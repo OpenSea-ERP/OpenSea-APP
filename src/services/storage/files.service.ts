@@ -1,4 +1,4 @@
-import { API_ENDPOINTS } from '@/config/api';
+import { API_ENDPOINTS, apiConfig, authConfig } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
 import type {
   RenameFileRequest,
@@ -37,6 +37,59 @@ export const storageFilesService = {
       body: formData,
       // Não definir Content-Type — o browser adiciona automaticamente
       // com o boundary correto para multipart/form-data
+    });
+  },
+
+  // Upload with real progress tracking via XMLHttpRequest
+  uploadFileWithProgress(
+    folderId: string | null,
+    file: File,
+    onProgress: (percent: number) => void,
+    options?: { entityType?: string; entityId?: string }
+  ): Promise<FileResponse> {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (options?.entityType) formData.append('entityType', options.entityType);
+      if (options?.entityId) formData.append('entityId', options.entityId);
+
+      const endpoint = folderId
+        ? API_ENDPOINTS.STORAGE.FILES.UPLOAD(folderId)
+        : API_ENDPOINTS.STORAGE.FILES.UPLOAD_ROOT;
+
+      const url = new URL(endpoint, apiConfig.baseURL).toString();
+      const token = typeof window !== 'undefined'
+        ? localStorage.getItem(authConfig.tokenKey)
+        : null;
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.withCredentials = true;
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            resolve(JSON.parse(xhr.responseText));
+          } catch {
+            reject(new Error('Resposta inválida do servidor'));
+          }
+        } else {
+          reject(new Error(`Upload falhou (${xhr.status})`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Erro de rede durante o upload'));
+      xhr.ontimeout = () => reject(new Error('Upload expirou'));
+      xhr.timeout = 5 * 60 * 1000; // 5 minutes for large files
+
+      xhr.send(formData);
     });
   },
 

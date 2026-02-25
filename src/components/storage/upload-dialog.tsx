@@ -14,10 +14,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUploadFile, useStorageStats } from '@/hooks/storage';
+import { useStorageStats } from '@/hooks/storage';
+import { storageFilesService } from '@/services/storage';
 import { cn } from '@/lib/utils';
 import { formatFileSize } from './utils';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface UploadDialogProps {
   open: boolean;
@@ -45,7 +47,7 @@ export function UploadDialog({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const uploadMutation = useUploadFile();
+  const queryClient = useQueryClient();
   const { data: stats } = useStorageStats();
 
   const hasQuota = stats && stats.maxStorageMb > 0;
@@ -60,14 +62,32 @@ export function UploadDialog({
   const quotaNearLimit =
     hasQuota && !quotaExceeded && stats.usedStoragePercent >= 80;
 
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
   const addFiles = useCallback((newFiles: FileList | File[]) => {
     const fileArray = Array.from(newFiles);
-    const uploadStates: FileUploadState[] = fileArray.map(file => ({
-      file,
-      status: 'pending',
-      progress: 0,
-    }));
-    setFiles(prev => [...prev, ...uploadStates]);
+    const rejected: string[] = [];
+    const accepted: FileUploadState[] = [];
+
+    for (const file of fileArray) {
+      if (file.size > MAX_FILE_SIZE) {
+        rejected.push(
+          `"${file.name}" excede o limite de ${formatFileSize(MAX_FILE_SIZE)}`
+        );
+      } else if (file.size === 0) {
+        rejected.push(`"${file.name}" está vazio`);
+      } else {
+        accepted.push({ file, status: 'pending', progress: 0 });
+      }
+    }
+
+    if (rejected.length > 0) {
+      toast.error(rejected.join('. '));
+    }
+
+    if (accepted.length > 0) {
+      setFiles(prev => [...prev, ...accepted]);
+    }
   }, []);
 
   const removeFile = useCallback((index: number) => {
@@ -118,19 +138,25 @@ export function UploadDialog({
       const fileState = files[i];
       if (fileState.status !== 'pending') continue;
 
-      // Atualizar status para uploading
       setFiles(prev =>
         prev.map((f, idx) =>
-          idx === i ? { ...f, status: 'uploading' as const, progress: 30 } : f
+          idx === i ? { ...f, status: 'uploading' as const, progress: 0 } : f
         )
       );
 
       try {
-        await uploadMutation.mutateAsync({
+        await storageFilesService.uploadFileWithProgress(
           folderId,
-          file: fileState.file,
-          options: entityType ? { entityType, entityId } : undefined,
-        });
+          fileState.file,
+          (percent) => {
+            setFiles(prev =>
+              prev.map((f, idx) =>
+                idx === i ? { ...f, progress: percent } : f
+              )
+            );
+          },
+          entityType ? { entityType, entityId } : undefined,
+        );
 
         setFiles(prev =>
           prev.map((f, idx) =>
@@ -153,6 +179,14 @@ export function UploadDialog({
         );
         errorCount++;
       }
+    }
+
+    // Invalidate queries after all uploads
+    if (successCount > 0) {
+      queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+      queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      queryClient.invalidateQueries({ queryKey: ['storage-files'] });
+      queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
     }
 
     setIsUploading(false);
