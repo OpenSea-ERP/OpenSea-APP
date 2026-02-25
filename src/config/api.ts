@@ -331,6 +331,8 @@ export const API_ENDPOINTS = {
       MARK_READ: (id: string) => `/v1/email/messages/${id}/read`,
       MOVE: (id: string) => `/v1/email/messages/${id}/move`,
       DELETE: (id: string) => `/v1/email/messages/${id}`,
+      ATTACHMENT_DOWNLOAD: (messageId: string, attachmentId: string) =>
+        `/v1/email/messages/${messageId}/attachments/${attachmentId}/download`,
     },
   },
   // RBAC - Permissions
@@ -512,6 +514,21 @@ export const API_ENDPOINTS = {
       },
     },
     SEARCH: '/v1/storage/search',
+    TRASH: {
+      LIST: '/v1/storage/trash',
+      RESTORE_FILE: (fileId: string) => `/v1/storage/trash/restore-file/${fileId}`,
+      RESTORE_FOLDER: (folderId: string) => `/v1/storage/trash/restore-folder/${folderId}`,
+      EMPTY: '/v1/storage/trash/empty',
+    },
+    SHARING: {
+      CREATE: (fileId: string) => `/v1/storage/files/${fileId}/share`,
+      LIST: (fileId: string) => `/v1/storage/files/${fileId}/shares`,
+      REVOKE: (linkId: string) => `/v1/storage/shares/${linkId}`,
+    },
+    PUBLIC: {
+      ACCESS: (token: string) => `/v1/public/shared/${token}`,
+      DOWNLOAD: (token: string) => `/v1/public/shared/${token}/download`,
+    },
     STATS: '/v1/storage/stats',
   },
   // Calendar
@@ -532,6 +549,26 @@ export const API_ENDPOINTS = {
         `/v1/calendar/events/${eventId}/reminders`,
       EXPORT: '/v1/calendar/events/export',
     },
+  },
+  // Core - Teams
+  TEAMS: {
+    LIST: '/v1/teams',
+    GET: (id: string) => `/v1/teams/${id}`,
+    CREATE: '/v1/teams',
+    UPDATE: (id: string) => `/v1/teams/${id}`,
+    DELETE: (id: string) => `/v1/teams/${id}`,
+    MY: '/v1/teams/my',
+    MEMBERS: {
+      LIST: (teamId: string) => `/v1/teams/${teamId}/members`,
+      ADD: (teamId: string) => `/v1/teams/${teamId}/members`,
+      BULK_ADD: (teamId: string) => `/v1/teams/${teamId}/members/bulk`,
+      REMOVE: (teamId: string, memberId: string) =>
+        `/v1/teams/${teamId}/members/${memberId}`,
+      CHANGE_ROLE: (teamId: string, memberId: string) =>
+        `/v1/teams/${teamId}/members/${memberId}/role`,
+    },
+    TRANSFER_OWNERSHIP: (teamId: string) =>
+      `/v1/teams/${teamId}/transfer-ownership`,
   },
   // Health
   HEALTH: '/health',

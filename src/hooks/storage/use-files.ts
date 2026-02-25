@@ -12,6 +12,7 @@ const QUERY_KEYS = {
   FILE_LIST: (query?: ListFilesQuery) => ['storage-files-list', query] as const,
   VERSIONS: (fileId: string) => ['storage-file-versions', fileId],
   STATS: ['storage-stats'],
+  SEARCH: (query: string) => ['storage-search', query] as const,
 } as const;
 
 export { QUERY_KEYS as storageFileKeys };
@@ -165,6 +166,16 @@ export function useRestoreVersion() {
       queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
       queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
     },
+  });
+}
+
+// GET /v1/storage/search - Busca global de arquivos e pastas
+export function useSearchStorage(query: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.SEARCH(query),
+    queryFn: () => storageFilesService.searchStorage({ query }),
+    enabled: query.length >= 2,
+    staleTime: 1000 * 30, // 30 segundos
   });
 }
 

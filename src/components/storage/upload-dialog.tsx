@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { Upload, X, FileIcon, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, X, FileIcon, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +10,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUploadFile } from '@/hooks/storage';
+import { useUploadFile, useStorageStats } from '@/hooks/storage';
 import { cn } from '@/lib/utils';
 import { formatFileSize } from './utils';
 import { toast } from 'sonner';
@@ -45,6 +46,19 @@ export function UploadDialog({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadMutation = useUploadFile();
+  const { data: stats } = useStorageStats();
+
+  const hasQuota = stats && stats.maxStorageMb > 0;
+  const totalPendingSize = files
+    .filter((f) => f.status === 'pending')
+    .reduce((sum, f) => sum + f.file.size, 0);
+  const projectedUsage = stats
+    ? stats.totalSize + totalPendingSize
+    : 0;
+  const quotaExceeded =
+    hasQuota && projectedUsage > stats.maxStorageMb * 1024 * 1024;
+  const quotaNearLimit =
+    hasQuota && !quotaExceeded && stats.usedStoragePercent >= 80;
 
   const addFiles = useCallback((newFiles: FileList | File[]) => {
     const fileArray = Array.from(newFiles);
@@ -184,6 +198,25 @@ export function UploadDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Quota warnings */}
+        {quotaExceeded && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              O upload excederia o limite de armazenamento ({formatFileSize(stats!.maxStorageMb * 1024 * 1024)}).
+              Remova arquivos ou solicite aumento do limite.
+            </AlertDescription>
+          </Alert>
+        )}
+        {quotaNearLimit && (
+          <Alert className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Armazenamento próximo do limite ({stats!.usedStoragePercent.toFixed(1)}% utilizado).
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Drop zone */}
         <div
           className={cn(
@@ -281,7 +314,7 @@ export function UploadDialog({
           <Button
             size="sm"
             onClick={handleUpload}
-            disabled={isUploading || pendingCount === 0}
+            disabled={isUploading || pendingCount === 0 || !!quotaExceeded}
           >
             {isUploading
               ? 'Enviando...'

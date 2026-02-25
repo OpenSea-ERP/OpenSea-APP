@@ -10,6 +10,8 @@ import type {
   FileVersionResponse,
   VersionsResponse,
   DownloadResponse,
+  SearchStorageQuery,
+  SearchStorageResponse,
   StorageStats,
 } from '@/types/storage';
 
@@ -127,6 +129,18 @@ export const storageFilesService = {
       API_ENDPOINTS.STORAGE.FILES.VERSIONS.RESTORE(id, versionId),
       {}
     );
+  },
+
+  // GET /v1/storage/search - Busca global de arquivos e pastas
+  async searchStorage(query: SearchStorageQuery): Promise<SearchStorageResponse> {
+    const params: Record<string, string> = { query: query.query };
+    if (query.fileType) params.fileType = query.fileType;
+    if (query.page) params.page = String(query.page);
+    if (query.limit) params.limit = String(query.limit);
+
+    return apiClient.get<SearchStorageResponse>(API_ENDPOINTS.STORAGE.SEARCH, {
+      params,
+    });
   },
 
   // GET /v1/storage/stats - Estatísticas de armazenamento

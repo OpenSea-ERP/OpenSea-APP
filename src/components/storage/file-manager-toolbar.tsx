@@ -30,6 +30,7 @@ import {
   List,
   Search,
   SlidersHorizontal,
+  Trash2,
   Upload,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -53,6 +54,8 @@ interface FileManagerToolbarProps {
   onNewFolder?: () => void;
   folderTypeFilter?: FolderTypeFilter;
   onFolderTypeFilterChange?: (filter: FolderTypeFilter) => void;
+  showTrash?: boolean;
+  onToggleTrash?: () => void;
   className?: string;
 }
 
@@ -82,6 +85,8 @@ export function FileManagerToolbar({
   onNewFolder,
   folderTypeFilter,
   onFolderTypeFilterChange,
+  showTrash,
+  onToggleTrash,
   className,
 }: FileManagerToolbarProps) {
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -130,6 +135,25 @@ export function FileManagerToolbar({
           <FolderPlus className="w-4 h-4" />
           Nova pasta
         </Button>
+      )}
+
+      {onToggleTrash && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant={showTrash ? 'default' : 'outline'}
+              onClick={onToggleTrash}
+              className={cn(showTrash && 'bg-red-600 hover:bg-red-700 text-white')}
+            >
+              <Trash2 className="w-4 h-4" />
+              Lixeira
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {showTrash ? 'Voltar ao gerenciador' : 'Abrir lixeira'}
+          </TooltipContent>
+        </Tooltip>
       )}
 
       {/* Spacer */}

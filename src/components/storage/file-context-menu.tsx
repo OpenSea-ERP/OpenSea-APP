@@ -10,6 +10,7 @@ import {
 import {
   Eye,
   Download,
+  Link2,
   Pencil,
   FolderInput,
   History,
@@ -34,6 +35,7 @@ interface FileContextMenuProps {
   onRename?: (file: StorageFile) => void;
   onMove?: (file: StorageFile) => void;
   onVersions?: (file: StorageFile) => void;
+  onShare?: (file: StorageFile) => void;
   onDelete?: (file: StorageFile) => void;
 }
 
@@ -46,6 +48,7 @@ export function FileContextMenu({
   onRename,
   onMove,
   onVersions,
+  onShare,
   onDelete,
 }: FileContextMenuProps) {
   const canRead = permissions?.canRead ?? true;
@@ -59,6 +62,7 @@ export function FileContextMenu({
   const showRename = canUpdate && onRename;
   const showMove = canUpdate && onMove;
   const showVersions = canVersions && onVersions;
+  const showShare = canUpdate && onShare;
   const showDelete = canDel && onDelete;
 
   return (
@@ -101,6 +105,13 @@ export function FileContextMenu({
           <ContextMenuItem onClick={() => onVersions(file)}>
             <History className="w-4 h-4" />
             Versões
+          </ContextMenuItem>
+        )}
+
+        {showShare && (
+          <ContextMenuItem onClick={() => onShare(file)}>
+            <Link2 className="w-4 h-4" />
+            Compartilhar
           </ContextMenuItem>
         )}
 

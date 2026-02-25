@@ -14,6 +14,7 @@ import {
   useInitializeFolders,
 } from '@/hooks/storage';
 import { usePermissions } from '@/hooks/use-permissions';
+import { storageFilesService, storageFoldersService } from '@/services/storage';
 import { cn } from '@/lib/utils';
 import type { StorageFile, StorageFolder } from '@/types/storage';
 import {
@@ -33,13 +34,16 @@ import {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { FilePermissions } from './file-context-menu';
 import { FileManagerBreadcrumb } from './file-manager-breadcrumb';
+import type { DragMoveItem } from './file-manager-grid';
 import { FileManagerGrid } from './file-manager-grid';
 import { FileManagerList } from './file-manager-list';
 import { FileManagerToolbar } from './file-manager-toolbar';
 import { FilePreviewModal } from './file-preview-modal';
+import { TrashView } from './trash-view';
 import { FileVersionPanel } from './file-version-panel';
 import { FolderAccessDialog } from './folder-access-dialog';
 import { FolderColorDialog } from './folder-color-dialog';
@@ -47,6 +51,7 @@ import type { FolderPermissions } from './folder-context-menu';
 import { MoveItemDialog } from './move-item-dialog';
 import { NewFolderDialog } from './new-folder-dialog';
 import { RenameDialog } from './rename-dialog';
+import { ShareLinkDialog } from './share-link-dialog';
 import { UploadDialog } from './upload-dialog';
 
 export interface FileManagerRef {
@@ -173,11 +178,15 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
     const [showColorDialog, setShowColorDialog] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
     const [deleteState, setDeleteState] = useState<DeleteState | null>(null);
+    const [showTrash, setShowTrash] = useState(false);
+    const [shareFile, setShareFile] = useState<StorageFile | null>(null);
+    const [showShareDialog, setShowShareDialog] = useState(false);
 
     // Mutations
     const deleteFolderMutation = useDeleteFolder();
     const deleteFileMutation = useDeleteFile();
     const downloadMutation = useDownloadFile();
+    const queryClient = useQueryClient();
     const initializeFolders = useInitializeFolders();
     const ensureEntityFolder = useEnsureEntityFolder();
 
@@ -322,17 +331,75 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
       }
     }, [deleteState, deleteFolderMutation, deleteFileMutation, manager]);
 
+    // File share
+    const handleShareFile = useCallback((file: StorageFile) => {
+      setShareFile(file);
+      setShowShareDialog(true);
+    }, []);
+
     // File versions
     const handleFileVersions = useCallback((file: StorageFile) => {
       setVersionFile(file);
       setShowVersions(true);
     }, []);
 
-    // Drag and drop on the main area
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragOver(true);
-    }, []);
+    // Drag-and-drop: move items into a folder
+    // Calls services directly (not mutation hooks) to avoid per-mutation
+    // onSuccess query invalidation that causes race conditions in multi-move
+    const handleDragMoveToFolder = useCallback(
+      async (targetFolderId: string | null, items: DragMoveItem[]) => {
+        const results = await Promise.allSettled(
+          items.map(item => {
+            if (item.type === 'folder') {
+              return storageFoldersService.moveFolder(item.id, {
+                parentId: targetFolderId,
+              });
+            }
+            return storageFilesService.moveFile(item.id, {
+              folderId: targetFolderId,
+            });
+          })
+        );
+
+        const movedCount = results.filter(r => r.status === 'fulfilled').length;
+        const errorCount = results.filter(r => r.status === 'rejected').length;
+
+        // Invalidate queries once after all moves complete
+        queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+        queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+        queryClient.invalidateQueries({ queryKey: ['storage-breadcrumb'] });
+
+        if (movedCount > 0) {
+          toast.success(
+            movedCount === 1
+              ? 'Item movido com sucesso'
+              : `${movedCount} itens movidos com sucesso`
+          );
+          manager.clearSelection();
+        }
+        if (errorCount > 0) {
+          toast.error(
+            errorCount === 1
+              ? 'Erro ao mover 1 item'
+              : `Erro ao mover ${errorCount} itens`
+          );
+        }
+      },
+      [queryClient, manager]
+    );
+
+    // Drag and drop on the main area (file upload from OS)
+    const DRAG_MIME = 'application/x-storage-item';
+
+    const handleDragOver = useCallback(
+      (e: React.DragEvent) => {
+        // Don't show upload overlay for internal drag-and-drop moves
+        if (e.dataTransfer.types.includes(DRAG_MIME)) return;
+        e.preventDefault();
+        setIsDragOver(true);
+      },
+      []
+    );
 
     const handleDragLeave = useCallback((e: React.DragEvent) => {
       e.preventDefault();
@@ -345,6 +412,8 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
       (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragOver(false);
+        // Ignore internal drag-and-drop (handled by folder cards)
+        if (e.dataTransfer.types.includes(DRAG_MIME)) return;
         if (
           e.dataTransfer.files.length > 0 &&
           manager.currentFolderId &&
@@ -387,6 +456,12 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
         }
         folderTypeFilter={folderTypeFilter}
         onFolderTypeFilterChange={setFolderTypeFilter}
+        showTrash={showTrash}
+        onToggleTrash={
+          hasPermission('storage.files.list')
+            ? () => setShowTrash(prev => !prev)
+            : undefined
+        }
       />
     );
 
@@ -401,127 +476,142 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
           </div>
         )}
 
-        {/* Breadcrumb + back button */}
-        <div className="shrink-0 px-4 h-12 flex items-center gap-2 border-b border-gray-100 dark:border-slate-800">
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={manager.navigateBack}
-            disabled={!manager.canNavigateBack}
-            className={cn(!manager.canNavigateBack && 'invisible')}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <FileManagerBreadcrumb
-            breadcrumb={manager.breadcrumb}
-            isLoading={manager.isLoadingBreadcrumb}
-            onNavigate={manager.navigateToBreadcrumb}
-          />
-        </div>
-
-        {/* Content area */}
-        <div
-          className={cn(
-            'flex-1 overflow-y-auto p-4 relative transition-colors',
-            isDragOver && 'bg-blue-50/50 dark:bg-blue-950/10'
-          )}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={e => {
-            // Deselect all when clicking empty area
-            if (e.target === e.currentTarget) {
-              manager.clearSelection();
-            }
-          }}
-        >
-          {/* Drag overlay */}
-          {isDragOver && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-50/80 dark:bg-blue-950/40 border-2 border-dashed border-blue-400 rounded-lg pointer-events-none">
-              <div className="text-center">
-                <p className="text-lg font-medium text-blue-600 dark:text-blue-400">
-                  Solte os arquivos aqui
-                </p>
-                <p className="text-sm text-blue-500 dark:text-blue-300">
-                  para enviar para esta pasta
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Loading state */}
-          {manager.isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 p-4">
-                  <Skeleton className="w-12 h-12 rounded-lg" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-              ))}
-            </div>
-          ) : manager.error ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <p className="text-sm text-red-500 dark:text-red-400 mb-4">
-                Erro ao carregar o conteúdo da pasta
-              </p>
+        {/* Trash view OR normal file manager content */}
+        {showTrash ? (
+          <TrashView className="flex-1" />
+        ) : (
+          <>
+            {/* Breadcrumb + back button */}
+            <div className="shrink-0 px-4 h-12 flex items-center gap-2 border-b border-gray-100 dark:border-slate-800">
               <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.location.reload()}
+                size="icon-sm"
+                variant="ghost"
+                onClick={manager.navigateBack}
+                disabled={!manager.canNavigateBack}
+                className={cn(!manager.canNavigateBack && 'invisible')}
               >
-                Tentar novamente
+                <ArrowLeft className="w-4 h-4" />
               </Button>
+              <FileManagerBreadcrumb
+                breadcrumb={manager.breadcrumb}
+                isLoading={manager.isLoadingBreadcrumb}
+                onNavigate={manager.navigateToBreadcrumb}
+                onDragMoveToFolder={handleDragMoveToFolder}
+                rootFolderId={rootFolderId ?? null}
+              />
             </div>
-          ) : manager.viewMode === 'grid' ? (
-            <FileManagerGrid
-              folders={folders}
-              files={files}
-              isSelected={manager.isSelected}
-              onSelectItem={handleSelectItem}
-              onSelectMultiple={manager.selectMultiple}
-              onNavigateToFolder={manager.navigateToFolder}
-              onPreviewFile={handlePreviewFile}
-              onUpload={() => setShowUpload(true)}
-              onRenameFolder={handleRenameFolder}
-              onChangeColorFolder={handleChangeColorFolder}
-              onMoveFolder={handleMoveFolder}
-              onManageFolderAccess={handleManageFolderAccess}
-              onDeleteFolder={handleDeleteFolder}
-              onDownloadFile={handleDownloadFile}
-              onRenameFile={handleRenameFile}
-              onMoveFile={handleMoveFile}
-              onFileVersions={handleFileVersions}
-              onDeleteFile={handleDeleteFile}
-              folderPermissions={folderPermissions}
-              filePermissions={filePermissions}
-            />
-          ) : (
-            <FileManagerList
-              folders={folders}
-              files={files}
-              isSelected={manager.isSelected}
-              onSelectItem={handleSelectItem}
-              onNavigateToFolder={manager.navigateToFolder}
-              onPreviewFile={handlePreviewFile}
-              onUpload={() => setShowUpload(true)}
-              sortBy={manager.sortBy}
-              sortOrder={manager.sortOrder}
-              onSortChange={manager.setSortBy}
-              onRenameFolder={handleRenameFolder}
-              onChangeColorFolder={handleChangeColorFolder}
-              onMoveFolder={handleMoveFolder}
-              onManageFolderAccess={handleManageFolderAccess}
-              onDeleteFolder={handleDeleteFolder}
-              onDownloadFile={handleDownloadFile}
-              onRenameFile={handleRenameFile}
-              onMoveFile={handleMoveFile}
-              onFileVersions={handleFileVersions}
-              onDeleteFile={handleDeleteFile}
-              folderPermissions={folderPermissions}
-              filePermissions={filePermissions}
-            />
-          )}
-        </div>
+
+            {/* Content area */}
+            <div
+              className={cn(
+                'flex-1 overflow-y-auto p-4 relative transition-colors',
+                isDragOver && 'bg-blue-50/50 dark:bg-blue-950/10'
+              )}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={e => {
+                // Deselect all when clicking empty area
+                if (e.target === e.currentTarget) {
+                  manager.clearSelection();
+                }
+              }}
+            >
+              {/* Drag overlay */}
+              {isDragOver && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-50/80 dark:bg-blue-950/40 border-2 border-dashed border-blue-400 rounded-lg pointer-events-none">
+                  <div className="text-center">
+                    <p className="text-lg font-medium text-blue-600 dark:text-blue-400">
+                      Solte os arquivos aqui
+                    </p>
+                    <p className="text-sm text-blue-500 dark:text-blue-300">
+                      para enviar para esta pasta
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Loading state */}
+              {manager.isLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center gap-2 p-4">
+                      <Skeleton className="w-12 h-12 rounded-lg" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  ))}
+                </div>
+              ) : manager.error ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <p className="text-sm text-red-500 dark:text-red-400 mb-4">
+                    Erro ao carregar o conteúdo da pasta
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.location.reload()}
+                  >
+                    Tentar novamente
+                  </Button>
+                </div>
+              ) : manager.viewMode === 'grid' ? (
+                <FileManagerGrid
+                  folders={folders}
+                  files={files}
+                  isSelected={manager.isSelected}
+                  selectedItems={manager.selectedItems}
+                  onSelectItem={handleSelectItem}
+                  onSelectMultiple={manager.selectMultiple}
+                  onNavigateToFolder={manager.navigateToFolder}
+                  onPreviewFile={handlePreviewFile}
+                  onUpload={() => setShowUpload(true)}
+                  onDragMoveToFolder={handleDragMoveToFolder}
+                  onRenameFolder={handleRenameFolder}
+                  onChangeColorFolder={handleChangeColorFolder}
+                  onMoveFolder={handleMoveFolder}
+                  onManageFolderAccess={handleManageFolderAccess}
+                  onDeleteFolder={handleDeleteFolder}
+                  onDownloadFile={handleDownloadFile}
+                  onRenameFile={handleRenameFile}
+                  onMoveFile={handleMoveFile}
+                  onFileVersions={handleFileVersions}
+                  onShareFile={handleShareFile}
+                  onDeleteFile={handleDeleteFile}
+                  folderPermissions={folderPermissions}
+                  filePermissions={filePermissions}
+                />
+              ) : (
+                <FileManagerList
+                  folders={folders}
+                  files={files}
+                  isSelected={manager.isSelected}
+                  selectedItems={manager.selectedItems}
+                  onSelectItem={handleSelectItem}
+                  onNavigateToFolder={manager.navigateToFolder}
+                  onPreviewFile={handlePreviewFile}
+                  onUpload={() => setShowUpload(true)}
+                  onDragMoveToFolder={handleDragMoveToFolder}
+                  sortBy={manager.sortBy}
+                  sortOrder={manager.sortOrder}
+                  onSortChange={manager.setSortBy}
+                  onRenameFolder={handleRenameFolder}
+                  onChangeColorFolder={handleChangeColorFolder}
+                  onMoveFolder={handleMoveFolder}
+                  onManageFolderAccess={handleManageFolderAccess}
+                  onDeleteFolder={handleDeleteFolder}
+                  onDownloadFile={handleDownloadFile}
+                  onRenameFile={handleRenameFile}
+                  onMoveFile={handleMoveFile}
+                  onFileVersions={handleFileVersions}
+                  onShareFile={handleShareFile}
+                  onDeleteFile={handleDeleteFile}
+                  folderPermissions={folderPermissions}
+                  filePermissions={filePermissions}
+                />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Selection Toolbar */}
         {manager.selectedItems.length > 0 && (
@@ -644,6 +734,15 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
           onOpenChange={open => {
             setShowColorDialog(open);
             if (!open) setColorFolder(null);
+          }}
+        />
+
+        <ShareLinkDialog
+          file={shareFile}
+          open={showShareDialog}
+          onOpenChange={open => {
+            setShowShareDialog(open);
+            if (!open) setShareFile(null);
           }}
         />
 

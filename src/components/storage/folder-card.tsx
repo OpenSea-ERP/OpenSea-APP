@@ -10,9 +10,18 @@ import { FolderIcon } from './folder-icon';
 interface FolderCardProps {
   folder: StorageFolder;
   isSelected?: boolean;
+  isDragging?: boolean;
+  isDragTarget?: boolean;
+  draggable?: boolean;
   permissions?: FolderPermissions;
   onClick?: (e: React.MouseEvent) => void;
   onDoubleClick?: () => void;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  onDragEnter?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
   onOpen?: (folder: StorageFolder) => void;
   onRename?: (folder: StorageFolder) => void;
   onChangeColor?: (folder: StorageFolder) => void;
@@ -25,9 +34,18 @@ interface FolderCardProps {
 export function FolderCard({
   folder,
   isSelected,
+  isDragging,
+  isDragTarget,
+  draggable,
   permissions,
   onClick,
   onDoubleClick,
+  onDragStart,
+  onDragEnd,
+  onDragEnter,
+  onDragOver,
+  onDragLeave,
+  onDrop,
   onOpen,
   onRename,
   onChangeColor,
@@ -56,8 +74,18 @@ export function FolderCard({
           'hover:border-gray-200 dark:hover:border-slate-700',
           isSelected &&
             'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700',
-          isSelected && 'ring-2 ring-blue-200 dark:ring-blue-800'
+          isSelected && 'ring-2 ring-blue-200 dark:ring-blue-800',
+          isDragTarget &&
+            'ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-950/40 scale-[1.02]',
+          isDragging && 'opacity-40'
         )}
+        draggable={draggable}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragEnter={onDragEnter}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
       >

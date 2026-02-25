@@ -9,19 +9,31 @@ import type { FilePermissions } from './file-context-menu';
 import { FolderCard } from './folder-card';
 import type { FolderPermissions } from './folder-context-menu';
 
+const DRAG_MIME = 'application/x-storage-item';
+
+export interface DragMoveItem {
+  id: string;
+  type: 'folder' | 'file';
+}
+
 interface FileManagerGridProps {
   folders: StorageFolder[];
   files: StorageFile[];
   isSelected: (id: string, type: 'folder' | 'file') => boolean;
+  selectedItems?: DragMoveItem[];
   onSelectItem: (
     id: string,
     type: 'folder' | 'file',
     e: React.MouseEvent
   ) => void;
-  onSelectMultiple?: (items: { id: string; type: 'folder' | 'file' }[]) => void;
+  onSelectMultiple?: (items: DragMoveItem[]) => void;
   onNavigateToFolder: (folderId: string) => void;
   onPreviewFile: (file: StorageFile) => void;
   onUpload?: () => void;
+  onDragMoveToFolder?: (
+    targetFolderId: string | null,
+    items: DragMoveItem[]
+  ) => void;
   // Folder actions
   onRenameFolder?: (folder: StorageFolder) => void;
   onChangeColorFolder?: (folder: StorageFolder) => void;
@@ -34,6 +46,7 @@ interface FileManagerGridProps {
   onRenameFile?: (file: StorageFile) => void;
   onMoveFile?: (file: StorageFile) => void;
   onFileVersions?: (file: StorageFile) => void;
+  onShareFile?: (file: StorageFile) => void;
   onDeleteFile?: (file: StorageFile) => void;
   // Permissions
   folderPermissions?: FolderPermissions;
@@ -61,11 +74,13 @@ export function FileManagerGrid({
   folders,
   files,
   isSelected,
+  selectedItems,
   onSelectItem,
   onSelectMultiple,
   onNavigateToFolder,
   onPreviewFile,
   onUpload,
+  onDragMoveToFolder,
   onRenameFolder,
   onChangeColorFolder,
   onMoveFolder,
@@ -76,6 +91,7 @@ export function FileManagerGrid({
   onRenameFile,
   onMoveFile,
   onFileVersions,
+  onShareFile,
   onDeleteFile,
   folderPermissions,
   filePermissions,
@@ -84,6 +100,120 @@ export function FileManagerGrid({
   const gridRef = useRef<HTMLDivElement>(null);
   const [dragRect, setDragRect] = useState<DragRect | null>(null);
   const isDraggingRef = useRef(false);
+
+  // Drag-and-drop state
+  const [draggedItemIds, setDraggedItemIds] = useState<Set<string>>(new Set());
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+
+  // --- Native drag-and-drop handlers ---
+
+  const handleItemDragStart = useCallback(
+    (
+      id: string,
+      type: 'folder' | 'file',
+      isSystem: boolean,
+      e: React.DragEvent
+    ) => {
+      if (isSystem) {
+        e.preventDefault();
+        return;
+      }
+
+      // Determine items to drag: if item is in selection, drag all selected; otherwise just this item
+      let items: DragMoveItem[];
+      const isInSelection = selectedItems?.some(
+        si => si.id === id && si.type === type
+      );
+      if (isInSelection && selectedItems && selectedItems.length > 1) {
+        items = selectedItems.filter(si => {
+          // Exclude system folders from the drag set
+          if (si.type === 'folder') {
+            const f = folders.find(fo => fo.id === si.id);
+            if (f?.isSystem) return false;
+          }
+          return true;
+        });
+      } else {
+        items = [{ id, type }];
+      }
+
+      e.dataTransfer.setData(DRAG_MIME, JSON.stringify(items));
+      e.dataTransfer.effectAllowed = 'move';
+
+      setDraggedItemIds(new Set(items.map(i => i.id)));
+    },
+    [selectedItems, folders]
+  );
+
+  const handleItemDragEnd = useCallback(() => {
+    setDraggedItemIds(new Set());
+    setDragOverFolderId(null);
+  }, []);
+
+  const handleFolderDragEnter = useCallback(
+    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
+      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+      if (draggedItemIds.has(folderId) || isSystem) return;
+
+      e.preventDefault();
+      setDragOverFolderId(folderId);
+    },
+    [draggedItemIds]
+  );
+
+  const handleFolderDragOver = useCallback(
+    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
+      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+      // Don't allow drop on self or on system folders
+      if (draggedItemIds.has(folderId) || isSystem) return;
+
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      setDragOverFolderId(folderId);
+    },
+    [draggedItemIds]
+  );
+
+  const handleFolderDragLeave = useCallback(
+    (folderId: string, e: React.DragEvent) => {
+      // Only clear if actually leaving this folder card (not entering a child)
+      const relatedTarget = e.relatedTarget as HTMLElement | null;
+      const currentTarget = e.currentTarget as HTMLElement;
+      if (relatedTarget && currentTarget.contains(relatedTarget)) return;
+
+      if (dragOverFolderId === folderId) {
+        setDragOverFolderId(null);
+      }
+    },
+    [dragOverFolderId]
+  );
+
+  const handleFolderDrop = useCallback(
+    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOverFolderId(null);
+
+      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
+      if (draggedItemIds.has(folderId) || isSystem) return;
+
+      try {
+        const items: DragMoveItem[] = JSON.parse(
+          e.dataTransfer.getData(DRAG_MIME)
+        );
+        if (items.length > 0 && onDragMoveToFolder) {
+          onDragMoveToFolder(folderId, items);
+        }
+      } catch {
+        // Invalid data — ignore
+      }
+
+      setDraggedItemIds(new Set());
+    },
+    [draggedItemIds, onDragMoveToFolder]
+  );
+
+  // --- Rubber-band selection ---
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -182,9 +312,26 @@ export function FileManagerGrid({
             <FolderCard
               folder={folder}
               isSelected={isSelected(folder.id, 'folder')}
+              isDragging={draggedItemIds.has(folder.id)}
+              isDragTarget={dragOverFolderId === folder.id}
+              draggable={!folder.isSystem}
               permissions={folderPermissions}
               onClick={e => onSelectItem(folder.id, 'folder', e)}
               onDoubleClick={() => onNavigateToFolder(folder.id)}
+              onDragStart={e =>
+                handleItemDragStart(folder.id, 'folder', folder.isSystem, e)
+              }
+              onDragEnd={handleItemDragEnd}
+              onDragEnter={e =>
+                handleFolderDragEnter(folder.id, folder.isSystem, e)
+              }
+              onDragOver={e =>
+                handleFolderDragOver(folder.id, folder.isSystem, e)
+              }
+              onDragLeave={e => handleFolderDragLeave(folder.id, e)}
+              onDrop={e =>
+                handleFolderDrop(folder.id, folder.isSystem, e)
+              }
               onOpen={f => onNavigateToFolder(f.id)}
               onRename={onRenameFolder}
               onChangeColor={onChangeColorFolder}
@@ -201,14 +348,21 @@ export function FileManagerGrid({
             <FileCard
               file={file}
               isSelected={isSelected(file.id, 'file')}
+              isDragging={draggedItemIds.has(file.id)}
+              draggable
               permissions={filePermissions}
               onClick={e => onSelectItem(file.id, 'file', e)}
               onDoubleClick={() => onPreviewFile(file)}
+              onDragStart={e =>
+                handleItemDragStart(file.id, 'file', false, e)
+              }
+              onDragEnd={handleItemDragEnd}
               onPreview={onPreviewFile}
               onDownload={onDownloadFile}
               onRename={onRenameFile}
               onMove={onMoveFile}
               onVersions={onFileVersions}
+              onShare={onShareFile}
               onDelete={onDeleteFile}
             />
           </div>

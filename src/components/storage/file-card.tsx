@@ -10,28 +10,38 @@ import { formatFileSize, truncateFileName } from './utils';
 interface FileCardProps {
   file: StorageFile;
   isSelected?: boolean;
+  isDragging?: boolean;
+  draggable?: boolean;
   permissions?: FilePermissions;
   onClick?: (e: React.MouseEvent) => void;
   onDoubleClick?: () => void;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
   onPreview?: (file: StorageFile) => void;
   onDownload?: (file: StorageFile) => void;
   onRename?: (file: StorageFile) => void;
   onMove?: (file: StorageFile) => void;
   onVersions?: (file: StorageFile) => void;
+  onShare?: (file: StorageFile) => void;
   onDelete?: (file: StorageFile) => void;
 }
 
 export function FileCard({
   file,
   isSelected,
+  isDragging,
+  draggable,
   permissions,
   onClick,
   onDoubleClick,
+  onDragStart,
+  onDragEnd,
   onPreview,
   onDownload,
   onRename,
   onMove,
   onVersions,
+  onShare,
   onDelete,
 }: FileCardProps) {
   const isImage = file.fileType === 'image';
@@ -45,6 +55,7 @@ export function FileCard({
       onRename={onRename}
       onMove={onMove}
       onVersions={onVersions}
+      onShare={onShare}
       onDelete={onDelete}
     >
       <div
@@ -55,8 +66,12 @@ export function FileCard({
           'hover:border-gray-200 dark:hover:border-slate-700',
           isSelected &&
             'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700',
-          isSelected && 'ring-2 ring-blue-200 dark:ring-blue-800'
+          isSelected && 'ring-2 ring-blue-200 dark:ring-blue-800',
+          isDragging && 'opacity-40'
         )}
+        draggable={draggable}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
       >

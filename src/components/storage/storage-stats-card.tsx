@@ -14,6 +14,18 @@ interface StorageStatsCardProps {
   className?: string;
 }
 
+function getQuotaColor(percent: number) {
+  if (percent >= 90) return 'text-red-600 dark:text-red-400';
+  if (percent >= 70) return 'text-amber-600 dark:text-amber-400';
+  return 'text-emerald-600 dark:text-emerald-400';
+}
+
+function getProgressColor(percent: number) {
+  if (percent >= 90) return '[&>div]:bg-red-500';
+  if (percent >= 70) return '[&>div]:bg-amber-500';
+  return '[&>div]:bg-emerald-500';
+}
+
 export function StorageStatsCard({ className }: StorageStatsCardProps) {
   const { data: stats, isLoading } = useStorageStats();
 
@@ -41,6 +53,11 @@ export function StorageStatsCard({ className }: StorageStatsCardProps) {
 
   if (!stats) return null;
 
+  const hasQuota = stats.maxStorageMb > 0;
+  const maxSizeFormatted = hasQuota
+    ? formatFileSize(stats.maxStorageMb * 1024 * 1024)
+    : 'Ilimitado';
+
   return (
     <Card className={cn('', className)}>
       <CardHeader>
@@ -58,16 +75,27 @@ export function StorageStatsCard({ className }: StorageStatsCardProps) {
               {stats.totalFiles === 1 ? 'arquivo' : 'arquivos'}
             </span>
             <span className="font-medium">
-              {formatFileSize(stats.totalSize)}
+              {formatFileSize(stats.totalSize)} / {maxSizeFormatted}
             </span>
           </div>
 
           <div>
             <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
               <span>Utilizado</span>
-              <span>{stats.usedStoragePercent.toFixed(1)}%</span>
+              <span
+                className={cn(
+                  hasQuota && getQuotaColor(stats.usedStoragePercent),
+                )}
+              >
+                {hasQuota
+                  ? `${stats.usedStoragePercent.toFixed(1)}%`
+                  : 'Sem limite'}
+              </span>
             </div>
-            <Progress value={stats.usedStoragePercent} />
+            <Progress
+              value={hasQuota ? stats.usedStoragePercent : 0}
+              className={cn(hasQuota && getProgressColor(stats.usedStoragePercent))}
+            />
           </div>
 
           {Object.keys(stats.filesByType).length > 0 && (

@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useFolderContents, useBreadcrumb } from './use-folders';
+import { useSearchStorage } from './use-files';
 import type { StorageFile, StorageFolder } from '@/types/storage';
 
 export type ViewMode = 'grid' | 'list';
@@ -45,11 +46,25 @@ export function useFileManager(options?: FileManagerOptions) {
     error: contentsError,
   } = useFolderContents(currentFolderId, contentsQuery);
 
+  // Global search (when at root with search query 2+ chars)
+  const isGlobalSearch = currentFolderId === null && searchQuery.length >= 2;
+  const { data: searchResults, isLoading: isLoadingSearch } =
+    useSearchStorage(isGlobalSearch ? searchQuery : '');
+
   // Ordena os dados no client-side
   const contents = useMemo(() => {
-    if (!rawContents) return rawContents;
+    // Use global search results when in search mode
+    const source = isGlobalSearch && searchResults
+      ? {
+          folders: searchResults.folders,
+          files: searchResults.files,
+          total: searchResults.totalFiles + searchResults.totalFolders,
+        }
+      : rawContents;
 
-    const sortedFolders = [...rawContents.folders].sort((a, b) => {
+    if (!source) return source;
+
+    const sortedFolders = [...source.folders].sort((a, b) => {
       const dir = sortOrder === 'asc' ? 1 : -1;
       switch (sortBy) {
         case 'name':
@@ -73,7 +88,7 @@ export function useFileManager(options?: FileManagerOptions) {
       }
     });
 
-    const sortedFiles = [...rawContents.files].sort((a, b) => {
+    const sortedFiles = [...source.files].sort((a, b) => {
       const dir = sortOrder === 'asc' ? 1 : -1;
       switch (sortBy) {
         case 'name':
@@ -100,9 +115,9 @@ export function useFileManager(options?: FileManagerOptions) {
     return {
       folders: sortedFolders,
       files: sortedFiles,
-      total: rawContents.total,
+      total: source.total,
     };
-  }, [rawContents, sortBy, sortOrder]);
+  }, [rawContents, searchResults, isGlobalSearch, sortBy, sortOrder]);
 
   // Busca breadcrumb da pasta atual
   const { data: breadcrumbData, isLoading: isLoadingBreadcrumb } =
@@ -241,8 +256,9 @@ export function useFileManager(options?: FileManagerOptions) {
     // Dados
     contents,
     breadcrumb: breadcrumbData?.breadcrumb ?? [],
-    isLoading: isLoadingContents,
+    isLoading: isGlobalSearch ? isLoadingSearch : isLoadingContents,
     isLoadingBreadcrumb,
+    isGlobalSearch,
     error: contentsError,
 
     // Navegação
