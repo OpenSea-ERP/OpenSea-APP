@@ -62,7 +62,7 @@ export function UploadDialog({
   const quotaNearLimit =
     hasQuota && !quotaExceeded && stats.usedStoragePercent >= 80;
 
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB (multipart upload supports large files)
 
   const addFiles = useCallback((newFiles: FileList | File[]) => {
     const fileArray = Array.from(newFiles);
@@ -145,7 +145,7 @@ export function UploadDialog({
       );
 
       try {
-        await storageFilesService.uploadFileWithProgress(
+        await storageFilesService.smartUpload(
           folderId,
           fileState.file,
           (percent) => {

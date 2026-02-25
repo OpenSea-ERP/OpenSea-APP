@@ -382,7 +382,9 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
         const errorCount = results.filter(r => r.status === 'rejected').length;
 
         // Invalidate queries once after all moves complete
-        queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+        queryClient.invalidateQueries({
+          queryKey: ['storage-folder-contents'],
+        });
         queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
         queryClient.invalidateQueries({ queryKey: ['storage-breadcrumb'] });
 
@@ -408,15 +410,12 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
     // Drag and drop on the main area (file upload from OS)
     const DRAG_MIME = 'application/x-storage-item';
 
-    const handleDragOver = useCallback(
-      (e: React.DragEvent) => {
-        // Don't show upload overlay for internal drag-and-drop moves
-        if (e.dataTransfer.types.includes(DRAG_MIME)) return;
-        e.preventDefault();
-        setIsDragOver(true);
-      },
-      []
-    );
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+      // Don't show upload overlay for internal drag-and-drop moves
+      if (e.dataTransfer.types.includes(DRAG_MIME)) return;
+      e.preventDefault();
+      setIsDragOver(true);
+    }, []);
 
     const handleDragLeave = useCallback((e: React.DragEvent) => {
       e.preventDefault();
@@ -521,7 +520,7 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
             {/* Content area */}
             <div
               className={cn(
-                'flex-1 overflow-y-auto p-4 relative transition-colors',
+                'flex-1 min-h-0 flex flex-col p-4 relative transition-colors',
                 isDragOver && 'bg-blue-50/50 dark:bg-blue-950/10'
               )}
               onDragOver={handleDragOver}
@@ -552,7 +551,10 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
               {manager.isLoading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1">
                   {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="flex flex-col items-center gap-2 p-4">
+                    <div
+                      key={i}
+                      className="flex flex-col items-center gap-2 p-4"
+                    >
                       <Skeleton className="w-12 h-12 rounded-lg" />
                       <Skeleton className="h-4 w-20" />
                     </div>

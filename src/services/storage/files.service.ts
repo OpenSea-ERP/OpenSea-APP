@@ -14,6 +14,10 @@ import type {
   SearchStorageQuery,
   SearchStorageResponse,
   StorageStats,
+  MultipartInitiateRequest,
+  MultipartInitiateResponse,
+  MultipartCompleteRequest,
+  MultipartCompleteResponse,
 } from '@/types/storage';
 
 export const storageFilesService = {
@@ -208,5 +212,161 @@ export const storageFilesService = {
   // GET /v1/storage/stats - Estatísticas de armazenamento
   async getStats(): Promise<StorageStats> {
     return apiClient.get<StorageStats>(API_ENDPOINTS.STORAGE.STATS);
+  },
+
+  // --- Multipart Upload (for files > 50MB) ---
+
+  // POST /v1/storage/files/multipart/initiate
+  async initiateMultipartUpload(
+    data: MultipartInitiateRequest,
+  ): Promise<MultipartInitiateResponse> {
+    return apiClient.post<MultipartInitiateResponse>(
+      API_ENDPOINTS.STORAGE.FILES.MULTIPART.INITIATE,
+      data,
+    );
+  },
+
+  // POST /v1/storage/files/multipart/complete
+  async completeMultipartUpload(
+    data: MultipartCompleteRequest,
+  ): Promise<MultipartCompleteResponse> {
+    return apiClient.post<MultipartCompleteResponse>(
+      API_ENDPOINTS.STORAGE.FILES.MULTIPART.COMPLETE,
+      data,
+    );
+  },
+
+  // POST /v1/storage/files/multipart/abort
+  async abortMultipartUpload(key: string, uploadId: string): Promise<void> {
+    return apiClient.post<void>(
+      API_ENDPOINTS.STORAGE.FILES.MULTIPART.ABORT,
+      { key, uploadId },
+    );
+  },
+
+  // Upload a single part to a presigned URL, returns ETag
+  async uploadPart(
+    url: string,
+    blob: Blob,
+    onProgress?: (loaded: number) => void,
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', url);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(e.loaded);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const etag = xhr.getResponseHeader('ETag');
+          if (etag) {
+            resolve(etag.replace(/"/g, ''));
+          } else {
+            reject(new Error('ETag não encontrado na resposta'));
+          }
+        } else {
+          reject(new Error(`Upload da parte falhou (${xhr.status})`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Erro de rede durante upload da parte'));
+      xhr.timeout = 5 * 60 * 1000;
+      xhr.ontimeout = () => reject(new Error('Upload da parte expirou'));
+
+      xhr.send(blob);
+    });
+  },
+
+  // Smart upload: auto-selects between single and multipart based on file size
+  MULTIPART_THRESHOLD: 50 * 1024 * 1024, // 50MB
+  PART_SIZE: 5 * 1024 * 1024, // 5MB per part
+
+  async smartUpload(
+    folderId: string | null,
+    file: File,
+    onProgress: (percent: number) => void,
+    options?: { entityType?: string; entityId?: string },
+  ): Promise<FileResponse> {
+    if (file.size < this.MULTIPART_THRESHOLD) {
+      return this.uploadFileWithProgress(folderId, file, onProgress, options);
+    }
+
+    // Multipart upload for large files
+    const totalParts = Math.ceil(file.size / this.PART_SIZE);
+
+    // Step 1: Initiate
+    onProgress(0);
+    const { uploadId, key, partUrls } = await this.initiateMultipartUpload({
+      fileName: file.name,
+      mimeType: file.type || 'application/octet-stream',
+      fileSize: file.size,
+      folderId,
+    });
+
+    try {
+      // Step 2: Upload parts with progress tracking
+      const completedParts: Array<{ partNumber: number; etag: string }> = [];
+      let totalUploaded = 0;
+
+      // Upload parts sequentially to avoid overwhelming the connection
+      for (const { partNumber, url } of partUrls) {
+        const start = (partNumber - 1) * this.PART_SIZE;
+        const end = Math.min(start + this.PART_SIZE, file.size);
+        const blob = file.slice(start, end);
+
+        const etag = await this.uploadPart(url, blob, (loaded) => {
+          const currentTotal = totalUploaded + loaded;
+          onProgress(Math.round((currentTotal / file.size) * 95)); // Reserve 5% for completion
+        });
+
+        totalUploaded += end - start;
+        completedParts.push({ partNumber, etag });
+        onProgress(Math.round((totalUploaded / file.size) * 95));
+      }
+
+      // Step 3: Complete multipart upload
+      const result = await this.completeMultipartUpload({
+        key,
+        uploadId,
+        parts: completedParts,
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        fileSize: file.size,
+      });
+
+      onProgress(100);
+
+      // Return as FileResponse format
+      return {
+        file: {
+          id: '',
+          tenantId: '',
+          folderId,
+          name: file.name,
+          originalName: file.name,
+          fileKey: result.key,
+          path: '',
+          size: result.size,
+          mimeType: result.mimeType,
+          fileType: 'other',
+          thumbnailKey: null,
+          status: 'ACTIVE',
+          currentVersion: 1,
+          entityType: null,
+          entityId: null,
+          expiresAt: null,
+          uploadedBy: '',
+          createdAt: new Date().toISOString(),
+        },
+      };
+    } catch (error) {
+      // Abort on failure
+      await this.abortMultipartUpload(key, uploadId).catch(() => {});
+      throw error;
+    }
   },
 };

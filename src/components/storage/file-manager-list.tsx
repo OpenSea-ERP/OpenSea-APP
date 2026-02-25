@@ -1,14 +1,6 @@
 'use client';
 
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { StorageFolder, StorageFile } from '@/types/storage';
 import type { SortBy, SortOrder } from '@/hooks/storage';
@@ -22,10 +14,14 @@ import { formatFileSize } from './utils';
 import { EmptyFolderState } from './empty-folder-state';
 import { FolderContextMenu } from './folder-context-menu';
 import { FileContextMenu } from './file-context-menu';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import type { DragMoveItem } from './file-manager-grid';
 
 const DRAG_MIME = 'application/x-storage-item';
+
+const ROW_HEIGHT = 48;
+const OVERSCAN = 10;
 
 interface FileManagerListProps {
   folders: StorageFolder[];
@@ -66,6 +62,10 @@ interface FileManagerListProps {
   filePermissions?: FilePermissions;
   className?: string;
 }
+
+type ListItem =
+  | { type: 'folder'; data: StorageFolder }
+  | { type: 'file'; data: StorageFile };
 
 function SortIndicator({
   column,
@@ -113,8 +113,28 @@ export function FileManagerList({
   filePermissions,
   className,
 }: FileManagerListProps) {
+  const parentRef = useRef<HTMLDivElement>(null);
   const [draggedItemIds, setDraggedItemIds] = useState<Set<string>>(new Set());
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+
+  // Merge folders and files into a single flat list
+  const allItems = useMemo<ListItem[]>(() => {
+    const items: ListItem[] = [];
+    for (const folder of folders) {
+      items.push({ type: 'folder', data: folder });
+    }
+    for (const file of files) {
+      items.push({ type: 'file', data: file });
+    }
+    return items;
+  }, [folders, files]);
+
+  const virtualizer = useVirtualizer({
+    count: allItems.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: OVERSCAN,
+  });
 
   const handleItemDragStart = useCallback(
     (
@@ -224,179 +244,230 @@ export function FileManagerList({
   }
 
   return (
-    <div className={cn('', className)}>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10" />
-            <TableHead
-              className="cursor-pointer select-none"
-              onClick={() => onSortChange('name')}
-            >
-              Nome
-              <SortIndicator
-                column="name"
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-            </TableHead>
-            <TableHead className="w-32">Tipo</TableHead>
-            <TableHead
-              className="cursor-pointer select-none w-28"
-              onClick={() => onSortChange('size')}
-            >
-              Tamanho
-              <SortIndicator
-                column="size"
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-            </TableHead>
-            <TableHead
-              className="cursor-pointer select-none w-40"
-              onClick={() => onSortChange('updatedAt')}
-            >
-              Modificado
-              <SortIndicator
-                column="updatedAt"
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-              />
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {folders.map(folder => (
-            <FolderContextMenu
-              key={folder.id}
-              folder={folder}
-              permissions={folderPermissions}
-              onOpen={f => onNavigateToFolder(f.id)}
-              onRename={onRenameFolder}
-              onChangeColor={onChangeColorFolder}
-              onMove={onMoveFolder}
-              onManageAccess={onManageFolderAccess}
-              onDelete={onDeleteFolder}
-              onDownload={onDownloadFolder}
-            >
-              <TableRow
-                className={cn(
-                  'cursor-pointer transition-all duration-150',
-                  isSelected(folder.id, 'folder') &&
-                    'bg-blue-50 dark:bg-blue-950/30',
-                  draggedItemIds.has(folder.id) && 'opacity-40',
-                  dragOverFolderId === folder.id &&
-                    'ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-950/40'
-                )}
-                draggable={!folder.isSystem}
-                onDragStart={e =>
-                  handleItemDragStart(folder.id, 'folder', folder.isSystem, e)
-                }
-                onDragEnd={handleItemDragEnd}
-                onDragEnter={e =>
-                  handleFolderDragEnter(folder.id, folder.isSystem, e)
-                }
-                onDragOver={e =>
-                  handleFolderDragOver(folder.id, folder.isSystem, e)
-                }
-                onDragLeave={e => handleFolderDragLeave(folder.id, e)}
-                onDrop={e =>
-                  handleFolderDrop(folder.id, folder.isSystem, e)
-                }
-                onClick={e => onSelectItem(folder.id, 'folder', e)}
-                onDoubleClick={() => onNavigateToFolder(folder.id)}
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={isSelected(folder.id, 'folder')}
-                    onClick={e => {
-                      e.stopPropagation();
-                      onSelectItem(folder.id, 'folder', e);
-                    }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <FolderIcon folder={folder} size="sm" />
-                    <span className="font-medium truncate">{folder.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-gray-500 dark:text-gray-400">
-                  Pasta
-                </TableCell>
-                <TableCell className="text-gray-500 dark:text-gray-400">
-                  {folder.fileCount !== undefined
-                    ? `${folder.fileCount} ${folder.fileCount === 1 ? 'item' : 'itens'}`
-                    : '--'}
-                </TableCell>
-                <TableCell className="text-gray-500 dark:text-gray-400">
-                  {formatDate(folder.createdAt)}
-                </TableCell>
-              </TableRow>
-            </FolderContextMenu>
-          ))}
+    <div className={cn('flex flex-col h-full', className)}>
+      {/* Sticky table header */}
+      <div className="shrink-0 border-b border-border">
+        <div className="flex items-center h-10 text-sm font-medium text-foreground">
+          <div className="w-10 px-2" />
+          <div
+            className="flex-1 min-w-0 px-2 cursor-pointer select-none"
+            onClick={() => onSortChange('name')}
+          >
+            Nome
+            <SortIndicator
+              column="name"
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+            />
+          </div>
+          <div className="w-32 px-2">Tipo</div>
+          <div
+            className="w-28 px-2 cursor-pointer select-none"
+            onClick={() => onSortChange('size')}
+          >
+            Tamanho
+            <SortIndicator
+              column="size"
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+            />
+          </div>
+          <div
+            className="w-40 px-2 cursor-pointer select-none"
+            onClick={() => onSortChange('updatedAt')}
+          >
+            Modificado
+            <SortIndicator
+              column="updatedAt"
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+            />
+          </div>
+        </div>
+      </div>
 
-          {files.map(file => (
-            <FileContextMenu
-              key={file.id}
-              file={file}
-              permissions={filePermissions}
-              onPreview={onPreviewFile}
-              onDownload={onDownloadFile}
-              onRename={onRenameFile}
-              onMove={onMoveFile}
-              onVersions={onFileVersions}
-              onShare={onShareFile}
-              onDelete={onDeleteFile}
-            >
-              <TableRow
-                className={cn(
-                  'cursor-pointer transition-all duration-150',
-                  isSelected(file.id, 'file') &&
-                    'bg-blue-50 dark:bg-blue-950/30',
-                  draggedItemIds.has(file.id) && 'opacity-40'
-                )}
-                draggable
-                onDragStart={e =>
-                  handleItemDragStart(file.id, 'file', false, e)
-                }
-                onDragEnd={handleItemDragEnd}
-                onClick={e => onSelectItem(file.id, 'file', e)}
-                onDoubleClick={() => onPreviewFile(file)}
+      {/* Virtualized scrollable body */}
+      <div ref={parentRef} className="flex-1 overflow-y-auto">
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {virtualizer.getVirtualItems().map(virtualRow => {
+            const item = allItems[virtualRow.index];
+
+            if (item.type === 'folder') {
+              const folder = item.data;
+              return (
+                <div
+                  key={`folder-${folder.id}`}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <FolderContextMenu
+                    folder={folder}
+                    permissions={folderPermissions}
+                    onOpen={f => onNavigateToFolder(f.id)}
+                    onRename={onRenameFolder}
+                    onChangeColor={onChangeColorFolder}
+                    onMove={onMoveFolder}
+                    onManageAccess={onManageFolderAccess}
+                    onDelete={onDeleteFolder}
+                    onDownload={onDownloadFolder}
+                  >
+                    <div
+                      className={cn(
+                        'flex items-center h-full border-b border-border cursor-pointer transition-all duration-150',
+                        'hover:bg-muted/50',
+                        isSelected(folder.id, 'folder') &&
+                          'bg-blue-50 dark:bg-blue-950/30',
+                        draggedItemIds.has(folder.id) && 'opacity-40',
+                        dragOverFolderId === folder.id &&
+                          'ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-950/40'
+                      )}
+                      draggable={!folder.isSystem}
+                      onDragStart={e =>
+                        handleItemDragStart(
+                          folder.id,
+                          'folder',
+                          folder.isSystem,
+                          e
+                        )
+                      }
+                      onDragEnd={handleItemDragEnd}
+                      onDragEnter={e =>
+                        handleFolderDragEnter(folder.id, folder.isSystem, e)
+                      }
+                      onDragOver={e =>
+                        handleFolderDragOver(folder.id, folder.isSystem, e)
+                      }
+                      onDragLeave={e => handleFolderDragLeave(folder.id, e)}
+                      onDrop={e =>
+                        handleFolderDrop(folder.id, folder.isSystem, e)
+                      }
+                      onClick={e => onSelectItem(folder.id, 'folder', e)}
+                      onDoubleClick={() => onNavigateToFolder(folder.id)}
+                    >
+                      <div className="w-10 px-2 flex items-center justify-center">
+                        <Checkbox
+                          checked={isSelected(folder.id, 'folder')}
+                          onClick={e => {
+                            e.stopPropagation();
+                            onSelectItem(folder.id, 'folder', e);
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0 px-2">
+                        <div className="flex items-center gap-2">
+                          <FolderIcon folder={folder} size="sm" />
+                          <span className="font-medium truncate">
+                            {folder.name}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-32 px-2 text-gray-500 dark:text-gray-400">
+                        Pasta
+                      </div>
+                      <div className="w-28 px-2 text-gray-500 dark:text-gray-400">
+                        {folder.fileCount !== undefined
+                          ? `${folder.fileCount} ${folder.fileCount === 1 ? 'item' : 'itens'}`
+                          : '--'}
+                      </div>
+                      <div className="w-40 px-2 text-gray-500 dark:text-gray-400">
+                        {formatDate(folder.createdAt)}
+                      </div>
+                    </div>
+                  </FolderContextMenu>
+                </div>
+              );
+            }
+
+            // File row
+            const file = item.data;
+            return (
+              <div
+                key={`file-${file.id}`}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
               >
-                <TableCell>
-                  <Checkbox
-                    checked={isSelected(file.id, 'file')}
-                    onClick={e => {
-                      e.stopPropagation();
-                      onSelectItem(file.id, 'file', e);
-                    }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <FileTypeIcon
-                      fileType={file.fileType}
-                      size={18}
-                      className="shrink-0"
-                    />
-                    <span className="font-medium truncate">{file.name}</span>
+                <FileContextMenu
+                  file={file}
+                  permissions={filePermissions}
+                  onPreview={onPreviewFile}
+                  onDownload={onDownloadFile}
+                  onRename={onRenameFile}
+                  onMove={onMoveFile}
+                  onVersions={onFileVersions}
+                  onShare={onShareFile}
+                  onDelete={onDeleteFile}
+                >
+                  <div
+                    className={cn(
+                      'flex items-center h-full border-b border-border cursor-pointer transition-all duration-150',
+                      'hover:bg-muted/50',
+                      isSelected(file.id, 'file') &&
+                        'bg-blue-50 dark:bg-blue-950/30',
+                      draggedItemIds.has(file.id) && 'opacity-40'
+                    )}
+                    draggable
+                    onDragStart={e =>
+                      handleItemDragStart(file.id, 'file', false, e)
+                    }
+                    onDragEnd={handleItemDragEnd}
+                    onClick={e => onSelectItem(file.id, 'file', e)}
+                    onDoubleClick={() => onPreviewFile(file)}
+                  >
+                    <div className="w-10 px-2 flex items-center justify-center">
+                      <Checkbox
+                        checked={isSelected(file.id, 'file')}
+                        onClick={e => {
+                          e.stopPropagation();
+                          onSelectItem(file.id, 'file', e);
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 px-2">
+                      <div className="flex items-center gap-2">
+                        <FileTypeIcon
+                          fileType={file.fileType}
+                          size={18}
+                          className="shrink-0"
+                        />
+                        <span className="font-medium truncate">
+                          {file.name}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-32 px-2 text-gray-500 dark:text-gray-400">
+                      {getFileTypeLabel(file.fileType)}
+                    </div>
+                    <div className="w-28 px-2 text-gray-500 dark:text-gray-400">
+                      {formatFileSize(file.size)}
+                    </div>
+                    <div className="w-40 px-2 text-gray-500 dark:text-gray-400">
+                      {formatDate(file.createdAt)}
+                    </div>
                   </div>
-                </TableCell>
-                <TableCell className="text-gray-500 dark:text-gray-400">
-                  {getFileTypeLabel(file.fileType)}
-                </TableCell>
-                <TableCell className="text-gray-500 dark:text-gray-400">
-                  {formatFileSize(file.size)}
-                </TableCell>
-                <TableCell className="text-gray-500 dark:text-gray-400">
-                  {formatDate(file.createdAt)}
-                </TableCell>
-              </TableRow>
-            </FileContextMenu>
-          ))}
-        </TableBody>
-      </Table>
+                </FileContextMenu>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

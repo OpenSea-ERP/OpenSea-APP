@@ -144,3 +144,34 @@ export interface StorageStats {
   maxStorageMb: number;
   usedStoragePercent: number;
 }
+
+// Multipart upload types
+export interface MultipartInitiateRequest {
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  folderId?: string | null;
+  prefix?: string;
+}
+
+export interface MultipartInitiateResponse {
+  uploadId: string;
+  key: string;
+  partUrls: Array<{ partNumber: number; url: string }>;
+}
+
+export interface MultipartCompleteRequest {
+  key: string;
+  uploadId: string;
+  parts: Array<{ partNumber: number; etag: string }>;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+}
+
+export interface MultipartCompleteResponse {
+  key: string;
+  url: string;
+  size: number;
+  mimeType: string;
+}

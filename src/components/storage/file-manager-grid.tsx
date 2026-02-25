@@ -2,7 +2,8 @@
 
 import { cn } from '@/lib/utils';
 import type { StorageFile, StorageFolder } from '@/types/storage';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyFolderState } from './empty-folder-state';
 import { FileCard } from './file-card';
 import type { FilePermissions } from './file-context-menu';
@@ -10,6 +11,26 @@ import { FolderCard } from './folder-card';
 import type { FolderPermissions } from './folder-context-menu';
 
 const DRAG_MIME = 'application/x-storage-item';
+
+/** Estimated card height including padding and gap (px) */
+const CARD_HEIGHT = 148;
+/** Gap between rows (px) — matches gap-3 = 12px */
+const ROW_GAP = 12;
+
+/**
+ * Breakpoint → columns mapping that mirrors the original CSS grid:
+ * grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6
+ *
+ * We compute columns based on container width rather than viewport breakpoints
+ * so the virtualizer stays in sync even when the container is not full-width.
+ */
+function getColumnsForWidth(width: number): number {
+  if (width >= 1100) return 6;
+  if (width >= 900) return 5;
+  if (width >= 700) return 4;
+  if (width >= 500) return 3;
+  return 2;
+}
 
 export interface DragMoveItem {
   id: string;
@@ -61,6 +82,10 @@ interface DragRect {
   currentY: number;
 }
 
+type GridItem =
+  | { type: 'folder'; data: StorageFolder }
+  | { type: 'file'; data: StorageFile };
+
 function rectsIntersect(
   a: { left: number; top: number; right: number; bottom: number },
   b: { left: number; top: number; right: number; bottom: number }
@@ -97,13 +122,56 @@ export function FileManagerGrid({
   filePermissions,
   className,
 }: FileManagerGridProps) {
-  const gridRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const gridContentRef = useRef<HTMLDivElement>(null);
   const [dragRect, setDragRect] = useState<DragRect | null>(null);
   const isDraggingRef = useRef(false);
 
   // Drag-and-drop state
   const [draggedItemIds, setDraggedItemIds] = useState<Set<string>>(new Set());
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+
+  // Dynamic column count based on container width
+  const [columns, setColumns] = useState(4);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        setColumns(getColumnsForWidth(width));
+      }
+    });
+
+    observer.observe(el);
+    // Set initial value
+    setColumns(getColumnsForWidth(el.clientWidth));
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Flatten folders + files into a single array
+  const allItems = useMemo<GridItem[]>(() => {
+    const items: GridItem[] = [];
+    for (const folder of folders) {
+      items.push({ type: 'folder', data: folder });
+    }
+    for (const file of files) {
+      items.push({ type: 'file', data: file });
+    }
+    return items;
+  }, [folders, files]);
+
+  const rowCount = Math.ceil(allItems.length / columns);
+
+  const virtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => CARD_HEIGHT + ROW_GAP,
+    overscan: 3,
+  });
 
   // --- Native drag-and-drop handlers ---
 
@@ -223,9 +291,6 @@ export function FileManagerGrid({
       // Don't start drag if clicking on a card
       if (target.closest('[data-item-id]')) return;
 
-      const rect = gridRef.current?.getBoundingClientRect();
-      if (!rect) return;
-
       isDraggingRef.current = false;
       const startX = e.clientX;
       const startY = e.clientY;
@@ -245,7 +310,7 @@ export function FileManagerGrid({
         });
 
         // Find intersecting items
-        if (!gridRef.current) return;
+        if (!gridContentRef.current) return;
         const selRect = {
           left: Math.min(startX, me.clientX),
           top: Math.min(startY, me.clientY),
@@ -254,7 +319,7 @@ export function FileManagerGrid({
         };
 
         const items: { id: string; type: 'folder' | 'file' }[] = [];
-        const cards = gridRef.current.querySelectorAll('[data-item-id]');
+        const cards = gridContentRef.current.querySelectorAll('[data-item-id]');
         cards.forEach(card => {
           const cardRect = card.getBoundingClientRect();
           if (rectsIntersect(selRect, cardRect)) {
@@ -300,73 +365,135 @@ export function FileManagerGrid({
   return (
     <>
       <div
-        ref={gridRef}
-        className={cn(
-          'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 select-none',
-          className
-        )}
+        ref={scrollRef}
+        className={cn('h-full overflow-y-auto select-none', className)}
         onMouseDown={handleMouseDown}
       >
-        {folders.map(folder => (
-          <div key={folder.id} data-item-id={folder.id} data-item-type="folder">
-            <FolderCard
-              folder={folder}
-              isSelected={isSelected(folder.id, 'folder')}
-              isDragging={draggedItemIds.has(folder.id)}
-              isDragTarget={dragOverFolderId === folder.id}
-              draggable={!folder.isSystem}
-              permissions={folderPermissions}
-              onClick={e => onSelectItem(folder.id, 'folder', e)}
-              onDoubleClick={() => onNavigateToFolder(folder.id)}
-              onDragStart={e =>
-                handleItemDragStart(folder.id, 'folder', folder.isSystem, e)
-              }
-              onDragEnd={handleItemDragEnd}
-              onDragEnter={e =>
-                handleFolderDragEnter(folder.id, folder.isSystem, e)
-              }
-              onDragOver={e =>
-                handleFolderDragOver(folder.id, folder.isSystem, e)
-              }
-              onDragLeave={e => handleFolderDragLeave(folder.id, e)}
-              onDrop={e =>
-                handleFolderDrop(folder.id, folder.isSystem, e)
-              }
-              onOpen={f => onNavigateToFolder(f.id)}
-              onRename={onRenameFolder}
-              onChangeColor={onChangeColorFolder}
-              onMove={onMoveFolder}
-              onManageAccess={onManageFolderAccess}
-              onDelete={onDeleteFolder}
-              onDownload={onDownloadFolder}
-            />
-          </div>
-        ))}
+        <div
+          ref={gridContentRef}
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {virtualizer.getVirtualItems().map(virtualRow => {
+            const rowIndex = virtualRow.index;
+            const startIdx = rowIndex * columns;
+            const rowItems = allItems.slice(startIdx, startIdx + columns);
 
-        {files.map(file => (
-          <div key={file.id} data-item-id={file.id} data-item-type="file">
-            <FileCard
-              file={file}
-              isSelected={isSelected(file.id, 'file')}
-              isDragging={draggedItemIds.has(file.id)}
-              draggable
-              permissions={filePermissions}
-              onClick={e => onSelectItem(file.id, 'file', e)}
-              onDoubleClick={() => onPreviewFile(file)}
-              onDragStart={e =>
-                handleItemDragStart(file.id, 'file', false, e)
-              }
-              onDragEnd={handleItemDragEnd}
-              onPreview={onPreviewFile}
-              onDownload={onDownloadFile}
-              onRename={onRenameFile}
-              onMove={onMoveFile}
-              onVersions={onFileVersions}
-              onShare={onShareFile}
-              onDelete={onDeleteFile}
-            />
-          </div>
-        ))}
+            return (
+              <div
+                key={virtualRow.index}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <div
+                  className="grid gap-3"
+                  style={{
+                    gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                  }}
+                >
+                  {rowItems.map(item => {
+                    if (item.type === 'folder') {
+                      const folder = item.data;
+                      return (
+                        <div
+                          key={folder.id}
+                          data-item-id={folder.id}
+                          data-item-type="folder"
+                        >
+                          <FolderCard
+                            folder={folder}
+                            isSelected={isSelected(folder.id, 'folder')}
+                            isDragging={draggedItemIds.has(folder.id)}
+                            isDragTarget={dragOverFolderId === folder.id}
+                            draggable={!folder.isSystem}
+                            permissions={folderPermissions}
+                            onClick={e => onSelectItem(folder.id, 'folder', e)}
+                            onDoubleClick={() => onNavigateToFolder(folder.id)}
+                            onDragStart={e =>
+                              handleItemDragStart(
+                                folder.id,
+                                'folder',
+                                folder.isSystem,
+                                e
+                              )
+                            }
+                            onDragEnd={handleItemDragEnd}
+                            onDragEnter={e =>
+                              handleFolderDragEnter(
+                                folder.id,
+                                folder.isSystem,
+                                e
+                              )
+                            }
+                            onDragOver={e =>
+                              handleFolderDragOver(
+                                folder.id,
+                                folder.isSystem,
+                                e
+                              )
+                            }
+                            onDragLeave={e =>
+                              handleFolderDragLeave(folder.id, e)
+                            }
+                            onDrop={e =>
+                              handleFolderDrop(folder.id, folder.isSystem, e)
+                            }
+                            onOpen={f => onNavigateToFolder(f.id)}
+                            onRename={onRenameFolder}
+                            onChangeColor={onChangeColorFolder}
+                            onMove={onMoveFolder}
+                            onManageAccess={onManageFolderAccess}
+                            onDelete={onDeleteFolder}
+                            onDownload={onDownloadFolder}
+                          />
+                        </div>
+                      );
+                    }
+
+                    const file = item.data;
+                    return (
+                      <div
+                        key={file.id}
+                        data-item-id={file.id}
+                        data-item-type="file"
+                      >
+                        <FileCard
+                          file={file}
+                          isSelected={isSelected(file.id, 'file')}
+                          isDragging={draggedItemIds.has(file.id)}
+                          draggable
+                          permissions={filePermissions}
+                          onClick={e => onSelectItem(file.id, 'file', e)}
+                          onDoubleClick={() => onPreviewFile(file)}
+                          onDragStart={e =>
+                            handleItemDragStart(file.id, 'file', false, e)
+                          }
+                          onDragEnd={handleItemDragEnd}
+                          onPreview={onPreviewFile}
+                          onDownload={onDownloadFile}
+                          onRename={onRenameFile}
+                          onMove={onMoveFile}
+                          onVersions={onFileVersions}
+                          onShare={onShareFile}
+                          onDelete={onDeleteFile}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Rubber-band selection overlay */}

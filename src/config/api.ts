@@ -515,6 +515,11 @@ export const API_ENDPOINTS = {
         RESTORE: (id: string, vId: string) =>
           `/v1/storage/files/${id}/versions/${vId}/restore`,
       },
+      MULTIPART: {
+        INITIATE: '/v1/storage/files/multipart/initiate',
+        COMPLETE: '/v1/storage/files/multipart/complete',
+        ABORT: '/v1/storage/files/multipart/abort',
+      },
     },
     SEARCH: '/v1/storage/search',
     TRASH: {
