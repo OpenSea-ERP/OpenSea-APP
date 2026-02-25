@@ -722,3 +722,204 @@ export async function enterActionPin(page: Page, pin: string): Promise<void> {
   // Auto-submit happens after 4 digits + 100ms timeout
   await page.waitForTimeout(300);
 }
+
+// =============================================================================
+// Trash API Helpers
+// =============================================================================
+
+/**
+ * List all deleted items (trash) via API.
+ */
+export async function listTrashViaApi(
+  token: string
+): Promise<{
+  files: Array<{ id: string; name: string; size: number; path: string; fileType: string }>;
+  folders: Array<{ id: string; name: string; path: string }>;
+  totalFiles: number;
+  totalFolders: number;
+}> {
+  const res = await fetch(`${API_URL}/v1/storage/trash`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    throw new Error(`List trash failed (${res.status}): ${await res.text()}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Restore a deleted file from trash via API.
+ */
+export async function restoreFileFromTrashViaApi(
+  token: string,
+  fileId: string
+): Promise<void> {
+  const res = await fetch(
+    `${API_URL}/v1/storage/trash/restore-file/${fileId}`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      `Restore file from trash failed (${res.status}): ${await res.text()}`
+    );
+  }
+}
+
+/**
+ * Restore a deleted folder from trash via API.
+ */
+export async function restoreFolderFromTrashViaApi(
+  token: string,
+  folderId: string
+): Promise<void> {
+  const res = await fetch(
+    `${API_URL}/v1/storage/trash/restore-folder/${folderId}`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      `Restore folder from trash failed (${res.status}): ${await res.text()}`
+    );
+  }
+}
+
+/**
+ * Empty the trash (permanently delete all items) via API.
+ */
+export async function emptyTrashViaApi(
+  token: string
+): Promise<{ deletedFiles: number; deletedFolders: number }> {
+  const res = await fetch(`${API_URL}/v1/storage/trash/empty`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Empty trash failed (${res.status}): ${await res.text()}`
+    );
+  }
+
+  return res.json();
+}
+
+// =============================================================================
+// Sharing API Helpers
+// =============================================================================
+
+/**
+ * Create a share link for a file via API.
+ */
+export async function createShareLinkViaApi(
+  token: string,
+  fileId: string,
+  options?: {
+    password?: string;
+    expiresAt?: string;
+    maxDownloads?: number;
+  }
+): Promise<{ id: string; token: string }> {
+  const res = await fetch(`${API_URL}/v1/storage/files/${fileId}/share`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(options ?? {}),
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Create share link failed (${res.status}): ${await res.text()}`
+    );
+  }
+
+  return res.json();
+}
+
+/**
+ * List share links for a file via API.
+ */
+export async function listShareLinksViaApi(
+  token: string,
+  fileId: string
+): Promise<
+  Array<{
+    id: string;
+    token: string;
+    expiresAt: string | null;
+    maxDownloads: number | null;
+    downloadCount: number;
+    isActive: boolean;
+  }>
+> {
+  const res = await fetch(`${API_URL}/v1/storage/files/${fileId}/shares`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `List share links failed (${res.status}): ${await res.text()}`
+    );
+  }
+
+  return res.json();
+}
+
+/**
+ * Revoke a share link via API.
+ */
+export async function revokeShareLinkViaApi(
+  token: string,
+  linkId: string
+): Promise<void> {
+  const res = await fetch(`${API_URL}/v1/storage/shares/${linkId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Revoke share link failed (${res.status}): ${await res.text()}`
+    );
+  }
+}
+
+// =============================================================================
+// Trash & Sharing UI Helpers
+// =============================================================================
+
+/**
+ * Click the "Lixeira" toggle button in the toolbar.
+ */
+export async function clickTrashToggle(page: Page): Promise<void> {
+  const btn = page.locator('button:has-text("Lixeira")').first();
+  await expect(btn).toBeVisible({ timeout: 5_000 });
+  await btn.click();
+  await page.waitForTimeout(500);
+}
+
+/**
+ * Open the share dialog for a file via context menu.
+ * Right-clicks the file → clicks "Compartilhar" → waits for dialog.
+ */
+export async function openShareDialog(
+  page: Page,
+  fileName: string
+): Promise<void> {
+  await rightClickItem(page, fileName);
+  await clickContextMenuItem(page, 'Compartilhar');
+  await expect(
+    page.locator('[role="dialog"]:has-text("Compartilhar arquivo")')
+  ).toBeVisible({ timeout: 5_000 });
+}
