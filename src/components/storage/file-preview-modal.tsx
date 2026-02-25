@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Download, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Loader2, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,8 +10,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { StorageFile } from '@/types/storage';
-import { useDownloadFile } from '@/hooks/storage';
+import { useDownloadFile, usePreviewFile } from '@/hooks/storage';
 import { FileTypeIcon } from './file-type-icon';
 import { formatFileSize } from './utils';
 import { formatDate } from '@/lib/utils';
@@ -33,6 +34,9 @@ export function FilePreviewModal({
   onNavigate,
 }: FilePreviewModalProps) {
   const downloadMutation = useDownloadFile();
+  const { data: preview, isLoading: isPreviewLoading } = usePreviewFile(
+    open && file ? file.id : null,
+  );
 
   const currentIndex = file ? files.findIndex(f => f.id === file.id) : -1;
   const hasPrevious = currentIndex > 0;
@@ -64,6 +68,7 @@ export function FilePreviewModal({
 
   const isImage = file.fileType === 'image';
   const isPdf = file.fileType === 'pdf';
+  const isPreviewable = isImage || isPdf;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,18 +108,25 @@ export function FilePreviewModal({
             </>
           )}
 
-          {isImage ? (
+          {isPreviewable && isPreviewLoading ? (
+            <div className="flex items-center justify-center w-full h-[50vh] rounded-lg bg-gray-50 dark:bg-slate-800/50">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Carregando visualização...</p>
+              </div>
+            </div>
+          ) : isImage && preview?.url ? (
             <div className="flex items-center justify-center w-full max-h-[50vh] overflow-hidden rounded-lg bg-gray-50 dark:bg-slate-800/50">
               <img
-                src={file.thumbnailKey ?? file.fileKey}
+                src={preview.thumbnailUrl ?? preview.url}
                 alt={file.name}
                 className="max-w-full max-h-[50vh] object-contain"
               />
             </div>
-          ) : isPdf ? (
+          ) : isPdf && preview?.url ? (
             <div className="w-full h-[50vh] rounded-lg overflow-hidden bg-gray-50 dark:bg-slate-800/50">
               <iframe
-                src={file.fileKey}
+                src={preview.url}
                 title={file.name}
                 className="w-full h-full border-0"
               />

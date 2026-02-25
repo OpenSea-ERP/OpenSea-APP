@@ -101,6 +101,16 @@ export interface DownloadResponse {
   url: string;
 }
 
+export interface PreviewFileResponse {
+  url: string;
+  thumbnailUrl: string | null;
+  name: string;
+  mimeType: string;
+  size: number;
+  fileType: string;
+  previewable: boolean;
+}
+
 export interface SearchStorageQuery {
   query: string;
   fileType?: string;

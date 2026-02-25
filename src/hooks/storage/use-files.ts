@@ -10,6 +10,7 @@ const QUERY_KEYS = {
   FILES: ['storage-files'],
   FILE: (id: string) => ['storage-files', id],
   FILE_LIST: (query?: ListFilesQuery) => ['storage-files-list', query] as const,
+  FILE_PREVIEW: (id: string) => ['storage-file-preview', id],
   VERSIONS: (fileId: string) => ['storage-file-versions', fileId],
   STATS: ['storage-stats'],
   SEARCH: (query: string) => ['storage-search', query] as const,
@@ -27,7 +28,7 @@ export function useUploadFile() {
       file,
       options,
     }: {
-      folderId: string;
+      folderId: string | null;
       file: File;
       options?: { entityType?: string; entityId?: string };
     }) => storageFilesService.uploadFile(folderId, file, options),
@@ -46,6 +47,17 @@ export function useFileDetails(id: string) {
     queryKey: QUERY_KEYS.FILE(id),
     queryFn: () => storageFilesService.getFile(id),
     enabled: !!id,
+    staleTime: 30_000,
+  });
+}
+
+// GET /v1/storage/files/:id/preview - Obtém presigned URL para preview
+export function usePreviewFile(id: string | null) {
+  return useQuery({
+    queryKey: QUERY_KEYS.FILE_PREVIEW(id ?? ''),
+    queryFn: () => storageFilesService.previewFile(id!),
+    enabled: !!id,
+    staleTime: 45 * 60 * 1000, // 45min (presigned URLs expiram em 1h)
   });
 }
 
@@ -111,6 +123,7 @@ export function useListFiles(query?: ListFilesQuery) {
   return useQuery({
     queryKey: QUERY_KEYS.FILE_LIST(query),
     queryFn: () => storageFilesService.listFiles(query),
+    staleTime: 30_000,
   });
 }
 

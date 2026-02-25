@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFolderContents, useBreadcrumb } from './use-folders';
 import { useSearchStorage } from './use-files';
+import { useDebounce } from '@/core/hooks/use-debounce';
 import type { StorageFile, StorageFolder } from '@/types/storage';
 
 export type ViewMode = 'grid' | 'list';
@@ -29,14 +30,15 @@ export function useFileManager(options?: FileManagerOptions) {
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [folderHistory, setFolderHistory] = useState<(string | null)[]>([]);
 
   // Parâmetros de consulta para o conteúdo da pasta (sorting is done client-side)
   const contentsQuery = useMemo(
     () => ({
-      search: searchQuery || undefined,
+      search: debouncedSearch || undefined,
     }),
-    [searchQuery]
+    [debouncedSearch]
   );
 
   // Busca conteúdo da pasta atual
@@ -47,9 +49,9 @@ export function useFileManager(options?: FileManagerOptions) {
   } = useFolderContents(currentFolderId, contentsQuery);
 
   // Global search (when at root with search query 2+ chars)
-  const isGlobalSearch = currentFolderId === null && searchQuery.length >= 2;
+  const isGlobalSearch = currentFolderId === null && debouncedSearch.length >= 2;
   const { data: searchResults, isLoading: isLoadingSearch } =
-    useSearchStorage(isGlobalSearch ? searchQuery : '');
+    useSearchStorage(isGlobalSearch ? debouncedSearch : '');
 
   // Ordena os dados no client-side
   const contents = useMemo(() => {

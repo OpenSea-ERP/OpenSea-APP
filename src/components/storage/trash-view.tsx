@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2, RotateCcw, Folder, FileIcon, Loader2 } from 'lucide-react';
+import { Trash2, RotateCcw, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -17,12 +17,15 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 import type { FileTypeCategory } from '@/types/storage';
 
+const TRASH_PAGE_LIMIT = 20;
+
 interface TrashViewProps {
   className?: string;
 }
 
 export function TrashView({ className }: TrashViewProps) {
-  const { data, isLoading } = useDeletedItems();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useDeletedItems(page, TRASH_PAGE_LIMIT);
   const restoreFile = useRestoreFile();
   const restoreFolder = useRestoreFolder();
   const [emptyTrashOpen, setEmptyTrashOpen] = useState(false);
@@ -169,6 +172,33 @@ export function TrashView({ className }: TrashViewProps) {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalItems > TRASH_PAGE_LIMIT && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-white/10">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Página {page} de {Math.ceil(totalItems / TRASH_PAGE_LIMIT)}
+          </p>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="icon-sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              disabled={page >= Math.ceil(totalItems / TRASH_PAGE_LIMIT)}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <EmptyTrashDialog
         open={emptyTrashOpen}

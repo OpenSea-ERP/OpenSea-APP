@@ -80,6 +80,7 @@ export function FileCard({
             <img
               src={file.thumbnailKey}
               alt={file.name}
+              loading="lazy"
               className="w-12 h-12 rounded-lg object-cover"
             />
           ) : (

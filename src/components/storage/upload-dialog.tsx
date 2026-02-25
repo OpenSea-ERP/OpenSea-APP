@@ -109,13 +109,6 @@ export function UploadDialog({
   const handleUpload = async () => {
     if (files.length === 0) return;
 
-    // Usa a pasta raiz (precisa ter um ID) ou cria na raiz
-    const targetFolderId = folderId;
-    if (!targetFolderId) {
-      toast.error('Nenhuma pasta selecionada para upload');
-      return;
-    }
-
     setIsUploading(true);
 
     let successCount = 0;
@@ -134,7 +127,7 @@ export function UploadDialog({
 
       try {
         await uploadMutation.mutateAsync({
-          folderId: targetFolderId,
+          folderId,
           file: fileState.file,
           options: entityType ? { entityType, entityId } : undefined,
         });

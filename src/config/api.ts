@@ -500,9 +500,11 @@ export const API_ENDPOINTS = {
     },
     FILES: {
       UPLOAD: (folderId: string) => `/v1/storage/folders/${folderId}/files`,
+      UPLOAD_ROOT: '/v1/storage/files',
       LIST: '/v1/storage/files',
       GET: (id: string) => `/v1/storage/files/${id}`,
       DOWNLOAD: (id: string) => `/v1/storage/files/${id}/download`,
+      PREVIEW: (id: string) => `/v1/storage/files/${id}/preview`,
       RENAME: (id: string) => `/v1/storage/files/${id}/rename`,
       MOVE: (id: string) => `/v1/storage/files/${id}/move`,
       DELETE: (id: string) => `/v1/storage/files/${id}`,

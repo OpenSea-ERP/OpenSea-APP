@@ -35,6 +35,7 @@ export function useFolderContents(
       folderId
         ? storageFoldersService.getFolderContents(folderId, query)
         : storageFoldersService.getRootContents(query),
+    staleTime: 30_000,
   });
 }
 
@@ -53,6 +54,7 @@ export function useBreadcrumb(folderId: string | null) {
     queryKey: QUERY_KEYS.BREADCRUMB(folderId),
     queryFn: () => storageFoldersService.getBreadcrumb(folderId!),
     enabled: !!folderId,
+    staleTime: 30_000,
   });
 }
 

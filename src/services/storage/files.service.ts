@@ -10,15 +10,16 @@ import type {
   FileVersionResponse,
   VersionsResponse,
   DownloadResponse,
+  PreviewFileResponse,
   SearchStorageQuery,
   SearchStorageResponse,
   StorageStats,
 } from '@/types/storage';
 
 export const storageFilesService = {
-  // POST /v1/storage/folders/:folderId/files - Upload de arquivo
+  // POST /v1/storage/folders/:folderId/files or POST /v1/storage/files - Upload de arquivo
   async uploadFile(
-    folderId: string,
+    folderId: string | null,
     file: File,
     options?: { entityType?: string; entityId?: string }
   ): Promise<FileResponse> {
@@ -27,15 +28,16 @@ export const storageFilesService = {
     if (options?.entityType) formData.append('entityType', options.entityType);
     if (options?.entityId) formData.append('entityId', options.entityId);
 
-    return apiClient.request<FileResponse>(
-      API_ENDPOINTS.STORAGE.FILES.UPLOAD(folderId),
-      {
-        method: 'POST',
-        body: formData,
-        // Não definir Content-Type — o browser adiciona automaticamente
-        // com o boundary correto para multipart/form-data
-      }
-    );
+    const endpoint = folderId
+      ? API_ENDPOINTS.STORAGE.FILES.UPLOAD(folderId)
+      : API_ENDPOINTS.STORAGE.FILES.UPLOAD_ROOT;
+
+    return apiClient.request<FileResponse>(endpoint, {
+      method: 'POST',
+      body: formData,
+      // Não definir Content-Type — o browser adiciona automaticamente
+      // com o boundary correto para multipart/form-data
+    });
   },
 
   // GET /v1/storage/files/:id - Busca detalhes de um arquivo com versões
@@ -53,6 +55,13 @@ export const storageFilesService = {
     return apiClient.get<DownloadResponse>(
       API_ENDPOINTS.STORAGE.FILES.DOWNLOAD(id),
       { params }
+    );
+  },
+
+  // GET /v1/storage/files/:id/preview - Obtém URL de preview com presigned URL
+  async previewFile(id: string): Promise<PreviewFileResponse> {
+    return apiClient.get<PreviewFileResponse>(
+      API_ENDPOINTS.STORAGE.FILES.PREVIEW(id)
     );
   },
 
