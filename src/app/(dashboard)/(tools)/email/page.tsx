@@ -18,6 +18,7 @@ import {
   useAllAccountFolders,
   useBulkDelete,
   useBulkMarkRead,
+  useBulkMove,
   useCentralInboxMessages,
   useEmailAccounts,
   useEmailFolders,
@@ -244,6 +245,7 @@ export default function EmailPage() {
 
   const syncMutation = useSyncEmailAccount();
   const bulkMarkReadMutation = useBulkMarkRead();
+  const bulkMoveMutation = useBulkMove();
   const bulkDeleteMutation = useBulkDelete();
   const moveMutation = useMoveMessage();
 
@@ -278,8 +280,9 @@ export default function EmailPage() {
     setComposeOpen(true);
   }
 
-  // Keyboard Delete handler
+  // Keyboard Delete handler (single message — bulk delete is handled by EmailMessageList)
   const handleDeleteSelected = useCallback(() => {
+    if (selectedIds.size > 0) return; // Bulk delete handled by message list component
     if (selectedMessageId) {
       const trashFolder = folders.find(f => f.type === 'TRASH');
       if (trashFolder) {
@@ -294,7 +297,7 @@ export default function EmailPage() {
         );
       }
     }
-  }, [selectedMessageId, folders, moveMutation]);
+  }, [selectedMessageId, selectedIds.size, folders, moveMutation]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -444,6 +447,7 @@ export default function EmailPage() {
                   if (!isCentralInbox) messagesQuery.fetchNextPage();
                 }}
                 selectedIds={selectedIds}
+                onSelectedIdsChange={setSelectedIds}
                 onToggleSelect={id =>
                   setSelectedIds(prev => {
                     const next = new Set(prev);
@@ -456,15 +460,44 @@ export default function EmailPage() {
                   setSelectedIds(new Set(messages.map(m => m.id)))
                 }
                 onClearSelection={() => setSelectedIds(new Set())}
-                onBulkMarkRead={ids => {
-                  bulkMarkReadMutation.mutate(ids, {
+                onBulkMarkRead={(ids, isRead) => {
+                  bulkMarkReadMutation.mutate({ ids, isRead }, {
                     onSuccess: () => setSelectedIds(new Set()),
                   });
                 }}
-                onBulkDelete={ids => {
-                  bulkDeleteMutation.mutate(ids, {
-                    onSuccess: () => setSelectedIds(new Set()),
+                onBulkArchive={ids => {
+                  // Look for an archive folder by common remote names
+                  const archiveFolder = folders.find(f =>
+                    f.remoteName.toLowerCase().includes('archive') ||
+                    f.remoteName.toLowerCase().includes('arquivo') ||
+                    f.displayName.toLowerCase().includes('archive') ||
+                    f.displayName.toLowerCase().includes('arquivo')
+                  );
+                  if (!archiveFolder) {
+                    toast.error('Pasta de arquivo não encontrada');
+                    return;
+                  }
+                  bulkMoveMutation.mutate({ ids, folderId: archiveFolder.id }, {
+                    onSuccess: () => {
+                      setSelectedIds(new Set());
+                      toast.success('Mensagens arquivadas');
+                    },
                   });
+                }}
+                onBulkDelete={ids => {
+                  const trashFolder = folders.find(f => f.type === 'TRASH');
+                  if (trashFolder) {
+                    bulkMoveMutation.mutate({ ids, folderId: trashFolder.id }, {
+                      onSuccess: () => {
+                        setSelectedIds(new Set());
+                        toast.success('Mensagens movidas para a lixeira');
+                      },
+                    });
+                  } else {
+                    bulkDeleteMutation.mutate(ids, {
+                      onSuccess: () => setSelectedIds(new Set()),
+                    });
+                  }
                 }}
               />
             </ResizablePanel>

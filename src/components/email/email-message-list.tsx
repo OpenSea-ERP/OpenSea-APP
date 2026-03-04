@@ -19,10 +19,11 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { format, isAfter, isBefore, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import {
   AlertCircle,
-  CheckSquare,
+  Archive,
   Filter,
   Inbox,
   Loader2,
+  Mail,
   MailOpen,
   Search,
   Settings,
@@ -30,7 +31,7 @@ import {
   X,
 } from 'lucide-react';
 import NextLink from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IoMailOpenOutline, IoMailUnreadOutline } from 'react-icons/io5';
 
 function formatMessageDate(dateStr: string): string {
@@ -67,10 +68,12 @@ interface EmailMessageListProps {
   folderUnreadMessages?: number;
   /** Bulk-select state */
   selectedIds?: Set<string>;
+  onSelectedIdsChange?: (ids: Set<string>) => void;
   onToggleSelect?: (id: string) => void;
   onSelectAll?: () => void;
   onClearSelection?: () => void;
-  onBulkMarkRead?: (ids: string[]) => void;
+  onBulkMarkRead?: (ids: string[], isRead: boolean) => void;
+  onBulkArchive?: (ids: string[]) => void;
   onBulkDelete?: (ids: string[]) => void;
 }
 
@@ -93,13 +96,16 @@ export function EmailMessageList({
   folderTotalMessages,
   folderUnreadMessages,
   selectedIds = new Set(),
+  onSelectedIdsChange,
   onToggleSelect,
   onSelectAll,
   onClearSelection,
   onBulkMarkRead,
+  onBulkArchive,
   onBulkDelete,
 }: EmailMessageListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const [fromFilter, setFromFilter] = useState('');
   const [hasAttachmentsFilter, setHasAttachmentsFilter] = useState(false);
   const [dateFrom, setDateFrom] = useState('');
@@ -141,6 +147,68 @@ export function EmailMessageList({
     estimateSize: () => 82,
     overscan: 6,
   });
+
+  // ─── Multi-select click handler ──────────────────────────────────────────
+  const handleMessageClick = useCallback(
+    (messageId: string, index: number, event: React.MouseEvent) => {
+      if (event.shiftKey && lastSelectedIndex !== null) {
+        // Range select: all between lastSelectedIndex and current
+        const start = Math.min(lastSelectedIndex, index);
+        const end = Math.max(lastSelectedIndex, index);
+        const newSelected = new Set(selectedIds);
+        for (let i = start; i <= end; i++) {
+          const msg = filteredMessages[i];
+          if (msg) newSelected.add(msg.id);
+        }
+        onSelectedIdsChange?.(newSelected);
+      } else if (event.ctrlKey || event.metaKey) {
+        // Toggle single
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(messageId)) newSelected.delete(messageId);
+        else newSelected.add(messageId);
+        onSelectedIdsChange?.(newSelected);
+        setLastSelectedIndex(index);
+      } else {
+        // Normal click: clear selection, open message
+        if (selectedIds.size > 0) {
+          onClearSelection?.();
+        }
+        onSelectMessage(messageId);
+        setLastSelectedIndex(index);
+      }
+    },
+    [lastSelectedIndex, selectedIds, filteredMessages, onSelectedIdsChange, onClearSelection, onSelectMessage]
+  );
+
+  // ─── Keyboard shortcuts ─────────────────────────────────────────────────
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Don't handle shortcuts when typing in input fields
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      if (e.key === 'Escape' && selectedIds.size > 0) {
+        e.preventDefault();
+        onClearSelection?.();
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && filteredMessages.length > 0) {
+        e.preventDefault();
+        const allIds = new Set(filteredMessages.map(m => m.id));
+        onSelectedIdsChange?.(allIds);
+      }
+
+      if (e.key === 'Delete' && selectedIds.size > 0) {
+        e.preventDefault();
+        onBulkDelete?.(Array.from(selectedIds));
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIds, filteredMessages, onClearSelection, onSelectedIdsChange, onBulkDelete]);
 
   // Trigger load-more when the user scrolls within 5 items of the end
   useEffect(() => {
@@ -276,11 +344,15 @@ export function EmailMessageList({
 
       {/* Bulk-actions toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border-b">
+        <div className="flex items-center gap-1.5 px-4 py-2 bg-muted/50 border-b">
           <Checkbox
             checked={
               selectedIds.size === filteredMessages.length &&
               filteredMessages.length > 0
+                ? true
+                : selectedIds.size > 0
+                  ? 'indeterminate'
+                  : false
             }
             onCheckedChange={checked => {
               if (checked) onSelectAll?.();
@@ -288,19 +360,42 @@ export function EmailMessageList({
             }}
             className="size-4"
           />
-          <span className="text-xs font-medium flex-1">
-            {selectedIds.size} selecionada{selectedIds.size > 1 ? 's' : ''}
+          <span className="text-xs font-medium mr-1">
+            {selectedIds.size} selecionado{selectedIds.size > 1 ? 's' : ''}
           </span>
+          <Separator orientation="vertical" className="h-4" />
           <Button
             variant="ghost"
             size="sm"
             className="h-7 text-xs gap-1.5"
             onClick={() => {
-              onBulkMarkRead?.(Array.from(selectedIds));
+              onBulkMarkRead?.(Array.from(selectedIds), true);
             }}
           >
-            <CheckSquare className="size-3.5" />
-            Marcar como lido
+            <MailOpen className="size-3.5" />
+            Lida
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs gap-1.5"
+            onClick={() => {
+              onBulkMarkRead?.(Array.from(selectedIds), false);
+            }}
+          >
+            <Mail className="size-3.5" />
+            Não lida
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs gap-1.5"
+            onClick={() => {
+              onBulkArchive?.(Array.from(selectedIds));
+            }}
+          >
+            <Archive className="size-3.5" />
+            Arquivar
           </Button>
           <Button
             variant="ghost"
@@ -313,13 +408,15 @@ export function EmailMessageList({
             <Trash2 className="size-3.5" />
             Excluir
           </Button>
+          <div className="flex-1" />
           <Button
             variant="ghost"
             size="icon"
             className="size-7"
             onClick={() => onClearSelection?.()}
+            title="Limpar seleção"
           >
-            <span className="text-xs">×</span>
+            <X className="size-3.5" />
           </Button>
         </div>
       )}
@@ -486,7 +583,7 @@ export function EmailMessageList({
                         !isChecked &&
                         'bg-primary/5 hover:bg-primary/10'
                     )}
-                    onClick={() => onSelectMessage(message.id)}
+                    onClick={(e) => handleMessageClick(message.id, virtualRow.index, e)}
                   >
                     {/* Checkbox / Mail icon - checkbox replaces icon on hover */}
                     <div

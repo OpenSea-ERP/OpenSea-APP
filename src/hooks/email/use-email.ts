@@ -351,13 +351,26 @@ export function useSaveDraft() {
 export function useBulkMarkRead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (ids: string[]) =>
-      Promise.all(ids.map(id => emailService.markAsRead(id, true))),
-    onSuccess: async () => {
-      toast.success('Mensagens marcadas como lidas');
+    mutationFn: ({ ids, isRead }: { ids: string[]; isRead: boolean }) =>
+      Promise.all(ids.map(id => emailService.markAsRead(id, isRead))),
+    onSuccess: async (_data, { isRead }) => {
+      toast.success(isRead ? 'Mensagens marcadas como lidas' : 'Mensagens marcadas como não lidas');
       await queryClient.invalidateQueries({ queryKey: ['email'] });
     },
     onError: () => toast.error('Falha ao marcar mensagens'),
+  });
+}
+
+export function useBulkMove() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, folderId }: { ids: string[]; folderId: string }) =>
+      Promise.all(ids.map(id => emailService.moveMessage(id, folderId))),
+    onSuccess: async () => {
+      toast.success('Mensagens movidas');
+      await queryClient.invalidateQueries({ queryKey: ['email'] });
+    },
+    onError: () => toast.error('Falha ao mover mensagens'),
   });
 }
 
