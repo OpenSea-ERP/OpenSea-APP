@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { EmailAccount, EmailFolder, EmailFolderType } from '@/types/email';
 import { formatDistanceToNow } from 'date-fns';
@@ -20,6 +21,7 @@ import {
   Folder,
   Inbox,
   Layers,
+  Mail,
   Plus,
   RefreshCw,
   Send,
@@ -114,6 +116,8 @@ interface EmailSidebarProps {
   unreadCounts?: Record<string, number>;
   /** Map of accountId -> total unread count (across all folders) */
   accountUnreadCounts?: Record<string, number>;
+  /** Whether accounts are still loading */
+  isLoadingAccounts?: boolean;
 }
 
 export function EmailSidebar({
@@ -132,6 +136,7 @@ export function EmailSidebar({
   onEditAccount,
   unreadCounts = {},
   accountUnreadCounts = {},
+  isLoadingAccounts = false,
 }: EmailSidebarProps) {
   const [expandedAccountId, setExpandedAccountId] = useState<string | null>(
     selectedAccountId
@@ -229,6 +234,45 @@ export function EmailSidebar({
       {/* Accounts with collapsible folders */}
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-0.5">
+          {/* Loading skeleton */}
+          {isLoadingAccounts && accounts.length === 0 && (
+            <div className="space-y-2 px-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2 py-1.5">
+                  <Skeleton className="size-6 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-2.5 w-32" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No accounts empty state */}
+          {!isLoadingAccounts && accounts.length === 0 && (
+            <div className="flex flex-col items-center justify-center gap-3 px-4 py-8 text-center">
+              <div className="size-12 rounded-full bg-muted flex items-center justify-center">
+                <Mail className="size-6 text-muted-foreground/50" />
+              </div>
+              <div>
+                <p className="text-xs font-medium">Nenhuma conta de e-mail</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Configure uma conta para começar
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 h-7 text-xs"
+                onClick={onOpenNewAccount}
+              >
+                <Plus className="size-3" />
+                Adicionar conta
+              </Button>
+            </div>
+          )}
+
           {accounts.map(account => {
             const isExpanded = expandedAccountId === account.id;
             const isSelected =

@@ -117,7 +117,7 @@ export function useEmailFolders(accountId: string | null) {
     queryKey: ['email', 'folders', accountId],
     queryFn: () => emailService.listFolders(accountId!),
     enabled: Boolean(accountId) && canRead,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 30_000,
   });
 }
 
@@ -156,7 +156,8 @@ export function useEmailMessages(params: {
         ? lastPage.meta.page + 1
         : undefined,
     enabled: Boolean(params.accountId) && canRead,
-    refetchInterval: 30_000,
+    staleTime: 0,
+    refetchInterval: 60_000,
   });
 }
 
@@ -197,8 +198,8 @@ export function useCentralInboxMessages(params: {
             limit: 50,
           }),
         enabled: params.enabled && canRead && Boolean(folderId),
-        refetchInterval: 30_000,
-        staleTime: 1000 * 60,
+        refetchInterval: 60_000,
+        staleTime: 0,
       } satisfies {
         queryKey: (string | undefined | boolean)[];
         queryFn: () => Promise<EmailMessagesResponse>;
@@ -234,7 +235,7 @@ export function useAllAccountFolders(accountIds: string[]) {
       queryKey: ['email', 'folders', accountId],
       queryFn: () => emailService.listFolders(accountId),
       enabled: canRead,
-      staleTime: 1000 * 60 * 5,
+      staleTime: 30_000,
     })),
   });
 }
@@ -292,6 +293,7 @@ export function useMarkMessageRead() {
       await queryClient.invalidateQueries({ queryKey: ['email'] });
     },
     onError: async () => {
+      toast.error('Erro ao alterar status da mensagem');
       // Revert on error by refetching
       await queryClient.invalidateQueries({ queryKey: ['email'] });
     },

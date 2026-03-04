@@ -407,6 +407,7 @@ export default function EmailPage() {
             onEditAccount={(account) => setEditAccount(account)}
             unreadCounts={unreadCounts}
             accountUnreadCounts={accountUnreadCounts}
+            isLoadingAccounts={accountsQuery.isLoading}
           />
 
           <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">

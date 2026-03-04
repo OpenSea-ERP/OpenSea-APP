@@ -305,14 +305,14 @@ export function EmailMessageDisplay({
 
   if (!selectedMessage) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+      <div className="flex h-full flex-col items-center justify-center gap-4 text-center px-6">
         <div className="flex size-16 items-center justify-center rounded-full bg-muted">
           <Mail className="size-7 text-muted-foreground/50" />
         </div>
         <div>
           <p className="text-sm font-medium">Selecione uma mensagem</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Clique em uma mensagem ao lado para visualizar
+            Escolha uma mensagem para visualizar
           </p>
         </div>
       </div>

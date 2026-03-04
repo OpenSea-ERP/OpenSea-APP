@@ -244,19 +244,19 @@ export function EmailMessageList({
   ]);
 
   // Trigger load-more when the user scrolls within 5 items of the end
+  const virtualRange = virtualizer.range;
   useEffect(() => {
-    const virtualItems = virtualizer.getVirtualItems();
-    const lastItem = virtualItems[virtualItems.length - 1];
-    if (!lastItem) return;
+    if (!virtualRange) return;
     if (
-      lastItem.index >= filteredMessages.length - 5 &&
+      virtualRange.endIndex >= filteredMessages.length - 5 &&
       hasMore &&
       !isFetchingNextPage
     ) {
       onLoadMore?.();
     }
   }, [
-    virtualizer.getVirtualItems(),
+    virtualRange?.startIndex,
+    virtualRange?.endIndex,
     hasMore,
     isFetchingNextPage,
     filteredMessages.length,
@@ -514,15 +514,15 @@ export function EmailMessageList({
             <Inbox className="size-8 text-muted-foreground/50" />
           </div>
           <div>
-            <p className="text-sm font-medium">Nenhuma conta configurada</p>
+            <p className="text-sm font-medium">Nenhuma conta de e-mail</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Configure uma conta para gerenciar seus e-mails.
+              Configure uma conta para começar
             </p>
           </div>
           <Button asChild size="sm" variant="outline" className="gap-1.5">
             <NextLink href="/email/settings">
               <Settings className="size-3.5" />
-              Configurar conta
+              Adicionar conta
             </NextLink>
           </Button>
         </div>
@@ -542,8 +542,7 @@ export function EmailMessageList({
                 <div>
                   <p className="text-sm font-medium">Nenhum resultado</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Nenhuma mensagem para{' '}
-                    <span className="font-medium">"{searchQuery}"</span>
+                    Tente uma busca diferente
                   </p>
                 </div>
               </>
@@ -567,11 +566,9 @@ export function EmailMessageList({
                   <Inbox className="size-6 text-muted-foreground/40" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">
-                    {folderName ? `${folderName} vazia` : 'Caixa vazia'}
-                  </p>
+                  <p className="text-sm font-medium">Nenhuma mensagem</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Nenhuma mensagem nesta pasta.
+                    Esta pasta está vazia
                   </p>
                 </div>
               </>
