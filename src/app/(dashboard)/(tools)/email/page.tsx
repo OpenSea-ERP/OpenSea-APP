@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  EmailAccountEditDialog,
+  EmailAccountWizard,
   EmailComposeDialog,
   EmailMessageDisplay,
   EmailMessageList,
@@ -26,9 +28,10 @@ import {
   useMoveMessage,
   useSyncEmailAccount,
 } from '@/hooks/email/use-email';
+import { useEmailAccountUnreadCounts } from '@/hooks/email/use-email-unread-count';
 import { useQueryClient } from '@tanstack/react-query';
 import { emailService } from '@/services/email';
-import type { EmailMessageListItem } from '@/types/email';
+import type { EmailAccount, EmailMessageListItem } from '@/types/email';
 import { Card } from '@/components/ui/card';
 import { Mail, PencilLine, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -64,6 +67,8 @@ export default function EmailPage() {
   const [composeMode, setComposeMode] = useState<ComposeMode>({ type: 'new' });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isCentralInbox, setIsCentralInbox] = useState(false);
+  const [accountWizardOpen, setAccountWizardOpen] = useState(false);
+  const [editAccount, setEditAccount] = useState<EmailAccount | null>(null);
   const queryClient = useQueryClient();
   const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -79,6 +84,7 @@ export default function EmailPage() {
 
   const accountsQuery = useEmailAccounts();
   const accounts = accountsQuery.data?.data ?? [];
+  const accountUnreadCounts = useEmailAccountUnreadCounts();
 
   useEffect(() => {
     const firstAccount = accounts[0];
@@ -396,13 +402,11 @@ export default function EmailPage() {
               setSelectedMessageId(null);
               setSelectedIds(new Set());
             }}
-            onOpenNewAccount={() => {
-              window.location.href = '/email/settings';
-            }}
-            onOpenManageAccounts={() => {
-              window.location.href = '/email/settings';
-            }}
+            onOpenNewAccount={() => setAccountWizardOpen(true)}
+            onOpenManageAccounts={() => setAccountWizardOpen(true)}
+            onEditAccount={(account) => setEditAccount(account)}
             unreadCounts={unreadCounts}
+            accountUnreadCounts={accountUnreadCounts}
           />
 
           <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
@@ -527,6 +531,21 @@ export default function EmailPage() {
           mode={composeMode}
         />
       </div>
+
+      {/* Account Wizard Modal */}
+      <EmailAccountWizard
+        open={accountWizardOpen}
+        onOpenChange={setAccountWizardOpen}
+      />
+
+      {/* Account Edit Modal */}
+      {editAccount && (
+        <EmailAccountEditDialog
+          account={editAccount}
+          open={!!editAccount}
+          onOpenChange={(open) => { if (!open) setEditAccount(null); }}
+        />
+      )}
     </div>
   );
 }

@@ -111,8 +111,11 @@ interface EmailSidebarProps {
   onCentralInbox: () => void;
   onOpenNewAccount: () => void;
   onOpenManageAccounts: () => void;
+  onEditAccount?: (account: EmailAccount) => void;
   /** Map of folderId → unread count */
   unreadCounts?: Record<string, number>;
+  /** Map of accountId → total unread count (across all folders) */
+  accountUnreadCounts?: Record<string, number>;
 }
 
 export function EmailSidebar({
@@ -128,7 +131,9 @@ export function EmailSidebar({
   onCentralInbox,
   onOpenNewAccount,
   onOpenManageAccounts,
+  onEditAccount,
   unreadCounts = {},
+  accountUnreadCounts = {},
 }: EmailSidebarProps) {
   const [expandedAccountId, setExpandedAccountId] = useState<string | null>(
     selectedAccountId
@@ -152,10 +157,10 @@ export function EmailSidebar({
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   });
 
-  const totalUnread = Object.values(unreadCounts).reduce(
-    (sum, count) => sum + count,
-    0
-  );
+  // Total unread across all accounts (prefer accountUnreadCounts if available)
+  const totalUnread = Object.keys(accountUnreadCounts).length > 0
+    ? Object.values(accountUnreadCounts).reduce((sum, count) => sum + count, 0)
+    : Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
 
   function handleAccountClick(accountId: string) {
     if (expandedAccountId === accountId) {
@@ -206,46 +211,64 @@ export function EmailSidebar({
               const isExpanded = expandedAccountId === account.id;
               const isSelected =
                 selectedAccountId === account.id && !isCentralInbox;
-              const accountUnread = isSelected ? totalUnread : 0;
+              // Use per-account unread counts; fall back to totalUnread for selected account
+              const accountUnread =
+                accountUnreadCounts[account.id] ?? (isSelected ? totalUnread : 0);
 
               return (
-                <div key={account.id}>
+                <div key={account.id} className="group/account">
                   {/* Account button */}
-                  <button
-                    className={cn(
-                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors',
-                      isSelected
-                        ? 'bg-accent text-accent-foreground'
-                        : 'hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                    )}
-                    onClick={() => handleAccountClick(account.id)}
-                  >
-                    {isExpanded ? (
-                      <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
-                    )}
-                    <Avatar className="size-5 shrink-0">
-                      <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
-                        {getInitials(account.displayName, account.address)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-medium leading-tight">
-                        {account.displayName || account.address}
-                      </p>
-                      {account.displayName && (
-                        <p className="truncate text-[10px] text-muted-foreground leading-tight">
-                          {account.address}
-                        </p>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      className={cn(
+                        'flex flex-1 min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors',
+                        isSelected
+                          ? 'bg-accent text-accent-foreground'
+                          : 'hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                       )}
-                    </div>
-                    {accountUnread > 0 && (
-                      <span className="inline-flex items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground min-w-[18px]">
-                        {accountUnread > 99 ? '99+' : accountUnread}
-                      </span>
+                      onClick={() => handleAccountClick(account.id)}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
+                      )}
+                      <Avatar className="size-5 shrink-0">
+                        <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
+                          {getInitials(account.displayName, account.address)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium leading-tight">
+                          {account.displayName || account.address}
+                        </p>
+                        {account.displayName && (
+                          <p className="truncate text-[10px] text-muted-foreground leading-tight">
+                            {account.address}
+                          </p>
+                        )}
+                      </div>
+                      {accountUnread > 0 && (
+                        <span className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground h-5 min-w-5 px-1.5 text-[10px] font-medium leading-none">
+                          {accountUnread > 99 ? '99+' : accountUnread}
+                        </span>
+                      )}
+                    </button>
+                    {onEditAccount && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 shrink-0 opacity-0 group-hover/account:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditAccount(account);
+                        }}
+                        title="Editar conta"
+                      >
+                        <Settings className="h-3.5 w-3.5" />
+                      </Button>
                     )}
-                  </button>
+                  </div>
 
                   {/* Collapsible folders */}
                   {isExpanded && isSelected && (
@@ -280,7 +303,14 @@ export function EmailSidebar({
                                 {getFolderDisplayName(folder)}
                               </span>
                               {folderUnread > 0 && (
-                                <span className="ml-auto inline-flex items-center justify-center rounded-full bg-primary px-1 py-0.5 text-[9px] font-semibold leading-none text-primary-foreground min-w-[16px]">
+                                <span
+                                  className={cn(
+                                    'ml-auto inline-flex items-center justify-center rounded-full h-5 min-w-5 px-1.5 text-xs font-medium leading-none',
+                                    folder.type === 'INBOX'
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-muted text-muted-foreground'
+                                  )}
+                                >
                                   {folderUnread > 99 ? '99+' : folderUnread}
                                 </span>
                               )}
