@@ -8,7 +8,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -24,7 +28,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useSaveDraft, useSendMessage, useSyncEmailAccount } from '@/hooks/email/use-email';
+import {
+  useSaveDraft,
+  useSendMessage,
+  useSyncEmailAccount,
+} from '@/hooks/email/use-email';
 import { emailService } from '@/services/email';
 import type { EmailAccount, EmailMessageListItem } from '@/types/email';
 import { useAuth } from '@/contexts/auth-context';
@@ -65,7 +73,7 @@ function buildSignatureHtml(signature: string | null): string {
   return `<hr/><p>${signature.replace(/\n/g, '<br/>')}</p>`;
 }
 
-// ── TipTap toolbar button ────────────────────────────────────────────────────
+// TipTap toolbar button
 function ToolbarButton({
   onClick,
   active,
@@ -93,6 +101,109 @@ function ToolbarButton({
         {tooltip}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+// Email chip component
+function EmailChip({
+  email,
+  onRemove,
+}: {
+  email: string;
+  onRemove: () => void;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium max-w-[200px]">
+      <span className="truncate">{email}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <X className="size-3" />
+      </button>
+    </span>
+  );
+}
+
+// Chip input for email addresses
+function ChipInput({
+  chips,
+  onChipsChange,
+  placeholder,
+  inputRef,
+}: {
+  chips: string[];
+  onChipsChange: (chips: string[]) => void;
+  placeholder?: string;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+}) {
+  const [inputValue, setInputValue] = useState('');
+  const localRef = useRef<HTMLInputElement>(null);
+  const ref = inputRef ?? localRef;
+
+  function addChip(value: string) {
+    const trimmed = value.trim();
+    if (trimmed && !chips.includes(trimmed)) {
+      onChipsChange([...chips, trimmed]);
+    }
+    setInputValue('');
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' || e.key === ',' || e.key === ';') {
+      e.preventDefault();
+      if (inputValue.trim()) {
+        addChip(inputValue);
+      }
+    } else if (e.key === 'Backspace' && inputValue === '' && chips.length > 0) {
+      onChipsChange(chips.slice(0, -1));
+    }
+  }
+
+  function handleBlur() {
+    if (inputValue.trim()) {
+      addChip(inputValue);
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text');
+    const addresses = pasted.split(/[;,\s]+/).filter(s => s.trim());
+    const newChips = [...chips];
+    for (const addr of addresses) {
+      const trimmed = addr.trim();
+      if (trimmed && !newChips.includes(trimmed)) {
+        newChips.push(trimmed);
+      }
+    }
+    onChipsChange(newChips);
+  }
+
+  return (
+    <div
+      className="flex flex-wrap items-center gap-1 rounded-md border border-input bg-background px-2 py-1 min-h-[32px] cursor-text"
+      onClick={() => ref.current?.focus()}
+    >
+      {chips.map((chip, idx) => (
+        <EmailChip
+          key={`${chip}-${idx}`}
+          email={chip}
+          onRemove={() => onChipsChange(chips.filter((_, i) => i !== idx))}
+        />
+      ))}
+      <input
+        ref={ref}
+        className="flex-1 min-w-[100px] bg-transparent text-sm outline-none placeholder:text-muted-foreground py-0.5"
+        placeholder={chips.length === 0 ? placeholder : ''}
+        value={inputValue}
+        onChange={e => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+        onPaste={handlePaste}
+      />
+    </div>
   );
 }
 
@@ -124,22 +235,22 @@ export function EmailComposeDialog({
   const [accountId, setAccountId] = useState(
     defaultAccountId ?? accounts[0]?.id ?? ''
   );
-  const [to, setTo] = useState('');
-  const [cc, setCc] = useState('');
-  const [bcc, setBcc] = useState('');
+  const [toChips, setToChips] = useState<string[]>([]);
+  const [ccChips, setCcChips] = useState<string[]>([]);
+  const [bccChips, setBccChips] = useState<string[]>([]);
   const [subject, setSubject] = useState('');
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
 
   const selectedAccount = accounts.find(a => a.id === accountId);
 
   // Current user's email addresses (all account addresses) for filtering self in replyAll
-  const myAddresses = new Set(
-    accounts.map(a => a.address.toLowerCase())
-  );
+  const myAddresses = new Set(accounts.map(a => a.address.toLowerCase()));
   // Also add the user's profile email
   if (user?.email) myAddresses.add(user.email.toLowerCase());
 
@@ -155,7 +266,7 @@ export function EmailComposeDialog({
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm dark:prose-invert max-w-none min-h-[160px] focus:outline-none py-1 text-sm leading-relaxed',
+          'prose prose-sm dark:prose-invert max-w-none min-h-[200px] focus:outline-none py-1 text-sm leading-relaxed',
       },
     },
   });
@@ -167,9 +278,9 @@ export function EmailComposeDialog({
     const sigHtml = buildSignatureHtml(account?.signature ?? null);
 
     if (mode.type === 'reply' && mode.message) {
-      setTo(mode.message.fromAddress);
-      setCc('');
-      setBcc('');
+      setToChips([mode.message.fromAddress]);
+      setCcChips([]);
+      setBccChips([]);
       setShowCc(false);
       setShowBcc(false);
       setSubject(
@@ -180,22 +291,22 @@ export function EmailComposeDialog({
       const quotedHeader = `<p><br/></p><blockquote><p>Em ${new Date(mode.message.receivedAt).toLocaleString('pt-BR')}, ${mode.message.fromName || mode.message.fromAddress} escreveu:</p></blockquote>`;
       editor.commands.setContent(`<p></p>${sigHtml}${quotedHeader}`);
     } else if (mode.type === 'replyAll' && mode.message) {
-      // Filter out current user's addresses from to and cc
       const allTo = [mode.message.fromAddress, ...(mode.replyAllTo ?? [])]
         .filter((v, i, arr) => arr.indexOf(v) === i)
         .filter(addr => !myAddresses.has(addr.toLowerCase()));
-      const ccAddresses = (mode.replyAllCc ?? [])
-        .filter(addr => !myAddresses.has(addr.toLowerCase()));
+      const ccAddresses = (mode.replyAllCc ?? []).filter(
+        addr => !myAddresses.has(addr.toLowerCase())
+      );
 
-      setTo(allTo.join(', '));
+      setToChips(allTo);
       if (ccAddresses.length) {
-        setCc(ccAddresses.join(', '));
+        setCcChips(ccAddresses);
         setShowCc(true);
       } else {
-        setCc('');
+        setCcChips([]);
         setShowCc(false);
       }
-      setBcc('');
+      setBccChips([]);
       setShowBcc(false);
       setSubject(
         mode.message.subject.startsWith('Re:')
@@ -205,9 +316,9 @@ export function EmailComposeDialog({
       const quotedHeader = `<p><br/></p><blockquote><p>Em ${new Date(mode.message.receivedAt).toLocaleString('pt-BR')}, ${mode.message.fromName || mode.message.fromAddress} escreveu:</p></blockquote>`;
       editor.commands.setContent(`<p></p>${sigHtml}${quotedHeader}`);
     } else if (mode.type === 'forward' && mode.message) {
-      setTo('');
-      setCc('');
-      setBcc('');
+      setToChips([]);
+      setCcChips([]);
+      setBccChips([]);
       setShowCc(false);
       setShowBcc(false);
       setSubject(
@@ -220,9 +331,9 @@ export function EmailComposeDialog({
         `<p></p>${sigHtml}<hr/><p><strong>---------- Mensagem encaminhada ----------</strong><br/>De: ${mode.message.fromName ? `${mode.message.fromName} &lt;${mode.message.fromAddress}&gt;` : mode.message.fromAddress}<br/>Data: ${fwdDate}<br/>Assunto: ${mode.message.subject}</p>`
       );
     } else {
-      setTo('');
-      setCc('');
-      setBcc('');
+      setToChips([]);
+      setCcChips([]);
+      setBccChips([]);
       setSubject('');
       setShowCc(false);
       setShowBcc(false);
@@ -248,15 +359,14 @@ export function EmailComposeDialog({
     if (!open) setAttachmentFiles([]);
   }, [open]);
 
-  // ─── Mutations via hooks ─────────────────────────────────────────────────
-
+  // Mutations via hooks
   const sendMutation = useSendMessage();
   const draftMutation = useSaveDraft();
   const syncMutation = useSyncEmailAccount();
 
   const handleSend = useCallback(() => {
     const bodyHtml = editor?.getHTML() ?? '';
-    if (!to.trim()) {
+    if (toChips.length === 0) {
       toast.error('Preencha o campo "Para"');
       return;
     }
@@ -264,12 +374,11 @@ export function EmailComposeDialog({
     sendMutation.mutate(
       {
         accountId,
-        to: parseAddresses(to),
-        cc: cc ? parseAddresses(cc) : undefined,
-        bcc: bcc ? parseAddresses(bcc) : undefined,
+        to: toChips,
+        cc: ccChips.length ? ccChips : undefined,
+        bcc: bccChips.length ? bccChips : undefined,
         subject,
         bodyHtml,
-        // Pass reply/forward headers when applicable (must use RFC Message-ID, not DB UUID)
         ...(mode.type === 'reply' || mode.type === 'replyAll'
           ? {
               inReplyTo: mode.rfcMessageId ?? undefined,
@@ -285,38 +394,55 @@ export function EmailComposeDialog({
         onSuccess: () => {
           setAttachmentFiles([]);
           onClose();
-          // Trigger sync for the sending account to refresh Sent folder
           syncMutation.mutate(accountId);
         },
       }
     );
   }, [
-    editor, to, cc, bcc, subject, accountId, attachmentFiles,
-    mode, sendMutation, syncMutation, onClose,
+    editor,
+    toChips,
+    ccChips,
+    bccChips,
+    subject,
+    accountId,
+    attachmentFiles,
+    mode,
+    sendMutation,
+    syncMutation,
+    onClose,
   ]);
 
   const handleSaveDraft = useCallback(() => {
     draftMutation.mutate(
       {
         accountId,
-        to: parseAddresses(to),
-        cc: cc ? parseAddresses(cc) : undefined,
-        bcc: bcc ? parseAddresses(bcc) : undefined,
+        to: toChips,
+        cc: ccChips.length ? ccChips : undefined,
+        bcc: bccChips.length ? bccChips : undefined,
         subject,
         bodyHtml: editor?.getHTML() ?? '',
       },
       { onSuccess: () => onClose() }
     );
-  }, [editor, to, cc, bcc, subject, accountId, draftMutation, onClose]);
+  }, [
+    editor,
+    toChips,
+    ccChips,
+    bccChips,
+    subject,
+    accountId,
+    draftMutation,
+    onClose,
+  ]);
 
   const isBusy = sendMutation.isPending || draftMutation.isPending;
 
   // Auto-save draft on close if content exists
   const handleClose = useCallback(() => {
     const hasContent =
-      to.trim() ||
-      cc.trim() ||
-      bcc.trim() ||
+      toChips.length > 0 ||
+      ccChips.length > 0 ||
+      bccChips.length > 0 ||
       subject.trim() ||
       (editor && editor.getHTML() !== '<p></p>' && editor.getText().trim());
 
@@ -324,9 +450,9 @@ export function EmailComposeDialog({
       emailService
         .saveDraft({
           accountId,
-          to: parseAddresses(to),
-          cc: cc ? parseAddresses(cc) : undefined,
-          bcc: bcc ? parseAddresses(bcc) : undefined,
+          to: toChips,
+          cc: ccChips.length ? ccChips : undefined,
+          bcc: bccChips.length ? bccChips : undefined,
           subject,
           bodyHtml: editor?.getHTML() ?? '',
         })
@@ -334,19 +460,18 @@ export function EmailComposeDialog({
         .catch(() => {});
     }
     onClose();
-  }, [to, cc, bcc, subject, editor, accountId, isBusy, onClose]);
+  }, [toChips, ccChips, bccChips, subject, editor, accountId, isBusy, onClose]);
 
-  function handleSetLink() {
-    if (!editor) return;
-    const url = window.prompt('URL do link:');
-    if (url) {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange('link')
-        .setLink({ href: url })
-        .run();
-    }
+  function handleInsertLink() {
+    if (!editor || !linkUrl.trim()) return;
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: linkUrl.trim() })
+      .run();
+    setLinkUrl('');
+    setLinkPopoverOpen(false);
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -357,7 +482,6 @@ export function EmailComposeDialog({
       const unique = files.filter(f => !existing.has(`${f.name}:${f.size}`));
       return [...prev, ...unique];
     });
-    // Reset input so same file can be re-selected
     e.target.value = '';
   }
 
@@ -383,7 +507,7 @@ export function EmailComposeDialog({
   return (
     <TooltipProvider delayDuration={200}>
       <Dialog open={open} onOpenChange={v => !v && handleClose()}>
-        <DialogContent className="sm:max-w-[680px] p-0 gap-0">
+        <DialogContent className="sm:max-w-3xl p-0 gap-0 min-h-[600px] flex flex-col">
           {/* Hidden file input */}
           <input
             ref={fileInputRef}
@@ -392,228 +516,142 @@ export function EmailComposeDialog({
             className="hidden"
             onChange={handleFileChange}
           />
-          <DialogHeader className="px-5 pt-5 pb-3">
-            <DialogTitle className="text-base">{title}</DialogTitle>
+          <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
+            <DialogTitle className="text-base font-semibold">
+              {title}
+            </DialogTitle>
           </DialogHeader>
 
-          <Separator />
+          <Separator className="shrink-0" />
 
-          <div className="px-5 py-4 space-y-3">
+          <div className="px-5 py-3 space-y-2 shrink-0">
             {/* From */}
-            <div className="flex items-center gap-3">
-              <Label className="w-12 text-right text-sm text-muted-foreground shrink-0">
-                De
-              </Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger className="h-8 text-sm flex-1">
-                  <SelectValue placeholder="Selecionar conta..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map(acc => (
-                    <SelectItem key={acc.id} value={acc.id} className="text-sm">
-                      {acc.displayName
-                        ? `${acc.displayName} <${acc.address}>`
-                        : acc.address}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {accounts.length > 1 && (
+              <div className="flex items-center gap-3">
+                <span className="w-10 text-right text-xs text-muted-foreground shrink-0">
+                  De
+                </span>
+                <Select value={accountId} onValueChange={setAccountId}>
+                  <SelectTrigger className="h-8 text-sm flex-1">
+                    <SelectValue placeholder="Selecionar conta..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map(acc => (
+                      <SelectItem
+                        key={acc.id}
+                        value={acc.id}
+                        className="text-sm"
+                      >
+                        {acc.displayName
+                          ? `${acc.displayName} <${acc.address}>`
+                          : acc.address}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* To */}
-            <div className="flex items-center gap-3">
-              <Label className="w-12 text-right text-sm text-muted-foreground shrink-0">
+            <div className="flex items-start gap-3">
+              <span className="w-10 text-right text-xs text-muted-foreground shrink-0 pt-1.5">
                 Para
-              </Label>
-              <div className="flex-1 flex items-center gap-1">
-                <Input
-                  ref={toInputRef}
-                  className="h-8 text-sm flex-1"
-                  placeholder="destinatario@email.com"
-                  value={to}
-                  onChange={e => setTo(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
-                  onClick={() => setShowCc(s => !s)}
-                >
-                  Cc
-                </button>
-                <button
-                  type="button"
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
-                  onClick={() => setShowBcc(s => !s)}
-                >
-                  Bcc
-                </button>
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1">
+                  <div className="flex-1">
+                    <ChipInput
+                      chips={toChips}
+                      onChipsChange={setToChips}
+                      placeholder="destinatario@email.com"
+                      inputRef={toInputRef}
+                    />
+                  </div>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <button
+                      type="button"
+                      className={`text-xs px-1.5 py-0.5 rounded transition-colors ${showCc ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                      onClick={() => setShowCc(s => !s)}
+                    >
+                      Cc
+                    </button>
+                    <button
+                      type="button"
+                      className={`text-xs px-1.5 py-0.5 rounded transition-colors ${showBcc ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                      onClick={() => setShowBcc(s => !s)}
+                    >
+                      Cco
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* CC */}
             {showCc && (
-              <div className="flex items-center gap-3">
-                <Label className="w-12 text-right text-sm text-muted-foreground shrink-0">
+              <div className="flex items-start gap-3">
+                <span className="w-10 text-right text-xs text-muted-foreground shrink-0 pt-1.5">
                   Cc
-                </Label>
-                <Input
-                  className="h-8 text-sm flex-1"
-                  placeholder="cc@email.com"
-                  value={cc}
-                  onChange={e => setCc(e.target.value)}
-                />
+                </span>
+                <div className="flex-1">
+                  <ChipInput
+                    chips={ccChips}
+                    onChipsChange={setCcChips}
+                    placeholder="cc@email.com"
+                  />
+                </div>
               </div>
             )}
 
             {/* BCC */}
             {showBcc && (
-              <div className="flex items-center gap-3">
-                <Label className="w-12 text-right text-sm text-muted-foreground shrink-0">
-                  Bcc
-                </Label>
-                <Input
-                  className="h-8 text-sm flex-1"
-                  placeholder="cco@email.com"
-                  value={bcc}
-                  onChange={e => setBcc(e.target.value)}
-                />
+              <div className="flex items-start gap-3">
+                <span className="w-10 text-right text-xs text-muted-foreground shrink-0 pt-1.5">
+                  Cco
+                </span>
+                <div className="flex-1">
+                  <ChipInput
+                    chips={bccChips}
+                    onChipsChange={setBccChips}
+                    placeholder="cco@email.com"
+                  />
+                </div>
               </div>
             )}
 
             {/* Subject */}
             <div className="flex items-center gap-3">
-              <Label className="w-12 text-right text-sm text-muted-foreground shrink-0">
-                Assunto
-              </Label>
+              <span className="w-10" />
               <Input
-                className="h-8 text-sm flex-1"
-                placeholder="Assunto do e-mail"
+                className="h-8 text-sm flex-1 border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+                placeholder="Assunto"
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
               />
             </div>
           </div>
 
-          <Separator />
+          <Separator className="shrink-0" />
 
-          {/* TipTap toolbar */}
-          <div className="flex items-center gap-0.5 px-5 py-1.5 border-b bg-muted/30 flex-wrap">
-            <ToolbarButton
-              onClick={() => editor?.chain().focus().toggleBold().run()}
-              active={editor?.isActive('bold')}
-              tooltip="Negrito (Ctrl+B)"
-            >
-              <Bold className="size-3.5" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() => editor?.chain().focus().toggleItalic().run()}
-              active={editor?.isActive('italic')}
-              tooltip="It\u00e1lico (Ctrl+I)"
-            >
-              <Italic className="size-3.5" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() => editor?.chain().focus().toggleUnderline().run()}
-              active={editor?.isActive('underline')}
-              tooltip="Sublinhado (Ctrl+U)"
-            >
-              <UnderlineIcon className="size-3.5" />
-            </ToolbarButton>
-
-            <Separator orientation="vertical" className="h-5 mx-1" />
-
-            <ToolbarButton
-              onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-              active={editor?.isActive({ textAlign: 'left' })}
-              tooltip="Alinhar \u00e0 esquerda"
-            >
-              <AlignLeft className="size-3.5" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() =>
-                editor?.chain().focus().setTextAlign('center').run()
-              }
-              active={editor?.isActive({ textAlign: 'center' })}
-              tooltip="Centralizar"
-            >
-              <AlignCenter className="size-3.5" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() =>
-                editor?.chain().focus().setTextAlign('right').run()
-              }
-              active={editor?.isActive({ textAlign: 'right' })}
-              tooltip="Alinhar \u00e0 direita"
-            >
-              <AlignRight className="size-3.5" />
-            </ToolbarButton>
-
-            <Separator orientation="vertical" className="h-5 mx-1" />
-
-            <ToolbarButton
-              onClick={() => editor?.chain().focus().toggleBulletList().run()}
-              active={editor?.isActive('bulletList')}
-              tooltip="Lista com marcadores"
-            >
-              <List className="size-3.5" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-              active={editor?.isActive('orderedList')}
-              tooltip="Lista numerada"
-            >
-              <ListOrdered className="size-3.5" />
-            </ToolbarButton>
-
-            <Separator orientation="vertical" className="h-5 mx-1" />
-
-            <ToolbarButton
-              onClick={handleSetLink}
-              active={editor?.isActive('link')}
-              tooltip="Inserir link"
-            >
-              <Link2 className="size-3.5" />
-            </ToolbarButton>
-
-            <Separator orientation="vertical" className="h-5 mx-1" />
-
-            <ToolbarButton
-              onClick={() => fileInputRef.current?.click()}
-              tooltip="Anexar arquivo"
-            >
-              <Paperclip className="size-3.5" />
-            </ToolbarButton>
-
-            {selectedAccount?.signature && (
-              <>
-                <Separator orientation="vertical" className="h-5 mx-1" />
-                <span className="text-[10px] text-muted-foreground ml-1">
-                  Assinatura:{' '}
-                  {selectedAccount.displayName ?? selectedAccount.address}
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* TipTap editor body */}
-          <div className="px-5 py-2 min-h-[180px] max-h-80 overflow-y-auto">
+          {/* TipTap editor body - fills remaining space */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-3">
             <EditorContent editor={editor} className="h-full" />
           </div>
 
           {/* Attachment chips */}
           {attachmentFiles.length > 0 && (
-            <div className="px-5 pb-2 flex flex-wrap gap-1.5">
+            <div className="px-5 pb-2 flex flex-wrap gap-1.5 shrink-0">
               {attachmentFiles.map((file, idx) => (
                 <div
                   key={`${file.name}-${idx}`}
-                  className="flex items-center gap-1.5 bg-muted rounded-md px-2 py-1 text-xs max-w-[200px]"
+                  className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 text-xs max-w-[220px]"
                 >
-                  <FileText className="size-3 shrink-0 text-muted-foreground" />
-                  <span className="truncate" title={file.name}>
+                  <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate font-medium" title={file.name}>
                     {file.name}
                   </span>
                   <span className="text-muted-foreground shrink-0">
-                    ({formatBytes(file.size)})
+                    {formatBytes(file.size)}
                   </span>
                   <button
                     type="button"
@@ -628,38 +666,188 @@ export function EmailComposeDialog({
             </div>
           )}
 
-          <Separator />
+          <Separator className="shrink-0" />
 
-          {/* Footer */}
-          <div className="flex items-center justify-between px-5 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2"
-              disabled={isBusy || !accountId}
-              onClick={handleSaveDraft}
-            >
-              {draftMutation.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <FileText className="size-3.5" />
-              )}
-              Salvar rascunho
-            </Button>
+          {/* Footer: toolbar left, actions right */}
+          <div className="flex items-center justify-between px-5 py-2.5 shrink-0">
+            {/* Left: formatting toolbar + attachment */}
+            <div className="flex items-center gap-0.5 flex-wrap">
+              <ToolbarButton
+                onClick={() => editor?.chain().focus().toggleBold().run()}
+                active={editor?.isActive('bold')}
+                tooltip="Negrito (Ctrl+B)"
+              >
+                <Bold className="size-3.5" />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor?.chain().focus().toggleItalic().run()}
+                active={editor?.isActive('italic')}
+                tooltip="It\u00e1lico (Ctrl+I)"
+              >
+                <Italic className="size-3.5" />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                active={editor?.isActive('underline')}
+                tooltip="Sublinhado (Ctrl+U)"
+              >
+                <UnderlineIcon className="size-3.5" />
+              </ToolbarButton>
 
-            <Button
-              size="sm"
-              className="gap-2"
-              disabled={isBusy || !to || !accountId}
-              onClick={handleSend}
-            >
-              {sendMutation.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Send className="size-3.5" />
+              <Separator orientation="vertical" className="h-5 mx-0.5" />
+
+              <ToolbarButton
+                onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                active={editor?.isActive('bulletList')}
+                tooltip="Lista com marcadores"
+              >
+                <List className="size-3.5" />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() =>
+                  editor?.chain().focus().toggleOrderedList().run()
+                }
+                active={editor?.isActive('orderedList')}
+                tooltip="Lista numerada"
+              >
+                <ListOrdered className="size-3.5" />
+              </ToolbarButton>
+
+              <Separator orientation="vertical" className="h-5 mx-0.5" />
+
+              <ToolbarButton
+                onClick={() =>
+                  editor?.chain().focus().setTextAlign('left').run()
+                }
+                active={editor?.isActive({ textAlign: 'left' })}
+                tooltip="Alinhar \u00e0 esquerda"
+              >
+                <AlignLeft className="size-3.5" />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() =>
+                  editor?.chain().focus().setTextAlign('center').run()
+                }
+                active={editor?.isActive({ textAlign: 'center' })}
+                tooltip="Centralizar"
+              >
+                <AlignCenter className="size-3.5" />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() =>
+                  editor?.chain().focus().setTextAlign('right').run()
+                }
+                active={editor?.isActive({ textAlign: 'right' })}
+                tooltip="Alinhar \u00e0 direita"
+              >
+                <AlignRight className="size-3.5" />
+              </ToolbarButton>
+
+              <Separator orientation="vertical" className="h-5 mx-0.5" />
+
+              {/* Link popover */}
+              <Popover open={linkPopoverOpen} onOpenChange={setLinkPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <div>
+                    <ToolbarButton
+                      onClick={() => setLinkPopoverOpen(true)}
+                      active={editor?.isActive('link')}
+                      tooltip="Inserir link"
+                    >
+                      <Link2 className="size-3.5" />
+                    </ToolbarButton>
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-72 p-3 space-y-2"
+                  side="top"
+                  align="start"
+                >
+                  <p className="text-xs font-medium">Inserir link</p>
+                  <Input
+                    placeholder="https://"
+                    value={linkUrl}
+                    onChange={e => setLinkUrl(e.target.value)}
+                    className="h-8 text-sm"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleInsertLink();
+                      }
+                    }}
+                  />
+                  <div className="flex justify-end gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        setLinkUrl('');
+                        setLinkPopoverOpen(false);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={handleInsertLink}
+                      disabled={!linkUrl.trim()}
+                    >
+                      Inserir
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Separator orientation="vertical" className="h-5 mx-0.5" />
+
+              <ToolbarButton
+                onClick={() => fileInputRef.current?.click()}
+                tooltip="Anexar arquivo"
+              >
+                <Paperclip className="size-3.5" />
+              </ToolbarButton>
+
+              {selectedAccount?.signature && (
+                <span className="text-[10px] text-muted-foreground ml-2 hidden sm:inline">
+                  Assinatura:{' '}
+                  {selectedAccount.displayName ?? selectedAccount.address}
+                </span>
               )}
-              Enviar
-            </Button>
+            </div>
+
+            {/* Right: discard + send */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-xs"
+                disabled={isBusy || !accountId}
+                onClick={handleSaveDraft}
+              >
+                {draftMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <FileText className="size-3.5" />
+                )}
+                Descartar
+              </Button>
+
+              <Button
+                size="sm"
+                className="gap-2"
+                disabled={isBusy || toChips.length === 0 || !accountId}
+                onClick={handleSend}
+              >
+                {sendMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Send className="size-3.5" />
+                )}
+                Enviar
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

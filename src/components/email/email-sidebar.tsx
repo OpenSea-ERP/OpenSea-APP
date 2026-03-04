@@ -1,6 +1,5 @@
 'use client';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,21 +8,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import type { EmailAccount, EmailFolder, EmailFolderType } from '@/types/email';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  AlertOctagon,
+  AlertTriangle,
   ChevronDown,
   ChevronRight,
   FileEdit,
-  FolderOpen,
+  Folder,
   Inbox,
   Layers,
-  PlusCircle,
-  RefreshCcw,
+  Plus,
+  RefreshCw,
   Send,
   Settings,
   Settings2,
@@ -36,8 +34,8 @@ const FOLDER_ICON: Record<EmailFolderType, React.ElementType> = {
   SENT: Send,
   DRAFTS: FileEdit,
   TRASH: Trash2,
-  SPAM: AlertOctagon,
-  CUSTOM: FolderOpen,
+  SPAM: AlertTriangle,
+  CUSTOM: Folder,
 };
 
 const FOLDER_ORDER: EmailFolderType[] = [
@@ -112,9 +110,9 @@ interface EmailSidebarProps {
   onOpenNewAccount: () => void;
   onOpenManageAccounts: () => void;
   onEditAccount?: (account: EmailAccount) => void;
-  /** Map of folderId → unread count */
+  /** Map of folderId -> unread count */
   unreadCounts?: Record<string, number>;
-  /** Map of accountId → total unread count (across all folders) */
+  /** Map of accountId -> total unread count (across all folders) */
   accountUnreadCounts?: Record<string, number>;
 }
 
@@ -158,9 +156,13 @@ export function EmailSidebar({
   });
 
   // Total unread across all accounts (prefer accountUnreadCounts if available)
-  const totalUnread = Object.keys(accountUnreadCounts).length > 0
-    ? Object.values(accountUnreadCounts).reduce((sum, count) => sum + count, 0)
-    : Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
+  const totalUnread =
+    Object.keys(accountUnreadCounts).length > 0
+      ? Object.values(accountUnreadCounts).reduce(
+          (sum, count) => sum + count,
+          0
+        )
+      : Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
 
   function handleAccountClick(accountId: string) {
     if (expandedAccountId === accountId) {
@@ -174,222 +176,250 @@ export function EmailSidebar({
   }
 
   return (
-    <div className="flex h-full w-[220px] shrink-0 flex-col border-r bg-muted/40">
-      {/* Central inbox button */}
-      <div className="p-3">
+    <div className="flex h-full w-[240px] shrink-0 flex-col border-r bg-muted/30">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <h2 className="text-sm font-semibold tracking-tight">E-mail</h2>
         <Button
-          className={cn('w-full gap-2', isCentralInbox && 'bg-primary/90')}
-          variant={isCentralInbox ? 'default' : 'outline'}
-          size="sm"
-          onClick={onCentralInbox}
+          variant="ghost"
+          size="icon"
+          className="size-7 rounded-md"
+          onClick={onOpenNewAccount}
+          title="Adicionar conta"
         >
-          <Layers className="size-3.5" />
-          Caixa Central
-          {totalUnread > 0 && (
-            <span className={cn(
-              'inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none min-w-[18px] ml-auto',
-              isCentralInbox
-                ? 'bg-primary-foreground text-primary'
-                : 'bg-primary text-primary-foreground'
-            )}>
-              {totalUnread > 99 ? '99+' : totalUnread}
-            </span>
-          )}
+          <Plus className="size-4" />
         </Button>
       </div>
 
-      <Separator />
+      {/* Central inbox button */}
+      <div className="px-2 pb-2">
+        <button
+          className={cn(
+            'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200',
+            isCentralInbox
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'hover:bg-muted/80 text-foreground'
+          )}
+          onClick={onCentralInbox}
+        >
+          <Layers className="size-4 shrink-0" />
+          <span className="font-medium flex-1 text-left">Caixa Central</span>
+          {totalUnread > 0 && (
+            <span
+              className={cn(
+                'inline-flex items-center justify-center rounded-full px-1.5 h-5 min-w-5 text-[10px] font-semibold leading-none',
+                isCentralInbox
+                  ? 'bg-primary-foreground/20 text-primary-foreground'
+                  : 'bg-primary text-primary-foreground'
+              )}
+            >
+              {totalUnread > 99 ? '99+' : totalUnread}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Divider with label */}
+      <div className="px-4 pt-2 pb-1">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Contas
+        </p>
+      </div>
 
       {/* Accounts with collapsible folders */}
       <ScrollArea className="flex-1">
-        <div className="p-2">
-          <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Contas
-          </p>
-          <div className="space-y-0.5">
-            {accounts.map(account => {
-              const isExpanded = expandedAccountId === account.id;
-              const isSelected =
-                selectedAccountId === account.id && !isCentralInbox;
-              // Use per-account unread counts; fall back to totalUnread for selected account
-              const accountUnread =
-                accountUnreadCounts[account.id] ?? (isSelected ? totalUnread : 0);
+        <div className="p-2 space-y-0.5">
+          {accounts.map(account => {
+            const isExpanded = expandedAccountId === account.id;
+            const isSelected =
+              selectedAccountId === account.id && !isCentralInbox;
+            // Use per-account unread counts; fall back to totalUnread for selected account
+            const accountUnread =
+              accountUnreadCounts[account.id] ?? (isSelected ? totalUnread : 0);
 
-              return (
-                <div key={account.id} className="group/account">
-                  {/* Account button */}
-                  <div className="flex items-center gap-0.5">
-                    <button
-                      className={cn(
-                        'flex flex-1 min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors',
-                        isSelected
-                          ? 'bg-accent text-accent-foreground'
-                          : 'hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                      )}
-                      onClick={() => handleAccountClick(account.id)}
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
-                      ) : (
-                        <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
-                      )}
-                      <Avatar className="size-5 shrink-0">
-                        <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
-                          {getInitials(account.displayName, account.address)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium leading-tight">
-                          {account.displayName || account.address}
-                        </p>
-                        {account.displayName && (
-                          <p className="truncate text-[10px] text-muted-foreground leading-tight">
-                            {account.address}
-                          </p>
-                        )}
-                      </div>
-                      {accountUnread > 0 && (
-                        <span className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground h-5 min-w-5 px-1.5 text-[10px] font-medium leading-none">
-                          {accountUnread > 99 ? '99+' : accountUnread}
-                        </span>
-                      )}
-                    </button>
-                    {onEditAccount && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 shrink-0 opacity-0 group-hover/account:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditAccount(account);
-                        }}
-                        title="Editar conta"
-                      >
-                        <Settings className="h-3.5 w-3.5" />
-                      </Button>
+            return (
+              <div key={account.id}>
+                {/* Account header */}
+                <div className="group/account flex items-center">
+                  <button
+                    className={cn(
+                      'flex flex-1 min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-all duration-200',
+                      isSelected && !isCentralInbox
+                        ? 'bg-accent text-accent-foreground'
+                        : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
                     )}
-                  </div>
-
-                  {/* Collapsible folders */}
-                  {isExpanded && isSelected && (
-                    <div className="ml-4 mt-0.5 space-y-0.5 border-l pl-2">
-                      {sortedFolders.length === 0 ? (
-                        <p className="px-2 py-1 text-[10px] text-muted-foreground">
-                          Sincronizando pastas...
+                    onClick={() => handleAccountClick(account.id)}
+                  >
+                    <div
+                      className={cn(
+                        'flex items-center justify-center transition-transform duration-200',
+                        isExpanded && 'rotate-0',
+                        !isExpanded && '-rotate-90'
+                      )}
+                    >
+                      <ChevronDown className="size-3 text-muted-foreground" />
+                    </div>
+                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <span className="text-[9px] font-medium leading-none">
+                        {getInitials(account.displayName, account.address)}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-medium leading-tight">
+                        {account.displayName || account.address}
+                      </p>
+                      {account.displayName && (
+                        <p className="truncate text-[10px] text-muted-foreground leading-tight">
+                          {account.address}
                         </p>
-                      ) : (
-                        sortedFolders.map(folder => {
-                          const Icon = FOLDER_ICON[folder.type] ?? FolderOpen;
-                          const isFolderSelected =
-                            selectedFolderId === folder.id && !isCentralInbox;
-                          const folderUnread = unreadCounts[folder.id] ?? 0;
-
-                          return (
-                            <button
-                              key={folder.id}
-                              className={cn(
-                                'flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors',
-                                isFolderSelected
-                                  ? 'bg-accent text-accent-foreground font-medium'
-                                  : 'hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                              )}
-                              onClick={e => {
-                                e.stopPropagation();
-                                onFolderChange(folder.id);
-                              }}
-                            >
-                              <Icon className="size-3.5 shrink-0" />
-                              <span className="truncate flex-1">
-                                {getFolderDisplayName(folder)}
-                              </span>
-                              {folderUnread > 0 && (
-                                <span
-                                  className={cn(
-                                    'ml-auto inline-flex items-center justify-center rounded-full h-5 min-w-5 px-1.5 text-xs font-medium leading-none',
-                                    folder.type === 'INBOX'
-                                      ? 'bg-primary text-primary-foreground'
-                                      : 'bg-muted text-muted-foreground'
-                                  )}
-                                >
-                                  {folderUnread > 99 ? '99+' : folderUnread}
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })
                       )}
                     </div>
+                    {accountUnread > 0 && (
+                      <span className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground h-[18px] min-w-[18px] px-1 text-[10px] font-semibold leading-none">
+                        {accountUnread > 99 ? '99+' : accountUnread}
+                      </span>
+                    )}
+                  </button>
+                  {onEditAccount && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 shrink-0 opacity-0 group-hover/account:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity duration-200"
+                      onClick={e => {
+                        e.stopPropagation();
+                        onEditAccount(account);
+                      }}
+                      title="Configurar conta"
+                    >
+                      <Settings className="h-3 w-3" />
+                    </Button>
                   )}
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Collapsible folders with animation */}
+                <div
+                  className={cn(
+                    'overflow-hidden transition-all duration-200',
+                    isExpanded && isSelected
+                      ? 'max-h-[500px] opacity-100'
+                      : 'max-h-0 opacity-0'
+                  )}
+                >
+                  <div className="ml-5 mt-0.5 space-y-0.5 border-l border-border/50 pl-2">
+                    {sortedFolders.length === 0 ? (
+                      <p className="px-3 py-1.5 text-[10px] text-muted-foreground">
+                        Sincronizando pastas...
+                      </p>
+                    ) : (
+                      sortedFolders.map(folder => {
+                        const Icon = FOLDER_ICON[folder.type] ?? Folder;
+                        const isFolderSelected =
+                          selectedFolderId === folder.id && !isCentralInbox;
+                        const folderUnread = unreadCounts[folder.id] ?? 0;
+
+                        return (
+                          <button
+                            key={folder.id}
+                            className={cn(
+                              'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs transition-all duration-150',
+                              isFolderSelected
+                                ? 'bg-primary/10 text-primary font-medium border-l-2 border-primary -ml-[2px] pl-[10px]'
+                                : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                            )}
+                            onClick={e => {
+                              e.stopPropagation();
+                              onFolderChange(folder.id);
+                            }}
+                          >
+                            <Icon className="size-3.5 shrink-0" />
+                            <span className="truncate flex-1">
+                              {getFolderDisplayName(folder)}
+                            </span>
+                            {folderUnread > 0 && (
+                              <span
+                                className={cn(
+                                  'ml-auto inline-flex items-center justify-center rounded-full h-[18px] min-w-[18px] px-1 text-[10px] font-medium leading-none',
+                                  folder.type === 'INBOX'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground'
+                                )}
+                              >
+                                {folderUnread > 99 ? '99+' : folderUnread}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </ScrollArea>
 
-      <Separator />
-
-      {/* Footer */}
-      <div className="flex items-center justify-between px-3 py-2">
-        <div className="min-w-0 flex-1">
-          {selectedAccount?.lastSyncAt ? (
-            <div className="leading-tight">
+      {/* Sync footer */}
+      <div className="border-t">
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="min-w-0 flex-1">
+            {selectedAccount?.lastSyncAt ? (
+              <p className="text-[10px] text-muted-foreground leading-tight">
+                Sincronizado h\u00e1{' '}
+                <span className="font-medium">
+                  {formatDistanceToNow(new Date(selectedAccount.lastSyncAt), {
+                    locale: ptBR,
+                  })}
+                </span>
+              </p>
+            ) : (
               <p className="text-[10px] text-muted-foreground">
-                Sincronizado há:
+                Nunca sincronizado
               </p>
-              <p className="text-[10px] font-medium text-muted-foreground">
-                {formatDistanceToNow(new Date(selectedAccount.lastSyncAt), {
-                  locale: ptBR,
-                })}
-              </p>
-            </div>
-          ) : (
-            <p className="text-[10px] text-muted-foreground">
-              Nunca sincronizado
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            disabled={!selectedAccountId || isSyncing}
-            onClick={onSyncAccount}
-            title="Sincronizar conta"
-          >
-            <RefreshCcw
-              className={cn('size-3.5', isSyncing && 'animate-spin')}
-            />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7"
-                title="Configurações de e-mail"
-              >
-                <Settings className="size-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="end" className="w-48">
-              <DropdownMenuItem
-                onClick={onOpenNewAccount}
-                className="gap-2 text-xs"
-              >
-                <PlusCircle className="size-3.5" />
-                Configurar nova conta
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onOpenManageAccounts}
-                className="gap-2 text-xs"
-              >
-                <Settings2 className="size-3.5" />
-                Gerenciar contas
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+          </div>
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7 rounded-md"
+              disabled={!selectedAccountId || isSyncing}
+              onClick={onSyncAccount}
+              title="Sincronizar conta"
+            >
+              <RefreshCw
+                className={cn('size-3.5', isSyncing && 'animate-spin')}
+              />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 rounded-md"
+                  title="Configura\u00e7\u00f5es"
+                >
+                  <Settings2 className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={onOpenNewAccount}
+                  className="gap-2 text-xs"
+                >
+                  <Plus className="size-3.5" />
+                  Configurar nova conta
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={onOpenManageAccounts}
+                  className="gap-2 text-xs"
+                >
+                  <Settings className="size-3.5" />
+                  Gerenciar contas
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </div>

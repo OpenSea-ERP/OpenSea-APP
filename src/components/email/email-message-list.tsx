@@ -16,7 +16,17 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import type { EmailMessageListItem } from '@/types/email';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { format, isAfter, isBefore, isToday, isYesterday, startOfDay, endOfDay } from 'date-fns';
+import {
+  format,
+  isAfter,
+  isBefore,
+  isSameYear,
+  isToday,
+  isYesterday,
+  startOfDay,
+  endOfDay,
+} from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   AlertCircle,
   Archive,
@@ -25,6 +35,7 @@ import {
   Loader2,
   Mail,
   MailOpen,
+  Paperclip,
   Search,
   Settings,
   Trash2,
@@ -32,19 +43,15 @@ import {
 } from 'lucide-react';
 import NextLink from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IoMailOpenOutline, IoMailUnreadOutline } from 'react-icons/io5';
 
-function formatMessageDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  if (isToday(date)) {
-    return format(date, 'HH:mm');
-  }
-  if (isYesterday(date)) {
-    return 'Ontem';
-  }
-  return format(date, 'dd/MM/yy');
+function formatEmailDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  if (isToday(d)) return format(d, 'HH:mm');
+  if (isYesterday(d)) return 'Ontem';
+  if (isSameYear(d, now)) return format(d, 'd MMM', { locale: ptBR });
+  return format(d, 'd MMM yyyy', { locale: ptBR });
 }
-
 
 interface EmailMessageListProps {
   messages: EmailMessageListItem[];
@@ -105,13 +112,18 @@ export function EmailMessageList({
   onBulkDelete,
 }: EmailMessageListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
+    null
+  );
   const [fromFilter, setFromFilter] = useState('');
   const [hasAttachmentsFilter, setHasAttachmentsFilter] = useState(false);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const hasActiveFilters =
-    Boolean(fromFilter) || hasAttachmentsFilter || Boolean(dateFrom) || Boolean(dateTo);
+    Boolean(fromFilter) ||
+    hasAttachmentsFilter ||
+    Boolean(dateFrom) ||
+    Boolean(dateTo);
 
   /** Client-side filters applied on top of server-side search */
   const filteredMessages = useMemo(() => {
@@ -144,11 +156,11 @@ export function EmailMessageList({
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 82,
+    estimateSize: () => 72,
     overscan: 6,
   });
 
-  // ─── Multi-select click handler ──────────────────────────────────────────
+  // Multi-select click handler
   const handleMessageClick = useCallback(
     (messageId: string, index: number, event: React.MouseEvent) => {
       if (event.shiftKey && lastSelectedIndex !== null) {
@@ -177,15 +189,26 @@ export function EmailMessageList({
         setLastSelectedIndex(index);
       }
     },
-    [lastSelectedIndex, selectedIds, filteredMessages, onSelectedIdsChange, onClearSelection, onSelectMessage]
+    [
+      lastSelectedIndex,
+      selectedIds,
+      filteredMessages,
+      onSelectedIdsChange,
+      onClearSelection,
+      onSelectMessage,
+    ]
   );
 
-  // ─── Keyboard shortcuts ─────────────────────────────────────────────────
+  // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       // Don't handle shortcuts when typing in input fields
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
         return;
       }
 
@@ -194,7 +217,11 @@ export function EmailMessageList({
         onClearSelection?.();
       }
 
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && filteredMessages.length > 0) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key === 'a' &&
+        filteredMessages.length > 0
+      ) {
         e.preventDefault();
         const allIds = new Set(filteredMessages.map(m => m.id));
         onSelectedIdsChange?.(allIds);
@@ -208,7 +235,13 @@ export function EmailMessageList({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIds, filteredMessages, onClearSelection, onSelectedIdsChange, onBulkDelete]);
+  }, [
+    selectedIds,
+    filteredMessages,
+    onClearSelection,
+    onSelectedIdsChange,
+    onBulkDelete,
+  ]);
 
   // Trigger load-more when the user scrolls within 5 items of the end
   useEffect(() => {
@@ -234,42 +267,38 @@ export function EmailMessageList({
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="text-base font-semibold">{folderName ?? 'Mensagens'}</h2>
-        <Badge variant="secondary" className="text-xs">
+        <h2 className="text-sm font-semibold tracking-tight">
+          {folderName ?? 'Mensagens'}
+        </h2>
+        <Badge
+          variant="secondary"
+          className="text-[10px] font-medium h-5 px-1.5"
+        >
           {total ?? messages.length}
         </Badge>
       </div>
 
-      {/* Tabs + Search */}
-      <div className="px-4 pb-2 space-y-2">
-        <Tabs
-          value={filter}
-          onValueChange={v => onFilterChange(v as 'all' | 'unread')}
-        >
-          <TabsList className="h-8 w-full">
-            <TabsTrigger value="all" className="flex-1 text-xs">
-              Todos{folderTotalMessages !== undefined && folderTotalMessages > 0 ? ` (${folderTotalMessages})` : ''}
-            </TabsTrigger>
-            <TabsTrigger value="unread" className="flex-1 text-xs">
-              Não lidos{folderUnreadMessages !== undefined && folderUnreadMessages > 0 ? ` (${folderUnreadMessages})` : ''}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <div className="relative flex items-center gap-1">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Pesquisar mensagens..."
-            value={searchQuery}
-            onChange={e => onSearchChange(e.target.value)}
-            className="pl-8 h-8 text-sm flex-1"
-          />
+      {/* Search + Filter */}
+      <div className="px-3 pb-2 space-y-2">
+        <div className="relative flex items-center gap-1.5">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Pesquisar e-mails..."
+              value={searchQuery}
+              onChange={e => onSearchChange(e.target.value)}
+              className="pl-8 h-8 text-sm rounded-lg"
+            />
+          </div>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={hasActiveFilters ? 'default' : 'ghost'}
                 size="icon"
-                className="size-8 shrink-0"
+                className={cn(
+                  'size-8 shrink-0 rounded-lg',
+                  hasActiveFilters && 'shadow-sm'
+                )}
                 title="Filtros avan\u00e7ados"
               >
                 <Filter className="size-3.5" />
@@ -292,7 +321,7 @@ export function EmailMessageList({
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs text-muted-foreground">
-                  Período
+                  Per\u00edodo
                 </label>
                 <div className="flex items-center gap-1.5">
                   <Input
@@ -338,13 +367,34 @@ export function EmailMessageList({
             </PopoverContent>
           </Popover>
         </div>
+
+        {/* Tabs */}
+        <Tabs
+          value={filter}
+          onValueChange={v => onFilterChange(v as 'all' | 'unread')}
+        >
+          <TabsList className="h-8 w-full">
+            <TabsTrigger value="all" className="flex-1 text-xs">
+              Todos
+              {folderTotalMessages !== undefined && folderTotalMessages > 0
+                ? ` (${folderTotalMessages})`
+                : ''}
+            </TabsTrigger>
+            <TabsTrigger value="unread" className="flex-1 text-xs">
+              N\u00e3o lidos
+              {folderUnreadMessages !== undefined && folderUnreadMessages > 0
+                ? ` (${folderUnreadMessages})`
+                : ''}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       <Separator />
 
       {/* Bulk-actions toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-1.5 px-4 py-2 bg-muted/50 border-b">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border-b">
           <Checkbox
             checked={
               selectedIds.size === filteredMessages.length &&
@@ -360,7 +410,7 @@ export function EmailMessageList({
             }}
             className="size-4"
           />
-          <span className="text-xs font-medium mr-1">
+          <span className="text-xs font-medium mr-1 text-primary">
             {selectedIds.size} selecionado{selectedIds.size > 1 ? 's' : ''}
           </span>
           <Separator orientation="vertical" className="h-4" />
@@ -384,7 +434,7 @@ export function EmailMessageList({
             }}
           >
             <Mail className="size-3.5" />
-            Não lida
+            N\u00e3o lida
           </Button>
           <Button
             variant="ghost"
@@ -414,20 +464,25 @@ export function EmailMessageList({
             size="icon"
             className="size-7"
             onClick={() => onClearSelection?.()}
-            title="Limpar seleção"
+            title="Limpar sele\u00e7\u00e3o"
           >
             <X className="size-3.5" />
           </Button>
         </div>
       )}
+
+      {/* Loading skeleton */}
       {isLoading && (
         <div className="space-y-0 overflow-hidden">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex gap-3 px-4 py-3 border-b">
-              <Skeleton className="size-9 rounded-full shrink-0" />
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-3.5 w-3/4" />
-                <Skeleton className="h-3 w-full" />
+            <div key={i} className="flex items-start gap-3 px-4 py-3 border-b">
+              <Skeleton className="size-2 rounded-full shrink-0 mt-2" />
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3.5 w-28" />
+                  <Skeleton className="h-3 w-12" />
+                </div>
+                <Skeleton className="h-3 w-3/4" />
                 <Skeleton className="h-3 w-2/3" />
               </div>
             </div>
@@ -438,7 +493,9 @@ export function EmailMessageList({
       {/* Error */}
       {isError && (
         <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-          <AlertCircle className="size-10 text-destructive/50" />
+          <div className="size-12 rounded-full bg-destructive/10 flex items-center justify-center">
+            <AlertCircle className="size-6 text-destructive/60" />
+          </div>
           <div>
             <p className="text-sm font-medium text-destructive">
               Erro ao carregar mensagens
@@ -479,7 +536,9 @@ export function EmailMessageList({
           <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
             {searchQuery ? (
               <>
-                <Search className="size-10 text-muted-foreground/40" />
+                <div className="size-12 rounded-full bg-muted flex items-center justify-center">
+                  <Search className="size-6 text-muted-foreground/40" />
+                </div>
                 <div>
                   <p className="text-sm font-medium">Nenhum resultado</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -490,7 +549,9 @@ export function EmailMessageList({
               </>
             ) : filter === 'unread' ? (
               <>
-                <MailOpen className="size-10 text-muted-foreground/40" />
+                <div className="size-12 rounded-full bg-muted flex items-center justify-center">
+                  <MailOpen className="size-6 text-muted-foreground/40" />
+                </div>
                 <div>
                   <p className="text-sm font-medium">
                     Nenhuma mensagem n\u00e3o lida
@@ -502,7 +563,9 @@ export function EmailMessageList({
               </>
             ) : (
               <>
-                <Inbox className="size-10 text-muted-foreground/40" />
+                <div className="size-12 rounded-full bg-muted flex items-center justify-center">
+                  <Inbox className="size-6 text-muted-foreground/40" />
+                </div>
                 <div>
                   <p className="text-sm font-medium">
                     {folderName ? `${folderName} vazia` : 'Caixa vazia'}
@@ -575,44 +638,45 @@ export function EmailMessageList({
                 >
                   <div
                     className={cn(
-                      'group flex w-full items-start gap-3 px-3 py-3 text-left transition-colors hover:bg-accent/50 border-b cursor-pointer',
-                      isSelected && 'bg-accent',
-                      isChecked && 'bg-primary/8',
+                      'group flex w-full items-start gap-2.5 px-3 py-2.5 text-left border-b cursor-pointer transition-colors duration-150',
+                      isSelected && 'bg-primary/10',
+                      isChecked && !isSelected && 'bg-primary/5',
+                      !isSelected && !isChecked && 'hover:bg-muted/30',
                       !message.isRead &&
                         !isSelected &&
                         !isChecked &&
-                        'bg-primary/5 hover:bg-primary/10'
+                        'bg-primary/[0.03]'
                     )}
-                    onClick={(e) => handleMessageClick(message.id, virtualRow.index, e)}
+                    onClick={e =>
+                      handleMessageClick(message.id, virtualRow.index, e)
+                    }
                   >
-                    {/* Checkbox / Mail icon - checkbox replaces icon on hover */}
+                    {/* Unread dot / Checkbox area */}
                     <div
-                      className="relative size-9 shrink-0 mt-0.5 flex items-center justify-center"
+                      className="relative size-5 shrink-0 mt-1 flex items-center justify-center"
                       onClick={e => {
                         e.stopPropagation();
                         onToggleSelect?.(message.id);
                       }}
                     >
-                      {/* Mail icon - hidden when checked or on hover */}
+                      {/* Unread dot - hidden when checked or on hover */}
                       <div
                         className={cn(
-                          'transition-opacity',
-                          (isChecked || selectedIds.size > 0)
+                          'flex items-center justify-center transition-opacity duration-150',
+                          isChecked || selectedIds.size > 0
                             ? 'opacity-0'
                             : 'group-hover:opacity-0'
                         )}
                       >
-                        {message.isRead ? (
-                          <IoMailOpenOutline className="size-5 text-slate-400" />
-                        ) : (
-                          <IoMailUnreadOutline className="size-5 text-sky-500" />
+                        {!message.isRead && (
+                          <div className="size-2 rounded-full bg-primary" />
                         )}
                       </div>
                       {/* Checkbox - shown when checked or on hover */}
                       <div
                         className={cn(
-                          'absolute inset-0 flex items-center justify-center rounded-full hover:bg-muted transition-opacity',
-                          (isChecked || selectedIds.size > 0)
+                          'absolute inset-0 flex items-center justify-center transition-opacity duration-150',
+                          isChecked || selectedIds.size > 0
                             ? 'opacity-100'
                             : 'opacity-0 group-hover:opacity-100'
                         )}
@@ -628,25 +692,30 @@ export function EmailMessageList({
 
                     {/* Content */}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1">
+                      {/* Row 1: Sender + Attachment + Date */}
+                      <div className="flex items-center gap-1">
                         <span
                           className={cn(
-                            'truncate text-sm',
+                            'truncate text-sm flex-1',
                             !message.isRead
                               ? 'font-semibold text-foreground'
-                              : 'font-normal text-foreground'
+                              : 'text-muted-foreground'
                           )}
                         >
                           {senderDisplay}
                         </span>
-                        <span className="shrink-0 text-[11px] text-muted-foreground">
-                          {formatMessageDate(message.receivedAt)}
+                        {message.hasAttachments && (
+                          <Paperclip className="size-3 shrink-0 text-muted-foreground" />
+                        )}
+                        <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                          {formatEmailDate(message.receivedAt)}
                         </span>
                       </div>
 
+                      {/* Row 2: Subject */}
                       <p
                         className={cn(
-                          'truncate text-sm',
+                          'truncate text-sm leading-snug',
                           !message.isRead
                             ? 'font-medium text-foreground'
                             : 'text-foreground/80'
@@ -655,20 +724,11 @@ export function EmailMessageList({
                         {message.subject || '(sem assunto)'}
                       </p>
 
-                      <p className="truncate text-xs text-muted-foreground mt-0.5">
-                        {message.snippet || ''}
-                      </p>
-
-                      {/* Tags */}
-                      {message.hasAttachments && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <Badge
-                            variant="outline"
-                            className="h-4 px-1 text-[10px] font-normal"
-                          >
-                            📎
-                          </Badge>
-                        </div>
+                      {/* Row 3: Snippet */}
+                      {message.snippet && (
+                        <p className="truncate text-xs text-muted-foreground mt-0.5 leading-snug">
+                          {message.snippet}
+                        </p>
                       )}
                     </div>
                   </div>
