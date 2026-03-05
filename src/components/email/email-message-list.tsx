@@ -264,7 +264,7 @@ export function EmailMessageList({
   ]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col" data-testid="email-message-list">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <h2 className="text-sm font-semibold tracking-tight">
@@ -394,7 +394,10 @@ export function EmailMessageList({
 
       {/* Bulk-actions toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border-b">
+        <div
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border-b"
+          data-testid="email-bulk-actions-toolbar"
+        >
           <Checkbox
             checked={
               selectedIds.size === filteredMessages.length &&
@@ -410,7 +413,10 @@ export function EmailMessageList({
             }}
             className="size-4"
           />
-          <span className="text-xs font-medium mr-1 text-primary">
+          <span
+            className="text-xs font-medium mr-1 text-primary"
+            data-testid="email-bulk-selection-count"
+          >
             {selectedIds.size} selecionado{selectedIds.size > 1 ? 's' : ''}
           </span>
           <Separator orientation="vertical" className="h-4" />

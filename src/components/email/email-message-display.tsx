@@ -335,7 +335,10 @@ export function EmailMessageDisplay({
   return (
     <>
       <TooltipProvider delayDuration={300}>
-        <div className="flex h-full flex-col">
+        <div
+          className="flex h-full flex-col"
+          data-testid="email-message-display"
+        >
           {/* Action toolbar */}
           <div className="flex items-center gap-0.5 border-b px-4 py-2">
             <Tooltip>

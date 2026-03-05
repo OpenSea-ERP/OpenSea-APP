@@ -181,7 +181,10 @@ export function EmailSidebar({
   }
 
   return (
-    <div className="flex h-full w-[240px] shrink-0 flex-col border-r bg-muted/30">
+    <div
+      className="flex h-full w-[240px] shrink-0 flex-col border-r bg-muted/30"
+      data-testid="email-sidebar"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <h2 className="text-sm font-semibold tracking-tight">E-mail</h2>
@@ -206,6 +209,7 @@ export function EmailSidebar({
               : 'hover:bg-muted/80 text-foreground'
           )}
           onClick={onCentralInbox}
+          data-testid="email-central-inbox"
         >
           <Layers className="size-4 shrink-0" />
           <span className="font-medium flex-1 text-left">Caixa Central</span>

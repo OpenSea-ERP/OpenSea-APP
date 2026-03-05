@@ -507,7 +507,10 @@ export function EmailComposeDialog({
   return (
     <TooltipProvider delayDuration={200}>
       <Dialog open={open} onOpenChange={v => !v && handleClose()}>
-        <DialogContent className="sm:max-w-3xl p-0 gap-0 min-h-[600px] flex flex-col">
+        <DialogContent
+          className="sm:max-w-3xl p-0 gap-0 min-h-[600px] flex flex-col"
+          data-testid="email-compose-dialog"
+        >
           {/* Hidden file input */}
           <input
             ref={fileInputRef}
