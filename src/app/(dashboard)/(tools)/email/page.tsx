@@ -4,20 +4,21 @@ import {
   EmailAccountEditDialog,
   EmailAccountWizard,
   EmailComposeDialog,
+  EmailEmptyState,
   EmailMessageDisplay,
   EmailMessageList,
   EmailSidebar,
 } from '@/components/email';
+import { getFolderDisplayName } from '@/components/email/email-utils';
 import { PageActionBar } from '@/components/layout/page-action-bar';
+import { Card } from '@/components/ui/card';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { EMAIL_PERMISSIONS } from '@/config/rbac/permission-codes';
-import { usePermissions } from '@/hooks/use-permissions';
 import {
-  useAllAccountFolders,
   useBulkDelete,
   useBulkMarkRead,
   useBulkMove,
@@ -29,25 +30,42 @@ import {
   useSyncEmailAccount,
 } from '@/hooks/email/use-email';
 import { useEmailAccountUnreadCounts } from '@/hooks/email/use-email-unread-count';
-import { useQueryClient } from '@tanstack/react-query';
+import { usePermissions } from '@/hooks/use-permissions';
 import { emailService } from '@/services/email';
 import type { EmailAccount, EmailMessageListItem } from '@/types/email';
-import { Card } from '@/components/ui/card';
-import { Mail, PencilLine, RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  CheckCircle2,
+  Loader2,
+  Mail,
+  PencilLine,
+  RefreshCw,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 type ComposeMode =
   | { type: 'new' }
-  | { type: 'reply'; message: EmailMessageListItem; rfcMessageId?: string | null }
+  | {
+      type: 'reply';
+      message: EmailMessageListItem;
+      rfcMessageId?: string | null;
+      quotedBody?: string | null;
+    }
   | {
       type: 'replyAll';
       message: EmailMessageListItem;
       replyAllTo: string[];
       replyAllCc: string[];
       rfcMessageId?: string | null;
+      quotedBody?: string | null;
     }
-  | { type: 'forward'; message: EmailMessageListItem; rfcMessageId?: string | null };
+  | {
+      type: 'forward';
+      message: EmailMessageListItem;
+      rfcMessageId?: string | null;
+      quotedBody?: string | null;
+    };
 
 export default function EmailPage() {
   const { hasPermission } = usePermissions();
@@ -69,6 +87,7 @@ export default function EmailPage() {
   const [isCentralInbox, setIsCentralInbox] = useState(false);
   const [accountWizardOpen, setAccountWizardOpen] = useState(false);
   const [editAccount, setEditAccount] = useState<EmailAccount | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const queryClient = useQueryClient();
   const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -124,6 +143,7 @@ export default function EmailPage() {
       emailService
         .triggerSync(selectedAccountId)
         .then(() => {
+          setLastSyncTime(new Date());
           queryClient.invalidateQueries({ queryKey: ['email', 'messages'] });
           queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
         })
@@ -138,6 +158,39 @@ export default function EmailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccountId, selectedFolderId]);
 
+  // ─── Periodic data refresh (backend scheduler handles IMAP sync) ───────
+  // The backend scheduler syncs all active accounts every 5 minutes via BullMQ.
+  // The frontend only needs to refetch cached data periodically without triggering
+  // additional IMAP connections, reducing load on the server significantly.
+  const isSyncingRef = useRef(false);
+  const accountsRef = useRef(accounts);
+  accountsRef.current = accounts;
+
+  useEffect(() => {
+    if (!selectedAccountId && !isCentralInbox) return;
+    if (accounts.length === 0) return;
+
+    const REFRESH_INTERVAL_MS = 60_000; // Refetch from DB every 60s
+
+    async function periodicRefresh() {
+      // Skip if tab is hidden or a refresh is already in progress
+      if (document.hidden || isSyncingRef.current) return;
+
+      isSyncingRef.current = true;
+      try {
+        // Just invalidate queries to refetch from DB — no IMAP sync trigger
+        queryClient.invalidateQueries({ queryKey: ['email', 'messages'] });
+        queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
+      } finally {
+        isSyncingRef.current = false;
+      }
+    }
+
+    const interval = setInterval(periodicRefresh, REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccountId, isCentralInbox, accounts.length]);
+
   // ─── Regular Messages Query ──────────────────────────────────────────────
 
   const messagesQuery = useEmailMessages({
@@ -147,34 +200,12 @@ export default function EmailPage() {
     search: debouncedSearch,
   });
 
-  // ─── Central Inbox: fetch ALL accounts' INBOX folders ────────────────────
+  // ─── Central Inbox ────────────────────────────────────────────────────────
 
-  const allAccountIds = useMemo(
-    () => accounts.map(a => a.id),
-    [accounts]
-  );
-
-  const allFolderQueries = useAllAccountFolders(
-    isCentralInbox ? allAccountIds : []
-  );
-
-  // Build map: accountId -> INBOX folderId
-  const inboxFolderIds = useMemo(() => {
-    const map: Record<string, string> = {};
-    allFolderQueries.forEach((q, idx) => {
-      if (q.data?.data) {
-        const inbox = q.data.data.find(f => f.type === 'INBOX');
-        if (inbox) {
-          map[allAccountIds[idx]] = inbox.id;
-        }
-      }
-    });
-    return map;
-  }, [allFolderQueries, allAccountIds]);
+  const allAccountIds = useMemo(() => accounts.map(a => a.id), [accounts]);
 
   const centralInbox = useCentralInboxMessages({
     accountIds: allAccountIds,
-    inboxFolderIds,
     filter: messageFilter,
     search: debouncedSearch,
     enabled: isCentralInbox,
@@ -184,7 +215,7 @@ export default function EmailPage() {
 
   const messages = isCentralInbox
     ? centralInbox.messages
-    : messagesQuery.data?.pages.flatMap(p => p.data) ?? [];
+    : (messagesQuery.data?.pages.flatMap(p => p.data) ?? []);
 
   const messagesTotal = isCentralInbox
     ? centralInbox.total
@@ -206,10 +237,67 @@ export default function EmailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messagesQuery.data, centralInbox.messages.length]);
 
-  const selectedMessage = useMemo<EmailMessageListItem | null>(
-    () => messages.find(m => m.id === selectedMessageId) ?? null,
-    [messages, selectedMessageId]
-  );
+  // Keep a ref to the last selected message so it persists when the message
+  // disappears from the list (e.g. auto-read + refetch while viewing unread filter).
+  const lastSelectedMessageRef = useRef<EmailMessageListItem | null>(null);
+
+  const selectedMessage = useMemo<EmailMessageListItem | null>(() => {
+    const found = messages.find(m => m.id === selectedMessageId) ?? null;
+    if (found) {
+      lastSelectedMessageRef.current = found;
+      return found;
+    }
+    // Message disappeared from list (e.g. marked as read during unread-filtered polling).
+    // Keep showing it until user explicitly navigates away.
+    if (
+      selectedMessageId &&
+      lastSelectedMessageRef.current?.id === selectedMessageId
+    ) {
+      return lastSelectedMessageRef.current;
+    }
+    lastSelectedMessageRef.current = null;
+    return null;
+  }, [messages, selectedMessageId]);
+
+  const prefetchedMessageIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const candidates = messages.slice(0, 8);
+
+    for (const message of candidates) {
+      if (prefetchedMessageIdsRef.current.has(message.id)) continue;
+      prefetchedMessageIdsRef.current.add(message.id);
+
+      void queryClient.prefetchQuery({
+        queryKey: ['email', 'message', message.id],
+        queryFn: () => emailService.getMessage(message.id),
+        staleTime: 1000 * 60 * 5,
+      });
+    }
+  }, [messages, queryClient]);
+
+  useEffect(() => {
+    if (!selectedMessageId) return;
+
+    const selectedIndex = messages.findIndex(m => m.id === selectedMessageId);
+    if (selectedIndex === -1) return;
+
+    const adjacent = [
+      messages[selectedIndex - 1],
+      messages[selectedIndex + 1],
+    ].filter((message): message is EmailMessageListItem => Boolean(message));
+
+    for (const message of adjacent) {
+      if (prefetchedMessageIdsRef.current.has(message.id)) continue;
+      prefetchedMessageIdsRef.current.add(message.id);
+
+      void queryClient.prefetchQuery({
+        queryKey: ['email', 'message', message.id],
+        queryFn: () => emailService.getMessage(message.id),
+        staleTime: 1000 * 60 * 5,
+      });
+    }
+  }, [selectedMessageId, messages, queryClient]);
   const selectedFolder = useMemo(
     () => folders.find(f => f.id === selectedFolderId) ?? null,
     [folders, selectedFolderId]
@@ -242,10 +330,10 @@ export default function EmailPage() {
     prevTotalRef.current = messagesTotal;
   }, [messagesTotal]);
 
-  // Reset counter when folder/account changes
+  // Reset counter when folder/account/filter changes
   useEffect(() => {
     prevTotalRef.current = undefined;
-  }, [selectedFolderId, selectedAccountId]);
+  }, [selectedFolderId, selectedAccountId, messageFilter]);
 
   // ─── Mutations via Hooks ─────────────────────────────────────────────────
 
@@ -260,8 +348,12 @@ export default function EmailPage() {
     setComposeOpen(true);
   }
 
-  function openReply(message: EmailMessageListItem, rfcMessageId?: string | null) {
-    setComposeMode({ type: 'reply', message, rfcMessageId });
+  function openReply(
+    message: EmailMessageListItem,
+    rfcMessageId?: string | null,
+    quotedBody?: string | null
+  ) {
+    setComposeMode({ type: 'reply', message, rfcMessageId, quotedBody });
     setComposeOpen(true);
   }
 
@@ -269,7 +361,8 @@ export default function EmailPage() {
     message: EmailMessageListItem,
     toAddresses: string[],
     ccAddresses: string[],
-    rfcMessageId?: string | null
+    rfcMessageId?: string | null,
+    quotedBody?: string | null
   ) {
     setComposeMode({
       type: 'replyAll',
@@ -277,12 +370,17 @@ export default function EmailPage() {
       replyAllTo: toAddresses,
       replyAllCc: ccAddresses,
       rfcMessageId,
+      quotedBody,
     });
     setComposeOpen(true);
   }
 
-  function openForward(message: EmailMessageListItem, rfcMessageId?: string | null) {
-    setComposeMode({ type: 'forward', message, rfcMessageId });
+  function openForward(
+    message: EmailMessageListItem,
+    rfcMessageId?: string | null,
+    quotedBody?: string | null
+  ) {
+    setComposeMode({ type: 'forward', message, rfcMessageId, quotedBody });
     setComposeOpen(true);
   }
 
@@ -316,222 +414,275 @@ export default function EmailPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleDeleteSelected, composeOpen]);
 
-  // Action bar buttons: Sync first, then Novo e-mail
-  const syncActionButtons = [
+  // Action bar buttons
+  const actionBarButtons = [
     ...(selectedAccountId && !isCentralInbox
       ? [
           {
             id: 'sync',
             title: 'Sincronizar',
             icon: RefreshCw,
-            variant: 'ghost' as const,
+            variant: 'outline' as const,
             onClick: () => syncMutation.mutate(selectedAccountId),
           },
         ]
       : []),
-    ...(canSend
+    ...(canSend && accounts.length > 0
       ? [
           {
             id: 'compose',
-            title: 'Novo e-mail',
+            title: 'Escrever',
             icon: PencilLine,
+            variant: 'default' as const,
             onClick: openCompose,
           },
         ]
       : []),
   ];
 
+  const hasAccounts = accounts.length > 0 || accountsQuery.isLoading;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-      {/* Action Bar + Hero Card */}
-      <div className="px-6 pt-4 pb-4 shrink-0 space-y-4">
-        <PageActionBar
-          breadcrumbItems={[{ label: 'E-mail', href: '/email' }]}
-          buttons={syncActionButtons}
-        />
+    <div className="flex flex-col gap-6 h-[calc(100vh-10rem)]">
+      {/* Action Bar */}
+      <PageActionBar
+        breadcrumbItems={[{ label: 'E-mail', href: '/email' }]}
+        buttons={actionBarButtons}
+      />
 
-        {/* Hero Card */}
-        <Card className="relative overflow-hidden p-6 md:p-8 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
-          <div className="absolute top-0 right-0 w-56 h-56 bg-violet-500/10 rounded-full opacity-80 -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-500/10 rounded-full opacity-80 translate-y-1/2 -translate-x-1/2" />
+      {/* Hero Banner */}
+      <Card className="relative overflow-hidden p-6 md:p-8 bg-white dark:bg-white/5 border-gray-200/80 dark:border-white/10 shadow-sm dark:shadow-none shrink-0">
+        <div className="absolute top-0 right-0 w-56 h-56 bg-blue-500/15 dark:bg-blue-500/10 rounded-full opacity-80 -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/15 dark:bg-indigo-500/10 rounded-full opacity-80 translate-y-1/2 -translate-x-1/2" />
 
-          <div className="relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-linear-to-br from-violet-500 to-purple-600">
-                <Mail className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                  E-mail
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-white/60">
-                  Gerencie suas mensagens e contas de e-mail
-                </p>
-              </div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600">
+              <Mail className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                E-mail
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-white/60">
+                Gerencie suas caixas de entrada, envie e receba mensagens
+              </p>
+              {/* Sync status indicator */}
+              {(syncMutation.isPending || lastSyncTime) && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  {syncMutation.isPending ? (
+                    <>
+                      <Loader2 className="size-3 animate-spin text-blue-500" />
+                      <span className="text-xs text-blue-500">
+                        Sincronizando...
+                      </span>
+                    </>
+                  ) : lastSyncTime ? (
+                    <>
+                      <CheckCircle2 className="size-3 text-emerald-500" />
+                      <span className="text-xs text-slate-400 dark:text-white/40">
+                        Última sincronização:{' '}
+                        {lastSyncTime.toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
-        </Card>
-      </div>
-
-      {/* 3-panel layout — fills remaining height */}
-      <div className="flex flex-1 min-h-0 overflow-hidden px-6 pb-4">
-        <div className="flex flex-1 rounded-lg border overflow-hidden bg-background">
-          <EmailSidebar
-            accounts={accounts}
-            folders={folders}
-            selectedAccountId={selectedAccountId}
-            selectedFolderId={selectedFolderId}
-            isCentralInbox={isCentralInbox}
-            onAccountChange={id => {
-              setSelectedAccountId(id);
-              setIsCentralInbox(false);
-            }}
-            onFolderChange={id => {
-              setSelectedFolderId(id);
-              setSelectedMessageId(null);
-              setSelectedIds(new Set());
-              setIsCentralInbox(false);
-            }}
-            onSyncAccount={() => {
-              if (selectedAccountId) syncMutation.mutate(selectedAccountId);
-            }}
-            isSyncing={syncMutation.isPending}
-            onCentralInbox={() => {
-              setIsCentralInbox(true);
-              setSelectedFolderId(null);
-              setSelectedMessageId(null);
-              setSelectedIds(new Set());
-            }}
-            onOpenNewAccount={() => setAccountWizardOpen(true)}
-            onOpenManageAccounts={() => setAccountWizardOpen(true)}
-            onEditAccount={(account) => setEditAccount(account)}
-            unreadCounts={unreadCounts}
-            accountUnreadCounts={accountUnreadCounts}
-            isLoadingAccounts={accountsQuery.isLoading}
-          />
-
-          <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
-            <ResizablePanel
-              defaultSize={35}
-              minSize={25}
-              maxSize={50}
-              className="border-r"
-            >
-              <EmailMessageList
-                messages={messages}
-                total={messagesTotal}
-                selectedMessageId={selectedMessageId}
-                onSelectMessage={id => setSelectedMessageId(id)}
-                isLoading={messagesLoading}
-                isError={messagesError}
-                noAccount={!selectedAccountId && !isCentralInbox}
-                searchQuery={searchQuery}
-                onSearchChange={q => {
-                  setSearchQuery(q);
-                  setSelectedMessageId(null);
-                }}
-                filter={messageFilter}
-                onFilterChange={f => {
-                  setMessageFilter(f);
-                  setSelectedMessageId(null);
-                }}
-                folderTotalMessages={selectedFolder?.totalMessages}
-                folderUnreadMessages={selectedFolder?.unreadMessages}
-                folderName={
-                  isCentralInbox
-                    ? 'Caixa Central'
-                    : selectedFolder?.displayName
-                }
-                hasMore={
-                  isCentralInbox ? false : messagesQuery.hasNextPage
-                }
-                isFetchingNextPage={
-                  isCentralInbox ? false : messagesQuery.isFetchingNextPage
-                }
-                onLoadMore={() => {
-                  if (!isCentralInbox) messagesQuery.fetchNextPage();
-                }}
-                selectedIds={selectedIds}
-                onSelectedIdsChange={setSelectedIds}
-                onToggleSelect={id =>
-                  setSelectedIds(prev => {
-                    const next = new Set(prev);
-                    if (next.has(id)) next.delete(id);
-                    else next.add(id);
-                    return next;
-                  })
-                }
-                onSelectAll={() =>
-                  setSelectedIds(new Set(messages.map(m => m.id)))
-                }
-                onClearSelection={() => setSelectedIds(new Set())}
-                onBulkMarkRead={(ids, isRead) => {
-                  bulkMarkReadMutation.mutate({ ids, isRead }, {
-                    onSuccess: () => setSelectedIds(new Set()),
-                  });
-                }}
-                onBulkArchive={ids => {
-                  // Look for an archive folder by common remote names
-                  const archiveFolder = folders.find(f =>
-                    f.remoteName.toLowerCase().includes('archive') ||
-                    f.remoteName.toLowerCase().includes('arquivo') ||
-                    f.displayName.toLowerCase().includes('archive') ||
-                    f.displayName.toLowerCase().includes('arquivo')
-                  );
-                  if (!archiveFolder) {
-                    toast.error('Pasta de arquivo não encontrada');
-                    return;
-                  }
-                  bulkMoveMutation.mutate({ ids, folderId: archiveFolder.id }, {
-                    onSuccess: () => {
-                      setSelectedIds(new Set());
-                      toast.success('Mensagens arquivadas');
-                    },
-                  });
-                }}
-                onBulkDelete={ids => {
-                  const trashFolder = folders.find(f => f.type === 'TRASH');
-                  if (trashFolder) {
-                    bulkMoveMutation.mutate({ ids, folderId: trashFolder.id }, {
-                      onSuccess: () => {
-                        setSelectedIds(new Set());
-                        toast.success('Mensagens movidas para a lixeira');
-                      },
-                    });
-                  } else {
-                    bulkDeleteMutation.mutate(ids, {
-                      onSuccess: () => setSelectedIds(new Set()),
-                    });
-                  }
-                }}
-              />
-            </ResizablePanel>
-
-            <ResizableHandle withHandle />
-
-            <ResizablePanel defaultSize={65} minSize={40}>
-              <EmailMessageDisplay
-                selectedMessage={selectedMessage}
-                folders={isCentralInbox ? [] : folders}
-                currentFolderId={selectedFolderId}
-                onReply={openReply}
-                onReplyAll={openReplyAll}
-                onForward={openForward}
-                onDeleteMessage={() => setSelectedMessageId(null)}
-                accountId={selectedMessage?.accountId ?? selectedAccountId}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
         </div>
+      </Card>
 
-        <EmailComposeDialog
-          open={composeOpen}
-          onClose={() => setComposeOpen(false)}
-          accounts={accounts}
-          defaultAccountId={selectedAccountId ?? undefined}
-          mode={composeMode}
-        />
-      </div>
+      {/* Body — empty state or 3-panel layout */}
+      {!hasAccounts ? (
+        <Card className="bg-white dark:bg-white/5 border-gray-200/80 dark:border-white/10 shadow-sm dark:shadow-none p-0 overflow-hidden flex-1 min-h-0 flex flex-col">
+          <EmailEmptyState onAddAccount={() => setAccountWizardOpen(true)} />
+        </Card>
+      ) : (
+        <Card className="bg-white dark:bg-white/5 border-gray-200/80 dark:border-white/10 shadow-sm dark:shadow-none p-0 overflow-hidden flex-1 min-h-0 flex flex-col">
+          <div className="flex flex-1 min-h-0">
+            <ResizablePanelGroup
+              direction="horizontal"
+              className="flex-1 min-w-0"
+            >
+              <ResizablePanel
+                defaultSize={20}
+                minSize={16}
+                maxSize={28}
+                className="border-r"
+              >
+                <EmailSidebar
+                  accounts={accounts}
+                  folders={folders}
+                  selectedAccountId={selectedAccountId}
+                  selectedFolderId={selectedFolderId}
+                  isCentralInbox={isCentralInbox}
+                  onAccountChange={id => {
+                    setSelectedAccountId(id);
+                    setIsCentralInbox(false);
+                  }}
+                  onFolderChange={id => {
+                    setSelectedFolderId(id);
+                    setSelectedMessageId(null);
+                    setSelectedIds(new Set());
+                    setIsCentralInbox(false);
+                  }}
+                  onSyncAccount={() => {
+                    if (selectedAccountId)
+                      syncMutation.mutate(selectedAccountId);
+                  }}
+                  isSyncing={syncMutation.isPending}
+                  onCentralInbox={() => {
+                    setIsCentralInbox(true);
+                    setSelectedFolderId(null);
+                    setSelectedMessageId(null);
+                    setSelectedIds(new Set());
+                  }}
+                  onOpenNewAccount={() => setAccountWizardOpen(true)}
+                  onEditAccount={account => setEditAccount(account)}
+                  unreadCounts={unreadCounts}
+                  accountUnreadCounts={accountUnreadCounts}
+                  isLoadingAccounts={accountsQuery.isLoading}
+                />
+              </ResizablePanel>
+
+              <ResizableHandle />
+
+              <ResizablePanel
+                defaultSize={30}
+                minSize={22}
+                maxSize={45}
+                className="border-r"
+              >
+                <EmailMessageList
+                  messages={messages}
+                  total={messagesTotal}
+                  selectedMessageId={selectedMessageId}
+                  onSelectMessage={id => setSelectedMessageId(id)}
+                  isLoading={messagesLoading}
+                  isError={messagesError}
+                  noAccount={!selectedAccountId && !isCentralInbox}
+                  searchQuery={searchQuery}
+                  onSearchChange={q => {
+                    setSearchQuery(q);
+                    setSelectedMessageId(null);
+                  }}
+                  filter={messageFilter}
+                  onFilterChange={f => {
+                    setMessageFilter(f);
+                    setSelectedMessageId(null);
+                  }}
+                  folderTotalMessages={selectedFolder?.totalMessages}
+                  folderUnreadMessages={selectedFolder?.unreadMessages}
+                  folderName={
+                    isCentralInbox
+                      ? 'Caixa Central'
+                      : selectedFolder
+                        ? getFolderDisplayName(selectedFolder)
+                        : undefined
+                  }
+                  hasMore={isCentralInbox ? false : messagesQuery.hasNextPage}
+                  isFetchingNextPage={
+                    isCentralInbox ? false : messagesQuery.isFetchingNextPage
+                  }
+                  onLoadMore={() => {
+                    if (!isCentralInbox) messagesQuery.fetchNextPage();
+                  }}
+                  selectedIds={selectedIds}
+                  onSelectedIdsChange={setSelectedIds}
+                  onToggleSelect={id =>
+                    setSelectedIds(prev => {
+                      const next = new Set(prev);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      return next;
+                    })
+                  }
+                  onSelectAll={() =>
+                    setSelectedIds(new Set(messages.map(m => m.id)))
+                  }
+                  onClearSelection={() => setSelectedIds(new Set())}
+                  onBulkMarkRead={(ids, isRead) => {
+                    bulkMarkReadMutation.mutate(
+                      { ids, isRead },
+                      {
+                        onSuccess: () => setSelectedIds(new Set()),
+                      }
+                    );
+                  }}
+                  onBulkArchive={ids => {
+                    const archiveFolder = folders.find(
+                      f =>
+                        f.remoteName.toLowerCase().includes('archive') ||
+                        f.remoteName.toLowerCase().includes('arquivo') ||
+                        f.displayName.toLowerCase().includes('archive') ||
+                        f.displayName.toLowerCase().includes('arquivo')
+                    );
+                    if (!archiveFolder) {
+                      toast.error('Pasta de arquivo não encontrada');
+                      return;
+                    }
+                    bulkMoveMutation.mutate(
+                      { ids, folderId: archiveFolder.id },
+                      {
+                        onSuccess: () => {
+                          setSelectedIds(new Set());
+                          toast.success('Mensagens arquivadas');
+                        },
+                      }
+                    );
+                  }}
+                  onBulkDelete={ids => {
+                    const trashFolder = folders.find(f => f.type === 'TRASH');
+                    if (trashFolder) {
+                      bulkMoveMutation.mutate(
+                        { ids, folderId: trashFolder.id },
+                        {
+                          onSuccess: () => {
+                            setSelectedIds(new Set());
+                            toast.success('Mensagens movidas para a lixeira');
+                          },
+                        }
+                      );
+                    } else {
+                      bulkDeleteMutation.mutate(ids, {
+                        onSuccess: () => setSelectedIds(new Set()),
+                      });
+                    }
+                  }}
+                />
+              </ResizablePanel>
+
+              <ResizableHandle />
+
+              <ResizablePanel defaultSize={50} minSize={35}>
+                <EmailMessageDisplay
+                  selectedMessage={selectedMessage}
+                  folders={isCentralInbox ? [] : folders}
+                  currentFolderId={selectedFolderId}
+                  onReply={openReply}
+                  onReplyAll={openReplyAll}
+                  onForward={openForward}
+                  onDeleteMessage={() => setSelectedMessageId(null)}
+                  accountId={selectedMessage?.accountId ?? selectedAccountId}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </div>
+        </Card>
+      )}
+
+      {/* Compose Dialog */}
+      <EmailComposeDialog
+        open={composeOpen}
+        onClose={() => setComposeOpen(false)}
+        accounts={accounts}
+        defaultAccountId={selectedAccountId ?? undefined}
+        mode={composeMode}
+      />
 
       {/* Account Wizard Modal */}
       <EmailAccountWizard
@@ -544,7 +695,9 @@ export default function EmailPage() {
         <EmailAccountEditDialog
           account={editAccount}
           open={!!editAccount}
-          onOpenChange={(open) => { if (!open) setEditAccount(null); }}
+          onOpenChange={open => {
+            if (!open) setEditAccount(null);
+          }}
         />
       )}
     </div>

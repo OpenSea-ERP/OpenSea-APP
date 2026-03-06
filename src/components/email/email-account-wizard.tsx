@@ -8,17 +8,16 @@ import {
   type WizardStep,
 } from '@/components/ui/step-wizard-dialog';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { useCreateEmailAccount, useSyncEmailAccount } from '@/hooks/email/use-email';
+import { useQueryClient } from '@tanstack/react-query';
 import { emailService } from '@/services/email';
 import type { CreateEmailAccountRequest } from '@/types/email';
 import {
   CheckCircle2,
+  Lightbulb,
   Loader2,
   Mail,
   MailCheck,
   Send,
-  Settings,
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -115,37 +114,40 @@ export function EmailAccountWizard({
   const [smtpPort, setSmtpPort] = useState(465);
   const [smtpSecure, setSmtpSecure] = useState(true);
 
-  // Step 4: Settings
-  const [visibility, setVisibility] = useState<'PRIVATE' | 'SHARED'>('PRIVATE');
-  const [signature, setSignature] = useState('');
-  const [isDefault, setIsDefault] = useState(false);
-
-  // Step 5: Connection test
+  // Step 4: Connection test
   const [testState, setTestState] = useState<ConnectionTestState>('idle');
   const [testError, setTestError] = useState('');
   const createdAccountIdRef = useRef<string | null>(null);
 
-  const createMutation = useCreateEmailAccount();
-  const syncMutation = useSyncEmailAccount();
+  const queryClient = useQueryClient();
 
   // Auto-detect provider settings when email changes
-  const handleEmailChange = useCallback(
-    (value: string) => {
-      setEmail(value);
-      const provider = detectProvider(value);
-      if (provider) {
-        setImapHost(provider.imap.host);
-        setImapPort(provider.imap.port);
-        setImapSecure(provider.imap.secure);
-        setSmtpHost(provider.smtp.host);
-        setSmtpPort(provider.smtp.port);
-        setSmtpSecure(provider.smtp.secure);
+  const handleEmailChange = useCallback((value: string) => {
+    setEmail(value);
+    const provider = detectProvider(value);
+    if (provider) {
+      setImapHost(provider.imap.host);
+      setImapPort(provider.imap.port);
+      setImapSecure(provider.imap.secure);
+      setSmtpHost(provider.smtp.host);
+      setSmtpPort(provider.smtp.port);
+      setSmtpSecure(provider.smtp.secure);
+    } else {
+      // Fallback for custom domains: guess mail.{domain}
+      const domain = value.split('@')[1]?.toLowerCase();
+      if (domain && domain.includes('.')) {
+        const guessedHost = `mail.${domain}`;
+        setImapHost(guessedHost);
+        setImapPort(993);
+        setImapSecure(true);
+        setSmtpHost(guessedHost);
+        setSmtpPort(465);
+        setSmtpSecure(true);
       }
-    },
-    []
-  );
+    }
+  }, []);
 
-  // Run connection test when entering step 5
+  // Run connection test when entering step 4
   const runConnectionTest = useCallback(async () => {
     setTestError('');
 
@@ -160,9 +162,8 @@ export function EmailAccountWizard({
       smtpHost,
       smtpPort,
       smtpSecure,
-      visibility,
-      signature: signature || undefined,
-      isDefault,
+      visibility: 'PRIVATE',
+      isDefault: false,
     };
 
     try {
@@ -185,7 +186,9 @@ export function EmailAccountWizard({
     } catch (err) {
       setTestState('error');
       const message =
-        err instanceof Error ? err.message : 'Erro desconhecido ao testar conexão';
+        err instanceof Error
+          ? err.message
+          : 'Erro desconhecido ao testar conexão';
       setTestError(message);
     }
   }, [
@@ -198,21 +201,18 @@ export function EmailAccountWizard({
     smtpHost,
     smtpPort,
     smtpSecure,
-    visibility,
-    signature,
-    isDefault,
   ]);
 
-  // Auto-trigger test on step 5 entry
+  // Auto-trigger test on step 4 entry
   useEffect(() => {
-    if (currentStep === 5 && testState === 'idle') {
+    if (currentStep === 4 && testState === 'idle') {
       runConnectionTest();
     }
   }, [currentStep, testState, runConnectionTest]);
 
   function handleStepChange(step: number) {
-    // If going to step 5, reset test state (unless already created)
-    if (step === 5 && currentStep !== 5) {
+    // If going to step 4, reset test state (unless already created)
+    if (step === 4 && currentStep !== 4) {
       if (!createdAccountIdRef.current) {
         setTestState('idle');
       }
@@ -232,9 +232,6 @@ export function EmailAccountWizard({
     setSmtpHost('');
     setSmtpPort(465);
     setSmtpSecure(true);
-    setVisibility('PRIVATE');
-    setSignature('');
-    setIsDefault(false);
     setTestState('idle');
     setTestError('');
     createdAccountIdRef.current = null;
@@ -242,8 +239,8 @@ export function EmailAccountWizard({
   }
 
   function handleFinish() {
-    // Invalidate queries on success
-    createMutation.reset();
+    // Invalidate all email queries so accounts/folders/messages refresh
+    queryClient.invalidateQueries({ queryKey: ['email'] });
     handleClose();
   }
 
@@ -259,9 +256,7 @@ export function EmailAccountWizard({
       {
         title: 'Dados da Conta',
         description: 'Informe o endereço de e-mail e senha de aplicativo',
-        icon: (
-          <Mail className="h-16 w-16 text-violet-500/60" />
-        ),
+        icon: <Mail className="h-16 w-16 text-primary/60" />,
         isValid: step1Valid,
         content: (
           <div className="space-y-4">
@@ -286,7 +281,9 @@ export function EmailAccountWizard({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="wizard-password">Senha / Senha de aplicativo *</Label>
+              <Label htmlFor="wizard-password">
+                Senha / Senha de aplicativo *
+              </Label>
               <Input
                 id="wizard-password"
                 type="password"
@@ -294,10 +291,24 @@ export function EmailAccountWizard({
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
-              <p className="text-[11px] text-muted-foreground">
-                Para Gmail e Outlook, utilize uma senha de aplicativo gerada nas
-                configurações de segurança da sua conta.
-              </p>
+              <div className="mt-1.5 flex items-start gap-2.5 rounded-lg bg-gray-50 dark:bg-gray-950/30 border border-gray-200/60 dark:border-gray-800/40 px-3 py-2.5">
+                <Lightbulb className="size-4 shrink-0 text-gray-500 mt-0.5" />
+                <p className="text-xs text-gray-800 dark:text-gray-200/90">
+                  Para{' '}
+                  <span className="font-semibold" style={{ color: '#EA4335' }}>
+                    Gmail
+                  </span>{' '}
+                  e{' '}
+                  <span className="font-semibold" style={{ color: '#0078D4' }}>
+                    Outlook
+                  </span>
+                  , utilize uma{' '}
+                  <span className="font-semibold dark:text-white">
+                    senha de aplicativo
+                  </span>{' '}
+                  gerada nas configurações de segurança da sua conta.
+                </p>
+              </div>
             </div>
           </div>
         ),
@@ -306,9 +317,7 @@ export function EmailAccountWizard({
       {
         title: 'Servidor de Recebimento (IMAP)',
         description: 'Configuração do servidor para receber e-mails',
-        icon: (
-          <MailCheck className="h-16 w-16 text-blue-500/60" />
-        ),
+        icon: <MailCheck className="h-16 w-16 text-primary/60" />,
         isValid: step2Valid,
         content: (
           <div className="space-y-4">
@@ -343,7 +352,7 @@ export function EmailAccountWizard({
               </div>
             </div>
             {detectProvider(email) && (
-              <p className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
+              <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
                 Configurações detectadas automaticamente com base no provedor de
                 e-mail.
               </p>
@@ -355,9 +364,7 @@ export function EmailAccountWizard({
       {
         title: 'Servidor de Saída (SMTP)',
         description: 'Configuração do servidor para enviar e-mails',
-        icon: (
-          <Send className="h-16 w-16 text-emerald-500/60" />
-        ),
+        icon: <Send className="h-16 w-16 text-primary/60" />,
         isValid: step3Valid,
         content: (
           <div className="space-y-4">
@@ -394,58 +401,7 @@ export function EmailAccountWizard({
           </div>
         ),
       },
-      // Step 4: Settings
-      {
-        title: 'Configurações',
-        description: 'Visibilidade, assinatura e preferências',
-        icon: (
-          <Settings className="h-16 w-16 text-amber-500/60" />
-        ),
-        isValid: true,
-        content: (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Visibilidade</Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Contas compartilhadas ficam visíveis para outros membros da equipe.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  {visibility === 'PRIVATE' ? 'Privada' : 'Compartilhada'}
-                </span>
-                <Switch
-                  checked={visibility === 'SHARED'}
-                  onCheckedChange={checked =>
-                    setVisibility(checked ? 'SHARED' : 'PRIVATE')
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Conta padrão</Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Usar esta conta como padrão para envio de e-mails.
-                </p>
-              </div>
-              <Switch checked={isDefault} onCheckedChange={setIsDefault} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="wizard-signature">Assinatura</Label>
-              <Textarea
-                id="wizard-signature"
-                placeholder="Sua assinatura de e-mail..."
-                value={signature}
-                onChange={e => setSignature(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </div>
-        ),
-      },
-      // Step 5: Connection Test
+      // Step 4: Connection Test
       {
         title: 'Teste de Conexão',
         description: 'Verificando conexão com os servidores de e-mail',
@@ -486,8 +442,8 @@ export function EmailAccountWizard({
                   Conta configurada com sucesso!
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  A sincronização inicial foi iniciada. Suas mensagens aparecerão em
-                  breve.
+                  A sincronização inicial foi iniciada. Suas mensagens
+                  aparecerão em breve.
                 </p>
               </div>
             )}
@@ -499,7 +455,8 @@ export function EmailAccountWizard({
                   Falha na conexão
                 </p>
                 <p className="text-xs text-muted-foreground max-w-sm">
-                  {testError || 'Verifique as credenciais e configurações do servidor.'}
+                  {testError ||
+                    'Verifique as credenciais e configurações do servidor.'}
                 </p>
               </div>
             )}
@@ -557,9 +514,6 @@ export function EmailAccountWizard({
       smtpHost,
       smtpPort,
       smtpSecure,
-      visibility,
-      signature,
-      isDefault,
       step1Valid,
       step2Valid,
       step3Valid,

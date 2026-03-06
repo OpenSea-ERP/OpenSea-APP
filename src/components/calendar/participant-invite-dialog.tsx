@@ -45,7 +45,7 @@ export function ParticipantInviteDialog({
   const { data: usersData, isLoading: usersLoading } = useUsers(open);
   const inviteMutation = useInviteParticipants();
 
-  const existingParticipantIds = new Set(event.participants.map((p) => p.userId));
+  const existingParticipantIds = new Set((event.participants ?? []).map((p) => p.userId));
 
   const filteredUsers = (usersData?.users ?? []).filter((u) => {
     if (existingParticipantIds.has(u.id)) return false;

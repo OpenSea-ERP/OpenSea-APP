@@ -1,59 +1,37 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from '@/lib/utils';
 
 interface RecurrencePickerProps {
   value: string | null;
   onChange: (rrule: string | null) => void;
+  accentColor?: string;
+  titleSlot?: React.ReactNode;
 }
 
 type Frequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 
 const WEEKDAYS = [
-  { value: 'MO', label: 'Se' },
-  { value: 'TU', label: 'Te' },
-  { value: 'WE', label: 'Qa' },
-  { value: 'TH', label: 'Qi' },
-  { value: 'FR', label: 'Sx' },
-  { value: 'SA', label: 'Sá' },
-  { value: 'SU', label: 'Do' },
+  { value: 'MO', label: 'Seg', full: 'Segunda' },
+  { value: 'TU', label: 'Ter', full: 'Terça' },
+  { value: 'WE', label: 'Qua', full: 'Quarta' },
+  { value: 'TH', label: 'Qui', full: 'Quinta' },
+  { value: 'FR', label: 'Sex', full: 'Sexta' },
+  { value: 'SA', label: 'Sáb', full: 'Sábado' },
+  { value: 'SU', label: 'Dom', full: 'Domingo' },
 ];
 
-const WEEKDAY_TOOLTIPS: Record<string, string> = {
-  MO: 'Segunda',
-  TU: 'Terça',
-  WE: 'Quarta',
-  TH: 'Quinta',
-  FR: 'Sexta',
-  SA: 'Sábado',
-  SU: 'Domingo',
-};
+const FREQUENCIES: { value: Frequency; label: string; suffix: string }[] = [
+  { value: 'DAILY', label: 'Dia', suffix: 'dia(s)' },
+  { value: 'WEEKLY', label: 'Semana', suffix: 'semana(s)' },
+  { value: 'MONTHLY', label: 'Mês', suffix: 'mês(es)' },
+  { value: 'YEARLY', label: 'Ano', suffix: 'ano(s)' },
+];
 
-const FREQUENCY_LABELS: Record<Frequency, string> = {
-  DAILY: 'Diário',
-  WEEKLY: 'Semanal',
-  MONTHLY: 'Mensal',
-  YEARLY: 'Anual',
-};
-
-const FREQUENCY_SUFFIX: Record<Frequency, string> = {
-  DAILY: 'dia(s)',
-  WEEKLY: 'semana(s)',
-  MONTHLY: 'mês(es)',
-  YEARLY: 'ano(s)',
-};
-
-export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
+export function RecurrencePicker({ value, onChange, accentColor = '#3b82f6', titleSlot }: RecurrencePickerProps) {
   const [frequency, setFrequency] = useState<Frequency>('WEEKLY');
   const [interval, setInterval] = useState(1);
   const [weekdays, setWeekdays] = useState<string[]>([]);
@@ -112,87 +90,97 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
     emitRRule(frequency, interval, weekdays, val);
   };
 
+  const currentFreq = FREQUENCIES.find((f) => f.value === frequency)!;
+
   return (
     <div className="space-y-3">
-      {/* Frequency + Interval row */}
-      <div className="flex items-center gap-3">
-        <Select
-          value={frequency}
-          onValueChange={(val) => handleFrequencyChange(val as Frequency)}
-        >
-          <SelectTrigger className="w-[130px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.entries(FREQUENCY_LABELS) as [Frequency, string][]).map(
-              ([val, label]) => (
-                <SelectItem key={val} value={val}>
-                  {label}
-                </SelectItem>
-              ),
-            )}
-          </SelectContent>
-        </Select>
+      {/* Header: title (left) + frequency chips (right) */}
+      <div className="flex items-center gap-2">
+        {titleSlot && <div className="flex-1 min-w-0">{titleSlot}</div>}
+        <div className={cn('flex gap-1', !titleSlot && 'w-full')}>
+          {FREQUENCIES.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => handleFrequencyChange(f.value)}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[11px] font-medium transition-all',
+                frequency === f.value
+                  ? 'text-white shadow-sm'
+                  : 'bg-muted/60 dark:bg-white/5 text-muted-foreground hover:bg-muted dark:hover:bg-white/10',
+              )}
+              style={frequency === f.value ? { backgroundColor: accentColor } : undefined}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-        <span className="text-sm text-muted-foreground">a cada</span>
-
+      {/* Interval row */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">A cada</span>
         <Input
           type="number"
           min={1}
           max={99}
           value={interval}
           onChange={(e) => handleIntervalChange(Number(e.target.value))}
-          className="w-16 text-center"
+          className="w-16 h-8 text-center text-sm px-1 [&::-webkit-inner-spin-button]:appearance-none"
         />
+        <span className="text-xs text-muted-foreground">{currentFreq.suffix}</span>
 
-        <span className="text-sm text-muted-foreground">
-          {FREQUENCY_SUFFIX[frequency]}
-        </span>
-      </div>
-
-      {/* Weekday selector (only for WEEKLY) */}
-      {frequency === 'WEEKLY' && (
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Repetir nos dias</Label>
-          <ToggleGroup
-            type="multiple"
-            value={weekdays}
-            onValueChange={handleWeekdaysChange}
-            className="justify-start gap-1"
-          >
-            {WEEKDAYS.map((day) => (
-              <ToggleGroupItem
-                key={day.value}
-                value={day.value}
-                size="sm"
-                className="w-9 h-8 text-xs rounded-full p-0"
-                title={WEEKDAY_TOOLTIPS[day.value]}
-              >
-                {day.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
-      )}
-
-      {/* Repetition count */}
-      <div className="flex items-center gap-3">
-        <Label className="text-xs text-muted-foreground whitespace-nowrap">
-          Repetições
-        </Label>
+        {/* Count */}
+        <span className="text-xs text-muted-foreground ml-auto">por</span>
         <Input
           type="number"
           min={1}
           max={365}
           value={count ?? ''}
-          placeholder="Sem limite"
+          placeholder="∞"
           onChange={(e) => {
             const val = e.target.value ? Number(e.target.value) : undefined;
             handleCountChange(val);
           }}
-          className="w-24"
+          className="w-16 h-8 text-center text-sm px-1 [&::-webkit-inner-spin-button]:appearance-none"
         />
+        <span className="text-xs text-muted-foreground">vezes</span>
       </div>
+
+      {/* Weekday selector (only for WEEKLY) */}
+      {frequency === 'WEEKLY' && (
+        <div className="space-y-1.5">
+          <span className="text-xs text-muted-foreground">Nos dias:</span>
+          <div className="rounded-md border border-border/60 bg-muted/30 dark:bg-white/[0.03] p-1.5">
+            <ToggleGroup
+              type="multiple"
+              value={weekdays}
+              onValueChange={handleWeekdaysChange}
+              className="w-full gap-1"
+            >
+              {WEEKDAYS.map((day) => (
+                <ToggleGroupItem
+                  key={day.value}
+                  value={day.value}
+                  size="sm"
+                  className={cn(
+                    'flex-1 h-8 rounded-md p-0 text-xs font-medium transition-all',
+                    weekdays.includes(day.value) && 'text-white',
+                  )}
+                  style={
+                    weekdays.includes(day.value)
+                      ? { backgroundColor: accentColor, borderColor: accentColor }
+                      : undefined
+                  }
+                  title={day.full}
+                >
+                  {day.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

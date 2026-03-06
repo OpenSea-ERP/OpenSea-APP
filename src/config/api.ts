@@ -325,6 +325,7 @@ export const API_ENDPOINTS = {
     },
     MESSAGES: {
       LIST: '/v1/email/messages',
+      CENTRAL_INBOX: '/v1/email/messages/central-inbox',
       GET: (id: string) => `/v1/email/messages/${id}`,
       DRAFT: '/v1/email/messages/draft',
       SEND: '/v1/email/messages/send',
@@ -398,6 +399,8 @@ export const API_ENDPOINTS = {
       CREATE_USER: (id: string) => `/v1/admin/tenants/${id}/users`,
       REMOVE_USER: (id: string, userId: string) =>
         `/v1/admin/tenants/${id}/users/${userId}`,
+      SET_SECURITY_KEY: (id: string, userId: string) =>
+        `/v1/admin/tenants/${id}/users/${userId}/security-key`,
     },
     PLANS: {
       LIST: '/v1/admin/plans',
@@ -515,6 +518,9 @@ export const API_ENDPOINTS = {
         RESTORE: (id: string, vId: string) =>
           `/v1/storage/files/${id}/versions/${vId}/restore`,
       },
+      SERVE: (id: string) => `/v1/storage/files/${id}/serve`,
+      COMPRESS: '/v1/storage/files/compress',
+      DECOMPRESS: (id: string) => `/v1/storage/files/${id}/decompress`,
       MULTIPART: {
         INITIATE: '/v1/storage/files/multipart/initiate',
         COMPLETE: '/v1/storage/files/multipart/complete',
@@ -537,10 +543,26 @@ export const API_ENDPOINTS = {
       ACCESS: (token: string) => `/v1/public/shared/${token}`,
       DOWNLOAD: (token: string) => `/v1/public/shared/${token}/download`,
     },
+    SECURITY: {
+      PROTECT: '/v1/storage/security/protect',
+      UNPROTECT: '/v1/storage/security/unprotect',
+      VERIFY: '/v1/storage/security/verify',
+      HIDE: '/v1/storage/security/hide',
+      UNHIDE: '/v1/storage/security/unhide',
+      VERIFY_KEY: '/v1/storage/security/verify-key',
+    },
     STATS: '/v1/storage/stats',
   },
   // Calendar
   CALENDAR: {
+    CALENDARS: {
+      LIST: '/v1/calendar/calendars',
+      CREATE_TEAM: '/v1/calendar/calendars/team',
+      UPDATE: (id: string) => `/v1/calendar/calendars/${id}`,
+      DELETE: (id: string) => `/v1/calendar/calendars/${id}`,
+      UPDATE_PERMISSIONS: (id: string) =>
+        `/v1/calendar/calendars/${id}/team-permissions`,
+    },
     EVENTS: {
       LIST: '/v1/calendar/events',
       GET: (id: string) => `/v1/calendar/events/${id}`,
@@ -555,7 +577,98 @@ export const API_ENDPOINTS = {
         `/v1/calendar/events/${eventId}/participants/${userId}`,
       MANAGE_REMINDERS: (eventId: string) =>
         `/v1/calendar/events/${eventId}/reminders`,
+      SHARE_USERS: (eventId: string) =>
+        `/v1/calendar/events/${eventId}/share-users`,
+      SHARE_TEAM: (eventId: string) =>
+        `/v1/calendar/events/${eventId}/share-team`,
+      UNSHARE_USER: (eventId: string, targetUserId: string) =>
+        `/v1/calendar/events/${eventId}/share-users/${targetUserId}`,
       EXPORT: '/v1/calendar/events/export',
+    },
+  },
+  // Tasks
+  TASKS: {
+    BOARDS: {
+      LIST: '/v1/tasks/boards',
+      CREATE: '/v1/tasks/boards',
+      GET: (boardId: string) => `/v1/tasks/boards/${boardId}`,
+      UPDATE: (boardId: string) => `/v1/tasks/boards/${boardId}`,
+      DELETE: (boardId: string) => `/v1/tasks/boards/${boardId}`,
+      ARCHIVE: (boardId: string) => `/v1/tasks/boards/${boardId}/archive`,
+      MEMBERS: {
+        INVITE: (boardId: string) => `/v1/tasks/boards/${boardId}/members`,
+        UPDATE: (boardId: string, memberId: string) => `/v1/tasks/boards/${boardId}/members/${memberId}`,
+        REMOVE: (boardId: string, memberId: string) => `/v1/tasks/boards/${boardId}/members/${memberId}`,
+      },
+    },
+    COLUMNS: {
+      CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/columns`,
+      UPDATE: (boardId: string, columnId: string) => `/v1/tasks/boards/${boardId}/columns/${columnId}`,
+      DELETE: (boardId: string, columnId: string) => `/v1/tasks/boards/${boardId}/columns/${columnId}`,
+      REORDER: (boardId: string) => `/v1/tasks/boards/${boardId}/columns/reorder`,
+    },
+    CARDS: {
+      LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/cards`,
+      CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/cards`,
+      GET: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}`,
+      UPDATE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}`,
+      DELETE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}`,
+      MOVE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/move`,
+      ASSIGN: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/assign`,
+      ARCHIVE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/archive`,
+      LABELS: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/labels`,
+    },
+    LABELS: {
+      LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/labels`,
+      CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/labels`,
+      UPDATE: (boardId: string, labelId: string) => `/v1/tasks/boards/${boardId}/labels/${labelId}`,
+      DELETE: (boardId: string, labelId: string) => `/v1/tasks/boards/${boardId}/labels/${labelId}`,
+    },
+    COMMENTS: {
+      LIST: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments`,
+      CREATE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments`,
+      UPDATE: (boardId: string, cardId: string, commentId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}`,
+      DELETE: (boardId: string, cardId: string, commentId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}`,
+      ADD_REACTION: (boardId: string, cardId: string, commentId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}/reactions`,
+      REMOVE_REACTION: (boardId: string, cardId: string, commentId: string, emoji: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}/reactions/${emoji}`,
+    },
+    SUBTASKS: {
+      LIST: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks`,
+      CREATE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks`,
+      UPDATE: (boardId: string, cardId: string, subtaskId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}`,
+      DELETE: (boardId: string, cardId: string, subtaskId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}`,
+      COMPLETE: (boardId: string, cardId: string, subtaskId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}/complete`,
+    },
+    CHECKLISTS: {
+      CREATE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists`,
+      UPDATE: (boardId: string, cardId: string, checklistId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}`,
+      DELETE: (boardId: string, cardId: string, checklistId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}`,
+      ADD_ITEM: (boardId: string, cardId: string, checklistId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items`,
+      TOGGLE_ITEM: (boardId: string, cardId: string, checklistId: string, itemId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items/${itemId}/toggle`,
+      DELETE_ITEM: (boardId: string, cardId: string, checklistId: string, itemId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items/${itemId}`,
+    },
+    CUSTOM_FIELDS: {
+      LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/custom-fields`,
+      CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/custom-fields`,
+      UPDATE: (boardId: string, fieldId: string) => `/v1/tasks/boards/${boardId}/custom-fields/${fieldId}`,
+      DELETE: (boardId: string, fieldId: string) => `/v1/tasks/boards/${boardId}/custom-fields/${fieldId}`,
+      SET_VALUES: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/custom-fields`,
+    },
+    ATTACHMENTS: {
+      LIST: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments`,
+      UPLOAD: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments`,
+      DELETE: (boardId: string, cardId: string, attachmentId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments/${attachmentId}`,
+    },
+    AUTOMATIONS: {
+      LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/automations`,
+      CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/automations`,
+      UPDATE: (boardId: string, automationId: string) => `/v1/tasks/boards/${boardId}/automations/${automationId}`,
+      DELETE: (boardId: string, automationId: string) => `/v1/tasks/boards/${boardId}/automations/${automationId}`,
+      TOGGLE: (boardId: string, automationId: string) => `/v1/tasks/boards/${boardId}/automations/${automationId}/toggle`,
+    },
+    ACTIVITY: {
+      BOARD: (boardId: string) => `/v1/tasks/boards/${boardId}/activity`,
+      CARD: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/activity`,
     },
   },
   // Core - Teams
@@ -577,6 +690,14 @@ export const API_ENDPOINTS = {
     },
     TRANSFER_OWNERSHIP: (teamId: string) =>
       `/v1/teams/${teamId}/transfer-ownership`,
+    EMAILS: {
+      LIST: (teamId: string) => `/v1/teams/${teamId}/emails`,
+      LINK: (teamId: string) => `/v1/teams/${teamId}/emails`,
+      UPDATE_PERMISSIONS: (teamId: string, accountId: string) =>
+        `/v1/teams/${teamId}/emails/${accountId}`,
+      UNLINK: (teamId: string, accountId: string) =>
+        `/v1/teams/${teamId}/emails/${accountId}`,
+    },
   },
   // Health
   HEALTH: '/health',

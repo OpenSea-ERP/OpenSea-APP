@@ -1,30 +1,35 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import {
   CalendarView,
+  CalendarSelector,
   EventCreateDialog,
   EventDetailSheet,
   EventEditDialog,
   EventFilters,
-  EventTypeBadge,
 } from '@/components/calendar';
-import { useCalendarEvents } from '@/hooks/calendar';
+import type { CalendarViewRef } from '@/components/calendar';
+import { useCalendarEvents, useCalendarEvent, useMyCalendars } from '@/hooks/calendar';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useAuth } from '@/contexts/auth-context';
 import { CALENDAR_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { apiConfig, authConfig } from '@/config/api';
 import { calendarEventsService } from '@/services/calendar';
 import type { CalendarEvent, EventType } from '@/types/calendar';
-import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Calendar, Download, Plus } from 'lucide-react';
 
-const LEGEND_TYPES: EventType[] = [
+const VALID_VIEWS = ['dayGridMonth', 'timeGridWeek', 'timeGridDay', 'listWeek'] as const;
+type CalendarViewType = typeof VALID_VIEWS[number];
+
+const VALID_EVENT_TYPES: EventType[] = [
   'MEETING', 'TASK', 'REMINDER', 'DEADLINE', 'HOLIDAY',
   'BIRTHDAY', 'VACATION', 'ABSENCE', 'FINANCE_DUE', 'PURCHASE_ORDER', 'CUSTOM',
 ];
@@ -32,6 +37,10 @@ const LEGEND_TYPES: EventType[] = [
 export default function CalendarPage() {
   const { user } = useAuth();
   const { hasPermission } = usePermissions();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const canCreate = hasPermission(CALENDAR_PERMISSIONS.EVENTS.CREATE);
   const canEdit = hasPermission(CALENDAR_PERMISSIONS.EVENTS.UPDATE);
   const canDelete = hasPermission(CALENDAR_PERMISSIONS.EVENTS.DELETE);
@@ -39,19 +48,95 @@ export default function CalendarPage() {
   const canRespond = hasPermission(CALENDAR_PERMISSIONS.PARTICIPANTS.RESPOND);
   const canManageParticipants = hasPermission(CALENDAR_PERMISSIONS.PARTICIPANTS.MANAGE);
   const canManageReminders = hasPermission(CALENDAR_PERMISSIONS.REMINDERS.CREATE);
+  const canShare = hasPermission(CALENDAR_PERMISSIONS.EVENTS.SHARE_USERS) ||
+    hasPermission(CALENDAR_PERMISSIONS.EVENTS.SHARE_TEAMS);
+  const canExport = hasPermission(CALENDAR_PERMISSIONS.EVENTS.EXPORT);
+
+  // Read URL query params
+  const urlView = searchParams.get('view') as CalendarViewType | null;
+  const urlType = searchParams.get('type') as EventType | null;
+  const urlDate = searchParams.get('date');
+
+  const initialView = useMemo<CalendarViewType>(() => {
+    if (urlView && VALID_VIEWS.includes(urlView)) return urlView;
+    return 'dayGridMonth';
+  }, [urlView]);
+
+  const initialDate = useMemo<Date | undefined>(() => {
+    if (!urlDate) return undefined;
+    const parsed = new Date(urlDate);
+    return isNaN(parsed.getTime()) ? undefined : parsed;
+  }, [urlDate]);
+
+  // Helper to update URL params without full navigation
+  const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
+  }, [searchParams, router, pathname]);
 
   // Date range state (controlled by FullCalendar's datesSet)
   const [dateRange, setDateRange] = useState(() => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 7);
+    const base = initialDate ?? new Date();
+    const start = new Date(base.getFullYear(), base.getMonth(), 1);
+    const end = new Date(base.getFullYear(), base.getMonth() + 1, 7);
     return { startDate: start.toISOString(), endDate: end.toISOString() };
   });
 
-  // Filters
-  const [selectedType, setSelectedType] = useState<EventType | undefined>();
+  // View state synced with URL
+  const [currentView, setCurrentView] = useState<CalendarViewType>(initialView);
+
+  // Filters synced with URL
+  const [selectedType, setSelectedType] = useState<EventType | undefined>(() => {
+    if (urlType && VALID_EVENT_TYPES.includes(urlType)) return urlType;
+    return undefined;
+  });
   const [includeSystemEvents, setIncludeSystemEvents] = useState(true);
-  const [search, setSearch] = useState('');
+  const calendarViewRef = useRef<CalendarViewRef>(null);
+
+  // Multi-calendar support
+  const { data: calendarsData } = useMyCalendars();
+  const calendars = calendarsData?.calendars ?? [];
+  const [selectedCalendarIds, setSelectedCalendarIds] = useState<string[]>([]);
+
+  // Initialize selected calendars once loaded
+  const isCalendarsInitialized = useMemo(() => {
+    if (calendars.length > 0 && selectedCalendarIds.length === 0) {
+      return false;
+    }
+    return true;
+  }, [calendars.length, selectedCalendarIds.length]);
+
+  // Auto-select all calendars when first loaded
+  if (!isCalendarsInitialized && calendars.length > 0) {
+    setSelectedCalendarIds(calendars.map((c) => c.id));
+  }
+
+  // Default calendar for creating events (first personal, or first creatable)
+  const defaultCalendarId = useMemo(() => {
+    const personal = calendars.find((c) => c.type === 'PERSONAL' && c.access.canCreate);
+    if (personal) return personal.id;
+    const first = calendars.find((c) => c.access.canCreate);
+    return first?.id ?? '';
+  }, [calendars]);
+
+  const handleTypeChange = useCallback((type: EventType | undefined) => {
+    setSelectedType(type);
+    updateUrlParams({ type: type ?? null });
+  }, [updateUrlParams]);
+
+  const handleViewChange = useCallback((view: string) => {
+    const validView = VALID_VIEWS.includes(view as CalendarViewType) ? (view as CalendarViewType) : 'dayGridMonth';
+    setCurrentView(validView);
+    updateUrlParams({ view: validView === 'dayGridMonth' ? null : validView });
+  }, [updateUrlParams]);
 
   // Dialogs/Sheets
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -60,22 +145,27 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [defaultCreateDate, setDefaultCreateDate] = useState<Date | undefined>();
 
+  // Live event data (auto-updates when participants change)
+  const { data: liveEventData } = useCalendarEvent(selectedEvent?.id ?? '');
+  const liveEvent = liveEventData?.event ?? selectedEvent;
+
   // Fetch events
   const { data, isLoading } = useCalendarEvents({
     ...dateRange,
     type: selectedType,
     includeSystemEvents,
-    search: search || undefined,
+    calendarIds: selectedCalendarIds.length > 0 ? selectedCalendarIds.join(',') : undefined,
   });
 
   const events = data?.events ?? [];
 
-  const handleDatesSet = useCallback((start: Date, end: Date) => {
+  const handleDatesSet = useCallback((start: Date, end: Date, viewType: string) => {
     setDateRange({
       startDate: start.toISOString(),
       endDate: end.toISOString(),
     });
-  }, []);
+    handleViewChange(viewType);
+  }, [handleViewChange]);
 
   const handleDateClick = useCallback(
     (date: Date) => {
@@ -95,6 +185,13 @@ export default function CalendarPage() {
   const handleEdit = useCallback((event: CalendarEvent) => {
     setSelectedEvent(event);
     setEditDialogOpen(true);
+  }, []);
+
+  const handleSearchSelect = useCallback((event: CalendarEvent) => {
+    const eventDate = new Date(event.occurrenceDate ?? event.startDate);
+    calendarViewRef.current?.gotoDate(eventDate);
+    setSelectedEvent(event);
+    setDetailSheetOpen(true);
   }, []);
 
   const handleExport = useCallback(async () => {
@@ -126,69 +223,86 @@ export default function CalendarPage() {
     }
   }, [dateRange, selectedType, includeSystemEvents]);
 
-  const actionButtons: HeaderButton[] = [];
-  if (canCreate) {
-    actionButtons.push({
-      id: 'new-event',
-      title: 'Novo Evento',
-      icon: Plus,
-      onClick: () => setCreateDialogOpen(true),
-    });
-  }
-  actionButtons.push({
-    id: 'export-ical',
-    title: 'Exportar iCal',
-    icon: Download,
-    variant: 'outline',
-    onClick: handleExport,
-  });
+  const actionButtons = [
+    ...(canExport
+      ? [{
+          id: 'export',
+          title: 'Exportar iCal',
+          icon: Download,
+          variant: 'outline' as const,
+          onClick: handleExport,
+        }]
+      : []),
+    ...(canCreate
+      ? [{
+          id: 'new-event',
+          title: 'Novo Evento',
+          icon: Plus,
+          variant: 'default' as const,
+          onClick: () => setCreateDialogOpen(true),
+        }]
+      : []),
+  ];
 
   return (
     <ProtectedRoute requiredPermission={CALENDAR_PERMISSIONS.EVENTS.LIST}>
-    <div className="space-y-6">
+    <div className="flex flex-col gap-3 h-[calc(100vh-10rem)]">
       {/* Action Bar */}
       <PageActionBar
         breadcrumbItems={[{ label: 'Agenda', href: '/calendar' }]}
         buttons={actionButtons}
       />
 
-      {/* Hero Card */}
-      <Card className="relative overflow-hidden p-6 md:p-8 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
-        <div className="absolute top-0 right-0 w-56 h-56 bg-blue-500/10 rounded-full opacity-80 -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/10 rounded-full opacity-80 translate-y-1/2 -translate-x-1/2" />
+      {/* Hero Banner — compact, with filters embedded */}
+      <Card className="relative overflow-hidden px-5 py-4 bg-white shadow-sm dark:shadow-none dark:bg-white/5 border-gray-200 dark:border-white/10 shrink-0">
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-44 h-44 bg-blue-500/15 dark:bg-blue-500/10 rounded-full opacity-80 -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full opacity-80 translate-y-1/2 -translate-x-1/2" />
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-3 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600">
-              <Calendar className="h-6 w-6 text-white" />
+          {/* Title row */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600">
+                <Calendar className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+                  Agenda
+                </h1>
+                <p className="text-sm text-slate-500 dark:text-white/60">
+                  Organize e acompanhe seus compromissos e eventos
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                Agenda
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-white/60">
-                Gerencie eventos, reuniões e compromissos
-              </p>
-            </div>
+
+            {/* Calendar selector (multi-calendar) */}
+            {calendars.length > 1 && (
+              <CalendarSelector
+                calendars={calendars}
+                selectedIds={selectedCalendarIds}
+                onSelectionChange={setSelectedCalendarIds}
+              />
+            )}
           </div>
 
-          <div className="mt-4">
+          {/* Filters row */}
+          <div className="bg-muted/30 dark:bg-white/5 rounded-lg px-3 py-2">
             <EventFilters
               selectedType={selectedType}
-              onTypeChange={setSelectedType}
+              onTypeChange={handleTypeChange}
               includeSystemEvents={includeSystemEvents}
               onSystemEventsChange={setIncludeSystemEvents}
-              search={search}
-              onSearchChange={setSearch}
+              onEventSelect={handleSearchSelect}
             />
           </div>
         </div>
       </Card>
 
-      {/* Calendar Card */}
-      <Card className="bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10 p-4 md:p-6">
-        {isLoading ? (
-          <div className="space-y-4">
+      {/* Calendar Card — fills remaining space */}
+      <Card className="bg-white shadow-sm dark:shadow-none dark:bg-white/5 border-gray-200 dark:border-white/10 p-3 md:p-4 flex-1 min-h-0 flex flex-col">
+        {isLoading && !data ? (
+          <div className="space-y-4 flex-1">
             <div className="flex items-center justify-between">
               <Skeleton className="h-8 w-32" />
               <Skeleton className="h-8 w-64" />
@@ -198,33 +312,31 @@ export default function CalendarPage() {
                 <Skeleton key={`header-${i}`} className="h-8" />
               ))}
               {Array.from({ length: 35 }).map((_, i) => (
-                <Skeleton key={`cell-${i}`} className="h-24" />
+                <Skeleton key={`cell-${i}`} className="h-20" />
               ))}
             </div>
           </div>
         ) : (
           <CalendarView
+            ref={calendarViewRef}
             events={events}
             onDateClick={handleDateClick}
             onEventClick={handleEventClick}
             onDatesSet={handleDatesSet}
+            currentView={currentView}
+            initialDate={initialDate}
+            className="flex-1 min-h-0"
           />
         )}
       </Card>
-
-      {/* Type Legend */}
-      <div className="flex items-center gap-2 flex-wrap px-1">
-        <span className="text-xs font-medium text-muted-foreground mr-1">Tipos:</span>
-        {LEGEND_TYPES.map((type) => (
-          <EventTypeBadge key={type} type={type} className="text-[0.65rem] px-1.5 py-0.5" />
-        ))}
-      </div>
 
       {/* Dialogs */}
       <EventCreateDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         defaultDate={defaultCreateDate}
+        calendars={calendars}
+        defaultCalendarId={defaultCalendarId}
       />
 
       <EventEditDialog
@@ -234,7 +346,7 @@ export default function CalendarPage() {
       />
 
       <EventDetailSheet
-        event={selectedEvent}
+        event={liveEvent}
         open={detailSheetOpen}
         onOpenChange={setDetailSheetOpen}
         onEdit={handleEdit}
@@ -242,9 +354,11 @@ export default function CalendarPage() {
         canDelete={canDelete}
         canInvite={canInvite}
         canRespond={canRespond}
+        canShare={canShare}
         canManageParticipants={canManageParticipants}
         canManageReminders={canManageReminders}
         currentUserId={user?.id}
+        calendars={calendars}
       />
     </div>
     </ProtectedRoute>

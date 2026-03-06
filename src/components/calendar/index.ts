@@ -1,7 +1,13 @@
 export { CalendarView } from './calendar-view';
+export type { CalendarViewRef } from './calendar-view';
+export { CalendarBadge } from './calendar-badge';
+export { CalendarPicker } from './calendar-picker';
+export { CalendarSelector } from './calendar-selector';
 export { EventCreateDialog } from './event-create-dialog';
 export { EventDetailSheet } from './event-detail-sheet';
 export { EventEditDialog } from './event-edit-dialog';
-export { EventTypeBadge } from './event-type-badge';
+export { EventTypeBadge, EVENT_TYPE_ICONS } from './event-type-badge';
 export { EventFilters } from './event-filters';
 export { RecurrencePicker } from './recurrence-picker';
+export { InviteShareDialog } from './invite-share-dialog';
+export { TeamCalendarPermissionsDialog } from './team-calendar-permissions-dialog';

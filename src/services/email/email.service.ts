@@ -1,6 +1,7 @@
 import { API_ENDPOINTS } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
 import type {
+    CentralInboxQuery,
     CreateEmailAccountRequest,
     EmailAccountResponse,
     EmailAccountsResponse,
@@ -81,6 +82,18 @@ export const emailService = {
     });
   },
 
+  async listCentralInbox(query: CentralInboxQuery): Promise<EmailMessagesResponse> {
+    return apiClient.get<EmailMessagesResponse>(API_ENDPOINTS.EMAIL.MESSAGES.CENTRAL_INBOX, {
+      params: {
+        accountIds: query.accountIds.join(','),
+        ...(query.unread !== undefined ? { unread: String(query.unread) } : {}),
+        ...(query.search ? { search: query.search } : {}),
+        page: String(query.page ?? 1),
+        limit: String(query.limit ?? 50),
+      },
+    });
+  },
+
   async getMessage(id: string): Promise<EmailMessageResponse> {
     return apiClient.get<EmailMessageResponse>(API_ENDPOINTS.EMAIL.MESSAGES.GET(id));
   },
@@ -102,7 +115,7 @@ export const emailService = {
       data.attachments.forEach(file => form.append('attachments', file, file.name));
       return apiClient.request<SendEmailMessageResponse>(
         API_ENDPOINTS.EMAIL.MESSAGES.SEND,
-        { method: 'POST', body: form as unknown as BodyInit },
+        { method: 'POST', body: form as unknown as BodyInit, timeout: 120_000 } as RequestInit & { timeout: number },
       );
     }
 
@@ -111,6 +124,7 @@ export const emailService = {
     return apiClient.post<SendEmailMessageResponse>(
       API_ENDPOINTS.EMAIL.MESSAGES.SEND,
       jsonBody,
+      { timeout: 120_000 } as RequestInit & { timeout: number },
     );
   },
 
@@ -153,11 +167,11 @@ export const emailService = {
     );
   },
 
-  async getAttachmentDownloadUrl(
+  async downloadAttachment(
     messageId: string,
     attachmentId: string,
-  ): Promise<{ url: string; filename: string; contentType: string }> {
-    return apiClient.get<{ url: string; filename: string; contentType: string }>(
+  ): Promise<{ blob: Blob; filename: string; contentType: string }> {
+    return apiClient.getBlob(
       API_ENDPOINTS.EMAIL.MESSAGES.ATTACHMENT_DOWNLOAD(messageId, attachmentId),
     );
   },

@@ -39,6 +39,7 @@ export const calendarEventsService = {
     if (params.includeSystemEvents !== undefined) {
       query.append('includeSystemEvents', String(params.includeSystemEvents));
     }
+    if (params.calendarIds) query.append('calendarIds', params.calendarIds);
     if (params.page) query.append('page', String(params.page));
     if (params.limit) query.append('limit', String(params.limit));
 
@@ -107,6 +108,32 @@ export const calendarEventsService = {
     return apiClient.put<ManageRemindersResponse>(
       API_ENDPOINTS.CALENDAR.EVENTS.MANAGE_REMINDERS(eventId),
       data,
+    );
+  },
+
+  async shareWithUsers(
+    eventId: string,
+    userIds: string[],
+  ): Promise<{ shared: number }> {
+    return apiClient.post<{ shared: number }>(
+      API_ENDPOINTS.CALENDAR.EVENTS.SHARE_USERS(eventId),
+      { userIds },
+    );
+  },
+
+  async shareWithTeam(
+    eventId: string,
+    teamId: string,
+  ): Promise<{ shared: number }> {
+    return apiClient.post<{ shared: number }>(
+      API_ENDPOINTS.CALENDAR.EVENTS.SHARE_TEAM(eventId),
+      { teamId },
+    );
+  },
+
+  async unshareUser(eventId: string, targetUserId: string): Promise<{ removed: boolean }> {
+    return apiClient.delete<{ removed: boolean }>(
+      API_ENDPOINTS.CALENDAR.EVENTS.UNSHARE_USER(eventId, targetUserId),
     );
   },
 

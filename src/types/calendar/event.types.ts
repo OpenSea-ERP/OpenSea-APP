@@ -44,6 +44,7 @@ export interface EventReminder {
 export interface CalendarEvent {
   id: string;
   tenantId: string;
+  calendarId: string | null;
   title: string;
   description: string | null;
   location: string | null;
@@ -60,8 +61,8 @@ export interface CalendarEvent {
   metadata: Record<string, unknown>;
   createdBy: string;
   creatorName: string | null;
-  participants: EventParticipant[];
-  reminders: EventReminder[];
+  participants?: EventParticipant[];
+  reminders?: EventReminder[];
   isRecurring: boolean;
   occurrenceDate: string | null;
   deletedAt: string | null;
@@ -70,6 +71,7 @@ export interface CalendarEvent {
 }
 
 export interface CreateCalendarEventData {
+  calendarId?: string;
   title: string;
   description?: string | null;
   location?: string | null;
@@ -105,6 +107,7 @@ export interface CalendarEventsQuery {
   type?: EventType;
   search?: string;
   includeSystemEvents?: boolean;
+  calendarIds?: string;
   page?: number;
   limit?: number;
 }

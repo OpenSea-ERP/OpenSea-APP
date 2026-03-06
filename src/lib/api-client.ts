@@ -42,14 +42,16 @@ class ApiClient {
 
     const token = this.tokenManager.getToken();
     const hasBody = restOptions.body !== undefined;
+    const isFormData = restOptions.body instanceof FormData;
     const defaultHeaders: HeadersInit = {
-      ...(hasBody && apiConfig.headers),
+      ...(hasBody && !isFormData && apiConfig.headers),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...headers,
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    const requestTimeout = (restOptions as Record<string, unknown>).timeout as number | undefined ?? this.timeout;
+    const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
 
     try {
       const response = await fetch(url.toString(), {
@@ -216,6 +218,77 @@ class ApiClient {
 
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+  }
+
+  /**
+   * Download a binary file as Blob. Similar to `get()` but returns a Blob
+   * instead of parsing the response as JSON. Handles auth token + 401 refresh.
+   */
+  async getBlob(
+    endpoint: string,
+    options?: RequestOptions,
+  ): Promise<{ blob: Blob; filename: string; contentType: string }> {
+    const { params, headers = {} } = options ?? {};
+
+    const url = new URL(endpoint, this.baseURL);
+    if (params) {
+      Object.keys(params).forEach(key => {
+        url.searchParams.append(key, params[key]);
+      });
+    }
+
+    const token = this.tokenManager.getToken();
+    const requestHeaders: HeadersInit = {
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...headers,
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: requestHeaders,
+        signal: controller.signal,
+        mode: 'cors',
+        credentials: 'include',
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Download failed' }));
+        throw new Error(
+          (errorData as Record<string, string>).message || `HTTP ${response.status}`,
+        );
+      }
+
+      const blob = await response.blob();
+
+      // Extract filename from Content-Disposition header
+      const disposition = response.headers.get('Content-Disposition') ?? '';
+      let filename = 'download';
+      const utf8Match = disposition.match(/filename\*=UTF-8''(.+)/);
+      if (utf8Match) {
+        filename = decodeURIComponent(utf8Match[1]);
+      } else {
+        const basicMatch = disposition.match(/filename="?([^";\n]+)"?/);
+        if (basicMatch) {
+          filename = basicMatch[1];
+        }
+      }
+
+      const contentType =
+        response.headers.get('Content-Type') ?? 'application/octet-stream';
+
+      return { blob, filename, contentType };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error instanceof Error
+        ? error
+        : new Error('An unexpected error occurred during download');
+    }
   }
 }
 

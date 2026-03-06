@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EventTypeBadge } from './event-type-badge';
-import { ParticipantInviteDialog } from './participant-invite-dialog';
+import { InviteShareDialog } from './invite-share-dialog';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import {
   useDeleteCalendarEvent,
@@ -30,11 +30,10 @@ import {
   ParticipantRoleLabels,
   ParticipantStatusLabels,
 } from '@/types/common/enums';
-import type { CalendarEvent, ParticipantStatus, SystemSourceType } from '@/types/calendar';
+import type { CalendarEvent, Calendar as CalendarType, ParticipantStatus, SystemSourceType } from '@/types/calendar';
 import { EVENT_TYPE_COLORS, REMINDER_PRESETS, SYSTEM_SOURCE_ROUTES, SYSTEM_SOURCE_LABELS } from '@/types/calendar';
 import {
   MapPin,
-  Clock,
   Users,
   Repeat,
   Eye,
@@ -50,6 +49,7 @@ import {
   FileText,
   Link2,
   Globe,
+  CalendarDays,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -63,9 +63,11 @@ interface EventDetailSheetProps {
   canDelete?: boolean;
   canInvite?: boolean;
   canRespond?: boolean;
+  canShare?: boolean;
   canManageParticipants?: boolean;
   canManageReminders?: boolean;
   currentUserId?: string;
+  calendars?: CalendarType[];
 }
 
 function getInitials(name: string): string {
@@ -77,6 +79,14 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
+// Participant status colors for avatar rings
+const STATUS_RING_COLORS: Record<string, string> = {
+  ACCEPTED: 'ring-emerald-500',
+  DECLINED: 'ring-red-400',
+  TENTATIVE: 'ring-amber-400',
+  PENDING: 'ring-gray-300 dark:ring-gray-600',
+};
+
 export function EventDetailSheet({
   event,
   open,
@@ -86,14 +96,17 @@ export function EventDetailSheet({
   canDelete = false,
   canInvite = false,
   canRespond = false,
+  canShare = false,
   canManageParticipants = false,
   canManageReminders = false,
   currentUserId,
+  calendars = [],
 }: EventDetailSheetProps) {
   const [showPinModal, setShowPinModal] = useState(false);
   const [showRemovePinModal, setShowRemovePinModal] = useState(false);
   const [participantToRemove, setParticipantToRemove] = useState<string | null>(null);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [showAllParticipants, setShowAllParticipants] = useState(false);
   const deleteEvent = useDeleteCalendarEvent();
   const respondToEvent = useRespondToEvent();
   const removeParticipant = useRemoveParticipant();
@@ -103,18 +116,27 @@ export function EventDetailSheet({
   if (!event) return null;
 
   const isSystem = !!event.systemSourceType;
+  const eventCalendar = event.calendarId
+    ? calendars.find((c) => c.id === event.calendarId)
+    : null;
   const startDate = new Date(event.startDate);
   const endDate = new Date(event.endDate);
   const eventColor = event.color ?? EVENT_TYPE_COLORS[event.type] ?? '#64748b';
 
+  const participants = event.participants ?? [];
+  const reminders = event.reminders ?? [];
+
   const myParticipation = currentUserId
-    ? event.participants.find((p) => p.userId === currentUserId)
+    ? participants.find((p) => p.userId === currentUserId)
     : null;
-  const isOwner = myParticipation?.role === 'OWNER';
+  const isOwner = myParticipation?.role === 'OWNER' || event.createdBy === currentUserId;
 
   const myReminders = currentUserId
-    ? event.reminders.filter((r) => r.userId === currentUserId)
+    ? reminders.filter((r) => r.userId === currentUserId)
     : [];
+
+  const isSameDay =
+    startDate.toDateString() === endDate.toDateString();
 
   const formatDate = (date: Date) => {
     if (event.isAllDay) {
@@ -130,6 +152,13 @@ export function EventDetailSheet({
       day: 'numeric',
       month: 'short',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatTimeOnly = (date: Date) => {
+    return date.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -208,118 +237,214 @@ export function EventDetailSheet({
   const currentReminderValue =
     myReminders.length > 0 ? String(myReminders[0].minutesBefore) : '0';
 
+  const visibleParticipants = showAllParticipants
+    ? participants
+    : participants.slice(0, 5);
+  const hiddenCount = participants.length - 5;
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-[480px] overflow-y-auto p-0">
-          {/* Color stripe */}
+        <SheetContent className="sm:max-w-[480px] overflow-y-auto p-0 bg-white dark:bg-card">
+          {/* Colored header banner */}
           <div
-            className="h-1.5 w-full rounded-t-lg"
-            style={{ backgroundColor: eventColor }}
-          />
+            className="relative px-6 pt-8 pb-5"
+            style={{ background: `linear-gradient(160deg, ${eventColor}30, ${eventColor}08 70%)` }}
+          >
+            <div
+              className="absolute top-0 left-0 w-full h-2"
+              style={{ backgroundColor: eventColor }}
+            />
 
-          <div className="px-6 pt-5 pb-6">
-            <SheetHeader className="space-y-3">
+            <SheetHeader className="space-y-1.5">
               {/* Badges row */}
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <EventTypeBadge type={event.type} />
-                <Badge variant="secondary" className="text-xs">
-                  <Eye className="w-3 h-3 mr-1" />
+                <Badge variant="secondary" className="text-[0.65rem] gap-1 h-6">
+                  <Eye className="w-3 h-3" />
                   {EventVisibilityLabels[event.visibility] ?? event.visibility}
                 </Badge>
                 {event.isRecurring && (
-                  <Badge variant="secondary" className="text-xs">
-                    <Repeat className="w-3 h-3 mr-1" />
+                  <Badge variant="secondary" className="text-[0.65rem] gap-1 h-6">
+                    <Repeat className="w-3 h-3" />
                     Recorrente
                   </Badge>
                 )}
                 {isSystem && (
-                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-500/40">
+                  <Badge variant="outline" className="text-[0.65rem] h-6 text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-500/40">
                     Sistema
                   </Badge>
                 )}
               </div>
 
-              {/* Title */}
-              <SheetTitle className="text-xl font-bold leading-tight">
-                {event.title}
-              </SheetTitle>
-            </SheetHeader>
-
-            <div className="space-y-3 mt-5">
-              {/* Date & Time + Location */}
-              <div className="rounded-lg bg-muted/50 dark:bg-white/5 p-3 space-y-2.5">
-                <div className="flex items-start gap-2.5">
-                  <Clock className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                  <div className="text-sm">
-                    <div className="font-medium">{formatDate(startDate)}</div>
-                    <div className="text-muted-foreground">até {formatDate(endDate)}</div>
-                  </div>
-                </div>
-
-                {event.timezone && (
-                  <div className="flex items-start gap-2.5">
-                    <Globe className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <span className="text-sm text-muted-foreground">{event.timezone}</span>
-                  </div>
-                )}
-
-                {event.location && (
-                  <div className="flex items-start gap-2.5">
-                    <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <span className="text-sm">{event.location}</span>
-                  </div>
+              {/* Title + Edit button */}
+              <div className="flex items-start gap-2">
+                <SheetTitle className="text-xl font-bold leading-tight truncate flex-1 min-w-0">
+                  {event.title}
+                </SheetTitle>
+                {canEdit && onEdit && !isSystem && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 rounded-full hover:bg-white/20"
+                    onClick={() => {
+                      onEdit(event);
+                      onOpenChange(false);
+                    }}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
                 )}
               </div>
 
-              {/* Description */}
-              {event.description && (
-                <div className="rounded-lg bg-muted/50 dark:bg-white/5 p-3">
-                  <div className="flex items-center gap-2 mb-1.5">
+              {/* Calendar subtitle */}
+              {eventCalendar && (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground -mt-0.5">
+                  {eventCalendar.color && (
+                    <div
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: eventCalendar.color }}
+                    />
+                  )}
+                  <span className="truncate">{eventCalendar.name}</span>
+                </div>
+              )}
+            </SheetHeader>
+          </div>
+
+          <div className="px-6 py-5 space-y-4">
+            {/* Date & Time */}
+            <div className="flex items-start gap-3">
+              <div
+                className="p-2 rounded-lg shrink-0"
+                style={{ backgroundColor: `${eventColor}15` }}
+              >
+                <CalendarDays className="w-4 h-4" style={{ color: eventColor }} />
+              </div>
+              <div className="text-sm space-y-0.5">
+                {event.isAllDay ? (
+                  <>
+                    <div className="font-medium">{formatDate(startDate)}</div>
+                    {!isSameDay && (
+                      <div className="text-muted-foreground">até {formatDate(endDate)}</div>
+                    )}
+                    <div className="text-xs text-muted-foreground">Dia inteiro</div>
+                  </>
+                ) : isSameDay ? (
+                  <>
+                    <div className="font-medium">
+                      {startDate.toLocaleDateString('pt-BR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </div>
+                    <div className="text-muted-foreground">
+                      {formatTimeOnly(startDate)} — {formatTimeOnly(endDate)}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="font-medium">{formatDate(startDate)}</div>
+                    <div className="text-muted-foreground">até {formatDate(endDate)}</div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Location */}
+            {event.location && (
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-muted/50 dark:bg-white/5 shrink-0">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="text-sm pt-1.5">{event.location}</div>
+              </div>
+            )}
+
+            {/* Timezone */}
+            {event.timezone && (
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-muted/50 dark:bg-white/5 shrink-0">
+                  <Globe className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="text-sm text-muted-foreground pt-1.5">
+                  {event.timezone}
+                  {(() => {
+                    try {
+                      const fmt = new Intl.DateTimeFormat('en-US', {
+                        timeZone: event.timezone!,
+                        timeZoneName: 'shortOffset',
+                      });
+                      const offsetPart = fmt.formatToParts(new Date()).find((p) => p.type === 'timeZoneName');
+                      if (offsetPart) {
+                        const raw = offsetPart.value.replace('GMT', '');
+                        const offset = !raw ? 'UTC' : raw.includes(':') ? raw : `${raw}:00`;
+                        return <span className="ml-1.5 text-xs opacity-60">({offset})</span>;
+                      }
+                    } catch { /* ignore */ }
+                    return null;
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {/* Description */}
+            {event.description && (
+              <>
+                <div className="border-t border-border/50" />
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
                     <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Descrição
                     </span>
                   </div>
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{event.description}</p>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground/90 pl-5.5">
+                    {event.description}
+                  </p>
                 </div>
-              )}
+              </>
+            )}
 
-              {/* RSVP */}
-              {canRespond && myParticipation && !isOwner && (
-                <div className="rounded-lg bg-muted/50 dark:bg-white/5 p-3">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2.5">
+            {/* RSVP */}
+            {canRespond && myParticipation && !isOwner && (
+              <>
+                <div className="border-t border-border/50" />
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                     Responder ao convite
                   </div>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant={myParticipation.status === 'ACCEPTED' ? 'default' : 'outline'}
-                      className="h-8 text-xs"
+                      className="h-9 text-xs flex-1"
                       onClick={() => handleRsvp('ACCEPTED')}
                       disabled={respondToEvent.isPending}
                     >
-                      <Check className="w-3.5 h-3.5 mr-1" />
+                      <Check className="w-3.5 h-3.5 mr-1.5" />
                       Aceitar
                     </Button>
                     <Button
                       size="sm"
                       variant={myParticipation.status === 'DECLINED' ? 'destructive' : 'outline'}
-                      className="h-8 text-xs"
+                      className="h-9 text-xs flex-1"
                       onClick={() => handleRsvp('DECLINED')}
                       disabled={respondToEvent.isPending}
                     >
-                      <XCircle className="w-3.5 h-3.5 mr-1" />
+                      <XCircle className="w-3.5 h-3.5 mr-1.5" />
                       Recusar
                     </Button>
                     <Button
                       size="sm"
                       variant={myParticipation.status === 'TENTATIVE' ? 'secondary' : 'outline'}
-                      className="h-8 text-xs"
+                      className="h-9 text-xs flex-1"
                       onClick={() => handleRsvp('TENTATIVE')}
                       disabled={respondToEvent.isPending}
                     >
-                      <HelpCircle className="w-3.5 h-3.5 mr-1" />
+                      <HelpCircle className="w-3.5 h-3.5 mr-1.5" />
                       Talvez
                     </Button>
                   </div>
@@ -332,12 +457,15 @@ export function EventDetailSheet({
                     </div>
                   )}
                 </div>
-              )}
+              </>
+            )}
 
-              {/* Reminders */}
-              {canManageReminders && myParticipation && (
-                <div className="rounded-lg bg-muted/50 dark:bg-white/5 p-3">
-                  <div className="flex items-center gap-2 mb-2">
+            {/* Reminders */}
+            {canManageReminders && myParticipation && (
+              <>
+                <div className="border-t border-border/50" />
+                <div>
+                  <div className="flex items-center gap-2 mb-2.5">
                     <Bell className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Lembrete
@@ -347,7 +475,10 @@ export function EventDetailSheet({
                     value={currentReminderValue}
                     onValueChange={handleReminderChange}
                   >
-                    <SelectTrigger className="w-full h-8 text-sm">
+                    <SelectTrigger
+                      className="w-full h-9 text-sm transition-colors"
+                      style={currentReminderValue !== '0' ? { borderColor: eventColor } : undefined}
+                    >
                       <SelectValue placeholder="Selecionar lembrete" />
                     </SelectTrigger>
                     <SelectContent>
@@ -360,16 +491,19 @@ export function EventDetailSheet({
                     </SelectContent>
                   </Select>
                 </div>
-              )}
+              </>
+            )}
 
-              {/* Participants */}
-              {event.participants && event.participants.length > 0 && (
-                <div className="rounded-lg bg-muted/50 dark:bg-white/5 p-3">
-                  <div className="flex items-center justify-between mb-2.5">
+            {/* Participants */}
+            {participants.length > 0 && (
+              <>
+                <div className="border-t border-border/50" />
+                <div>
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Users className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Participantes ({event.participants.length})
+                        Participantes ({participants.length})
                       </span>
                     </div>
                     {canInvite && isOwner && (
@@ -384,34 +518,72 @@ export function EventDetailSheet({
                       </Button>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    {event.participants.map((p) => {
-                      const displayName = p.userName ?? p.userEmail ?? p.userId;
-                      return (
-                        <div
-                          key={p.id}
-                          className="flex items-center gap-2.5"
+
+                  {/* Avatar group (summary view) */}
+                  {!showAllParticipants && participants.length > 0 && (
+                    <div className="flex items-center mb-2">
+                      <div className="flex -space-x-2">
+                        {participants.slice(0, 8).map((p) => {
+                          const displayName = p.userName ?? p.userEmail ?? p.userId;
+                          const statusRing = STATUS_RING_COLORS[p.status] ?? STATUS_RING_COLORS.PENDING;
+                          return (
+                            <div
+                              key={p.id}
+                              title={`${displayName} — ${ParticipantRoleLabels[p.role] ?? p.role} · ${ParticipantStatusLabels[p.status] ?? p.status}`}
+                              className={`w-8 h-8 rounded-full ring-2 ${statusRing} flex items-center justify-center text-[0.55rem] font-semibold text-white cursor-default`}
+                              style={{ backgroundColor: `${eventColor}cc` }}
+                            >
+                              {getInitials(displayName)}
+                            </div>
+                          );
+                        })}
+                        {participants.length > 8 && (
+                          <div className="w-8 h-8 rounded-full ring-2 ring-border bg-muted flex items-center justify-center text-[0.55rem] font-semibold text-muted-foreground">
+                            +{participants.length - 8}
+                          </div>
+                        )}
+                      </div>
+                      {(canManageParticipants || participants.length > 3) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs ml-3 text-muted-foreground"
+                          onClick={() => setShowAllParticipants(true)}
                         >
+                          Ver todos
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Expanded participant list */}
+                  {showAllParticipants && (
+                    <div className="space-y-1.5">
+                      {visibleParticipants.map((p) => {
+                        const displayName = p.userName ?? p.userEmail ?? p.userId;
+                        const statusRing = STATUS_RING_COLORS[p.status] ?? STATUS_RING_COLORS.PENDING;
+                        return (
                           <div
-                            className="w-7 h-7 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-[0.6rem] font-semibold text-primary shrink-0"
+                            key={p.id}
+                            className="flex items-center gap-2.5 py-1 px-2 rounded-md hover:bg-muted/50 dark:hover:bg-white/5 transition-colors"
                           >
-                            {getInitials(displayName)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm truncate">{displayName}</div>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Badge variant="outline" className="text-[0.6rem] px-1.5 py-0">
-                              {ParticipantRoleLabels[p.role] ?? p.role}
-                            </Badge>
-                            <Badge variant="secondary" className="text-[0.6rem] px-1.5 py-0">
-                              {ParticipantStatusLabels[p.status] ?? p.status}
-                            </Badge>
+                            <div
+                              className={`w-7 h-7 rounded-full ring-2 ${statusRing} flex items-center justify-center text-[0.55rem] font-semibold text-white shrink-0`}
+                              style={{ backgroundColor: `${eventColor}cc` }}
+                            >
+                              {getInitials(displayName)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm truncate font-medium">{displayName}</div>
+                              <div className="text-[0.65rem] text-muted-foreground">
+                                {ParticipantRoleLabels[p.role] ?? p.role} · {ParticipantStatusLabels[p.status] ?? p.status}
+                              </div>
+                            </div>
                             {canManageParticipants && isOwner && p.role !== 'OWNER' && (
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
                                 onClick={() => {
                                   setParticipantToRemove(p.userId);
                                   setShowRemovePinModal(true);
@@ -421,75 +593,79 @@ export function EventDetailSheet({
                               </Button>
                             )}
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* System source link */}
-              {isSystem && event.systemSourceId && (
-                <div className="rounded-lg bg-muted/50 dark:bg-white/5 p-3">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Origem
-                    </span>
-                  </div>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="p-0 h-auto text-sm"
-                    onClick={handleViewSource}
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                    Ver origem:{' '}
-                    {SYSTEM_SOURCE_LABELS[event.systemSourceType as SystemSourceType] ??
-                      event.systemSourceType}
-                  </Button>
-                </div>
-              )}
-
-              {/* Creator footer */}
-              {event.creatorName && (
-                <div className="text-xs text-muted-foreground pt-1">
-                  Criado por {event.creatorName}
-                </div>
-              )}
-
-              {/* Actions */}
-              {!isSystem && (canEdit || canDelete) && (
-                <div className="flex gap-2 pt-3 border-t border-border">
-                  {canEdit && onEdit && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8"
-                      onClick={() => {
-                        onEdit(event);
-                        onOpenChange(false);
-                      }}
-                    >
-                      <Pencil className="w-3.5 h-3.5 mr-1.5" />
-                      Editar
-                    </Button>
-                  )}
-                  {canDelete && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="h-8"
-                      onClick={() => setShowPinModal(true)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                      Excluir
-                    </Button>
+                        );
+                      })}
+                      {!showAllParticipants && hiddenCount > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full h-7 text-xs text-muted-foreground"
+                          onClick={() => setShowAllParticipants(true)}
+                        >
+                          Mostrar mais {hiddenCount} participantes
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-7 text-xs text-muted-foreground"
+                        onClick={() => setShowAllParticipants(false)}
+                      >
+                        Recolher
+                      </Button>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
+
+            {/* System source link */}
+            {isSystem && event.systemSourceId && (
+              <>
+                <div className="border-t border-border/50" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/10 shrink-0">
+                    <Link2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-0.5">Origem do sistema</div>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="p-0 h-auto text-sm"
+                      onClick={handleViewSource}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                      {SYSTEM_SOURCE_LABELS[event.systemSourceType as SystemSourceType] ??
+                        event.systemSourceType}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Creator footer */}
+            {event.creatorName && (
+              <div className="text-xs text-muted-foreground pt-3 border-t border-border/50">
+                Criado por <span className="font-medium text-foreground/70">{event.creatorName}</span>
+              </div>
+            )}
+
           </div>
+
+          {/* Delete button at bottom, full-width */}
+          {!isSystem && canDelete && (
+            <div className="px-6 pb-6 mt-auto">
+              <Button
+                variant="ghost"
+                className="w-full h-10 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-500/10"
+                onClick={() => setShowPinModal(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir evento
+              </Button>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
@@ -514,9 +690,9 @@ export function EventDetailSheet({
         description="Tem certeza que deseja remover este participante do evento? Digite seu PIN de Ação para confirmar."
       />
 
-      {/* Invite participants dialog */}
+      {/* Unified invite & share dialog */}
       {showInviteDialog && (
-        <ParticipantInviteDialog
+        <InviteShareDialog
           event={event}
           open={showInviteDialog}
           onOpenChange={setShowInviteDialog}

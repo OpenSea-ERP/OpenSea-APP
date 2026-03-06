@@ -8,6 +8,7 @@ export interface EmailMessageListItem {
   snippet: string | null;
   receivedAt: string;
   isRead: boolean;
+  isAnswered: boolean;
   hasAttachments: boolean;
 }
 
@@ -42,6 +43,7 @@ export interface EmailMessageDetail {
   sentAt: string | null;
   isRead: boolean;
   isFlagged: boolean;
+  isAnswered: boolean;
   hasAttachments: boolean;
   deletedAt: string | null;
   createdAt: string;
@@ -52,6 +54,14 @@ export interface EmailMessageDetail {
 export interface EmailMessagesQuery {
   accountId: string;
   folderId?: string;
+  unread?: boolean;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CentralInboxQuery {
+  accountIds: string[];
   unread?: boolean;
   search?: string;
   page?: number;

@@ -1,102 +1,29 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import type { EmailAccount, EmailFolder, EmailFolderType } from '@/types/email';
+import type { EmailAccount, EmailFolder } from '@/types/email';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  AlertTriangle,
   ChevronDown,
-  ChevronRight,
-  FileEdit,
   Folder,
-  Inbox,
   Layers,
   Mail,
   Plus,
   RefreshCw,
-  Send,
   Settings,
-  Settings2,
-  Trash2,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
-const FOLDER_ICON: Record<EmailFolderType, React.ElementType> = {
-  INBOX: Inbox,
-  SENT: Send,
-  DRAFTS: FileEdit,
-  TRASH: Trash2,
-  SPAM: AlertTriangle,
-  CUSTOM: Folder,
-};
-
-const FOLDER_ORDER: EmailFolderType[] = [
-  'INBOX',
-  'SENT',
-  'DRAFTS',
-  'SPAM',
-  'TRASH',
-  'CUSTOM',
-];
-
-/** Map IMAP/English folder names to Portuguese */
-const FOLDER_PT_NAMES: Record<string, string> = {
-  inbox: 'Caixa de entrada',
-  sent: 'Enviados',
-  'sent mail': 'Enviados',
-  'sent items': 'Enviados',
-  drafts: 'Rascunhos',
-  draft: 'Rascunhos',
-  trash: 'Lixeira',
-  'deleted items': 'Lixeira',
-  deleted: 'Lixeira',
-  spam: 'Spam',
-  junk: 'Spam',
-  'junk e-mail': 'Spam',
-  archive: 'Arquivo',
-  archives: 'Arquivo',
-  all: 'Todos',
-  'all mail': 'Todos',
-  starred: 'Com estrela',
-  flagged: 'Com estrela',
-  important: 'Importantes',
-};
-
-function getFolderDisplayName(folder: EmailFolder): string {
-  const lower = folder.displayName.toLowerCase().trim();
-  if (FOLDER_PT_NAMES[lower]) return FOLDER_PT_NAMES[lower];
-
-  const remoteLower = folder.remoteName.toLowerCase().trim();
-  if (FOLDER_PT_NAMES[remoteLower]) return FOLDER_PT_NAMES[remoteLower];
-
-  // Try partial matches
-  for (const [key, label] of Object.entries(FOLDER_PT_NAMES)) {
-    if (lower.includes(key) || remoteLower.includes(key)) return label;
-  }
-
-  return folder.displayName;
-}
-
-function getInitials(name: string | null, address: string): string {
-  if (name) {
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  }
-  return address.substring(0, 2).toUpperCase();
-}
+import { useEffect, useMemo, useState } from 'react';
+import {
+  FOLDER_ICON,
+  FOLDER_ORDER,
+  getAvatarColor,
+  getFolderDisplayName,
+  getInitials,
+} from './email-utils';
 
 interface EmailSidebarProps {
   accounts: EmailAccount[];
@@ -110,7 +37,6 @@ interface EmailSidebarProps {
   isSyncing: boolean;
   onCentralInbox: () => void;
   onOpenNewAccount: () => void;
-  onOpenManageAccounts: () => void;
   onEditAccount?: (account: EmailAccount) => void;
   /** Map of folderId -> unread count */
   unreadCounts?: Record<string, number>;
@@ -118,6 +44,46 @@ interface EmailSidebarProps {
   accountUnreadCounts?: Record<string, number>;
   /** Whether accounts are still loading */
   isLoadingAccounts?: boolean;
+}
+
+/** Group accounts into personal + team groups */
+interface AccountGroup {
+  label: string;
+  teamId: string | null;
+  accounts: EmailAccount[];
+}
+
+function groupAccounts(accounts: EmailAccount[]): AccountGroup[] {
+  const personal: EmailAccount[] = [];
+  const teamMap = new Map<string, { name: string; accounts: EmailAccount[] }>();
+
+  for (const account of accounts) {
+    if (account.teamId && account.teamName) {
+      const existing = teamMap.get(account.teamId);
+      if (existing) {
+        existing.accounts.push(account);
+      } else {
+        teamMap.set(account.teamId, {
+          name: account.teamName,
+          accounts: [account],
+        });
+      }
+    } else {
+      personal.push(account);
+    }
+  }
+
+  const groups: AccountGroup[] = [];
+
+  if (personal.length > 0) {
+    groups.push({ label: 'Contas Pessoais', teamId: null, accounts: personal });
+  }
+
+  for (const [teamId, { name, accounts: teamAccounts }] of teamMap) {
+    groups.push({ label: name, teamId, accounts: teamAccounts });
+  }
+
+  return groups;
 }
 
 export function EmailSidebar({
@@ -132,7 +98,6 @@ export function EmailSidebar({
   isSyncing,
   onCentralInbox,
   onOpenNewAccount,
-  onOpenManageAccounts,
   onEditAccount,
   unreadCounts = {},
   accountUnreadCounts = {},
@@ -160,7 +125,7 @@ export function EmailSidebar({
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   });
 
-  // Total unread across all accounts (prefer accountUnreadCounts if available)
+  // Total unread across all accounts
   const totalUnread =
     Object.keys(accountUnreadCounts).length > 0
       ? Object.values(accountUnreadCounts).reduce(
@@ -168,6 +133,9 @@ export function EmailSidebar({
           0
         )
       : Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
+
+  // Group accounts by personal vs team
+  const accountGroups = useMemo(() => groupAccounts(accounts), [accounts]);
 
   function handleAccountClick(accountId: string) {
     if (expandedAccountId === accountId) {
@@ -182,71 +150,63 @@ export function EmailSidebar({
 
   return (
     <div
-      className="flex h-full w-[240px] shrink-0 flex-col border-r bg-muted/30"
+      className="flex h-full w-full flex-col"
       data-testid="email-sidebar"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="text-sm font-semibold tracking-tight">E-mail</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-7 rounded-md"
-          onClick={onOpenNewAccount}
-          title="Adicionar conta"
-        >
-          <Plus className="size-4" />
-        </Button>
+      {/* Central Inbox + Add Account */}
+      <div className="px-3 pt-3 pb-2">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isCentralInbox ? 'default' : 'secondary'}
+            className={cn(
+              'flex-1 justify-start gap-3 rounded-xl h-10 text-sm font-medium',
+              isCentralInbox && 'shadow-md'
+            )}
+            onClick={onCentralInbox}
+            data-testid="email-central-inbox"
+          >
+            <Layers className="size-5 shrink-0" />
+            <span className="flex-1 text-left">Caixa Central</span>
+            {totalUnread > 0 && (
+              <span
+                className={cn(
+                  'inline-flex items-center justify-center rounded-full px-2 h-5.5 min-w-5.5 text-[11px] font-semibold leading-none',
+                  isCentralInbox
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                    : 'bg-primary text-primary-foreground'
+                )}
+                title={`${totalUnread} mensagen${totalUnread === 1 ? '' : 's'} não lida${totalUnread === 1 ? '' : 's'}`}
+              >
+                {totalUnread > 99 ? '99+' : totalUnread}
+              </span>
+            )}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-10 shrink-0 rounded-xl"
+            onClick={onOpenNewAccount}
+            title="Adicionar conta"
+            aria-label="Adicionar conta"
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Central inbox button */}
-      <div className="px-2 pb-2">
-        <button
-          className={cn(
-            'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200',
-            isCentralInbox
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'hover:bg-muted/80 text-foreground'
-          )}
-          onClick={onCentralInbox}
-          data-testid="email-central-inbox"
-        >
-          <Layers className="size-4 shrink-0" />
-          <span className="font-medium flex-1 text-left">Caixa Central</span>
-          {totalUnread > 0 && (
-            <span
-              className={cn(
-                'inline-flex items-center justify-center rounded-full px-1.5 h-5 min-w-5 text-[10px] font-semibold leading-none',
-                isCentralInbox
-                  ? 'bg-primary-foreground/20 text-primary-foreground'
-                  : 'bg-primary text-primary-foreground'
-              )}
-            >
-              {totalUnread > 99 ? '99+' : totalUnread}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Divider with label */}
-      <div className="px-4 pt-2 pb-1">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Contas
-        </p>
-      </div>
-
-      {/* Accounts with collapsible folders */}
+      {/* Accounts grouped by Personal / Teams */}
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-0.5">
+        <div className="px-3 pb-2">
           {/* Loading skeleton */}
           {isLoadingAccounts && accounts.length === 0 && (
-            <div className="space-y-2 px-2">
+            <div className="space-y-3 px-1 pt-2">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2 py-1.5">
-                  <Skeleton className="size-6 rounded-full shrink-0" />
-                  <div className="flex-1 space-y-1">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-2.5 w-32" />
+                <div key={i} className="flex items-center gap-3 py-2">
+                  <Skeleton className="size-8 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-28" />
+                    <Skeleton className="h-3 w-36" />
                   </div>
                 </div>
               ))}
@@ -255,165 +215,195 @@ export function EmailSidebar({
 
           {/* No accounts empty state */}
           {!isLoadingAccounts && accounts.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 px-4 py-8 text-center">
-              <div className="size-12 rounded-full bg-muted flex items-center justify-center">
-                <Mail className="size-6 text-muted-foreground/50" />
+            <div className="flex flex-col items-center justify-center gap-4 px-4 py-10 text-center">
+              <div className="size-14 rounded-2xl bg-muted flex items-center justify-center">
+                <Mail className="size-7 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-xs font-medium">Nenhuma conta de e-mail</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-sm font-medium">Nenhuma conta de e-mail</p>
+                <p className="text-xs text-muted-foreground mt-1">
                   Configure uma conta para começar
                 </p>
               </div>
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-1.5 h-7 text-xs"
+                className="gap-2 rounded-xl"
                 onClick={onOpenNewAccount}
               >
-                <Plus className="size-3" />
+                <Plus className="size-3.5" />
                 Adicionar conta
               </Button>
             </div>
           )}
 
-          {accounts.map(account => {
-            const isExpanded = expandedAccountId === account.id;
-            const isSelected =
-              selectedAccountId === account.id && !isCentralInbox;
-            // Use per-account unread counts; fall back to totalUnread for selected account
-            const accountUnread =
-              accountUnreadCounts[account.id] ?? (isSelected ? totalUnread : 0);
+          {/* Account groups */}
+          {accountGroups.map(group => (
+            <div key={group.teamId ?? 'personal'} className="mt-2">
+              {/* Group label */}
+              <div className="px-1 pt-2 pb-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {group.label}
+                </p>
+              </div>
 
-            return (
-              <div key={account.id}>
-                {/* Account header */}
-                <div className="group/account flex items-center">
-                  <button
-                    className={cn(
-                      'flex flex-1 min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-all duration-200',
-                      isSelected && !isCentralInbox
-                        ? 'bg-accent text-accent-foreground'
-                        : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
-                    )}
-                    onClick={() => handleAccountClick(account.id)}
-                  >
-                    <div
-                      className={cn(
-                        'flex items-center justify-center transition-transform duration-200',
-                        isExpanded && 'rotate-0',
-                        !isExpanded && '-rotate-90'
-                      )}
-                    >
-                      <ChevronDown className="size-3 text-muted-foreground" />
-                    </div>
-                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <span className="text-[9px] font-medium leading-none">
-                        {getInitials(account.displayName, account.address)}
-                      </span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-medium leading-tight">
-                        {account.displayName || account.address}
-                      </p>
-                      {account.displayName && (
-                        <p className="truncate text-[10px] text-muted-foreground leading-tight">
-                          {account.address}
-                        </p>
-                      )}
-                    </div>
-                    {accountUnread > 0 && (
-                      <span className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground h-[18px] min-w-[18px] px-1 text-[10px] font-semibold leading-none">
-                        {accountUnread > 99 ? '99+' : accountUnread}
-                      </span>
-                    )}
-                  </button>
-                  {onEditAccount && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0 opacity-0 group-hover/account:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity duration-200"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onEditAccount(account);
-                      }}
-                      title="Configurar conta"
-                    >
-                      <Settings className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
+              {/* Accounts in this group */}
+              <div className="space-y-0.5">
+                {group.accounts.map(account => {
+                  const isExpanded = expandedAccountId === account.id;
+                  const isSelected =
+                    selectedAccountId === account.id && !isCentralInbox;
+                  const accountUnread =
+                    accountUnreadCounts[account.id] ?? (isSelected ? totalUnread : 0);
+                  const avatarColor = getAvatarColor(account.address);
 
-                {/* Collapsible folders with animation */}
-                <div
-                  className={cn(
-                    'overflow-hidden transition-all duration-200',
-                    isExpanded && isSelected
-                      ? 'max-h-[500px] opacity-100'
-                      : 'max-h-0 opacity-0'
-                  )}
-                >
-                  <div className="ml-5 mt-0.5 space-y-0.5 border-l border-border/50 pl-2">
-                    {sortedFolders.length === 0 ? (
-                      <p className="px-3 py-1.5 text-[10px] text-muted-foreground">
-                        Sincronizando pastas...
-                      </p>
-                    ) : (
-                      sortedFolders.map(folder => {
-                        const Icon = FOLDER_ICON[folder.type] ?? Folder;
-                        const isFolderSelected =
-                          selectedFolderId === folder.id && !isCentralInbox;
-                        const folderUnread = unreadCounts[folder.id] ?? 0;
+                  return (
+                    <div key={account.id}>
+                      {/* Account header */}
+                      <div className="group/account relative">
+                        <button
+                          className={cn(
+                            'flex w-full min-w-0 items-center gap-3 rounded-xl px-2.5 py-2 text-left text-sm transition-all duration-200',
+                            isSelected && !isCentralInbox
+                              ? 'bg-accent text-accent-foreground'
+                              : 'hover:bg-muted/60 text-foreground'
+                          )}
+                          onClick={() => handleAccountClick(account.id)}
+                        >
+                          {/* Avatar */}
+                          <div
+                            className="flex size-8 shrink-0 items-center justify-center rounded-full text-white"
+                            style={{ backgroundColor: avatarColor }}
+                          >
+                            <span className="text-xs font-semibold leading-none">
+                              {getInitials(account.displayName, account.address)}
+                            </span>
+                          </div>
 
-                        return (
-                          <button
-                            key={folder.id}
-                            className={cn(
-                              'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs transition-all duration-150',
-                              isFolderSelected
-                                ? 'bg-primary/10 text-primary font-medium border-l-2 border-primary -ml-[2px] pl-[10px]'
-                                : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                          {/* Name + Email */}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium leading-tight">
+                              {account.displayName || account.address}
+                            </p>
+                            {account.displayName && (
+                              <p className="truncate text-[11px] text-muted-foreground leading-tight mt-0.5">
+                                {account.address}
+                              </p>
                             )}
+                          </div>
+
+                          {/* Unread badge — hidden on group hover (replaced by settings icon) */}
+                          {accountUnread > 0 && (
+                            <span
+                              className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground h-5 min-w-5 px-1.5 text-[11px] font-semibold leading-none group-hover/account:opacity-0 transition-opacity duration-200"
+                              title={`${accountUnread} mensagen${accountUnread === 1 ? '' : 's'} não lida${accountUnread === 1 ? '' : 's'}`}
+                            >
+                              {accountUnread > 99 ? '99+' : accountUnread}
+                            </span>
+                          )}
+
+                          {/* Chevron */}
+                          <ChevronDown
+                            className={cn(
+                              'size-3.5 shrink-0 text-muted-foreground transition-transform duration-200',
+                              !isExpanded && '-rotate-90'
+                            )}
+                          />
+                        </button>
+
+                        {/* Settings button on hover — replaces unread badge position */}
+                        {onEditAccount && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0 absolute right-8 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover/account:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity duration-200 rounded-lg"
                             onClick={e => {
                               e.stopPropagation();
-                              onFolderChange(folder.id);
+                              onEditAccount(account);
                             }}
+                            title="Configurar conta"
                           >
-                            <Icon className="size-3.5 shrink-0" />
-                            <span className="truncate flex-1">
-                              {getFolderDisplayName(folder)}
-                            </span>
-                            {folderUnread > 0 && (
-                              <span
-                                className={cn(
-                                  'ml-auto inline-flex items-center justify-center rounded-full h-[18px] min-w-[18px] px-1 text-[10px] font-medium leading-none',
-                                  folder.type === 'INBOX'
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-muted text-muted-foreground'
-                                )}
-                              >
-                                {folderUnread > 99 ? '99+' : folderUnread}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
+                            <Settings className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Collapsible folders */}
+                      <div
+                        className={cn(
+                          'overflow-hidden transition-all duration-200',
+                          isExpanded
+                            ? 'max-h-[500px] opacity-100'
+                            : 'max-h-0 opacity-0'
+                        )}
+                      >
+                        <div className="ml-6 mt-1 mb-2 space-y-0.5 pl-4">
+                          {sortedFolders.length === 0 ? (
+                            <p className="px-3 py-2 text-[11px] text-muted-foreground">
+                              Sincronizando pastas...
+                            </p>
+                          ) : (
+                            sortedFolders.map(folder => {
+                              const Icon = FOLDER_ICON[folder.type] ?? Folder;
+                              const isFolderSelected =
+                                selectedFolderId === folder.id && !isCentralInbox;
+                              const folderUnread = unreadCounts[folder.id] ?? 0;
+
+                              return (
+                                <button
+                                  key={folder.id}
+                                  className={cn(
+                                    'flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-left text-xs transition-all duration-150',
+                                    isFolderSelected
+                                      ? 'bg-primary/10 text-primary font-medium'
+                                      : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                                  )}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    onFolderChange(folder.id);
+                                  }}
+                                >
+                                  <Icon className="size-4 shrink-0" />
+                                  <span
+                                    className="truncate flex-1"
+                                    title={getFolderDisplayName(folder)}
+                                  >
+                                    {getFolderDisplayName(folder)}
+                                  </span>
+                                  {folderUnread > 0 && (
+                                    <span
+                                      className={cn(
+                                        'ml-auto inline-flex items-center justify-center rounded-full h-5 min-w-5 px-1.5 text-[10px] font-semibold leading-none',
+                                        folder.type === 'INBOX'
+                                          ? 'bg-primary text-primary-foreground'
+                                          : 'bg-muted text-muted-foreground'
+                                      )}
+                                    >
+                                      {folderUnread > 99 ? '99+' : folderUnread}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </ScrollArea>
 
       {/* Sync footer */}
-      <div className="border-t">
-        <div className="flex items-center justify-between px-3 py-2">
+      <div className="border-t px-3 py-2.5">
+        <div className="flex items-center justify-between">
           <div className="min-w-0 flex-1">
             {selectedAccount?.lastSyncAt ? (
               <p className="text-[10px] text-muted-foreground leading-tight">
-                Sincronizado h\u00e1{' '}
+                Sincronizado há{' '}
                 <span className="font-medium">
                   {formatDistanceToNow(new Date(selectedAccount.lastSyncAt), {
                     locale: ptBR,
@@ -426,48 +416,19 @@ export function EmailSidebar({
               </p>
             )}
           </div>
-          <div className="flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 rounded-md"
-              disabled={!selectedAccountId || isSyncing}
-              onClick={onSyncAccount}
-              title="Sincronizar conta"
-            >
-              <RefreshCw
-                className={cn('size-3.5', isSyncing && 'animate-spin')}
-              />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 rounded-md"
-                  title="Configura\u00e7\u00f5es"
-                >
-                  <Settings2 className="size-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={onOpenNewAccount}
-                  className="gap-2 text-xs"
-                >
-                  <Plus className="size-3.5" />
-                  Configurar nova conta
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={onOpenManageAccounts}
-                  className="gap-2 text-xs"
-                >
-                  <Settings className="size-3.5" />
-                  Gerenciar contas
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 rounded-lg"
+            disabled={!selectedAccountId || isSyncing}
+            onClick={onSyncAccount}
+            title="Sincronizar conta"
+            aria-label="Sincronizar conta"
+          >
+            <RefreshCw
+              className={cn('size-3.5', isSyncing && 'animate-spin')}
+            />
+          </Button>
         </div>
       </div>
     </div>

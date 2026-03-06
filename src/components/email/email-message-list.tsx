@@ -16,17 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import type { EmailMessageListItem } from '@/types/email';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import {
-  format,
-  isAfter,
-  isBefore,
-  isSameYear,
-  isToday,
-  isYesterday,
-  startOfDay,
-  endOfDay,
-} from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
 import {
   AlertCircle,
   Archive,
@@ -36,6 +26,7 @@ import {
   Mail,
   MailOpen,
   Paperclip,
+  Reply,
   Search,
   Settings,
   Trash2,
@@ -43,15 +34,12 @@ import {
 } from 'lucide-react';
 import NextLink from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
-function formatEmailDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  const now = new Date();
-  if (isToday(d)) return format(d, 'HH:mm');
-  if (isYesterday(d)) return 'Ontem';
-  if (isSameYear(d, now)) return format(d, 'd MMM', { locale: ptBR });
-  return format(d, 'd MMM yyyy', { locale: ptBR });
-}
+import {
+  formatEmailDate,
+  formatEmailDateFull,
+  getAvatarColor,
+  getInitials,
+} from './email-utils';
 
 interface EmailMessageListProps {
   messages: EmailMessageListItem[];
@@ -156,7 +144,7 @@ export function EmailMessageList({
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 72,
+    estimateSize: () => 82,
     overscan: 6,
   });
 
@@ -164,7 +152,6 @@ export function EmailMessageList({
   const handleMessageClick = useCallback(
     (messageId: string, index: number, event: React.MouseEvent) => {
       if (event.shiftKey && lastSelectedIndex !== null) {
-        // Range select: all between lastSelectedIndex and current
         const start = Math.min(lastSelectedIndex, index);
         const end = Math.max(lastSelectedIndex, index);
         const newSelected = new Set(selectedIds);
@@ -174,14 +161,12 @@ export function EmailMessageList({
         }
         onSelectedIdsChange?.(newSelected);
       } else if (event.ctrlKey || event.metaKey) {
-        // Toggle single
         const newSelected = new Set(selectedIds);
         if (newSelected.has(messageId)) newSelected.delete(messageId);
         else newSelected.add(messageId);
         onSelectedIdsChange?.(newSelected);
         setLastSelectedIndex(index);
       } else {
-        // Normal click: clear selection, open message
         if (selectedIds.size > 0) {
           onClearSelection?.();
         }
@@ -202,7 +187,6 @@ export function EmailMessageList({
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Don't handle shortcuts when typing in input fields
       const target = e.target as HTMLElement;
       if (
         target.tagName === 'INPUT' ||
@@ -266,28 +250,28 @@ export function EmailMessageList({
   return (
     <div className="flex h-full flex-col" data-testid="email-message-list">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="text-sm font-semibold tracking-tight">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <h2 className="text-base font-semibold tracking-tight">
           {folderName ?? 'Mensagens'}
         </h2>
         <Badge
           variant="secondary"
-          className="text-[10px] font-medium h-5 px-1.5"
+          className="text-[11px] font-medium h-5.5 px-2 rounded-full"
         >
           {total ?? messages.length}
         </Badge>
       </div>
 
       {/* Search + Filter */}
-      <div className="px-3 pb-2 space-y-2">
-        <div className="relative flex items-center gap-1.5">
+      <div className="px-4 pb-3 space-y-3">
+        <div className="relative flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Pesquisar e-mails..."
               value={searchQuery}
               onChange={e => onSearchChange(e.target.value)}
-              className="pl-8 h-8 text-sm rounded-lg"
+              className="pl-9 h-9 text-sm rounded-xl"
             />
           </div>
           <Popover>
@@ -296,51 +280,51 @@ export function EmailMessageList({
                 variant={hasActiveFilters ? 'default' : 'ghost'}
                 size="icon"
                 className={cn(
-                  'size-8 shrink-0 rounded-lg',
+                  'size-9 shrink-0 rounded-xl',
                   hasActiveFilters && 'shadow-sm'
                 )}
-                title="Filtros avan\u00e7ados"
+                title="Filtros avançados"
               >
-                <Filter className="size-3.5" />
+                <Filter className="size-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3 space-y-3" align="end">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold">Filtros</p>
+            <PopoverContent className="w-72 p-4 space-y-4" align="end">
+              <div>
+                <p className="text-sm font-semibold">Filtros</p>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">
                   Remetente
                 </label>
                 <Input
                   placeholder="email@exemplo.com"
                   value={fromFilter}
                   onChange={e => setFromFilter(e.target.value)}
-                  className="h-7 text-xs"
+                  className="h-8 text-xs rounded-lg"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">
-                  Per\u00edodo
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Período
                 </label>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <Input
                     type="date"
                     value={dateFrom}
                     onChange={e => setDateFrom(e.target.value)}
-                    className="h-7 text-xs flex-1"
+                    className="h-8 text-xs flex-1 rounded-lg"
                   />
                   <span className="text-xs text-muted-foreground">a</span>
                   <Input
                     type="date"
                     value={dateTo}
                     onChange={e => setDateTo(e.target.value)}
-                    className="h-7 text-xs flex-1"
+                    className="h-8 text-xs flex-1 rounded-lg"
                   />
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <label className="text-xs text-muted-foreground">
+                <label className="text-xs font-medium text-muted-foreground">
                   Tem anexo
                 </label>
                 <Switch
@@ -352,7 +336,7 @@ export function EmailMessageList({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full h-7 text-xs gap-1.5 text-muted-foreground"
+                  className="w-full h-8 text-xs gap-2 text-muted-foreground rounded-lg"
                   onClick={() => {
                     setFromFilter('');
                     setHasAttachmentsFilter(false);
@@ -373,15 +357,15 @@ export function EmailMessageList({
           value={filter}
           onValueChange={v => onFilterChange(v as 'all' | 'unread')}
         >
-          <TabsList className="h-8 w-full">
-            <TabsTrigger value="all" className="flex-1 text-xs">
+          <TabsList className="h-9 w-full rounded-xl">
+            <TabsTrigger value="all" className="flex-1 text-xs rounded-lg">
               Todos
               {folderTotalMessages !== undefined && folderTotalMessages > 0
                 ? ` (${folderTotalMessages})`
                 : ''}
             </TabsTrigger>
-            <TabsTrigger value="unread" className="flex-1 text-xs">
-              N\u00e3o lidos
+            <TabsTrigger value="unread" className="flex-1 text-xs rounded-lg">
+              Não lidos
               {folderUnreadMessages !== undefined && folderUnreadMessages > 0
                 ? ` (${folderUnreadMessages})`
                 : ''}
@@ -390,12 +374,10 @@ export function EmailMessageList({
         </Tabs>
       </div>
 
-      <Separator />
-
       {/* Bulk-actions toolbar */}
       {selectedIds.size > 0 && (
         <div
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border-b"
+          className="flex items-center gap-2 px-4 py-2 bg-primary/8 border-y"
           data-testid="email-bulk-actions-toolbar"
         >
           <Checkbox
@@ -414,7 +396,7 @@ export function EmailMessageList({
             className="size-4"
           />
           <span
-            className="text-xs font-medium mr-1 text-primary"
+            className="text-xs font-semibold text-primary"
             data-testid="email-bulk-selection-count"
           >
             {selectedIds.size} selecionado{selectedIds.size > 1 ? 's' : ''}
@@ -423,7 +405,7 @@ export function EmailMessageList({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs gap-1.5"
+            className="h-7 text-xs gap-1.5 rounded-lg"
             onClick={() => {
               onBulkMarkRead?.(Array.from(selectedIds), true);
             }}
@@ -434,18 +416,18 @@ export function EmailMessageList({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs gap-1.5"
+            className="h-7 text-xs gap-1.5 rounded-lg"
             onClick={() => {
               onBulkMarkRead?.(Array.from(selectedIds), false);
             }}
           >
             <Mail className="size-3.5" />
-            N\u00e3o lida
+            Não lida
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs gap-1.5"
+            className="h-7 text-xs gap-1.5 rounded-lg"
             onClick={() => {
               onBulkArchive?.(Array.from(selectedIds));
             }}
@@ -456,7 +438,7 @@ export function EmailMessageList({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs gap-1.5 text-destructive hover:text-destructive"
+            className="h-7 text-xs gap-1.5 rounded-lg text-destructive hover:text-destructive"
             onClick={() => {
               onBulkDelete?.(Array.from(selectedIds));
             }}
@@ -468,9 +450,10 @@ export function EmailMessageList({
           <Button
             variant="ghost"
             size="icon"
-            className="size-7"
+            className="size-7 rounded-lg"
             onClick={() => onClearSelection?.()}
-            title="Limpar sele\u00e7\u00e3o"
+            title="Limpar seleção"
+            aria-label="Limpar seleção"
           >
             <X className="size-3.5" />
           </Button>
@@ -479,16 +462,16 @@ export function EmailMessageList({
 
       {/* Loading skeleton */}
       {isLoading && (
-        <div className="space-y-0 overflow-hidden">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex items-start gap-3 px-4 py-3 border-b">
-              <Skeleton className="size-2 rounded-full shrink-0 mt-2" />
+        <div className="space-y-0 overflow-hidden px-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-3 px-3 py-3.5">
+              <Skeleton className="size-9 rounded-full shrink-0" />
               <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-3.5 w-28" />
-                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="h-3.5 w-32" />
+                  <Skeleton className="h-3 w-14" />
                 </div>
-                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-3.5 w-3/4" />
                 <Skeleton className="h-3 w-2/3" />
               </div>
             </div>
@@ -498,15 +481,15 @@ export function EmailMessageList({
 
       {/* Error */}
       {isError && (
-        <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-          <div className="size-12 rounded-full bg-destructive/10 flex items-center justify-center">
-            <AlertCircle className="size-6 text-destructive/60" />
+        <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+          <div className="size-14 rounded-2xl bg-destructive/10 flex items-center justify-center">
+            <AlertCircle className="size-7 text-destructive/60" />
           </div>
           <div>
             <p className="text-sm font-medium text-destructive">
               Erro ao carregar mensagens
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1.5">
               Verifique sua conectividade ou sincronize a conta.
             </p>
           </div>
@@ -515,19 +498,24 @@ export function EmailMessageList({
 
       {/* No account */}
       {noAccount && !isLoading && (
-        <div className="flex flex-col items-center justify-center gap-4 px-6 py-12 text-center">
-          <div className="size-16 rounded-full bg-muted flex items-center justify-center">
-            <Inbox className="size-8 text-muted-foreground/50" />
+        <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+          <div className="size-16 rounded-2xl bg-muted flex items-center justify-center">
+            <Inbox className="size-8 text-muted-foreground" />
           </div>
           <div>
             <p className="text-sm font-medium">Nenhuma conta de e-mail</p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1.5">
               Configure uma conta para começar
             </p>
           </div>
-          <Button asChild size="sm" variant="outline" className="gap-1.5">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="gap-2 rounded-xl"
+          >
             <NextLink href="/email/settings">
-              <Settings className="size-3.5" />
+              <Settings className="size-4" />
               Adicionar conta
             </NextLink>
           </Button>
@@ -539,41 +527,41 @@ export function EmailMessageList({
         !isError &&
         !noAccount &&
         filteredMessages.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+          <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
             {searchQuery ? (
               <>
-                <div className="size-12 rounded-full bg-muted flex items-center justify-center">
-                  <Search className="size-6 text-muted-foreground/40" />
+                <div className="size-14 rounded-2xl bg-muted flex items-center justify-center">
+                  <Search className="size-7 text-muted-foreground" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Nenhum resultado</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1.5">
                     Tente uma busca diferente
                   </p>
                 </div>
               </>
             ) : filter === 'unread' ? (
               <>
-                <div className="size-12 rounded-full bg-muted flex items-center justify-center">
-                  <MailOpen className="size-6 text-muted-foreground/40" />
+                <div className="size-14 rounded-2xl bg-muted flex items-center justify-center">
+                  <MailOpen className="size-7 text-muted-foreground" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    Nenhuma mensagem n\u00e3o lida
+                    Nenhuma mensagem não lida
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Voc\u00ea est\u00e1 em dia!
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Você está em dia!
                   </p>
                 </div>
               </>
             ) : (
               <>
-                <div className="size-12 rounded-full bg-muted flex items-center justify-center">
-                  <Inbox className="size-6 text-muted-foreground/40" />
+                <div className="size-14 rounded-2xl bg-muted flex items-center justify-center">
+                  <Inbox className="size-7 text-muted-foreground" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Nenhuma mensagem</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1.5">
                     Esta pasta está vazia
                   </p>
                 </div>
@@ -624,7 +612,13 @@ export function EmailMessageList({
               const message = filteredMessages[virtualRow.index];
               const isSelected = selectedMessageId === message.id;
               const isChecked = selectedIds.has(message.id);
-              const senderDisplay = message.fromName || message.fromAddress;
+              const senderDisplay =
+                message.fromName || message.fromAddress || '(sem remetente)';
+              const avatarColor = getAvatarColor(message.fromAddress);
+              const initials = getInitials(
+                message.fromName,
+                message.fromAddress
+              );
 
               return (
                 <div
@@ -639,100 +633,119 @@ export function EmailMessageList({
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <div
-                    className={cn(
-                      'group flex w-full items-start gap-2.5 px-3 py-2.5 text-left border-b cursor-pointer transition-colors duration-150',
-                      isSelected && 'bg-primary/10',
-                      isChecked && !isSelected && 'bg-primary/5',
-                      !isSelected && !isChecked && 'hover:bg-muted/30',
-                      !message.isRead &&
-                        !isSelected &&
-                        !isChecked &&
-                        'bg-primary/[0.03]'
-                    )}
-                    onClick={e =>
-                      handleMessageClick(message.id, virtualRow.index, e)
-                    }
-                  >
-                    {/* Unread dot / Checkbox area */}
+                  <div className="px-2">
                     <div
-                      className="relative size-5 shrink-0 mt-1 flex items-center justify-center"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onToggleSelect?.(message.id);
-                      }}
+                      className={cn(
+                        'group flex w-full items-start gap-3 px-3 py-3 text-left cursor-pointer transition-all duration-150 rounded-xl',
+                        isSelected && 'bg-accent shadow-sm',
+                        isChecked && !isSelected && 'bg-primary/5',
+                        !isSelected && !isChecked && 'hover:bg-muted/50'
+                      )}
+                      onClick={e =>
+                        handleMessageClick(message.id, virtualRow.index, e)
+                      }
                     >
-                      {/* Unread dot - hidden when checked or on hover */}
+                      {/* Avatar / Checkbox area */}
                       <div
-                        className={cn(
-                          'flex items-center justify-center transition-opacity duration-150',
-                          isChecked || selectedIds.size > 0
-                            ? 'opacity-0'
-                            : 'group-hover:opacity-0'
-                        )}
+                        className="relative shrink-0 mt-0.5"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onToggleSelect?.(message.id);
+                        }}
                       >
-                        {!message.isRead && (
-                          <div className="size-2 rounded-full bg-primary" />
-                        )}
-                      </div>
-                      {/* Checkbox - shown when checked or on hover */}
-                      <div
-                        className={cn(
-                          'absolute inset-0 flex items-center justify-center transition-opacity duration-150',
-                          isChecked || selectedIds.size > 0
-                            ? 'opacity-100'
-                            : 'opacity-0 group-hover:opacity-100'
-                        )}
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          className="size-4"
-                          onCheckedChange={() => onToggleSelect?.(message.id)}
-                          onClick={e => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="min-w-0 flex-1">
-                      {/* Row 1: Sender + Attachment + Date */}
-                      <div className="flex items-center gap-1">
-                        <span
+                        {/* Avatar */}
+                        <div
                           className={cn(
-                            'truncate text-sm flex-1',
-                            !message.isRead
-                              ? 'font-semibold text-foreground'
-                              : 'text-muted-foreground'
+                            'flex size-9 items-center justify-center rounded-full text-white transition-opacity duration-150',
+                            (isChecked || selectedIds.size > 0) &&
+                              'opacity-0 group-hover:opacity-0'
+                          )}
+                          style={{ backgroundColor: avatarColor }}
+                        >
+                          <span className="text-xs font-semibold leading-none">
+                            {initials}
+                          </span>
+                        </div>
+
+                        {/* Unread dot */}
+                        {!message.isRead &&
+                          !isChecked &&
+                          selectedIds.size === 0 && (
+                            <div className="absolute -top-0.5 -left-0.5 size-2.5 rounded-full bg-primary ring-2 ring-background" />
+                          )}
+
+                        {/* Checkbox overlay */}
+                        <div
+                          className={cn(
+                            'absolute inset-0 flex items-center justify-center rounded-full transition-opacity duration-150',
+                            isChecked || selectedIds.size > 0
+                              ? 'opacity-100'
+                              : 'opacity-0 group-hover:opacity-100'
                           )}
                         >
-                          {senderDisplay}
-                        </span>
-                        {message.hasAttachments && (
-                          <Paperclip className="size-3 shrink-0 text-muted-foreground" />
-                        )}
-                        <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
-                          {formatEmailDate(message.receivedAt)}
-                        </span>
+                          <div className="size-9 rounded-full bg-muted/80 backdrop-blur-sm flex items-center justify-center">
+                            <Checkbox
+                              checked={isChecked}
+                              className="size-4"
+                              onCheckedChange={() =>
+                                onToggleSelect?.(message.id)
+                              }
+                              onClick={e => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Row 2: Subject */}
-                      <p
-                        className={cn(
-                          'truncate text-sm leading-snug',
-                          !message.isRead
-                            ? 'font-medium text-foreground'
-                            : 'text-foreground/80'
-                        )}
-                      >
-                        {message.subject || '(sem assunto)'}
-                      </p>
+                      {/* Content — 3 rows: sender+date, subject, snippet */}
+                      <div className="min-w-0 flex-1">
+                        {/* Row 1: Sender + Attachment + Date */}
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              'truncate text-sm flex-1',
+                              !message.isRead
+                                ? 'font-semibold text-foreground'
+                                : 'text-muted-foreground font-semibold'
+                            )}
+                            title={senderDisplay}
+                          >
+                            {senderDisplay}
+                          </span>
+                          <span
+                            className="shrink-0 text-[11px] text-muted-foreground tabular-nums"
+                            title={formatEmailDateFull(message.receivedAt)}
+                          >
+                            {formatEmailDate(message.receivedAt)}
+                          </span>
+                        </div>
 
-                      {/* Row 3: Snippet */}
-                      {message.snippet && (
-                        <p className="truncate text-xs text-muted-foreground mt-0.5 leading-snug">
-                          {message.snippet}
-                        </p>
-                      )}
+                        {/* Row 2: Subject (with attachment icon) */}
+                        <div className="flex items-center justify-between gap-1 mt-0.5">
+                          <p
+                            className={cn(
+                              'truncate text-[13px] leading-snug',
+                              !message.isRead
+                                ? 'font-medium text-foreground'
+                                : 'text-muted-foreground'
+                            )}
+                            title={message.subject || '(sem assunto)'}
+                          >
+                            {message.subject || (
+                              <em className="text-muted-foreground">
+                                (sem assunto)
+                              </em>
+                            )}
+                          </p>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {message.isAnswered && (
+                              <Reply className="size-3 shrink-0 text-muted-foreground" />
+                            )}
+                            {message.hasAttachments && (
+                              <Paperclip className="size-3 shrink-0 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

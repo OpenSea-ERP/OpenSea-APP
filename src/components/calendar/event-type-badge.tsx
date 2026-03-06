@@ -18,7 +18,7 @@ import {
   Tag,
 } from 'lucide-react';
 
-const EVENT_TYPE_ICONS: Record<EventType, React.ReactNode> = {
+export const EVENT_TYPE_ICONS: Record<EventType, React.ReactNode> = {
   MEETING: <Users className="w-3 h-3" />,
   TASK: <CheckSquare className="w-3 h-3" />,
   REMINDER: <Bell className="w-3 h-3" />,

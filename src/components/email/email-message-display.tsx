@@ -3,6 +3,12 @@
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -19,73 +25,71 @@ import {
   useMoveMessage,
   useSyncEmailAccount,
 } from '@/hooks/email/use-email';
+import { emailService } from '@/services/email';
 import type { EmailFolder, EmailMessageListItem } from '@/types/email';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle,
   Archive,
   ArchiveRestore,
-  CornerUpLeft,
-  CornerUpRight,
   Download,
-  File,
+  FileSpreadsheet,
+  FileText,
   Forward,
   Image,
   Loader2,
   Mail,
   MailOpen,
   MoreHorizontal,
+  Paperclip,
   Reply,
   ReplyAll,
   Trash2,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { emailService } from '@/services/email';
+import { EmailHtmlBody } from './email-html-body';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
-function getInitials(name: string | null, address: string): string {
-  if (name) {
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  }
-  return address.substring(0, 2).toUpperCase();
-}
-
-function getAvatarColor(email: string): string {
-  let hash = 0;
-  for (const char of email) hash = (hash << 5) - hash + char.charCodeAt(0);
-  const colors = [
-    '#3b82f6',
-    '#ef4444',
-    '#10b981',
-    '#f59e0b',
-    '#8b5cf6',
-    '#ec4899',
-    '#06b6d4',
-    '#f97316',
-  ];
-  return colors[Math.abs(hash) % colors.length];
-}
+  formatEmailDateFull,
+  formatFileSize,
+  getAvatarColor,
+  getInitials,
+} from './email-utils';
 
 function getFileIcon(contentType: string) {
   if (contentType.startsWith('image/')) return Image;
-  return File;
+  if (
+    contentType.includes('spreadsheet') ||
+    contentType.includes('excel') ||
+    contentType.includes('csv')
+  )
+    return FileSpreadsheet;
+  return FileText;
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function getFileIconColor(contentType: string): string {
+  if (contentType.startsWith('image/')) return '#8b5cf6'; // violet
+  if (contentType.includes('pdf')) return '#ef4444'; // red
+  if (
+    contentType.includes('spreadsheet') ||
+    contentType.includes('excel') ||
+    contentType.includes('csv')
+  )
+    return '#10b981'; // emerald
+  if (
+    contentType.includes('word') ||
+    contentType.includes('document') ||
+    contentType.includes('text/')
+  )
+    return '#3b82f6'; // blue
+  return '#6b7280'; // gray
+}
+
+function stripGlobalEmailStyles(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+    .replace(/<link[^>]*?>/gi, '')
+    .replace(/<meta[^>]*?>/gi, '')
+    .replace(/<\/?(?:html|head|body)[^>]*?>/gi, '');
 }
 
 /**
@@ -115,17 +119,20 @@ interface EmailMessageDisplayProps {
   currentFolderId?: string | null;
   onReply?: (
     message: EmailMessageListItem,
-    rfcMessageId?: string | null
+    rfcMessageId?: string | null,
+    quotedBody?: string | null
   ) => void;
   onReplyAll?: (
     message: EmailMessageListItem,
     toAddresses: string[],
     ccAddresses: string[],
-    rfcMessageId?: string | null
+    rfcMessageId?: string | null,
+    quotedBody?: string | null
   ) => void;
   onForward?: (
     message: EmailMessageListItem,
-    rfcMessageId?: string | null
+    rfcMessageId?: string | null,
+    quotedBody?: string | null
   ) => void;
   onDeleteMessage?: (id: string) => void;
   /** The accountId for the selected message (needed when folders come from a different account in Central Inbox) */
@@ -165,18 +172,20 @@ export function EmailMessageDisplay({
   ) {
     try {
       setDownloadingAttachmentId(attachmentId);
-      const { url, filename } = await emailService.getAttachmentDownloadUrl(
+      const { blob, filename } = await emailService.downloadAttachment(
         messageId,
         attachmentId
       );
+      // Create a temporary Object URL and trigger download
+      const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
+      link.href = objectUrl;
       link.download = filename;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      // Free memory
+      URL.revokeObjectURL(objectUrl);
     } catch {
       toast.error('Erro ao baixar anexo');
     } finally {
@@ -251,14 +260,14 @@ export function EmailMessageDisplay({
         }
       );
     } else {
-      toast.error('Pasta de arquivo n\u00e3o encontrada');
+      toast.error('Pasta de arquivo não encontrada');
     }
   }
 
   function handleSpam() {
     if (!selectedMessage) return;
     if (!spamFolder) {
-      toast.error('Pasta de spam n\u00e3o encontrada');
+      toast.error('Pasta de spam não encontrada');
       return;
     }
     moveMutation.mutate(
@@ -303,23 +312,27 @@ export function EmailMessageDisplay({
     });
   }
 
+  const detail = messageQuery.data?.message;
+  const safeBodyHtml = useMemo(() => {
+    if (!detail?.bodyHtmlSanitized) return null;
+    return stripGlobalEmailStyles(detail.bodyHtmlSanitized);
+  }, [detail?.bodyHtmlSanitized]);
+
   if (!selectedMessage) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 text-center px-6">
-        <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-          <Mail className="size-7 text-muted-foreground/50" />
+        <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
+          <Mail className="size-7 text-muted-foreground" />
         </div>
         <div>
           <p className="text-sm font-medium">Selecione uma mensagem</p>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1.5">
             Escolha uma mensagem para visualizar
           </p>
         </div>
       </div>
     );
   }
-
-  const detail = messageQuery.data?.message;
   const initials = getInitials(
     selectedMessage.fromName,
     selectedMessage.fromAddress
@@ -340,14 +353,20 @@ export function EmailMessageDisplay({
           data-testid="email-message-display"
         >
           {/* Action toolbar */}
-          <div className="flex items-center gap-0.5 border-b px-4 py-2">
+          <div className="flex items-center gap-1.5 border-b px-5 py-3">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-md"
-                  onClick={() => onReply?.(selectedMessage, detail?.messageId)}
+                  className="size-9 rounded-lg"
+                  onClick={() =>
+                    onReply?.(
+                      selectedMessage,
+                      detail?.messageId,
+                      detail?.bodyHtmlSanitized
+                    )
+                  }
                 >
                   <Reply className="size-4" />
                 </Button>
@@ -360,14 +379,15 @@ export function EmailMessageDisplay({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-md"
+                  className="size-9 rounded-lg"
                   onClick={() => {
                     if (detail) {
                       onReplyAll?.(
                         selectedMessage,
                         detail.toAddresses ?? [],
                         detail.ccAddresses ?? [],
-                        detail.messageId
+                        detail.messageId,
+                        detail.bodyHtmlSanitized
                       );
                     } else {
                       onReplyAll?.(selectedMessage, [], [], null);
@@ -385,9 +405,13 @@ export function EmailMessageDisplay({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-md"
+                  className="size-9 rounded-lg"
                   onClick={() =>
-                    onForward?.(selectedMessage, detail?.messageId)
+                    onForward?.(
+                      selectedMessage,
+                      detail?.messageId,
+                      detail?.bodyHtmlSanitized
+                    )
                   }
                 >
                   <Forward className="size-4" />
@@ -396,14 +420,14 @@ export function EmailMessageDisplay({
               <TooltipContent>Encaminhar</TooltipContent>
             </Tooltip>
 
-            <Separator orientation="vertical" className="h-5 mx-1" />
+            <Separator orientation="vertical" className="h-5 mx-1.5" />
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-md"
+                  className="size-9 rounded-lg"
                   onClick={handleArchiveToggle}
                   disabled={moveMutation.isPending}
                 >
@@ -424,7 +448,7 @@ export function EmailMessageDisplay({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-md"
+                  className="size-9 rounded-lg"
                   onClick={handleSpam}
                   disabled={moveMutation.isPending}
                 >
@@ -439,7 +463,7 @@ export function EmailMessageDisplay({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-md"
+                  className="size-9 rounded-lg"
                   disabled={
                     moveMutation.isPending || permanentDeleteMutation.isPending
                   }
@@ -453,14 +477,14 @@ export function EmailMessageDisplay({
               </TooltipContent>
             </Tooltip>
 
-            <Separator orientation="vertical" className="h-5 mx-1" />
+            <Separator orientation="vertical" className="h-5 mx-1.5" />
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-md"
+                  className="size-9 rounded-lg"
                   onClick={handleToggleRead}
                 >
                   {selectedMessage.isRead ? (
@@ -472,7 +496,7 @@ export function EmailMessageDisplay({
               </TooltipTrigger>
               <TooltipContent>
                 {selectedMessage.isRead
-                  ? 'Marcar como n\u00e3o lida'
+                  ? 'Marcar como não lida'
                   : 'Marcar como lida'}
               </TooltipContent>
             </Tooltip>
@@ -484,14 +508,21 @@ export function EmailMessageDisplay({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 rounded-md"
+                  className="size-9 rounded-lg"
+                  aria-label="Mais opções"
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => onReply?.(selectedMessage, detail?.messageId)}
+                  onClick={() =>
+                    onReply?.(
+                      selectedMessage,
+                      detail?.messageId,
+                      detail?.bodyHtmlSanitized
+                    )
+                  }
                   className="gap-2 text-xs"
                 >
                   <Reply className="size-3.5" />
@@ -499,7 +530,11 @@ export function EmailMessageDisplay({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
-                    onForward?.(selectedMessage, detail?.messageId)
+                    onForward?.(
+                      selectedMessage,
+                      detail?.messageId,
+                      detail?.bodyHtmlSanitized
+                    )
                   }
                   className="gap-2 text-xs"
                 >
@@ -513,7 +548,7 @@ export function EmailMessageDisplay({
                   {selectedMessage.isRead ? (
                     <>
                       <Mail className="size-3.5" />
-                      Marcar como n\u00e3o lida
+                      Marcar como não lida
                     </>
                   ) : (
                     <>
@@ -527,15 +562,15 @@ export function EmailMessageDisplay({
           </div>
 
           {/* Email header */}
-          <div className="px-6 pt-5 pb-4">
+          <div className="px-6 pt-6 pb-5">
             <h2 className="text-lg font-semibold leading-tight">
               {selectedMessage.subject || '(sem assunto)'}
             </h2>
 
-            <div className="mt-4 flex items-start gap-3">
-              <Avatar className="size-10 shrink-0">
+            <div className="mt-5 flex items-start gap-4">
+              <Avatar className="size-12 shrink-0">
                 <AvatarFallback
-                  className="text-sm font-medium text-white"
+                  className="text-sm font-semibold text-white"
                   style={{ backgroundColor: avatarColor }}
                 >
                   {initials}
@@ -544,19 +579,19 @@ export function EmailMessageDisplay({
 
               <div className="min-w-0 flex-1">
                 {messageQuery.isLoading ? (
-                  <div className="space-y-1.5 pt-0.5">
-                    <Skeleton className="h-3.5 w-48" />
-                    <Skeleton className="h-3 w-64" />
+                  <div className="space-y-2 pt-0.5">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-3.5 w-64" />
                   </div>
                 ) : (
                   <>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-sm font-semibold">
+                      <span className="text-base font-semibold">
                         {selectedMessage.fromName ||
                           selectedMessage.fromAddress}
                       </span>
                       {selectedMessage.fromName && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-sm text-muted-foreground">
                           &lt;{selectedMessage.fromAddress}&gt;
                         </span>
                       )}
@@ -564,24 +599,25 @@ export function EmailMessageDisplay({
 
                     {/* Recipients */}
                     {detail && (
-                      <div className="mt-0.5">
+                      <div className="mt-1.5">
                         {shouldCollapseRecipients && !showAllRecipients ? (
                           <p className="text-xs text-muted-foreground">
                             Para: {allTo.slice(0, 2).join(', ')}
                             {totalRecipients > 2 && (
-                              <button
-                                className="ml-1 text-primary hover:underline"
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="ml-1 h-auto p-0 text-xs"
                                 onClick={() => setShowAllRecipients(true)}
                               >
                                 +{totalRecipients - 2} mais
-                              </button>
+                              </Button>
                             )}
                           </p>
                         ) : (
                           <>
                             <p className="text-xs text-muted-foreground">
-                              Para:{' '}
-                              {allTo.join(', ') || 'destinat\u00e1rio oculto'}
+                              Para: {allTo.join(', ') || 'destinatário oculto'}
                             </p>
                             {allCc.length > 0 && (
                               <p className="text-xs text-muted-foreground">
@@ -589,24 +625,22 @@ export function EmailMessageDisplay({
                               </p>
                             )}
                             {shouldCollapseRecipients && (
-                              <button
-                                className="text-xs text-primary hover:underline mt-0.5"
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-xs mt-0.5"
                                 onClick={() => setShowAllRecipients(false)}
                               >
                                 Recolher
-                              </button>
+                              </Button>
                             )}
                           </>
                         )}
                       </div>
                     )}
 
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {format(
-                        new Date(selectedMessage.receivedAt),
-                        "d 'de' MMMM 'de' yyyy, HH:mm",
-                        { locale: ptBR }
-                      )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {formatEmailDateFull(selectedMessage.receivedAt)}
                     </p>
                   </>
                 )}
@@ -616,8 +650,66 @@ export function EmailMessageDisplay({
 
           <Separator />
 
+          {/* Attachments bar (Outlook-style) */}
+          {detail?.attachments && detail.attachments.length > 0 && (
+            <>
+              <div className="px-6 py-3 bg-muted/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Paperclip className="size-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {detail.attachments.length}{' '}
+                    {detail.attachments.length === 1 ? 'anexo' : 'anexos'}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {detail.attachments.map(att => {
+                    const FileIcon = getFileIcon(att.contentType);
+                    const iconColor = getFileIconColor(att.contentType);
+                    const isDownloading = downloadingAttachmentId === att.id;
+
+                    return (
+                      <button
+                        key={att.id}
+                        className="flex items-center gap-2 rounded-lg border bg-background px-3 py-1.5 text-left hover:bg-muted/40 hover:shadow-sm transition-all duration-150 group"
+                        onClick={() =>
+                          handleDownloadAttachment(detail.id, att.id)
+                        }
+                        disabled={isDownloading}
+                        title={`Baixar ${att.filename} (${formatFileSize(att.size)})`}
+                      >
+                        <div
+                          className="flex size-7 shrink-0 items-center justify-center rounded"
+                          style={{ backgroundColor: `${iconColor}15` }}
+                        >
+                          <FileIcon
+                            className="size-4"
+                            style={{ color: iconColor }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium truncate max-w-40">
+                            {att.filename}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatFileSize(att.size)}
+                          </p>
+                        </div>
+                        {isDownloading ? (
+                          <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />
+                        ) : (
+                          <Download className="size-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
           {/* Body */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-6">
             {messageQuery.isLoading && (
               <div className="space-y-3">
                 <Skeleton className="h-4 w-full" />
@@ -631,99 +723,26 @@ export function EmailMessageDisplay({
               </div>
             )}
 
-            {!messageQuery.isLoading &&
-              (detail?.bodyHtmlSanitized || detail?.bodyText) && (
-                <div className="max-w-3xl">
-                  {detail.bodyHtmlSanitized ? (
-                    <div
-                      className="prose prose-sm max-w-none dark:prose-invert text-foreground/80 text-sm leading-relaxed"
-                      dangerouslySetInnerHTML={{
-                        __html: detail.bodyHtmlSanitized,
-                      }}
-                    />
-                  ) : (
-                    <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground/80">
-                      {detail.bodyText}
-                    </pre>
-                  )}
-                </div>
-              )}
-
-            {!messageQuery.isLoading &&
-              !detail?.bodyHtmlSanitized &&
-              !detail?.bodyText && (
-                <p className="text-sm text-muted-foreground italic">
-                  Sem conte\u00fado dispon\u00edvel.
-                </p>
-              )}
-
-            {/* Attachments */}
-            {detail?.attachments && detail.attachments.length > 0 && (
-              <div className="mt-6 space-y-3">
-                <Separator />
-                <p className="text-sm font-medium pt-1">
-                  Anexos ({detail.attachments.length})
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {detail.attachments.map(att => {
-                    const FileIcon = getFileIcon(att.contentType);
-                    const isDownloading = downloadingAttachmentId === att.id;
-
-                    return (
-                      <button
-                        key={att.id}
-                        className="flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2.5 text-left hover:bg-muted/60 transition-colors duration-150 group"
-                        onClick={() =>
-                          handleDownloadAttachment(detail.id, att.id)
-                        }
-                        disabled={isDownloading}
-                        title={`Baixar ${att.filename}`}
-                      >
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted">
-                          <FileIcon className="size-4 text-muted-foreground" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium truncate">
-                            {att.filename}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {formatFileSize(att.size)}
-                          </p>
-                        </div>
-                        {isDownloading ? (
-                          <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
-                        ) : (
-                          <Download className="size-4 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+            {!messageQuery.isLoading && (safeBodyHtml || detail?.bodyText) && (
+              <div className="max-w-3xl">
+                {safeBodyHtml ? (
+                  <EmailHtmlBody
+                    html={safeBodyHtml}
+                    messageId={selectedMessage.id}
+                  />
+                ) : (
+                  <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground/80">
+                    {detail?.bodyText ?? ''}
+                  </pre>
+                )}
               </div>
             )}
-          </div>
 
-          {/* Quick reply footer */}
-          <Separator />
-          <div className="px-4 py-3 flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 rounded-lg"
-              onClick={() => onReply?.(selectedMessage, detail?.messageId)}
-            >
-              <CornerUpLeft className="size-3.5" />
-              Responder
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 rounded-lg"
-              onClick={() => onForward?.(selectedMessage, detail?.messageId)}
-            >
-              <CornerUpRight className="size-3.5" />
-              Encaminhar
-            </Button>
+            {!messageQuery.isLoading && !safeBodyHtml && !detail?.bodyText && (
+              <p className="text-sm text-muted-foreground italic">
+                Sem conteúdo disponível.
+              </p>
+            )}
           </div>
         </div>
       </TooltipProvider>
@@ -732,7 +751,7 @@ export function EmailMessageDisplay({
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         title="Excluir mensagem permanentemente"
-        description="Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita. A mensagem ser\u00e1 exclu\u00edda permanentemente."
+        description="Esta ação não pode ser desfeita. A mensagem será excluída permanentemente."
         confirmLabel="Excluir"
         cancelLabel="Cancelar"
         onConfirm={handleConfirmPermanentDelete}
