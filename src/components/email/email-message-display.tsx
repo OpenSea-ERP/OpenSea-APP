@@ -3,12 +3,6 @@
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -31,6 +25,8 @@ import {
   AlertTriangle,
   Archive,
   ArchiveRestore,
+  ChevronDown,
+  ChevronUp,
   Download,
   FileSpreadsheet,
   FileText,
@@ -39,13 +35,12 @@ import {
   Loader2,
   Mail,
   MailOpen,
-  MoreHorizontal,
   Paperclip,
   Reply,
   ReplyAll,
   Trash2,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EmailHtmlBody } from './email-html-body';
 import {
@@ -154,6 +149,8 @@ export function EmailMessageDisplay({
     string | null
   >(null);
   const [showAllRecipients, setShowAllRecipients] = useState(false);
+  const [attachmentsExpanded, setAttachmentsExpanded] = useState(true);
+  const prevMessageIdRef = useRef<string | null>(null);
 
   // When in Central Inbox, propFolders is empty. Fetch folders for the message's account.
   const messageAccountId = selectedMessage?.accountId ?? accountId ?? null;
@@ -211,9 +208,13 @@ export function EmailMessageDisplay({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMessage?.id]);
 
-  // Reset expanded recipients on message change
+  // Reset expanded recipients and attachments on message change
   useEffect(() => {
     setShowAllRecipients(false);
+    if (prevMessageIdRef.current !== selectedMessage?.id) {
+      setAttachmentsExpanded(true);
+      prevMessageIdRef.current = selectedMessage?.id ?? null;
+    }
   }, [selectedMessage?.id]);
 
   const handleToggleRead = useCallback(() => {
@@ -354,74 +355,7 @@ export function EmailMessageDisplay({
         >
           {/* Action toolbar */}
           <div className="flex items-center gap-1.5 border-b px-5 py-3">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-9 rounded-lg"
-                  onClick={() =>
-                    onReply?.(
-                      selectedMessage,
-                      detail?.messageId,
-                      detail?.bodyHtmlSanitized
-                    )
-                  }
-                >
-                  <Reply className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Responder</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-9 rounded-lg"
-                  onClick={() => {
-                    if (detail) {
-                      onReplyAll?.(
-                        selectedMessage,
-                        detail.toAddresses ?? [],
-                        detail.ccAddresses ?? [],
-                        detail.messageId,
-                        detail.bodyHtmlSanitized
-                      );
-                    } else {
-                      onReplyAll?.(selectedMessage, [], [], null);
-                    }
-                  }}
-                >
-                  <ReplyAll className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Responder a todos</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-9 rounded-lg"
-                  onClick={() =>
-                    onForward?.(
-                      selectedMessage,
-                      detail?.messageId,
-                      detail?.bodyHtmlSanitized
-                    )
-                  }
-                >
-                  <Forward className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Encaminhar</TooltipContent>
-            </Tooltip>
-
-            <Separator orientation="vertical" className="h-5 mx-1.5" />
-
+            {/* Left side: management actions */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -503,19 +437,13 @@ export function EmailMessageDisplay({
 
             <div className="flex-1" />
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            {/* Right side: reply/forward actions */}
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="size-9 rounded-lg"
-                  aria-label="Mais opções"
-                >
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
                   onClick={() =>
                     onReply?.(
                       selectedMessage,
@@ -523,12 +451,45 @@ export function EmailMessageDisplay({
                       detail?.bodyHtmlSanitized
                     )
                   }
-                  className="gap-2 text-xs"
                 >
-                  <Reply className="size-3.5" />
-                  Responder
-                </DropdownMenuItem>
-                <DropdownMenuItem
+                  <Reply className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Responder</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 rounded-lg"
+                  onClick={() => {
+                    if (detail) {
+                      onReplyAll?.(
+                        selectedMessage,
+                        detail.toAddresses ?? [],
+                        detail.ccAddresses ?? [],
+                        detail.messageId,
+                        detail.bodyHtmlSanitized
+                      );
+                    } else {
+                      onReplyAll?.(selectedMessage, [], [], null);
+                    }
+                  }}
+                >
+                  <ReplyAll className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Responder a todos</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 rounded-lg"
                   onClick={() =>
                     onForward?.(
                       selectedMessage,
@@ -536,29 +497,12 @@ export function EmailMessageDisplay({
                       detail?.bodyHtmlSanitized
                     )
                   }
-                  className="gap-2 text-xs"
                 >
-                  <Forward className="size-3.5" />
-                  Encaminhar
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleToggleRead}
-                  className="gap-2 text-xs"
-                >
-                  {selectedMessage.isRead ? (
-                    <>
-                      <Mail className="size-3.5" />
-                      Marcar como não lida
-                    </>
-                  ) : (
-                    <>
-                      <MailOpen className="size-3.5" />
-                      Marcar como lida
-                    </>
-                  )}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <Forward className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Encaminhar</TooltipContent>
+            </Tooltip>
           </div>
 
           {/* Email header */}
@@ -654,55 +598,66 @@ export function EmailMessageDisplay({
           {detail?.attachments && detail.attachments.length > 0 && (
             <>
               <div className="px-6 py-3 bg-muted/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Paperclip className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-muted-foreground">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 text-left"
+                  onClick={() => setAttachmentsExpanded(prev => !prev)}
+                >
+                  <Paperclip className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground flex-1">
                     {detail.attachments.length}{' '}
                     {detail.attachments.length === 1 ? 'anexo' : 'anexos'}
                   </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {detail.attachments.map(att => {
-                    const FileIcon = getFileIcon(att.contentType);
-                    const iconColor = getFileIconColor(att.contentType);
-                    const isDownloading = downloadingAttachmentId === att.id;
+                  {attachmentsExpanded ? (
+                    <ChevronUp className="size-4 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                  )}
+                </button>
+                {attachmentsExpanded && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {detail.attachments.map(att => {
+                      const FileIcon = getFileIcon(att.contentType);
+                      const iconColor = getFileIconColor(att.contentType);
+                      const isDownloading = downloadingAttachmentId === att.id;
 
-                    return (
-                      <button
-                        key={att.id}
-                        className="flex items-center gap-2 rounded-lg border bg-background px-3 py-1.5 text-left hover:bg-muted/40 hover:shadow-sm transition-all duration-150 group"
-                        onClick={() =>
-                          handleDownloadAttachment(detail.id, att.id)
-                        }
-                        disabled={isDownloading}
-                        title={`Baixar ${att.filename} (${formatFileSize(att.size)})`}
-                      >
-                        <div
-                          className="flex size-7 shrink-0 items-center justify-center rounded"
-                          style={{ backgroundColor: `${iconColor}15` }}
+                      return (
+                        <button
+                          key={att.id}
+                          className="flex items-center gap-2 rounded-lg border bg-background px-3 py-1.5 text-left hover:bg-muted/40 hover:shadow-sm transition-all duration-150 group"
+                          onClick={() =>
+                            handleDownloadAttachment(detail.id, att.id)
+                          }
+                          disabled={isDownloading}
+                          title={`Baixar ${att.filename} (${formatFileSize(att.size)})`}
                         >
-                          <FileIcon
-                            className="size-4"
-                            style={{ color: iconColor }}
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium truncate max-w-40">
-                            {att.filename}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {formatFileSize(att.size)}
-                          </p>
-                        </div>
-                        {isDownloading ? (
-                          <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />
-                        ) : (
-                          <Download className="size-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                          <div
+                            className="flex size-7 shrink-0 items-center justify-center rounded"
+                            style={{ backgroundColor: `${iconColor}15` }}
+                          >
+                            <FileIcon
+                              className="size-4"
+                              style={{ color: iconColor }}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate max-w-40">
+                              {att.filename}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {formatFileSize(att.size)}
+                            </p>
+                          </div>
+                          {isDownloading ? (
+                            <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />
+                          ) : (
+                            <Download className="size-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <Separator />
             </>

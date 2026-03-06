@@ -43,6 +43,7 @@ import {
   X,
 } from 'lucide-react';
 import NextLink from 'next/link';
+import { PiSparkleDuotone } from 'react-icons/pi';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   formatEmailDate,
@@ -922,14 +923,17 @@ export function EmailMessageList({
                         <div className="flex items-center gap-1.5">
                           <span
                             className={cn(
-                              'truncate text-sm flex-1',
+                              'flex min-w-0 flex-1 items-center gap-1 text-sm',
                               !message.isRead
                                 ? 'font-semibold text-foreground'
                                 : 'text-muted-foreground font-semibold'
                             )}
                             title={senderDisplay}
                           >
-                            {senderDisplay}
+                            <span className="truncate">{senderDisplay}</span>
+                            {!message.isRead && (
+                              <PiSparkleDuotone className="size-3.5 shrink-0 text-sky-500" />
+                            )}
                           </span>
                           <span
                             className="shrink-0 text-[11px] text-muted-foreground tabular-nums"
