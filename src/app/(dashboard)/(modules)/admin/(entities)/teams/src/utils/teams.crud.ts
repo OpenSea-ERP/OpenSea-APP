@@ -49,6 +49,7 @@ export async function updateTeam(
     name: data.name as string | undefined,
     description: data.description as string | null | undefined,
     color: data.color as string | null | undefined,
+    emailAccountId: data.emailAccountId as string | null | undefined,
   });
   return response.team;
 }

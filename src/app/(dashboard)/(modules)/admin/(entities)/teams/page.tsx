@@ -44,8 +44,8 @@ import {
   Plus,
   Trash2,
   User,
-  Users2,
 } from 'lucide-react';
+import { PiUsersThreeDuotone } from 'react-icons/pi';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -54,7 +54,6 @@ import {
   createTeam,
   deleteTeam,
   DetailModal,
-  EditModal,
   formatMembersCount,
   getStatusBadgeVariant,
   getStatusLabel,
@@ -84,10 +83,6 @@ export default function TeamsPage() {
   const [renameTeam, setRenameTeam] = useState<Team | null>(null);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isRenameSubmitting, setIsRenameSubmitting] = useState(false);
-
-  // Edit modal state
-  const [editTeam, setEditTeam] = useState<Team | null>(null);
-  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Color modal state
   const [colorTeam, setColorTeam] = useState<Team | null>(null);
@@ -196,11 +191,7 @@ export default function TeamsPage() {
 
   const handleContextEdit = (ids: string[]) => {
     if (ids.length === 1) {
-      const team = page.filteredItems.find(item => item.id === ids[0]);
-      if (team) {
-        setEditTeam(team);
-        setIsEditOpen(true);
-      }
+      router.push(`/admin/teams/${ids[0]}/edit`);
     }
   };
 
@@ -284,11 +275,16 @@ export default function TeamsPage() {
 
     if (canEdit) {
       actions.push({
+        id: 'edit',
+        label: 'Editar',
+        icon: Pencil,
+        onClick: handleContextEdit,
+      });
+      actions.push({
         id: 'rename',
         label: 'Renomear',
         icon: Pencil,
         onClick: handleContextRename,
-        separator: 'before',
       });
       actions.push({
         id: 'color',
@@ -331,13 +327,13 @@ export default function TeamsPage() {
         field: 'name' as const,
         direction: 'asc' as const,
         label: 'Nome (A-Z)',
-        icon: Users2,
+        icon: PiUsersThreeDuotone,
       },
       {
         field: 'name' as const,
         direction: 'desc' as const,
         label: 'Nome (Z-A)',
-        icon: Users2,
+        icon: PiUsersThreeDuotone,
       },
       {
         field: 'createdAt' as const,
@@ -376,7 +372,6 @@ export default function TeamsPage() {
       <EntityContextMenu
         itemId={item.id}
         onView={canView ? handleContextView : undefined}
-        onEdit={canEdit ? handleContextEdit : undefined}
         actions={contextActions}
         contentClassName="w-56"
       >
@@ -385,7 +380,7 @@ export default function TeamsPage() {
           variant="grid"
           title={item.name}
           subtitle={item.slug}
-          icon={Users2}
+          icon={PiUsersThreeDuotone}
           iconBgColor={
             !item.color
               ? 'bg-linear-to-br from-blue-500 to-cyan-600'
@@ -400,11 +395,6 @@ export default function TeamsPage() {
           ]}
           metadata={
             <div className="space-y-2">
-              {item.description && (
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {item.description}
-                </p>
-              )}
               <div className="flex flex-col gap-1 text-xs">
                 <div className="flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 shrink-0 text-blue-500" />
@@ -448,7 +438,6 @@ export default function TeamsPage() {
       <EntityContextMenu
         itemId={item.id}
         onView={canView ? handleContextView : undefined}
-        onEdit={canEdit ? handleContextEdit : undefined}
         actions={contextActions}
         contentClassName="w-56"
       >
@@ -456,8 +445,8 @@ export default function TeamsPage() {
           id={item.id}
           variant="list"
           title={item.name}
-          subtitle={item.description || item.slug}
-          icon={Users2}
+          subtitle={item.slug}
+          icon={PiUsersThreeDuotone}
           iconBgColor={
             !item.color
               ? 'bg-linear-to-br from-blue-500 to-cyan-600'
@@ -679,17 +668,6 @@ export default function TeamsPage() {
             team={renameTeam}
             isSubmitting={isRenameSubmitting}
             onSubmit={handleRenameSubmit}
-          />
-
-          {/* Edit Modal */}
-          <EditModal
-            isOpen={isEditOpen}
-            onClose={() => setIsEditOpen(false)}
-            team={editTeam}
-            onSuccess={() => {
-              page.crud.refetch();
-              setIsEditOpen(false);
-            }}
           />
 
           {/* Color Modal */}

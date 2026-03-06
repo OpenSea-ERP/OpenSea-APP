@@ -18,7 +18,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Calendar, FileText, Hash, User, Users2, X } from 'lucide-react';
+import { Calendar, FileText, Hash, User, X } from 'lucide-react';
+import { PiUsersThreeDuotone } from 'react-icons/pi';
 import type { DetailModalProps } from '../types';
 import {
   formatMembersCount,
@@ -45,7 +46,7 @@ export function DetailModal({ team, open, onOpenChange }: DetailModalProps) {
                 className="flex items-center justify-center text-white shrink-0 p-2 rounded-lg bg-linear-to-br from-blue-500 to-cyan-600"
                 style={iconStyle}
               >
-                <Users2 className="h-5 w-5" />
+                <PiUsersThreeDuotone className="h-5 w-5" />
               </div>
               <div className="flex-col flex">
                 <span className="text-xs text-slate-500/50">Equipe</span>
@@ -85,7 +86,7 @@ export function DetailModal({ team, open, onOpenChange }: DetailModalProps) {
             {/* Status */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Users2 className="h-4 w-4 text-green-500" />
+                <PiUsersThreeDuotone className="h-4 w-4 text-green-500" />
                 <span className="text-sm font-medium">Status</span>
               </div>
               <Badge variant={getStatusBadgeVariant(team.isActive)}>

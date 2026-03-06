@@ -12,7 +12,8 @@ export {
   ColorModal,
   CreateModal,
   DetailModal,
-  EditModal,
+  EmailPermissionsDialog,
+  LinkEmailDialog,
   RenameModal,
 } from './modals';
 
@@ -20,7 +21,6 @@ export {
 export type {
   CreateModalProps,
   DetailModalProps,
-  EditModalProps,
   NewTeamData,
   TeamCardProps,
 } from './types';

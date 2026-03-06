@@ -21,13 +21,6 @@ export interface DetailModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export interface EditModalProps {
-  team: Team | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-}
-
 // ============================================================================
 // FORM TYPES
 // ============================================================================

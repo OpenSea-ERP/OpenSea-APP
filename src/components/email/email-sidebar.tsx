@@ -398,38 +398,79 @@ export function EmailSidebar({
       </ScrollArea>
 
       {/* Sync footer */}
-      <div className="border-t px-3 py-2.5">
-        <div className="flex items-center justify-between">
-          <div className="min-w-0 flex-1">
-            {selectedAccount?.lastSyncAt ? (
-              <p className="text-[10px] text-muted-foreground leading-tight">
-                Sincronizado há{' '}
-                <span className="font-medium">
-                  {formatDistanceToNow(new Date(selectedAccount.lastSyncAt), {
-                    locale: ptBR,
-                  })}
-                </span>
+      <SyncFooter
+        lastSyncAt={selectedAccount?.lastSyncAt ?? null}
+        isSyncing={isSyncing}
+        disabled={!selectedAccountId}
+        onSync={onSyncAccount}
+      />
+    </div>
+  );
+}
+
+// ─── SyncFooter ─────────────────────────────────────────────────────────────
+// Separated component so the 30s tick interval only re-renders the footer,
+// not the entire sidebar tree.
+
+function SyncFooter({
+  lastSyncAt,
+  isSyncing,
+  disabled,
+  onSync,
+}: {
+  lastSyncAt: string | null;
+  isSyncing: boolean;
+  disabled: boolean;
+  onSync: () => void;
+}) {
+  // Tick counter to force re-render every 30s (updates relative time text)
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Recalculated on every render (tick forces periodic re-render)
+  const timeText = lastSyncAt
+    ? formatDistanceToNow(new Date(lastSyncAt), { locale: ptBR })
+    : null;
+
+  return (
+    <div className="border-t px-3 py-2.5">
+      <div className="flex items-center justify-between">
+        <div className="min-w-0 flex-1">
+          {isSyncing ? (
+            <div className="flex items-center gap-1.5">
+              <RefreshCw className="size-3 animate-spin text-primary" />
+              <p className="text-[10px] text-primary font-medium leading-tight">
+                Sincronizando...
               </p>
-            ) : (
-              <p className="text-[10px] text-muted-foreground">
-                Nunca sincronizado
-              </p>
-            )}
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 rounded-lg"
-            disabled={!selectedAccountId || isSyncing}
-            onClick={onSyncAccount}
-            title="Sincronizar conta"
-            aria-label="Sincronizar conta"
-          >
-            <RefreshCw
-              className={cn('size-3.5', isSyncing && 'animate-spin')}
-            />
-          </Button>
+            </div>
+          ) : timeText ? (
+            <p className="text-[10px] text-muted-foreground leading-tight">
+              Sincronizado há{' '}
+              <span className="font-medium">{timeText}</span>
+            </p>
+          ) : (
+            <p className="text-[10px] text-muted-foreground">
+              Nunca sincronizado
+            </p>
+          )}
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7 rounded-lg"
+          disabled={disabled || isSyncing}
+          onClick={onSync}
+          title="Sincronizar conta"
+          aria-label="Sincronizar conta"
+        >
+          <RefreshCw
+            className={cn('size-3.5', isSyncing && 'animate-spin')}
+          />
+        </Button>
       </div>
     </div>
   );

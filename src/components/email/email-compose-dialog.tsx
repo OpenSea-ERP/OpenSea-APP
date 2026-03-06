@@ -446,7 +446,14 @@ export function EmailComposeDialog({
         subject,
         bodyHtml: editor?.getHTML() ?? '',
       },
-      { onSuccess: () => onClose() }
+      {
+        onSuccess: () => {
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
+          onClose();
+          // Fire-and-forget sync so the draft appears in the folder list
+          syncMutation.mutate(accountId, { onError: () => {} });
+        },
+      }
     );
   }, [
     editor,
@@ -456,6 +463,7 @@ export function EmailComposeDialog({
     subject,
     accountId,
     draftMutation,
+    syncMutation,
     onClose,
   ]);
 
@@ -538,6 +546,10 @@ export function EmailComposeDialog({
         .then(() => {
           localStorage.removeItem(DRAFT_STORAGE_KEY);
           toast.success('Rascunho salvo automaticamente');
+          // Fire-and-forget sync so the draft appears in the folder list.
+          // The backend also queues a sync, but triggering from here ensures
+          // the frontend query cache is invalidated via the mutation hook.
+          syncMutation.mutate(accountId, { onError: () => {} });
         })
         .catch(() => {
           // API failed — persist to localStorage as fallback
@@ -560,6 +572,7 @@ export function EmailComposeDialog({
     isBusy,
     onClose,
     hasUnsavedContent,
+    syncMutation,
   ]);
 
   function handleInsertLink() {

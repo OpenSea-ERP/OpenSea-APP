@@ -34,13 +34,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { emailService } from '@/services/email';
 import type { EmailAccount, EmailMessageListItem } from '@/types/email';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  CheckCircle2,
-  Loader2,
-  Mail,
-  PencilLine,
-  RefreshCw,
-} from 'lucide-react';
+import { Mail, PencilLine } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -87,7 +81,6 @@ export default function EmailPage() {
   const [isCentralInbox, setIsCentralInbox] = useState(false);
   const [accountWizardOpen, setAccountWizardOpen] = useState(false);
   const [editAccount, setEditAccount] = useState<EmailAccount | null>(null);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const queryClient = useQueryClient();
   const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -143,9 +136,9 @@ export default function EmailPage() {
       emailService
         .triggerSync(selectedAccountId)
         .then(() => {
-          setLastSyncTime(new Date());
           queryClient.invalidateQueries({ queryKey: ['email', 'messages'] });
           queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
+          queryClient.invalidateQueries({ queryKey: ['email', 'accounts'] });
         })
         .catch(() => {}); // Silent — sync failure shouldn't block UI
     }, 2000);
@@ -314,26 +307,6 @@ export default function EmailPage() {
     return counts;
   }, [folders]);
 
-  // — Polling: detect new messages on auto-refresh —
-  const prevTotalRef = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    if (messagesTotal === undefined) return;
-    if (
-      prevTotalRef.current !== undefined &&
-      messagesTotal > prevTotalRef.current
-    ) {
-      const diff = messagesTotal - prevTotalRef.current;
-      toast.info(
-        `${diff} nova${diff > 1 ? 's' : ''} mensagem${diff > 1 ? 'ns' : ''} recebida${diff > 1 ? 's' : ''}`
-      );
-    }
-    prevTotalRef.current = messagesTotal;
-  }, [messagesTotal]);
-
-  // Reset counter when folder/account/filter changes
-  useEffect(() => {
-    prevTotalRef.current = undefined;
-  }, [selectedFolderId, selectedAccountId, messageFilter]);
 
   // ─── Mutations via Hooks ─────────────────────────────────────────────────
 
@@ -416,17 +389,6 @@ export default function EmailPage() {
 
   // Action bar buttons
   const actionBarButtons = [
-    ...(selectedAccountId && !isCentralInbox
-      ? [
-          {
-            id: 'sync',
-            title: 'Sincronizar',
-            icon: RefreshCw,
-            variant: 'outline' as const,
-            onClick: () => syncMutation.mutate(selectedAccountId),
-          },
-        ]
-      : []),
     ...(canSend && accounts.length > 0
       ? [
           {
@@ -467,30 +429,6 @@ export default function EmailPage() {
               <p className="text-sm text-slate-500 dark:text-white/60">
                 Gerencie suas caixas de entrada, envie e receba mensagens
               </p>
-              {/* Sync status indicator */}
-              {(syncMutation.isPending || lastSyncTime) && (
-                <div className="flex items-center gap-1.5 mt-1">
-                  {syncMutation.isPending ? (
-                    <>
-                      <Loader2 className="size-3 animate-spin text-blue-500" />
-                      <span className="text-xs text-blue-500">
-                        Sincronizando...
-                      </span>
-                    </>
-                  ) : lastSyncTime ? (
-                    <>
-                      <CheckCircle2 className="size-3 text-emerald-500" />
-                      <span className="text-xs text-slate-400 dark:text-white/40">
-                        Última sincronização:{' '}
-                        {lastSyncTime.toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </>
-                  ) : null}
-                </div>
-              )}
             </div>
           </div>
         </div>

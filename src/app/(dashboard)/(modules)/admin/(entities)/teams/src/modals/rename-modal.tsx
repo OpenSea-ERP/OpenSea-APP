@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { Team } from '@/types/core';
-import { Loader2, Users2, X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
+import { PiUsersThreeDuotone } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
 
 interface RenameModalProps {
@@ -67,7 +68,7 @@ export function RenameModal({
                     : undefined
                 }
               >
-                <Users2 className="h-5 w-5" />
+                <PiUsersThreeDuotone className="h-5 w-5" />
               </div>
               Renomear Equipe
             </div>

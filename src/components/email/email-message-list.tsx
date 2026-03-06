@@ -3,6 +3,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Popover,
@@ -20,11 +26,15 @@ import { endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
 import {
   AlertCircle,
   Archive,
+  ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Filter,
   Inbox,
   Loader2,
   Mail,
   MailOpen,
+  MoreHorizontal,
   Paperclip,
   Reply,
   Search,
@@ -39,7 +49,33 @@ import {
   formatEmailDateFull,
   getAvatarColor,
   getInitials,
+  groupMessagesByDate,
 } from './email-utils';
+
+// ── Virtual list item types ───────────────────────────────────────────────────
+
+interface VirtualGroupHeader {
+  type: 'group-header';
+  groupKey: string;
+  label: string;
+  messageCount: number;
+  messageIds: string[];
+}
+
+interface VirtualMessageRow {
+  type: 'message';
+  message: EmailMessageListItem;
+}
+
+type VirtualListItem = VirtualGroupHeader | VirtualMessageRow;
+
+// ── Heights ───────────────────────────────────────────────────────────────────
+
+const GROUP_HEADER_HEIGHT = 36;
+const MESSAGE_ROW_HEIGHT = 82;
+const LOADER_ROW_HEIGHT = 40;
+
+// ── Props ─────────────────────────────────────────────────────────────────────
 
 interface EmailMessageListProps {
   messages: EmailMessageListItem[];
@@ -100,13 +136,14 @@ export function EmailMessageList({
   onBulkDelete,
 }: EmailMessageListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
-    null
-  );
+  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
   const [fromFilter, setFromFilter] = useState('');
   const [hasAttachmentsFilter, setHasAttachmentsFilter] = useState(false);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set()
+  );
   const hasActiveFilters =
     Boolean(fromFilter) ||
     hasAttachmentsFilter ||
@@ -138,44 +175,127 @@ export function EmailMessageList({
     return result;
   }, [messages, fromFilter, hasAttachmentsFilter, dateFrom, dateTo]);
 
+  // ── Build flat virtual items from date groups ─────────────────────────────
+
+  const flatItems = useMemo<VirtualListItem[]>(() => {
+    const groups = groupMessagesByDate(filteredMessages);
+    const items: VirtualListItem[] = [];
+
+    for (const group of groups) {
+      items.push({
+        type: 'group-header',
+        groupKey: group.key,
+        label: group.label,
+        messageCount: group.messages.length,
+        messageIds: group.messages.map(m => m.id),
+      });
+
+      if (!collapsedGroups.has(group.key)) {
+        for (const message of group.messages) {
+          items.push({ type: 'message', message });
+        }
+      }
+    }
+
+    return items;
+  }, [filteredMessages, collapsedGroups]);
+
+  // All group keys (for expand/collapse all toggle)
+  const allGroupKeys = useMemo(
+    () =>
+      flatItems
+        .filter((i): i is VirtualGroupHeader => i.type === 'group-header')
+        .map(i => i.groupKey),
+    [flatItems]
+  );
+  const allCollapsed =
+    allGroupKeys.length > 0 && collapsedGroups.size >= allGroupKeys.length;
+
+  const toggleAllGroups = useCallback(() => {
+    setCollapsedGroups(prev =>
+      prev.size >= allGroupKeys.length
+        ? new Set()
+        : new Set(allGroupKeys)
+    );
+  }, [allGroupKeys]);
+
   // +1 row when there's more to load (renders a spinner/sentinel as last item)
-  const rowCount = filteredMessages.length + (hasMore ? 1 : 0);
+  const rowCount = flatItems.length + (hasMore ? 1 : 0);
+
+  const getItemKey = useCallback(
+    (index: number) => {
+      if (index >= flatItems.length) return `loader-${index}`;
+      const item = flatItems[index];
+      return item.type === 'group-header'
+        ? `gh-${item.groupKey}`
+        : `msg-${item.message.id}`;
+    },
+    [flatItems]
+  );
 
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 82,
+    estimateSize: index => {
+      if (index >= flatItems.length) return LOADER_ROW_HEIGHT;
+      const item = flatItems[index];
+      return item.type === 'group-header'
+        ? GROUP_HEADER_HEIGHT
+        : MESSAGE_ROW_HEIGHT;
+    },
+    getItemKey,
     overscan: 6,
   });
 
-  // Multi-select click handler
+  // Reset cached measurements when collapse state changes so items are re-estimated
+  useEffect(() => {
+    virtualizer.measure();
+  }, [virtualizer, collapsedGroups]);
+
+  // Toggle group collapse
+  const toggleGroup = useCallback((groupKey: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) next.delete(groupKey);
+      else next.add(groupKey);
+      return next;
+    });
+  }, []);
+
+  // Multi-select click handler (uses message IDs instead of array indices)
   const handleMessageClick = useCallback(
-    (messageId: string, index: number, event: React.MouseEvent) => {
-      if (event.shiftKey && lastSelectedIndex !== null) {
-        const start = Math.min(lastSelectedIndex, index);
-        const end = Math.max(lastSelectedIndex, index);
-        const newSelected = new Set(selectedIds);
-        for (let i = start; i <= end; i++) {
-          const msg = filteredMessages[i];
-          if (msg) newSelected.add(msg.id);
+    (messageId: string, event: React.MouseEvent) => {
+      if (event.shiftKey && lastSelectedId !== null) {
+        // Find range in filteredMessages by ID
+        const startIdx = filteredMessages.findIndex(
+          m => m.id === lastSelectedId
+        );
+        const endIdx = filteredMessages.findIndex(m => m.id === messageId);
+        if (startIdx !== -1 && endIdx !== -1) {
+          const lo = Math.min(startIdx, endIdx);
+          const hi = Math.max(startIdx, endIdx);
+          const newSelected = new Set(selectedIds);
+          for (let i = lo; i <= hi; i++) {
+            newSelected.add(filteredMessages[i].id);
+          }
+          onSelectedIdsChange?.(newSelected);
         }
-        onSelectedIdsChange?.(newSelected);
       } else if (event.ctrlKey || event.metaKey) {
         const newSelected = new Set(selectedIds);
         if (newSelected.has(messageId)) newSelected.delete(messageId);
         else newSelected.add(messageId);
         onSelectedIdsChange?.(newSelected);
-        setLastSelectedIndex(index);
+        setLastSelectedId(messageId);
       } else {
         if (selectedIds.size > 0) {
           onClearSelection?.();
         }
         onSelectMessage(messageId);
-        setLastSelectedIndex(index);
+        setLastSelectedId(messageId);
       }
     },
     [
-      lastSelectedIndex,
+      lastSelectedId,
       selectedIds,
       filteredMessages,
       onSelectedIdsChange,
@@ -232,7 +352,7 @@ export function EmailMessageList({
   useEffect(() => {
     if (!virtualRange) return;
     if (
-      virtualRange.endIndex >= filteredMessages.length - 5 &&
+      virtualRange.endIndex >= flatItems.length - 5 &&
       hasMore &&
       !isFetchingNextPage
     ) {
@@ -243,7 +363,7 @@ export function EmailMessageList({
     virtualRange?.endIndex,
     hasMore,
     isFetchingNextPage,
-    filteredMessages.length,
+    flatItems.length,
     onLoadMore,
   ]);
 
@@ -350,6 +470,20 @@ export function EmailMessageList({
               )}
             </PopoverContent>
           </Popover>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-9 shrink-0 rounded-xl"
+            onClick={toggleAllGroups}
+            title={allCollapsed ? 'Expandir todos os grupos' : 'Colapsar todos os grupos'}
+            aria-label={allCollapsed ? 'Expandir todos os grupos' : 'Colapsar todos os grupos'}
+          >
+            {allCollapsed ? (
+              <ChevronsUpDown className="size-4" />
+            ) : (
+              <ChevronsDownUp className="size-4" />
+            )}
+          </Button>
         </div>
 
         {/* Tabs */}
@@ -570,7 +704,7 @@ export function EmailMessageList({
           </div>
         )}
 
-      {/* Virtualized list */}
+      {/* Virtualized list with date groups */}
       {!isLoading && !isError && !noAccount && filteredMessages.length > 0 && (
         <div ref={parentRef} className="flex-1 overflow-y-auto">
           <div
@@ -581,7 +715,7 @@ export function EmailMessageList({
             }}
           >
             {virtualizer.getVirtualItems().map(virtualRow => {
-              const isLoader = virtualRow.index >= filteredMessages.length;
+              const isLoader = virtualRow.index >= flatItems.length;
 
               if (isLoader) {
                 return (
@@ -609,7 +743,95 @@ export function EmailMessageList({
                 );
               }
 
-              const message = filteredMessages[virtualRow.index];
+              const item = flatItems[virtualRow.index];
+
+              // ── Group header row ────────────────────────────────────────
+              if (item.type === 'group-header') {
+                const isCollapsed = collapsedGroups.has(item.groupKey);
+
+                return (
+                  <div
+                    key={`group-${item.groupKey}`}
+                    data-index={virtualRow.index}
+                    ref={virtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <div className="group/header px-2">
+                      <div
+                        className="flex items-center gap-1.5 px-3 h-9 cursor-pointer select-none hover:bg-muted/40 rounded-lg transition-colors duration-150"
+                        onClick={() => toggleGroup(item.groupKey)}
+                      >
+                        <ChevronRight
+                          className={cn(
+                            'size-3.5 shrink-0 text-muted-foreground transition-transform duration-200',
+                            !isCollapsed && 'rotate-90'
+                          )}
+                        />
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex-1">
+                          {item.label}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/60 tabular-nums mr-0.5">
+                          {item.messageCount}
+                        </span>
+
+                        {/* Hover actions dropdown */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-6 shrink-0 rounded-md opacity-0 group-hover/header:opacity-100 focus:opacity-100 transition-opacity duration-150"
+                              onClick={e => e.stopPropagation()}
+                              title="Ações do grupo"
+                              aria-label="Ações do grupo"
+                            >
+                              <MoreHorizontal className="size-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                onBulkMarkRead?.(item.messageIds, true);
+                              }}
+                              className="text-xs gap-2"
+                            >
+                              <MailOpen className="size-3.5" />
+                              Marcar como Lido
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                onBulkMarkRead?.(item.messageIds, false);
+                              }}
+                              className="text-xs gap-2"
+                            >
+                              <Mail className="size-3.5" />
+                              Marcar como Não Lido
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                onBulkDelete?.(item.messageIds);
+                              }}
+                              className="text-xs gap-2 text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="size-3.5" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // ── Message row ─────────────────────────────────────────────
+              const message = item.message;
               const isSelected = selectedMessageId === message.id;
               const isChecked = selectedIds.has(message.id);
               const senderDisplay =
@@ -641,9 +863,7 @@ export function EmailMessageList({
                         isChecked && !isSelected && 'bg-primary/5',
                         !isSelected && !isChecked && 'hover:bg-muted/50'
                       )}
-                      onClick={e =>
-                        handleMessageClick(message.id, virtualRow.index, e)
-                      }
+                      onClick={e => handleMessageClick(message.id, e)}
                     >
                       {/* Avatar / Checkbox area */}
                       <div
@@ -696,9 +916,9 @@ export function EmailMessageList({
                         </div>
                       </div>
 
-                      {/* Content — 3 rows: sender+date, subject, snippet */}
+                      {/* Content — sender+date, subject */}
                       <div className="min-w-0 flex-1">
-                        {/* Row 1: Sender + Attachment + Date */}
+                        {/* Row 1: Sender + Date */}
                         <div className="flex items-center gap-1.5">
                           <span
                             className={cn(

@@ -6,7 +6,7 @@
 import { CORE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { defineEntityConfig } from '@/core/types';
 import type { Team } from '@/types/core';
-import { Users2 } from 'lucide-react';
+import { PiUsersThreeDuotone } from 'react-icons/pi';
 
 export const teamsConfig = defineEntityConfig<Team>()({
   // ======================== IDENTIFICAÇÃO ========================
@@ -14,7 +14,7 @@ export const teamsConfig = defineEntityConfig<Team>()({
   namePlural: 'Equipes',
   slug: 'teams',
   description: 'Gerenciamento de equipes da organização',
-  icon: Users2,
+  icon: PiUsersThreeDuotone,
 
   // ======================== API ========================
   api: {
@@ -43,7 +43,7 @@ export const teamsConfig = defineEntityConfig<Team>()({
 
   // ======================== DISPLAY ========================
   display: {
-    icon: Users2,
+    icon: PiUsersThreeDuotone,
     color: 'blue',
     gradient: 'from-blue-500 to-cyan-600',
     titleField: 'name',

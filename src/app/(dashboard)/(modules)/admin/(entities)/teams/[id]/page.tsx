@@ -32,7 +32,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Tooltip,
   TooltipContent,
@@ -44,10 +43,14 @@ import { UserAvatar } from '@/components/shared/user-avatar';
 import { CORE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useAuth } from '@/contexts/auth-context';
+import { InfoField } from '@/components/shared/info-field';
 import { toast } from 'sonner';
 import { teamsService } from '@/services/core/teams.service';
-import type { Team, TeamMember, TeamMemberRole } from '@/types/core';
+import type { Team, TeamEmailAccount, TeamMember, TeamMemberRole } from '@/types/core';
 import { TEAM_MEMBER_ROLE_LABELS } from '@/types/core';
+import type { Calendar as CalendarModel } from '@/types/calendar';
+import { CalendarBadge, TeamCalendarPermissionsDialog } from '@/components/calendar';
+import { useMyCalendars, useCreateTeamCalendar, useDeleteCalendar, useUpdateCalendar } from '@/hooks/calendar';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
@@ -58,6 +61,11 @@ import {
   Crown,
   Edit,
   FileText,
+  Pencil,
+  Link2,
+  Link2Off,
+  Mail,
+  Settings,
   Shield,
   ShieldCheck,
   Trash2,
@@ -65,11 +73,11 @@ import {
   UserMinus,
   UserPlus,
   Users,
-  Users2,
 } from 'lucide-react';
+import { PiUsersThreeDuotone } from 'react-icons/pi';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { AddMemberDialog } from '../src';
+import { AddMemberDialog, EmailPermissionsDialog, LinkEmailDialog } from '../src';
 
 export default function TeamDetailPage() {
   const params = useParams();
@@ -82,9 +90,12 @@ export default function TeamDetailPage() {
   const canEdit = hasPermission(CORE_PERMISSIONS.TEAMS.UPDATE);
   const canDelete = hasPermission(CORE_PERMISSIONS.TEAMS.DELETE);
   const canManageMembers = hasPermission(CORE_PERMISSIONS.TEAMS.MEMBERS.ADD);
+  const canReadEmails = hasPermission(CORE_PERMISSIONS.TEAMS.EMAILS.READ);
+  const canLinkEmails = hasPermission(CORE_PERMISSIONS.TEAMS.EMAILS.LINK);
+  const canManageEmails = hasPermission(CORE_PERMISSIONS.TEAMS.EMAILS.MANAGE);
+  const canUnlinkEmails = hasPermission(CORE_PERMISSIONS.TEAMS.EMAILS.UNLINK);
 
   // State
-  const [editOpen, setEditOpen] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [changeRoleOpen, setChangeRoleOpen] = useState(false);
@@ -94,11 +105,16 @@ export default function TeamDetailPage() {
   const [pendingAction, setPendingAction] = useState<'changeRole' | 'removeMember' | null>(null);
   const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
   const [slugCopied, setSlugCopied] = useState(false);
+  const [linkEmailOpen, setLinkEmailOpen] = useState(false);
+  const [editEmailPermsOpen, setEditEmailPermsOpen] = useState(false);
+  const [selectedTeamEmail, setSelectedTeamEmail] = useState<TeamEmailAccount | null>(null);
+  const [calendarPermsOpen, setCalendarPermsOpen] = useState(false);
+  const [selectedCalendar, setSelectedCalendar] = useState<CalendarModel | null>(null);
+  const [renameCalendar, setRenameCalendar] = useState<CalendarModel | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  // renameColor removed — team calendars inherit the team's color
+  const [deleteCalendarConfirm, setDeleteCalendarConfirm] = useState<CalendarModel | null>(null);
 
-  // Edit form state
-  const [editName, setEditName] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [editColor, setEditColor] = useState('');
 
   // Queries
   const { data: teamData, isLoading: isLoadingTeam } = useQuery({
@@ -113,23 +129,29 @@ export default function TeamDetailPage() {
 
   const team = teamData?.team;
   const members = membersData?.data ?? [];
-  const isCurrentUserOwner = members.some(
-    m => m.userId === currentUser?.id && m.role === 'OWNER'
-  );
 
-  // Mutations
-  const updateMutation = useMutation({
-    mutationFn: (data: { name?: string; description?: string; color?: string }) =>
-      teamsService.updateTeam(teamId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['teams'] });
-      toast.success('Equipe atualizada com sucesso');
-      setEditOpen(false);
-    },
-    onError: () => toast.error('Erro ao atualizar equipe'),
+  const { data: teamEmailsData, isLoading: isLoadingTeamEmails } = useQuery({
+    queryKey: ['teams', teamId, 'emails'],
+    queryFn: () => teamsService.listTeamEmails(teamId),
+    enabled: canReadEmails,
   });
 
+  const teamEmails = teamEmailsData?.emailAccounts ?? [];
+
+  const { data: calendarsData, isLoading: isLoadingCalendars } = useMyCalendars();
+  const teamCalendars = (calendarsData?.calendars ?? []).filter(
+    (c) => c.type === 'TEAM' && c.ownerId === teamId,
+  );
+  const createTeamCalendar = useCreateTeamCalendar();
+  const deleteCalendar = useDeleteCalendar();
+  const updateCalendar = useUpdateCalendar();
+
+  const currentMember = members.find(m => m.userId === currentUser?.id);
+  const currentUserTeamRole = currentMember?.role as 'OWNER' | 'ADMIN' | 'MEMBER' | undefined;
+  const isCurrentUserOwner = currentUserTeamRole === 'OWNER';
+  const canManageTeamCalendars = currentUserTeamRole === 'OWNER' || currentUserTeamRole === 'ADMIN';
+
+  // Mutations
   const deleteMutation = useMutation({
     mutationFn: () => teamsService.deleteTeam(teamId),
     onSuccess: () => {
@@ -175,23 +197,17 @@ export default function TeamDetailPage() {
     onError: () => toast.error('Erro ao transferir propriedade'),
   });
 
+  const unlinkEmailMutation = useMutation({
+    mutationFn: (accountId: string) =>
+      teamsService.unlinkEmailFromTeam(teamId, accountId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'emails'] });
+      toast.success('Conta de e-mail desvinculada com sucesso');
+    },
+    onError: () => toast.error('Erro ao desvincular conta de e-mail'),
+  });
+
   // Handlers
-  const handleOpenEdit = () => {
-    if (!team) return;
-    setEditName(team.name);
-    setEditDescription(team.description ?? '');
-    setEditColor(team.color ?? '');
-    setEditOpen(true);
-  };
-
-  const handleSaveEdit = () => {
-    updateMutation.mutate({
-      name: editName,
-      description: editDescription || undefined,
-      color: editColor || undefined,
-    });
-  };
-
   const handleDeleteConfirm = () => {
     deleteMutation.mutate();
     setDeleteConfirmOpen(false);
@@ -303,7 +319,7 @@ export default function TeamDetailPage() {
         </PageHeader>
         <PageBody>
           <Card className="bg-white/5 p-12 text-center">
-            <Users2 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <PiUsersThreeDuotone className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="text-2xl font-semibold mb-2">
               Equipe não encontrada
             </h2>
@@ -346,7 +362,7 @@ export default function TeamDetailPage() {
                     id: 'edit',
                     title: 'Editar',
                     icon: Edit,
-                    onClick: handleOpenEdit,
+                    onClick: () => router.push(`/admin/teams/${teamId}/edit`),
                   },
                 ]
               : []),
@@ -368,7 +384,7 @@ export default function TeamDetailPage() {
                   : undefined
               }
             >
-              <Users2 className="h-7 w-7 text-white" />
+              <PiUsersThreeDuotone className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
@@ -434,29 +450,31 @@ export default function TeamDetailPage() {
               <FileText className="h-5 w-5" />
               Informações
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1 md:col-span-2">
-                <p className="text-xs text-muted-foreground">Descrição</p>
-                <p className="text-sm whitespace-pre-wrap">
-                  {team.description || 'Sem descrição'}
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <InfoField
+                  label="Descrição"
+                  value={team.description}
+                  emptyText="Sem descrição"
+                />
               </div>
-              {team.color && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Cor</p>
-                  <div className="flex items-center gap-2">
+              <InfoField
+                label="Cor"
+                value={team.color}
+                icon={
+                  team.color ? (
                     <div
-                      className="w-5 h-5 rounded"
+                      className="w-4 h-4 rounded"
                       style={{ backgroundColor: team.color }}
                     />
-                    <span className="font-mono text-sm">{team.color}</span>
-                  </div>
-                </div>
-              )}
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Criado por</p>
-                <p className="text-sm font-medium">{team.creatorName ?? team.createdBy}</p>
-              </div>
+                  ) : undefined
+                }
+                emptyText="Sem cor"
+              />
+              <InfoField
+                label="Criado por"
+                value={team.creatorName ?? team.createdBy}
+              />
             </div>
           </Card>
 
@@ -540,65 +558,220 @@ export default function TeamDetailPage() {
               </div>
             )}
           </Card>
+
+          {/* Team Emails Card */}
+          {canReadEmails && (
+            <Card className="p-4 sm:p-6 w-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg uppercase font-semibold flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Contas de E-mail
+                  <Badge variant="secondary" className="ml-2">
+                    {teamEmails.length}
+                  </Badge>
+                </h3>
+                {canLinkEmails && (
+                  <Button size="sm" onClick={() => setLinkEmailOpen(true)}>
+                    <Link2 className="w-4 h-4 mr-2" />
+                    Vincular E-mail
+                  </Button>
+                )}
+              </div>
+
+              {isLoadingTeamEmails ? (
+                <div className="space-y-2">
+                  {[1, 2].map(i => (
+                    <Skeleton key={i} className="h-14 w-full" />
+                  ))}
+                </div>
+              ) : teamEmails.length === 0 ? (
+                <div className="py-8 text-center">
+                  <Mail className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">
+                    Nenhuma conta de e-mail vinculada.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {teamEmails.map(te => (
+                    <div
+                      key={te.id}
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
+                          <Mail className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {te.accountAddress ?? te.accountId}
+                          </p>
+                          {te.accountDisplayName && (
+                            <p className="text-sm text-muted-foreground">
+                              {te.accountDisplayName}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {canManageEmails && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setSelectedTeamEmail(te);
+                                    setEditEmailPermsOpen(true);
+                                  }}
+                                >
+                                  <Settings className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Editar permissões</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {canUnlinkEmails && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => unlinkEmailMutation.mutate(te.accountId)}
+                                  disabled={unlinkEmailMutation.isPending}
+                                >
+                                  <Link2Off className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Desvincular</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Team Calendars Card */}
+          <Card className="p-4 sm:p-6 w-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg uppercase font-semibold flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Calendários da Equipe
+                <Badge variant="secondary" className="ml-2">
+                  {teamCalendars.length}
+                </Badge>
+              </h3>
+              {canManageTeamCalendars && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    createTeamCalendar.mutate(
+                      { teamId, name: `Calendário de ${team.name}` },
+                      {
+                        onSuccess: () => toast.success('Calendário criado com sucesso'),
+                        onError: (err) => toast.error(err instanceof Error ? err.message : 'Erro ao criar calendário'),
+                      },
+                    );
+                  }}
+                  disabled={createTeamCalendar.isPending}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Novo Calendário
+                </Button>
+              )}
+            </div>
+
+            {isLoadingCalendars ? (
+              <div className="space-y-2">
+                {[1, 2].map(i => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
+              </div>
+            ) : teamCalendars.length === 0 ? (
+              <div className="py-8 text-center">
+                <Calendar className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
+                <p className="text-muted-foreground">
+                  Nenhum calendário de equipe criado.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {teamCalendars.map(cal => (
+                  <div
+                    key={cal.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                  >
+                    <CalendarBadge name={cal.name} type={cal.type} color={team.color} />
+                    <div className="flex items-center gap-1">
+                      {(cal.access?.canManage ?? canManageTeamCalendars) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setRenameCalendar(cal);
+                                  setRenameValue(cal.name);
+                                }}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Editar</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {(cal.access?.canManage ?? canManageTeamCalendars) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedCalendar(cal);
+                                  setCalendarPermsOpen(true);
+                                }}
+                              >
+                                <Settings className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Permissões</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {(cal.access?.canDelete ?? isCurrentUserOwner) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDeleteCalendarConfirm(cal)}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Excluir</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       </PageBody>
-
-      {/* EDIT MODAL */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Equipe</DialogTitle>
-            <DialogDescription>Altere as informações da equipe.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label>Nome</Label>
-              <Input
-                value={editName}
-                onChange={e => setEditName(e.target.value)}
-                placeholder="Nome da equipe"
-              />
-            </div>
-            <div>
-              <Label>Descrição</Label>
-              <Textarea
-                value={editDescription}
-                onChange={e => setEditDescription(e.target.value)}
-                placeholder="Descrição da equipe"
-                rows={3}
-              />
-            </div>
-            <div>
-              <Label>Cor</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="color"
-                  value={editColor || '#3b82f6'}
-                  onChange={e => setEditColor(e.target.value)}
-                  className="w-12 h-10 p-1"
-                />
-                <Input
-                  value={editColor}
-                  onChange={e => setEditColor(e.target.value)}
-                  placeholder="#3b82f6"
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSaveEdit}
-              disabled={updateMutation.isPending || !editName.trim()}
-            >
-              {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* CHANGE ROLE / TRANSFER OWNERSHIP MODAL */}
       <Dialog open={changeRoleOpen} onOpenChange={setChangeRoleOpen}>
@@ -697,6 +870,145 @@ export default function TeamDetailPage() {
               ? 'Digite seu PIN de ação para remover este membro da equipe.'
               : `Digite seu PIN de ação para alterar o papel de ${selectedMember?.userName ?? 'membro'}.`
         }
+      />
+
+      {/* LINK EMAIL DIALOG */}
+      <LinkEmailDialog
+        teamId={teamId}
+        open={linkEmailOpen}
+        onOpenChange={setLinkEmailOpen}
+      />
+
+      {/* EMAIL PERMISSIONS DIALOG */}
+      <EmailPermissionsDialog
+        teamId={teamId}
+        teamEmail={selectedTeamEmail}
+        open={editEmailPermsOpen}
+        onOpenChange={setEditEmailPermsOpen}
+      />
+
+      {/* EDIT CALENDAR DIALOG (name only — color inherited from team) */}
+      {(() => {
+        const editAccent = team.color || '#3b82f6';
+        return (
+          <Dialog open={!!renameCalendar} onOpenChange={(open) => { if (!open) setRenameCalendar(null); }}>
+            <DialogContent className="sm:max-w-[440px] p-0">
+              {/* Accent bar */}
+              <div
+                className="h-1.5 w-full rounded-t-lg transition-colors"
+                style={{ background: `linear-gradient(to right, ${editAccent}, ${editAccent}80)` }}
+              />
+
+              <div className="px-6 pt-4 pb-2">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2.5">
+                    <div
+                      className="p-2 rounded-lg transition-colors"
+                      style={{ background: `${editAccent}18` }}
+                    >
+                      <Pencil className="w-4 h-4" style={{ color: editAccent }} />
+                    </div>
+                    Renomear Calendário
+                  </DialogTitle>
+                  <DialogDescription>
+                    Altere o nome do calendário da equipe. A cor é herdada da equipe.
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+
+              <div className="px-6 pb-2">
+                <Label htmlFor="calendar-name" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Nome
+                </Label>
+                <Input
+                  id="calendar-name"
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  placeholder="Nome do calendário"
+                  className="mt-1.5"
+                  style={{ borderColor: `${editAccent}50` }}
+                />
+              </div>
+
+              <DialogFooter className="px-6 pb-5 pt-3">
+                <Button variant="outline" onClick={() => setRenameCalendar(null)}>
+                  Cancelar
+                </Button>
+                <Button
+                  disabled={!renameValue.trim() || updateCalendar.isPending}
+                  style={{ background: editAccent }}
+                  className="hover:opacity-90 text-white"
+                  onClick={() => {
+                    if (!renameCalendar) return;
+                    updateCalendar.mutate(
+                      {
+                        id: renameCalendar.id,
+                        data: { name: renameValue.trim() },
+                      },
+                      {
+                        onSuccess: () => {
+                          toast.success('Calendário renomeado com sucesso');
+                          setRenameCalendar(null);
+                        },
+                        onError: (err) => toast.error(err instanceof Error ? err.message : 'Erro ao renomear calendário'),
+                      },
+                    );
+                  }}
+                >
+                  Salvar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
+
+      {/* DELETE CALENDAR CONFIRM DIALOG */}
+      <Dialog open={!!deleteCalendarConfirm} onOpenChange={(open) => { if (!open) setDeleteCalendarConfirm(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Calendário</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o calendário &quot;{deleteCalendarConfirm?.name}&quot;?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <p className="text-sm text-muted-foreground">
+              Todos os eventos associados a este calendário serão removidos. Esta ação não pode ser desfeita.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteCalendarConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteCalendar.isPending}
+              onClick={() => {
+                if (!deleteCalendarConfirm) return;
+                deleteCalendar.mutate(deleteCalendarConfirm.id, {
+                  onSuccess: () => {
+                    toast.success('Calendário excluído com sucesso');
+                    setDeleteCalendarConfirm(null);
+                  },
+                  onError: (err) => toast.error(err instanceof Error ? err.message : 'Erro ao excluir calendário'),
+                });
+              }}
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CALENDAR PERMISSIONS DIALOG */}
+      <TeamCalendarPermissionsDialog
+        calendar={selectedCalendar}
+        open={calendarPermsOpen}
+        onOpenChange={setCalendarPermsOpen}
+        userTeamRole={currentUserTeamRole}
+        teamColor={team.color}
       />
     </PageLayout>
   );

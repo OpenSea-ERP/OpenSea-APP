@@ -156,10 +156,9 @@ export function useSyncEmailAccount() {
   return useMutation({
     mutationFn: (accountId: string) => emailService.triggerSync(accountId),
     onSuccess: async () => {
-      toast.success('Sincronização disparada');
       await queryClient.invalidateQueries({ queryKey: ['email'] });
     },
-    onError: () => toast.error('Falha ao disparar sincronização'),
+    onError: () => toast.error('Falha ao solicitar sincronismo'),
   });
 }
 

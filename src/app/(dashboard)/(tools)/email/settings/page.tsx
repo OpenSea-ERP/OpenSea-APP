@@ -188,7 +188,6 @@ export default function EmailSettingsPage() {
 
   const syncMutation = useMutation({
     mutationFn: (id: string) => emailService.triggerSync(id),
-    onSuccess: () => toast.success('Sincronização disparada'),
     onError: () => toast.error('Erro ao disparar sincronização'),
   });
 

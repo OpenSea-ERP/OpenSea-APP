@@ -12,19 +12,74 @@ import { emailService } from '@/services/email';
 import { teamsService } from '@/services/core/teams.service';
 import type { CreateEmailAccountRequest, LinkTeamEmailData } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  CheckCircle2,
+  Lightbulb,
+  Loader2,
+  Mail,
+  MailCheck,
+  Send,
+  ShieldCheck,
+  XCircle,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  MdContactMail,
-  MdMailLock,
-  MdMarkunreadMailbox,
-  MdOutgoingMail,
-} from 'react-icons/md';
-import {
-  PiWifiHighBold,
-  PiWifiHighLight,
-  PiWifiSlashBold,
-} from 'react-icons/pi';
 import { toast } from 'sonner';
+
+// ─── Known Provider Auto-Detection ────────────────────────────────────────────
+
+interface ProviderSettings {
+  imap: { host: string; port: number; secure: boolean };
+  smtp: { host: string; port: number; secure: boolean };
+}
+
+const KNOWN_PROVIDERS: Record<string, ProviderSettings> = {
+  'gmail.com': {
+    imap: { host: 'imap.gmail.com', port: 993, secure: true },
+    smtp: { host: 'smtp.gmail.com', port: 465, secure: true },
+  },
+  'outlook.com': {
+    imap: { host: 'outlook.office365.com', port: 993, secure: true },
+    smtp: { host: 'smtp.office365.com', port: 587, secure: true },
+  },
+  'hotmail.com': {
+    imap: { host: 'outlook.office365.com', port: 993, secure: true },
+    smtp: { host: 'smtp.office365.com', port: 587, secure: true },
+  },
+  'live.com': {
+    imap: { host: 'outlook.office365.com', port: 993, secure: true },
+    smtp: { host: 'smtp.office365.com', port: 587, secure: true },
+  },
+  'yahoo.com': {
+    imap: { host: 'imap.mail.yahoo.com', port: 993, secure: true },
+    smtp: { host: 'smtp.mail.yahoo.com', port: 465, secure: true },
+  },
+  'yahoo.com.br': {
+    imap: { host: 'imap.mail.yahoo.com', port: 993, secure: true },
+    smtp: { host: 'smtp.mail.yahoo.com', port: 465, secure: true },
+  },
+  'icloud.com': {
+    imap: { host: 'imap.mail.me.com', port: 993, secure: true },
+    smtp: { host: 'smtp.mail.me.com', port: 587, secure: true },
+  },
+  'uol.com.br': {
+    imap: { host: 'imap.uol.com.br', port: 993, secure: true },
+    smtp: { host: 'smtps.uol.com.br', port: 587, secure: true },
+  },
+  'bol.com.br': {
+    imap: { host: 'imap.bol.com.br', port: 993, secure: true },
+    smtp: { host: 'smtps.bol.com.br', port: 587, secure: true },
+  },
+  'terra.com.br': {
+    imap: { host: 'imap.terra.com.br', port: 993, secure: true },
+    smtp: { host: 'smtp.terra.com.br', port: 587, secure: true },
+  },
+};
+
+function detectProvider(email: string): ProviderSettings | null {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return null;
+  return KNOWN_PROVIDERS[domain] ?? null;
+}
 
 // ---------------------------------------------------------------------------
 // Types & constants
@@ -37,7 +92,7 @@ interface LinkEmailDialogProps {
 }
 
 type PermissionKey = keyof Omit<LinkTeamEmailData, 'accountId'>;
-type TestStatus = 'idle' | 'testing' | 'success' | 'error';
+type TestStatus = 'idle' | 'creating' | 'testing' | 'syncing' | 'success' | 'error';
 
 const DEFAULT_PERMISSIONS: Omit<LinkTeamEmailData, 'accountId'> = {
   ownerCanRead: true,
@@ -76,8 +131,6 @@ const ACTIONS = [
   { key: 'Manage', label: 'Gerenciamento' },
 ] as const;
 
-const ICON_SIZE = 80;
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -112,6 +165,37 @@ export function LinkEmailDialog({
     value: CreateEmailAccountRequest[K]
   ) => setForm(prev => ({ ...prev, [key]: value }));
 
+  const handleEmailChange = useCallback((value: string) => {
+    setForm(prev => ({ ...prev, address: value }));
+    const provider = detectProvider(value);
+    if (provider) {
+      setForm(prev => ({
+        ...prev,
+        address: value,
+        imapHost: provider.imap.host,
+        imapPort: provider.imap.port,
+        imapSecure: provider.imap.secure,
+        smtpHost: provider.smtp.host,
+        smtpPort: provider.smtp.port,
+        smtpSecure: provider.smtp.secure,
+      }));
+    } else {
+      const domain = value.split('@')[1]?.toLowerCase();
+      if (domain && domain.includes('.')) {
+        setForm(prev => ({
+          ...prev,
+          address: value,
+          imapHost: `mail.${domain}`,
+          imapPort: 993,
+          imapSecure: true,
+          smtpHost: `mail.${domain}`,
+          smtpPort: 465,
+          smtpSecure: true,
+        }));
+      }
+    }
+  }, []);
+
   const togglePermission = (key: PermissionKey) =>
     setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -129,7 +213,6 @@ export function LinkEmailDialog({
   // ── Connection test flow ─────────────────────────────────────────────
 
   const runConnectionTest = useCallback(async () => {
-    setTestStatus('testing');
     setTestError(null);
 
     try {
@@ -139,6 +222,8 @@ export function LinkEmailDialog({
         username: form.address,
       };
 
+      // Step 1: Create or update account
+      setTestStatus('creating');
       if (!accountId) {
         const { account } = await emailService.createAccount(formData);
         accountId = account.id;
@@ -147,6 +232,7 @@ export function LinkEmailDialog({
         await emailService.updateAccount(accountId, formData);
       }
 
+      // Link to team
       if (!linkedRef.current) {
         await teamsService.linkEmailToTeam(teamId, {
           accountId,
@@ -155,7 +241,14 @@ export function LinkEmailDialog({
         linkedRef.current = true;
       }
 
+      // Step 2: Test connection
+      setTestStatus('testing');
       await emailService.testConnection(accountId);
+
+      // Step 3: Trigger sync
+      setTestStatus('syncing');
+      await emailService.triggerSync(accountId);
+
       setTestStatus('success');
     } catch (err) {
       setTestStatus('error');
@@ -185,9 +278,9 @@ export function LinkEmailDialog({
     // Step 1 — Account data
     {
       title: 'Dados da Conta',
-      description: 'Informe o endereço e as credenciais da conta',
-      icon: <MdContactMail size={ICON_SIZE} className="text-white/10" />,
-      isValid: form.address.trim() !== '' && form.secret.trim() !== '',
+      description: 'Informe o endereço de e-mail e senha de aplicativo',
+      icon: <Mail className="h-16 w-16 text-primary/60" />,
+      isValid: form.address.includes('@') && form.secret.length > 0,
       content: (
         <div className="space-y-4">
           <div className="space-y-2">
@@ -197,7 +290,8 @@ export function LinkEmailDialog({
               type="email"
               placeholder="equipe@empresa.com"
               value={form.address}
-              onChange={e => updateField('address', e.target.value)}
+              onChange={e => handleEmailChange(e.target.value)}
+              autoFocus
             />
           </div>
           <div className="space-y-2">
@@ -210,7 +304,9 @@ export function LinkEmailDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="wz-secret">Senha / App Password *</Label>
+            <Label htmlFor="wz-secret">
+              Senha / Senha de aplicativo *
+            </Label>
             <Input
               id="wz-secret"
               type="password"
@@ -218,6 +314,24 @@ export function LinkEmailDialog({
               value={form.secret}
               onChange={e => updateField('secret', e.target.value)}
             />
+            <div className="mt-1.5 flex items-start gap-2.5 rounded-lg bg-gray-50 dark:bg-gray-950/30 border border-gray-200/60 dark:border-gray-800/40 px-3 py-2.5">
+              <Lightbulb className="size-4 shrink-0 text-gray-500 mt-0.5" />
+              <p className="text-xs text-gray-800 dark:text-gray-200/90">
+                Para{' '}
+                <span className="font-semibold" style={{ color: '#EA4335' }}>
+                  Gmail
+                </span>{' '}
+                e{' '}
+                <span className="font-semibold" style={{ color: '#0078D4' }}>
+                  Outlook
+                </span>
+                , utilize uma{' '}
+                <span className="font-semibold dark:text-white">
+                  senha de aplicativo
+                </span>{' '}
+                gerada nas configurações de segurança da sua conta.
+              </p>
+            </div>
           </div>
         </div>
       ),
@@ -225,22 +339,22 @@ export function LinkEmailDialog({
 
     // Step 2 — IMAP
     {
-      title: 'Servidor de Recebimento',
-      description: 'Configure o servidor IMAP',
-      icon: <MdMarkunreadMailbox size={ICON_SIZE} className="text-white/10" />,
-      isValid: form.imapHost.trim() !== '',
+      title: 'Servidor de Recebimento (IMAP)',
+      description: 'Configuração do servidor para receber e-mails',
+      icon: <MailCheck className="h-16 w-16 text-primary/60" />,
+      isValid: form.imapHost.trim() !== '' && form.imapPort > 0,
       content: (
         <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="wz-imapHost">Host IMAP *</Label>
-              <Input
-                id="wz-imapHost"
-                placeholder="imap.gmail.com"
-                value={form.imapHost}
-                onChange={e => updateField('imapHost', e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="wz-imapHost">Servidor IMAP *</Label>
+            <Input
+              id="wz-imapHost"
+              placeholder="imap.exemplo.com"
+              value={form.imapHost}
+              onChange={e => updateField('imapHost', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="wz-imapPort">Porta</Label>
               <Input
@@ -250,39 +364,45 @@ export function LinkEmailDialog({
                 onChange={e => updateField('imapPort', Number(e.target.value))}
               />
             </div>
+            <div className="flex items-center gap-3 pt-6">
+              <Switch
+                id="wz-imapSecure"
+                checked={form.imapSecure ?? true}
+                onCheckedChange={v => updateField('imapSecure', v)}
+              />
+              <Label htmlFor="wz-imapSecure" className="text-sm">
+                Conexão segura (SSL/TLS)
+              </Label>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              id="wz-imapSecure"
-              checked={form.imapSecure ?? true}
-              onCheckedChange={v => updateField('imapSecure', v)}
-            />
-            <Label htmlFor="wz-imapSecure" className="text-sm">
-              Conexão segura (SSL/TLS)
-            </Label>
-          </div>
+          {detectProvider(form.address) && (
+            <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
+              Configurações detectadas automaticamente com base no provedor de
+              e-mail.
+            </p>
+          )}
         </div>
       ),
     },
 
     // Step 3 — SMTP
     {
-      title: 'Servidor de Saída',
-      description: 'Configure o servidor SMTP',
-      icon: <MdOutgoingMail size={ICON_SIZE} className="text-white/10" />,
-      isValid: form.smtpHost.trim() !== '',
+      title: 'Servidor de Saída (SMTP)',
+      description: 'Configuração do servidor para enviar e-mails',
+      icon: <Send className="h-16 w-16 text-primary/60" />,
+      isValid: form.smtpHost.trim() !== '' && form.smtpPort > 0,
       content: (
         <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="wz-smtpHost">Host SMTP *</Label>
-              <Input
-                id="wz-smtpHost"
-                placeholder="smtp.gmail.com"
-                value={form.smtpHost}
-                onChange={e => updateField('smtpHost', e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="wz-smtpHost">Servidor SMTP *</Label>
+            <Input
+              id="wz-smtpHost"
+              placeholder="smtp.exemplo.com"
+              value={form.smtpHost}
+              onChange={e => updateField('smtpHost', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="wz-smtpPort">Porta</Label>
               <Input
@@ -292,16 +412,16 @@ export function LinkEmailDialog({
                 onChange={e => updateField('smtpPort', Number(e.target.value))}
               />
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              id="wz-smtpSecure"
-              checked={form.smtpSecure ?? true}
-              onCheckedChange={v => updateField('smtpSecure', v)}
-            />
-            <Label htmlFor="wz-smtpSecure" className="text-sm">
-              Conexão segura (TLS)
-            </Label>
+            <div className="flex items-center gap-3 pt-6">
+              <Switch
+                id="wz-smtpSecure"
+                checked={form.smtpSecure ?? true}
+                onCheckedChange={v => updateField('smtpSecure', v)}
+              />
+              <Label htmlFor="wz-smtpSecure" className="text-sm">
+                Conexão segura (SSL/TLS)
+              </Label>
+            </div>
           </div>
         </div>
       ),
@@ -311,7 +431,7 @@ export function LinkEmailDialog({
     {
       title: 'Permissões',
       description: 'Defina as permissões de acesso por papel',
-      icon: <MdMailLock size={ICON_SIZE} className="text-white/10" />,
+      icon: <ShieldCheck className="h-16 w-16 text-primary/60" />,
       content: (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
@@ -351,85 +471,96 @@ export function LinkEmailDialog({
     // Step 5 — Connection test
     {
       title: 'Teste de Conexão',
-      description:
-        testStatus === 'testing'
-          ? 'Verificando conectividade...'
-          : testStatus === 'success'
-            ? 'Conexão estabelecida com sucesso!'
-            : testStatus === 'error'
-              ? 'Não foi possível estabelecer a conexão'
-              : 'Testando conexão...',
-      icon:
-        testStatus === 'success' ? (
-          <PiWifiHighBold size={ICON_SIZE} className="text-green-500" />
-        ) : testStatus === 'error' ? (
-          <PiWifiSlashBold size={ICON_SIZE} className="text-destructive" />
-        ) : (
-          <PiWifiHighLight size={ICON_SIZE} className="text-white/10" />
-        ),
+      description: 'Verificando conexão com os servidores de e-mail',
+      icon: (
+        <div className="flex items-center justify-center">
+          {testStatus === 'success' ? (
+            <CheckCircle2 className="h-16 w-16 text-green-500" />
+          ) : testStatus === 'error' ? (
+            <XCircle className="h-16 w-16 text-red-500" />
+          ) : (
+            <Loader2 className="h-16 w-16 text-blue-500 animate-spin" />
+          )}
+        </div>
+      ),
+      isValid: false,
       content: (
-        <div className="flex flex-col items-center justify-center h-full gap-4">
-          {testStatus === 'testing' && (
-            <>
-              <p className="text-sm text-muted-foreground">
-                Criando conta e testando conexão...
+        <div className="flex flex-col items-center justify-center py-4 space-y-4">
+          {(testStatus === 'creating' ||
+            testStatus === 'testing' ||
+            testStatus === 'syncing') && (
+            <div className="text-center space-y-2">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+              <p className="text-sm font-medium">
+                {testStatus === 'creating' && 'Criando conta e vinculando à equipe...'}
+                {testStatus === 'testing' && 'Testando conexão IMAP/SMTP...'}
+                {testStatus === 'syncing' && 'Sincronizando pastas...'}
               </p>
-              <div className="w-full max-w-xs h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full w-1/3 rounded-full bg-primary"
-                  style={{
-                    animation: 'wz-indeterminate 1.5s infinite ease-in-out',
-                  }}
-                />
-              </div>
-              <style>{`@keyframes wz-indeterminate{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}`}</style>
-            </>
+              <p className="text-xs text-muted-foreground">
+                Isso pode levar alguns segundos
+              </p>
+            </div>
           )}
 
           {testStatus === 'success' && (
-            <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-              Conta criada, vinculada e conexão verificada com sucesso!
-            </p>
+            <div className="text-center space-y-2">
+              <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto" />
+              <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                Conta criada, vinculada e conexão verificada com sucesso!
+              </p>
+              <p className="text-xs text-muted-foreground">
+                A sincronização inicial foi iniciada. As mensagens aparecerão em
+                breve.
+              </p>
+            </div>
           )}
 
           {testStatus === 'error' && (
-            <div className="text-center space-y-2">
-              <p className="text-sm text-destructive font-medium">
-                Falha ao conectar com o servidor de e-mail.
+            <div className="text-center space-y-3">
+              <XCircle className="h-10 w-10 text-red-500 mx-auto" />
+              <p className="text-sm font-medium text-red-700 dark:text-red-400">
+                Falha na conexão
               </p>
-              {testError && (
-                <p className="text-xs text-muted-foreground max-w-sm">
-                  {testError}
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground max-w-sm">
+                {testError ||
+                  'Verifique as credenciais e configurações do servidor.'}
+              </p>
             </div>
           )}
         </div>
       ),
-      footer:
-        testStatus === 'testing' ? (
-          <></>
-        ) : testStatus === 'success' ? (
-          <Button type="button" onClick={handleSuccess}>
-            Concluir
-          </Button>
-        ) : testStatus === 'error' ? (
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setStep(1);
-                setTestStatus('idle');
-              }}
-            >
-              Verificar Configurações
+      footer: (
+        <div className="flex items-center gap-2">
+          {testStatus === 'success' ? (
+            <Button onClick={handleSuccess}>Concluir</Button>
+          ) : testStatus === 'error' ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStep(1);
+                  setTestStatus('idle');
+                }}
+              >
+                Verificar Configurações
+              </Button>
+              <Button
+                onClick={() => {
+                  setTestStatus('idle');
+                  runConnectionTest();
+                }}
+              >
+                Tentar Novamente
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" disabled>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Processando...
             </Button>
-            <Button type="button" onClick={runConnectionTest}>
-              Tentar Novamente
-            </Button>
-          </>
-        ) : undefined,
+          )}
+        </div>
+      ),
     },
   ];
 

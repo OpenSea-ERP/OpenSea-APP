@@ -7,11 +7,15 @@ import {
   Send,
   Trash2,
 } from 'lucide-react';
+import type { EmailMessageListItem } from '@/types/email';
 import {
   format,
+  isSameMonth,
+  isSameWeek,
   isSameYear,
   isToday,
   isYesterday,
+  subWeeks,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -128,4 +132,106 @@ export function getFolderDisplayName(folder: EmailFolder): string {
   }
 
   return folder.displayName;
+}
+
+// ── Date Grouping ─────────────────────────────────────────────────────────────
+
+export interface DateGroup {
+  key: string;
+  label: string;
+  messages: EmailMessageListItem[];
+}
+
+/**
+ * Classifies a date into a group key.
+ * Priority order ensures mutual exclusivity:
+ * today > yesterday > this-week > last-week > this-month > month-YYYY-M
+ */
+function getDateGroupKey(date: Date, now: Date): string {
+  if (isToday(date)) return 'today';
+  if (isYesterday(date)) return 'yesterday';
+  if (isSameWeek(date, now, { weekStartsOn: 1 })) return 'this-week';
+
+  const lastWeekRef = subWeeks(now, 1);
+  if (isSameWeek(date, lastWeekRef, { weekStartsOn: 1 })) return 'last-week';
+
+  if (isSameMonth(date, now) && isSameYear(date, now)) return 'this-month';
+
+  return `month-${date.getFullYear()}-${date.getMonth()}`;
+}
+
+/** Returns a human-readable label for a group key */
+function getDateGroupLabel(key: string, now: Date): string {
+  if (key === 'today') return 'Hoje';
+  if (key === 'yesterday') return 'Ontem';
+  if (key === 'this-week') return 'Essa Semana';
+  if (key === 'last-week') return 'Semana Passada';
+  if (key === 'this-month') return 'Este Mês';
+
+  // month-YYYY-M
+  const parts = key.split('-');
+  const year = parseInt(parts[1], 10);
+  const month = parseInt(parts[2], 10);
+  const monthDate = new Date(year, month, 1);
+  const monthName = format(monthDate, 'MMMM', { locale: ptBR });
+  const capitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+  if (isSameYear(monthDate, now)) return capitalized;
+  return `${capitalized} de ${year}`;
+}
+
+/** Group order — defines display priority from most recent to oldest */
+const GROUP_ORDER = [
+  'today',
+  'yesterday',
+  'this-week',
+  'last-week',
+  'this-month',
+];
+
+/**
+ * Groups messages by date category. Messages within each group
+ * retain their original order (assumed to be date descending).
+ * Groups are ordered from most recent to oldest.
+ */
+export function groupMessagesByDate(
+  messages: EmailMessageListItem[]
+): DateGroup[] {
+  const now = new Date();
+  const groupMap = new Map<string, EmailMessageListItem[]>();
+
+  for (const msg of messages) {
+    const key = getDateGroupKey(new Date(msg.receivedAt), now);
+    const existing = groupMap.get(key);
+    if (existing) {
+      existing.push(msg);
+    } else {
+      groupMap.set(key, [msg]);
+    }
+  }
+
+  // Sort groups: fixed-order groups first, then month groups by date descending
+  const sortedKeys = [...groupMap.keys()].sort((a, b) => {
+    const ai = GROUP_ORDER.indexOf(a);
+    const bi = GROUP_ORDER.indexOf(b);
+
+    // Both are fixed-order groups
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    // Only a is fixed-order
+    if (ai !== -1) return -1;
+    // Only b is fixed-order
+    if (bi !== -1) return 1;
+
+    // Both are month-YYYY-M: sort descending (newer months first)
+    const [, aYear, aMonth] = a.split('-').map(Number);
+    const [, bYear, bMonth] = b.split('-').map(Number);
+    if (aYear !== bYear) return bYear - aYear;
+    return bMonth - aMonth;
+  });
+
+  return sortedKeys.map(key => ({
+    key,
+    label: getDateGroupLabel(key, now),
+    messages: groupMap.get(key)!,
+  }));
 }
