@@ -26,8 +26,10 @@ export interface UpdateColumnRequest {
   color?: string | null;
   position?: number;
   isDefault?: boolean;
+  isDone?: boolean;
+  wipLimit?: number | null;
 }
 
 export interface ReorderColumnsRequest {
-  columns: { id: string; position: number }[];
+  columnIds: string[];
 }

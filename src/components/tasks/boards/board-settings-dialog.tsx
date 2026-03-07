@@ -156,7 +156,7 @@ export function BoardSettingsDialog({
 
     try {
       await reorderColumns.mutateAsync({
-        columns: reordered.map((c, i) => ({ id: c.id, position: i })),
+        columnIds: reordered.map((c) => c.id),
       });
     } catch (error: unknown) {
       const message =
