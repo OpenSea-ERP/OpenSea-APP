@@ -209,7 +209,7 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Delete key handler for selected items
+    // Keyboard shortcuts for file manager
     useEffect(() => {
       const handler = (e: KeyboardEvent) => {
         // Don't trigger when typing in inputs
@@ -217,15 +217,76 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
         if ((e.target as HTMLElement)?.isContentEditable) return;
 
+        const allFolders = manager.contents?.folders ?? [];
+        const allFiles = manager.contents?.files ?? [];
+
+        // Ctrl+A — select all
+        if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+          e.preventDefault();
+          const allItems = [
+            ...allFolders.map(f => ({ id: f.id, type: 'folder' as const })),
+            ...allFiles.map(f => ({ id: f.id, type: 'file' as const })),
+          ];
+          for (const item of allItems) {
+            if (!manager.isSelected(item.id, item.type)) {
+              manager.toggleItem(item);
+            }
+          }
+          return;
+        }
+
+        // Escape — clear selection
+        if (e.key === 'Escape') {
+          manager.clearSelection();
+          return;
+        }
+
+        // Backspace — navigate back
+        if (e.key === 'Backspace' && manager.canNavigateBack) {
+          e.preventDefault();
+          manager.navigateBack();
+          return;
+        }
+
+        // F2 — rename selected item (single selection only)
+        if (e.key === 'F2' && manager.selectedItems.length === 1) {
+          e.preventDefault();
+          const item = manager.selectedItems[0];
+          if (item.type === 'folder') {
+            const folder = allFolders.find(f => f.id === item.id);
+            if (folder && !folder.isSystem && !folder.isFilter) {
+              handleRenameFolder(folder);
+            }
+          } else {
+            const file = allFiles.find(f => f.id === item.id);
+            if (file) {
+              handleRenameFile(file);
+            }
+          }
+          return;
+        }
+
+        // Enter — open selected item (single selection only)
+        if (e.key === 'Enter' && manager.selectedItems.length === 1) {
+          e.preventDefault();
+          const item = manager.selectedItems[0];
+          if (item.type === 'folder') {
+            const folder = allFolders.find(f => f.id === item.id);
+            if (folder) handleNavigateToFolder(folder.id);
+          } else {
+            const file = allFiles.find(f => f.id === item.id);
+            if (file) handlePreviewFile(file);
+          }
+          return;
+        }
+
+        // Delete — delete selected items
         if (e.key === 'Delete' && manager.selectedItems.length > 0) {
           e.preventDefault();
           const selected = manager.selectedItems;
 
           if (selected.length === 1) {
             const item = selected[0];
-            const allFolders = manager.contents?.folders ?? [];
-            const allFiles = manager.contents?.files ?? [];
-
             if (item.type === 'folder') {
               const folder = allFolders.find(f => f.id === item.id);
               if (folder && !folder.isSystem) {
@@ -252,7 +313,9 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
       };
       window.addEventListener('keydown', handler);
       return () => window.removeEventListener('keydown', handler);
-    }, [manager.selectedItems, manager.contents]);
+      // Handlers are stable useCallbacks with [] deps — safe to omit
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [manager.selectedItems, manager.contents, manager.canNavigateBack]);
 
     // Track last clicked item for shift-click range selection
     const lastClickedRef = useRef<{

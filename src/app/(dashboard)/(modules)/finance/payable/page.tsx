@@ -453,7 +453,7 @@ export default function PayablePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Status Filter */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-muted-foreground">
+                <label htmlFor="filter-status" className="text-sm font-medium text-muted-foreground">
                   Status
                 </label>
                 <Select
@@ -479,12 +479,13 @@ export default function PayablePage() {
 
               {/* Supplier Name Filter */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-muted-foreground">
+                <label htmlFor="filter-supplier" className="text-sm font-medium text-muted-foreground">
                   Fornecedor
                 </label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
+                    id="filter-supplier"
                     placeholder="Nome do fornecedor..."
                     value={supplierFilter}
                     onChange={(e) => {
@@ -498,7 +499,7 @@ export default function PayablePage() {
 
               {/* Due Date From */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-muted-foreground">
+                <label htmlFor="filter-due-from" className="text-sm font-medium text-muted-foreground">
                   Vencimento de
                 </label>
                 <Popover>
@@ -532,7 +533,7 @@ export default function PayablePage() {
 
               {/* Due Date To */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-muted-foreground">
+                <label htmlFor="filter-due-to" className="text-sm font-medium text-muted-foreground">
                   Vencimento até
                 </label>
                 <Popover>

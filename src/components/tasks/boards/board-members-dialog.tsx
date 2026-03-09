@@ -248,7 +248,7 @@ export function BoardMembersDialog({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Função</label>
+                <label htmlFor="member-role" className="text-sm font-medium">Função</label>
                 <Select
                   value={inviteRole}
                   onValueChange={v => setInviteRole(v as BoardMemberRole)}

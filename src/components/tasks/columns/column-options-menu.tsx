@@ -286,10 +286,11 @@ export function ColumnOptionsMenu({
             </PopoverTrigger>
             <PopoverContent className="w-56 p-3" side="right" align="start">
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label htmlFor="col-wip-limit" className="text-xs font-medium text-muted-foreground">
                   Máximo de cartões nesta coluna
                 </label>
                 <Input
+                  id="col-wip-limit"
                   type="number"
                   min={0}
                   placeholder="Sem limite"

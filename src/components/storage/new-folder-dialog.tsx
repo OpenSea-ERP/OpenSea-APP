@@ -99,8 +99,9 @@ export function NewFolderDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Nome</label>
+            <label htmlFor="new-folder-name" className="text-sm font-medium">Nome</label>
             <Input
+              id="new-folder-name"
               placeholder="Nome da pasta"
               value={name}
               onChange={e => setName(e.target.value)}

@@ -178,7 +178,7 @@ export function MapPicker({
       <div className="grid gap-3 sm:grid-cols-3">
         {/* Warehouse */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+          <label htmlFor="map-warehouse" className="text-xs font-medium text-muted-foreground flex items-center gap-1">
             <Warehouse className="h-3 w-3" />
             Armazém
           </label>
@@ -201,7 +201,7 @@ export function MapPicker({
 
         {/* Zone */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+          <label htmlFor="map-zone" className="text-xs font-medium text-muted-foreground flex items-center gap-1">
             <Grid3X3 className="h-3 w-3" />
             Zona
           </label>
@@ -225,7 +225,7 @@ export function MapPicker({
 
         {/* Aisle */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+          <label htmlFor="map-aisle" className="text-xs font-medium text-muted-foreground flex items-center gap-1">
             <Layers className="h-3 w-3" />
             Corredor
           </label>
