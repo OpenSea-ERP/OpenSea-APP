@@ -30,6 +30,7 @@ import {
   useFinanceCategory,
   useUpdateFinanceCategory,
 } from '@/hooks/finance';
+import { useQueryClient } from '@tanstack/react-query';
 import { FINANCE_CATEGORY_TYPE_LABELS } from '@/types/finance';
 import type { FinanceCategoryType } from '@/types/finance';
 import { FolderTree, Save, X } from 'lucide-react';
@@ -47,6 +48,7 @@ export default function EditFinanceCategoryPage({
   const { data, isLoading } = useFinanceCategory(id);
   const { data: allCategoriesData } = useFinanceCategories();
   const updateMutation = useUpdateFinanceCategory();
+  const queryClient = useQueryClient();
   const category = data?.category;
   const allCategories = allCategoriesData?.categories ?? [];
   const formRef = useRef<HTMLFormElement>(null);
@@ -185,6 +187,8 @@ export default function EditFinanceCategoryPage({
           parentId: formData.parentId || undefined,
         },
       });
+      // Wait for cache to refetch before navigating
+      await queryClient.invalidateQueries({ queryKey: ['finance-categories'] });
       toast.success('Categoria atualizada com sucesso!');
       router.push(`/finance/categories/${id}`);
     } catch {
