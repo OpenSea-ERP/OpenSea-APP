@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight,
@@ -52,9 +52,28 @@ export function CardActivityTab({ boardId, cardId }: CardActivityTabProps) {
     limit: PAGE_SIZE,
   });
 
-  const activities = data?.activities ?? [];
+  const accumulatedRef = useRef<typeof activities>([]);
+  const lastPageRef = useRef(0);
+
+  const currentPageActivities = data?.activities ?? [];
   const meta = data?.meta;
   const hasMore = meta ? meta.page < meta.pages : false;
+
+  useEffect(() => {
+    if (data && meta && meta.page > lastPageRef.current) {
+      accumulatedRef.current = [...accumulatedRef.current, ...currentPageActivities];
+      lastPageRef.current = meta.page;
+    }
+  }, [data, meta, currentPageActivities]);
+
+  // Reset accumulation when card changes
+  useEffect(() => {
+    accumulatedRef.current = [];
+    lastPageRef.current = 0;
+    setPage(1);
+  }, [cardId]);
+
+  const activities = page === 1 ? currentPageActivities : accumulatedRef.current;
 
   const handleLoadMore = useCallback(() => {
     setPage((p) => p + 1);

@@ -460,11 +460,16 @@ function SyncFooter({
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1">
           {isSyncing ? (
-            <div className="flex items-center gap-1.5">
-              <RefreshCw className="size-3 animate-spin text-primary" />
-              <p className="text-[10px] text-primary font-medium leading-tight">
-                Sincronizando...
-              </p>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5">
+                <RefreshCw className="size-3 animate-spin text-primary" />
+                <p className="text-[10px] text-primary font-medium leading-tight">
+                  Sincronizando...
+                </p>
+              </div>
+              <div className="h-1 w-full rounded-full bg-primary/20 overflow-hidden">
+                <div className="h-full rounded-full bg-primary animate-pulse w-2/3" />
+              </div>
             </div>
           ) : timeText ? (
             <p className="text-[10px] text-muted-foreground leading-tight">

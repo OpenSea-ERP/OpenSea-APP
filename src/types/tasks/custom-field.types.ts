@@ -44,7 +44,7 @@ export interface UpdateCustomFieldRequest {
 }
 
 export interface SetCustomFieldValueRequest {
-  value: string | null;
+  values: { fieldId: string; value: unknown }[];
 }
 
 export interface CustomFieldsQuery {

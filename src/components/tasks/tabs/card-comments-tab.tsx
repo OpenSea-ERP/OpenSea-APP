@@ -209,7 +209,7 @@ function CommentItem({
         )}
 
         {/* Reactions */}
-        {(Object.keys(groupedReactions).length > 0 || true) && (
+        {Object.keys(groupedReactions).length > 0 && (
           <div className="flex items-center gap-1 mt-1.5 flex-wrap">
             {Object.entries(groupedReactions).map(([emoji, data]) => (
               <button

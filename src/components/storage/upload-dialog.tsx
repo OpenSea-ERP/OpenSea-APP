@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Upload, X, FileIcon, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Upload, X, FileIcon, CheckCircle2, AlertCircle, AlertTriangle, RotateCcw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,7 @@ export function UploadDialog({
   const [files, setFiles] = useState<FileUploadState[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const cancelledRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { data: stats } = useStorageStats();
@@ -140,14 +141,17 @@ export function UploadDialog({
     if (files.length === 0) return;
 
     setIsUploading(true);
+    cancelledRef.current = false;
 
     let successCount = 0;
     let errorCount = 0;
 
-    for (let i = 0; i < files.length; i++) {
-      const fileState = files[i];
-      if (fileState.status !== 'pending') continue;
+    const MAX_CONCURRENT = 3;
+    const pendingIndices = files
+      .map((f, i) => (f.status === 'pending' ? i : -1))
+      .filter((i) => i !== -1);
 
+    const uploadFile = async (i: number) => {
       setFiles(prev =>
         prev.map((f, idx) =>
           idx === i ? { ...f, status: 'uploading' as const, progress: 0 } : f
@@ -157,7 +161,7 @@ export function UploadDialog({
       try {
         await storageFilesService.smartUpload(
           folderId,
-          fileState.file,
+          files[i].file,
           (percent) => {
             setFiles(prev =>
               prev.map((f, idx) =>
@@ -189,7 +193,20 @@ export function UploadDialog({
         );
         errorCount++;
       }
-    }
+    };
+
+    // Upload with concurrency limit
+    const queue = [...pendingIndices];
+    const workers = Array.from(
+      { length: Math.min(MAX_CONCURRENT, queue.length) },
+      async () => {
+        while (queue.length > 0 && !cancelledRef.current) {
+          const idx = queue.shift()!;
+          await uploadFile(idx);
+        }
+      },
+    );
+    await Promise.all(workers);
 
     // Invalidate queries after all uploads
     if (successCount > 0) {
@@ -213,8 +230,15 @@ export function UploadDialog({
     }
   };
 
+  const handleCancel = useCallback(() => {
+    cancelledRef.current = true;
+  }, []);
+
   const handleClose = () => {
-    if (isUploading) return;
+    if (isUploading) {
+      handleCancel();
+      return;
+    }
     setFiles([]);
     setIsDragging(false);
     onOpenChange(false);
@@ -346,6 +370,24 @@ export function UploadDialog({
                       <X className="w-4 h-4" />
                     </Button>
                   )}
+                  {fileState.status === 'error' && !isUploading && (
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      className="shrink-0 text-amber-600"
+                      title="Tentar novamente"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setFiles(prev =>
+                          prev.map((f, idx) =>
+                            idx === index ? { ...f, status: 'pending' as const, error: undefined, progress: 0 } : f
+                          )
+                        );
+                      }}
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -357,10 +399,9 @@ export function UploadDialog({
             type="button"
             variant="outline"
             size="sm"
-            onClick={handleClose}
-            disabled={isUploading}
+            onClick={isUploading ? handleCancel : handleClose}
           >
-            Cancelar
+            {isUploading ? 'Parar' : 'Cancelar'}
           </Button>
           <Button
             size="sm"

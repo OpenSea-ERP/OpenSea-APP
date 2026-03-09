@@ -81,11 +81,17 @@ export function FileCard({
           isSelected && 'ring-2 ring-blue-200 dark:ring-blue-800',
           isDragging && 'opacity-40'
         )}
+        role="button"
+        tabIndex={0}
+        aria-label={`Arquivo ${file.name}`}
         draggable={draggable}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
+        onKeyDown={e => {
+          if (e.key === 'Enter' && onDoubleClick) onDoubleClick();
+        }}
       >
         <div className="relative flex items-center justify-center w-12 h-12">
           {isImage && file.thumbnailKey && !thumbError ? (

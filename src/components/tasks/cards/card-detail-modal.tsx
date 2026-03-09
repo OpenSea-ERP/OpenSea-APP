@@ -9,6 +9,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -878,15 +889,30 @@ export function CardDetailModal({
                       <Archive className="h-3.5 w-3.5 text-muted-foreground" />
                       {card.archivedAt ? 'Desarquivar' : 'Arquivar'}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs w-full justify-start gap-1.5 text-red-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-                      onClick={handleDelete}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Excluir
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs w-full justify-start gap-1.5 text-red-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Excluir
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir cartão?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação é irreversível. Subtarefas, comentários e anexos também serão removidos.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
 
                   {/* Meta info */}

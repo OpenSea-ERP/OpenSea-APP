@@ -527,6 +527,10 @@ export const API_ENDPOINTS = {
         ABORT: '/v1/storage/files/multipart/abort',
       },
     },
+    BULK: {
+      DELETE: '/v1/storage/bulk/delete',
+      MOVE: '/v1/storage/bulk/move',
+    },
     SEARCH: '/v1/storage/search',
     TRASH: {
       LIST: '/v1/storage/trash',

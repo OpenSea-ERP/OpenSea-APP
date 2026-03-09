@@ -66,6 +66,7 @@ export interface FolderContentsQuery {
   limit?: number;
   search?: string;
   sort?: string;
+  sortOrder?: 'asc' | 'desc';
   /** Admin-only: show all users' files and folders */
   viewAll?: boolean;
   /** Show hidden items (requires verified security key) */

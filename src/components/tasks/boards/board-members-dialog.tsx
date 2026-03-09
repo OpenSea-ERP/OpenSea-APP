@@ -56,7 +56,7 @@ export function BoardMembersDialog({
 
   async function handleInvite() {
     if (!inviteUserId.trim()) {
-      toast.error('Informe o ID ou e-mail do usuario.');
+      toast.error('Informe o ID ou e-mail do usuário.');
       return;
     }
 
@@ -231,11 +231,11 @@ export function BoardMembersDialog({
             <div className="flex items-end gap-2">
               <div className="flex-1 space-y-1.5">
                 <label htmlFor="invite-user" className="text-sm font-medium">
-                  ID ou e-mail do usuario
+                  ID ou e-mail do usuário
                 </label>
                 <Input
                   id="invite-user"
-                  placeholder="usuario@exemplo.com"
+                  placeholder="usuário@exemplo.com"
                   value={inviteUserId}
                   onChange={(e) => setInviteUserId(e.target.value)}
                   onKeyDown={(e) => {

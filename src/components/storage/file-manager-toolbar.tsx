@@ -29,12 +29,13 @@ import {
   EyeOff,
   FolderPlus,
   Grid3X3,
+  KeyRound,
   List,
   Search,
   SlidersHorizontal,
   Upload,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
 export interface FolderTypeFilter {
   filter: boolean;
@@ -51,9 +52,9 @@ interface FileManagerToolbarProps {
   onSortByChange: (sortBy: SortBy) => void;
   onSortOrderChange: (order: SortOrder) => void;
   onSearchChange: (query: string) => void;
-  onSearchKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   showHidden?: boolean;
   onToggleHidden?: () => void;
+  onSecurityKey?: () => void;
   onUpload?: () => void;
   onNewFolder?: () => void;
   folderTypeFilter?: FolderTypeFilter;
@@ -83,29 +84,17 @@ export function FileManagerToolbar({
   onSortByChange,
   onSortOrderChange,
   onSearchChange,
-  onSearchKeyDown,
   showHidden,
   onToggleHidden,
+  onSecurityKey,
   onUpload,
   onNewFolder,
   folderTypeFilter,
   onFolderTypeFilterChange,
   className,
 }: FileManagerToolbarProps) {
-  const [localSearch, setLocalSearch] = useState(searchQuery);
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onSearchChange(localSearch);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [localSearch, onSearchChange]);
-
-  // Sync external changes
-  useEffect(() => {
-    setLocalSearch(searchQuery);
-  }, [searchQuery]);
+  // Search is debounced in use-file-manager hook (useDebounce 300ms)
+  // No local debounce needed here
 
   const handleSortToggle = useCallback(
     (selected: SortBy) => {
@@ -148,12 +137,23 @@ export function FileManagerToolbar({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
           placeholder="Pesquisar..."
-          value={localSearch}
-          onChange={e => setLocalSearch(e.target.value)}
-          onKeyDown={onSearchKeyDown}
+          value={searchQuery}
+          onChange={e => onSearchChange(e.target.value)}
           className="h-9 pl-9 text-sm"
         />
       </div>
+
+      {/* Security key button */}
+      {onSecurityKey && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button size="icon-sm" variant="ghost" onClick={onSecurityKey}>
+              <KeyRound className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Chave de segurança</TooltipContent>
+        </Tooltip>
+      )}
 
       {/* Hidden items toggle */}
       {showHidden && onToggleHidden && (

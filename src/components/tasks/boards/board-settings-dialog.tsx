@@ -169,7 +169,7 @@ export function BoardSettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Configuracoes do Quadro</DialogTitle>
+          <DialogTitle>Configurações do Quadro</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">

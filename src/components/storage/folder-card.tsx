@@ -86,6 +86,9 @@ export function FolderCard({
             'ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-950/40 scale-[1.02]',
           isDragging && 'opacity-40'
         )}
+        role="button"
+        tabIndex={0}
+        aria-label={`Pasta ${folder.name}`}
         draggable={draggable}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
@@ -95,6 +98,9 @@ export function FolderCard({
         onDrop={onDrop}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
+        onKeyDown={e => {
+          if (e.key === 'Enter' && onDoubleClick) onDoubleClick();
+        }}
       >
         <div className="relative">
           <FolderIcon folder={folder} size="lg" />

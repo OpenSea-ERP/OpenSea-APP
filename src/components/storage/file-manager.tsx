@@ -1,10 +1,7 @@
 'use client';
 
-import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { SelectionAction } from '@/core/components/selection-toolbar';
-import { SelectionToolbar } from '@/core/components/selection-toolbar';
 import {
   useDeleteFile,
   useDeleteFolder,
@@ -18,16 +15,8 @@ import { storageFilesService, storageFoldersService } from '@/services/storage';
 import { storageSecurityService } from '@/services/storage/security.service';
 import { cn } from '@/lib/utils';
 import type { StorageFile, StorageFolder } from '@/types/storage';
-import {
-  Archive,
-  ArrowLeft,
-  Download,
-  FolderInput,
-  PackageOpen,
-  Palette,
-  Shield,
-  Trash2,
-} from 'lucide-react';
+import { DRAG_MIME } from './constants';
+import { ArrowLeft } from 'lucide-react';
 import {
   forwardRef,
   useCallback,
@@ -46,20 +35,11 @@ import type { DragMoveItem } from './file-manager-grid';
 import { FileManagerGrid } from './file-manager-grid';
 import { FileManagerList } from './file-manager-list';
 import { FileManagerToolbar } from './file-manager-toolbar';
-import { FilePreviewModal } from './file-preview-modal';
+import { FileManagerSelectionToolbar } from './file-manager-selection-toolbar';
+import { FileManagerDialogs } from './file-manager-dialogs';
+import type { MoveState, RenameState, DeleteState } from './file-manager-dialogs';
 import { TrashView } from './trash-view';
-import { FileVersionPanel } from './file-version-panel';
-import { FolderAccessDialog } from './folder-access-dialog';
-import { FolderColorDialog } from './folder-color-dialog';
 import type { FolderPermissions } from './folder-context-menu';
-import { MoveItemDialog } from './move-item-dialog';
-import { NewFolderDialog } from './new-folder-dialog';
-import { RenameDialog } from './rename-dialog';
-import { FilePropertiesDialog } from './file-properties-dialog';
-import { ProtectionDialog } from './protection-dialog';
-import { UnlockDialog } from './unlock-dialog';
-import { ShareLinkDialog } from './share-link-dialog';
-import { UploadDialog } from './upload-dialog';
 import { formatFileSize } from './utils';
 
 export interface FileManagerRef {
@@ -82,25 +62,6 @@ interface FileManagerProps {
   /** Controlled trash view state (when managed externally) */
   showTrash?: boolean;
   onShowTrashChange?: (show: boolean) => void;
-}
-
-// Dialog state types
-interface MoveState {
-  itemId: string;
-  itemType: 'folder' | 'file';
-  itemName: string;
-}
-
-interface RenameState {
-  itemId: string;
-  itemType: 'folder' | 'file';
-  currentName: string;
-}
-
-interface DeleteState {
-  type: 'folder' | 'file';
-  id: string;
-  name: string;
 }
 
 export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
@@ -182,6 +143,7 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
     // Dialog states
     const [showUpload, setShowUpload] = useState(false);
     const [showNewFolder, setShowNewFolder] = useState(false);
+    const [securityKeyDialogOpen, setSecurityKeyDialogOpen] = useState(false);
     const [previewFile, setPreviewFile] = useState<StorageFile | null>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [previewPassword, setPreviewPassword] = useState<string | undefined>(undefined);
@@ -257,20 +219,34 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
 
         if (e.key === 'Delete' && manager.selectedItems.length > 0) {
           e.preventDefault();
-          const item = manager.selectedItems[0];
-          const allFolders = manager.contents?.folders ?? [];
-          const allFiles = manager.contents?.files ?? [];
+          const selected = manager.selectedItems;
 
-          if (item.type === 'folder') {
-            const folder = allFolders.find(f => f.id === item.id);
-            if (folder && !folder.isSystem) {
-              setDeleteState({ type: 'folder', id: folder.id, name: folder.name });
+          if (selected.length === 1) {
+            const item = selected[0];
+            const allFolders = manager.contents?.folders ?? [];
+            const allFiles = manager.contents?.files ?? [];
+
+            if (item.type === 'folder') {
+              const folder = allFolders.find(f => f.id === item.id);
+              if (folder && !folder.isSystem) {
+                setDeleteState({ type: 'folder', id: folder.id, name: folder.name });
+              }
+            } else {
+              const file = allFiles.find(f => f.id === item.id);
+              if (file) {
+                setDeleteState({ type: 'file', id: file.id, name: file.name });
+              }
             }
           } else {
-            const file = allFiles.find(f => f.id === item.id);
-            if (file) {
-              setDeleteState({ type: 'file', id: file.id, name: file.name });
-            }
+            const bulkFileIds = selected.filter(i => i.type === 'file').map(i => i.id);
+            const bulkFolderIds = selected.filter(i => i.type === 'folder').map(i => i.id);
+            setDeleteState({
+              type: 'bulk',
+              id: 'bulk',
+              name: `${selected.length} itens`,
+              bulkFileIds,
+              bulkFolderIds,
+            });
           }
         }
       };
@@ -457,7 +433,17 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
       if (!deleteState) return;
 
       try {
-        if (deleteState.type === 'folder') {
+        if (deleteState.type === 'bulk') {
+          await storageFilesService.bulkDelete({
+            fileIds: deleteState.bulkFileIds,
+            folderIds: deleteState.bulkFolderIds,
+          });
+          const total = (deleteState.bulkFileIds?.length ?? 0) + (deleteState.bulkFolderIds?.length ?? 0);
+          toast.success(`${total} itens excluídos com sucesso`);
+          queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+          queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+          queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+        } else if (deleteState.type === 'folder') {
           await deleteFolderMutation.mutateAsync(deleteState.id);
           toast.success('Pasta excluída com sucesso');
         } else {
@@ -467,14 +453,16 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
         manager.clearSelection();
       } catch {
         toast.error(
-          deleteState.type === 'folder'
-            ? 'Erro ao excluir a pasta'
-            : 'Erro ao excluir o arquivo'
+          deleteState.type === 'bulk'
+            ? 'Erro ao excluir os itens'
+            : deleteState.type === 'folder'
+              ? 'Erro ao excluir a pasta'
+              : 'Erro ao excluir o arquivo'
         );
       } finally {
         setDeleteState(null);
       }
-    }, [deleteState, deleteFolderMutation, deleteFileMutation, manager]);
+    }, [deleteState, deleteFolderMutation, deleteFileMutation, manager, queryClient]);
 
     // File share
     const handleShareFile = useCallback((file: StorageFile) => {
@@ -522,7 +510,8 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
           await storageSecurityService.hideItem({ itemId: file.id, itemType: 'file' });
           toast.success('Arquivo ocultado com sucesso');
         }
-        queryClient.invalidateQueries({ queryKey: ['storage'] });
+        queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+        queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
       } catch {
         toast.error('Erro ao alterar visibilidade do arquivo');
       }
@@ -537,32 +526,18 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
           await storageSecurityService.hideItem({ itemId: folder.id, itemType: 'folder' });
           toast.success('Pasta ocultada com sucesso');
         }
-        queryClient.invalidateQueries({ queryKey: ['storage'] });
+        queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+        queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
       } catch {
         toast.error('Erro ao alterar visibilidade da pasta');
       }
     }, [queryClient]);
 
-    // Search bar Enter key: try to verify as security key
-    const handleSearchKeyDown = useCallback(
-      async (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key !== 'Enter') return;
-        const query = manager.searchQuery.trim();
-        if (!query) return;
-
-        try {
-          const { valid } = await storageSecurityService.verifySecurityKey(query);
-          if (valid) {
-            manager.setShowHidden(true);
-            manager.setSearchQuery('');
-            toast.success('Itens ocultos revelados');
-          }
-        } catch {
-          // Not a valid key — treat as normal search (no-op)
-        }
-      },
-      [manager]
-    );
+    // Security key dialog success handler
+    const handleSecurityKeySuccess = useCallback(() => {
+      manager.setShowHidden(true);
+      manager.setSearchQuery('');
+    }, [manager]);
 
     // Toggle hidden items off
     const handleToggleHidden = useCallback(() => {
@@ -620,8 +595,6 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
     );
 
     // Drag and drop on the main area (file upload from OS)
-    const DRAG_MIME = 'application/x-storage-item';
-
     const handleDragOver = useCallback((e: React.DragEvent) => {
       // Don't show upload overlay for internal drag-and-drop moves
       if (e.dataTransfer.types.includes(DRAG_MIME)) return;
@@ -716,7 +689,6 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
         onSortByChange={manager.setSortBy}
         onSortOrderChange={manager.setSortOrder}
         onSearchChange={manager.setSearchQuery}
-        onSearchKeyDown={handleSearchKeyDown}
         showHidden={manager.showHidden}
         onToggleHidden={handleToggleHidden}
         onUpload={
@@ -729,6 +701,7 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
             ? undefined
             : () => setShowNewFolder(true)
         }
+        onSecurityKey={() => setSecurityKeyDialogOpen(true)}
         folderTypeFilter={folderTypeFilter}
         onFolderTypeFilterChange={setFolderTypeFilter}
       />
@@ -823,7 +796,10 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => window.location.reload()}
+                    onClick={() => {
+                      queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+                      queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+                    }}
                   >
                     Tentar novamente
                   </Button>
@@ -903,6 +879,9 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
                 <span>
                   {folders.length + files.length}{' '}
                   {folders.length + files.length === 1 ? 'item' : 'itens'}
+                  {(manager.searchQuery.trim() || !folderTypeFilter.filter || !folderTypeFilter.system || !folderTypeFilter.personal) && (
+                    <span className="ml-1 text-yellow-600 dark:text-yellow-400">(filtrado)</span>
+                  )}
                 </span>
                 <span>
                   {formatFileSize(
@@ -926,15 +905,27 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
             onClear={manager.clearSelection}
             onSelectAll={manager.selectAll}
             onMove={ids => {
-              // Move first item (bulk move does sequential calls)
-              const item = manager.selectedItems.find(i => ids.includes(i.id));
-              if (item) {
+              const selectedForMove = manager.selectedItems.filter(i => ids.includes(i.id));
+              if (selectedForMove.length === 0) return;
+
+              if (selectedForMove.length === 1) {
+                const item = selectedForMove[0];
                 const folder = allFolders.find(f => f.id === item.id);
                 const file = files.find(f => f.id === item.id);
                 setMoveState({
                   itemId: item.id,
                   itemType: item.type,
                   itemName: folder?.name ?? file?.name ?? '',
+                });
+              } else {
+                const bulkFileIds = selectedForMove.filter(i => i.type === 'file').map(i => i.id);
+                const bulkFolderIds = selectedForMove.filter(i => i.type === 'folder').map(i => i.id);
+                setMoveState({
+                  itemId: 'bulk',
+                  itemType: 'bulk',
+                  itemName: `${selectedForMove.length} itens`,
+                  bulkFileIds,
+                  bulkFolderIds,
                 });
               }
             }}
@@ -953,18 +944,39 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
               }
             }}
             onDownload={async ids => {
-              // Download all selected files
-              for (const item of manager.selectedItems) {
-                if (item.type === 'file' && ids.includes(item.id)) {
-                  const file = files.find(f => f.id === item.id);
-                  if (file) await handleDownloadFile(file);
+              const selectedForDownload = manager.selectedItems.filter(
+                i => ids.includes(i.id)
+              );
+              const downloadFiles = selectedForDownload.filter(i => i.type === 'file');
+
+              if (downloadFiles.length <= 1) {
+                // Single file download
+                const file = files.find(f => f.id === downloadFiles[0]?.id);
+                if (file) await handleDownloadFile(file);
+              } else {
+                // Multiple files: compress into ZIP, then download
+                try {
+                  toast.info('Preparando download...');
+                  const result = await storageFilesService.compressFiles({
+                    fileIds: downloadFiles.map(i => i.id),
+                    folderIds: selectedForDownload.filter(i => i.type === 'folder').map(i => i.id),
+                    targetFolderId: manager.currentFolderId,
+                  });
+                  const downloadUrl = storageFilesService.getServeUrl(result.file.id, { download: true });
+                  window.open(downloadUrl, '_blank');
+                  queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+                  queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+                } catch {
+                  toast.error('Erro ao preparar download');
                 }
               }
             }}
             onDelete={ids => {
-              // Bulk delete: delete first selected item (opens PIN modal)
-              const item = manager.selectedItems.find(i => ids.includes(i.id));
-              if (item) {
+              const selectedForDelete = manager.selectedItems.filter(i => ids.includes(i.id));
+              if (selectedForDelete.length === 0) return;
+
+              if (selectedForDelete.length === 1) {
+                const item = selectedForDelete[0];
                 if (item.type === 'folder') {
                   const folder = allFolders.find(f => f.id === item.id);
                   if (folder) handleDeleteFolder(folder);
@@ -972,6 +984,16 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
                   const file = files.find(f => f.id === item.id);
                   if (file) handleDeleteFile(file);
                 }
+              } else {
+                const bulkFileIds = selectedForDelete.filter(i => i.type === 'file').map(i => i.id);
+                const bulkFolderIds = selectedForDelete.filter(i => i.type === 'folder').map(i => i.id);
+                setDeleteState({
+                  type: 'bulk',
+                  id: 'bulk',
+                  name: `${selectedForDelete.length} itens`,
+                  bulkFileIds,
+                  bulkFolderIds,
+                });
               }
             }}
             onCompress={handleCompress}
@@ -980,364 +1002,66 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
         )}
 
         {/* Dialogs */}
-        <UploadDialog
-          open={showUpload}
-          onOpenChange={open => {
-            setShowUpload(open);
-            if (!open) setDroppedFiles([]);
-          }}
-          folderId={manager.currentFolderId}
+        <FileManagerDialogs
+          showUpload={showUpload}
+          onShowUploadChange={setShowUpload}
+          currentFolderId={manager.currentFolderId}
           entityType={entityType}
           entityId={entityId}
-          initialFiles={droppedFiles}
-        />
-
-        <NewFolderDialog
-          open={showNewFolder}
-          onOpenChange={setShowNewFolder}
-          parentId={manager.currentFolderId}
-          module={undefined}
-          entityType={entityType}
-          entityId={entityId}
-        />
-
-        <FilePreviewModal
-          file={previewFile}
-          files={files}
-          open={showPreview}
-          onOpenChange={(open) => {
-            setShowPreview(open);
-            if (!open) setPreviewPassword(undefined);
-          }}
-          onNavigate={file => {
-            // Clear password when navigating to a different file
+          droppedFiles={droppedFiles}
+          onClearDroppedFiles={() => setDroppedFiles([])}
+          showNewFolder={showNewFolder}
+          onShowNewFolderChange={setShowNewFolder}
+          previewFile={previewFile}
+          previewFiles={files}
+          showPreview={showPreview}
+          onShowPreviewChange={setShowPreview}
+          onPreviewNavigate={file => {
             setPreviewPassword(undefined);
             setPreviewFile(file);
           }}
+          onClearPreviewPassword={() => setPreviewPassword(undefined)}
           canDownload={filePermissions.canDownload}
-          password={previewPassword}
-        />
-
-        <FileVersionPanel
-          file={versionFile}
-          open={showVersions}
-          onOpenChange={setShowVersions}
-        />
-
-        {moveState && (
-          <MoveItemDialog
-            open={!!moveState}
-            onOpenChange={open => {
-              if (!open) setMoveState(null);
-            }}
-            itemId={moveState.itemId}
-            itemType={moveState.itemType}
-            itemName={moveState.itemName}
-            currentFolderId={manager.currentFolderId}
-          />
-        )}
-
-        {renameState && (
-          <RenameDialog
-            open={!!renameState}
-            onOpenChange={open => {
-              if (!open) setRenameState(null);
-            }}
-            itemId={renameState.itemId}
-            itemType={renameState.itemType}
-            currentName={renameState.currentName}
-          />
-        )}
-
-        <FolderAccessDialog
-          folder={accessFolder}
-          open={showAccess}
-          onOpenChange={open => {
-            setShowAccess(open);
-            if (!open) setAccessFolder(null);
-          }}
-        />
-
-        <FolderColorDialog
-          folder={colorFolder}
-          open={showColorDialog}
-          onOpenChange={open => {
-            setShowColorDialog(open);
-            if (!open) setColorFolder(null);
-          }}
-        />
-
-        <ShareLinkDialog
-          file={shareFile}
-          open={showShareDialog}
-          onOpenChange={open => {
-            setShowShareDialog(open);
-            if (!open) setShareFile(null);
-          }}
-        />
-
-        <FilePropertiesDialog
-          file={propertiesFile}
-          open={!!propertiesFile}
-          onOpenChange={open => {
-            if (!open) setPropertiesFile(null);
-          }}
+          previewPassword={previewPassword}
+          versionFile={versionFile}
+          showVersions={showVersions}
+          onShowVersionsChange={setShowVersions}
+          moveState={moveState}
+          onMoveStateChange={setMoveState}
+          renameState={renameState}
+          onRenameStateChange={setRenameState}
+          accessFolder={accessFolder}
+          showAccess={showAccess}
+          onShowAccessChange={setShowAccess}
+          onClearAccessFolder={() => setAccessFolder(null)}
+          colorFolder={colorFolder}
+          showColorDialog={showColorDialog}
+          onShowColorDialogChange={setShowColorDialog}
+          onClearColorFolder={() => setColorFolder(null)}
+          shareFile={shareFile}
+          showShareDialog={showShareDialog}
+          onShowShareDialogChange={setShowShareDialog}
+          onClearShareFile={() => setShareFile(null)}
+          propertiesFile={propertiesFile}
+          onClearPropertiesFile={() => setPropertiesFile(null)}
           folderName={
             manager.breadcrumb.length > 0
               ? manager.breadcrumb[manager.breadcrumb.length - 1].name
               : 'Início'
           }
-        />
-
-        {/* Protection dialog */}
-        {protectState && (
-          <ProtectionDialog
-            open={!!protectState}
-            onOpenChange={(open) => {
-              if (!open) setProtectState(null);
-            }}
-            itemId={protectState.itemId}
-            itemType={protectState.itemType}
-            itemName={protectState.itemName}
-            isProtected={protectState.isProtected}
-          />
-        )}
-
-        {/* Unlock dialog for protected items */}
-        {unlockState && (
-          <UnlockDialog
-            open={!!unlockState}
-            onOpenChange={(open) => {
-              if (!open) setUnlockState(null);
-            }}
-            itemId={unlockState.itemId}
-            itemType={unlockState.itemType}
-            itemName={unlockState.itemName}
-            onUnlocked={unlockState.onUnlocked}
-          />
-        )}
-
-        {/* PIN verification for destructive actions */}
-        <VerifyActionPinModal
-          isOpen={!!deleteState}
-          onClose={() => setDeleteState(null)}
-          onSuccess={handleDeleteConfirm}
-          title={
-            deleteState?.type === 'folder' ? 'Excluir Pasta' : 'Excluir Arquivo'
-          }
-          description={
-            deleteState
-              ? `Digite seu PIN de Ação para confirmar a exclusão de "${deleteState.name}".`
-              : ''
-          }
+          protectState={protectState}
+          onClearProtectState={() => setProtectState(null)}
+          unlockState={unlockState}
+          onClearUnlockState={() => setUnlockState(null)}
+          securityKeyDialogOpen={securityKeyDialogOpen}
+          onSecurityKeyDialogOpenChange={setSecurityKeyDialogOpen}
+          onSecurityKeySuccess={handleSecurityKeySuccess}
+          deleteState={deleteState}
+          onClearDeleteState={() => setDeleteState(null)}
+          onDeleteConfirm={handleDeleteConfirm}
         />
       </div>
     );
   }
 );
 
-// =============================================================================
-// Selection Toolbar Sub-Component
-// =============================================================================
-
-interface FileManagerSelectionToolbarProps {
-  selectedItems: { id: string; type: 'folder' | 'file' }[];
-  allFolders: StorageFolder[];
-  allFiles: StorageFile[];
-  totalItems: number;
-  folderPermissions: FolderPermissions;
-  filePermissions: FilePermissions;
-  onClear: () => void;
-  onSelectAll: () => void;
-  onMove: (ids: string[]) => void;
-  onShare: (ids: string[]) => void;
-  onChangeColor: (ids: string[]) => void;
-  onDownload: (ids: string[]) => void;
-  onDelete: (ids: string[]) => void;
-  onCompress: () => void;
-  onDecompress: () => void;
-}
-
-function FileManagerSelectionToolbar({
-  selectedItems,
-  allFolders,
-  allFiles,
-  totalItems,
-  folderPermissions,
-  filePermissions,
-  onClear,
-  onSelectAll,
-  onMove,
-  onShare,
-  onChangeColor,
-  onDownload,
-  onDelete,
-  onCompress,
-  onDecompress,
-}: FileManagerSelectionToolbarProps) {
-  const selectedIds = selectedItems.map(i => i.id);
-  const selectedFolders = selectedItems.filter(i => i.type === 'folder');
-  const selectedFiles = selectedItems.filter(i => i.type === 'file');
-
-  const hasSystemFolders = selectedFolders.some(sf => {
-    const folder = allFolders.find(f => f.id === sf.id);
-    return folder?.isSystem;
-  });
-  const hasFilterFolders = selectedFolders.some(sf => {
-    const folder = allFolders.find(f => f.id === sf.id);
-    return folder?.isFilter;
-  });
-  const hasFiles = selectedFiles.length > 0;
-  const hasFolders = selectedFolders.length > 0;
-  const onlyUserFolders =
-    hasFolders && !hasFiles && !hasSystemFolders && !hasFilterFolders;
-
-  // Build actions based on selection composition and permissions
-  const actions = useMemo<SelectionAction[]>(() => {
-    const result: SelectionAction[] = [];
-
-    // Move: not available if system/filter folders are selected
-    const canMove =
-      !hasSystemFolders &&
-      !hasFilterFolders &&
-      (hasFolders ? folderPermissions.canEditUserFolders : true) &&
-      (hasFiles ? filePermissions.canUpdate : true);
-
-    if (canMove) {
-      result.push({
-        id: 'move',
-        label: 'Mover',
-        icon: FolderInput,
-        onClick: onMove,
-        variant: 'ghost',
-      });
-    }
-
-    // Share: available for all types if user has share permissions for relevant types
-    const canShare =
-      !hasFolders ||
-      ((hasSystemFolders ? folderPermissions.canShareSystemFolders : true) &&
-        (hasFilterFolders ? folderPermissions.canShareFilterFolders : true) &&
-        (!hasSystemFolders && !hasFilterFolders
-          ? folderPermissions.canShareUserFolders
-          : true));
-
-    if (canShare) {
-      result.push({
-        id: 'share',
-        label: 'Compartilhar',
-        icon: Shield,
-        onClick: onShare,
-        variant: 'ghost',
-      });
-    }
-
-    // Change color: only for user folders (no files, no system/filter folders)
-    if (onlyUserFolders && folderPermissions.canEditUserFolders) {
-      result.push({
-        id: 'color',
-        label: 'Alterar cor',
-        icon: Palette,
-        onClick: onChangeColor,
-        variant: 'ghost',
-      });
-    }
-
-    // Download: always available if user has download permission
-    const canDownload =
-      (hasFiles ? filePermissions.canDownload : true) &&
-      (!hasFolders ||
-        ((hasSystemFolders
-          ? folderPermissions.canDownloadSystemFolders
-          : true) &&
-          (hasFilterFolders
-            ? folderPermissions.canDownloadFilterFolders
-            : true) &&
-          (!hasSystemFolders && !hasFilterFolders
-            ? folderPermissions.canDownloadUserFolders
-            : true)));
-
-    if (canDownload) {
-      result.push({
-        id: 'download',
-        label: 'Baixar',
-        icon: Download,
-        onClick: onDownload,
-        variant: 'ghost',
-      });
-    }
-
-    // Compress selected files/folders into ZIP
-    result.push({
-      id: 'compress',
-      label: 'Compactar',
-      icon: Archive,
-      onClick: onCompress,
-      variant: 'ghost',
-    });
-
-    // Decompress: only if exactly 1 .zip file is selected
-    const isSingleZip =
-      selectedItems.length === 1 &&
-      selectedItems[0].type === 'file' &&
-      allFiles
-        .find(f => f.id === selectedItems[0].id)
-        ?.name.match(/\.(zip|tar\.gz|7z)$/i);
-
-    if (isSingleZip) {
-      result.push({
-        id: 'decompress',
-        label: 'Descompactar',
-        icon: PackageOpen,
-        onClick: onDecompress,
-        variant: 'ghost',
-      });
-    }
-
-    // Delete: available if user has delete permission
-    const canDelete =
-      !hasSystemFolders &&
-      !hasFilterFolders &&
-      (hasFolders ? folderPermissions.canDeleteUserFolders : true) &&
-      (hasFiles ? filePermissions.canDelete : true);
-
-    if (canDelete) {
-      result.push({
-        id: 'delete',
-        label: 'Excluir',
-        icon: Trash2,
-        onClick: onDelete,
-        variant: 'destructive',
-      });
-    }
-
-    return result;
-  }, [
-    hasSystemFolders,
-    hasFilterFolders,
-    hasFolders,
-    hasFiles,
-    onlyUserFolders,
-    folderPermissions,
-    filePermissions,
-    selectedItems,
-    allFiles,
-    onMove,
-    onShare,
-    onChangeColor,
-    onDownload,
-    onDelete,
-    onCompress,
-    onDecompress,
-  ]);
-
-  return (
-    <SelectionToolbar
-      selectedIds={selectedIds}
-      totalItems={totalItems}
-      onClear={onClear}
-      onSelectAll={onSelectAll}
-      actions={actions}
-    />
-  );
-}

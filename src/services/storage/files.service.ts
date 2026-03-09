@@ -366,48 +366,50 @@ export const storageFilesService = {
         onProgress(Math.round((totalUploaded / file.size) * 95));
       }
 
-      // Step 3: Complete multipart upload
-      const result = await this.completeMultipartUpload({
+      // Step 3: Complete multipart upload (backend creates the file record and returns it)
+      const response = await this.completeMultipartUpload({
         key,
         uploadId,
         parts: completedParts,
         fileName: file.name,
         mimeType: file.type || 'application/octet-stream',
         fileSize: file.size,
+        folderId,
+        entityType: options?.entityType,
+        entityId: options?.entityId,
       });
 
       onProgress(100);
 
-      // Return as FileResponse format
-      return {
-        file: {
-          id: '',
-          tenantId: '',
-          folderId,
-          name: file.name,
-          originalName: file.name,
-          fileKey: result.key,
-          path: '',
-          size: result.size,
-          mimeType: result.mimeType,
-          fileType: 'other',
-          thumbnailKey: null,
-          status: 'ACTIVE',
-          currentVersion: 1,
-          entityType: null,
-          entityId: null,
-          expiresAt: null,
-          isEncrypted: false,
-          isProtected: false,
-          isHidden: false,
-          uploadedBy: '',
-          createdAt: new Date().toISOString(),
-        },
-      };
+      return response;
     } catch (error) {
       // Abort on failure
       await this.abortMultipartUpload(key, uploadId).catch(() => {});
       throw error;
     }
+  },
+
+  // --- Bulk Operations ---
+
+  // POST /v1/storage/bulk/delete - Excluir múltiplos itens
+  async bulkDelete(data: { fileIds?: string[]; folderIds?: string[] }): Promise<{
+    deletedFiles: number;
+    deletedFolders: number;
+    errors: string[];
+  }> {
+    return apiClient.post(API_ENDPOINTS.STORAGE.BULK.DELETE, data);
+  },
+
+  // POST /v1/storage/bulk/move - Mover múltiplos itens
+  async bulkMove(data: {
+    fileIds?: string[];
+    folderIds?: string[];
+    targetFolderId: string | null;
+  }): Promise<{
+    movedFiles: number;
+    movedFolders: number;
+    errors: string[];
+  }> {
+    return apiClient.post(API_ENDPOINTS.STORAGE.BULK.MOVE, data);
   },
 };

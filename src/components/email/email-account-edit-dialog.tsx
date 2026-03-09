@@ -55,7 +55,7 @@ import {
   UnderlineIcon,
   XCircle,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type SectionId = 'general' | 'signature' | 'connection';
 
@@ -113,6 +113,7 @@ export function EmailAccountEditDialog({
   const [smtpHost, setSmtpHost] = useState(account.smtpHost);
   const [smtpPort, setSmtpPort] = useState(account.smtpPort);
   const [smtpSecure, setSmtpSecure] = useState(account.smtpSecure);
+  const [tlsVerify, setTlsVerify] = useState(account.tlsVerify);
   const [password, setPassword] = useState('');
 
   // Connection test state
@@ -125,10 +126,10 @@ export function EmailAccountEditDialog({
   const deleteMutation = useDeleteEmailAccount();
   const testConnectionMutation = useTestEmailConnection();
 
-  // Signature editor
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
+  // Signature editor — memoize extensions and editorProps to avoid
+  // recreating the TipTap editor instance on every render
+  const extensions = useMemo(
+    () => [
       StarterKit,
       UnderlineExt,
       LinkExt.configure({ openOnClick: false }),
@@ -137,12 +138,23 @@ export function EmailAccountEditDialog({
         placeholder: 'Escreva sua assinatura aqui...',
       }),
     ],
-    editorProps: {
+    [],
+  );
+
+  const editorProps = useMemo(
+    () => ({
       attributes: {
         class:
           'prose prose-sm dark:prose-invert max-w-none min-h-[180px] focus:outline-none py-3 px-4 text-sm leading-relaxed',
       },
-    },
+    }),
+    [],
+  );
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions,
+    editorProps,
     content: account.signature ?? '',
   });
 
@@ -158,6 +170,7 @@ export function EmailAccountEditDialog({
     setSmtpHost(account.smtpHost);
     setSmtpPort(account.smtpPort);
     setSmtpSecure(account.smtpSecure);
+    setTlsVerify(account.tlsVerify);
     setPassword('');
     setActiveSection('general');
     setTestResult(null);
@@ -183,6 +196,7 @@ export function EmailAccountEditDialog({
       smtpHost,
       smtpPort,
       smtpSecure,
+      tlsVerify,
       ...(password ? { secret: password } : {}),
     };
 
@@ -694,6 +708,21 @@ export function EmailAccountEditDialog({
                       placeholder="Deixe em branco para manter a atual"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
+                    />
+                  </div>
+
+                  {/* TLS Certificate Verification */}
+                  <div className="flex items-center justify-between pt-2">
+                    <div>
+                      <p className="text-sm font-medium">Verificar certificado TLS</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Valida o certificado do servidor. Desative para hosts com certificados auto-assinados.
+                      </p>
+                    </div>
+                    <Switch
+                      id="edit-tls-verify"
+                      checked={tlsVerify}
+                      onCheckedChange={setTlsVerify}
                     />
                   </div>
 

@@ -205,41 +205,30 @@ export function CardCustomFieldsTab({ boardId, cardId }: CardCustomFieldsTabProp
   }, []);
 
   const handleSave = useCallback(() => {
-    // Save each changed field
-    const promises = customFields.map((field) => {
-      const newValue = localValues[field.id] ?? '';
-      const existingValue = existingValues.find((v) => v.fieldId === field.id)?.value ?? '';
-      if (newValue === existingValue) return null;
+    const changedValues = customFields
+      .map((field) => {
+        const newValue = localValues[field.id] ?? '';
+        const existingValue = existingValues.find((v) => v.fieldId === field.id)?.value ?? '';
+        if (newValue === existingValue) return null;
+        return { fieldId: field.id, value: newValue || null };
+      })
+      .filter(Boolean) as { fieldId: string; value: string | null }[];
 
-      return setValues.mutateAsync({
-        cardId,
-        data: { value: newValue || null },
-      });
-    }).filter(Boolean);
-
-    if (promises.length === 0) {
+    if (changedValues.length === 0) {
       toast.info('Nenhuma alteração para salvar');
       return;
     }
 
-    // Just save all at once - the hook handles invalidation
-    for (const field of customFields) {
-      const newValue = localValues[field.id] ?? '';
-      const existingValue = existingValues.find((v) => v.fieldId === field.id)?.value ?? '';
-      if (newValue !== existingValue) {
-        setValues.mutate(
-          { cardId, data: { value: newValue || null } },
-          {
-            onSuccess: () => {
-              setIsDirty(false);
-              toast.success('Campos atualizados');
-            },
-            onError: () => toast.error('Erro ao salvar campos'),
-          },
-        );
-        break; // Only show one toast
-      }
-    }
+    setValues.mutate(
+      { cardId, values: changedValues },
+      {
+        onSuccess: () => {
+          setIsDirty(false);
+          toast.success('Campos atualizados');
+        },
+        onError: () => toast.error('Erro ao salvar campos'),
+      },
+    );
   }, [customFields, localValues, existingValues, cardId, setValues]);
 
   if (isLoadingFields) {

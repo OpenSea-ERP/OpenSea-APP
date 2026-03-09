@@ -567,6 +567,10 @@ export default function EmailPage() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // Don't trigger shortcuts when user is typing in an input/textarea
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
+
       if (e.key === 'Delete' && !composeOpen) {
         e.preventDefault();
         handleDeleteSelected();

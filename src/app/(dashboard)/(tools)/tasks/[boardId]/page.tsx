@@ -31,6 +31,7 @@ import {
   KanbanSquare,
 } from 'lucide-react';
 import type { Card as TaskCard } from '@/types/tasks';
+import { useAuth } from '@/contexts/auth-context';
 
 function BoardPageContent() {
   const params = useParams();
@@ -52,8 +53,16 @@ function BoardPageContent() {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  const { user } = useAuth();
   const board = boardData?.board;
   const allCards = cardsData?.cards ?? [];
+
+  const isViewer = useMemo(() => {
+    if (!board || !user) return false;
+    if (board.ownerId === user.id) return false;
+    const membership = board.members?.find((m) => m.userId === user.id);
+    return membership?.role === 'VIEWER';
+  }, [board, user]);
 
   // Filter + search cards
   const filteredCards = useMemo(() => {
@@ -94,6 +103,12 @@ function BoardPageContent() {
     if (!el) return;
     const top = el.getBoundingClientRect().top;
     setViewHeight(Math.max(200, window.innerHeight - top - 16));
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      document.documentElement.style.overflow = '';
+    };
   }, []);
 
   useEffect(() => {
@@ -287,6 +302,7 @@ function BoardPageContent() {
             board={board}
             cards={filteredCards}
             boardId={boardId}
+            readOnly={isViewer}
             onCardClick={handleCardClick}
           />
         )}

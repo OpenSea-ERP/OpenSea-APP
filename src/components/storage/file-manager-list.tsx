@@ -14,11 +14,10 @@ import { formatFileSize } from './utils';
 import { EmptyFolderState } from './empty-folder-state';
 import { FolderContextMenu } from './folder-context-menu';
 import { FileContextMenu } from './file-context-menu';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { DragMoveItem } from './file-manager-grid';
-
-const DRAG_MIME = 'application/x-storage-item';
+import { useStorageDragDrop } from './use-storage-drag-drop';
 
 const ROW_HEIGHT = 48;
 const OVERSCAN = 10;
@@ -124,8 +123,14 @@ export function FileManagerList({
   className,
 }: FileManagerListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const [draggedItemIds, setDraggedItemIds] = useState<Set<string>>(new Set());
-  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+
+  // Drag-and-drop
+  const {
+    draggedItemIds, dragOverFolderId,
+    handleItemDragStart, handleItemDragEnd,
+    handleFolderDragEnter, handleFolderDragOver,
+    handleFolderDragLeave, handleFolderDrop,
+  } = useStorageDragDrop({ selectedItems, folders, onDragMoveToFolder });
 
   // Merge folders and files into a single flat list
   const allItems = useMemo<ListItem[]>(() => {
@@ -146,107 +151,6 @@ export function FileManagerList({
     overscan: OVERSCAN,
   });
 
-  const handleItemDragStart = useCallback(
-    (
-      id: string,
-      type: 'folder' | 'file',
-      isSystem: boolean,
-      e: React.DragEvent
-    ) => {
-      if (isSystem) {
-        e.preventDefault();
-        return;
-      }
-
-      let items: DragMoveItem[];
-      const isInSelection = selectedItems?.some(
-        si => si.id === id && si.type === type
-      );
-      if (isInSelection && selectedItems && selectedItems.length > 1) {
-        items = selectedItems.filter(si => {
-          if (si.type === 'folder') {
-            const f = folders.find(fo => fo.id === si.id);
-            if (f?.isSystem) return false;
-          }
-          return true;
-        });
-      } else {
-        items = [{ id, type }];
-      }
-
-      e.dataTransfer.setData(DRAG_MIME, JSON.stringify(items));
-      e.dataTransfer.effectAllowed = 'move';
-      setDraggedItemIds(new Set(items.map(i => i.id)));
-    },
-    [selectedItems, folders]
-  );
-
-  const handleItemDragEnd = useCallback(() => {
-    setDraggedItemIds(new Set());
-    setDragOverFolderId(null);
-  }, []);
-
-  const handleFolderDragEnter = useCallback(
-    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
-      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
-      if (draggedItemIds.has(folderId) || isSystem) return;
-
-      e.preventDefault();
-      setDragOverFolderId(folderId);
-    },
-    [draggedItemIds]
-  );
-
-  const handleFolderDragOver = useCallback(
-    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
-      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
-      if (draggedItemIds.has(folderId) || isSystem) return;
-
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      setDragOverFolderId(folderId);
-    },
-    [draggedItemIds]
-  );
-
-  const handleFolderDragLeave = useCallback(
-    (folderId: string, e: React.DragEvent) => {
-      const relatedTarget = e.relatedTarget as HTMLElement | null;
-      const currentTarget = e.currentTarget as HTMLElement;
-      if (relatedTarget && currentTarget.contains(relatedTarget)) return;
-
-      if (dragOverFolderId === folderId) {
-        setDragOverFolderId(null);
-      }
-    },
-    [dragOverFolderId]
-  );
-
-  const handleFolderDrop = useCallback(
-    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragOverFolderId(null);
-
-      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
-      if (draggedItemIds.has(folderId) || isSystem) return;
-
-      try {
-        const items: DragMoveItem[] = JSON.parse(
-          e.dataTransfer.getData(DRAG_MIME)
-        );
-        if (items.length > 0 && onDragMoveToFolder) {
-          onDragMoveToFolder(folderId, items);
-        }
-      } catch {
-        // Invalid data
-      }
-
-      setDraggedItemIds(new Set());
-    },
-    [draggedItemIds, onDragMoveToFolder]
-  );
-
   const isEmpty = folders.length === 0 && files.length === 0;
 
   if (isEmpty) {
@@ -260,8 +164,12 @@ export function FileManagerList({
         <div className="flex items-center h-10 text-sm font-medium text-foreground">
           <div className="w-10 px-2" />
           <div
+            role="columnheader"
+            tabIndex={0}
+            aria-sort={sortBy === 'name' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
             className="flex-1 min-w-0 px-2 cursor-pointer select-none"
             onClick={() => onSortChange('name')}
+            onKeyDown={e => e.key === 'Enter' && onSortChange('name')}
           >
             Nome
             <SortIndicator
@@ -270,10 +178,14 @@ export function FileManagerList({
               sortOrder={sortOrder}
             />
           </div>
-          <div className="w-32 px-2">Tipo</div>
+          <div role="columnheader" className="w-32 px-2">Tipo</div>
           <div
+            role="columnheader"
+            tabIndex={0}
+            aria-sort={sortBy === 'size' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
             className="w-28 px-2 cursor-pointer select-none"
             onClick={() => onSortChange('size')}
+            onKeyDown={e => e.key === 'Enter' && onSortChange('size')}
           >
             Tamanho
             <SortIndicator
@@ -283,8 +195,12 @@ export function FileManagerList({
             />
           </div>
           <div
+            role="columnheader"
+            tabIndex={0}
+            aria-sort={sortBy === 'updatedAt' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
             className="w-40 px-2 cursor-pointer select-none"
             onClick={() => onSortChange('updatedAt')}
+            onKeyDown={e => e.key === 'Enter' && onSortChange('updatedAt')}
           >
             Modificado
             <SortIndicator
@@ -394,7 +310,7 @@ export function FileManagerList({
                           : '--'}
                       </div>
                       <div className="w-40 px-2 text-gray-500 dark:text-gray-400">
-                        {formatDate(folder.createdAt)}
+                        {formatDate(folder.updatedAt ?? folder.createdAt)}
                       </div>
                     </div>
                   </FolderContextMenu>
@@ -474,7 +390,7 @@ export function FileManagerList({
                       {formatFileSize(file.size)}
                     </div>
                     <div className="w-40 px-2 text-gray-500 dark:text-gray-400">
-                      {formatDate(file.createdAt)}
+                      {formatDate(file.updatedAt ?? file.createdAt)}
                     </div>
                   </div>
                 </FileContextMenu>

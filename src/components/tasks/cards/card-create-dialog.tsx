@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,9 +61,11 @@ export function CardCreateDialog({
   const [estimatedHours, setEstimatedHours] = useState('');
 
   // Update columnId when board loads if no default was set
-  if (!columnId && firstColumnId) {
-    setColumnId(firstColumnId);
-  }
+  useEffect(() => {
+    if (!columnId && firstColumnId) {
+      setColumnId(firstColumnId);
+    }
+  }, [firstColumnId]);
 
   function resetForm() {
     setTitle('');
@@ -79,7 +81,7 @@ export function CardCreateDialog({
     e.preventDefault();
 
     if (!title.trim()) {
-      toast.error('O título do card é obrigatório.');
+      toast.error('O título do cartão é obrigatório.');
       return;
     }
 
@@ -113,7 +115,7 @@ export function CardCreateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Novo Card</DialogTitle>
+          <DialogTitle>Novo Cartão</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -258,7 +260,7 @@ export function CardCreateDialog({
               {createCard.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
-              Criar Card
+              Criar Cartão
             </Button>
           </DialogFooter>
         </form>

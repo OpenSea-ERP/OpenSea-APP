@@ -10,6 +10,7 @@ export interface EmailAccount {
   smtpHost: string;
   smtpPort: number;
   smtpSecure: boolean;
+  tlsVerify: boolean;
   username: string;
   visibility: EmailAccountVisibility;
   isActive: boolean;
@@ -33,6 +34,7 @@ export interface CreateEmailAccountRequest {
   smtpHost: string;
   smtpPort: number;
   smtpSecure?: boolean;
+  tlsVerify?: boolean;
   username: string;
   secret: string;
   isDefault?: boolean;
@@ -49,6 +51,7 @@ export interface UpdateEmailAccountRequest {
   smtpHost?: string;
   smtpPort?: number;
   smtpSecure?: boolean;
+  tlsVerify?: boolean;
   username?: string;
   secret?: string;
   isDefault?: boolean;

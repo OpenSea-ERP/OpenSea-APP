@@ -15,9 +15,10 @@ interface CardItemProps {
   isDragOverlay?: boolean;
 }
 
-function isOverdue(dateStr: string | null): boolean {
-  if (!dateStr) return false;
-  return new Date(dateStr) < new Date();
+function isCardOverdue(dueDate: string | null | undefined, status: string): boolean {
+  if (!dueDate) return false;
+  if (status === 'DONE' || status === 'CANCELED') return false;
+  return new Date(dueDate) < new Date();
 }
 
 function formatDueDate(dateStr: string): string {
@@ -80,7 +81,7 @@ export function CardItem({
   };
 
   const topColor = getCardTopColor(card);
-  const overdue = isOverdue(card.dueDate);
+  const overdue = isCardOverdue(card.dueDate, card.status);
   const counts = card._count;
   const hasSubtasks = counts && counts.subtasks > 0;
   const hasComments = counts && counts.comments > 0;

@@ -182,6 +182,7 @@ export function useDeleteFolder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
       queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
     },
   });
 }

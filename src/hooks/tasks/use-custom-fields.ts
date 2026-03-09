@@ -57,8 +57,8 @@ export function useDeleteCustomField(boardId: string) {
 export function useSetCustomFieldValues(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ cardId, data }: { cardId: string; data: SetCustomFieldValueRequest }) =>
-      customFieldsService.setValues(boardId, cardId, data),
+    mutationFn: ({ cardId, values }: { cardId: string; values: SetCustomFieldValueRequest['values'] }) =>
+      customFieldsService.setValues(boardId, cardId, { values }),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId) });

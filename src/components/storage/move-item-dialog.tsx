@@ -16,6 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { StorageFolder } from '@/types/storage';
 import { useFolderContents } from '@/hooks/storage';
 import { useMoveFolder, useMoveFile } from '@/hooks/storage';
+import { storageFilesService } from '@/services/storage';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -23,9 +25,11 @@ interface MoveItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   itemId: string;
-  itemType: 'folder' | 'file';
+  itemType: 'folder' | 'file' | 'bulk';
   itemName: string;
   currentFolderId: string | null;
+  bulkFileIds?: string[];
+  bulkFolderIds?: string[];
 }
 
 export function MoveItemDialog({
@@ -35,16 +39,20 @@ export function MoveItemDialog({
   itemType,
   itemName,
   currentFolderId,
+  bulkFileIds,
+  bulkFolderIds,
 }: MoveItemDialogProps) {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [browseFolderId, setBrowseFolderId] = useState<string | null>(null);
   const [folderPath, setFolderPath] = useState<
     Array<{ id: string | null; name: string }>
   >([{ id: null, name: 'Início' }]);
+  const [isBulkMoving, setIsBulkMoving] = useState(false);
 
   const { data: contents, isLoading } = useFolderContents(browseFolderId);
   const moveFolderMutation = useMoveFolder();
   const moveFileMutation = useMoveFile();
+  const queryClient = useQueryClient();
 
   const handleNavigate = useCallback((folder: StorageFolder) => {
     setBrowseFolderId(folder.id);
@@ -83,7 +91,17 @@ export function MoveItemDialog({
     }
 
     try {
-      if (itemType === 'folder') {
+      if (itemType === 'bulk') {
+        setIsBulkMoving(true);
+        await storageFilesService.bulkMove({
+          fileIds: bulkFileIds,
+          folderIds: bulkFolderIds,
+          targetFolderId: targetId,
+        });
+        queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+        queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+        setIsBulkMoving(false);
+      } else if (itemType === 'folder') {
         await moveFolderMutation.mutateAsync({
           id: itemId,
           data: { parentId: targetId },
@@ -95,10 +113,11 @@ export function MoveItemDialog({
         });
       }
 
-      toast.success('Item movido com sucesso');
+      toast.success(itemType === 'bulk' ? 'Itens movidos com sucesso' : 'Item movido com sucesso');
       handleClose();
     } catch {
-      toast.error('Erro ao mover o item');
+      setIsBulkMoving(false);
+      toast.error(itemType === 'bulk' ? 'Erro ao mover os itens' : 'Erro ao mover o item');
     }
   };
 
@@ -110,12 +129,13 @@ export function MoveItemDialog({
   };
 
   const isMovePending =
-    moveFolderMutation.isPending || moveFileMutation.isPending;
+    moveFolderMutation.isPending || moveFileMutation.isPending || isBulkMoving;
 
   // Filtrar a pasta do item ao mover uma pasta (não pode mover para si mesma)
   const availableFolders =
     contents?.folders.filter(f => {
       if (itemType === 'folder' && f.id === itemId) return false;
+      if (itemType === 'bulk' && bulkFolderIds?.includes(f.id)) return false;
       return true;
     }) ?? [];
 

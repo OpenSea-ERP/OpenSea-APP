@@ -36,14 +36,16 @@ export function useFileManager(options?: FileManagerOptions) {
   const [folderHistory, setFolderHistory] = useState<(string | null)[]>([]);
   const [showHidden, setShowHidden] = useState(false);
 
-  // Parâmetros de consulta para o conteúdo da pasta (sorting is done client-side)
+  // Parâmetros de consulta para o conteúdo da pasta (inclui sorting server-side)
   const contentsQuery = useMemo(
     () => ({
       search: debouncedSearch || undefined,
+      sort: sortBy,
+      sortOrder,
       viewAll: options?.viewAll || undefined,
       showHidden: showHidden || undefined,
     }),
-    [debouncedSearch, options?.viewAll, showHidden]
+    [debouncedSearch, sortBy, sortOrder, options?.viewAll, showHidden]
   );
 
   // Busca conteúdo da pasta atual
@@ -162,9 +164,8 @@ export function useFileManager(options?: FileManagerOptions) {
   const navigateToBreadcrumb = useCallback(
     (folderId: string | null) => {
       if (folderId === currentFolderId) return;
-      // Ao navegar para um item do breadcrumb, limpa o histórico
+      setFolderHistory(prev => [...prev, currentFolderId]);
       setCurrentFolderId(folderId);
-      setFolderHistory([]);
       setSelectedItems([]);
       setSearchQuery('');
     },

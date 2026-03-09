@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { useCallback, useState } from 'react';
 import type { DragMoveItem } from './file-manager-grid';
 
-const DRAG_MIME = 'application/x-storage-item';
+import { DRAG_MIME } from './constants';
 
 interface FileManagerBreadcrumbProps {
   breadcrumb: FolderBreadcrumb[];
@@ -24,7 +24,7 @@ interface FileManagerBreadcrumbProps {
     targetFolderId: string | null,
     items: DragMoveItem[]
   ) => void;
-  /** The root folder ID (for dropping on "Inicio"). When absent, null is sent as targetFolderId (move to root). */
+  /** The root folder ID (for dropping on "Início"). When absent, null is sent as targetFolderId (move to root). */
   rootFolderId?: string | null;
   className?: string;
 }
@@ -82,7 +82,7 @@ export function FileManagerBreadcrumb({
 
       if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
 
-      // folderId is null when dropping on "Inicio" breadcrumb
+      // folderId is null when dropping on "Início" breadcrumb
       // rootFolderId overrides null when set (entity-scoped file managers)
       // When both are null/undefined, send null to API (move to root)
       const targetId = folderId ?? rootFolderId ?? null;
@@ -125,13 +125,13 @@ export function FileManagerBreadcrumb({
                 onClick={() => onNavigate(null)}
               >
                 <Home className="w-3.5 h-3.5" />
-                <span>Inicio</span>
+                <span>Início</span>
               </BreadcrumbLink>
             </div>
           ) : (
             <BreadcrumbPage className="flex items-center gap-1.5">
               <Home className="w-3.5 h-3.5" />
-              <span>Inicio</span>
+              <span>Início</span>
             </BreadcrumbPage>
           )}
         </BreadcrumbItem>

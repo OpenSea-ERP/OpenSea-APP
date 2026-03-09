@@ -472,6 +472,9 @@ function KanbanColumn({
           <h3
             className="text-sm font-semibold truncate flex-1 cursor-text hover:bg-black/5 dark:hover:bg-white/5 rounded px-1.5 py-0.5 -mx-1 transition-colors"
             onClick={startEditing}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startEditing(); } }}
+            tabIndex={0}
+            role="button"
             title="Clique para renomear"
           >
             {column.title}

@@ -71,10 +71,11 @@ export default function TasksPage() {
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
 
-  // Always include archived so we can show the section conditionally
+  // Fetch all boards (limit: 100 is the API max) including archived
   const { data, isLoading } = useBoards({
     search: search || undefined,
     includeArchived: true,
+    limit: 100,
   });
 
   const boards = data?.boards ?? [];
@@ -185,11 +186,14 @@ export default function TasksPage() {
           )}
 
           {/* Team board groups */}
-          {teamBoardGroups.map((group) => (
+          {teamBoardGroups.map((group, index) => (
             <BoardSection
               key={group.teamId}
               icon={Users}
-              title="Quadros de Equipe"
+              title={teamBoardGroups.length > 1
+                ? `Quadros de Equipe ${index + 1}`
+                : 'Quadros de Equipe'
+              }
               boards={group.boards}
             />
           ))}

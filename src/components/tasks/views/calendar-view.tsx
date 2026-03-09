@@ -18,6 +18,7 @@ interface CalendarViewProps {
   board: Board;
   cards: Card[];
   boardId: string;
+  readOnly?: boolean;
   onCardClick?: (card: Card) => void;
 }
 
@@ -29,7 +30,7 @@ const PRIORITY_HEX: Record<CardPriority, string> = {
   NONE: '#9ca3af',
 };
 
-export function CalendarView({ board, cards, boardId, onCardClick }: CalendarViewProps) {
+export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: CalendarViewProps) {
   const updateCard = useUpdateCard(boardId);
   const gradient = getGradientForBoard(boardId);
 
@@ -170,9 +171,9 @@ export function CalendarView({ board, cards, boardId, onCardClick }: CalendarVie
           noEventsText="Nenhum cartão com prazo neste período"
           events={events}
           eventContent={renderEventContent}
-          editable
+          editable={!readOnly}
           eventClick={handleEventClick}
-          eventDrop={handleEventDrop}
+          eventDrop={readOnly ? undefined : handleEventDrop}
           height="auto"
           dayMaxEvents={3}
           eventDisplay="block"

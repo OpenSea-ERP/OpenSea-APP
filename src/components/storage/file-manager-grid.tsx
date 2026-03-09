@@ -9,8 +9,7 @@ import { FileCard } from './file-card';
 import type { FilePermissions } from './file-context-menu';
 import { FolderCard } from './folder-card';
 import type { FolderPermissions } from './folder-context-menu';
-
-const DRAG_MIME = 'application/x-storage-item';
+import { useStorageDragDrop } from './use-storage-drag-drop';
 
 /** Estimated card height including padding and gap (px) */
 const CARD_HEIGHT = 148;
@@ -139,9 +138,13 @@ export function FileManagerGrid({
   const [dragRect, setDragRect] = useState<DragRect | null>(null);
   const isDraggingRef = useRef(false);
 
-  // Drag-and-drop state
-  const [draggedItemIds, setDraggedItemIds] = useState<Set<string>>(new Set());
-  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  // Drag-and-drop
+  const {
+    draggedItemIds, dragOverFolderId,
+    handleItemDragStart, handleItemDragEnd,
+    handleFolderDragEnter, handleFolderDragOver,
+    handleFolderDragLeave, handleFolderDrop,
+  } = useStorageDragDrop({ selectedItems, folders, onDragMoveToFolder });
 
   // Dynamic column count based on container width.
   // Uses a ref to avoid unnecessary re-renders when the column count hasn't changed
@@ -203,114 +206,6 @@ export function FileManagerGrid({
     estimateSize: () => CARD_HEIGHT + ROW_GAP,
     overscan: 3,
   });
-
-  // --- Native drag-and-drop handlers ---
-
-  const handleItemDragStart = useCallback(
-    (
-      id: string,
-      type: 'folder' | 'file',
-      isSystem: boolean,
-      e: React.DragEvent
-    ) => {
-      if (isSystem) {
-        e.preventDefault();
-        return;
-      }
-
-      // Determine items to drag: if item is in selection, drag all selected; otherwise just this item
-      let items: DragMoveItem[];
-      const isInSelection = selectedItems?.some(
-        si => si.id === id && si.type === type
-      );
-      if (isInSelection && selectedItems && selectedItems.length > 1) {
-        items = selectedItems.filter(si => {
-          // Exclude system folders from the drag set
-          if (si.type === 'folder') {
-            const f = folders.find(fo => fo.id === si.id);
-            if (f?.isSystem) return false;
-          }
-          return true;
-        });
-      } else {
-        items = [{ id, type }];
-      }
-
-      e.dataTransfer.setData(DRAG_MIME, JSON.stringify(items));
-      e.dataTransfer.effectAllowed = 'move';
-
-      setDraggedItemIds(new Set(items.map(i => i.id)));
-    },
-    [selectedItems, folders]
-  );
-
-  const handleItemDragEnd = useCallback(() => {
-    setDraggedItemIds(new Set());
-    setDragOverFolderId(null);
-  }, []);
-
-  const handleFolderDragEnter = useCallback(
-    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
-      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
-      if (draggedItemIds.has(folderId) || isSystem) return;
-
-      e.preventDefault();
-      setDragOverFolderId(folderId);
-    },
-    [draggedItemIds]
-  );
-
-  const handleFolderDragOver = useCallback(
-    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
-      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
-      // Don't allow drop on self or on system folders
-      if (draggedItemIds.has(folderId) || isSystem) return;
-
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      setDragOverFolderId(folderId);
-    },
-    [draggedItemIds]
-  );
-
-  const handleFolderDragLeave = useCallback(
-    (folderId: string, e: React.DragEvent) => {
-      // Only clear if actually leaving this folder card (not entering a child)
-      const relatedTarget = e.relatedTarget as HTMLElement | null;
-      const currentTarget = e.currentTarget as HTMLElement;
-      if (relatedTarget && currentTarget.contains(relatedTarget)) return;
-
-      if (dragOverFolderId === folderId) {
-        setDragOverFolderId(null);
-      }
-    },
-    [dragOverFolderId]
-  );
-
-  const handleFolderDrop = useCallback(
-    (folderId: string, isSystem: boolean, e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragOverFolderId(null);
-
-      if (!e.dataTransfer.types.includes(DRAG_MIME)) return;
-      if (draggedItemIds.has(folderId) || isSystem) return;
-
-      try {
-        const items: DragMoveItem[] = JSON.parse(
-          e.dataTransfer.getData(DRAG_MIME)
-        );
-        if (items.length > 0 && onDragMoveToFolder) {
-          onDragMoveToFolder(folderId, items);
-        }
-      } catch {
-        // Invalid data — ignore
-      }
-
-      setDraggedItemIds(new Set());
-    },
-    [draggedItemIds, onDragMoveToFolder]
-  );
 
   // --- Rubber-band selection ---
 

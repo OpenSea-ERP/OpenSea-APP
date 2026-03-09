@@ -128,14 +128,12 @@ export function ColumnOptionsMenu({
 
     const targetCol = otherColumns.find((c) => c.id === targetColumnId);
     try {
-      await Promise.all(
-        cards.map((card, index) =>
-          moveCard.mutateAsync({
-            cardId: card.id,
-            data: { columnId: targetColumnId, position: index },
-          }),
-        ),
-      );
+      for (let i = 0; i < cards.length; i++) {
+        await moveCard.mutateAsync({
+          cardId: cards[i].id,
+          data: { columnId: targetColumnId, position: i },
+        });
+      }
       toast.success(`${cards.length} cartão(s) movido(s) para "${targetCol?.title}".`);
     } catch {
       toast.error('Erro ao mover cartões.');
@@ -304,8 +302,17 @@ export function ColumnOptionsMenu({
                       variant="ghost"
                       className="h-7"
                       onClick={() => {
-                        setWipValue('');
-                        handleSaveWip();
+                        updateColumn.mutate(
+                          { columnId: column.id, data: { wipLimit: null } },
+                          {
+                            onSuccess: () => {
+                              setWipValue('');
+                              toast.success('Limite WIP removido.');
+                              setShowWipPopover(false);
+                            },
+                            onError: () => toast.error('Erro ao remover limite.'),
+                          },
+                        );
                       }}
                     >
                       Limpar

@@ -189,11 +189,11 @@ export interface MultipartCompleteRequest {
   fileName: string;
   mimeType: string;
   fileSize: number;
+  folderId?: string | null;
+  entityType?: string;
+  entityId?: string;
 }
 
 export interface MultipartCompleteResponse {
-  key: string;
-  url: string;
-  size: number;
-  mimeType: string;
+  file: StorageFile;
 }
