@@ -6,7 +6,12 @@ import type {
   UpdateCardRequest,
   MoveCardRequest,
 } from '@/types/tasks';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { BOARD_QUERY_KEYS } from './use-boards';
 
 export const CARD_QUERY_KEYS = {
@@ -45,11 +50,18 @@ export function useCreateCard(boardId: string) {
 export function useUpdateCard(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ cardId, data }: { cardId: string; data: UpdateCardRequest }) =>
-      cardsService.update(boardId, cardId, data),
+    mutationFn: ({
+      cardId,
+      data,
+    }: {
+      cardId: string;
+      data: UpdateCardRequest;
+    }) => cardsService.update(boardId, cardId, data),
     onMutate: async ({ cardId, data }) => {
       await qc.cancelQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.cancelQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.cancelQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
 
       const previousCardsQueries = qc.getQueriesData<CardsResponse>({
         queryKey: CARD_QUERY_KEYS.CARDS(boardId),
@@ -57,15 +69,15 @@ export function useUpdateCard(boardId: string) {
 
       qc.setQueriesData<CardsResponse>(
         { queryKey: CARD_QUERY_KEYS.CARDS(boardId) },
-        (old) => {
+        old => {
           if (!old) return old;
           return {
             ...old,
-            cards: old.cards.map((c) =>
-              c.id === cardId ? { ...c, ...data } : c,
+            cards: old.cards.map(c =>
+              c.id === cardId ? { ...c, ...data } : c
             ),
           };
-        },
+        }
       );
 
       return { previousCardsQueries };
@@ -79,7 +91,9 @@ export function useUpdateCard(boardId: string) {
     },
     onSettled: (_, __, variables) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId) });
+      qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
+      });
     },
   });
 }
@@ -88,7 +102,7 @@ export function useDeleteCard(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (cardId: string) => cardsService.delete(boardId, cardId),
-    onMutate: async (cardId) => {
+    onMutate: async cardId => {
       await qc.cancelQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
       const previousQueries = qc.getQueriesData<CardsResponse>({
         queryKey: CARD_QUERY_KEYS.CARDS(boardId),
@@ -96,13 +110,13 @@ export function useDeleteCard(boardId: string) {
 
       qc.setQueriesData<CardsResponse>(
         { queryKey: CARD_QUERY_KEYS.CARDS(boardId) },
-        (old) => {
+        old => {
           if (!old) return old;
           return {
             ...old,
-            cards: old.cards.filter((c) => c.id !== cardId),
+            cards: old.cards.filter(c => c.id !== cardId),
           };
-        },
+        }
       );
 
       return { previousQueries };
@@ -134,15 +148,17 @@ export function useMoveCard(boardId: string) {
 
       qc.setQueriesData<CardsResponse>(
         { queryKey: CARD_QUERY_KEYS.CARDS(boardId) },
-        (old) => {
+        old => {
           if (!old) return old;
           return {
             ...old,
-            cards: old.cards.map((c) =>
-              c.id === cardId ? { ...c, columnId: data.columnId, position: data.position } : c,
+            cards: old.cards.map(c =>
+              c.id === cardId
+                ? { ...c, columnId: data.columnId, position: data.position }
+                : c
             ),
           };
-        },
+        }
       );
 
       return { previousQueries };
@@ -160,14 +176,34 @@ export function useMoveCard(boardId: string) {
   });
 }
 
+/**
+ * Fire-and-forget move card mutation for Kanban view.
+ * No onMutate, no onSettled — the Kanban manages optimistic UI by writing
+ * directly to the TanStack Query cache and controls invalidation timing
+ * via a debounced refetch to avoid race conditions on rapid drags.
+ */
+export function useMoveCardLocal(boardId: string) {
+  return useMutation({
+    mutationFn: ({ cardId, data }: { cardId: string; data: MoveCardRequest }) =>
+      cardsService.move(boardId, cardId, data),
+  });
+}
+
 export function useAssignCard(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ cardId, assigneeId }: { cardId: string; assigneeId: string | null }) =>
-      cardsService.assign(boardId, cardId, { assigneeId }),
+    mutationFn: ({
+      cardId,
+      assigneeId,
+    }: {
+      cardId: string;
+      assigneeId: string | null;
+    }) => cardsService.assign(boardId, cardId, { assigneeId }),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId) });
+      qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
+      });
     },
   });
 }
@@ -179,7 +215,9 @@ export function useArchiveCard(boardId: string) {
       cardsService.archive(boardId, cardId, archive),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId) });
+      qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
+      });
     },
   });
 }
@@ -187,11 +225,18 @@ export function useArchiveCard(boardId: string) {
 export function useManageCardLabels(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ cardId, labelIds }: { cardId: string; labelIds: string[] }) =>
-      cardsService.manageLabels(boardId, cardId, { labelIds }),
+    mutationFn: ({
+      cardId,
+      labelIds,
+    }: {
+      cardId: string;
+      labelIds: string[];
+    }) => cardsService.manageLabels(boardId, cardId, { labelIds }),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId) });
+      qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
+      });
     },
   });
 }
