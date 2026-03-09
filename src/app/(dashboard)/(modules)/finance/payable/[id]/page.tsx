@@ -1,21 +1,119 @@
 /**
  * Payable Entry Detail Page
+ * Complete rewrite with payment history, attachments, baixa button, and rateio.
  */
 
 'use client';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { useFinanceEntry } from '@/hooks/finance';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { BaixaModal } from '@/components/finance/baixa-modal';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import {
+  useDeleteFinanceEntry,
+  useFinanceEntry,
+} from '@/hooks/finance';
+import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
+import { financeEntriesService } from '@/services/finance';
+import type { FinanceAttachmentType, FinanceEntryStatus } from '@/types/finance';
 import {
   FINANCE_ENTRY_STATUS_LABELS,
   PAYMENT_METHOD_LABELS,
   RECURRENCE_TYPE_LABELS,
+  RECURRENCE_UNIT_LABELS,
 } from '@/types/finance';
-import { ArrowLeft, DollarSign, Edit, FileText, Trash } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  CreditCard,
+  DollarSign,
+  Download,
+  FileText,
+  Info,
+  Layers,
+  Loader2,
+  Paperclip,
+  Trash2,
+  Upload,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { use } from 'react';
+import { useRouter } from 'next/navigation';
+import { use, useCallback, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+function formatCurrency(value: number | null | undefined): string {
+  if (value == null) return 'R$ 0,00';
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+}
+
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('pt-BR');
+}
+
+function getStatusBadgeVariant(
+  status: FinanceEntryStatus
+): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' {
+  switch (status) {
+    case 'PAID':
+      return 'success';
+    case 'RECEIVED':
+      return 'success';
+    case 'PENDING':
+      return 'secondary';
+    case 'OVERDUE':
+      return 'destructive';
+    case 'PARTIALLY_PAID':
+      return 'warning';
+    case 'CANCELLED':
+      return 'outline';
+    case 'SCHEDULED':
+      return 'default';
+    default:
+      return 'secondary';
+  }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+const ATTACHMENT_TYPE_LABELS: Record<string, string> = {
+  BOLETO: 'Boleto',
+  PAYMENT_RECEIPT: 'Comprovante',
+  CONTRACT: 'Contrato',
+  INVOICE: 'Nota Fiscal',
+  OTHER: 'Outro',
+};
+
+const PAYABLE_STATUSES: FinanceEntryStatus[] = [
+  'PENDING',
+  'OVERDUE',
+  'PARTIALLY_PAID',
+];
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 export default function PayableDetailPage({
   params,
@@ -23,8 +121,85 @@ export default function PayableDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { data, isLoading } = useFinanceEntry(id);
+  const router = useRouter();
+  const { data, isLoading, refetch } = useFinanceEntry(id);
+  const deleteMutation = useDeleteFinanceEntry();
   const entry = data?.entry;
+
+  // Category rates for baixa modal
+  const { data: categoriesData } = useFinanceCategories();
+  const categories = categoriesData?.categories ?? [];
+
+  // Baixa modal state
+  const [baixaOpen, setBaixaOpen] = useState(false);
+
+  // Delete state
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+
+  // Attachment upload
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const categoryRates = useMemo(() => {
+    if (!entry) return { interestRate: undefined, penaltyRate: undefined };
+    const cat = categories.find((c) => c.id === entry.categoryId);
+    return {
+      interestRate: cat?.interestRate ?? undefined,
+      penaltyRate: cat?.penaltyRate ?? undefined,
+    };
+  }, [entry, categories]);
+
+  const handleDeleteConfirmed = useCallback(async () => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Conta a pagar excluida com sucesso.');
+      router.push('/finance/payable');
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Erro ao excluir conta a pagar.';
+      toast.error(message);
+    }
+  }, [id, deleteMutation, router]);
+
+  const handleUploadAttachment = useCallback(
+    async (file: File) => {
+      setUploading(true);
+      try {
+        await financeEntriesService.uploadAttachment(
+          id,
+          file,
+          'OTHER' as FinanceAttachmentType
+        );
+        toast.success('Anexo enviado com sucesso!');
+        refetch();
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Erro ao enviar anexo.';
+        toast.error(message);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [id, refetch]
+  );
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleUploadAttachment(file);
+      }
+      // Reset input so same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [handleUploadAttachment]
+  );
+
+  // --------------------------------------------------------------------------
+  // Loading / Not Found
+  // --------------------------------------------------------------------------
 
   if (isLoading) {
     return (
@@ -40,54 +215,14 @@ export default function PayableDetailPage({
   if (!entry) {
     return (
       <div className="flex items-center justify-center h-96">
-        <p className="text-destructive">Lançamento não encontrado.</p>
+        <p className="text-destructive">Lancamento nao encontrado.</p>
       </div>
     );
   }
 
-  const handleDelete = () => {
-    if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-      alert('Funcionalidade de exclusão será implementada');
-    }
-  };
-
-  const handleRegisterPayment = () => {
-    alert('Funcionalidade de registro de pagamento será implementada');
-  };
-
-  const formatCurrency = (value: number | null | undefined) => {
-    if (!value) return 'R$ 0,00';
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
-  const formatDate = (dateStr: string | null | undefined) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('pt-BR');
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return 'success';
-      case 'PENDING':
-        return 'secondary';
-      case 'OVERDUE':
-        return 'destructive';
-      case 'PARTIALLY_PAID':
-        return 'outline';
-      default:
-        return 'secondary';
-    }
-  };
-
-  const totalAmount =
-    (entry.expectedAmount || 0) -
-    (entry.discount || 0) +
-    (entry.interest || 0) +
-    (entry.penalty || 0);
+  const canPay = PAYABLE_STATUSES.includes(entry.status);
+  const hasAllocations =
+    entry.costCenterAllocations && entry.costCenterAllocations.length > 0;
 
   return (
     <div className="space-y-6">
@@ -97,32 +232,40 @@ export default function PayableDetailPage({
           <Link href="/finance/payable">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-5 w-5 mr-2" />
-              Voltar para contas a pagar
+              Voltar
             </Button>
           </Link>
         </div>
 
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDelete}
-            className="gap-2"
-          >
-            <Trash className="h-4 w-4 text-red-800" />
-            Excluir
-          </Button>
-
+          {canPay && (
+            <Button
+              size="sm"
+              className="gap-2"
+              onClick={() => setBaixaOpen(true)}
+            >
+              <DollarSign className="h-4 w-4" />
+              Registrar Pagamento
+            </Button>
+          )}
           <Link href={`/finance/payable/${id}/edit`}>
             <Button variant="outline" size="sm" className="gap-2">
-              <Edit className="h-4 w-4 text-sky-500" />
               Editar
             </Button>
           </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPinModalOpen(true)}
+            className="gap-2"
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+            Excluir
+          </Button>
         </div>
       </div>
 
-      {/* Entry Info Card */}
+      {/* Entry Header Card */}
       <Card className="p-4 sm:p-6">
         <div className="flex gap-4 sm:flex-row items-center sm:gap-6">
           <div className="flex items-center justify-center h-10 w-10 md:h-16 md:w-16 rounded-lg bg-linear-to-br from-red-500 to-orange-600 shrink-0">
@@ -130,194 +273,492 @@ export default function PayableDetailPage({
           </div>
           <div className="flex justify-between flex-1 gap-4 flex-row items-center">
             <div>
-              <h1 className="text-lg sm:text-3xl font-bold tracking-tight">
-                {entry.description}
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Fornecedor: {entry.supplierName || 'Não informado'}
-              </p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-3xl font-bold tracking-tight">
+                  {entry.description}
+                </h1>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="font-mono text-sm text-muted-foreground">
+                  {entry.code}
+                </span>
+                {entry.supplierName && (
+                  <>
+                    <span className="text-muted-foreground">|</span>
+                    <span className="text-sm text-muted-foreground">
+                      {entry.supplierName}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-            <div>
-              <Badge variant={getStatusVariant(entry.status)}>
+            <div className="flex items-center gap-2">
+              <Badge variant={getStatusBadgeVariant(entry.status)}>
                 {FINANCE_ENTRY_STATUS_LABELS[entry.status]}
               </Badge>
+              {entry.currentInstallment != null &&
+                entry.totalInstallments != null &&
+                entry.totalInstallments > 1 && (
+                  <Badge variant="outline">
+                    Parcela {entry.currentInstallment}/{entry.totalInstallments}
+                  </Badge>
+                )}
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Financial Details */}
-      <Card className="p-4 sm:p-6">
-        <h2 className="text-lg font-semibold mb-4">Valores</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Valor Esperado</p>
-            <p className="text-xl font-bold">
-              {formatCurrency(entry.expectedAmount)}
-            </p>
-          </div>
-          {entry.discount && entry.discount > 0 && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Desconto</p>
-              <p className="text-xl font-bold text-green-600">
-                -{formatCurrency(entry.discount)}
-              </p>
-            </div>
-          )}
-          {entry.interest && entry.interest > 0 && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Juros</p>
-              <p className="text-xl font-bold text-red-600">
-                +{formatCurrency(entry.interest)}
-              </p>
-            </div>
-          )}
-          {entry.penalty && entry.penalty > 0 && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Multa</p>
-              <p className="text-xl font-bold text-red-600">
-                +{formatCurrency(entry.penalty)}
-              </p>
-            </div>
-          )}
-          <div className="md:col-span-2">
-            <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
-            <p className="text-3xl font-bold text-red-600">
-              {formatCurrency(totalAmount)}
-            </p>
-          </div>
-          {entry.totalDue - entry.remainingBalance > 0 && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Valor Pago</p>
-              <p className="text-xl font-bold text-green-600">
-                {formatCurrency(entry.totalDue - entry.remainingBalance)}
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
+      {/* Info Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Card 1: Dados Gerais */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              Dados Gerais
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow label="Tipo" value={entry.type === 'PAYABLE' ? 'A Pagar' : 'A Receber'} />
+            {entry.supplierName && (
+              <InfoRow label="Fornecedor" value={entry.supplierName} />
+            )}
+            {entry.categoryName && (
+              <InfoRow label="Categoria" value={entry.categoryName} />
+            )}
+            {entry.costCenterName && !hasAllocations && (
+              <InfoRow label="Centro de Custo" value={entry.costCenterName} />
+            )}
+            {hasAllocations && (
+              <InfoRow label="Centro de Custo" value="Rateio (ver abaixo)" />
+            )}
+            {entry.bankAccountName && (
+              <InfoRow label="Conta Bancaria" value={entry.bankAccountName} />
+            )}
+            {entry.recurrenceType && (
+              <InfoRow
+                label="Recorrencia"
+                value={RECURRENCE_TYPE_LABELS[entry.recurrenceType]}
+              />
+            )}
+            {entry.notes && <InfoRow label="Observacoes" value={entry.notes} />}
+          </CardContent>
+        </Card>
 
-      {/* Entry Information */}
-      <Card className="p-4 sm:p-6">
-        <h2 className="text-lg font-semibold mb-4">Informações</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">
-              Data de Emissão
-            </p>
-            <p className="font-medium">{formatDate(entry.issueDate)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">
-              Data de Vencimento
-            </p>
-            <p className="font-medium">{formatDate(entry.dueDate)}</p>
-          </div>
-          {entry.paymentDate && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Data de Pagamento
-              </p>
-              <p className="font-medium">{formatDate(entry.paymentDate)}</p>
+        {/* Card 2: Valores */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Valores
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow
+              label="Valor Esperado"
+              value={formatCurrency(entry.expectedAmount)}
+            />
+            {entry.discount > 0 && (
+              <InfoRow
+                label="Desconto"
+                value={`-${formatCurrency(entry.discount)}`}
+                className="text-green-600"
+              />
+            )}
+            {entry.interest > 0 && (
+              <InfoRow
+                label="Juros"
+                value={`+${formatCurrency(entry.interest)}`}
+                className="text-red-600"
+              />
+            )}
+            {entry.penalty > 0 && (
+              <InfoRow
+                label="Multa"
+                value={`+${formatCurrency(entry.penalty)}`}
+                className="text-red-600"
+              />
+            )}
+            <div className="pt-2 border-t">
+              <InfoRow
+                label="Total Devido"
+                value={formatCurrency(entry.totalDue)}
+                className="font-bold text-lg"
+              />
             </div>
-          )}
-          {entry.categoryName && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Categoria</p>
-              <p className="font-medium">{entry.categoryName}</p>
-            </div>
-          )}
-          {entry.costCenterName && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Centro de Custo
-              </p>
-              <p className="font-medium">{entry.costCenterName}</p>
-            </div>
-          )}
-          {entry.bankAccountName && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Conta Bancária
-              </p>
-              <p className="font-medium">{entry.bankAccountName}</p>
-            </div>
-          )}
-          {entry.recurrenceType && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Recorrência</p>
-              <p className="font-medium">
-                {RECURRENCE_TYPE_LABELS[entry.recurrenceType]}
-              </p>
-            </div>
-          )}
-        </div>
+            <InfoRow
+              label="Saldo Restante"
+              value={formatCurrency(entry.remainingBalance)}
+              className={entry.remainingBalance > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}
+            />
+            {entry.totalDue - entry.remainingBalance > 0 && (
+              <InfoRow
+                label="Total Pago"
+                value={formatCurrency(entry.totalDue - entry.remainingBalance)}
+                className="text-green-600"
+              />
+            )}
+          </CardContent>
+        </Card>
 
-        {entry.notes && (
-          <div className="mt-6">
-            <p className="text-sm text-muted-foreground mb-1">Observações</p>
-            <p className="font-medium">{entry.notes}</p>
-          </div>
+        {/* Card 3: Datas */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Datas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow label="Emissao" value={formatDate(entry.issueDate)} />
+            <InfoRow
+              label="Vencimento"
+              value={formatDate(entry.dueDate)}
+              className={
+                entry.isOverdue && entry.status !== 'PAID'
+                  ? 'text-destructive font-medium'
+                  : ''
+              }
+            />
+            {entry.competenceDate && (
+              <InfoRow
+                label="Competencia"
+                value={formatDate(entry.competenceDate)}
+              />
+            )}
+            {entry.paymentDate && (
+              <InfoRow label="Pagamento" value={formatDate(entry.paymentDate)} />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Card 4: Parcelamento (if installment) */}
+        {entry.recurrenceType === 'INSTALLMENT' && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Layers className="h-4 w-4" />
+                Parcelamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {entry.currentInstallment != null &&
+                entry.totalInstallments != null && (
+                  <InfoRow
+                    label="Parcela"
+                    value={`${entry.currentInstallment} de ${entry.totalInstallments}`}
+                  />
+                )}
+              {entry.recurrenceUnit && (
+                <InfoRow
+                  label="Frequencia"
+                  value={RECURRENCE_UNIT_LABELS[entry.recurrenceUnit]}
+                />
+              )}
+              {entry.parentEntryId && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Lancamento Pai
+                  </span>
+                  <Link
+                    href={`/finance/payable/${entry.parentEntryId}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Ver lancamento original
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
+      </div>
 
-        {entry.tags && entry.tags.length > 0 && (
-          <div className="mt-6">
-            <p className="text-sm text-muted-foreground mb-2">Tags</p>
-            <div className="flex flex-wrap gap-2">
-              {entry.tags.map((tag, index) => (
-                <Badge key={index} variant="outline">
-                  {tag}
-                </Badge>
+      {/* Cost Center Allocations (Rateio) */}
+      {hasAllocations && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Rateio de Centro de Custo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Centro de Custo</TableHead>
+                  <TableHead className="text-right">Percentual</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entry.costCenterAllocations!.map((alloc, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      {alloc.costCenterName || alloc.costCenterId}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {alloc.percentage.toFixed(1)}%
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatCurrency(alloc.amount)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Payment History */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Historico de Pagamentos
+            {entry.payments && entry.payments.length > 0 && (
+              <Badge variant="secondary">{entry.payments.length}</Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {entry.payments && entry.payments.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead>Metodo</TableHead>
+                  <TableHead>Conta</TableHead>
+                  <TableHead>Referencia</TableHead>
+                  <TableHead>Observacoes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entry.payments.map((payment) => (
+                  <TableRow key={payment.id}>
+                    <TableCell className="text-sm">
+                      {formatDate(payment.paidAt)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {formatCurrency(payment.amount)}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {payment.method
+                        ? (PAYMENT_METHOD_LABELS[
+                            payment.method as keyof typeof PAYMENT_METHOD_LABELS
+                          ] ?? payment.method)
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {payment.bankAccountName || '-'}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {payment.reference || '-'}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {payment.notes || '-'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              Nenhum pagamento registrado.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Attachments */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              Anexos
+              {entry.attachments && entry.attachments.length > 0 && (
+                <Badge variant="secondary">{entry.attachments.length}</Badge>
+              )}
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              Enviar Anexo
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {entry.attachments && entry.attachments.length > 0 ? (
+            <div className="space-y-2">
+              {entry.attachments.map((attachment) => (
+                <div
+                  key={attachment.id}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">
+                        {attachment.fileName}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Badge variant="outline" className="text-xs">
+                          {ATTACHMENT_TYPE_LABELS[attachment.type] ||
+                            attachment.type}
+                        </Badge>
+                        <span>{formatFileSize(attachment.fileSize)}</span>
+                        <span>{formatDate(attachment.createdAt)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {attachment.fileUrl && (
+                    <a
+                      href={attachment.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                    >
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </a>
+                  )}
+                </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              Nenhum anexo enviado.
+            </p>
+          )}
+        </CardContent>
       </Card>
 
-      {/* Payments Section */}
-      {entry.payments && entry.payments.length > 0 && (
+      {/* Child Entries (Installments) */}
+      {entry.childEntries && entry.childEntries.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Parcelas
+              <Badge variant="secondary">{entry.childEntries.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Parcela</TableHead>
+                  <TableHead>Vencimento</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[80px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entry.childEntries.map((child) => (
+                  <TableRow key={child.id}>
+                    <TableCell className="text-sm">
+                      {child.currentInstallment != null &&
+                      child.totalInstallments != null
+                        ? `${child.currentInstallment}/${child.totalInstallments}`
+                        : child.code}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {formatDate(child.dueDate)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {formatCurrency(child.expectedAmount)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(child.status)}>
+                        {FINANCE_ENTRY_STATUS_LABELS[child.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/finance/payable/${child.id}`}>
+                        <Button variant="ghost" size="sm">
+                          Ver
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tags */}
+      {entry.tags && entry.tags.length > 0 && (
         <Card className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Pagamentos
-              <Badge variant="secondary">{entry.payments.length}</Badge>
-            </h2>
-          </div>
-          <div className="space-y-3">
-            {entry.payments.map(payment => (
-              <div
-                key={payment.id}
-                className="flex items-center justify-between p-3 rounded-lg border"
-              >
-                <div>
-                  <p className="font-medium">
-                    {formatCurrency(payment.amount)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(payment.paidAt)} •{' '}
-                    {payment.method
-                      ? (PAYMENT_METHOD_LABELS[
-                          payment.method as keyof typeof PAYMENT_METHOD_LABELS
-                        ] ?? payment.method)
-                      : ''}
-                  </p>
-                </div>
-              </div>
+          <p className="text-sm text-muted-foreground mb-2">Tags</p>
+          <div className="flex flex-wrap gap-2">
+            {entry.tags.map((tag, index) => (
+              <Badge key={index} variant="outline">
+                {tag}
+              </Badge>
             ))}
           </div>
         </Card>
       )}
 
-      {/* Register Payment Button */}
-      {entry.status !== 'PAID' && (
-        <Card className="p-4 sm:p-6">
-          <Button onClick={handleRegisterPayment} className="w-full">
-            <DollarSign className="h-4 w-4 mr-2" />
-            Registrar Pagamento
-          </Button>
-        </Card>
+      {/* Baixa Modal */}
+      {canPay && (
+        <BaixaModal
+          open={baixaOpen}
+          onOpenChange={setBaixaOpen}
+          entry={entry}
+          categoryInterestRate={categoryRates.interestRate}
+          categoryPenaltyRate={categoryRates.penaltyRate}
+        />
       )}
+
+      {/* Delete PIN Confirmation Modal */}
+      <VerifyActionPinModal
+        isOpen={pinModalOpen}
+        onClose={() => setPinModalOpen(false)}
+        onSuccess={handleDeleteConfirmed}
+        title="Confirmar Exclusao"
+        description="Digite seu PIN de Acao para confirmar a exclusao desta conta a pagar."
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
+
+function InfoRow({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div className="flex justify-between items-start gap-4">
+      <span className="text-sm text-muted-foreground shrink-0">{label}</span>
+      <span className={cn('text-sm text-right', className)}>{value}</span>
     </div>
   );
 }

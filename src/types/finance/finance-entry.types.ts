@@ -43,6 +43,7 @@ export interface FinanceEntry {
   categoryName?: string;
   costCenterId: string;
   costCenterName?: string;
+  costCenterAllocations?: CostCenterAllocation[];
   bankAccountId?: string | null;
   bankAccountName?: string;
   supplierName?: string | null;
