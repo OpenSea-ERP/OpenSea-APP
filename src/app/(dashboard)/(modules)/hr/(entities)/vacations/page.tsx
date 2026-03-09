@@ -30,12 +30,14 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
+import { exportToCSV } from '@/lib/csv-export';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { VacationPeriod, VacationStatus } from '@/types/hr';
 import {
   Ban,
   CalendarDays,
   DollarSign,
+  Download,
   ExternalLink,
   Eye,
   Palmtree,
@@ -60,6 +62,7 @@ import {
   formatDaysInfo,
 } from './src';
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
 const VACATION_STATUS_OPTIONS: { value: VacationStatus; label: string }[] = [
   { value: 'PENDING', label: 'Pendente' },
@@ -143,6 +146,7 @@ export default function VacationsPage() {
     [vacations]
   );
 
+
   // ============================================================================
   // HANDLERS
   // ============================================================================
@@ -176,6 +180,22 @@ export default function VacationsPage() {
     },
     [cancelSchedule]
   );
+
+  const handleExport = useCallback((ids: string[]) => {
+    const items = ids.length > 0
+      ? vacations.filter(v => ids.includes(v.id))
+      : vacations;
+    exportToCSV(items, [
+      { header: 'Funcionário', accessor: v => getName(v.employeeId) },
+      { header: 'Status', accessor: v => getStatusLabel(v.status) },
+      { header: 'Início Aquisitivo', accessor: v => v.acquisitionStart ? new Date(v.acquisitionStart).toLocaleDateString('pt-BR') : '' },
+      { header: 'Fim Aquisitivo', accessor: v => v.acquisitionEnd ? new Date(v.acquisitionEnd).toLocaleDateString('pt-BR') : '' },
+      { header: 'Dias Totais', accessor: v => v.totalDays },
+      { header: 'Dias Usados', accessor: v => v.usedDays },
+      { header: 'Dias Vendidos', accessor: v => v.soldDays },
+      { header: 'Dias Restantes', accessor: v => v.remainingDays },
+    ], 'ferias');
+  }, [vacations, getName]);
 
   // ============================================================================
   // CONTEXT MENU
@@ -270,7 +290,7 @@ export default function VacationsPage() {
             </div>
           }
           isSelected={isSelected}
-          showSelection={false}
+          showSelection={true}
           clickable
           onClick={() => router.push(`/hr/vacations/${item.id}`)}
           createdAt={item.createdAt}
@@ -362,8 +382,9 @@ export default function VacationsPage() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
-        clickable={false}
+        showSelection={true}
+        clickable
+        onClick={() => router.push(`/hr/vacations/${item.id}`)}
         createdAt={item.createdAt}
         updatedAt={item.updatedAt}
       />
@@ -379,19 +400,27 @@ export default function VacationsPage() {
   }, []);
 
   const actionButtons: HeaderButton[] = useMemo(
-    () =>
-      canCreate
-        ? [
-            {
-              id: 'create-vacation',
-              title: 'Novo Período',
-              icon: Plus,
-              onClick: handleOpenCreate,
-              variant: 'default',
-            },
-          ]
-        : [],
-    [canCreate, handleOpenCreate]
+    () => {
+      const buttons: HeaderButton[] = [];
+      buttons.push({
+        id: 'export-vacations',
+        title: 'Exportar',
+        icon: Download,
+        onClick: () => handleExport([]),
+        variant: 'outline',
+      });
+      if (canCreate) {
+        buttons.push({
+          id: 'create-vacation',
+          title: 'Novo Período',
+          icon: Plus,
+          onClick: handleOpenCreate,
+          variant: 'default',
+        });
+      }
+      return buttons;
+    },
+    [canCreate, handleOpenCreate, handleExport]
   );
 
   // ============================================================================
@@ -562,6 +591,16 @@ export default function VacationsPage() {
               setSelectedVacation(null);
             }}
             vacation={selectedVacation}
+          />
+
+          <HRSelectionToolbar
+            totalItems={vacations.length}
+            defaultActions={{
+              export: true,
+            }}
+            handlers={{
+              onExport: handleExport,
+            }}
           />
         </PageBody>
       </PageLayout>

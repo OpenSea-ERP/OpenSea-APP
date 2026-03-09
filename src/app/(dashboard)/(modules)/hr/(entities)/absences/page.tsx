@@ -13,7 +13,7 @@ import {
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
 import {
   Select,
   SelectContent,
@@ -29,6 +29,7 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
+import { exportToCSV } from '@/lib/csv-export';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { Absence, AbsenceType, AbsenceStatus } from '@/types/hr';
 import {
@@ -36,6 +37,7 @@ import {
   Calendar,
   Check,
   Clock,
+  Download,
   ExternalLink,
   Eye,
   Plus,
@@ -44,6 +46,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useCallback, useMemo, useState } from 'react';
 import {
   absencesConfig,
@@ -59,6 +62,7 @@ import {
   getTypeColor,
 } from './src';
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
 function formatDate(dateStr?: string | null): string {
   if (!dateStr) return '\u2014';
@@ -153,9 +157,44 @@ export default function AbsencesPage() {
     [absences]
   );
 
+
   // ============================================================================
   // HANDLERS
   // ============================================================================
+
+  const handleBulkApprove = useCallback(async (ids: string[]) => {
+    const pendingIds = ids.filter(id => {
+      const item = absences.find(a => a.id === id);
+      return item && item.status === 'PENDING';
+    });
+    if (pendingIds.length === 0) {
+      toast.info('Nenhuma ausência pendente selecionada');
+      return;
+    }
+    try {
+      for (const id of pendingIds) {
+        approveAbsence.mutate(id);
+      }
+      toast.success(`${pendingIds.length} ausência(s) aprovada(s)`);
+    } catch {
+      // Toast handled by mutation
+    }
+  }, [absences, approveAbsence]);
+
+  const handleExport = useCallback((ids: string[]) => {
+    const items = ids.length > 0
+      ? absences.filter(a => ids.includes(a.id))
+      : absences;
+    exportToCSV(items, [
+      { header: 'Funcionário', accessor: a => getName(a.employeeId) },
+      { header: 'Tipo', accessor: a => getTypeLabel(a.type) },
+      { header: 'Status', accessor: a => getStatusLabel(a.status) },
+      { header: 'Data Início', accessor: a => a.startDate ? new Date(a.startDate).toLocaleDateString('pt-BR') : '' },
+      { header: 'Data Fim', accessor: a => a.endDate ? new Date(a.endDate).toLocaleDateString('pt-BR') : '' },
+      { header: 'Dias', accessor: a => a.totalDays },
+      { header: 'CID', accessor: a => a.cid || '' },
+    ], 'ausencias');
+  }, [absences, getName]);
 
   const handleViewItem = useCallback(
     (ids: string[]) => {
@@ -290,7 +329,7 @@ export default function AbsencesPage() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
+        showSelection={true}
         clickable
         onClick={() => router.push(`/hr/absences/${item.id}`)}
         createdAt={item.createdAt}
@@ -379,7 +418,7 @@ export default function AbsencesPage() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
+        showSelection={true}
         clickable
         onClick={() => router.push(`/hr/absences/${item.id}`)}
         createdAt={item.createdAt}
@@ -397,19 +436,27 @@ export default function AbsencesPage() {
   }, []);
 
   const actionButtons: HeaderButton[] = useMemo(
-    () =>
-      canCreate
-        ? [
-            {
-              id: 'create-absence',
-              title: 'Registrar Atestado',
-              icon: Plus,
-              onClick: handleOpenCreate,
-              variant: 'default',
-            },
-          ]
-        : [],
-    [canCreate, handleOpenCreate]
+    () => {
+      const buttons: HeaderButton[] = [];
+      buttons.push({
+        id: 'export-absences',
+        title: 'Exportar',
+        icon: Download,
+        onClick: () => handleExport([]),
+        variant: 'outline',
+      });
+      if (canCreate) {
+        buttons.push({
+          id: 'create-absence',
+          title: 'Registrar Atestado',
+          icon: Plus,
+          onClick: handleOpenCreate,
+          variant: 'default',
+        });
+      }
+      return buttons;
+    },
+    [canCreate, handleOpenCreate, handleExport]
   );
 
   // ============================================================================
@@ -517,19 +564,11 @@ export default function AbsencesPage() {
               </SelectContent>
             </Select>
 
-            <Input
-              type="date"
-              value={filterStartDate}
-              onChange={e => setFilterStartDate(e.target.value)}
-              className="w-40"
-              placeholder="Data início"
-            />
-            <Input
-              type="date"
-              value={filterEndDate}
-              onChange={e => setFilterEndDate(e.target.value)}
-              className="w-40"
-              placeholder="Data fim"
+            <DateRangeFilter
+              startDate={filterStartDate}
+              endDate={filterEndDate}
+              onStartDateChange={setFilterStartDate}
+              onEndDateChange={setFilterEndDate}
             />
 
             {hasActiveFilters && (
@@ -598,6 +637,25 @@ export default function AbsencesPage() {
               setSelectedAbsence(null);
             }}
             absence={selectedAbsence}
+          />
+
+          <HRSelectionToolbar
+            totalItems={absences.length}
+            actions={[
+              ...(canApprove ? [{
+                id: 'bulk-approve',
+                label: 'Aprovar',
+                icon: Check,
+                onClick: handleBulkApprove,
+                variant: 'default' as const,
+              }] : []),
+            ]}
+            defaultActions={{
+              export: true,
+            }}
+            handlers={{
+              onExport: handleExport,
+            }}
           />
         </PageBody>
       </PageLayout>

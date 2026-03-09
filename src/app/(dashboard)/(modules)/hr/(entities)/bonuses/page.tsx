@@ -20,8 +20,9 @@ import {
   EntityGrid,
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
+import { exportToCSV } from '@/lib/csv-export';
 import { usePermissions } from '@/hooks/use-permissions';
-import { Input } from '@/components/ui/input';
+import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
 import {
   Select,
   SelectContent,
@@ -31,8 +32,9 @@ import {
 } from '@/components/ui/select';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Bonus } from '@/types/hr';
-import { Calendar, ExternalLink, Eye, PlusCircle, Plus, Trash2, User } from 'lucide-react';
+import { Calendar, Download, ExternalLink, Eye, Plus, PlusCircle, Trash2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useCallback, useMemo, useState } from 'react';
 import {
   bonusesConfig,
@@ -49,6 +51,7 @@ import {
   type BonusFilters,
 } from './src';
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
 export default function BonusesPage() {
   const router = useRouter();
@@ -122,6 +125,7 @@ export default function BonusesPage() {
     [filteredItems]
   );
 
+
   // ============================================================================
   // HANDLERS
   // ============================================================================
@@ -168,6 +172,31 @@ export default function BonusesPage() {
       // Toast handled by mutation
     }
   }, [deleteTarget, deleteMutation]);
+
+  const handleBulkDelete = useCallback(async (ids: string[]) => {
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast.success(`${ids.length} bonificação(ões) excluída(s)`);
+    } catch {
+      // Toast handled by mutation
+    }
+  }, [deleteMutation]);
+
+  const handleExport = useCallback((ids: string[]) => {
+    const items = ids.length > 0
+      ? bonuses.filter(b => ids.includes(b.id))
+      : bonuses;
+    exportToCSV(items, [
+      { header: 'Nome', accessor: b => b.name },
+      { header: 'Funcionário', accessor: b => getName(b.employeeId) },
+      { header: 'Valor', accessor: b => b.amount },
+      { header: 'Data', accessor: b => b.date ? new Date(b.date).toLocaleDateString('pt-BR') : '' },
+      { header: 'Motivo', accessor: b => b.reason },
+      { header: 'Paga', accessor: b => b.isPaid ? 'Sim' : 'Não' },
+    ], 'bonificacoes');
+  }, [bonuses, getName]);
 
   // ============================================================================
   // CONTEXT MENU ACTIONS
@@ -248,7 +277,7 @@ export default function BonusesPage() {
             </div>
           }
           isSelected={isSelected}
-          showSelection={false}
+          showSelection={true}
           clickable
           onClick={() => router.push(`/hr/bonuses/${item.id}`)}
           createdAt={item.createdAt}
@@ -294,7 +323,7 @@ export default function BonusesPage() {
             </div>
           }
           isSelected={isSelected}
-          showSelection={false}
+          showSelection={true}
           clickable
           onClick={() => router.push(`/hr/bonuses/${item.id}`)}
           createdAt={item.createdAt}
@@ -313,19 +342,27 @@ export default function BonusesPage() {
   }, []);
 
   const actionButtons: HeaderButton[] = useMemo(
-    () =>
-      canCreate
-        ? [
-            {
-              id: 'create-bonus',
-              title: 'Nova Bonificação',
-              icon: Plus,
-              onClick: handleOpenCreate,
-              variant: 'default',
-            },
-          ]
-        : [],
-    [canCreate, handleOpenCreate]
+    () => {
+      const buttons: HeaderButton[] = [];
+      buttons.push({
+        id: 'export-bonuses',
+        title: 'Exportar',
+        icon: Download,
+        onClick: () => handleExport([]),
+        variant: 'outline',
+      });
+      if (canCreate) {
+        buttons.push({
+          id: 'create-bonus',
+          title: 'Nova Bonificação',
+          icon: Plus,
+          onClick: handleOpenCreate,
+          variant: 'default',
+        });
+      }
+      return buttons;
+    },
+    [canCreate, handleOpenCreate, handleExport]
   );
 
   // ============================================================================
@@ -427,20 +464,11 @@ export default function BonusesPage() {
               </SelectContent>
             </Select>
 
-            <Input
-              type="date"
-              value={filterStartDate}
-              onChange={e => setFilterStartDate(e.target.value)}
-              className="w-40"
-              placeholder="Data início"
-            />
-
-            <Input
-              type="date"
-              value={filterEndDate}
-              onChange={e => setFilterEndDate(e.target.value)}
-              className="w-40"
-              placeholder="Data fim"
+            <DateRangeFilter
+              startDate={filterStartDate}
+              endDate={filterEndDate}
+              onStartDateChange={setFilterStartDate}
+              onEndDateChange={setFilterEndDate}
             />
 
             {hasActiveFilters && (
@@ -516,6 +544,18 @@ export default function BonusesPage() {
             }}
             onConfirm={handleDeleteConfirm}
             isLoading={deleteMutation.isPending}
+          />
+
+          <HRSelectionToolbar
+            totalItems={filteredItems.length}
+            defaultActions={{
+              delete: canDelete,
+              export: true,
+            }}
+            handlers={{
+              onDelete: handleBulkDelete,
+              onExport: handleExport,
+            }}
           />
         </PageBody>
       </PageLayout>

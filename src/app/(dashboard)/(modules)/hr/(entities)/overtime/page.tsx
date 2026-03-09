@@ -14,7 +14,6 @@ import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -28,12 +27,15 @@ import {
   EntityContextMenu,
   EntityGrid,
 } from '@/core';
+import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
+import { exportToCSV } from '@/lib/csv-export';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { Overtime } from '@/types/hr';
-import { Check, Clock, Coffee, ExternalLink, Eye, Plus, User } from 'lucide-react';
+import { Check, Clock, Coffee, Download, ExternalLink, Eye, Plus, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useCallback, useMemo, useState } from 'react';
 import {
   overtimeConfig,
@@ -49,6 +51,7 @@ import {
   getApprovalColor,
 } from './src';
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
 export default function OvertimePage() {
   const router = useRouter();
@@ -127,6 +130,7 @@ export default function OvertimePage() {
     [filteredItems]
   );
 
+
   // ============================================================================
   // HANDLERS
   // ============================================================================
@@ -156,6 +160,38 @@ export default function OvertimePage() {
     },
     [overtimeList]
   );
+
+  const handleBulkApprove = useCallback(async (ids: string[]) => {
+    const pendingIds = ids.filter(id => {
+      const item = overtimeList.find(o => o.id === id);
+      return item && item.approved === null;
+    });
+    if (pendingIds.length === 0) {
+      toast.info('Nenhuma hora extra pendente selecionada');
+      return;
+    }
+    try {
+      for (const id of pendingIds) {
+        await approveMutation.mutateAsync({ id, data: { addToTimeBank: false } });
+      }
+      toast.success(`${pendingIds.length} hora(s) extra(s) aprovada(s)`);
+    } catch {
+      // Toast handled by mutation
+    }
+  }, [overtimeList, approveMutation]);
+
+  const handleExport = useCallback((ids: string[]) => {
+    const items = ids.length > 0
+      ? overtimeList.filter(o => ids.includes(o.id))
+      : overtimeList;
+    exportToCSV(items, [
+      { header: 'Funcionário', accessor: o => getName(o.employeeId) },
+      { header: 'Data', accessor: o => o.date ? new Date(o.date).toLocaleDateString('pt-BR') : '' },
+      { header: 'Horas', accessor: o => o.hours },
+      { header: 'Motivo', accessor: o => o.reason },
+      { header: 'Aprovada', accessor: o => o.approved === null ? 'Pendente' : o.approved ? 'Sim' : 'Não' },
+    ], 'horas-extras');
+  }, [overtimeList, getName]);
 
   // ============================================================================
   // CONTEXT MENU
@@ -227,7 +263,7 @@ export default function OvertimePage() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
+        showSelection={true}
         clickable
         onClick={() => router.push(`/hr/overtime/${item.id}`)}
         createdAt={item.createdAt}
@@ -285,7 +321,7 @@ export default function OvertimePage() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
+        showSelection={true}
         clickable
         onClick={() => router.push(`/hr/overtime/${item.id}`)}
         createdAt={item.createdAt}
@@ -303,19 +339,27 @@ export default function OvertimePage() {
   }, []);
 
   const actionButtons: HeaderButton[] = useMemo(
-    () =>
-      canCreate
-        ? [
-            {
-              id: 'create-overtime',
-              title: 'Registrar Hora Extra',
-              icon: Plus,
-              onClick: handleOpenCreate,
-              variant: 'default',
-            },
-          ]
-        : [],
-    [canCreate, handleOpenCreate]
+    () => {
+      const buttons: HeaderButton[] = [];
+      buttons.push({
+        id: 'export-overtime',
+        title: 'Exportar',
+        icon: Download,
+        onClick: () => handleExport([]),
+        variant: 'outline',
+      });
+      if (canCreate) {
+        buttons.push({
+          id: 'create-overtime',
+          title: 'Registrar Hora Extra',
+          icon: Plus,
+          onClick: handleOpenCreate,
+          variant: 'default',
+        });
+      }
+      return buttons;
+    },
+    [canCreate, handleOpenCreate, handleExport]
   );
 
   // ============================================================================
@@ -404,19 +448,11 @@ export default function OvertimePage() {
               </SelectContent>
             </Select>
 
-            <Input
-              type="date"
-              value={filterStartDate}
-              onChange={e => setFilterStartDate(e.target.value)}
-              className="w-40"
-              placeholder="Data início"
-            />
-            <Input
-              type="date"
-              value={filterEndDate}
-              onChange={e => setFilterEndDate(e.target.value)}
-              className="w-40"
-              placeholder="Data fim"
+            <DateRangeFilter
+              startDate={filterStartDate}
+              endDate={filterEndDate}
+              onStartDateChange={setFilterStartDate}
+              onEndDateChange={setFilterEndDate}
             />
 
             {hasActiveFilters && (
@@ -489,6 +525,25 @@ export default function OvertimePage() {
               setSelectedOvertime(null);
             }}
             overtime={selectedOvertime}
+          />
+
+          <HRSelectionToolbar
+            totalItems={filteredItems.length}
+            actions={[
+              ...(canApprove ? [{
+                id: 'bulk-approve',
+                label: 'Aprovar',
+                icon: Check,
+                onClick: handleBulkApprove,
+                variant: 'default' as const,
+              }] : []),
+            ]}
+            defaultActions={{
+              export: true,
+            }}
+            handlers={{
+              onExport: handleExport,
+            }}
           />
         </PageBody>
       </PageLayout>

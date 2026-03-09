@@ -21,8 +21,9 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
+import { exportToCSV } from '@/lib/csv-export';
 import type { TimeBank } from '@/types/hr';
-import { ExternalLink, Eye, Hourglass, Minus, Plus, SlidersHorizontal } from 'lucide-react';
+import { Download, ExternalLink, Eye, Hourglass, Minus, Plus, SlidersHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import {
@@ -39,6 +40,7 @@ import {
   AdjustModal,
   ViewModal,
 } from './src';
+import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
 export default function TimeBankPage() {
   return (
@@ -101,6 +103,7 @@ function TimeBankPageContent() {
     [timeBanks]
   );
 
+
   // ============================================================================
   // HANDLERS
   // ============================================================================
@@ -138,6 +141,18 @@ function TimeBankPageContent() {
     },
     [timeBanks]
   );
+
+  const handleExport = useCallback((ids: string[]) => {
+    const items = ids.length > 0
+      ? timeBanks.filter(tb => ids.includes(tb.id))
+      : timeBanks;
+    exportToCSV(items, [
+      { header: 'Funcionário', accessor: tb => getName(tb.employeeId) },
+      { header: 'Ano', accessor: tb => tb.year },
+      { header: 'Saldo (horas)', accessor: tb => tb.balance },
+      { header: 'Atualizado em', accessor: tb => new Date(tb.updatedAt).toLocaleDateString('pt-BR') },
+    ], 'banco-de-horas');
+  }, [timeBanks, getName]);
 
   // ============================================================================
   // CONTEXT MENU
@@ -198,7 +213,7 @@ function TimeBankPageContent() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
+        showSelection={true}
         clickable
         onClick={() => router.push(`/hr/time-bank/${item.id}`)}
         createdAt={item.createdAt}
@@ -235,7 +250,7 @@ function TimeBankPageContent() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
+        showSelection={true}
         clickable
         onClick={() => router.push(`/hr/time-bank/${item.id}`)}
         createdAt={item.createdAt}
@@ -250,6 +265,13 @@ function TimeBankPageContent() {
 
   const actionButtons = useMemo<HeaderButton[]>(
     () => [
+      {
+        id: 'export',
+        title: 'Exportar',
+        icon: Download,
+        onClick: () => handleExport([]),
+        variant: 'outline',
+      },
       {
         id: 'adjust',
         title: 'Ajustar',
@@ -275,7 +297,7 @@ function TimeBankPageContent() {
         className: 'bg-emerald-600 hover:bg-emerald-700 text-white',
       },
     ],
-    []
+    [handleExport]
   );
 
   // ============================================================================
@@ -406,6 +428,16 @@ function TimeBankPageContent() {
               setViewTarget(null);
             }}
             timeBank={viewTarget}
+          />
+
+          <HRSelectionToolbar
+            totalItems={timeBanks.length}
+            defaultActions={{
+              export: true,
+            }}
+            handlers={{
+              onExport: handleExport,
+            }}
           />
         </PageBody>
       </PageLayout>

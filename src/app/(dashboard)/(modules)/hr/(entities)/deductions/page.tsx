@@ -21,7 +21,7 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
-import { Input } from '@/components/ui/input';
+import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
 import {
   Select,
   SelectContent,
@@ -30,10 +30,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
+import { exportToCSV } from '@/lib/csv-export';
 import type { Deduction } from '@/types/hr';
-import { Calendar, ExternalLink, Eye, MinusCircle, Plus, Trash2, User } from 'lucide-react';
+import { Calendar, Download, ExternalLink, Eye, MinusCircle, Plus, Trash2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import {
   deductionsConfig,
   useListDeductions,
@@ -50,6 +52,7 @@ import {
   type DeductionFilters,
 } from './src';
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
 export default function DeductionsPage() {
   const router = useRouter();
@@ -133,6 +136,7 @@ export default function DeductionsPage() {
     [filteredItems]
   );
 
+
   // ============================================================================
   // HANDLERS
   // ============================================================================
@@ -179,6 +183,32 @@ export default function DeductionsPage() {
       // Toast handled by mutation
     }
   }, [deleteTarget, deleteMutation]);
+
+  const handleBulkDelete = useCallback(async (ids: string[]) => {
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast.success(`${ids.length} dedução(ões) excluída(s)`);
+    } catch {
+      // Toast handled by mutation
+    }
+  }, [deleteMutation]);
+
+  const handleExport = useCallback((ids: string[]) => {
+    const items = ids.length > 0
+      ? deductions.filter(d => ids.includes(d.id))
+      : deductions;
+    exportToCSV(items, [
+      { header: 'Nome', accessor: d => d.name },
+      { header: 'Funcionário', accessor: d => getName(d.employeeId) },
+      { header: 'Valor', accessor: d => d.amount },
+      { header: 'Data', accessor: d => d.date ? new Date(d.date).toLocaleDateString('pt-BR') : '' },
+      { header: 'Motivo', accessor: d => d.reason },
+      { header: 'Recorrente', accessor: d => d.isRecurring ? 'Sim' : 'Não' },
+      { header: 'Aplicada', accessor: d => d.isApplied ? 'Sim' : 'Não' },
+    ], 'deducoes');
+  }, [deductions, getName]);
 
   // ============================================================================
   // CONTEXT MENU ACTIONS
@@ -267,7 +297,7 @@ export default function DeductionsPage() {
             </div>
           }
           isSelected={isSelected}
-          showSelection={false}
+          showSelection={true}
           clickable
           onClick={() => router.push(`/hr/deductions/${item.id}`)}
           createdAt={item.createdAt}
@@ -321,7 +351,7 @@ export default function DeductionsPage() {
             </div>
           }
           isSelected={isSelected}
-          showSelection={false}
+          showSelection={true}
           clickable
           onClick={() => router.push(`/hr/deductions/${item.id}`)}
           createdAt={item.createdAt}
@@ -340,19 +370,27 @@ export default function DeductionsPage() {
   }, []);
 
   const actionButtons: HeaderButton[] = useMemo(
-    () =>
-      canCreate
-        ? [
-            {
-              id: 'create-deduction',
-              title: 'Nova Dedução',
-              icon: Plus,
-              onClick: handleOpenCreate,
-              variant: 'default',
-            },
-          ]
-        : [],
-    [canCreate, handleOpenCreate]
+    () => {
+      const buttons: HeaderButton[] = [];
+      buttons.push({
+        id: 'export-deductions',
+        title: 'Exportar',
+        icon: Download,
+        onClick: () => handleExport([]),
+        variant: 'outline',
+      });
+      if (canCreate) {
+        buttons.push({
+          id: 'create-deduction',
+          title: 'Nova Dedução',
+          icon: Plus,
+          onClick: handleOpenCreate,
+          variant: 'default',
+        });
+      }
+      return buttons;
+    },
+    [canCreate, handleOpenCreate, handleExport]
   );
 
   // ============================================================================
@@ -478,20 +516,11 @@ export default function DeductionsPage() {
               </SelectContent>
             </Select>
 
-            <Input
-              type="date"
-              value={filterStartDate}
-              onChange={e => setFilterStartDate(e.target.value)}
-              className="w-40"
-              placeholder="Data início"
-            />
-
-            <Input
-              type="date"
-              value={filterEndDate}
-              onChange={e => setFilterEndDate(e.target.value)}
-              className="w-40"
-              placeholder="Data fim"
+            <DateRangeFilter
+              startDate={filterStartDate}
+              endDate={filterEndDate}
+              onStartDateChange={setFilterStartDate}
+              onEndDateChange={setFilterEndDate}
             />
 
             {hasActiveFilters && (
@@ -567,6 +596,18 @@ export default function DeductionsPage() {
             }}
             onConfirm={handleDeleteConfirm}
             isLoading={deleteMutation.isPending}
+          />
+
+          <HRSelectionToolbar
+            totalItems={filteredItems.length}
+            defaultActions={{
+              delete: canDelete,
+              export: true,
+            }}
+            handlers={{
+              onDelete: handleBulkDelete,
+              onExport: handleExport,
+            }}
           />
         </PageBody>
       </PageLayout>

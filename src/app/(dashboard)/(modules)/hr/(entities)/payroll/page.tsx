@@ -28,6 +28,7 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
+import { exportToCSV } from '@/lib/csv-export';
 import type { Payroll, PayrollStatus } from '@/types/hr';
 import {
   Ban,
@@ -35,6 +36,7 @@ import {
   CalendarDays,
   Check,
   DollarSign,
+  Download,
   ExternalLink,
   Eye,
   Plus,
@@ -58,6 +60,7 @@ import {
   type PayrollFilters,
 } from './src';
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
 const MONTHS = [
   { value: '1', label: 'Janeiro' },
@@ -141,9 +144,23 @@ export default function PayrollPage() {
     [payrolls]
   );
 
+
   // ============================================================================
   // HANDLERS
   // ============================================================================
+
+  const handleExport = useCallback((ids: string[]) => {
+    const items = ids.length > 0
+      ? payrolls.filter(p => ids.includes(p.id))
+      : payrolls;
+    exportToCSV(items, [
+      { header: 'Mês/Ano', accessor: p => formatMonthYear(p.referenceMonth, p.referenceYear) },
+      { header: 'Status', accessor: p => getStatusLabel(p.status) },
+      { header: 'Bruto', accessor: p => p.totalGross },
+      { header: 'Deduções', accessor: p => p.totalDeductions },
+      { header: 'Líquido', accessor: p => p.totalNet },
+    ], 'folha-pagamento');
+  }, [payrolls]);
 
   const handleCreate = useCallback(
     async (data: Parameters<typeof createMutation.mutateAsync>[0]) => {
@@ -286,7 +303,7 @@ export default function PayrollPage() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
+        showSelection={true}
         clickable
         onClick={() => router.push(`/hr/payroll/${item.id}`)}
         createdAt={item.createdAt}
@@ -384,7 +401,7 @@ export default function PayrollPage() {
           </div>
         }
         isSelected={isSelected}
-        showSelection={false}
+        showSelection={true}
         clickable
         onClick={() => router.push(`/hr/payroll/${item.id}`)}
         createdAt={item.createdAt}
@@ -402,19 +419,27 @@ export default function PayrollPage() {
   }, []);
 
   const actionButtons: HeaderButton[] = useMemo(
-    () =>
-      canCreate
-        ? [
-            {
-              id: 'create-payroll',
-              title: 'Nova Folha',
-              icon: Plus,
-              onClick: handleOpenCreate,
-              variant: 'default',
-            },
-          ]
-        : [],
-    [canCreate, handleOpenCreate]
+    () => {
+      const buttons: HeaderButton[] = [];
+      buttons.push({
+        id: 'export-payroll',
+        title: 'Exportar',
+        icon: Download,
+        onClick: () => handleExport([]),
+        variant: 'outline',
+      });
+      if (canCreate) {
+        buttons.push({
+          id: 'create-payroll',
+          title: 'Nova Folha',
+          icon: Plus,
+          onClick: handleOpenCreate,
+          variant: 'default',
+        });
+      }
+      return buttons;
+    },
+    [canCreate, handleOpenCreate, handleExport]
   );
 
   // ============================================================================
@@ -564,6 +589,16 @@ export default function PayrollPage() {
               setViewTarget(null);
             }}
             payroll={viewTarget}
+          />
+
+          <HRSelectionToolbar
+            totalItems={payrolls.length}
+            defaultActions={{
+              export: true,
+            }}
+            handlers={{
+              onExport: handleExport,
+            }}
           />
         </PageBody>
       </PageLayout>
