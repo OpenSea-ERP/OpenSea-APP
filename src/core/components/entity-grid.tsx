@@ -25,7 +25,6 @@ import {
   Clock,
   Grid3x3,
   List,
-  LucideIcon,
 } from 'lucide-react';
 import React, {
   useCallback,
@@ -48,7 +47,7 @@ export interface SortOption {
   field: SortField;
   direction: SortDirection;
   label: string;
-  icon?: LucideIcon;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 export interface EntityGridProps<T extends BaseEntity> {

@@ -4,14 +4,12 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  FileText,
-  Paperclip,
-  Upload,
-  Trash2,
-} from 'lucide-react';
+import { FileText, Paperclip, Upload, Trash2 } from 'lucide-react';
 import { useUpdateCard } from '@/hooks/tasks/use-cards';
-import { useAttachments, useDeleteAttachment } from '@/hooks/tasks/use-attachments';
+import {
+  useAttachments,
+  useDeleteAttachment,
+} from '@/hooks/tasks/use-attachments';
 import type { Card } from '@/types/tasks';
 
 interface CardDetailsTabProps {
@@ -55,7 +53,7 @@ export function CardDetailsTab({ card, boardId }: CardDetailsTabProps) {
           setIsEditingDesc(false);
         },
         onError: () => toast.error('Erro ao atualizar descrição'),
-      },
+      }
     );
   }, [card.id, card.description, editDesc, updateCard]);
 
@@ -66,7 +64,7 @@ export function CardDetailsTab({ card, boardId }: CardDetailsTabProps) {
         onError: () => toast.error('Erro ao remover anexo'),
       });
     },
-    [deleteAttachment],
+    [deleteAttachment]
   );
 
   return (
@@ -81,13 +79,17 @@ export function CardDetailsTab({ card, boardId }: CardDetailsTabProps) {
           <div className="space-y-2">
             <Textarea
               value={editDesc}
-              onChange={(e) => setEditDesc(e.target.value)}
+              onChange={e => setEditDesc(e.target.value)}
               placeholder="Adicione uma descrição..."
               rows={4}
               autoFocus
             />
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleSaveDesc} disabled={updateCard.isPending}>
+              <Button
+                size="sm"
+                onClick={handleSaveDesc}
+                disabled={updateCard.isPending}
+              >
                 Salvar
               </Button>
               <Button
@@ -127,7 +129,7 @@ export function CardDetailsTab({ card, boardId }: CardDetailsTabProps) {
           <p className="text-xs text-muted-foreground px-1">Nenhum anexo</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {attachments.map((att) => (
+            {attachments.map(att => (
               <div
                 key={att.id}
                 className="flex items-center gap-2 rounded-md border border-border p-2 text-xs group"
@@ -156,7 +158,6 @@ export function CardDetailsTab({ card, boardId }: CardDetailsTabProps) {
           </div>
         )}
       </section>
-
     </div>
   );
 }

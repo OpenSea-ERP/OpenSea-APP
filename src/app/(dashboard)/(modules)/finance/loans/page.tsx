@@ -583,7 +583,7 @@ export default function LoansPage() {
             message="Ocorreu um erro ao tentar carregar os empréstimos. Por favor, tente novamente."
             action={{
               label: 'Tentar Novamente',
-              onClick: () => refetch(),
+              onClick: () => { refetch(); },
             }}
           />
         ) : !canList ? (

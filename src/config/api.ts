@@ -519,6 +519,7 @@ export const API_ENDPOINTS = {
           `/v1/storage/files/${id}/versions/${vId}/restore`,
       },
       SERVE: (id: string) => `/v1/storage/files/${id}/serve`,
+      SERVE_TOKEN: '/v1/storage/files/serve-token',
       COMPRESS: '/v1/storage/files/compress',
       DECOMPRESS: (id: string) => `/v1/storage/files/${id}/decompress`,
       MULTIPART: {

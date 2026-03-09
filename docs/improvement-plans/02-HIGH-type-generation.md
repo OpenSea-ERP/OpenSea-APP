@@ -16,12 +16,9 @@
 
 ### 2. Pipeline de geracao (commit APP `3e8f3fa`)
 
-- Scripts no package.json:
-  - `api:export` - exporta swagger do backend
-  - `api:generate` - gera types com `swagger-typescript-api`
-  - `api:update` - export + generate
-- `src/types/generated/api-types.ts` excluido do tsc e eslint
-- **Limitacao**: Backend usa schemas inline (0 named schemas), types gerados sao mínimos
+- Script `api:export` exporta swagger do backend
+- ~~`api:generate` e `api:update` removidos (Mar 2026)~~ — types gerados eram inuteis (0 named schemas)
+- `src/types/generated/` removido — todos os types sao manuais em modulos
 
 ### 3. Fragmentar monolitos em modulos
 
@@ -41,7 +38,6 @@
 
 ```
 src/types/
-  generated/      api-types.ts (auto-gerado, NAO EDITAR)
   common/         pagination.ts, enums.ts
   stock/          16 files (product, variant, item, warehouse, supplier, etc.)
   hr/             3 files (employee, department, company)

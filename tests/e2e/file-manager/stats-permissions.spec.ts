@@ -20,10 +20,7 @@ test.describe('File Manager - Permissão storage.stats.view', () => {
   // ─── SP-1 Com permissão — 200 ──────────────────────────────────────
   test('SP-1 - Deve retornar 200 com permissão storage.stats.view', async () => {
     const user = await createUserWithPermissions(
-      [
-        STORAGE_PERMISSIONS.INTERFACE_VIEW,
-        STORAGE_PERMISSIONS.STATS_VIEW,
-      ],
+      [STORAGE_PERMISSIONS.INTERFACE_VIEW, STORAGE_PERMISSIONS.STATS_VIEW],
       `e2e-sp1-${Date.now().toString(36)}`
     );
     const auth = await getAuthenticatedToken(user.email, user.password);

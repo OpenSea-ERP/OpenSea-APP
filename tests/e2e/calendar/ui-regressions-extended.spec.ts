@@ -40,7 +40,8 @@ test.describe('Calendar - Regressões Estendidas de Interface', () => {
 
     await page.route('**/v1/calendar/events**', async route => {
       const url = new URL(route.request().url());
-      const includeSystem = url.searchParams.get('includeSystemEvents') !== 'false';
+      const includeSystem =
+        url.searchParams.get('includeSystemEvents') !== 'false';
       const events = includeSystem
         ? [
             {
@@ -140,13 +141,21 @@ test.describe('Calendar - Regressões Estendidas de Interface', () => {
     await injectAuthIntoBrowser(page, userToken, userTenantId);
     await navigateToCalendar(page);
 
-    await expect(page.locator(`.fc-event:has-text("${systemTitle}")`).first()).toBeVisible();
-    await expect(page.locator(`.fc-event:has-text("${customTitle}")`).first()).toBeVisible();
+    await expect(
+      page.locator(`.fc-event:has-text("${systemTitle}")`).first()
+    ).toBeVisible();
+    await expect(
+      page.locator(`.fc-event:has-text("${customTitle}")`).first()
+    ).toBeVisible();
 
     await page.locator('#system-events').click();
     await page.waitForTimeout(500);
-    await expect(page.locator(`.fc-event:has-text("${systemTitle}")`)).toHaveCount(0);
-    await expect(page.locator(`.fc-event:has-text("${customTitle}")`).first()).toBeVisible();
+    await expect(
+      page.locator(`.fc-event:has-text("${systemTitle}")`)
+    ).toHaveCount(0);
+    await expect(
+      page.locator(`.fc-event:has-text("${customTitle}")`).first()
+    ).toBeVisible();
   });
 
   test('12.2 - Alternar Dia inteiro troca tipo dos inputs no create', async ({
@@ -156,11 +165,15 @@ test.describe('Calendar - Regressões Estendidas de Interface', () => {
     await navigateToCalendar(page);
 
     await page.locator('button:has-text("Novo Evento")').click();
-    const startInput = page.locator('[role="dialog"] input[type="datetime-local"]').first();
+    const startInput = page
+      .locator('[role="dialog"] input[type="datetime-local"]')
+      .first();
     await expect(startInput).toBeVisible({ timeout: 10_000 });
 
     await page.locator('label:has-text("Dia inteiro")').click();
-    await expect(page.locator('[role="dialog"] input[type="date"]').first()).toBeVisible({
+    await expect(
+      page.locator('[role="dialog"] input[type="date"]').first()
+    ).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -177,11 +190,17 @@ test.describe('Calendar - Regressões Estendidas de Interface', () => {
     await injectAuthIntoBrowser(page, userToken, userTenantId);
     await navigateToCalendar(page);
     await openCalendarEventByTitle(page, title);
-    await expect(page.locator('text=Recorrente')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Recorrente')).toBeVisible({
+      timeout: 10_000,
+    });
 
     await page.locator('button:has-text("Editar")').click();
-    await page.locator('[role="dialog"] label:has-text("Repetir evento")').click();
-    await page.locator('[role="dialog"] button:has-text("Salvar Alterações")').click();
+    await page
+      .locator('[role="dialog"] label:has-text("Repetir evento")')
+      .click();
+    await page
+      .locator('[role="dialog"] button:has-text("Salvar Alterações")')
+      .click();
     await waitForToast(page, 'Evento atualizado com sucesso');
 
     await openCalendarEventByTitle(page, title);
@@ -199,8 +218,13 @@ test.describe('Calendar - Regressões Estendidas de Interface', () => {
     await page.locator('button:has-text("Novo Evento")').click();
     await page.locator('input[placeholder="Nome do evento"]').fill(title);
     await page.locator('text=Fuso horário').click();
-    await page.locator('button[role="combobox"]:has-text("America")').first().click();
-    await page.locator('input[placeholder="Buscar fuso horário..."]').fill('UTC');
+    await page
+      .locator('button[role="combobox"]:has-text("America")')
+      .first()
+      .click();
+    await page
+      .locator('input[placeholder="Buscar fuso horário..."]')
+      .fill('UTC');
     await page.locator('[role="option"]:has-text("UTC")').first().click();
     await page.locator('button:has-text("Criar Evento")').click();
     await waitForToast(page, 'Evento criado com sucesso');

@@ -68,13 +68,17 @@ test.describe('Teams - CRUD de Equipes', () => {
     });
   });
 
-  test('1.3 - Botão "Criar Equipe" desabilitado com nome vazio', async ({ page }) => {
+  test('1.3 - Botão "Criar Equipe" desabilitado com nome vazio', async ({
+    page,
+  }) => {
     await injectAuthIntoBrowser(page, userToken, userTenantId);
     await navigateToTeams(page);
 
     // Open create modal
     await page.locator('button:has-text("Nova Equipe")').click();
-    await expect(page.locator('text=Nova Equipe').first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Nova Equipe').first()).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Submit button should be disabled with empty name
     const submitBtn = page.locator('button:has-text("Criar Equipe")');
@@ -115,7 +119,9 @@ test.describe('Teams - CRUD de Equipes', () => {
 
     // Click edit button
     await page.locator('button:has-text("Editar")').click();
-    await expect(page.locator('text=Editar Equipe')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Editar Equipe')).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Update name and description
     const updatedName = `${name}-updated`;
@@ -123,7 +129,9 @@ test.describe('Teams - CRUD de Equipes', () => {
     await nameInput.clear();
     await nameInput.fill(updatedName);
 
-    const descInput = page.locator('textarea[placeholder="Descrição da equipe"]');
+    const descInput = page.locator(
+      'textarea[placeholder="Descrição da equipe"]'
+    );
     await descInput.fill('Descrição atualizada');
 
     // Save

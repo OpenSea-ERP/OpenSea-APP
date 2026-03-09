@@ -34,16 +34,21 @@ function formatDueDate(dateStr: string): string {
   });
 }
 
-export function ListView({ board, cards, boardId, onCardClick }: ListViewProps) {
+export function ListView({
+  board,
+  cards,
+  boardId,
+  onCardClick,
+}: ListViewProps) {
   const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
 
   const gradient = getGradientForBoard(boardId);
 
   const columns = useMemo(
     () => [...(board.columns ?? [])].sort((a, b) => a.position - b.position),
-    [board.columns],
+    [board.columns]
   );
 
   const cardsByColumn = useMemo(() => {
@@ -62,7 +67,7 @@ export function ListView({ board, cards, boardId, onCardClick }: ListViewProps) 
   }, [cards, columns]);
 
   function toggleColumn(columnId: string) {
-    setCollapsedColumns((prev) => {
+    setCollapsedColumns(prev => {
       const next = new Set(prev);
       if (next.has(columnId)) next.delete(columnId);
       else next.add(columnId);
@@ -72,7 +77,7 @@ export function ListView({ board, cards, boardId, onCardClick }: ListViewProps) 
 
   return (
     <div className="space-y-3">
-      {columns.map((column) => {
+      {columns.map(column => {
         const colCards = cardsByColumn.get(column.id) ?? [];
         const isCollapsed = collapsedColumns.has(column.id);
         const colColor = column.color || gradient.from;
@@ -100,12 +105,8 @@ export function ListView({ board, cards, boardId, onCardClick }: ListViewProps) 
                 className="h-3 w-3 rounded shrink-0"
                 style={{ backgroundColor: colColor }}
               />
-              <span className="text-sm font-semibold">
-                {column.title}
-              </span>
-              <span
-                className="text-xs font-medium tabular-nums ml-1 px-1.5 py-0.5 rounded-md bg-muted/50"
-              >
+              <span className="text-sm font-semibold">{column.title}</span>
+              <span className="text-xs font-medium tabular-nums ml-1 px-1.5 py-0.5 rounded-md bg-muted/50">
                 {colCards.length}
               </span>
             </button>
@@ -118,11 +119,10 @@ export function ListView({ board, cards, boardId, onCardClick }: ListViewProps) 
                     Nenhum cartão nesta coluna
                   </div>
                 ) : (
-                  colCards.map((card) => {
+                  colCards.map(card => {
                     const priorityConfig = PRIORITY_CONFIG[card.priority];
                     const overdue = isOverdue(card.dueDate);
-                    const hasComments =
-                      card._count && card._count.comments > 0;
+                    const hasComments = card._count && card._count.comments > 0;
 
                     return (
                       <button
@@ -139,7 +139,7 @@ export function ListView({ board, cards, boardId, onCardClick }: ListViewProps) 
                         <span
                           className={cn(
                             'h-2.5 w-2.5 rounded-full shrink-0',
-                            priorityConfig.dotColor,
+                            priorityConfig.dotColor
                           )}
                         />
                         <span className="flex-1 text-sm font-medium truncate">
@@ -149,7 +149,7 @@ export function ListView({ board, cards, boardId, onCardClick }: ListViewProps) 
                         {/* Labels as dots */}
                         {card.labels && card.labels.length > 0 && (
                           <div className="hidden sm:flex items-center gap-1 shrink-0">
-                            {card.labels.slice(0, 4).map((label) => (
+                            {card.labels.slice(0, 4).map(label => (
                               <span
                                 key={label.id}
                                 className="h-2 w-2 rounded-full shrink-0"
@@ -173,7 +173,7 @@ export function ListView({ board, cards, boardId, onCardClick }: ListViewProps) 
                               'inline-flex items-center gap-1 text-[11px] font-medium rounded px-1.5 py-0.5 shrink-0',
                               overdue
                                 ? 'bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400'
-                                : 'text-muted-foreground',
+                                : 'text-muted-foreground'
                             )}
                           >
                             <CalendarClock className="h-3 w-3" />

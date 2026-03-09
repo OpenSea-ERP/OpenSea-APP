@@ -27,7 +27,7 @@ export function ViewToggle({ currentView }: ViewToggleProps) {
       params.set('view', view);
       router.replace(`${pathname}?${params.toString()}`);
     },
-    [router, pathname, searchParams],
+    [router, pathname, searchParams]
   );
 
   return (
@@ -42,7 +42,7 @@ export function ViewToggle({ currentView }: ViewToggleProps) {
               'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative',
               isActive
                 ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground',
+                : 'text-muted-foreground hover:text-foreground'
             )}
             onClick={() => handleViewChange(key)}
           >

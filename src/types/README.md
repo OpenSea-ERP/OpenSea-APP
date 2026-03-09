@@ -16,7 +16,6 @@ types/
   rbac/            # Permission, PermissionGroup
   admin/           # Dashboard (frontend), Tenant
   common/          # Pagination, Enums (shared across modules)
-  generated/       # Auto-generated from Swagger (DO NOT EDIT)
 ```
 
 ## How to Import
@@ -77,12 +76,10 @@ Root-level shim files re-export from subdirectories for backwards compatibility:
 
 Do NOT delete these shims - some imports reference them directly.
 
-## Swagger Sync
+## Swagger
 
 ```bash
-npm run api:update   # Export swagger from backend + regenerate types
-npm run api:export   # Only export swagger.json
-npm run api:generate # Only regenerate from existing swagger.json
+npm run api:export   # Export swagger.json from backend
 ```
 
-The `generated/api-types.ts` is excluded from tsc and eslint. Currently has minimal types because backend schemas are inline (not `$ref`-based).
+Type generation from Swagger was removed — backend schemas are inline (not `$ref`-based), producing unusable types. All types are maintained manually in module directories. Future investment in named Swagger schemas will enable re-adding auto-generation.

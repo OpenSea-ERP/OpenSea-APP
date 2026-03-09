@@ -39,7 +39,7 @@ export function CardInlineCreate({ boardId, columnId }: CardInlineCreateProps) {
           inputRef.current?.focus();
         },
         onError: () => toast.error('Erro ao criar cartão'),
-      },
+      }
     );
   }, [title, columnId, createCard]);
 
@@ -54,7 +54,7 @@ export function CardInlineCreate({ boardId, columnId }: CardInlineCreateProps) {
         setIsAdding(false);
       }
     },
-    [handleSubmit],
+    [handleSubmit]
   );
 
   if (!isAdding) {
@@ -75,7 +75,7 @@ export function CardInlineCreate({ boardId, columnId }: CardInlineCreateProps) {
       <textarea
         ref={inputRef}
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={e => setTitle(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={() => {
           if (!title.trim()) {
@@ -87,7 +87,7 @@ export function CardInlineCreate({ boardId, columnId }: CardInlineCreateProps) {
         rows={2}
         className={cn(
           'w-full resize-none rounded-lg border bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 px-3 py-2 text-sm',
-          'placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50',
+          'placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50'
         )}
       />
       <div className="flex items-center gap-2">

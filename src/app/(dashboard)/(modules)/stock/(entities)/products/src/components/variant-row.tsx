@@ -50,8 +50,7 @@ export function VariantRow({
         key,
         label: attr.label || key,
         unitOfMeasure: attr.unitOfMeasure,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        value: (variant.attributes as any)?.[key],
+        value: variant.attributes?.[key],
       }));
   }, [variantAttributes, variant.attributes]);
 

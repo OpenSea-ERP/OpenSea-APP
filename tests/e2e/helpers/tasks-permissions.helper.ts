@@ -35,7 +35,7 @@ export const TASKS_FULL_PERMISSIONS = Object.values(TASKS_PERMISSIONS);
 
 export async function createTasksUser(
   permissionCodes: string[],
-  groupName?: string,
+  groupName?: string
 ) {
   return createUserWithPermissions(permissionCodes, groupName);
 }

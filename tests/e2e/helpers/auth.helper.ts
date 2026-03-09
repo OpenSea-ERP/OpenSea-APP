@@ -122,9 +122,7 @@ export async function getFirstTenantId(token: string): Promise<string> {
   });
 
   if (!res.ok) {
-    throw new Error(
-      `List tenants failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`List tenants failed (${res.status}): ${await res.text()}`);
   }
 
   const data = await res.json();

@@ -41,7 +41,7 @@ export function CardSubtasksTab({ boardId, cardId }: CardSubtasksTabProps) {
           toast.success('Subtarefa criada');
         },
         onError: () => toast.error('Erro ao criar subtarefa'),
-      },
+      }
     );
   }, [newTitle, createSubtask]);
 
@@ -52,7 +52,7 @@ export function CardSubtasksTab({ boardId, cardId }: CardSubtasksTabProps) {
         handleCreate();
       }
     },
-    [handleCreate],
+    [handleCreate]
   );
 
   const handleToggleComplete = useCallback(
@@ -62,10 +62,10 @@ export function CardSubtasksTab({ boardId, cardId }: CardSubtasksTabProps) {
         { subtaskId, completed },
         {
           onError: () => toast.error('Erro ao atualizar subtarefa'),
-        },
+        }
       );
     },
-    [completeSubtask],
+    [completeSubtask]
   );
 
   const handleDelete = useCallback(
@@ -75,13 +75,14 @@ export function CardSubtasksTab({ boardId, cardId }: CardSubtasksTabProps) {
         onError: () => toast.error('Erro ao remover subtarefa'),
       });
     },
-    [deleteSubtask],
+    [deleteSubtask]
   );
 
   // Progress
-  const completedCount = subtasks.filter((s) => s.status === 'DONE').length;
+  const completedCount = subtasks.filter(s => s.status === 'DONE').length;
   const totalCount = subtasks.length;
-  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const progressPercent =
+    totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
     <div className="space-y-4 flex-col w-full">
@@ -89,7 +90,9 @@ export function CardSubtasksTab({ boardId, cardId }: CardSubtasksTabProps) {
       {totalCount > 0 && (
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{completedCount} de {totalCount} concluídas</span>
+            <span>
+              {completedCount} de {totalCount} concluídas
+            </span>
             <span>{progressPercent}%</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -113,7 +116,7 @@ export function CardSubtasksTab({ boardId, cardId }: CardSubtasksTabProps) {
         </div>
       ) : (
         <div className="space-y-1">
-          {subtasks.map((subtask) => {
+          {subtasks.map(subtask => {
             const isDone = subtask.status === 'DONE';
             return (
               <div
@@ -122,7 +125,9 @@ export function CardSubtasksTab({ boardId, cardId }: CardSubtasksTabProps) {
               >
                 <Checkbox
                   checked={isDone}
-                  onCheckedChange={() => handleToggleComplete(subtask.id, subtask.status)}
+                  onCheckedChange={() =>
+                    handleToggleComplete(subtask.id, subtask.status)
+                  }
                 />
                 <span
                   className={`flex-1 text-sm ${isDone ? 'line-through text-muted-foreground' : ''}`}
@@ -149,7 +154,7 @@ export function CardSubtasksTab({ boardId, cardId }: CardSubtasksTabProps) {
         <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
         <Input
           value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
+          onChange={e => setNewTitle(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Adicionar subtarefa..."
           className="h-8 text-sm"

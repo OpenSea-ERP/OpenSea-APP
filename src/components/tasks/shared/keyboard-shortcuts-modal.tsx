@@ -65,13 +65,13 @@ export function KeyboardShortcutsModal({
         </DialogHeader>
 
         <div className="space-y-6">
-          {SHORTCUT_SECTIONS.map((section) => (
+          {SHORTCUT_SECTIONS.map(section => (
             <div key={section.title}>
               <h3 className="text-sm font-semibold text-muted-foreground mb-2">
                 {section.title}
               </h3>
               <div className="space-y-1">
-                {section.shortcuts.map((shortcut) => (
+                {section.shortcuts.map(shortcut => (
                   <div
                     key={shortcut.key}
                     className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50"

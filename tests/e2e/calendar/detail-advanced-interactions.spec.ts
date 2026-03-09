@@ -83,9 +83,13 @@ test.describe('Calendar - P2 Interface (Detalhe e Interações Avançadas)', () 
     await navigateToCalendar(page);
     await openCalendarEventByTitle(page, title);
 
-    await expect(page.locator('text=Recorrente')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Recorrente')).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator('text=Privado')).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('text=Descricao detalhada para teste')).toBeVisible({
+    await expect(
+      page.locator('text=Descricao detalhada para teste')
+    ).toBeVisible({
       timeout: 10_000,
     });
     await expect(page.locator('text=Auditório Principal')).toBeVisible({
@@ -100,7 +104,9 @@ test.describe('Calendar - P2 Interface (Detalhe e Interações Avançadas)', () 
       ownerToken,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(ownerToken, event.id, [{ userId: guestUserId }]);
+    await inviteParticipantsViaApi(ownerToken, event.id, [
+      { userId: guestUserId },
+    ]);
 
     await injectAuthIntoBrowser(page, ownerToken, ownerTenantId);
     await navigateToCalendar(page);
@@ -119,13 +125,17 @@ test.describe('Calendar - P2 Interface (Detalhe e Interações Avançadas)', () 
     await waitForToast(page, 'Participante removido');
   });
 
-  test('9.3 - Configurar e remover lembrete (Sem lembrete)', async ({ page }) => {
+  test('9.3 - Configurar e remover lembrete (Sem lembrete)', async ({
+    page,
+  }) => {
     const title = `e2e-cal-reminder-remove-${Date.now()}`;
     const event = await createCalendarEventViaApi(
       ownerToken,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(ownerToken, event.id, [{ userId: guestUserId }]);
+    await inviteParticipantsViaApi(ownerToken, event.id, [
+      { userId: guestUserId },
+    ]);
 
     await injectAuthIntoBrowser(page, guestToken, guestTenantId);
     await navigateToCalendar(page);
@@ -149,7 +159,9 @@ test.describe('Calendar - P2 Interface (Detalhe e Interações Avançadas)', () 
       ownerToken,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(ownerToken, event.id, [{ userId: guestUserId }]);
+    await inviteParticipantsViaApi(ownerToken, event.id, [
+      { userId: guestUserId },
+    ]);
 
     await injectAuthIntoBrowser(page, ownerToken, ownerTenantId);
     await navigateToCalendar(page);
@@ -167,7 +179,9 @@ test.describe('Calendar - P2 Interface (Detalhe e Interações Avançadas)', () 
       timeout: 10_000,
     });
 
-    await page.locator('input[placeholder="Buscar por nome ou e-mail..."]').fill(guestUsername);
+    await page
+      .locator('input[placeholder="Buscar por nome ou e-mail..."]')
+      .fill(guestUsername);
     await expect(page.locator('text=Nenhum usuário encontrado')).toBeVisible({
       timeout: 10_000,
     });
@@ -188,9 +202,13 @@ test.describe('Calendar - P2 Interface (Detalhe e Interações Avançadas)', () 
     await openCalendarEventByTitle(page, title);
     await page.locator('button:has-text("Editar")').click();
 
-    await expect(page.locator('text=Editar Evento')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Editar Evento')).toBeVisible({
+      timeout: 5_000,
+    });
     await expect(
-      page.locator('[role="dialog"] textarea[placeholder="Descrição do evento"]')
+      page.locator(
+        '[role="dialog"] textarea[placeholder="Descrição do evento"]'
+      )
     ).toBeVisible({ timeout: 10_000 });
     await expect(
       page.locator('[role="dialog"] input[placeholder="Local do evento"]')

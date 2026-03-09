@@ -19,17 +19,30 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useBoard, useUpdateBoard } from '@/hooks/tasks/use-boards';
-import { useCreateColumn, useUpdateColumn, useDeleteColumn, useReorderColumns } from '@/hooks/tasks/use-columns';
+import {
+  useCreateColumn,
+  useUpdateColumn,
+  useDeleteColumn,
+  useReorderColumns,
+} from '@/hooks/tasks/use-columns';
 import type { BoardVisibility, Column } from '@/types/tasks';
 import { toast } from 'sonner';
-import { Loader2, ChevronUp, ChevronDown, Pencil, Trash2, Plus, Check, X } from 'lucide-react';
+import {
+  Loader2,
+  ChevronUp,
+  ChevronDown,
+  Pencil,
+  Trash2,
+  Plus,
+  Check,
+  X,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   BOARD_GRADIENTS,
   getGradientForBoard,
   setGradientForBoard,
 } from '@/components/tasks/shared/board-gradients';
-
 
 interface BoardSettingsDialogProps {
   open: boolean;
@@ -145,8 +158,9 @@ export function BoardSettingsDialog({
   }
 
   async function handleMoveColumn(column: Column, direction: 'up' | 'down') {
-    const currentIndex = columns.findIndex((c) => c.id === column.id);
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const currentIndex = columns.findIndex(c => c.id === column.id);
+    const targetIndex =
+      direction === 'up' ? currentIndex - 1 : currentIndex + 1;
 
     if (targetIndex < 0 || targetIndex >= columns.length) return;
 
@@ -156,7 +170,7 @@ export function BoardSettingsDialog({
 
     try {
       await reorderColumns.mutateAsync({
-        columnIds: reordered.map((c) => c.id),
+        columnIds: reordered.map(c => c.id),
       });
     } catch (error: unknown) {
       const message =
@@ -181,19 +195,22 @@ export function BoardSettingsDialog({
             <Input
               id="settings-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
             />
           </div>
 
           {/* Descrição */}
           <div className="space-y-1.5">
-            <label htmlFor="settings-description" className="text-sm font-medium">
+            <label
+              htmlFor="settings-description"
+              className="text-sm font-medium"
+            >
               Descrição
             </label>
             <Textarea
               id="settings-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               rows={3}
             />
           </div>
@@ -203,7 +220,7 @@ export function BoardSettingsDialog({
             <label className="text-sm font-medium">Visibilidade</label>
             <Select
               value={visibility}
-              onValueChange={(v) => setVisibility(v as BoardVisibility)}
+              onValueChange={v => setVisibility(v as BoardVisibility)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -219,7 +236,7 @@ export function BoardSettingsDialog({
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Cor de fundo</label>
             <div className="grid grid-cols-6 gap-2">
-              {BOARD_GRADIENTS.map((gradient) => {
+              {BOARD_GRADIENTS.map(gradient => {
                 const current = getGradientForBoard(boardId, board?.gradientId);
                 const isSelected = current.id === gradient.id;
                 return (
@@ -228,14 +245,15 @@ export function BoardSettingsDialog({
                     type="button"
                     className={cn(
                       'h-8 w-full rounded-md transition-all duration-150 hover:scale-110',
-                      isSelected && 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110',
+                      isSelected &&
+                        'ring-2 ring-white ring-offset-2 ring-offset-background scale-110'
                     )}
                     style={gradient.style}
                     onClick={() => {
                       setGradientForBoard(boardId, gradient.id);
                       updateBoard.mutate(
                         { boardId, data: { gradientId: gradient.id } },
-                        { onSuccess: () => toast.success('Cor atualizada!') },
+                        { onSuccess: () => toast.success('Cor atualizada!') }
                       );
                     }}
                   >
@@ -269,11 +287,12 @@ export function BoardSettingsDialog({
                     <div className="flex items-center gap-1 flex-1">
                       <Input
                         value={editingColumnName}
-                        onChange={(e) => setEditingColumnName(e.target.value)}
+                        onChange={e => setEditingColumnName(e.target.value)}
                         className="h-7 text-sm"
                         autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleUpdateColumnName(column.id);
+                        onKeyDown={e => {
+                          if (e.key === 'Enter')
+                            handleUpdateColumnName(column.id);
                           if (e.key === 'Escape') setEditingColumnId(null);
                         }}
                       />
@@ -370,9 +389,9 @@ export function BoardSettingsDialog({
               <Input
                 placeholder="Nome da nova coluna"
                 value={newColumnName}
-                onChange={(e) => setNewColumnName(e.target.value)}
+                onChange={e => setNewColumnName(e.target.value)}
                 className="text-sm"
-                onKeyDown={(e) => {
+                onKeyDown={e => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     handleAddColumn();
@@ -405,10 +424,7 @@ export function BoardSettingsDialog({
           >
             Fechar
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={updateBoard.isPending}
-          >
+          <Button onClick={handleSave} disabled={updateBoard.isPending}>
             {updateBoard.isPending && (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             )}

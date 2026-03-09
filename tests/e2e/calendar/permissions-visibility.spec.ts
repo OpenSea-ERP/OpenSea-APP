@@ -28,7 +28,10 @@ test.describe('Calendar - Visibilidade por Permissão', () => {
     page,
   }) => {
     const eventTitle = `e2e-cal-perm-read-${Date.now()}`;
-    await createCalendarEventViaApi(adminToken, buildDefaultEventPayload(eventTitle));
+    await createCalendarEventViaApi(
+      adminToken,
+      buildDefaultEventPayload(eventTitle)
+    );
 
     const user = await createCalendarUser(
       [CALENDAR_PERMISSIONS.EVENTS_LIST],
@@ -54,7 +57,10 @@ test.describe('Calendar - Visibilidade por Permissão', () => {
     const auth = await getAuthenticatedToken(user.email, user.password);
 
     const title = `e2e-cal-owner-event-${Date.now()}`;
-    await createCalendarEventViaApi(auth.token, buildDefaultEventPayload(title));
+    await createCalendarEventViaApi(
+      auth.token,
+      buildDefaultEventPayload(title)
+    );
 
     await injectAuthIntoBrowser(page, auth.token, auth.tenantId);
     await navigateToCalendar(page);
@@ -77,7 +83,9 @@ test.describe('Calendar - Visibilidade por Permissão', () => {
       adminToken,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(adminToken, event.id, [{ userId: user.userId }]);
+    await inviteParticipantsViaApi(adminToken, event.id, [
+      { userId: user.userId },
+    ]);
 
     await injectAuthIntoBrowser(page, auth.token, auth.tenantId);
     await navigateToCalendar(page);
@@ -90,7 +98,10 @@ test.describe('Calendar - Visibilidade por Permissão', () => {
     page,
   }) => {
     const user = await createCalendarUser(
-      [CALENDAR_PERMISSIONS.EVENTS_LIST, CALENDAR_PERMISSIONS.PARTICIPANTS_RESPOND],
+      [
+        CALENDAR_PERMISSIONS.EVENTS_LIST,
+        CALENDAR_PERMISSIONS.PARTICIPANTS_RESPOND,
+      ],
       `e2e-cal-no-reminder-${Date.now()}`
     );
     const auth = await getAuthenticatedToken(user.email, user.password);
@@ -100,7 +111,9 @@ test.describe('Calendar - Visibilidade por Permissão', () => {
       adminToken,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(adminToken, event.id, [{ userId: user.userId }]);
+    await inviteParticipantsViaApi(adminToken, event.id, [
+      { userId: user.userId },
+    ]);
 
     await injectAuthIntoBrowser(page, auth.token, auth.tenantId);
     await navigateToCalendar(page);

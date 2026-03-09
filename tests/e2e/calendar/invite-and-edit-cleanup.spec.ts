@@ -58,14 +58,19 @@ test.describe('Calendar - Convite Avançado e Limpeza de Campos', () => {
       .locator('input[placeholder="Buscar por nome ou e-mail..."]')
       .fill(guestUsername);
     await page.locator('[role="dialog"] [role="checkbox"]').first().click();
-    await page.locator('[role="dialog"] button[role="combobox"]').last().click();
+    await page
+      .locator('[role="dialog"] button[role="combobox"]')
+      .last()
+      .click();
     await page.locator('[role="option"]:has-text("Responsável")').click();
     await page.locator('button:has-text("Convidar (1)")').click();
     await waitForToast(page, '1 participante(s) convidado(s)');
 
     await page.keyboard.press('Escape');
     await openCalendarEventByTitle(page, title);
-    await expect(page.locator('text=Responsável')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Responsável')).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test('15.2 - Falha ao carregar usuários no convite mostra estado seguro', async ({

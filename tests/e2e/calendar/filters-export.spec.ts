@@ -34,14 +34,19 @@ test.beforeAll(async () => {
 test.describe('Calendar - Filtros e Exportação', () => {
   test('7.1 - Buscar evento por texto', async ({ page }) => {
     const unique = `e2e-cal-search-${Date.now()}`;
-    await createCalendarEventViaApi(adminToken, buildDefaultEventPayload(unique));
+    await createCalendarEventViaApi(
+      adminToken,
+      buildDefaultEventPayload(unique)
+    );
 
     await injectAuthIntoBrowser(page, userToken, userTenantId);
     await navigateToCalendar(page);
 
     await page.locator('input[placeholder="Buscar eventos..."]').fill(unique);
     await page.waitForTimeout(800);
-    await expect(page.locator(`.fc-event:has-text("${unique}")`).first()).toBeVisible({
+    await expect(
+      page.locator(`.fc-event:has-text("${unique}")`).first()
+    ).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -65,7 +70,9 @@ test.describe('Calendar - Filtros e Exportação', () => {
     await page.locator('[role="option"]:has-text("Tarefa")').click();
     await page.waitForTimeout(800);
 
-    await expect(page.locator(`.fc-event:has-text("${taskTitle}")`).first()).toBeVisible({
+    await expect(
+      page.locator(`.fc-event:has-text("${taskTitle}")`).first()
+    ).toBeVisible({
       timeout: 10_000,
     });
   });

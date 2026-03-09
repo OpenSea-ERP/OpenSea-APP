@@ -58,7 +58,9 @@ test.describe('Calendar - Permissões de Toolbar e Criação', () => {
     await navigateToCalendar(page);
 
     await page.locator('.fc-daygrid-day[data-date]').first().click();
-    await expect(page.locator('[role="dialog"] >> text=Novo Evento')).toHaveCount(0);
+    await expect(
+      page.locator('[role="dialog"] >> text=Novo Evento')
+    ).toHaveCount(0);
   });
 
   test('2.4 - Clique no dia abre modal com permissão de criação', async ({
@@ -74,6 +76,8 @@ test.describe('Calendar - Permissões de Toolbar e Criação', () => {
     await navigateToCalendar(page);
 
     await page.locator('.fc-daygrid-day[data-date]').first().click();
-    await expect(page.locator('text=Novo Evento')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Novo Evento')).toBeVisible({
+      timeout: 5_000,
+    });
   });
 });

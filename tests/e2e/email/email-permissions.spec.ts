@@ -66,9 +66,9 @@ test.describe('E-mail - Controle de Permissoes', () => {
     await page.waitForLoadState('networkidle');
 
     // Should see the email page header
-    await expect(
-      page.locator('text=E-mail').first()
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('text=E-mail').first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('6.2 - Usuario com todas permissoes deve ver botao "Novo e-mail"', async ({
@@ -78,9 +78,9 @@ test.describe('E-mail - Controle de Permissoes', () => {
     await page.goto('/email');
     await page.waitForLoadState('networkidle');
 
-    await expect(
-      page.locator('button:has-text("Novo e-mail")')
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('button:has-text("Novo e-mail")')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('6.3 - Usuario somente leitura nao deve ver botao "Novo e-mail"', async ({
@@ -107,9 +107,9 @@ test.describe('E-mail - Controle de Permissoes', () => {
     await page.goto('/email/settings');
     await page.waitForLoadState('networkidle');
 
-    await expect(
-      page.locator('text=Contas configuradas').first()
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('text=Contas configuradas').first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('6.5 - Usuario com todas permissoes deve ver botao "Nova conta" em settings', async ({
@@ -119,9 +119,9 @@ test.describe('E-mail - Controle de Permissoes', () => {
     await page.goto('/email/settings');
     await page.waitForLoadState('networkidle');
 
-    await expect(
-      page.locator('button:has-text("Nova conta")')
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('button:has-text("Nova conta")')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('6.6 - Usuario somente leitura nao deve ver botao "Nova conta"', async ({

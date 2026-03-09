@@ -290,7 +290,8 @@ test.describe('File Manager - Drag and Drop', () => {
             break;
           }
         }
-        if (!targetDiv) throw new Error(`Breadcrumb link for "${parentName}" not found`);
+        if (!targetDiv)
+          throw new Error(`Breadcrumb link for "${parentName}" not found`);
 
         // Find the source element
         const source = document.querySelector(`[data-item-id="${fileId}"]`);
@@ -303,21 +304,38 @@ test.describe('File Manager - Drag and Drop', () => {
         const origGetData = dt.getData.bind(dt);
         dt.setData = (format: string, data: string) => {
           dataStore[format] = data;
-          try { origSetData(format, data); } catch { /* noop */ }
+          try {
+            origSetData(format, data);
+          } catch {
+            /* noop */
+          }
         };
-        dt.getData = (format: string) => dataStore[format] ?? origGetData(format);
-        Object.defineProperty(dt, 'types', { get: () => Object.keys(dataStore) });
+        dt.getData = (format: string) =>
+          dataStore[format] ?? origGetData(format);
+        Object.defineProperty(dt, 'types', {
+          get: () => Object.keys(dataStore),
+        });
 
         // Dispatch events
         const items = JSON.stringify([{ id: fileId, type: 'file' }]);
         dt.setData(mime, items);
         dt.effectAllowed = 'move';
 
-        source.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dt, bubbles: true }));
-        targetDiv.dispatchEvent(new DragEvent('dragenter', { dataTransfer: dt, bubbles: true }));
-        targetDiv.dispatchEvent(new DragEvent('dragover', { dataTransfer: dt, bubbles: true }));
-        targetDiv.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true }));
-        source.dispatchEvent(new DragEvent('dragend', { dataTransfer: dt, bubbles: true }));
+        source.dispatchEvent(
+          new DragEvent('dragstart', { dataTransfer: dt, bubbles: true })
+        );
+        targetDiv.dispatchEvent(
+          new DragEvent('dragenter', { dataTransfer: dt, bubbles: true })
+        );
+        targetDiv.dispatchEvent(
+          new DragEvent('dragover', { dataTransfer: dt, bubbles: true })
+        );
+        targetDiv.dispatchEvent(
+          new DragEvent('drop', { dataTransfer: dt, bubbles: true })
+        );
+        source.dispatchEvent(
+          new DragEvent('dragend', { dataTransfer: dt, bubbles: true })
+        );
       },
       { fileId, parentId, mime: DRAG_MIME, parentName }
     );
@@ -361,7 +379,9 @@ test.describe('File Manager - Drag and Drop', () => {
 
     // Select both files via Ctrl+click (so handleItemDragStart includes both)
     await page.locator(`[data-item-id="${file1Id}"]`).click();
-    await page.locator(`[data-item-id="${file2Id}"]`).click({ modifiers: ['Control'] });
+    await page
+      .locator(`[data-item-id="${file2Id}"]`)
+      .click({ modifiers: ['Control'] });
 
     // Small wait for React state to settle
     await page.waitForTimeout(200);
@@ -424,7 +444,9 @@ test.describe('File Manager - Drag and Drop', () => {
     await expect(page.locator(`[title="${userFolderName}"]`)).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.locator(`[title="${systemFolder.name}"]`).first()).toBeVisible({
+    await expect(
+      page.locator(`[title="${systemFolder.name}"]`).first()
+    ).toBeVisible({
       timeout: 10_000,
     });
 
@@ -432,9 +454,9 @@ test.describe('File Manager - Drag and Drop', () => {
     // should prevent the drop handler from running (no preventDefault on dragover).
     // We simulate the full sequence and verify nothing happened.
     const sourceWrapper = page.locator(`[data-item-id="${userFolderId}"]`);
-    const targetWrapper = page.locator(
-      `[data-item-id]:has([title="${systemFolder.name}"])`
-    ).first();
+    const targetWrapper = page
+      .locator(`[data-item-id]:has([title="${systemFolder.name}"])`)
+      .first();
     const targetDataId = await targetWrapper.getAttribute('data-item-id');
 
     await simulateDragAndDrop(
@@ -519,7 +541,8 @@ test.describe('File Manager - Drag and Drop', () => {
           }
         }
 
-        if (!sourceRow) throw new Error(`Source row for "${fileName}" not found`);
+        if (!sourceRow)
+          throw new Error(`Source row for "${fileName}" not found`);
         if (!targetRow)
           throw new Error(`Target row for "${targetName}" not found`);
 
@@ -530,19 +553,36 @@ test.describe('File Manager - Drag and Drop', () => {
         const origGetData = dt.getData.bind(dt);
         dt.setData = (format: string, data: string) => {
           dataStore[format] = data;
-          try { origSetData(format, data); } catch { /* noop */ }
+          try {
+            origSetData(format, data);
+          } catch {
+            /* noop */
+          }
         };
-        dt.getData = (format: string) => dataStore[format] ?? origGetData(format);
-        Object.defineProperty(dt, 'types', { get: () => Object.keys(dataStore) });
+        dt.getData = (format: string) =>
+          dataStore[format] ?? origGetData(format);
+        Object.defineProperty(dt, 'types', {
+          get: () => Object.keys(dataStore),
+        });
 
         dt.setData(mime, JSON.stringify([{ id: fileId, type: 'file' }]));
         dt.effectAllowed = 'move';
 
-        sourceRow.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dt, bubbles: true }));
-        targetRow.dispatchEvent(new DragEvent('dragenter', { dataTransfer: dt, bubbles: true }));
-        targetRow.dispatchEvent(new DragEvent('dragover', { dataTransfer: dt, bubbles: true }));
-        targetRow.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true }));
-        sourceRow.dispatchEvent(new DragEvent('dragend', { dataTransfer: dt, bubbles: true }));
+        sourceRow.dispatchEvent(
+          new DragEvent('dragstart', { dataTransfer: dt, bubbles: true })
+        );
+        targetRow.dispatchEvent(
+          new DragEvent('dragenter', { dataTransfer: dt, bubbles: true })
+        );
+        targetRow.dispatchEvent(
+          new DragEvent('dragover', { dataTransfer: dt, bubbles: true })
+        );
+        targetRow.dispatchEvent(
+          new DragEvent('drop', { dataTransfer: dt, bubbles: true })
+        );
+        sourceRow.dispatchEvent(
+          new DragEvent('dragend', { dataTransfer: dt, bubbles: true })
+        );
       },
       { fileId, targetId, targetName, fileName, mime: DRAG_MIME }
     );

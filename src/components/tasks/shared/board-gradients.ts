@@ -103,10 +103,13 @@ function hashBoardId(boardId: string): number {
   return Math.abs(hash);
 }
 
-export function getGradientForBoard(boardId: string, serverGradientId?: string | null): BoardGradient {
+export function getGradientForBoard(
+  boardId: string,
+  serverGradientId?: string | null
+): BoardGradient {
   // Server-persisted gradient takes precedence
   if (serverGradientId) {
-    const found = BOARD_GRADIENTS.find((g) => g.id === serverGradientId);
+    const found = BOARD_GRADIENTS.find(g => g.id === serverGradientId);
     if (found) return found;
   }
 
@@ -114,7 +117,7 @@ export function getGradientForBoard(boardId: string, serverGradientId?: string |
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem(`${STORAGE_PREFIX}${boardId}`);
     if (stored) {
-      const found = BOARD_GRADIENTS.find((g) => g.id === stored);
+      const found = BOARD_GRADIENTS.find(g => g.id === stored);
       if (found) return found;
     }
   }

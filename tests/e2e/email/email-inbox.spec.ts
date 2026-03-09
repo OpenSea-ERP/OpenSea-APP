@@ -124,9 +124,7 @@ test.describe('E-mail - Caixa de Entrada (Inbox)', () => {
 
     // Look for filter control (tab/button for unread)
     const unreadFilter = page.locator('text=Não lido').first();
-    if (
-      await unreadFilter.isVisible({ timeout: 5_000 }).catch(() => false)
-    ) {
+    if (await unreadFilter.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await unreadFilter.click();
       await page.waitForTimeout(1000);
 
@@ -155,9 +153,7 @@ test.describe('E-mail - Caixa de Entrada (Inbox)', () => {
     }
   });
 
-  test('3.6 - Deve exibir indicador de mensagem nao lida', async ({
-    page,
-  }) => {
+  test('3.6 - Deve exibir indicador de mensagem nao lida', async ({ page }) => {
     const messages = [
       buildMockMessageItem({
         id: 'unread-indicator',

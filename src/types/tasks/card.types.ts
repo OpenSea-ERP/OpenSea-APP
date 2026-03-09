@@ -94,13 +94,24 @@ export const PRIORITY_CONFIG: Record<
 > = {
   URGENT: { label: 'Urgente', color: 'text-red-600', dotColor: 'bg-red-500' },
   HIGH: { label: 'Alta', color: 'text-orange-600', dotColor: 'bg-orange-500' },
-  MEDIUM: { label: 'Média', color: 'text-yellow-600', dotColor: 'bg-yellow-500' },
+  MEDIUM: {
+    label: 'Média',
+    color: 'text-yellow-600',
+    dotColor: 'bg-yellow-500',
+  },
   LOW: { label: 'Baixa', color: 'text-blue-600', dotColor: 'bg-blue-500' },
-  NONE: { label: 'Nenhuma', color: 'text-muted-foreground', dotColor: 'bg-gray-400' },
+  NONE: {
+    label: 'Nenhuma',
+    color: 'text-muted-foreground',
+    dotColor: 'bg-gray-400',
+  },
 };
 
 // Status config for UI rendering (PT-BR labels)
-export const STATUS_CONFIG: Record<CardStatus, { label: string; color: string }> = {
+export const STATUS_CONFIG: Record<
+  CardStatus,
+  { label: string; color: string }
+> = {
   OPEN: { label: 'Aberto', color: 'text-gray-600' },
   IN_PROGRESS: { label: 'Em Progresso', color: 'text-blue-600' },
   DONE: { label: 'Concluído', color: 'text-green-600' },

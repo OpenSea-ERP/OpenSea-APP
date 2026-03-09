@@ -295,16 +295,15 @@ export function ProductViewer({
 
     if (!itemsSearch.trim()) return result;
     const q = itemsSearch.toLowerCase();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return result.filter((item: any) => {
+    return result.filter((item: Item) => {
       const locationAddress =
-        (item.bin?.address as string) ||
-        (item.resolvedAddress as string) ||
-        (item.binId as string) ||
-        (item.locationId as string) ||
+        item.bin?.address ||
+        item.resolvedAddress ||
+        item.binId ||
+        item.locationId ||
         '';
-      const fullCode = (item.fullCode as string) || '';
-      const uniqueCode = (item.uniqueCode as string) || '';
+      const fullCode = item.fullCode || '';
+      const uniqueCode = item.uniqueCode || '';
       const quantity = String(item.currentQuantity ?? '');
       return (
         fullCode.toLowerCase().includes(q) ||
@@ -318,22 +317,19 @@ export function ProductViewer({
   const totalItemsQuantity = useMemo(
     () =>
       filteredItems.reduce(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (sum: number, item: any) => sum + item.currentQuantity,
+        (sum: number, item: Item) => sum + item.currentQuantity,
         0
       ),
     [filteredItems]
   );
 
   const unitOfMeasure = formatUnitOfMeasure(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (product as any).template?.unitOfMeasure || 'UNITS'
+    product.template?.unitOfMeasure || 'UNITS'
   );
 
   // Mapear care options selecionadas
   const selectedCareOptions = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const careInstructionIds = (product as any)?.careInstructionIds || [];
+    const careInstructionIds = product.careInstructionIds || [];
     if (!careOptionsData || careInstructionIds.length === 0) return [];
 
     const allOptions = Object.values(careOptionsData).flat();
@@ -736,8 +732,7 @@ export function ProductViewer({
 
       {/* Atributos Personalizados */}
       {(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const attrs = (product.template as any)?.productAttributes || {};
+        const attrs = product.template?.productAttributes || {};
         return Object.keys(attrs).length > 0 ? (
           <Card className="p-6 mb-6">
             <h3 className="text-lg font-semibold mb-4">
@@ -746,20 +741,13 @@ export function ProductViewer({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {Object.entries(attrs)
                 .sort(([keyA, configA], [keyB, configB]) => {
-                  const labelA =
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ((configA as any)?.label || keyA).toLowerCase();
-
-                  const labelB =
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ((configB as any)?.label || keyB).toLowerCase();
+                  const labelA = (configA.label || keyA).toLowerCase();
+                  const labelB = (configB.label || keyB).toLowerCase();
                   return labelA.localeCompare(labelB);
                 })
                 .map(([key, config]) => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const value = (product.attributes as any)?.[key];
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const cfg = config as any;
+                  const value = product.attributes?.[key];
+                  const cfg = config;
                   const baseLabel = cfg?.label || key;
                   // Adiciona unidade de medida ao label quando existir
                   const label = cfg?.unitOfMeasure
@@ -853,10 +841,7 @@ export function ProductViewer({
                     setEditingVariant(v);
                     setShowEditVariantModal(true);
                   }}
-                  variantAttributes={
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (product as any).template?.variantAttributes
-                  }
+                  variantAttributes={product.template?.variantAttributes}
                 />
               ))
             )}
@@ -965,10 +950,7 @@ export function ProductViewer({
                       key={item.id}
                       item={item}
                       unitLabel={unitOfMeasure}
-                      itemAttributes={
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (product as any).template?.itemAttributes
-                      }
+                      itemAttributes={product.template?.itemAttributes}
                       isSelected={selectionActions.isSelected(item.id)}
                       onClick={e => handleItemClick(item, e)}
                       onDoubleClick={() => handleItemDoubleClick(item)}

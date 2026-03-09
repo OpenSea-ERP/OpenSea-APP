@@ -25,13 +25,18 @@ interface BoardCreateDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function BoardCreateDialog({ open, onOpenChange }: BoardCreateDialogProps) {
+export function BoardCreateDialog({
+  open,
+  onOpenChange,
+}: BoardCreateDialogProps) {
   const router = useRouter();
   const createBoard = useCreateBoard();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedGradient, setSelectedGradient] = useState(BOARD_GRADIENTS[0].id);
+  const [selectedGradient, setSelectedGradient] = useState(
+    BOARD_GRADIENTS[0].id
+  );
 
   function resetForm() {
     setTitle('');
@@ -67,7 +72,8 @@ export function BoardCreateDialog({ open, onOpenChange }: BoardCreateDialogProps
     }
   }
 
-  const activeGradient = BOARD_GRADIENTS.find((g) => g.id === selectedGradient) ?? BOARD_GRADIENTS[0];
+  const activeGradient =
+    BOARD_GRADIENTS.find(g => g.id === selectedGradient) ?? BOARD_GRADIENTS[0];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,7 +109,7 @@ export function BoardCreateDialog({ open, onOpenChange }: BoardCreateDialogProps
               id="board-title"
               placeholder="Ex: Projeto Website"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={e => setTitle(e.target.value)}
               autoFocus
             />
           </div>
@@ -117,7 +123,7 @@ export function BoardCreateDialog({ open, onOpenChange }: BoardCreateDialogProps
               id="board-description"
               placeholder="Descreva o objetivo deste quadro..."
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               rows={2}
             />
           </div>
@@ -126,13 +132,14 @@ export function BoardCreateDialog({ open, onOpenChange }: BoardCreateDialogProps
           <div className="space-y-2">
             <label className="text-sm font-medium">Cor de fundo</label>
             <div className="grid grid-cols-6 gap-2">
-              {BOARD_GRADIENTS.map((gradient) => (
+              {BOARD_GRADIENTS.map(gradient => (
                 <button
                   key={gradient.id}
                   type="button"
                   className={cn(
                     'h-8 w-full rounded-md transition-all duration-150 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                    selectedGradient === gradient.id && 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110',
+                    selectedGradient === gradient.id &&
+                      'ring-2 ring-white ring-offset-2 ring-offset-background scale-110'
                   )}
                   style={gradient.style}
                   onClick={() => setSelectedGradient(gradient.id)}

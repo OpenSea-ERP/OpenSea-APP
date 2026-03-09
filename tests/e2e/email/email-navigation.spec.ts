@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { getAuthenticatedToken, injectAuthIntoBrowser } from '../helpers/auth.helper';
+import {
+  getAuthenticatedToken,
+  injectAuthIntoBrowser,
+} from '../helpers/auth.helper';
 import {
   ALL_EMAIL_PERMISSIONS,
   createEmailUser,
@@ -43,7 +46,11 @@ test.describe('E-mail - Navegacao', () => {
     await navigateToEmail(page, userToken, userTenantId);
 
     // Header elements
-    await expect(page.locator('h1:has-text("E-mail"), h2:has-text("E-mail"), text=E-mail').first()).toBeVisible({
+    await expect(
+      page
+        .locator('h1:has-text("E-mail"), h2:has-text("E-mail"), text=E-mail')
+        .first()
+    ).toBeVisible({
       timeout: 15_000,
     });
     await expect(
@@ -57,9 +64,9 @@ test.describe('E-mail - Navegacao', () => {
     await mockEmailMessageRoutes(page, { accountId });
     await navigateToEmail(page, userToken, userTenantId);
 
-    await expect(
-      page.locator('button:has-text("Novo e-mail")')
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('button:has-text("Novo e-mail")')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('2.3 - Deve exibir botao "Configuracoes" no action bar', async ({
@@ -68,9 +75,9 @@ test.describe('E-mail - Navegacao', () => {
     await mockEmailMessageRoutes(page, { accountId });
     await navigateToEmail(page, userToken, userTenantId);
 
-    await expect(
-      page.locator('button:has-text("Configurações")')
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('button:has-text("Configurações")')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('2.4 - Deve navegar para settings ao clicar em "Configuracoes"', async ({
@@ -105,7 +112,9 @@ test.describe('E-mail - Navegacao', () => {
     // Sidebar should show account selector or account name
     // The sidebar renders account names and folder tree
     await page.waitForTimeout(2000); // Wait for accounts to load
-    const sidebar = page.locator('aside, [class*="sidebar"], [class*="Sidebar"]').first();
+    const sidebar = page
+      .locator('aside, [class*="sidebar"], [class*="Sidebar"]')
+      .first();
     if (await sidebar.isVisible({ timeout: 5_000 })) {
       await expect(sidebar).toBeVisible();
     }

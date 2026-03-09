@@ -21,7 +21,7 @@ let userTenantId: string;
 test.beforeAll(async () => {
   const user = await createTasksUser(
     TASKS_FULL_PERMISSIONS,
-    `e2e-tasks-crud-${Date.now().toString(36)}`,
+    `e2e-tasks-crud-${Date.now().toString(36)}`
   );
   const auth = await getAuthenticatedToken(user.email, user.password);
   userToken = auth.token;
@@ -37,10 +37,15 @@ test.describe('Tasks - CRUD de Quadros', () => {
 
     // Click "Novo Quadro" button
     await page.locator('button:has-text("Novo Quadro")').click();
-    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('[role="dialog"]')).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Fill title
-    await page.locator('[role="dialog"] input[type="text"]').first().fill(title);
+    await page
+      .locator('[role="dialog"] input[type="text"]')
+      .first()
+      .fill(title);
 
     // Submit
     await page.locator('[role="dialog"] button:has-text("Criar")').click();
@@ -58,10 +63,18 @@ test.describe('Tasks - CRUD de Quadros', () => {
     await navigateToBoard(page, board.id);
 
     // Board title should be visible
-    await expect(page.locator(`text="${board.title}"`)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(`text="${board.title}"`)).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Default columns should be visible (kanban view)
-    await expect(page.locator('[data-testid="kanban-column"], .kanban-column, [class*="kanban"]').first()).toBeVisible({
+    await expect(
+      page
+        .locator(
+          '[data-testid="kanban-column"], .kanban-column, [class*="kanban"]'
+        )
+        .first()
+    ).toBeVisible({
       timeout: 10_000,
     });
 
@@ -79,7 +92,9 @@ test.describe('Tasks - CRUD de Quadros', () => {
 
     // Open settings
     await page.locator('button:has-text("Configurações")').click();
-    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('[role="dialog"]')).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Change title
     const nameInput = page.locator('[role="dialog"] #settings-name');
@@ -102,7 +117,9 @@ test.describe('Tasks - CRUD de Quadros', () => {
     await navigateToTasks(page);
 
     // Board should appear in the list
-    await expect(page.locator(`text="${board.title}"`)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(`text="${board.title}"`)).toBeVisible({
+      timeout: 10_000,
+    });
 
     await deleteBoardViaApi(userToken, board.id);
   });

@@ -71,7 +71,9 @@ test.describe('File Manager - Mover para Raiz', () => {
 
     // Verify child is no longer in parent
     const parentContents = await getFolderContentsViaApi(userToken, parentId);
-    const childInParent = parentContents.folders.find(f => f.name === childName);
+    const childInParent = parentContents.folders.find(
+      f => f.name === childName
+    );
     expect(childInParent).toBeUndefined();
 
     // Verify child is in root

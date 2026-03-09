@@ -49,20 +49,21 @@ function serializeState(state: PrintQueueState): string {
 /**
  * Migra items v1 (sem entityType) para v2 (com entityType: 'stock-item')
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function migrateV1Items(items: any[]): PrintQueueItem[] {
+function migrateV1Items(
+  items: Array<Record<string, unknown>>
+): PrintQueueItem[] {
   return items.map(item => {
     if (!item.entityType) {
       return {
         ...item,
         entityType: 'stock-item' as const,
-        addedAt: new Date(item.addedAt),
-      };
+        addedAt: new Date(item.addedAt as string),
+      } as PrintQueueItem;
     }
     return {
       ...item,
-      addedAt: new Date(item.addedAt),
-    };
+      addedAt: new Date(item.addedAt as string),
+    } as PrintQueueItem;
   });
 }
 

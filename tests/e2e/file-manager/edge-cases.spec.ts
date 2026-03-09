@@ -51,7 +51,12 @@ test.describe('File Manager - Casos de Borda', () => {
     const folderName = `e2e-ec2-${Date.now()}`;
     const fileName = `ec2-${Date.now()}.txt`;
     const folderId = await createTestFolder(userToken, folderName);
-    const fileId = await uploadTestFile(userToken, folderId, fileName, 'Share limit test');
+    const fileId = await uploadTestFile(
+      userToken,
+      folderId,
+      fileName,
+      'Share limit test'
+    );
 
     // Create share link with maxDownloads=1
     let shareLink: { id: string; token: string };
@@ -79,7 +84,12 @@ test.describe('File Manager - Casos de Borda', () => {
     const folderName = `e2e-ec3-${Date.now()}`;
     const fileName = `ec3-${Date.now()}.txt`;
     const folderId = await createTestFolder(userToken, folderName);
-    const fileId = await uploadTestFile(userToken, folderId, fileName, 'Expired share test');
+    const fileId = await uploadTestFile(
+      userToken,
+      folderId,
+      fileName,
+      'Expired share test'
+    );
 
     // Create share link expired in the past
     const pastDate = new Date(Date.now() - 60_000).toISOString(); // 1 min ago
@@ -113,7 +123,12 @@ test.describe('File Manager - Casos de Borda', () => {
 
     const fileIds: string[] = [];
     for (const name of specialNames) {
-      const id = await uploadTestFile(userToken, folderId, name, `Content: ${name}`);
+      const id = await uploadTestFile(
+        userToken,
+        folderId,
+        name,
+        `Content: ${name}`
+      );
       fileIds.push(id);
     }
 

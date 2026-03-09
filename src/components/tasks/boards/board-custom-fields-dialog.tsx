@@ -25,7 +25,15 @@ import {
 } from '@/hooks/tasks/use-custom-fields';
 import type { CustomFieldType } from '@/types/tasks';
 import { toast } from 'sonner';
-import { Loader2, Pencil, Trash2, Check, X, Plus, Asterisk } from 'lucide-react';
+import {
+  Loader2,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  Plus,
+  Asterisk,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface BoardCustomFieldsDialogProps {
@@ -80,9 +88,13 @@ export function BoardCustomFieldsDialog({
       return;
     }
 
-    const options = isSelectType(newType) && newOptions.trim()
-      ? newOptions.split(',').map((o) => o.trim()).filter(Boolean)
-      : undefined;
+    const options =
+      isSelectType(newType) && newOptions.trim()
+        ? newOptions
+            .split(',')
+            .map(o => o.trim())
+            .filter(Boolean)
+        : undefined;
 
     try {
       await createField.mutateAsync({
@@ -122,9 +134,13 @@ export function BoardCustomFieldsDialog({
       return;
     }
 
-    const options = isSelectType(editingType) && editingOptions.trim()
-      ? editingOptions.split(',').map((o) => o.trim()).filter(Boolean)
-      : undefined;
+    const options =
+      isSelectType(editingType) && editingOptions.trim()
+        ? editingOptions
+            .split(',')
+            .map(o => o.trim())
+            .filter(Boolean)
+        : undefined;
 
     try {
       await updateField.mutateAsync({
@@ -171,7 +187,7 @@ export function BoardCustomFieldsDialog({
                 Nenhum campo personalizado criado.
               </p>
             ) : (
-              fields.map((field) => (
+              fields.map(field => (
                 <div key={field.id} className="space-y-2">
                   <div className="flex items-center gap-2 rounded-md border px-3 py-2">
                     <span className="text-sm font-medium flex-1">
@@ -213,7 +229,7 @@ export function BoardCustomFieldsDialog({
                     <div className="space-y-2 rounded-md border border-dashed p-3">
                       <Input
                         value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
+                        onChange={e => setEditingName(e.target.value)}
                         className="h-8 text-sm"
                         placeholder="Nome do campo"
                         autoFocus
@@ -221,14 +237,19 @@ export function BoardCustomFieldsDialog({
 
                       <Select
                         value={editingType}
-                        onValueChange={(v) => setEditingType(v as CustomFieldType)}
+                        onValueChange={v =>
+                          setEditingType(v as CustomFieldType)
+                        }
                       >
                         <SelectTrigger className="h-8 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {(
-                            Object.entries(FIELD_TYPE_LABELS) as [CustomFieldType, string][]
+                            Object.entries(FIELD_TYPE_LABELS) as [
+                              CustomFieldType,
+                              string,
+                            ][]
                           ).map(([value, label]) => (
                             <SelectItem key={value} value={value}>
                               {label}
@@ -240,7 +261,7 @@ export function BoardCustomFieldsDialog({
                       {isSelectType(editingType) && (
                         <Input
                           value={editingOptions}
-                          onChange={(e) => setEditingOptions(e.target.value)}
+                          onChange={e => setEditingOptions(e.target.value)}
                           className="h-8 text-sm"
                           placeholder="Opções separadas por vírgula"
                         />
@@ -250,7 +271,7 @@ export function BoardCustomFieldsDialog({
                         <Checkbox
                           id={`edit-required-${field.id}`}
                           checked={editingRequired}
-                          onCheckedChange={(v) => setEditingRequired(v === true)}
+                          onCheckedChange={v => setEditingRequired(v === true)}
                         />
                         <label
                           htmlFor={`edit-required-${field.id}`}
@@ -299,7 +320,7 @@ export function BoardCustomFieldsDialog({
                 <Input
                   placeholder="Ex: Estimativa de horas"
                   value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
+                  onChange={e => setNewName(e.target.value)}
                 />
               </div>
 
@@ -308,14 +329,17 @@ export function BoardCustomFieldsDialog({
                 <label className="text-sm font-medium">Tipo</label>
                 <Select
                   value={newType}
-                  onValueChange={(v) => setNewType(v as CustomFieldType)}
+                  onValueChange={v => setNewType(v as CustomFieldType)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {(
-                      Object.entries(FIELD_TYPE_LABELS) as [CustomFieldType, string][]
+                      Object.entries(FIELD_TYPE_LABELS) as [
+                        CustomFieldType,
+                        string,
+                      ][]
                     ).map(([value, label]) => (
                       <SelectItem key={value} value={value}>
                         {label}
@@ -332,7 +356,7 @@ export function BoardCustomFieldsDialog({
                   <Input
                     placeholder="Opção 1, Opção 2, Opção 3"
                     value={newOptions}
-                    onChange={(e) => setNewOptions(e.target.value)}
+                    onChange={e => setNewOptions(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
                     Separe as opções por vírgula.
@@ -345,7 +369,7 @@ export function BoardCustomFieldsDialog({
                 <Checkbox
                   id="new-field-required"
                   checked={newRequired}
-                  onCheckedChange={(v) => setNewRequired(v === true)}
+                  onCheckedChange={v => setNewRequired(v === true)}
                 />
                 <label htmlFor="new-field-required" className="text-sm">
                   Obrigatório

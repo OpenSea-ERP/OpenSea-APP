@@ -15,9 +15,16 @@ import {
   openCalendarEventByTitle,
 } from '../helpers/calendar.helper';
 
-async function createOwnerWithPermissions(permissionCodes: string[], suffix: string) {
+async function createOwnerWithPermissions(
+  permissionCodes: string[],
+  suffix: string
+) {
   const user = await createCalendarUser(
-    [CALENDAR_PERMISSIONS.EVENTS_LIST, CALENDAR_PERMISSIONS.EVENTS_CREATE, ...permissionCodes],
+    [
+      CALENDAR_PERMISSIONS.EVENTS_LIST,
+      CALENDAR_PERMISSIONS.EVENTS_CREATE,
+      ...permissionCodes,
+    ],
     `e2e-cal-matrix-owner-${suffix}-${Date.now()}`
   );
   const auth = await getAuthenticatedToken(user.email, user.password);
@@ -33,13 +40,18 @@ test.describe('Calendar - Matriz Estendida de Permissões (UI)', () => {
       'upd-only'
     );
     const title = `e2e-cal-matrix-upd-${Date.now()}`;
-    await createCalendarEventViaApi(owner.token, buildDefaultEventPayload(title));
+    await createCalendarEventViaApi(
+      owner.token,
+      buildDefaultEventPayload(title)
+    );
 
     await injectAuthIntoBrowser(page, owner.token, owner.tenantId);
     await navigateToCalendar(page);
     await openCalendarEventByTitle(page, title);
 
-    await expect(page.locator('button:has-text("Editar")')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('button:has-text("Editar")')).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator('button:has-text("Excluir")')).toHaveCount(0);
   });
 
@@ -51,13 +63,18 @@ test.describe('Calendar - Matriz Estendida de Permissões (UI)', () => {
       'del-only'
     );
     const title = `e2e-cal-matrix-del-${Date.now()}`;
-    await createCalendarEventViaApi(owner.token, buildDefaultEventPayload(title));
+    await createCalendarEventViaApi(
+      owner.token,
+      buildDefaultEventPayload(title)
+    );
 
     await injectAuthIntoBrowser(page, owner.token, owner.tenantId);
     await navigateToCalendar(page);
     await openCalendarEventByTitle(page, title);
 
-    await expect(page.locator('button:has-text("Excluir")')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('button:has-text("Excluir")')).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator('button:has-text("Editar")')).toHaveCount(0);
   });
 
@@ -77,14 +94,18 @@ test.describe('Calendar - Matriz Estendida de Permissões (UI)', () => {
       owner.token,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(owner.token, event.id, [{ userId: guest.userId }]);
+    await inviteParticipantsViaApi(owner.token, event.id, [
+      { userId: guest.userId },
+    ]);
 
     await injectAuthIntoBrowser(page, owner.token, owner.tenantId);
     await navigateToCalendar(page);
     await openCalendarEventByTitle(page, title);
 
     await expect(page.locator('button:has-text("Convidar")')).toHaveCount(0);
-    await expect(page.locator('text=Participantes')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Participantes')).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(
       page.locator('div.flex.items-center.gap-2\\.5 button.h-6.w-6').first()
     ).toBeVisible({ timeout: 10_000 });
@@ -112,13 +133,17 @@ test.describe('Calendar - Matriz Estendida de Permissões (UI)', () => {
       owner.token,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(owner.token, event.id, [{ userId: guest.userId }]);
+    await inviteParticipantsViaApi(owner.token, event.id, [
+      { userId: guest.userId },
+    ]);
 
     await injectAuthIntoBrowser(page, guestAuth.token, guestAuth.tenantId);
     await navigateToCalendar(page);
     await openCalendarEventByTitle(page, title);
 
-    await expect(page.locator('text=Responder ao convite')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Responder ao convite')).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator('button:has-text("Convidar")')).toHaveCount(0);
   });
 });

@@ -111,6 +111,7 @@ export function FilePreviewModal({
                 variant="ghost"
                 onClick={handleDownload}
                 title="Baixar"
+                aria-label="Baixar arquivo"
               >
                 <Download className="w-4 h-4" />
               </Button>
@@ -120,6 +121,7 @@ export function FilePreviewModal({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               title="Fechar"
+              aria-label="Fechar preview"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -137,6 +139,7 @@ export function FilePreviewModal({
                   variant="ghost"
                   className="absolute left-0 top-1/2 -translate-y-1/2 z-10"
                   onClick={handlePrevious}
+                  aria-label="Arquivo anterior"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </Button>
@@ -147,6 +150,7 @@ export function FilePreviewModal({
                   variant="ghost"
                   className="absolute right-0 top-1/2 -translate-y-1/2 z-10"
                   onClick={handleNext}
+                  aria-label="Próximo arquivo"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </Button>

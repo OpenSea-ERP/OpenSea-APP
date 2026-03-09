@@ -17,7 +17,10 @@ test.beforeAll(async () => {
   adminToken = admin.token;
   await initializeSystemFolders(adminToken);
 
-  testFolderId = await createTestFolder(adminToken, `e2e-pubshare-${Date.now()}`);
+  testFolderId = await createTestFolder(
+    adminToken,
+    `e2e-pubshare-${Date.now()}`
+  );
 });
 
 test.describe('Public Share Page - /shared/[token]', () => {
@@ -33,9 +36,9 @@ test.describe('Public Share Page - /shared/[token]', () => {
     await page.goto(`/shared/${shareLink.token}`);
 
     // Wait for file info to load
-    await expect(
-      page.locator(`text=${fileName}`)
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(`text=${fileName}`)).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Verify file size and mimeType visible
     await expect(page.locator('text=text/plain')).toBeVisible();
@@ -46,23 +49,19 @@ test.describe('Public Share Page - /shared/[token]', () => {
     ).toBeVisible();
 
     // Verify branding
-    await expect(
-      page.locator('text=Compartilhado via OpenSea')
-    ).toBeVisible();
+    await expect(page.locator('text=Compartilhado via OpenSea')).toBeVisible();
   });
 
   // ─── PS-2 Download de arquivo público ─────────────────────────────
-  test('PS-2 - Deve permitir download de arquivo público', async ({
-    page,
-  }) => {
+  test('PS-2 - Deve permitir download de arquivo público', async ({ page }) => {
     const fileName = `public-dl-${Date.now()}.txt`;
     const fileId = await uploadTestFile(adminToken, testFolderId, fileName);
     const shareLink = await createShareLinkViaApi(adminToken, fileId);
 
     await page.goto(`/shared/${shareLink.token}`);
-    await expect(
-      page.locator(`text=${fileName}`)
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(`text=${fileName}`)).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Click download — it calls window.open so intercept popup
     const popupPromise = page
@@ -97,9 +96,7 @@ test.describe('Public Share Page - /shared/[token]', () => {
     ).toBeVisible({ timeout: 15_000 });
 
     // Password input should be visible
-    await expect(
-      page.locator('input[type="password"]')
-    ).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toBeVisible();
 
     // Download button should be disabled (no password entered)
     await expect(
@@ -125,9 +122,9 @@ test.describe('Public Share Page - /shared/[token]', () => {
     await page.locator('button:has-text("Baixar arquivo")').click();
 
     // Assert error text
-    await expect(
-      page.locator('text=Senha incorreta')
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Senha incorreta')).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   // ─── PS-5 Aceitar senha correta e permitir download ───────────────
@@ -168,9 +165,9 @@ test.describe('Public Share Page - /shared/[token]', () => {
   }) => {
     await page.goto('/shared/invalid-token-12345');
 
-    await expect(
-      page.locator('text=Link indisponível')
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('text=Link indisponível')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   // ─── PS-7 Informações de expiração ────────────────────────────────
@@ -186,14 +183,14 @@ test.describe('Public Share Page - /shared/[token]', () => {
     });
 
     await page.goto(`/shared/${shareLink.token}`);
-    await expect(
-      page.locator(`text=${fileName}`)
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(`text=${fileName}`)).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Should show "Disponível até"
-    await expect(
-      page.locator('text=Disponível até')
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Disponível até')).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ─── PS-8 Contador de downloads com limite ────────────────────────
@@ -208,14 +205,14 @@ test.describe('Public Share Page - /shared/[token]', () => {
     });
 
     await page.goto(`/shared/${shareLink.token}`);
-    await expect(
-      page.locator(`text=${fileName}`)
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(`text=${fileName}`)).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Should show "0 de 10 downloads realizados"
-    await expect(
-      page.locator('text=0 de 10 downloads realizados')
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=0 de 10 downloads realizados')).toBeVisible(
+      { timeout: 5_000 }
+    );
   });
 
   // ─── PS-9 "Link indisponível" para link revogado ──────────────────
@@ -231,8 +228,8 @@ test.describe('Public Share Page - /shared/[token]', () => {
 
     await page.goto(`/shared/${shareLink.token}`);
 
-    await expect(
-      page.locator('text=Link indisponível')
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('text=Link indisponível')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });

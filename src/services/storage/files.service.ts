@@ -24,18 +24,62 @@ import type {
   DecompressFileResponse,
 } from '@/types/storage';
 
+// Serve token cache: short-lived JWT for file serving (avoids exposing session token in URLs)
+let _serveTokenCache: { token: string; expiresAt: number } | null = null;
+
 export const storageFilesService = {
+  /**
+   * Gets a short-lived serve token (5min), cached with 60s safety margin.
+   */
+  async getServeToken(): Promise<string> {
+    const now = Date.now();
+    if (_serveTokenCache && _serveTokenCache.expiresAt > now + 60_000) {
+      return _serveTokenCache.token;
+    }
+
+    const response = await apiClient.post<{ token: string; expiresIn: number }>(
+      API_ENDPOINTS.STORAGE.FILES.SERVE_TOKEN,
+      {},
+    );
+
+    _serveTokenCache = {
+      token: response.token,
+      expiresAt: now + response.expiresIn * 1000,
+    };
+
+    return response.token;
+  },
+
   /**
    * Returns the full proxy serve URL with auth token as query param.
    * Used for <iframe>, <video>, <img> src attributes which cannot send Authorization headers.
+   * Falls back to session token if serve token is not yet cached (sync method).
    */
   getServeUrl(id: string, options?: { version?: number; download?: boolean; password?: string; format?: 'pdf' }): string {
-    const token = typeof window !== 'undefined'
-      ? localStorage.getItem(authConfig.tokenKey)
-      : null;
+    // Use cached serve token if available, otherwise fall back to session token
+    const token = _serveTokenCache && _serveTokenCache.expiresAt > Date.now() + 60_000
+      ? _serveTokenCache.token
+      : typeof window !== 'undefined'
+        ? localStorage.getItem(authConfig.tokenKey)
+        : null;
     const base = `${apiConfig.baseURL}${API_ENDPOINTS.STORAGE.FILES.SERVE(id)}`;
     const params = new URLSearchParams();
     if (token) params.set('token', token);
+    if (options?.version) params.set('version', String(options.version));
+    if (options?.download) params.set('download', '1');
+    if (options?.password) params.set('password', options.password);
+    if (options?.format) params.set('format', options.format);
+    return `${base}?${params.toString()}`;
+  },
+
+  /**
+   * Returns a serve URL using a fresh short-lived token (async version).
+   */
+  async getServeUrlWithToken(id: string, options?: { version?: number; download?: boolean; password?: string; format?: 'pdf' }): Promise<string> {
+    const token = await this.getServeToken();
+    const base = `${apiConfig.baseURL}${API_ENDPOINTS.STORAGE.FILES.SERVE(id)}`;
+    const params = new URLSearchParams();
+    params.set('token', token);
     if (options?.version) params.set('version', String(options.version));
     if (options?.download) params.set('download', '1');
     if (options?.password) params.set('password', options.password);

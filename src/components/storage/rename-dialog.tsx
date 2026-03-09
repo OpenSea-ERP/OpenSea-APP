@@ -49,6 +49,12 @@ export function RenameDialog({
       return;
     }
 
+    const illegalChars = /[/\\:*?"<>|]/;
+    if (illegalChars.test(trimmedName)) {
+      toast.error('O nome contém caracteres inválidos: / \\ : * ? " < > |');
+      return;
+    }
+
     if (trimmedName === currentName) {
       onOpenChange(false);
       return;

@@ -110,7 +110,7 @@ export function BoardMembersDialog({
     if (name) {
       return name
         .split(' ')
-        .map((n) => n[0])
+        .map(n => n[0])
         .slice(0, 2)
         .join('')
         .toUpperCase();
@@ -139,7 +139,7 @@ export function BoardMembersDialog({
               </p>
             ) : (
               <div className="space-y-2">
-                {members.map((member) => (
+                {members.map(member => (
                   <div
                     key={member.id}
                     className="flex items-center gap-3 rounded-md border px-3 py-2"
@@ -162,7 +162,7 @@ export function BoardMembersDialog({
                     {/* Role select */}
                     <Select
                       value={member.role}
-                      onValueChange={(v) =>
+                      onValueChange={v =>
                         handleUpdateRole(member.id, v as BoardMemberRole)
                       }
                     >
@@ -237,8 +237,8 @@ export function BoardMembersDialog({
                   id="invite-user"
                   placeholder="usuário@exemplo.com"
                   value={inviteUserId}
-                  onChange={(e) => setInviteUserId(e.target.value)}
-                  onKeyDown={(e) => {
+                  onChange={e => setInviteUserId(e.target.value)}
+                  onKeyDown={e => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       handleInvite();
@@ -251,7 +251,7 @@ export function BoardMembersDialog({
                 <label className="text-sm font-medium">Função</label>
                 <Select
                   value={inviteRole}
-                  onValueChange={(v) => setInviteRole(v as BoardMemberRole)}
+                  onValueChange={v => setInviteRole(v as BoardMemberRole)}
                 >
                   <SelectTrigger className="w-[130px]">
                     <SelectValue />

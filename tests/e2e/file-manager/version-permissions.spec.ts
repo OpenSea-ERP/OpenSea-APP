@@ -30,7 +30,11 @@ test.describe('File Manager - Permissões de Versões', () => {
     // Setup: create file with admin
     const folderName = `e2e-vp1-${Date.now()}`;
     const folderId = await createTestFolder(adminToken, folderName);
-    const fileId = await uploadTestFile(adminToken, folderId, `vp1-${Date.now()}.txt`);
+    const fileId = await uploadTestFile(
+      adminToken,
+      folderId,
+      `vp1-${Date.now()}.txt`
+    );
 
     // Create user WITHOUT versions.create
     const user = await createUserWithPermissions(
@@ -70,7 +74,11 @@ test.describe('File Manager - Permissões de Versões', () => {
     // Setup: create file + version with admin
     const folderName = `e2e-vp2-${Date.now()}`;
     const folderId = await createTestFolder(adminToken, folderName);
-    const fileId = await uploadTestFile(adminToken, folderId, `vp2-${Date.now()}.txt`);
+    const fileId = await uploadTestFile(
+      adminToken,
+      folderId,
+      `vp2-${Date.now()}.txt`
+    );
     await uploadFileVersionViaApi(adminToken, fileId, 'V2 content');
 
     const versions = await listFileVersionsViaApi(adminToken, fileId);
@@ -106,7 +114,11 @@ test.describe('File Manager - Permissões de Versões', () => {
   test('VP-3 - Deve rejeitar listagem de versões sem storage.versions.read (403)', async () => {
     const folderName = `e2e-vp3-${Date.now()}`;
     const folderId = await createTestFolder(adminToken, folderName);
-    const fileId = await uploadTestFile(adminToken, folderId, `vp3-${Date.now()}.txt`);
+    const fileId = await uploadTestFile(
+      adminToken,
+      folderId,
+      `vp3-${Date.now()}.txt`
+    );
 
     // Create user WITHOUT versions.read
     const user = await createUserWithPermissions(
@@ -135,7 +147,11 @@ test.describe('File Manager - Permissões de Versões', () => {
   test('VP-4 - Deve permitir upload de versão com storage.versions.create (201)', async () => {
     const folderName = `e2e-vp4-${Date.now()}`;
     const folderId = await createTestFolder(adminToken, folderName);
-    const fileId = await uploadTestFile(adminToken, folderId, `vp4-${Date.now()}.txt`);
+    const fileId = await uploadTestFile(
+      adminToken,
+      folderId,
+      `vp4-${Date.now()}.txt`
+    );
 
     // Create user WITH versions.create
     const user = await createUserWithPermissions(
@@ -166,7 +182,11 @@ test.describe('File Manager - Permissões de Versões', () => {
   test('VP-5 - Deve permitir restore de versão com storage.versions.restore (200)', async () => {
     const folderName = `e2e-vp5-${Date.now()}`;
     const folderId = await createTestFolder(adminToken, folderName);
-    const fileId = await uploadTestFile(adminToken, folderId, `vp5-${Date.now()}.txt`);
+    const fileId = await uploadTestFile(
+      adminToken,
+      folderId,
+      `vp5-${Date.now()}.txt`
+    );
     await uploadFileVersionViaApi(adminToken, fileId, 'V2');
 
     const versions = await listFileVersionsViaApi(adminToken, fileId);

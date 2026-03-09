@@ -1,4 +1,9 @@
-import { API_URL, loginViaApi, selectTenantViaApi, getFirstTenantId } from './auth.helper';
+import {
+  API_URL,
+  loginViaApi,
+  selectTenantViaApi,
+  getFirstTenantId,
+} from './auth.helper';
 
 /**
  * All storage permission codes available.
@@ -54,9 +59,7 @@ export const STORAGE_PERMISSIONS = {
 export const ALL_STORAGE_PERMISSIONS = Object.values(STORAGE_PERMISSIONS);
 
 /** Minimal permissions to see the file manager page */
-export const VIEW_ONLY_PERMISSIONS = [
-  STORAGE_PERMISSIONS.INTERFACE_VIEW,
-];
+export const VIEW_ONLY_PERMISSIONS = [STORAGE_PERMISSIONS.INTERFACE_VIEW];
 
 /** All file-related permissions */
 export const ALL_FILE_PERMISSIONS = [
@@ -114,18 +117,21 @@ export async function createPermissionGroup(
   permissionCodes: string[]
 ): Promise<string> {
   // 1. Create the group
-  const createRes = await fetchWithRetry(`${API_URL}/v1/rbac/permission-groups`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      name,
-      description: `E2E test group: ${name}`,
-      priority: 200,
-    }),
-  });
+  const createRes = await fetchWithRetry(
+    `${API_URL}/v1/rbac/permission-groups`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name,
+        description: `E2E test group: ${name}`,
+        priority: 200,
+      }),
+    }
+  );
 
   if (!createRes.ok) {
     throw new Error(
@@ -201,7 +207,9 @@ async function fetchWithRetry(
       const body = await res.text();
       if (res.status === 429 || body.includes('Rate limit')) {
         const match = body.match(/retry in (\d+)/);
-        const waitMs = match ? (parseInt(match[1], 10) + 2) * 1_000 : (attempt + 1) * 5_000;
+        const waitMs = match
+          ? (parseInt(match[1], 10) + 2) * 1_000
+          : (attempt + 1) * 5_000;
         await sleep(waitMs);
         continue;
       }
@@ -222,7 +230,12 @@ async function fetchWithRetry(
 export async function createTestUser(
   token: string,
   groupId: string
-): Promise<{ email: string; password: string; userId: string; username: string }> {
+): Promise<{
+  email: string;
+  password: string;
+  userId: string;
+  username: string;
+}> {
   const counter = ++userCounter;
   // Username: max 20 chars, letters/numbers/underscore only (domain VO rule)
   const shortId = Date.now().toString(36) + counter.toString(36);
@@ -294,7 +307,11 @@ export async function createUserWithPermissions(
   const admin = await getAdminToken();
   const name = groupName ?? `e2e group ${Date.now().toString(36)}`;
 
-  const groupId = await createPermissionGroup(admin.token, name, permissionCodes);
+  const groupId = await createPermissionGroup(
+    admin.token,
+    name,
+    permissionCodes
+  );
   const user = await createTestUser(admin.token, groupId);
 
   return {

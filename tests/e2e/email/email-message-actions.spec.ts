@@ -111,11 +111,7 @@ test.describe('E-mail - Acoes em Mensagens', () => {
 
       // HTML body should render
       const bodyContent = page.locator('text=Paragrafo com');
-      if (
-        await bodyContent
-          .isVisible({ timeout: 5_000 })
-          .catch(() => false)
-      ) {
+      if (await bodyContent.isVisible({ timeout: 5_000 }).catch(() => false)) {
         await expect(bodyContent.first()).toBeVisible();
       }
     }

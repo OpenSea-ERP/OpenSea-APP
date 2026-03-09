@@ -20,8 +20,12 @@ export interface CreateCardPayload {
  */
 export async function createBoardViaApi(
   token: string,
-  payload: CreateBoardPayload,
-): Promise<{ id: string; title: string; columns: Array<{ id: string; title: string }> }> {
+  payload: CreateBoardPayload
+): Promise<{
+  id: string;
+  title: string;
+  columns: Array<{ id: string; title: string }>;
+}> {
   const res = await fetch(`${API_URL}/v1/tasks/boards`, {
     method: 'POST',
     headers: {
@@ -50,7 +54,7 @@ export async function createBoardViaApi(
 export async function createCardViaApi(
   token: string,
   boardId: string,
-  payload: CreateCardPayload,
+  payload: CreateCardPayload
 ): Promise<{ id: string; title: string }> {
   const res = await fetch(`${API_URL}/v1/tasks/boards/${boardId}/cards`, {
     method: 'POST',
@@ -75,7 +79,7 @@ export async function createCardViaApi(
  */
 export async function deleteBoardViaApi(
   token: string,
-  boardId: string,
+  boardId: string
 ): Promise<void> {
   await fetch(`${API_URL}/v1/tasks/boards/${boardId}`, {
     method: 'DELETE',
@@ -94,7 +98,10 @@ export async function navigateToTasks(page: Page): Promise<void> {
 /**
  * Navigate to a specific board page.
  */
-export async function navigateToBoard(page: Page, boardId: string): Promise<void> {
+export async function navigateToBoard(
+  page: Page,
+  boardId: string
+): Promise<void> {
   await page.goto(`/tasks/${boardId}`);
   await page.waitForLoadState('networkidle');
 }
@@ -104,6 +111,6 @@ export async function navigateToBoard(page: Page, boardId: string): Promise<void
  */
 export async function waitForToast(page: Page, text: string): Promise<void> {
   await expect(
-    page.locator(`[data-sonner-toast] :text-matches("${text}", "i")`).first(),
+    page.locator(`[data-sonner-toast] :text-matches("${text}", "i")`).first()
   ).toBeVisible({ timeout: 10_000 });
 }

@@ -101,15 +101,23 @@ test.describe('Calendar - P3 Interface (Origem, Erros e Ownership)', () => {
     await openCalendarEventByTitle(page, systemTitle);
 
     await expect(page.locator('text=Sistema')).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('text=Ver origem: Lançamento Financeiro')).toBeVisible({
+    await expect(
+      page.locator('text=Ver origem: Lançamento Financeiro')
+    ).toBeVisible({
       timeout: 10_000,
     });
 
-    await page.locator('button:has-text("Ver origem: Lançamento Financeiro")').click();
-    await expect(page).toHaveURL(/\/finance\/entries\/fin-123/, { timeout: 10_000 });
+    await page
+      .locator('button:has-text("Ver origem: Lançamento Financeiro")')
+      .click();
+    await expect(page).toHaveURL(/\/finance\/entries\/fin-123/, {
+      timeout: 10_000,
+    });
   });
 
-  test('10.2 - Erro visual ao criar evento (intercept POST)', async ({ page }) => {
+  test('10.2 - Erro visual ao criar evento (intercept POST)', async ({
+    page,
+  }) => {
     await page.route('**/v1/calendar/events', async route => {
       await route.fulfill({
         status: 500,
@@ -122,13 +130,17 @@ test.describe('Calendar - P3 Interface (Origem, Erros e Ownership)', () => {
     await navigateToCalendar(page);
 
     await page.locator('button:has-text("Novo Evento")').click();
-    await page.locator('input[placeholder="Nome do evento"]').fill(`e2e-create-error-${Date.now()}`);
+    await page
+      .locator('input[placeholder="Nome do evento"]')
+      .fill(`e2e-create-error-${Date.now()}`);
     await page.locator('button:has-text("Criar Evento")').click();
 
     await waitForToast(page, 'Falha forçada no create');
   });
 
-  test('10.3 - Erro visual ao editar evento (intercept PATCH)', async ({ page }) => {
+  test('10.3 - Erro visual ao editar evento (intercept PATCH)', async ({
+    page,
+  }) => {
     const title = `e2e-edit-error-${Date.now()}`;
     const event = await createCalendarEventViaApi(
       ownerToken,
@@ -151,7 +163,9 @@ test.describe('Calendar - P3 Interface (Origem, Erros e Ownership)', () => {
     await navigateToCalendar(page);
     await openCalendarEventByTitle(page, title);
     await page.locator('button:has-text("Editar")').click();
-    await page.locator('input[placeholder="Nome do evento"]').fill(`${title}-changed`);
+    await page
+      .locator('input[placeholder="Nome do evento"]')
+      .fill(`${title}-changed`);
     await page.locator('button:has-text("Salvar Alterações")').click();
 
     await waitForToast(page, 'Falha forçada no update');
@@ -166,13 +180,16 @@ test.describe('Calendar - P3 Interface (Origem, Erros e Ownership)', () => {
       buildDefaultEventPayload(title)
     );
 
-    await page.route(`**/v1/calendar/events/${event.id}/participants`, async route => {
-      await route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: 'Falha forçada no convite' }),
-      });
-    });
+    await page.route(
+      `**/v1/calendar/events/${event.id}/participants`,
+      async route => {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Falha forçada no convite' }),
+        });
+      }
+    );
 
     await injectAuthIntoBrowser(page, ownerToken, ownerTenantId);
     await navigateToCalendar(page);
@@ -197,15 +214,20 @@ test.describe('Calendar - P3 Interface (Origem, Erros e Ownership)', () => {
       ownerToken,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(ownerToken, event.id, [{ userId: guestUserId }]);
+    await inviteParticipantsViaApi(ownerToken, event.id, [
+      { userId: guestUserId },
+    ]);
 
-    await page.route(`**/v1/calendar/events/${event.id}/reminders`, async route => {
-      await route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: 'Falha forçada no lembrete' }),
-      });
-    });
+    await page.route(
+      `**/v1/calendar/events/${event.id}/reminders`,
+      async route => {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Falha forçada no lembrete' }),
+        });
+      }
+    );
 
     await injectAuthIntoBrowser(page, guestToken, guestTenantId);
     await navigateToCalendar(page);
@@ -226,7 +248,9 @@ test.describe('Calendar - P3 Interface (Origem, Erros e Ownership)', () => {
       ownerToken,
       buildDefaultEventPayload(title)
     );
-    await inviteParticipantsViaApi(ownerToken, event.id, [{ userId: guestUserId }]);
+    await inviteParticipantsViaApi(ownerToken, event.id, [
+      { userId: guestUserId },
+    ]);
 
     await injectAuthIntoBrowser(page, guestToken, guestTenantId);
     await navigateToCalendar(page);

@@ -59,9 +59,9 @@ test.describe('File Manager - Permissões da Lixeira (UI)', () => {
     await injectAuthIntoBrowser(page, auth.token, auth.tenantId);
     await navigateToFileManager(page);
 
-    await expect(
-      page.locator('button:has-text("Lixeira")')
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('button:has-text("Lixeira")')).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ─── TP-2 Botão "Lixeira" oculto sem FILES_LIST ───────────────────
@@ -77,9 +77,7 @@ test.describe('File Manager - Permissões da Lixeira (UI)', () => {
     await navigateToFileManager(page);
 
     await page.waitForTimeout(2_000);
-    await expect(
-      page.locator('button:has-text("Lixeira")')
-    ).not.toBeVisible();
+    await expect(page.locator('button:has-text("Lixeira")')).not.toBeVisible();
   });
 
   // ─── TP-3 "Restaurar" visível com FILES_UPDATE ─────────────────────

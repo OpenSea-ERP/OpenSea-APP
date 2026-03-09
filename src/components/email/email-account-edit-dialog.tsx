@@ -21,6 +21,12 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
@@ -30,9 +36,12 @@ import {
   useUpdateEmailAccount,
 } from '@/hooks/email/use-email';
 import type { EmailAccount, UpdateEmailAccountRequest } from '@/types/email';
+import { Color, FontSize } from '@tiptap/extension-text-style';
+import ImageExt from '@tiptap/extension-image';
 import LinkExt from '@tiptap/extension-link';
 import PlaceholderExt from '@tiptap/extension-placeholder';
 import TextAlignExt from '@tiptap/extension-text-align';
+import { TextStyle as TextStyleExt } from '@tiptap/extension-text-style';
 import UnderlineExt from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -44,18 +53,20 @@ import {
   CheckCircle2,
   ChevronRight,
   Globe,
+  ImageIcon,
   Italic,
   Link2,
   List,
   ListOrdered,
   Loader2,
+  Palette,
   Settings2,
   Signature,
   Trash2,
   UnderlineIcon,
   XCircle,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type SectionId = 'general' | 'signature' | 'connection';
 
@@ -122,6 +133,9 @@ export function EmailAccountEditDialog({
     message: string;
   } | null>(null);
 
+  // Signature image upload
+  const sigImageInputRef = useRef<HTMLInputElement>(null);
+
   const updateMutation = useUpdateEmailAccount();
   const deleteMutation = useDeleteEmailAccount();
   const testConnectionMutation = useTestEmailConnection();
@@ -132,6 +146,10 @@ export function EmailAccountEditDialog({
     () => [
       StarterKit,
       UnderlineExt,
+      TextStyleExt,
+      Color,
+      FontSize,
+      ImageExt.configure({ inline: true, allowBase64: true }),
       LinkExt.configure({ openOnClick: false }),
       TextAlignExt.configure({ types: ['heading', 'paragraph'] }),
       PlaceholderExt.configure({
@@ -434,6 +452,26 @@ export function EmailAccountEditDialog({
                   {/* Toolbar */}
                   {editor && (
                     <div className="rounded-xl border overflow-hidden">
+                      {/* Hidden image input */}
+                      <input
+                        ref={sigImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 2 * 1024 * 1024) {
+                            return; // silently ignore large files
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            editor.chain().focus().setImage({ src: reader.result as string }).run();
+                          };
+                          reader.readAsDataURL(file);
+                          e.target.value = '';
+                        }}
+                      />
                       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b bg-muted/30 flex-wrap">
                         <Button
                           type="button"
@@ -480,6 +518,94 @@ export function EmailAccountEditDialog({
                         >
                           <UnderlineIcon className="size-4" />
                         </Button>
+
+                        <div className="w-px h-5 bg-border mx-1" />
+
+                        {/* Font size */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 rounded-lg"
+                              title="Tamanho da fonte"
+                            >
+                              <span className="text-[10px] font-bold">A</span>
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-36 p-1" side="bottom" align="start">
+                            {[
+                              { label: 'Pequeno', value: '12px' },
+                              { label: 'Normal', value: '14px' },
+                              { label: 'Médio', value: '16px' },
+                              { label: 'Grande', value: '20px' },
+                              { label: 'Muito grande', value: '24px' },
+                            ].map(fs => (
+                              <button
+                                key={fs.value}
+                                type="button"
+                                className="w-full text-left px-2.5 py-1.5 text-sm rounded-md hover:bg-muted transition-colors"
+                                style={{ fontSize: fs.value }}
+                                onClick={() => editor.chain().focus().setFontSize(fs.value).run()}
+                              >
+                                {fs.label}
+                              </button>
+                            ))}
+                            <Separator className="my-1" />
+                            <button
+                              type="button"
+                              className="w-full text-left px-2.5 py-1.5 text-xs text-muted-foreground rounded-md hover:bg-muted"
+                              onClick={() => editor.chain().focus().unsetFontSize().run()}
+                            >
+                              Tamanho padrão
+                            </button>
+                          </PopoverContent>
+                        </Popover>
+
+                        {/* Text color */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 rounded-lg"
+                              title="Cor do texto"
+                            >
+                              <Palette className="size-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-3" side="bottom" align="start">
+                            <p className="text-xs font-medium mb-2">Cor do texto</p>
+                            <div className="grid grid-cols-5 gap-1.5">
+                              {[
+                                '#000000', '#434343', '#666666', '#999999', '#cccccc',
+                                '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6',
+                                '#8b5cf6', '#ec4899', '#14b8a6', '#0ea5e9', '#6366f1',
+                              ].map(color => (
+                                <button
+                                  key={color}
+                                  type="button"
+                                  className="size-6 rounded-md border border-border hover:scale-110 transition-transform"
+                                  style={{ backgroundColor: color }}
+                                  onClick={() => editor.chain().focus().setColor(color).run()}
+                                  title={color}
+                                />
+                              ))}
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="color"
+                                className="size-6 cursor-pointer border-0 p-0 bg-transparent"
+                                onChange={e => editor.chain().focus().setColor(e.target.value).run()}
+                                title="Cor personalizada"
+                              />
+                              <span className="text-xs text-muted-foreground">Personalizada</span>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
 
                         <div className="w-px h-5 bg-border mx-1" />
 
@@ -600,6 +726,18 @@ export function EmailAccountEditDialog({
                           title="Inserir link"
                         >
                           <Link2 className="size-4" />
+                        </Button>
+
+                        {/* Image insert */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 rounded-lg"
+                          onClick={() => sigImageInputRef.current?.click()}
+                          title="Inserir imagem"
+                        >
+                          <ImageIcon className="size-4" />
                         </Button>
                       </div>
 

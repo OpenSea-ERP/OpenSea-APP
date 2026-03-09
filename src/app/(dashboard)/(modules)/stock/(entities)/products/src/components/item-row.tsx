@@ -148,8 +148,7 @@ export function ItemRow({
         key,
         label: attr.label || key,
         unitOfMeasure: attr.unitOfMeasure,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        value: (item.attributes as any)?.[key],
+        value: item.attributes?.[key],
       }));
   }, [itemAttributes, item.attributes]);
 

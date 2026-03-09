@@ -45,7 +45,7 @@ export function BoardList({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {boards.map((board) => {
+      {boards.map(board => {
         const gradient = getGradientForBoard(board.id);
         return (
           <button
@@ -97,7 +97,7 @@ export function BoardList({
                 {/* Member avatars */}
                 {board.members && board.members.length > 0 && (
                   <div className="flex items-center -space-x-1.5">
-                    {board.members.slice(0, 3).map((member) => (
+                    {board.members.slice(0, 3).map(member => (
                       <div
                         key={member.id}
                         className="h-6 w-6 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-[10px] font-bold text-white ring-2 ring-white/30"

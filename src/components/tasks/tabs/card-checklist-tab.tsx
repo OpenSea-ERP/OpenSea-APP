@@ -5,7 +5,13 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, CheckSquare, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  CheckSquare,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
 import {
   useCreateChecklist,
   useUpdateChecklist,
@@ -43,9 +49,10 @@ function ChecklistSection({
   const [collapsed, setCollapsed] = useState(false);
 
   const items = checklist.items ?? [];
-  const completedCount = items.filter((i) => i.isCompleted).length;
+  const completedCount = items.filter(i => i.isCompleted).length;
   const totalCount = items.length;
-  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const progressPercent =
+    totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   const handleStartEditTitle = useCallback(() => {
     setEditTitle(checklist.title);
@@ -63,7 +70,7 @@ function ChecklistSection({
       {
         onSuccess: () => setIsEditingTitle(false),
         onError: () => toast.error('Erro ao atualizar checklist'),
-      },
+      }
     );
   }, [checklist.id, checklist.title, editTitle, updateChecklist]);
 
@@ -84,7 +91,7 @@ function ChecklistSection({
           setNewItemTitle('');
         },
         onError: () => toast.error('Erro ao adicionar item'),
-      },
+      }
     );
   }, [checklist.id, newItemTitle, addItem]);
 
@@ -94,10 +101,10 @@ function ChecklistSection({
         { checklistId: checklist.id, itemId },
         {
           onError: () => toast.error('Erro ao atualizar item'),
-        },
+        }
       );
     },
-    [checklist.id, toggleItem],
+    [checklist.id, toggleItem]
   );
 
   const handleDeleteItem = useCallback(
@@ -106,10 +113,10 @@ function ChecklistSection({
         { checklistId: checklist.id, itemId },
         {
           onError: () => toast.error('Erro ao remover item'),
-        },
+        }
       );
     },
-    [checklist.id, deleteItem],
+    [checklist.id, deleteItem]
   );
 
   return (
@@ -130,9 +137,9 @@ function ChecklistSection({
         {isEditingTitle ? (
           <Input
             value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
+            onChange={e => setEditTitle(e.target.value)}
             onBlur={handleSaveTitle}
-            onKeyDown={(e) => {
+            onKeyDown={e => {
               if (e.key === 'Enter') handleSaveTitle();
               if (e.key === 'Escape') setIsEditingTitle(false);
             }}
@@ -176,7 +183,7 @@ function ChecklistSection({
         <>
           {/* Items */}
           <div className="space-y-1">
-            {items.map((item) => (
+            {items.map(item => (
               <div
                 key={item.id}
                 className="flex items-center gap-2 px-1 py-1 rounded group hover:bg-muted/50 transition-colors"
@@ -207,8 +214,8 @@ function ChecklistSection({
             <Plus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <Input
               value={newItemTitle}
-              onChange={(e) => setNewItemTitle(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setNewItemTitle(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   handleAddItem();
@@ -246,7 +253,7 @@ export function CardChecklistTab({
           toast.success('Checklist criado');
         },
         onError: () => toast.error('Erro ao criar checklist'),
-      },
+      }
     );
   }, [newChecklistTitle, createChecklist]);
 
@@ -259,7 +266,7 @@ export function CardChecklistTab({
         </div>
       ) : (
         <div className="space-y-3">
-          {checklists.map((cl) => (
+          {checklists.map(cl => (
             <ChecklistSection
               key={cl.id}
               checklist={cl}
@@ -274,8 +281,8 @@ export function CardChecklistTab({
         <div className="flex items-center gap-2">
           <Input
             value={newChecklistTitle}
-            onChange={(e) => setNewChecklistTitle(e.target.value)}
-            onKeyDown={(e) => {
+            onChange={e => setNewChecklistTitle(e.target.value)}
+            onKeyDown={e => {
               if (e.key === 'Enter') {
                 e.preventDefault();
                 handleCreateChecklist();

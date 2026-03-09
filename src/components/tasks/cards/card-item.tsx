@@ -15,7 +15,10 @@ interface CardItemProps {
   isDragOverlay?: boolean;
 }
 
-function isCardOverdue(dueDate: string | null | undefined, status: string): boolean {
+function isCardOverdue(
+  dueDate: string | null | undefined,
+  status: string
+): boolean {
   if (!dueDate) return false;
   if (status === 'DONE' || status === 'CANCELED') return false;
   return new Date(dueDate) < new Date();
@@ -103,9 +106,11 @@ export function CardItem({
         'group relative rounded-lg border bg-white dark:bg-white/[0.06] border-gray-200 dark:border-white/10 overflow-hidden cursor-grab active:cursor-grabbing transition-all duration-150',
         isDragging && 'opacity-30',
         isDragOverlay && 'shadow-2xl rotate-1 scale-105',
-        !isDragging && !isDragOverlay && 'hover:shadow-md hover:-translate-y-0.5',
+        !isDragging &&
+          !isDragOverlay &&
+          'hover:shadow-md hover:-translate-y-0.5'
       )}
-      onClick={(e) => {
+      onClick={e => {
         if (isDragging) return;
         e.stopPropagation();
         onClick();
@@ -113,17 +118,14 @@ export function CardItem({
     >
       {/* Color bar at top */}
       {topColor && (
-        <div
-          className="h-1 w-full"
-          style={{ backgroundColor: topColor }}
-        />
+        <div className="h-1 w-full" style={{ backgroundColor: topColor }} />
       )}
 
       <div className="p-3">
         {/* Labels as compact colored dots */}
         {card.labels && card.labels.length > 0 && (
           <div className="flex items-center gap-1 mb-2">
-            {card.labels.map((label) => (
+            {card.labels.map(label => (
               <span
                 key={label.id}
                 className="h-2 w-8 rounded-full"
@@ -150,7 +152,7 @@ export function CardItem({
                     'inline-flex items-center gap-1 text-[11px] font-medium rounded px-1.5 py-0.5',
                     overdue
                       ? 'bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400'
-                      : 'text-muted-foreground',
+                      : 'text-muted-foreground'
                   )}
                 >
                   <CalendarClock className="h-3 w-3" />

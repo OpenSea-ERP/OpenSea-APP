@@ -16,7 +16,13 @@ interface TableViewProps {
   onCardClick?: (card: Card) => void;
 }
 
-type SortColumn = 'title' | 'status' | 'priority' | 'assignee' | 'dueDate' | 'labels';
+type SortColumn =
+  | 'title'
+  | 'status'
+  | 'priority'
+  | 'assignee'
+  | 'dueDate'
+  | 'labels';
 type SortDirection = 'asc' | 'desc';
 
 const PRIORITY_ORDER: Record<string, number> = {
@@ -40,19 +46,25 @@ function isOverdue(dateStr: string | null): boolean {
   return new Date(dateStr) < new Date();
 }
 
-export function TableView({ board, cards, boardId, onCardClick }: TableViewProps) {
+export function TableView({
+  board,
+  cards,
+  boardId,
+  onCardClick,
+}: TableViewProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const gradient = getGradientForBoard(boardId);
 
   const columns = useMemo(
     () => [...(board.columns ?? [])].sort((a, b) => a.position - b.position),
-    [board.columns],
+    [board.columns]
   );
 
   const columnMap = useMemo(() => {
     const map = new Map<string, { title: string; color: string | null }>();
-    for (const col of columns) map.set(col.id, { title: col.title, color: col.color });
+    for (const col of columns)
+      map.set(col.id, { title: col.title, color: col.color });
     return map;
   }, [columns]);
 
@@ -72,10 +84,15 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
           break;
         }
         case 'priority':
-          cmp = (PRIORITY_ORDER[a.priority] ?? 0) - (PRIORITY_ORDER[b.priority] ?? 0);
+          cmp =
+            (PRIORITY_ORDER[a.priority] ?? 0) -
+            (PRIORITY_ORDER[b.priority] ?? 0);
           break;
         case 'assignee':
-          cmp = (a.assigneeName ?? '').localeCompare(b.assigneeName ?? '', 'pt-BR');
+          cmp = (a.assigneeName ?? '').localeCompare(
+            b.assigneeName ?? '',
+            'pt-BR'
+          );
           break;
         case 'dueDate': {
           const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
@@ -106,8 +123,13 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
   }
 
   function SortIcon({ column }: { column: SortColumn }) {
-    if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
-    return sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />;
+    if (sortColumn !== column)
+      return <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
+    return sortDirection === 'asc' ? (
+      <ArrowUp className="h-3 w-3 text-primary" />
+    ) : (
+      <ArrowDown className="h-3 w-3 text-primary" />
+    );
   }
 
   return (
@@ -125,12 +147,26 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
               {[
                 { key: 'title' as const, label: 'Título' },
                 { key: 'status' as const, label: 'Coluna', width: 'w-36' },
-                { key: 'priority' as const, label: 'Prioridade', width: 'w-32' },
-                { key: 'assignee' as const, label: 'Responsável', width: 'w-40' },
+                {
+                  key: 'priority' as const,
+                  label: 'Prioridade',
+                  width: 'w-32',
+                },
+                {
+                  key: 'assignee' as const,
+                  label: 'Responsável',
+                  width: 'w-40',
+                },
                 { key: 'dueDate' as const, label: 'Prazo', width: 'w-36' },
                 { key: 'labels' as const, label: 'Etiquetas', width: 'w-32' },
               ].map(({ key, label, width }) => (
-                <th key={key} className={cn('px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider', width)}>
+                <th
+                  key={key}
+                  className={cn(
+                    'px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider',
+                    width
+                  )}
+                >
                   <button
                     type="button"
                     className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
@@ -146,7 +182,10 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
           <tbody className="divide-y divide-border/50">
             {sortedCards.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                <td
+                  colSpan={7}
+                  className="px-4 py-8 text-center text-muted-foreground text-sm"
+                >
                   Nenhum cartão encontrado
                 </td>
               </tr>
@@ -167,7 +206,9 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
                       {index + 1}
                     </td>
                     <td className="px-4 py-2.5">
-                      <span className="font-medium line-clamp-1">{card.title}</span>
+                      <span className="font-medium line-clamp-1">
+                        {card.title}
+                      </span>
                     </td>
                     <td className="px-4 py-2.5">
                       <span className="inline-flex items-center gap-1.5">
@@ -175,13 +216,20 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
                           className="h-2.5 w-2.5 rounded shrink-0"
                           style={{ backgroundColor: colColor }}
                         />
-                        <span className="text-sm text-muted-foreground">{columnName}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {columnName}
+                        </span>
                       </span>
                     </td>
                     <td className="px-4 py-2.5">
                       <span className="inline-flex items-center gap-1.5">
                         <PriorityBadge priority={card.priority} />
-                        <span className={cn('text-xs font-medium', PRIORITY_CONFIG[card.priority].color)}>
+                        <span
+                          className={cn(
+                            'text-xs font-medium',
+                            PRIORITY_CONFIG[card.priority].color
+                          )}
+                        >
                           {PRIORITY_CONFIG[card.priority].label}
                         </span>
                       </span>
@@ -190,7 +238,9 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
                       {card.assigneeName ? (
                         <span className="inline-flex items-center gap-2">
                           <MemberAvatar name={card.assigneeName} size="sm" />
-                          <span className="text-sm truncate max-w-[120px]">{card.assigneeName}</span>
+                          <span className="text-sm truncate max-w-[120px]">
+                            {card.assigneeName}
+                          </span>
                         </span>
                       ) : (
                         <span className="text-muted-foreground">--</span>
@@ -198,7 +248,14 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
                     </td>
                     <td className="px-4 py-2.5">
                       {card.dueDate ? (
-                        <span className={cn('text-xs font-medium', overdue ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground')}>
+                        <span
+                          className={cn(
+                            'text-xs font-medium',
+                            overdue
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-muted-foreground'
+                          )}
+                        >
                           {formatDate(card.dueDate)}
                         </span>
                       ) : (
@@ -208,7 +265,7 @@ export function TableView({ board, cards, boardId, onCardClick }: TableViewProps
                     <td className="px-4 py-2.5">
                       {card.labels && card.labels.length > 0 ? (
                         <div className="flex items-center gap-1">
-                          {card.labels.slice(0, 3).map((label) => (
+                          {card.labels.slice(0, 3).map(label => (
                             <span
                               key={label.id}
                               className="h-2.5 w-2.5 rounded-full shrink-0"

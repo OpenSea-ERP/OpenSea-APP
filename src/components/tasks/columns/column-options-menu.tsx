@@ -70,7 +70,7 @@ export function ColumnOptionsMenu({
   const [wipValue, setWipValue] = useState(column.wipLimit?.toString() ?? '');
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const otherColumns = allColumns.filter((c) => c.id !== column.id);
+  const otherColumns = allColumns.filter(c => c.id !== column.id);
 
   // ─── Change color ───
   function handleChangeColor(color: string | null) {
@@ -79,7 +79,7 @@ export function ColumnOptionsMenu({
       {
         onSuccess: () => toast.success('Cor atualizada!'),
         onError: () => toast.error('Erro ao alterar cor.'),
-      },
+      }
     );
   }
 
@@ -95,11 +95,13 @@ export function ColumnOptionsMenu({
       { columnId: column.id, data: { wipLimit: parsed } },
       {
         onSuccess: () => {
-          toast.success(parsed ? `Limite WIP definido: ${parsed}` : 'Limite WIP removido.');
+          toast.success(
+            parsed ? `Limite WIP definido: ${parsed}` : 'Limite WIP removido.'
+          );
           setShowWipPopover(false);
         },
         onError: () => toast.error('Erro ao definir limite.'),
-      },
+      }
     );
   }
 
@@ -112,10 +114,10 @@ export function ColumnOptionsMenu({
           toast.success(
             column.isDone
               ? 'Coluna desmarcada como concluída.'
-              : 'Coluna marcada como concluída!',
+              : 'Coluna marcada como concluída!'
           ),
         onError: () => toast.error('Erro ao atualizar coluna.'),
-      },
+      }
     );
   }
 
@@ -126,7 +128,7 @@ export function ColumnOptionsMenu({
       return;
     }
 
-    const targetCol = otherColumns.find((c) => c.id === targetColumnId);
+    const targetCol = otherColumns.find(c => c.id === targetColumnId);
     try {
       for (let i = 0; i < cards.length; i++) {
         await moveCard.mutateAsync({
@@ -134,7 +136,9 @@ export function ColumnOptionsMenu({
           data: { columnId: targetColumnId, position: i },
         });
       }
-      toast.success(`${cards.length} cartão(s) movido(s) para "${targetCol?.title}".`);
+      toast.success(
+        `${cards.length} cartão(s) movido(s) para "${targetCol?.title}".`
+      );
     } catch {
       toast.error('Erro ao mover cartões.');
     }
@@ -148,7 +152,8 @@ export function ColumnOptionsMenu({
 
     const sorted = [...cards].sort((a, b) => {
       if (sortBy === 'title') return a.title.localeCompare(b.title, 'pt-BR');
-      if (sortBy === 'priority') return priorityOrder[a.priority] - priorityOrder[b.priority];
+      if (sortBy === 'priority')
+        return priorityOrder[a.priority] - priorityOrder[b.priority];
       if (sortBy === 'dueDate') {
         if (!a.dueDate && !b.dueDate) return 0;
         if (!a.dueDate) return 1;
@@ -164,8 +169,8 @@ export function ColumnOptionsMenu({
           moveCard.mutateAsync({
             cardId: card.id,
             data: { columnId: column.id, position: index },
-          }),
-        ),
+          })
+        )
       );
       const labels: Record<string, string> = {
         title: 'nome',
@@ -199,7 +204,7 @@ export function ColumnOptionsMenu({
               'p-1 rounded transition-opacity shrink-0',
               'opacity-0 group-hover/header:opacity-60 hover:!opacity-100',
               'hover:bg-black/5 dark:hover:bg-white/10',
-              menuOpen && '!opacity-100',
+              menuOpen && '!opacity-100'
             )}
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -227,7 +232,7 @@ export function ColumnOptionsMenu({
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="p-2">
               <div className="grid grid-cols-3 gap-1.5">
-                {COLUMN_COLORS.map((c) => {
+                {COLUMN_COLORS.map(c => {
                   const isSelected = column.color === c.value;
                   return (
                     <button
@@ -236,12 +241,15 @@ export function ColumnOptionsMenu({
                       title={c.name}
                       className={cn(
                         'h-7 w-full rounded-md transition-all hover:scale-110',
-                        isSelected && 'ring-2 ring-white ring-offset-2 ring-offset-popover scale-110',
+                        isSelected &&
+                          'ring-2 ring-white ring-offset-2 ring-offset-popover scale-110'
                       )}
                       style={{ backgroundColor: c.value }}
                       onClick={() => handleChangeColor(c.value)}
                     >
-                      {isSelected && <Check className="h-3 w-3 text-white mx-auto drop-shadow" />}
+                      {isSelected && (
+                        <Check className="h-3 w-3 text-white mx-auto drop-shadow" />
+                      )}
                     </button>
                   );
                 })}
@@ -262,7 +270,7 @@ export function ColumnOptionsMenu({
           <Popover open={showWipPopover} onOpenChange={setShowWipPopover}>
             <PopoverTrigger asChild>
               <DropdownMenuItem
-                onSelect={(e) => {
+                onSelect={e => {
                   e.preventDefault();
                   setShowWipPopover(true);
                 }}
@@ -270,7 +278,9 @@ export function ColumnOptionsMenu({
                 <Gauge className="h-4 w-4 mr-2" />
                 Limite WIP
                 {column.wipLimit && (
-                  <span className="ml-auto text-xs text-muted-foreground">{column.wipLimit}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {column.wipLimit}
+                  </span>
                 )}
               </DropdownMenuItem>
             </PopoverTrigger>
@@ -284,8 +294,8 @@ export function ColumnOptionsMenu({
                   min={0}
                   placeholder="Sem limite"
                   value={wipValue}
-                  onChange={(e) => setWipValue(e.target.value)}
-                  onKeyDown={(e) => {
+                  onChange={e => setWipValue(e.target.value)}
+                  onKeyDown={e => {
                     if (e.key === 'Enter') handleSaveWip();
                     if (e.key === 'Escape') setShowWipPopover(false);
                   }}
@@ -293,7 +303,11 @@ export function ColumnOptionsMenu({
                   autoFocus
                 />
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 h-7" onClick={handleSaveWip}>
+                  <Button
+                    size="sm"
+                    className="flex-1 h-7"
+                    onClick={handleSaveWip}
+                  >
                     Salvar
                   </Button>
                   {column.wipLimit && (
@@ -310,8 +324,9 @@ export function ColumnOptionsMenu({
                               toast.success('Limite WIP removido.');
                               setShowWipPopover(false);
                             },
-                            onError: () => toast.error('Erro ao remover limite.'),
-                          },
+                            onError: () =>
+                              toast.error('Erro ao remover limite.'),
+                          }
                         );
                       }}
                     >
@@ -326,10 +341,7 @@ export function ColumnOptionsMenu({
           {/* Toggle isDone */}
           <DropdownMenuItem onClick={handleToggleDone}>
             <CheckCircle2
-              className={cn(
-                'h-4 w-4 mr-2',
-                column.isDone && 'text-green-500',
-              )}
+              className={cn('h-4 w-4 mr-2', column.isDone && 'text-green-500')}
             />
             {column.isDone ? 'Desmarcar concluída' : 'Marcar como concluída'}
           </DropdownMenuItem>
@@ -338,12 +350,14 @@ export function ColumnOptionsMenu({
 
           {/* Move all cards */}
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger disabled={cards.length === 0 || otherColumns.length === 0}>
+            <DropdownMenuSubTrigger
+              disabled={cards.length === 0 || otherColumns.length === 0}
+            >
               <ArrowRightLeft className="h-4 w-4 mr-2" />
               Mover cartões para...
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              {otherColumns.map((col) => (
+              {otherColumns.map(col => (
                 <DropdownMenuItem
                   key={col.id}
                   onClick={() => handleMoveAllCards(col.id)}
@@ -395,12 +409,14 @@ export function ColumnOptionsMenu({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir coluna &ldquo;{column.title}&rdquo;?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Excluir coluna &ldquo;{column.title}&rdquo;?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {cards.length > 0
                 ? `Os ${cards.length} cartão(s) desta coluna serão movidos para a coluna padrão.`
-                : 'Esta coluna não possui cartões.'}
-              {' '}Esta ação não pode ser desfeita.
+                : 'Esta coluna não possui cartões.'}{' '}
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

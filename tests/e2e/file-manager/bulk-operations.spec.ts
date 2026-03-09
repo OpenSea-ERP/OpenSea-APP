@@ -35,11 +35,27 @@ test.describe('File Manager - Operações em Lote', () => {
   test('BK-1 - Deve excluir múltiplos arquivos em lote via API', async () => {
     const folderName = `e2e-bk1-${Date.now()}`;
     const folderId = await createTestFolder(userToken, folderName);
-    const fileId1 = await uploadTestFile(userToken, folderId, `bk1-a-${Date.now()}.txt`);
-    const fileId2 = await uploadTestFile(userToken, folderId, `bk1-b-${Date.now()}.txt`);
-    const fileId3 = await uploadTestFile(userToken, folderId, `bk1-c-${Date.now()}.txt`);
+    const fileId1 = await uploadTestFile(
+      userToken,
+      folderId,
+      `bk1-a-${Date.now()}.txt`
+    );
+    const fileId2 = await uploadTestFile(
+      userToken,
+      folderId,
+      `bk1-b-${Date.now()}.txt`
+    );
+    const fileId3 = await uploadTestFile(
+      userToken,
+      folderId,
+      `bk1-c-${Date.now()}.txt`
+    );
 
-    const result = await bulkDeleteViaApi(userToken, [fileId1, fileId2, fileId3]);
+    const result = await bulkDeleteViaApi(userToken, [
+      fileId1,
+      fileId2,
+      fileId3,
+    ]);
 
     expect(result.deletedFiles).toBe(3);
     expect(result.errors).toHaveLength(0);
@@ -53,8 +69,16 @@ test.describe('File Manager - Operações em Lote', () => {
   test('BK-2 - Deve excluir mix de arquivos e pastas em lote', async () => {
     const parentName = `e2e-bk2-${Date.now()}`;
     const parentId = await createTestFolder(userToken, parentName);
-    const fileId = await uploadTestFile(userToken, parentId, `bk2-file-${Date.now()}.txt`);
-    const childId = await createTestFolder(userToken, `bk2-child-${Date.now()}`, parentId);
+    const fileId = await uploadTestFile(
+      userToken,
+      parentId,
+      `bk2-file-${Date.now()}.txt`
+    );
+    const childId = await createTestFolder(
+      userToken,
+      `bk2-child-${Date.now()}`,
+      parentId
+    );
 
     const result = await bulkDeleteViaApi(userToken, [fileId], [childId]);
 
@@ -70,10 +94,23 @@ test.describe('File Manager - Operações em Lote', () => {
     const srcId = await createTestFolder(userToken, srcName);
     const dstId = await createTestFolder(userToken, dstName);
 
-    const fileId1 = await uploadTestFile(userToken, srcId, `bk3-a-${Date.now()}.txt`);
-    const fileId2 = await uploadTestFile(userToken, srcId, `bk3-b-${Date.now()}.txt`);
+    const fileId1 = await uploadTestFile(
+      userToken,
+      srcId,
+      `bk3-a-${Date.now()}.txt`
+    );
+    const fileId2 = await uploadTestFile(
+      userToken,
+      srcId,
+      `bk3-b-${Date.now()}.txt`
+    );
 
-    const result = await bulkMoveViaApi(userToken, [fileId1, fileId2], undefined, dstId);
+    const result = await bulkMoveViaApi(
+      userToken,
+      [fileId1, fileId2],
+      undefined,
+      dstId
+    );
 
     expect(result.movedFiles).toBe(2);
     expect(result.errors).toHaveLength(0);
@@ -122,10 +159,15 @@ test.describe('File Manager - Operações em Lote', () => {
     );
     const auth = await getAuthenticatedToken(user.email, user.password);
 
-    const { status } = await apiRequest(auth.token, 'POST', '/v1/storage/bulk/delete', {
-      fileIds: ['00000000-0000-0000-0000-000000000001'],
-      folderIds: [],
-    });
+    const { status } = await apiRequest(
+      auth.token,
+      'POST',
+      '/v1/storage/bulk/delete',
+      {
+        fileIds: ['00000000-0000-0000-0000-000000000001'],
+        folderIds: [],
+      }
+    );
 
     expect(status).toBe(403);
   });
@@ -147,11 +189,16 @@ test.describe('File Manager - Operações em Lote', () => {
     );
     const auth = await getAuthenticatedToken(user.email, user.password);
 
-    const { status } = await apiRequest(auth.token, 'POST', '/v1/storage/bulk/move', {
-      fileIds: ['00000000-0000-0000-0000-000000000001'],
-      folderIds: [],
-      targetFolderId: null,
-    });
+    const { status } = await apiRequest(
+      auth.token,
+      'POST',
+      '/v1/storage/bulk/move',
+      {
+        fileIds: ['00000000-0000-0000-0000-000000000001'],
+        folderIds: [],
+        targetFolderId: null,
+      }
+    );
 
     expect(status).toBe(403);
   });

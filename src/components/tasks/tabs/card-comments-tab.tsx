@@ -86,7 +86,7 @@ function CommentItem({
           toast.success('Comentário atualizado');
         },
         onError: () => toast.error('Erro ao atualizar comentário'),
-      },
+      }
     );
   }, [comment.id, comment.content, editContent, updateComment]);
 
@@ -100,22 +100,22 @@ function CommentItem({
   const handleToggleReaction = useCallback(
     (emoji: string) => {
       const existingReaction = comment.reactions?.find(
-        (r) => r.emoji === emoji && r.userId === currentUserId,
+        r => r.emoji === emoji && r.userId === currentUserId
       );
       if (existingReaction) {
         removeReaction.mutate(
           { commentId: comment.id, emoji },
-          { onError: () => toast.error('Erro ao remover reação') },
+          { onError: () => toast.error('Erro ao remover reação') }
         );
       } else {
         addReaction.mutate(
           { commentId: comment.id, emoji },
-          { onError: () => toast.error('Erro ao adicionar reação') },
+          { onError: () => toast.error('Erro ao adicionar reação') }
         );
       }
       setEmojiPickerOpen(false);
     },
-    [comment.id, comment.reactions, currentUserId, addReaction, removeReaction],
+    [comment.id, comment.reactions, currentUserId, addReaction, removeReaction]
   );
 
   // Group reactions by emoji
@@ -130,7 +130,7 @@ function CommentItem({
       }
       return acc;
     },
-    {} as Record<string, { count: number; userReacted: boolean }>,
+    {} as Record<string, { count: number; userReacted: boolean }>
   );
 
   return (
@@ -145,7 +145,9 @@ function CommentItem({
             {formatRelativeTime(comment.createdAt)}
           </span>
           {comment.updatedAt && (
-            <span className="text-[10px] text-muted-foreground italic">(editado)</span>
+            <span className="text-[10px] text-muted-foreground italic">
+              (editado)
+            </span>
           )}
 
           {isOwner && (
@@ -180,7 +182,7 @@ function CommentItem({
           <div className="mt-1.5 space-y-1.5">
             <Textarea
               value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
+              onChange={e => setEditContent(e.target.value)}
               rows={2}
               autoFocus
               className="text-sm"
@@ -205,7 +207,9 @@ function CommentItem({
             </div>
           </div>
         ) : (
-          <p className="text-sm mt-0.5 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
+          <p className="text-sm mt-0.5 whitespace-pre-wrap leading-relaxed">
+            {comment.content}
+          </p>
         )}
 
         {/* Reactions */}
@@ -234,7 +238,7 @@ function CommentItem({
               </PopoverTrigger>
               <PopoverContent className="w-auto p-1.5" align="start">
                 <div className="flex gap-0.5">
-                  {QUICK_EMOJIS.map((emoji) => (
+                  {QUICK_EMOJIS.map(emoji => (
                     <button
                       key={emoji}
                       className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted transition-colors text-sm"
@@ -253,7 +257,11 @@ function CommentItem({
   );
 }
 
-export function CardCommentsTab({ boardId, cardId, messagingLayout }: CardCommentsTabProps) {
+export function CardCommentsTab({
+  boardId,
+  cardId,
+  messagingLayout,
+}: CardCommentsTabProps) {
   const { user } = useAuth();
   const { data: commentsData, isLoading } = useComments(boardId, cardId);
   const createComment = useCreateComment(boardId, cardId);
@@ -281,7 +289,7 @@ export function CardCommentsTab({ boardId, cardId, messagingLayout }: CardCommen
           setNewContent('');
         },
         onError: () => toast.error('Erro ao adicionar comentário'),
-      },
+      }
     );
   }, [newContent, createComment]);
 
@@ -292,7 +300,7 @@ export function CardCommentsTab({ boardId, cardId, messagingLayout }: CardCommen
         handleCreateComment();
       }
     },
-    [handleCreateComment],
+    [handleCreateComment]
   );
 
   // Messaging layout: messages above, input pinned below
@@ -309,11 +317,13 @@ export function CardCommentsTab({ boardId, cardId, messagingLayout }: CardCommen
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <MessageSquare className="h-8 w-8 mb-2 opacity-30" />
               <p className="text-xs">Nenhum comentário ainda</p>
-              <p className="text-[10px] mt-1 opacity-60">Inicie uma conversa sobre esta tarefa</p>
+              <p className="text-[10px] mt-1 opacity-60">
+                Inicie uma conversa sobre esta tarefa
+              </p>
             </div>
           ) : (
             <div className="space-y-0.5 py-2">
-              {comments.map((comment) => (
+              {comments.map(comment => (
                 <CommentItem
                   key={comment.id}
                   comment={comment}
@@ -331,7 +341,7 @@ export function CardCommentsTab({ boardId, cardId, messagingLayout }: CardCommen
           <div className="flex items-end gap-2">
             <Textarea
               value={newContent}
-              onChange={(e) => setNewContent(e.target.value)}
+              onChange={e => setNewContent(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Escreva um comentário... (Enter para enviar)"
               rows={1}
@@ -358,7 +368,7 @@ export function CardCommentsTab({ boardId, cardId, messagingLayout }: CardCommen
       <div className="space-y-2">
         <Textarea
           value={newContent}
-          onChange={(e) => setNewContent(e.target.value)}
+          onChange={e => setNewContent(e.target.value)}
           placeholder="Escreva um comentário..."
           rows={3}
         />
@@ -385,7 +395,7 @@ export function CardCommentsTab({ boardId, cardId, messagingLayout }: CardCommen
         </div>
       ) : (
         <div className="divide-y divide-border">
-          {comments.map((comment) => (
+          {comments.map(comment => (
             <CommentItem
               key={comment.id}
               comment={comment}

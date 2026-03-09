@@ -39,9 +39,24 @@ test.beforeAll(async () => {
   searchFolderName = `e2e-search-${Date.now()}`;
   searchFolderId = await createTestFolder(userToken, searchFolderName);
 
-  await uploadTestFile(userToken, searchFolderId, 'report.pdf', 'report content');
-  await uploadTestFile(userToken, searchFolderId, 'invoice.pdf', 'invoice content');
-  await uploadTestFile(userToken, searchFolderId, 'readme.txt', 'readme content');
+  await uploadTestFile(
+    userToken,
+    searchFolderId,
+    'report.pdf',
+    'report content'
+  );
+  await uploadTestFile(
+    userToken,
+    searchFolderId,
+    'invoice.pdf',
+    'invoice content'
+  );
+  await uploadTestFile(
+    userToken,
+    searchFolderId,
+    'readme.txt',
+    'readme content'
+  );
 });
 
 test.describe('File Manager - Busca', () => {
@@ -56,7 +71,9 @@ test.describe('File Manager - Busca', () => {
     await page.waitForTimeout(1_000);
 
     // All 3 files should be visible initially
-    await expect(page.locator('[title="report.pdf"]')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[title="report.pdf"]')).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.locator('[title="invoice.pdf"]')).toBeVisible();
     await expect(page.locator('[title="readme.txt"]')).toBeVisible();
 

@@ -25,7 +25,7 @@ describe('board-gradients', () => {
     });
 
     it('all IDs should be unique', () => {
-      const ids = BOARD_GRADIENTS.map((g) => g.id);
+      const ids = BOARD_GRADIENTS.map(g => g.id);
       expect(new Set(ids).size).toBe(ids.length);
     });
   });
@@ -68,7 +68,9 @@ describe('board-gradients', () => {
   describe('setGradientForBoard', () => {
     it('should persist gradient in localStorage', () => {
       setGradientForBoard('board-set', 'lime-green');
-      expect(localStorage.getItem('board-gradient-board-set')).toBe('lime-green');
+      expect(localStorage.getItem('board-gradient-board-set')).toBe(
+        'lime-green'
+      );
     });
   });
 });

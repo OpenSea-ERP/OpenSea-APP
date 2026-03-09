@@ -24,9 +24,7 @@ export async function createTeamViaApi(
   });
 
   if (!res.ok) {
-    throw new Error(
-      `Create team failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`Create team failed (${res.status}): ${await res.text()}`);
   }
 
   const data = await res.json();
@@ -44,9 +42,7 @@ export async function deleteTeamViaApi(
   });
 
   if (!res.ok) {
-    throw new Error(
-      `Delete team failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`Delete team failed (${res.status}): ${await res.text()}`);
   }
 }
 
@@ -65,9 +61,7 @@ export async function updateTeamViaApi(
   });
 
   if (!res.ok) {
-    throw new Error(
-      `Update team failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`Update team failed (${res.status}): ${await res.text()}`);
   }
 }
 
@@ -87,24 +81,22 @@ export async function addTeamMemberViaApi(
   });
 
   if (!res.ok) {
-    throw new Error(
-      `Add member failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`Add member failed (${res.status}): ${await res.text()}`);
   }
 }
 
 export async function listTeamMembersViaApi(
   token: string,
   teamId: string
-): Promise<Array<{ id: string; userId: string; role: string; userName: string | null }>> {
+): Promise<
+  Array<{ id: string; userId: string; role: string; userName: string | null }>
+> {
   const res = await fetch(`${API_URL}/v1/teams/${teamId}/members?limit=100`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) {
-    throw new Error(
-      `List members failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`List members failed (${res.status}): ${await res.text()}`);
   }
 
   const data = await res.json();
@@ -117,19 +109,20 @@ export async function changeTeamMemberRoleViaApi(
   memberId: string,
   role: 'ADMIN' | 'MEMBER'
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/v1/teams/${teamId}/members/${memberId}/role`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ role }),
-  });
+  const res = await fetch(
+    `${API_URL}/v1/teams/${teamId}/members/${memberId}/role`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ role }),
+    }
+  );
 
   if (!res.ok) {
-    throw new Error(
-      `Change role failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`Change role failed (${res.status}): ${await res.text()}`);
   }
 }
 
@@ -158,7 +151,9 @@ export async function transferOwnershipViaApi(
 
 export async function navigateToTeams(page: Page): Promise<void> {
   await page.goto('/admin/teams');
-  await expect(page.locator('h1:has-text("Equipes"), h2:has-text("Equipes")')).toBeVisible({
+  await expect(
+    page.locator('h1:has-text("Equipes"), h2:has-text("Equipes")')
+  ).toBeVisible({
     timeout: 15_000,
   });
 }
@@ -173,11 +168,7 @@ export async function navigateToTeamDetail(
   });
 }
 
-export async function waitForToast(
-  page: Page,
-  text: string,
-  timeout = 10_000
-) {
+export async function waitForToast(page: Page, text: string, timeout = 10_000) {
   const toast = page.locator(`[data-sonner-toast] :text("${text}")`).first();
   await expect(toast).toBeVisible({ timeout });
   return toast;
@@ -190,7 +181,9 @@ export async function createTeamViaUi(
 ): Promise<void> {
   // Click "Nova Equipe" button
   await page.locator('button:has-text("Nova Equipe")').click();
-  await expect(page.locator('text=Nova Equipe').first()).toBeVisible({ timeout: 5_000 });
+  await expect(page.locator('text=Nova Equipe').first()).toBeVisible({
+    timeout: 5_000,
+  });
 
   // Fill name
   await page.locator('#team-name').fill(name);
@@ -202,7 +195,9 @@ export async function createTeamViaUi(
 
   // Select color if provided (click the Nth color circle)
   if (options?.colorIndex !== undefined) {
-    const colorButtons = page.locator('button.rounded-full[style*="background-color"]');
+    const colorButtons = page.locator(
+      'button.rounded-full[style*="background-color"]'
+    );
     await colorButtons.nth(options.colorIndex).click();
   }
 

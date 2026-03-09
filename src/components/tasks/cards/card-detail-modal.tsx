@@ -92,12 +92,32 @@ import { ptBR } from 'date-fns/locale';
 
 type CardTab = 'geral' | 'subtarefas' | 'checklists' | 'campos' | 'atividade';
 
-const TABS: { key: CardTab; label: string; icon: React.ElementType; color: string }[] = [
+const TABS: {
+  key: CardTab;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+}[] = [
   { key: 'geral', label: 'Detalhes', icon: FileText, color: 'text-blue-500' },
-  { key: 'subtarefas', label: 'Subtarefas', icon: ListChecks, color: 'text-emerald-500' },
-  { key: 'checklists', label: 'Checklists', icon: CheckSquare, color: 'text-violet-500' },
+  {
+    key: 'subtarefas',
+    label: 'Subtarefas',
+    icon: ListChecks,
+    color: 'text-emerald-500',
+  },
+  {
+    key: 'checklists',
+    label: 'Checklists',
+    icon: CheckSquare,
+    color: 'text-violet-500',
+  },
   { key: 'campos', label: 'Campos', icon: Settings2, color: 'text-amber-500' },
-  { key: 'atividade', label: 'Atividade', icon: Activity, color: 'text-orange-500' },
+  {
+    key: 'atividade',
+    label: 'Atividade',
+    icon: Activity,
+    color: 'text-orange-500',
+  },
 ];
 
 // Priority color fallback for header gradient
@@ -174,7 +194,7 @@ export function CardDetailModal({
           setIsEditingTitle(false);
         },
         onError: () => toast.error('Erro ao atualizar título'),
-      },
+      }
     );
   }, [card, cardId, editTitle, updateCard]);
 
@@ -186,7 +206,7 @@ export function CardDetailModal({
       }
       if (e.key === 'Escape') setIsEditingTitle(false);
     },
-    [handleSaveTitle],
+    [handleSaveTitle]
   );
 
   const handleColumnChange = useCallback(
@@ -197,10 +217,10 @@ export function CardDetailModal({
         {
           onSuccess: () => toast.success('Cartão movido'),
           onError: () => toast.error('Erro ao mover cartão'),
-        },
+        }
       );
     },
-    [card, cardId, moveCard],
+    [card, cardId, moveCard]
   );
 
   const handlePriorityChange = useCallback(
@@ -210,10 +230,10 @@ export function CardDetailModal({
         {
           onSuccess: () => toast.success('Prioridade atualizada'),
           onError: () => toast.error('Erro ao atualizar prioridade'),
-        },
+        }
       );
     },
-    [cardId, updateCard],
+    [cardId, updateCard]
   );
 
   const handleAssigneeChange = useCallback(
@@ -222,14 +242,16 @@ export function CardDetailModal({
         { cardId, assigneeId },
         {
           onSuccess: () => {
-            toast.success(assigneeId ? 'Responsável atribuído' : 'Responsável removido');
+            toast.success(
+              assigneeId ? 'Responsável atribuído' : 'Responsável removido'
+            );
             setAssigneeOpen(false);
           },
           onError: () => toast.error('Erro ao atribuir responsável'),
-        },
+        }
       );
     },
-    [cardId, assignCard],
+    [cardId, assignCard]
   );
 
   const handleDueDateChange = useCallback(
@@ -242,25 +264,25 @@ export function CardDetailModal({
             setDueDateOpen(false);
           },
           onError: () => toast.error('Erro ao atualizar prazo'),
-        },
+        }
       );
     },
-    [cardId, updateCard],
+    [cardId, updateCard]
   );
 
   const handleToggleLabel = useCallback(
     (labelId: string) => {
       if (!card) return;
-      const currentLabelIds = card.labels?.map((l) => l.id) ?? [];
+      const currentLabelIds = card.labels?.map(l => l.id) ?? [];
       const newLabelIds = currentLabelIds.includes(labelId)
-        ? currentLabelIds.filter((id) => id !== labelId)
+        ? currentLabelIds.filter(id => id !== labelId)
         : [...currentLabelIds, labelId];
       manageLabels.mutate(
         { cardId, labelIds: newLabelIds },
-        { onError: () => toast.error('Erro ao atualizar etiquetas') },
+        { onError: () => toast.error('Erro ao atualizar etiquetas') }
       );
     },
-    [card, cardId, manageLabels],
+    [card, cardId, manageLabels]
   );
 
   const handleEstimatedHoursBlur = useCallback(
@@ -272,23 +294,28 @@ export function CardDetailModal({
         {
           onSuccess: () => toast.success('Estimativa atualizada'),
           onError: () => toast.error('Erro ao atualizar estimativa'),
-        },
+        }
       );
     },
-    [card, cardId, updateCard],
+    [card, cardId, updateCard]
   );
 
   const handleStatusChange = useCallback(
     (status: string) => {
       updateCard.mutate(
-        { cardId, data: { status: status as 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'CANCELED' } },
+        {
+          cardId,
+          data: {
+            status: status as 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'CANCELED',
+          },
+        },
         {
           onSuccess: () => toast.success('Status atualizado'),
           onError: () => toast.error('Erro ao atualizar status'),
-        },
+        }
       );
     },
-    [cardId, updateCard],
+    [cardId, updateCard]
   );
 
   const handleArchive = useCallback(() => {
@@ -298,11 +325,13 @@ export function CardDetailModal({
       { cardId, archive: !isArchived },
       {
         onSuccess: () => {
-          toast.success(isArchived ? 'Cartão desarquivado' : 'Cartão arquivado');
+          toast.success(
+            isArchived ? 'Cartão desarquivado' : 'Cartão arquivado'
+          );
           if (!isArchived) onOpenChange(false);
         },
         onError: () => toast.error('Erro ao arquivar cartão'),
-      },
+      }
     );
   }, [card, cardId, archiveCard, onOpenChange]);
 
@@ -320,20 +349,26 @@ export function CardDetailModal({
     const url = `${window.location.origin}${window.location.pathname}?card=${cardId}`;
     navigator.clipboard.writeText(url).then(
       () => toast.success('Link copiado'),
-      () => toast.error('Erro ao copiar link'),
+      () => toast.error('Erro ao copiar link')
     );
   }, [cardId]);
 
-  const currentColumn = columns.find((c) => c.id === card?.columnId);
+  const currentColumn = columns.find(c => c.id === card?.columnId);
 
   // Derive header color from first label or priority
-  const headerColor = card?.labels?.[0]?.color ?? PRIORITY_HEADER_COLORS[card?.priority ?? 'NONE'];
+  const headerColor =
+    card?.labels?.[0]?.color ??
+    PRIORITY_HEADER_COLORS[card?.priority ?? 'NONE'];
 
   // Due date helpers
-  const isOverdue = card?.dueDate ? new Date(card.dueDate) < new Date() && card.status !== 'DONE' : false;
-  const isDueSoon = card?.dueDate && !isOverdue
-    ? new Date(card.dueDate).getTime() - Date.now() < 2 * 24 * 60 * 60 * 1000 && card.status !== 'DONE'
+  const isOverdue = card?.dueDate
+    ? new Date(card.dueDate) < new Date() && card.status !== 'DONE'
     : false;
+  const isDueSoon =
+    card?.dueDate && !isOverdue
+      ? new Date(card.dueDate).getTime() - Date.now() <
+          2 * 24 * 60 * 60 * 1000 && card.status !== 'DONE'
+      : false;
 
   if (!open) return null;
 
@@ -347,7 +382,9 @@ export function CardDetailModal({
           <div className="flex items-center justify-center p-20">
             <DialogHeader className="sr-only">
               <DialogTitle>Carregando cartão...</DialogTitle>
-              <DialogDescription>Carregando detalhes do cartão</DialogDescription>
+              <DialogDescription>
+                Carregando detalhes do cartão
+              </DialogDescription>
             </DialogHeader>
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
@@ -370,7 +407,7 @@ export function CardDetailModal({
                     <Input
                       ref={titleInputRef}
                       value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
+                      onChange={e => setEditTitle(e.target.value)}
                       onBlur={handleSaveTitle}
                       onKeyDown={handleTitleKeyDown}
                       className="text-lg font-bold border-none shadow-none px-0 focus-visible:ring-0 h-auto py-0"
@@ -391,10 +428,15 @@ export function CardDetailModal({
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     {/* Column badge */}
                     {currentColumn && (
-                      <Badge variant="outline" className="text-[10px] h-5 gap-1 font-normal">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] h-5 gap-1 font-normal"
+                      >
                         <span
                           className="h-1.5 w-1.5 rounded-full shrink-0"
-                          style={{ backgroundColor: currentColumn.color ?? '#6b7280' }}
+                          style={{
+                            backgroundColor: currentColumn.color ?? '#6b7280',
+                          }}
                         />
                         {currentColumn.title}
                       </Badge>
@@ -405,10 +447,14 @@ export function CardDetailModal({
                       variant="secondary"
                       className={cn(
                         'text-[10px] h-5 font-medium',
-                        card.status === 'DONE' && 'bg-green-500/15 text-green-600 dark:text-green-400',
-                        card.status === 'IN_PROGRESS' && 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-                        card.status === 'CANCELED' && 'bg-red-500/15 text-red-600 dark:text-red-400',
-                        card.status === 'OPEN' && 'bg-gray-500/15 text-gray-600 dark:text-gray-400',
+                        card.status === 'DONE' &&
+                          'bg-green-500/15 text-green-600 dark:text-green-400',
+                        card.status === 'IN_PROGRESS' &&
+                          'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+                        card.status === 'CANCELED' &&
+                          'bg-red-500/15 text-red-600 dark:text-red-400',
+                        card.status === 'OPEN' &&
+                          'bg-gray-500/15 text-gray-600 dark:text-gray-400'
                       )}
                     >
                       {STATUS_CONFIG[card.status].label}
@@ -419,11 +465,16 @@ export function CardDetailModal({
                       variant="secondary"
                       className={cn(
                         'text-[10px] h-5 gap-1 font-medium',
-                        card.priority === 'URGENT' && 'bg-red-500/15 text-red-600 dark:text-red-400',
-                        card.priority === 'HIGH' && 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
-                        card.priority === 'MEDIUM' && 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400',
-                        card.priority === 'LOW' && 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-                        card.priority === 'NONE' && 'bg-gray-500/10 text-gray-500',
+                        card.priority === 'URGENT' &&
+                          'bg-red-500/15 text-red-600 dark:text-red-400',
+                        card.priority === 'HIGH' &&
+                          'bg-orange-500/15 text-orange-600 dark:text-orange-400',
+                        card.priority === 'MEDIUM' &&
+                          'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400',
+                        card.priority === 'LOW' &&
+                          'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+                        card.priority === 'NONE' &&
+                          'bg-gray-500/10 text-gray-500'
                       )}
                     >
                       <PriorityBadge priority={card.priority} />
@@ -436,34 +487,51 @@ export function CardDetailModal({
                         variant="secondary"
                         className={cn(
                           'text-[10px] h-5 gap-1 font-medium',
-                          isOverdue && 'bg-red-500/15 text-red-600 dark:text-red-400',
-                          isDueSoon && 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-                          !isOverdue && !isDueSoon && 'bg-gray-500/10',
+                          isOverdue &&
+                            'bg-red-500/15 text-red-600 dark:text-red-400',
+                          isDueSoon &&
+                            'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+                          !isOverdue && !isDueSoon && 'bg-gray-500/10'
                         )}
                       >
                         {isOverdue && <AlertCircle className="h-3 w-3" />}
                         <CalendarIcon className="h-3 w-3" />
-                        {format(new Date(card.dueDate), "dd 'de' MMM", { locale: ptBR })}
+                        {format(new Date(card.dueDate), "dd 'de' MMM", {
+                          locale: ptBR,
+                        })}
                       </Badge>
                     )}
 
                     {/* Assignee badge */}
                     {card.assigneeName && (
-                      <Badge variant="secondary" className="text-[10px] h-5 gap-1 font-normal">
-                        <MemberAvatar name={card.assigneeName} size="sm" className="h-3.5 w-3.5 text-[7px]" />
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] h-5 gap-1 font-normal"
+                      >
+                        <MemberAvatar
+                          name={card.assigneeName}
+                          size="sm"
+                          className="h-3.5 w-3.5 text-[7px]"
+                        />
                         {card.assigneeName}
                       </Badge>
                     )}
 
                     {/* Counters */}
                     {card._count && card._count.comments > 0 && (
-                      <Badge variant="outline" className="text-[10px] h-5 gap-1 font-normal text-muted-foreground">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] h-5 gap-1 font-normal text-muted-foreground"
+                      >
                         <MessageSquare className="h-3 w-3" />
                         {card._count.comments}
                       </Badge>
                     )}
                     {card._count && card._count.subtasks > 0 && (
-                      <Badge variant="outline" className="text-[10px] h-5 gap-1 font-normal text-muted-foreground">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] h-5 gap-1 font-normal text-muted-foreground"
+                      >
                         <ListChecks className="h-3 w-3" />
                         {card._count.completedSubtasks}/{card._count.subtasks}
                       </Badge>
@@ -472,8 +540,12 @@ export function CardDetailModal({
                     {/* Labels */}
                     {card.labels && card.labels.length > 0 && (
                       <>
-                        {card.labels.map((label) => (
-                          <LabelBadge key={label.id} name={label.name} color={label.color} />
+                        {card.labels.map(label => (
+                          <LabelBadge
+                            key={label.id}
+                            name={label.name}
+                            color={label.color}
+                          />
                         ))}
                       </>
                     )}
@@ -494,8 +566,10 @@ export function CardDetailModal({
             </DialogHeader>
 
             {/* ═══════ 3-column layout ═══════ */}
-            <div className="flex overflow-hidden flex-1 min-h-0 border-t border-border mt-3" style={{ height: 'calc(90vh - 120px)' }}>
-
+            <div
+              className="flex overflow-hidden flex-1 min-h-0 border-t border-border mt-3"
+              style={{ height: 'calc(90vh - 120px)' }}
+            >
               {/* ─── Column 1: Comments (messaging) ─── */}
               <div className="w-[280px] shrink-0 border-r border-border flex flex-col bg-muted/10 dark:bg-white/[0.01] hidden md:flex">
                 {/* Column header */}
@@ -503,7 +577,10 @@ export function CardDetailModal({
                   <MessageSquare className="h-3.5 w-3.5 text-blue-500" />
                   <span className="text-xs font-semibold">Comentários</span>
                   {card._count && card._count.comments > 0 && (
-                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-auto">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] h-4 px-1.5 ml-auto"
+                    >
                       {card._count.comments}
                     </Badge>
                   )}
@@ -521,7 +598,7 @@ export function CardDetailModal({
               <div className="flex-1 flex flex-col min-w-0">
                 {/* Tab bar */}
                 <div className="shrink-0 flex items-center gap-0.5 px-4 border-b border-border bg-muted/20 dark:bg-white/[0.02]">
-                  {TABS.map((tab) => {
+                  {TABS.map(tab => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.key;
                     return (
@@ -532,11 +609,16 @@ export function CardDetailModal({
                           'relative flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors',
                           isActive
                             ? 'text-foreground'
-                            : 'text-muted-foreground hover:text-foreground',
+                            : 'text-muted-foreground hover:text-foreground'
                         )}
                         onClick={() => setActiveTab(tab.key)}
                       >
-                        <Icon className={cn('h-3.5 w-3.5', isActive ? tab.color : '')} />
+                        <Icon
+                          className={cn(
+                            'h-3.5 w-3.5',
+                            isActive ? tab.color : ''
+                          )}
+                        />
                         {tab.label}
                         {isActive && (
                           <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-primary" />
@@ -580,7 +662,9 @@ export function CardDetailModal({
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Settings2 className="h-4 w-4 text-amber-500" />
-                        <h4 className="text-sm font-semibold">Campos personalizados</h4>
+                        <h4 className="text-sm font-semibold">
+                          Campos personalizados
+                        </h4>
                       </div>
                       <CardCustomFieldsTab boardId={boardId} cardId={cardId} />
                     </div>
@@ -590,7 +674,9 @@ export function CardDetailModal({
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Activity className="h-4 w-4 text-orange-500" />
-                        <h4 className="text-sm font-semibold">Histórico de atividades</h4>
+                        <h4 className="text-sm font-semibold">
+                          Histórico de atividades
+                        </h4>
                       </div>
                       <CardActivityTab boardId={boardId} cardId={cardId} />
                     </div>
@@ -618,19 +704,26 @@ export function CardDetailModal({
 
                     {/* Coluna */}
                     <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-medium">Coluna</p>
-                      <Select value={card.columnId} onValueChange={handleColumnChange}>
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        Coluna
+                      </p>
+                      <Select
+                        value={card.columnId}
+                        onValueChange={handleColumnChange}
+                      >
                         <SelectTrigger className="h-8 text-xs w-full">
                           <Columns3 className="h-3.5 w-3.5 mr-1.5 text-muted-foreground shrink-0" />
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {columns.map((col) => (
+                          {columns.map(col => (
                             <SelectItem key={col.id} value={col.id}>
                               <span className="flex items-center gap-1.5">
                                 <span
                                   className="h-2 w-2 rounded-full shrink-0"
-                                  style={{ backgroundColor: col.color ?? '#6b7280' }}
+                                  style={{
+                                    backgroundColor: col.color ?? '#6b7280',
+                                  }}
                                 />
                                 {col.title}
                               </span>
@@ -642,33 +735,57 @@ export function CardDetailModal({
 
                     {/* Status */}
                     <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-medium">Status</p>
-                      <Select value={card.status} onValueChange={handleStatusChange}>
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        Status
+                      </p>
+                      <Select
+                        value={card.status}
+                        onValueChange={handleStatusChange}
+                      >
                         <SelectTrigger className="h-8 text-xs w-full">
                           <SelectValue>
-                            <span className={cn('flex items-center gap-1.5', STATUS_CONFIG[card.status].color)}>
-                              <span className={cn(
-                                'h-2 w-2 rounded-full shrink-0',
-                                card.status === 'DONE' && 'bg-green-500',
-                                card.status === 'IN_PROGRESS' && 'bg-blue-500',
-                                card.status === 'CANCELED' && 'bg-red-500',
-                                card.status === 'OPEN' && 'bg-gray-400',
-                              )} />
+                            <span
+                              className={cn(
+                                'flex items-center gap-1.5',
+                                STATUS_CONFIG[card.status].color
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'h-2 w-2 rounded-full shrink-0',
+                                  card.status === 'DONE' && 'bg-green-500',
+                                  card.status === 'IN_PROGRESS' &&
+                                    'bg-blue-500',
+                                  card.status === 'CANCELED' && 'bg-red-500',
+                                  card.status === 'OPEN' && 'bg-gray-400'
+                                )}
+                              />
                               {STATUS_CONFIG[card.status].label}
                             </span>
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {(Object.keys(STATUS_CONFIG) as Array<keyof typeof STATUS_CONFIG>).map((s) => (
+                          {(
+                            Object.keys(STATUS_CONFIG) as Array<
+                              keyof typeof STATUS_CONFIG
+                            >
+                          ).map(s => (
                             <SelectItem key={s} value={s}>
-                              <span className={cn('flex items-center gap-1.5', STATUS_CONFIG[s].color)}>
-                                <span className={cn(
-                                  'h-2 w-2 rounded-full shrink-0',
-                                  s === 'DONE' && 'bg-green-500',
-                                  s === 'IN_PROGRESS' && 'bg-blue-500',
-                                  s === 'CANCELED' && 'bg-red-500',
-                                  s === 'OPEN' && 'bg-gray-400',
-                                )} />
+                              <span
+                                className={cn(
+                                  'flex items-center gap-1.5',
+                                  STATUS_CONFIG[s].color
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    'h-2 w-2 rounded-full shrink-0',
+                                    s === 'DONE' && 'bg-green-500',
+                                    s === 'IN_PROGRESS' && 'bg-blue-500',
+                                    s === 'CANCELED' && 'bg-red-500',
+                                    s === 'OPEN' && 'bg-gray-400'
+                                  )}
+                                />
                                 {STATUS_CONFIG[s].label}
                               </span>
                             </SelectItem>
@@ -679,8 +796,13 @@ export function CardDetailModal({
 
                     {/* Prioridade */}
                     <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-medium">Prioridade</p>
-                      <Select value={card.priority} onValueChange={handlePriorityChange}>
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        Prioridade
+                      </p>
+                      <Select
+                        value={card.priority}
+                        onValueChange={handlePriorityChange}
+                      >
                         <SelectTrigger className="h-8 text-xs w-full">
                           <SelectValue>
                             <span className="flex items-center gap-1.5">
@@ -690,14 +812,16 @@ export function CardDetailModal({
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {(Object.keys(PRIORITY_CONFIG) as CardPriority[]).map((p) => (
-                            <SelectItem key={p} value={p}>
-                              <span className="flex items-center gap-1.5">
-                                <PriorityBadge priority={p} />
-                                {PRIORITY_CONFIG[p].label}
-                              </span>
-                            </SelectItem>
-                          ))}
+                          {(Object.keys(PRIORITY_CONFIG) as CardPriority[]).map(
+                            p => (
+                              <SelectItem key={p} value={p}>
+                                <span className="flex items-center gap-1.5">
+                                  <PriorityBadge priority={p} />
+                                  {PRIORITY_CONFIG[p].label}
+                                </span>
+                              </SelectItem>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -711,19 +835,36 @@ export function CardDetailModal({
 
                     {/* Responsável */}
                     <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-medium">Responsável</p>
-                      <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        Responsável
+                      </p>
+                      <Popover
+                        open={assigneeOpen}
+                        onOpenChange={setAssigneeOpen}
+                      >
                         <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8 text-xs w-full justify-start gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs w-full justify-start gap-1.5"
+                          >
                             {card.assigneeName ? (
                               <>
-                                <MemberAvatar name={card.assigneeName} size="sm" className="h-4 w-4 text-[8px]" />
-                                <span className="truncate">{card.assigneeName}</span>
+                                <MemberAvatar
+                                  name={card.assigneeName}
+                                  size="sm"
+                                  className="h-4 w-4 text-[8px]"
+                                />
+                                <span className="truncate">
+                                  {card.assigneeName}
+                                </span>
                               </>
                             ) : (
                               <>
                                 <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                <span className="text-muted-foreground">Nenhum</span>
+                                <span className="text-muted-foreground">
+                                  Nenhum
+                                </span>
                               </>
                             )}
                           </Button>
@@ -734,20 +875,26 @@ export function CardDetailModal({
                               className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted transition-colors"
                               onClick={() => handleAssigneeChange(null)}
                             >
-                              <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px]">--</span>
-                              <span className="text-muted-foreground">Nenhum</span>
+                              <span className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px]">
+                                --
+                              </span>
+                              <span className="text-muted-foreground">
+                                Nenhum
+                              </span>
                             </button>
-                            {members.map((m) => (
+                            {members.map(m => (
                               <button
                                 key={m.userId}
                                 className={cn(
                                   'w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted transition-colors',
-                                  card.assigneeId === m.userId && 'bg-muted',
+                                  card.assigneeId === m.userId && 'bg-muted'
                                 )}
                                 onClick={() => handleAssigneeChange(m.userId)}
                               >
                                 <MemberAvatar name={m.userName} size="sm" />
-                                <span className="truncate">{m.userName ?? m.userEmail}</span>
+                                <span className="truncate">
+                                  {m.userName ?? m.userEmail}
+                                </span>
                               </button>
                             ))}
                           </div>
@@ -757,7 +904,9 @@ export function CardDetailModal({
 
                     {/* Prazo */}
                     <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-medium">Prazo</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        Prazo
+                      </p>
                       <Popover open={dueDateOpen} onOpenChange={setDueDateOpen}>
                         <PopoverTrigger asChild>
                           <Button
@@ -765,20 +914,26 @@ export function CardDetailModal({
                             size="sm"
                             className={cn(
                               'h-8 text-xs w-full justify-start gap-1.5',
-                              isOverdue && 'text-red-500 border-red-300 dark:border-red-500/40 bg-red-50/50 dark:bg-red-500/5',
-                              isDueSoon && 'text-amber-600 border-amber-300 dark:border-amber-500/40 bg-amber-50/50 dark:bg-amber-500/5',
+                              isOverdue &&
+                                'text-red-500 border-red-300 dark:border-red-500/40 bg-red-50/50 dark:bg-red-500/5',
+                              isDueSoon &&
+                                'text-amber-600 border-amber-300 dark:border-amber-500/40 bg-amber-50/50 dark:bg-amber-500/5'
                             )}
                           >
                             <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
                             {card.dueDate
-                              ? format(new Date(card.dueDate), "dd 'de' MMM", { locale: ptBR })
+                              ? format(new Date(card.dueDate), "dd 'de' MMM", {
+                                  locale: ptBR,
+                                })
                               : 'Definir'}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={card.dueDate ? new Date(card.dueDate) : undefined}
+                            selected={
+                              card.dueDate ? new Date(card.dueDate) : undefined
+                            }
                             onSelect={handleDueDateChange}
                             locale={ptBR}
                           />
@@ -800,7 +955,9 @@ export function CardDetailModal({
 
                     {/* Estimativa */}
                     <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground font-medium">Estimativa</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        Estimativa
+                      </p>
                       <div className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <Input
@@ -809,7 +966,7 @@ export function CardDetailModal({
                           step={0.5}
                           placeholder="Horas"
                           defaultValue={card.estimatedHours ?? ''}
-                          onBlur={(e) => handleEstimatedHoursBlur(e.target.value)}
+                          onBlur={e => handleEstimatedHoursBlur(e.target.value)}
                           className="h-8 text-xs flex-1"
                         />
                       </div>
@@ -823,7 +980,11 @@ export function CardDetailModal({
                     </p>
                     <Popover open={labelsOpen} onOpenChange={setLabelsOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 text-xs w-full justify-start gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs w-full justify-start gap-1.5"
+                        >
                           <Tag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           {card.labels && card.labels.length > 0
                             ? `${card.labels.length} selecionada${card.labels.length > 1 ? 's' : ''}`
@@ -837,16 +998,24 @@ export function CardDetailModal({
                               Nenhuma etiqueta neste quadro
                             </p>
                           ) : (
-                            allLabels.map((label) => {
-                              const isSelected = card.labels?.some((l) => l.id === label.id) ?? false;
+                            allLabels.map(label => {
+                              const isSelected =
+                                card.labels?.some(l => l.id === label.id) ??
+                                false;
                               return (
                                 <button
                                   key={label.id}
                                   className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted transition-colors"
                                   onClick={() => handleToggleLabel(label.id)}
                                 >
-                                  <Checkbox checked={isSelected} className="pointer-events-none" />
-                                  <LabelBadge name={label.name} color={label.color} />
+                                  <Checkbox
+                                    checked={isSelected}
+                                    className="pointer-events-none"
+                                  />
+                                  <LabelBadge
+                                    name={label.name}
+                                    color={label.color}
+                                  />
                                 </button>
                               );
                             })
@@ -858,8 +1027,13 @@ export function CardDetailModal({
                     {/* Show selected labels */}
                     {card.labels && card.labels.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {card.labels.map((label) => (
-                          <LabelBadge key={label.id} name={label.name} color={label.color} className="text-[9px]" />
+                        {card.labels.map(label => (
+                          <LabelBadge
+                            key={label.id}
+                            name={label.name}
+                            color={label.color}
+                            className="text-[9px]"
+                          />
                         ))}
                       </div>
                     )}
@@ -904,12 +1078,15 @@ export function CardDetailModal({
                         <AlertDialogHeader>
                           <AlertDialogTitle>Excluir cartão?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Esta ação é irreversível. Subtarefas, comentários e anexos também serão removidos.
+                            Esta ação é irreversível. Subtarefas, comentários e
+                            anexos também serão removidos.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+                          <AlertDialogAction onClick={handleDelete}>
+                            Excluir
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -918,11 +1095,19 @@ export function CardDetailModal({
                   {/* Meta info */}
                   <div className="px-1 pt-1 space-y-1">
                     <p className="text-[10px] text-muted-foreground">
-                      Criado por <span className="font-medium text-foreground/70">{card.creatorName ?? 'Desconhecido'}</span>
+                      Criado por{' '}
+                      <span className="font-medium text-foreground/70">
+                        {card.creatorName ?? 'Desconhecido'}
+                      </span>
                     </p>
                     {card.createdAt && (
                       <p className="text-[10px] text-muted-foreground">
-                        em {format(new Date(card.createdAt), "dd 'de' MMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                        em{' '}
+                        {format(
+                          new Date(card.createdAt),
+                          "dd 'de' MMM 'de' yyyy 'às' HH:mm",
+                          { locale: ptBR }
+                        )}
                       </p>
                     )}
                   </div>

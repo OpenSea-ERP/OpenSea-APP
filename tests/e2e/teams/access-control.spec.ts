@@ -33,7 +33,10 @@ test.beforeAll(async () => {
     TEAMS_FULL_PERMISSIONS,
     `e2e-teams-acl-full-${Date.now().toString(36)}`
   );
-  const fullAuth = await getAuthenticatedToken(fullUser.email, fullUser.password);
+  const fullAuth = await getAuthenticatedToken(
+    fullUser.email,
+    fullUser.password
+  );
   fullToken = fullAuth.token;
   fullTenantId = fullAuth.tenantId;
 
@@ -42,7 +45,10 @@ test.beforeAll(async () => {
     TEAMS_VIEW_ONLY_PERMISSIONS,
     `e2e-teams-acl-view-${Date.now().toString(36)}`
   );
-  const viewAuth = await getAuthenticatedToken(viewUser.email, viewUser.password);
+  const viewAuth = await getAuthenticatedToken(
+    viewUser.email,
+    viewUser.password
+  );
   viewOnlyToken = viewAuth.token;
   viewOnlyTenantId = viewAuth.tenantId;
 
@@ -51,7 +57,10 @@ test.beforeAll(async () => {
     ['core.profiles.read'],
     `e2e-teams-acl-none-${Date.now().toString(36)}`
   );
-  const noPermAuth = await getAuthenticatedToken(noPermUser.email, noPermUser.password);
+  const noPermAuth = await getAuthenticatedToken(
+    noPermUser.email,
+    noPermUser.password
+  );
   noPermToken = noPermAuth.token;
   noPermTenantId = noPermAuth.tenantId;
 });
@@ -95,7 +104,9 @@ test.describe('Teams - Controle de Acesso', () => {
     await navigateToTeamDetail(page, team.id);
 
     // Members are always visible (no tabs) — "Adicionar Membro" button should NOT be visible
-    await expect(page.locator('button:has-text("Adicionar Membro")')).toHaveCount(0);
+    await expect(
+      page.locator('button:has-text("Adicionar Membro")')
+    ).toHaveCount(0);
   });
 
   test('3.4 - Full permission: todas ações visíveis', async ({ page }) => {
@@ -107,11 +118,17 @@ test.describe('Teams - Controle de Acesso', () => {
     await navigateToTeamDetail(page, team.id);
 
     // "Editar" and "Excluir" buttons should be visible in action bar
-    await expect(page.locator('button:has-text("Editar")')).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('button:has-text("Excluir")').first()).toBeVisible();
+    await expect(page.locator('button:has-text("Editar")')).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(
+      page.locator('button:has-text("Excluir")').first()
+    ).toBeVisible();
 
     // "Adicionar Membro" should be visible (members always visible, no tabs)
-    await expect(page.locator('button:has-text("Adicionar Membro")')).toBeVisible({
+    await expect(
+      page.locator('button:has-text("Adicionar Membro")')
+    ).toBeVisible({
       timeout: 5_000,
     });
   });

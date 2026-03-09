@@ -73,27 +73,33 @@ export function ProtectedImageCanvas({
     img.src = src;
   }, [src, watermarkText, maxHeight]);
 
-  // Block keyboard shortcuts for save/print/devtools
+  // Block keyboard shortcuts for save/print/devtools — scoped to parent container
+  const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    const container = containerRef.current?.closest('[role="dialog"]') ?? containerRef.current;
+    if (!container) return;
+
+    const handler = (e: Event) => {
+      const ke = e as KeyboardEvent;
       if (
-        (e.ctrlKey || e.metaKey) &&
-        (e.key === 's' || e.key === 'p' || e.key === 'u' ||
-         (e.shiftKey && e.key === 'I'))
+        (ke.ctrlKey || ke.metaKey) &&
+        (ke.key === 's' || ke.key === 'p' || ke.key === 'u' ||
+         (ke.shiftKey && ke.key === 'I'))
       ) {
-        e.preventDefault();
+        ke.preventDefault();
       }
-      if (e.key === 'PrintScreen') {
-        e.preventDefault();
+      if (ke.key === 'PrintScreen') {
+        ke.preventDefault();
       }
     };
 
-    window.addEventListener('keydown', handler, { capture: true });
-    return () => window.removeEventListener('keydown', handler, { capture: true });
+    container.addEventListener('keydown', handler, { capture: true });
+    return () => container.removeEventListener('keydown', handler, { capture: true });
   }, []);
 
   return (
     <div
+      ref={containerRef}
       className={className}
       onContextMenu={e => e.preventDefault()}
       onDragStart={e => e.preventDefault()}

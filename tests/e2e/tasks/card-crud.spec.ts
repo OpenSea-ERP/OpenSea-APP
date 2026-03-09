@@ -22,7 +22,7 @@ let boardId: string;
 test.beforeAll(async () => {
   const user = await createTasksUser(
     TASKS_FULL_PERMISSIONS,
-    `e2e-tasks-cards-${Date.now().toString(36)}`,
+    `e2e-tasks-cards-${Date.now().toString(36)}`
   );
   const auth = await getAuthenticatedToken(user.email, user.password);
   userToken = auth.token;
@@ -46,19 +46,30 @@ test.describe('Tasks - CRUD de Cartões', () => {
     await navigateToBoard(page, boardId);
 
     // Click add card button (+ icon in a column)
-    const addButton = page.locator('button:has-text("Adicionar"), button[aria-label*="adicionar"], button:has-text("Nova tarefa")').first();
+    const addButton = page
+      .locator(
+        'button:has-text("Adicionar"), button[aria-label*="adicionar"], button:has-text("Nova tarefa")'
+      )
+      .first();
     await addButton.click();
 
     // Fill title in dialog
-    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 5_000 });
-    await page.locator('[role="dialog"] input[type="text"]').first().fill(title);
+    await expect(page.locator('[role="dialog"]')).toBeVisible({
+      timeout: 5_000,
+    });
+    await page
+      .locator('[role="dialog"] input[type="text"]')
+      .first()
+      .fill(title);
 
     // Submit
     await page.locator('[role="dialog"] button:has-text("Criar")').click();
     await waitForToast(page, 'Cartão criado');
 
     // Card should appear in the kanban
-    await expect(page.locator(`text="${title}"`)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(`text="${title}"`)).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test('Abrir modal de detalhes do cartão', async ({ page }) => {
@@ -73,8 +84,12 @@ test.describe('Tasks - CRUD de Cartões', () => {
     await page.locator(`text="${card.title}"`).first().click();
 
     // Detail modal should open
-    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 5_000 });
-    await expect(page.locator(`[role="dialog"] :text("${card.title}")`)).toBeVisible();
+    await expect(page.locator('[role="dialog"]')).toBeVisible({
+      timeout: 5_000,
+    });
+    await expect(
+      page.locator(`[role="dialog"] :text("${card.title}")`)
+    ).toBeVisible();
   });
 
   test('Editar título do cartão no modal', async ({ page }) => {
@@ -88,10 +103,14 @@ test.describe('Tasks - CRUD de Cartões', () => {
 
     // Open card detail
     await page.locator(`text="${oldTitle}"`).first().click();
-    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('[role="dialog"]')).toBeVisible({
+      timeout: 5_000,
+    });
 
     // Edit title (click on title text to enable editing)
-    const titleElement = page.locator('[role="dialog"] input, [role="dialog"] [contenteditable]').first();
+    const titleElement = page
+      .locator('[role="dialog"] input, [role="dialog"] [contenteditable]')
+      .first();
     await titleElement.click();
     await titleElement.fill(newTitle);
 
@@ -100,6 +119,8 @@ test.describe('Tasks - CRUD de Cartões', () => {
     await page.waitForTimeout(1_000);
 
     // Verify the title was updated
-    await expect(page.locator(`[role="dialog"] :text("${newTitle}")`)).toBeVisible({ timeout: 5_000 });
+    await expect(
+      page.locator(`[role="dialog"] :text("${newTitle}")`)
+    ).toBeVisible({ timeout: 5_000 });
   });
 });

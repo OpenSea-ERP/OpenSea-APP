@@ -46,7 +46,9 @@ test.describe('Calendar - CRUD de Eventos', () => {
 
     await createEventViaUi(page, title);
     await waitForToast(page, 'Evento criado com sucesso');
-    await expect(page.locator(`.fc-event:has-text("${title}")`).first()).toBeVisible({
+    await expect(
+      page.locator(`.fc-event:has-text("${title}")`).first()
+    ).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -61,7 +63,9 @@ test.describe('Calendar - CRUD de Eventos', () => {
     await waitForToast(page, 'O título é obrigatório');
   });
 
-  test('3.3 - Validar erro com data fim anterior ao início', async ({ page }) => {
+  test('3.3 - Validar erro com data fim anterior ao início', async ({
+    page,
+  }) => {
     const title = `e2e-cal-invalid-date-${Date.now()}`;
 
     await injectAuthIntoBrowser(page, userToken, userTenantId);
@@ -70,32 +74,44 @@ test.describe('Calendar - CRUD de Eventos', () => {
     await page.locator('button:has-text("Novo Evento")').click();
     await page.locator('input[placeholder="Nome do evento"]').fill(title);
 
-    const dateInputs = page.locator('[role="dialog"] input[type="datetime-local"]');
+    const dateInputs = page.locator(
+      '[role="dialog"] input[type="datetime-local"]'
+    );
     await dateInputs.nth(0).fill('2026-03-01T10:00');
     await dateInputs.nth(1).fill('2026-03-01T09:00');
     await page.locator('button:has-text("Criar Evento")').click();
 
-    await waitForToast(page, 'A data de fim deve ser posterior à data de início');
+    await waitForToast(
+      page,
+      'A data de fim deve ser posterior à data de início'
+    );
   });
 
   test('3.4 - Editar evento existente', async ({ page }) => {
     const oldTitle = `e2e-cal-edit-old-${Date.now()}`;
     const newTitle = `e2e-cal-edit-new-${Date.now()}`;
 
-    await createCalendarEventViaApi(userToken, buildDefaultEventPayload(oldTitle));
+    await createCalendarEventViaApi(
+      userToken,
+      buildDefaultEventPayload(oldTitle)
+    );
 
     await injectAuthIntoBrowser(page, userToken, userTenantId);
     await navigateToCalendar(page);
     await openCalendarEventByTitle(page, oldTitle);
 
     await page.locator('button:has-text("Editar")').click();
-    await expect(page.locator('text=Editar Evento')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Editar Evento')).toBeVisible({
+      timeout: 5_000,
+    });
     await page.locator('input[placeholder="Nome do evento"]').fill(newTitle);
     await page.locator('button:has-text("Salvar Alterações")').click();
 
     await waitForToast(page, 'Evento atualizado com sucesso');
     await page.locator('input[placeholder="Buscar eventos..."]').fill(newTitle);
-    await expect(page.locator(`.fc-event:has-text("${newTitle}")`).first()).toBeVisible({
+    await expect(
+      page.locator(`.fc-event:has-text("${newTitle}")`).first()
+    ).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -109,7 +125,9 @@ test.describe('Calendar - CRUD de Eventos', () => {
     await openCalendarEventByTitle(page, title);
 
     await page.locator('button:has-text("Excluir")').click();
-    await expect(page.locator('text=Excluir Evento')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Excluir Evento')).toBeVisible({
+      timeout: 5_000,
+    });
 
     await enterActionPin(page, TEST_PIN);
     await waitForToast(page, 'Evento excluído com sucesso');

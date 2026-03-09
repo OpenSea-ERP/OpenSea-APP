@@ -19,7 +19,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { CalendarIcon, Settings2 } from 'lucide-react';
-import { useCustomFields, useSetCustomFieldValues } from '@/hooks/tasks/use-custom-fields';
+import {
+  useCustomFields,
+  useSetCustomFieldValues,
+} from '@/hooks/tasks/use-custom-fields';
 import { useCard } from '@/hooks/tasks/use-cards';
 import type { CustomField, CustomFieldType } from '@/types/tasks';
 import { format } from 'date-fns';
@@ -46,7 +49,7 @@ function FieldInput({
       return (
         <Input
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           placeholder="Texto..."
           className="h-8 text-sm"
         />
@@ -56,7 +59,7 @@ function FieldInput({
         <Input
           type="number"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           placeholder="0"
           className="h-8 text-sm"
         />
@@ -66,7 +69,7 @@ function FieldInput({
         <Input
           type="url"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           placeholder="https://..."
           className="h-8 text-sm"
         />
@@ -76,7 +79,7 @@ function FieldInput({
         <Input
           type="email"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           placeholder="email@exemplo.com"
           className="h-8 text-sm"
         />
@@ -86,7 +89,7 @@ function FieldInput({
         <div className="flex items-center h-8">
           <Checkbox
             checked={value === 'true'}
-            onCheckedChange={(checked) => onChange(String(!!checked))}
+            onCheckedChange={checked => onChange(String(!!checked))}
           />
         </div>
       );
@@ -110,7 +113,7 @@ function FieldInput({
             <Calendar
               mode="single"
               selected={dateValue}
-              onSelect={(d) => onChange(d ? d.toISOString() : '')}
+              onSelect={d => onChange(d ? d.toISOString() : '')}
               locale={ptBR}
             />
           </PopoverContent>
@@ -121,7 +124,7 @@ function FieldInput({
       return (
         <Select
           value={value || FIELD_NONE_VALUE}
-          onValueChange={(v) => onChange(v === FIELD_NONE_VALUE ? '' : v)}
+          onValueChange={v => onChange(v === FIELD_NONE_VALUE ? '' : v)}
         >
           <SelectTrigger className="h-8 text-sm">
             <SelectValue placeholder="Selecionar..." />
@@ -130,7 +133,7 @@ function FieldInput({
             <SelectItem value={FIELD_NONE_VALUE}>
               <span className="text-muted-foreground">Nenhum</span>
             </SelectItem>
-            {(field.options ?? []).map((opt) => (
+            {(field.options ?? []).map(opt => (
               <SelectItem key={opt} value={opt}>
                 {opt}
               </SelectItem>
@@ -142,7 +145,7 @@ function FieldInput({
       const selectedValues = value ? value.split(',').filter(Boolean) : [];
       return (
         <div className="space-y-1">
-          {(field.options ?? []).map((opt) => {
+          {(field.options ?? []).map(opt => {
             const isChecked = selectedValues.includes(opt);
             return (
               <label
@@ -151,10 +154,10 @@ function FieldInput({
               >
                 <Checkbox
                   checked={isChecked}
-                  onCheckedChange={(checked) => {
+                  onCheckedChange={checked => {
                     const next = checked
                       ? [...selectedValues, opt]
-                      : selectedValues.filter((v) => v !== opt);
+                      : selectedValues.filter(v => v !== opt);
                     onChange(next.join(','));
                   }}
                 />
@@ -169,15 +172,19 @@ function FieldInput({
       return (
         <Input
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           className="h-8 text-sm"
         />
       );
   }
 }
 
-export function CardCustomFieldsTab({ boardId, cardId }: CardCustomFieldsTabProps) {
-  const { data: fieldsData, isLoading: isLoadingFields } = useCustomFields(boardId);
+export function CardCustomFieldsTab({
+  boardId,
+  cardId,
+}: CardCustomFieldsTabProps) {
+  const { data: fieldsData, isLoading: isLoadingFields } =
+    useCustomFields(boardId);
   const { data: cardData } = useCard(boardId, cardId);
   const setValues = useSetCustomFieldValues(boardId);
 
@@ -200,15 +207,16 @@ export function CardCustomFieldsTab({ boardId, cardId }: CardCustomFieldsTabProp
   }, [existingValues]);
 
   const handleFieldChange = useCallback((fieldId: string, value: string) => {
-    setLocalValues((prev) => ({ ...prev, [fieldId]: value }));
+    setLocalValues(prev => ({ ...prev, [fieldId]: value }));
     setIsDirty(true);
   }, []);
 
   const handleSave = useCallback(() => {
     const changedValues = customFields
-      .map((field) => {
+      .map(field => {
         const newValue = localValues[field.id] ?? '';
-        const existingValue = existingValues.find((v) => v.fieldId === field.id)?.value ?? '';
+        const existingValue =
+          existingValues.find(v => v.fieldId === field.id)?.value ?? '';
         if (newValue === existingValue) return null;
         return { fieldId: field.id, value: newValue || null };
       })
@@ -227,7 +235,7 @@ export function CardCustomFieldsTab({ boardId, cardId }: CardCustomFieldsTabProp
           toast.success('Campos atualizados');
         },
         onError: () => toast.error('Erro ao salvar campos'),
-      },
+      }
     );
   }, [customFields, localValues, existingValues, cardId, setValues]);
 
@@ -243,7 +251,9 @@ export function CardCustomFieldsTab({ boardId, cardId }: CardCustomFieldsTabProp
     return (
       <div className="flex flex-col items-center justify-center py-8 text-muted-foreground w-full">
         <Settings2 className="h-8 w-8 mb-2 opacity-50" />
-        <p className="text-sm">Nenhum campo customizado configurado neste quadro</p>
+        <p className="text-sm">
+          Nenhum campo customizado configurado neste quadro
+        </p>
       </div>
     );
   }
@@ -251,7 +261,7 @@ export function CardCustomFieldsTab({ boardId, cardId }: CardCustomFieldsTabProp
   return (
     <div className="space-y-4 flex-col w-full">
       <div className="space-y-4">
-        {customFields.map((field) => (
+        {customFields.map(field => (
           <div key={field.id} className="space-y-1">
             <label className="text-sm font-medium flex items-center gap-1">
               {field.name}
@@ -260,7 +270,7 @@ export function CardCustomFieldsTab({ boardId, cardId }: CardCustomFieldsTabProp
             <FieldInput
               field={field}
               value={localValues[field.id] ?? ''}
-              onChange={(v) => handleFieldChange(field.id, v)}
+              onChange={v => handleFieldChange(field.id, v)}
             />
           </div>
         ))}
@@ -268,11 +278,7 @@ export function CardCustomFieldsTab({ boardId, cardId }: CardCustomFieldsTabProp
 
       {isDirty && (
         <div className="flex justify-end pt-2 border-t border-border">
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={setValues.isPending}
-          >
+          <Button size="sm" onClick={handleSave} disabled={setValues.isPending}>
             Salvar
           </Button>
         </div>

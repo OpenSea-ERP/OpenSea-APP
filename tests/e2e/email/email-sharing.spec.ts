@@ -45,16 +45,14 @@ test.describe('E-mail - Compartilhamento de Contas', () => {
     });
 
     // Expand account settings
-    const configBtn = page
-      .locator('button:has-text("Configurações")')
-      .first();
+    const configBtn = page.locator('button:has-text("Configurações")').first();
     if (await configBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await configBtn.click();
 
       // Should show sharing section
-      await expect(
-        page.locator('text=Compartilhamento')
-      ).toBeVisible({ timeout: 5_000 });
+      await expect(page.locator('text=Compartilhamento')).toBeVisible({
+        timeout: 5_000,
+      });
       await expect(
         page.locator('button:has-text("Adicionar acesso")')
       ).toBeVisible();
@@ -75,33 +73,21 @@ test.describe('E-mail - Compartilhamento de Contas', () => {
     });
 
     // Expand and click share
-    const configBtn = page
-      .locator('button:has-text("Configurações")')
-      .first();
+    const configBtn = page.locator('button:has-text("Configurações")').first();
     if (await configBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await configBtn.click();
 
-      const addAccessBtn = page.locator(
-        'button:has-text("Adicionar acesso")'
-      );
-      if (
-        await addAccessBtn.isVisible({ timeout: 5_000 }).catch(() => false)
-      ) {
+      const addAccessBtn = page.locator('button:has-text("Adicionar acesso")');
+      if (await addAccessBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
         await addAccessBtn.click();
 
         // Dialog should open
         const dialog = page.locator('[role="dialog"]');
         await expect(dialog).toBeVisible({ timeout: 5_000 });
-        await expect(
-          dialog.locator('text=Compartilhar conta')
-        ).toBeVisible();
+        await expect(dialog.locator('text=Compartilhar conta')).toBeVisible();
         await expect(dialog.locator('text=ID do usuário')).toBeVisible();
-        await expect(
-          dialog.locator('text=Pode ler mensagens')
-        ).toBeVisible();
-        await expect(
-          dialog.locator('text=Pode enviar e-mails')
-        ).toBeVisible();
+        await expect(dialog.locator('text=Pode ler mensagens')).toBeVisible();
+        await expect(dialog.locator('text=Pode enviar e-mails')).toBeVisible();
         await expect(
           dialog.locator('text=Pode gerenciar a conta')
         ).toBeVisible();
@@ -123,33 +109,23 @@ test.describe('E-mail - Compartilhamento de Contas', () => {
     });
 
     // Expand → Share
-    const configBtn = page
-      .locator('button:has-text("Configurações")')
-      .first();
+    const configBtn = page.locator('button:has-text("Configurações")').first();
     if (await configBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await configBtn.click();
 
-      const addAccessBtn = page.locator(
-        'button:has-text("Adicionar acesso")'
-      );
-      if (
-        await addAccessBtn.isVisible({ timeout: 5_000 }).catch(() => false)
-      ) {
+      const addAccessBtn = page.locator('button:has-text("Adicionar acesso")');
+      if (await addAccessBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
         await addAccessBtn.click();
         const dialog = page.locator('[role="dialog"]');
         await expect(dialog).toBeVisible({ timeout: 5_000 });
 
         // Fill user ID
-        const userIdInput = dialog.locator(
-          'input[placeholder*="uuid"]'
-        );
+        const userIdInput = dialog.locator('input[placeholder*="uuid"]');
         await userIdInput.fill(secondUserId);
 
         // Enable read permission (should already be on by default)
         // Click "Conceder acesso"
-        const grantBtn = dialog.locator(
-          'button:has-text("Conceder acesso")'
-        );
+        const grantBtn = dialog.locator('button:has-text("Conceder acesso")');
         await grantBtn.click();
 
         await waitForToast(page, 'Conta compartilhada com sucesso');
@@ -173,9 +149,9 @@ test.describe('E-mail - Compartilhamento de Contas', () => {
     });
 
     // Should show "Compartilhada" badge
-    await expect(
-      page.locator('text=Compartilhada').first()
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Compartilhada').first()).toBeVisible({
+      timeout: 5_000,
+    });
 
     await deleteEmailAccountViaApi(userToken, account.id);
   });
@@ -194,9 +170,9 @@ test.describe('E-mail - Compartilhamento de Contas', () => {
     });
 
     // Should show "Privada" badge
-    await expect(
-      page.locator('text=Privada').first()
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Privada').first()).toBeVisible({
+      timeout: 5_000,
+    });
 
     await deleteEmailAccountViaApi(userToken, account.id);
   });
@@ -214,18 +190,12 @@ test.describe('E-mail - Compartilhamento de Contas', () => {
       timeout: 15_000,
     });
 
-    const configBtn = page
-      .locator('button:has-text("Configurações")')
-      .first();
+    const configBtn = page.locator('button:has-text("Configurações")').first();
     if (await configBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await configBtn.click();
 
-      const addAccessBtn = page.locator(
-        'button:has-text("Adicionar acesso")'
-      );
-      if (
-        await addAccessBtn.isVisible({ timeout: 5_000 }).catch(() => false)
-      ) {
+      const addAccessBtn = page.locator('button:has-text("Adicionar acesso")');
+      if (await addAccessBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
         await addAccessBtn.click();
         const dialog = page.locator('[role="dialog"]');
         await expect(dialog).toBeVisible({ timeout: 5_000 });

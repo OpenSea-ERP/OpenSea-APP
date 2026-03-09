@@ -40,7 +40,9 @@ test.describe('Teams - Navegação e Filtros', () => {
     await navigateToTeams(page);
 
     // Type in the search bar
-    const searchInput = page.locator('input[placeholder*="Buscar"], input[type="search"]').first();
+    const searchInput = page
+      .locator('input[placeholder*="Buscar"], input[type="search"]')
+      .first();
     await searchInput.fill('SearchTarget');
 
     // Wait for filter to apply
@@ -72,7 +74,9 @@ test.describe('Teams - Navegação e Filtros', () => {
     }
 
     // Page should still be functional (no crash)
-    await expect(page.locator('h1:has-text("Equipes"), h2:has-text("Equipes")')).toBeVisible();
+    await expect(
+      page.locator('h1:has-text("Equipes"), h2:has-text("Equipes")')
+    ).toBeVisible();
   });
 
   test('4.3 - Paginação com múltiplas equipes', async ({ page }) => {
@@ -86,7 +90,9 @@ test.describe('Teams - Navegação e Filtros', () => {
     await navigateToTeams(page);
 
     // Grid should render with team cards
-    const cards = page.locator('[class*="entity-card"], [class*="card"]').first();
+    const cards = page
+      .locator('[class*="entity-card"], [class*="card"]')
+      .first();
     await expect(cards).toBeVisible({ timeout: 10_000 });
   });
 
@@ -110,7 +116,9 @@ test.describe('Teams - Navegação e Filtros', () => {
     if (await breadcrumbLink.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await breadcrumbLink.click();
       await page.waitForURL('**/admin/teams', { timeout: 10_000 });
-      await expect(page.locator('h1:has-text("Equipes"), h2:has-text("Equipes")')).toBeVisible({
+      await expect(
+        page.locator('h1:has-text("Equipes"), h2:has-text("Equipes")')
+      ).toBeVisible({
         timeout: 10_000,
       });
     }
@@ -121,7 +129,11 @@ test.describe('Teams - Navegação e Filtros', () => {
     await navigateToTeams(page);
 
     // Look for sort button/dropdown
-    const sortButton = page.locator('button:has-text("Nome"), button[aria-label*="sort"], button[aria-label*="Ordenar"]').first();
+    const sortButton = page
+      .locator(
+        'button:has-text("Nome"), button[aria-label*="sort"], button[aria-label*="Ordenar"]'
+      )
+      .first();
     if (await sortButton.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await sortButton.click();
 
@@ -132,6 +144,8 @@ test.describe('Teams - Navegação e Filtros', () => {
     }
 
     // Page should be functional regardless
-    await expect(page.locator('h1:has-text("Equipes"), h2:has-text("Equipes")')).toBeVisible();
+    await expect(
+      page.locator('h1:has-text("Equipes"), h2:has-text("Equipes")')
+    ).toBeVisible();
   });
 });

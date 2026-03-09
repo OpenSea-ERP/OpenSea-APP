@@ -57,7 +57,9 @@ test.describe('Calendar - Filtros, Querystring e Persistência', () => {
     expect(params.get('endDate')).toBeTruthy();
   });
 
-  test('14.2 - Filtros persistem ao navegar período e trocar view', async ({ page }) => {
+  test('14.2 - Filtros persistem ao navegar período e trocar view', async ({
+    page,
+  }) => {
     const requestUrls: string[] = [];
 
     await page.route('**/v1/calendar/events**', async route => {
@@ -75,7 +77,9 @@ test.describe('Calendar - Filtros, Querystring e Persistência', () => {
     await injectAuthIntoBrowser(page, userToken, userTenantId);
     await navigateToCalendar(page);
 
-    await page.locator('input[placeholder="Buscar eventos..."]').fill('persist-check');
+    await page
+      .locator('input[placeholder="Buscar eventos..."]')
+      .fill('persist-check');
     await page.locator('button[role="combobox"]').first().click();
     await page.locator('[role="option"]:has-text("Reunião")').click();
     await page.locator('#system-events').click();
@@ -84,10 +88,13 @@ test.describe('Calendar - Filtros, Querystring e Persistência', () => {
     await page.locator('button.fc-timeGridWeek-button').click();
     await page.waitForTimeout(700);
 
-    await expect(page.locator('input[placeholder="Buscar eventos..."]')).toHaveValue(
-      'persist-check'
+    await expect(
+      page.locator('input[placeholder="Buscar eventos..."]')
+    ).toHaveValue('persist-check');
+    await expect(page.locator('#system-events')).toHaveAttribute(
+      'data-state',
+      'unchecked'
     );
-    await expect(page.locator('#system-events')).toHaveAttribute('data-state', 'unchecked');
 
     const hasFilteredRequest = requestUrls.some(url => {
       const params = new URL(url).searchParams;

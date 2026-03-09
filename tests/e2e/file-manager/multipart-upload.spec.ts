@@ -74,7 +74,9 @@ test.describe('File Manager - Upload Multipart', () => {
     expect(result.partUrls).toHaveLength(expectedParts);
 
     // Part numbers should be sequential starting from 1
-    const partNumbers = result.partUrls.map(p => p.partNumber).sort((a, b) => a - b);
+    const partNumbers = result.partUrls
+      .map(p => p.partNumber)
+      .sort((a, b) => a - b);
     for (let i = 0; i < expectedParts; i++) {
       expect(partNumbers[i]).toBe(i + 1);
     }
@@ -117,7 +119,11 @@ test.describe('File Manager - Upload Multipart', () => {
     );
 
     // Abort should not throw
-    await abortMultipartUploadViaApi(userToken, initResult.key, initResult.uploadId);
+    await abortMultipartUploadViaApi(
+      userToken,
+      initResult.key,
+      initResult.uploadId
+    );
 
     // Verify abort via API returns 204
     const { status } = await apiRequest(

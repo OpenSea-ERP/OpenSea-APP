@@ -34,7 +34,13 @@ interface CardCreateDialogProps {
   defaultColumnId?: string;
 }
 
-const PRIORITY_OPTIONS: CardPriority[] = ['NONE', 'LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+const PRIORITY_OPTIONS: CardPriority[] = [
+  'NONE',
+  'LOW',
+  'MEDIUM',
+  'HIGH',
+  'URGENT',
+];
 
 export function CardCreateDialog({
   open,
@@ -128,7 +134,7 @@ export function CardCreateDialog({
               id="card-title"
               placeholder="Ex: Implementar funcionalidade X"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={e => setTitle(e.target.value)}
               autoFocus
             />
           </div>
@@ -142,7 +148,7 @@ export function CardCreateDialog({
               id="card-description"
               placeholder="Descreva o card..."
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               rows={3}
             />
           </div>
@@ -155,7 +161,7 @@ export function CardCreateDialog({
                 <SelectValue placeholder="Selecione a coluna" />
               </SelectTrigger>
               <SelectContent>
-                {sortedColumns.map((col) => (
+                {sortedColumns.map(col => (
                   <SelectItem key={col.id} value={col.id}>
                     <span className="flex items-center gap-2">
                       <span
@@ -173,7 +179,10 @@ export function CardCreateDialog({
           {/* Prioridade */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Prioridade</label>
-            <Select value={priority} onValueChange={(v) => setPriority(v as CardPriority)}>
+            <Select
+              value={priority}
+              onValueChange={v => setPriority(v as CardPriority)}
+            >
               <SelectTrigger>
                 <SelectValue>
                   <span className="flex items-center gap-1.5">
@@ -183,7 +192,7 @@ export function CardCreateDialog({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {PRIORITY_OPTIONS.map((p) => (
+                {PRIORITY_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>
                     <span className="flex items-center gap-1.5">
                       <PriorityBadge priority={p} />
@@ -206,7 +215,7 @@ export function CardCreateDialog({
                 <SelectItem value="__none__">
                   <span className="text-muted-foreground">Sem responsável</span>
                 </SelectItem>
-                {members.map((m) => (
+                {members.map(m => (
                   <SelectItem key={m.userId} value={m.userId}>
                     <span className="flex items-center gap-2">
                       <MemberAvatar name={m.userName} size="sm" />
@@ -228,11 +237,14 @@ export function CardCreateDialog({
                 id="card-due-date"
                 type="date"
                 value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+                onChange={e => setDueDate(e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="card-estimated-hours" className="text-sm font-medium">
+              <label
+                htmlFor="card-estimated-hours"
+                className="text-sm font-medium"
+              >
                 Estimativa (horas)
               </label>
               <Input
@@ -242,7 +254,7 @@ export function CardCreateDialog({
                 step={0.5}
                 placeholder="0"
                 value={estimatedHours}
-                onChange={(e) => setEstimatedHours(e.target.value)}
+                onChange={e => setEstimatedHours(e.target.value)}
               />
             </div>
           </div>

@@ -49,7 +49,12 @@ test.describe('File Manager - Estatísticas de Armazenamento', () => {
 
     const folderName = `e2e-ss2-${Date.now()}`;
     const folderId = await createTestFolder(userToken, folderName);
-    await uploadTestFile(userToken, folderId, `ss2-${Date.now()}.txt`, 'Stats test content');
+    await uploadTestFile(
+      userToken,
+      folderId,
+      `ss2-${Date.now()}.txt`,
+      'Stats test content'
+    );
 
     const statsAfter = await getStorageStatsViaApi(userToken);
 

@@ -82,14 +82,17 @@ export async function inviteParticipantsViaApi(
   eventId: string,
   participants: Array<{ userId: string; role?: 'ASSIGNEE' | 'GUEST' }>
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/v1/calendar/events/${eventId}/participants`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ participants }),
-  });
+  const res = await fetch(
+    `${API_URL}/v1/calendar/events/${eventId}/participants`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ participants }),
+    }
+  );
 
   if (!res.ok) {
     throw new Error(
@@ -120,7 +123,9 @@ export async function createEventViaUi(
   title: string
 ): Promise<void> {
   await page.locator('button:has-text("Novo Evento")').click();
-  await expect(page.locator('text=Novo Evento')).toBeVisible({ timeout: 5_000 });
+  await expect(page.locator('text=Novo Evento')).toBeVisible({
+    timeout: 5_000,
+  });
   await page.locator('input[placeholder="Nome do evento"]').fill(title);
   await page.locator('button:has-text("Criar Evento")').click();
 }

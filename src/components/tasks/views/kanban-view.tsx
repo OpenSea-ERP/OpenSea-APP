@@ -51,10 +51,10 @@ function buildCardMap(columnIds: string[], cards: Card[]): Map<string, Card[]> {
 
 function findColumnOfCard(
   cardMap: Map<string, Card[]>,
-  cardId: UniqueIdentifier,
+  cardId: UniqueIdentifier
 ): string | undefined {
   for (const [colId, colCards] of cardMap) {
-    if (colCards.some((c) => c.id === cardId)) return colId;
+    if (colCards.some(c => c.id === cardId)) return colId;
   }
   return undefined;
 }
@@ -84,7 +84,7 @@ export function KanbanView({
 
   const propsColumns = useMemo(
     () => [...(board.columns ?? [])].sort((a, b) => a.position - b.position),
-    [board.columns],
+    [board.columns]
   );
 
   const [orderedColumns, setOrderedColumns] = useState<Column[]>(propsColumns);
@@ -103,11 +103,14 @@ export function KanbanView({
 
   // ─── Derived ───
 
-  const columnIds = useMemo(() => orderedColumns.map((c) => c.id), [orderedColumns]);
+  const columnIds = useMemo(
+    () => orderedColumns.map(c => c.id),
+    [orderedColumns]
+  );
 
   const cardsByColumn = useMemo(
     () => buildCardMap(columnIds, localCards),
-    [localCards, columnIds],
+    [localCards, columnIds]
   );
 
   // Ref to always have the latest cardsByColumn in dragEnd without stale closure
@@ -123,7 +126,7 @@ export function KanbanView({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
-    }),
+    })
   );
 
   // ─── Drag Start ───
@@ -132,14 +135,14 @@ export function KanbanView({
     (event: DragStartEvent) => {
       const data = event.active.data.current;
       if (data?.type === 'column') {
-        const col = orderedColumns.find((c) => c.id === event.active.id);
+        const col = orderedColumns.find(c => c.id === event.active.id);
         if (col) setActiveColumn(col);
       } else {
         const card = data?.card as Card | undefined;
         if (card) setActiveCard(card);
       }
     },
-    [orderedColumns],
+    [orderedColumns]
   );
 
   // ─── Drag Over ───
@@ -159,7 +162,7 @@ export function KanbanView({
 
       const overData = over.data.current;
 
-      setLocalCards((prev) => {
+      setLocalCards(prev => {
         // Build a FRESH map from the latest prev state
         const freshMap = buildCardMap(columnIdsRef.current, prev);
 
@@ -182,42 +185,52 @@ export function KanbanView({
           const colCards = freshMap.get(sourceColId);
           if (!colCards) return prev;
 
-          const oldIdx = colCards.findIndex((c) => c.id === activeId);
-          const newIdx = colCards.findIndex((c) => c.id === overId);
+          const oldIdx = colCards.findIndex(c => c.id === activeId);
+          const newIdx = colCards.findIndex(c => c.id === overId);
           if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return prev;
 
           const reordered = arrayMove(colCards, oldIdx, newIdx);
-          const other = prev.filter((c) => c.columnId !== sourceColId);
-          return [...other, ...reordered.map((c, i) => ({ ...c, position: i }))];
+          const other = prev.filter(c => c.columnId !== sourceColId);
+          return [
+            ...other,
+            ...reordered.map((c, i) => ({ ...c, position: i })),
+          ];
         }
 
         // ── Cross-column move ──
         const sourceCards = [...(freshMap.get(sourceColId) ?? [])];
         const targetCards = [...(freshMap.get(targetColId) ?? [])];
 
-        const cardIdx = sourceCards.findIndex((c) => c.id === activeId);
+        const cardIdx = sourceCards.findIndex(c => c.id === activeId);
         if (cardIdx === -1) return prev;
 
         const [movedCard] = sourceCards.splice(cardIdx, 1);
 
         let insertIdx = targetCards.length;
         if (overData?.type === 'card') {
-          const overIdx = targetCards.findIndex((c) => c.id === overId);
+          const overIdx = targetCards.findIndex(c => c.id === overId);
           if (overIdx >= 0) insertIdx = overIdx;
         }
 
-        targetCards.splice(insertIdx, 0, { ...movedCard, columnId: targetColId });
+        targetCards.splice(insertIdx, 0, {
+          ...movedCard,
+          columnId: targetColId,
+        });
 
         const touchedColIds = new Set([sourceColId, targetColId]);
-        const other = prev.filter((c) => !touchedColIds.has(c.columnId));
+        const other = prev.filter(c => !touchedColIds.has(c.columnId));
         return [
           ...other,
           ...sourceCards.map((c, i) => ({ ...c, position: i })),
-          ...targetCards.map((c, i) => ({ ...c, position: i, columnId: targetColId })),
+          ...targetCards.map((c, i) => ({
+            ...c,
+            position: i,
+            columnId: targetColId,
+          })),
         ];
       });
     },
-    [], // No stale dependencies — everything is inside setLocalCards(prev => ...)
+    [] // No stale dependencies — everything is inside setLocalCards(prev => ...)
   );
 
   // ─── Drag End (commit to API) ───
@@ -232,13 +245,13 @@ export function KanbanView({
         setActiveColumn(null);
         if (!over || active.id === over.id) return;
 
-        const oldIndex = orderedColumns.findIndex((c) => c.id === active.id);
-        const newIndex = orderedColumns.findIndex((c) => c.id === over.id);
+        const oldIndex = orderedColumns.findIndex(c => c.id === active.id);
+        const newIndex = orderedColumns.findIndex(c => c.id === over.id);
         if (oldIndex === -1 || newIndex === -1) return;
 
         const reordered = arrayMove(orderedColumns, oldIndex, newIndex);
         setOrderedColumns(reordered);
-        reorderColumns.mutate({ columnIds: reordered.map((c) => c.id) });
+        reorderColumns.mutate({ columnIds: reordered.map(c => c.id) });
         return;
       }
 
@@ -253,7 +266,7 @@ export function KanbanView({
       if (!over || !finalColumnId) return;
 
       const finalCards = latestMap.get(finalColumnId) ?? [];
-      const finalPosition = finalCards.findIndex((c) => c.id === activeCardId);
+      const finalPosition = finalCards.findIndex(c => c.id === activeCardId);
 
       moveCard.mutate({
         cardId: activeCardId,
@@ -263,7 +276,7 @@ export function KanbanView({
         },
       });
     },
-    [orderedColumns, moveCard, reorderColumns],
+    [orderedColumns, moveCard, reorderColumns]
   );
 
   // ─── Drag Cancel ───
@@ -286,8 +299,11 @@ export function KanbanView({
     >
       <div className="kanban-scroll h-full overflow-x-auto overflow-y-hidden pb-2">
         <div className="flex gap-3 min-w-max h-full">
-          <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-            {orderedColumns.map((column) => {
+          <SortableContext
+            items={columnIds}
+            strategy={horizontalListSortingStrategy}
+          >
+            {orderedColumns.map(column => {
               const colCards = cardsByColumn.get(column.id) ?? [];
               return (
                 <KanbanColumn
@@ -306,10 +322,12 @@ export function KanbanView({
         </div>
       </div>
 
-      <DragOverlay dropAnimation={{
-        duration: 200,
-        easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-      }}>
+      <DragOverlay
+        dropAnimation={{
+          duration: 200,
+          easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+        }}
+      >
         {activeCard ? (
           <CardItem
             card={activeCard}
@@ -405,11 +423,11 @@ function KanbanColumn({
           toast.error('Erro ao renomear coluna.');
           cancelEditing();
         },
-      },
+      }
     );
   }
 
-  const cardIds = useMemo(() => cards.map((c) => c.id), [cards]);
+  const cardIds = useMemo(() => cards.map(c => c.id), [cards]);
   const isOverWip = column.wipLimit ? cards.length >= column.wipLimit : false;
   const colColor = column.color || boardGradientFrom;
 
@@ -424,7 +442,7 @@ function KanbanColumn({
       style={style}
       className={cn(
         'flex flex-col w-[280px] shrink-0',
-        isDragging && 'opacity-40',
+        isDragging && 'opacity-40'
       )}
     >
       {/* Column header with color accent + drag handle */}
@@ -456,23 +474,28 @@ function KanbanColumn({
           <input
             ref={inputRef}
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={e => setEditValue(e.target.value)}
             onBlur={saveTitle}
-            onKeyDown={(e) => {
+            onKeyDown={e => {
               if (e.key === 'Enter') saveTitle();
               if (e.key === 'Escape') cancelEditing();
             }}
             className={cn(
               'text-sm font-semibold flex-1 min-w-0 bg-white dark:bg-white/10',
               'border border-primary/50 rounded px-1.5 py-0.5 outline-none',
-              'focus:ring-2 focus:ring-primary/30',
+              'focus:ring-2 focus:ring-primary/30'
             )}
           />
         ) : (
           <h3
             className="text-sm font-semibold truncate flex-1 cursor-text hover:bg-black/5 dark:hover:bg-white/5 rounded px-1.5 py-0.5 -mx-1 transition-colors"
             onClick={startEditing}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startEditing(); } }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                startEditing();
+              }
+            }}
             tabIndex={0}
             role="button"
             title="Clique para renomear"
@@ -487,7 +510,7 @@ function KanbanColumn({
             'text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md shrink-0',
             isOverWip
               ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15'
-              : 'text-muted-foreground bg-muted/50',
+              : 'text-muted-foreground bg-muted/50'
           )}
         >
           {cards.length}
@@ -509,12 +532,19 @@ function KanbanColumn({
         className={cn(
           'flex-1 space-y-2 rounded-b-xl border border-gray-200 dark:border-white/10 p-2 transition-colors min-h-[80px]',
           'bg-muted/20 dark:bg-white/[0.02]',
-          isOver && !isDragging && 'ring-2 ring-inset',
+          isOver && !isDragging && 'ring-2 ring-inset'
         )}
-        style={isOver && !isDragging ? { borderColor: `${colColor}40`, boxShadow: `inset 0 0 0 1px ${colColor}20` } : undefined}
+        style={
+          isOver && !isDragging
+            ? {
+                borderColor: `${colColor}40`,
+                boxShadow: `inset 0 0 0 1px ${colColor}20`,
+              }
+            : undefined
+        }
       >
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-          {cards.map((card) => (
+          {cards.map(card => (
             <CardItem
               key={card.id}
               card={card}
@@ -559,7 +589,9 @@ function KanbanColumnOverlay({
           className="h-3 w-3 rounded shrink-0"
           style={{ backgroundColor: colColor }}
         />
-        <h3 className="text-sm font-semibold truncate flex-1">{column.title}</h3>
+        <h3 className="text-sm font-semibold truncate flex-1">
+          {column.title}
+        </h3>
         <span className="text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md text-muted-foreground bg-muted/50">
           {cardCount}
         </span>
@@ -592,7 +624,7 @@ function AddColumnButton({ boardId }: { boardId: string }) {
           setName('');
           setIsAdding(false);
         },
-      },
+      }
     );
   }
 
@@ -629,13 +661,13 @@ function AddColumnButton({ boardId }: { boardId: string }) {
         autoFocus
         type="text"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={e => setName(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Nome da coluna..."
         disabled={createColumn.isPending}
         className={cn(
           'w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-sm',
-          'placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50',
+          'placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50'
         )}
       />
       <div className="flex items-center gap-2">

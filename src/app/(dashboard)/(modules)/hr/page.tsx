@@ -128,14 +128,16 @@ export default function HRLandingPage() {
         ]);
 
       const extractCount = (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        result: PromiseSettledResult<any>,
+        result: PromiseSettledResult<unknown>,
         entityKey: string
       ): number | null => {
         if (result.status !== 'fulfilled') return null;
-        const v = result.value;
+        const v = result.value as Record<string, unknown> | unknown[];
         if (Array.isArray(v)) return v.length;
-        return v?.meta?.total ?? v?.total ?? v?.[entityKey]?.length ?? null;
+        const meta = (v as Record<string, unknown>)?.meta as Record<string, unknown> | undefined;
+        const total = (v as Record<string, unknown>)?.total as number | undefined;
+        const entityArr = (v as Record<string, unknown>)?.[entityKey] as unknown[] | undefined;
+        return meta?.total as number ?? total ?? entityArr?.length ?? null;
       };
 
       setCounts({

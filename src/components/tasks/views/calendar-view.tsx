@@ -6,7 +6,11 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
-import type { EventClickArg, EventDropArg, EventContentArg } from '@fullcalendar/core';
+import type {
+  EventClickArg,
+  EventDropArg,
+  EventContentArg,
+} from '@fullcalendar/core';
 import { cn } from '@/lib/utils';
 import type { Board, Card, CardPriority } from '@/types/tasks';
 import { PRIORITY_CONFIG } from '@/types/tasks';
@@ -30,29 +34,37 @@ const PRIORITY_HEX: Record<CardPriority, string> = {
   NONE: '#9ca3af',
 };
 
-export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: CalendarViewProps) {
+export function CalendarView({
+  board,
+  cards,
+  boardId,
+  readOnly,
+  onCardClick,
+}: CalendarViewProps) {
   const updateCard = useUpdateCard(boardId);
   const gradient = getGradientForBoard(boardId);
 
   const columns = useMemo(
     () => [...(board.columns ?? [])].sort((a, b) => a.position - b.position),
-    [board.columns],
+    [board.columns]
   );
 
   const columnMap = useMemo(() => {
     const map = new Map<string, { title: string; color: string | null }>();
-    for (const col of columns) map.set(col.id, { title: col.title, color: col.color });
+    for (const col of columns)
+      map.set(col.id, { title: col.title, color: col.color });
     return map;
   }, [columns]);
 
   const events = useMemo(
     () =>
       cards
-        .filter((c) => c.dueDate)
-        .map((c) => {
-          const color = c.labels && c.labels.length > 0
-            ? c.labels[0].color
-            : PRIORITY_HEX[c.priority];
+        .filter(c => c.dueDate)
+        .map(c => {
+          const color =
+            c.labels && c.labels.length > 0
+              ? c.labels[0].color
+              : PRIORITY_HEX[c.priority];
           return {
             id: c.id,
             title: c.title,
@@ -62,7 +74,7 @@ export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: C
             extendedProps: { card: c },
           };
         }),
-    [cards],
+    [cards]
   );
 
   const handleEventClick = useCallback(
@@ -70,7 +82,7 @@ export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: C
       const card = info.event.extendedProps.card as Card | undefined;
       if (card) onCardClick?.(card);
     },
-    [onCardClick],
+    [onCardClick]
   );
 
   const handleEventDrop = useCallback(
@@ -91,10 +103,10 @@ export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: C
             toast.error('Erro ao atualizar prazo');
             info.revert();
           },
-        },
+        }
       );
     },
-    [updateCard],
+    [updateCard]
   );
 
   const renderEventContent = useCallback(
@@ -102,30 +114,42 @@ export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: C
       const card = arg.event.extendedProps.card as Card | undefined;
       const isListView = arg.view.type === 'listWeek';
       const isMonthView = arg.view.type === 'dayGridMonth';
-      const isTimeGrid = arg.view.type === 'timeGridWeek' || arg.view.type === 'timeGridDay';
+      const isTimeGrid =
+        arg.view.type === 'timeGridWeek' || arg.view.type === 'timeGridDay';
 
       const colInfo = card ? columnMap.get(card.columnId) : null;
       const priorityConfig = card ? PRIORITY_CONFIG[card.priority] : null;
 
-      const timeText = isMonthView && arg.event.start
-        ? arg.event.start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-        : null;
+      const timeText =
+        isMonthView && arg.event.start
+          ? arg.event.start.toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : null;
 
       return (
-        <div className={cn(
-          'flex items-center gap-1.5 overflow-hidden w-full',
-          isListView ? 'py-1 px-1' : 'px-1.5',
-          isTimeGrid && 'py-0.5',
-        )}>
+        <div
+          className={cn(
+            'flex items-center gap-1.5 overflow-hidden w-full',
+            isListView ? 'py-1 px-1' : 'px-1.5',
+            isTimeGrid && 'py-0.5'
+          )}
+        >
           {priorityConfig && (
             <span
-              className={cn('h-2 w-2 rounded-full shrink-0', priorityConfig.dotColor)}
+              className={cn(
+                'h-2 w-2 rounded-full shrink-0',
+                priorityConfig.dotColor
+              )}
             />
           )}
-          <span className={cn(
-            'truncate font-medium leading-tight flex-1 min-w-0',
-            isListView ? 'text-xs' : 'text-[0.75rem]',
-          )}>
+          <span
+            className={cn(
+              'truncate font-medium leading-tight flex-1 min-w-0',
+              isListView ? 'text-xs' : 'text-[0.75rem]'
+            )}
+          >
             {arg.event.title}
           </span>
           {isListView && colInfo && (
@@ -141,7 +165,7 @@ export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: C
         </div>
       );
     },
-    [columnMap],
+    [columnMap]
   );
 
   return (
@@ -151,7 +175,12 @@ export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: C
 
       <div className="os-calendar p-3 md:p-4">
         <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+          plugins={[
+            dayGridPlugin,
+            timeGridPlugin,
+            listPlugin,
+            interactionPlugin,
+          ]}
           initialView="dayGridMonth"
           locale="pt-br"
           headerToolbar={{
@@ -167,7 +196,7 @@ export function CalendarView({ board, cards, boardId, readOnly, onCardClick }: C
             list: 'Agenda',
           }}
           allDayText="Dia inteiro"
-          moreLinkText={(n) => `+${n} mais`}
+          moreLinkText={n => `+${n} mais`}
           noEventsText="Nenhum cartão com prazo neste período"
           events={events}
           eventContent={renderEventContent}

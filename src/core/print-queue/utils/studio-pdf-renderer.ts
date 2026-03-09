@@ -684,8 +684,7 @@ export async function renderStudioTemplateToPdf(
   previewData: Record<string, unknown>,
   offsetX: number,
   offsetY: number,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  JsBarcode: any,
+  JsBarcode: (canvas: HTMLCanvasElement, data: string, options: Record<string, unknown>) => void,
   QRCode: typeof import('qrcode')
 ) {
   // Desenhar fundo do canvas se não for branco

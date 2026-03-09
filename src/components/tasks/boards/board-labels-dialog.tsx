@@ -128,10 +128,14 @@ export function BoardLabelsDialog({
                 Nenhuma etiqueta criada.
               </p>
             ) : (
-              labels.map((label) => (
+              labels.map(label => (
                 <div key={label.id} className="space-y-2">
                   <div className="flex items-center gap-2 rounded-md border px-3 py-2">
-                    <LabelBadge name={label.name} color={label.color} className="text-xs" />
+                    <LabelBadge
+                      name={label.name}
+                      color={label.color}
+                      className="text-xs"
+                    />
                     <div className="flex-1" />
 
                     {editingId !== label.id && (
@@ -161,16 +165,16 @@ export function BoardLabelsDialog({
                     <div className="space-y-2 rounded-md border border-dashed p-3">
                       <Input
                         value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
+                        onChange={e => setEditingName(e.target.value)}
                         className="h-8 text-sm"
                         autoFocus
-                        onKeyDown={(e) => {
+                        onKeyDown={e => {
                           if (e.key === 'Enter') handleUpdate(label.id);
                           if (e.key === 'Escape') setEditingId(null);
                         }}
                       />
                       <div className="flex items-center gap-1.5">
-                        {LABEL_COLORS.map((c) => (
+                        {LABEL_COLORS.map(c => (
                           <button
                             key={c.value}
                             type="button"
@@ -179,7 +183,7 @@ export function BoardLabelsDialog({
                               'h-6 w-6 rounded-full transition-all ring-offset-1 ring-offset-background',
                               editingColor === c.value
                                 ? 'ring-2 ring-primary scale-110'
-                                : 'hover:scale-105',
+                                : 'hover:scale-105'
                             )}
                             style={{ backgroundColor: c.value }}
                             onClick={() => setEditingColor(c.value)}
@@ -222,8 +226,8 @@ export function BoardLabelsDialog({
               <Input
                 placeholder="Nome da etiqueta"
                 value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => {
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={e => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     handleCreate();
@@ -232,7 +236,7 @@ export function BoardLabelsDialog({
               />
 
               <div className="flex items-center gap-1.5">
-                {LABEL_COLORS.map((c) => (
+                {LABEL_COLORS.map(c => (
                   <button
                     key={c.value}
                     type="button"
@@ -241,7 +245,7 @@ export function BoardLabelsDialog({
                       'h-6 w-6 rounded-full transition-all ring-offset-1 ring-offset-background',
                       newColor === c.value
                         ? 'ring-2 ring-primary scale-110'
-                        : 'hover:scale-105',
+                        : 'hover:scale-105'
                     )}
                     style={{ backgroundColor: c.value }}
                     onClick={() => setNewColor(c.value)}

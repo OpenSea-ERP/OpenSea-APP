@@ -27,8 +27,15 @@ test.describe('Calendar - Enforcement de Backend (403)', () => {
     );
     const auth = await getAuthenticatedToken(user.email, user.password);
 
-    const payload = buildDefaultEventPayload(`e2e-cal-403-create-title-${Date.now()}`);
-    const { status } = await apiRequest(auth.token, 'POST', '/v1/calendar/events', payload);
+    const payload = buildDefaultEventPayload(
+      `e2e-cal-403-create-title-${Date.now()}`
+    );
+    const { status } = await apiRequest(
+      auth.token,
+      'POST',
+      '/v1/calendar/events',
+      payload
+    );
 
     expect(status).toBe(403);
   });
@@ -113,7 +120,9 @@ test.describe('Calendar - Enforcement de Backend (403)', () => {
       adminToken,
       buildDefaultEventPayload(`e2e-cal-403-respond-${Date.now()}`)
     );
-    await inviteParticipantsViaApi(adminToken, event.id, [{ userId: user.userId }]);
+    await inviteParticipantsViaApi(adminToken, event.id, [
+      { userId: user.userId },
+    ]);
 
     const { status } = await apiRequest(
       auth.token,
@@ -127,7 +136,10 @@ test.describe('Calendar - Enforcement de Backend (403)', () => {
 
   test('6.6 - Rejeitar manage reminders sem calendar.reminders.create', async () => {
     const user = await createCalendarUser(
-      [CALENDAR_PERMISSIONS.EVENTS_LIST, CALENDAR_PERMISSIONS.PARTICIPANTS_RESPOND],
+      [
+        CALENDAR_PERMISSIONS.EVENTS_LIST,
+        CALENDAR_PERMISSIONS.PARTICIPANTS_RESPOND,
+      ],
       `e2e-cal-403-remind-user-${Date.now()}`
     );
     const auth = await getAuthenticatedToken(user.email, user.password);
@@ -136,7 +148,9 @@ test.describe('Calendar - Enforcement de Backend (403)', () => {
       adminToken,
       buildDefaultEventPayload(`e2e-cal-403-remind-${Date.now()}`)
     );
-    await inviteParticipantsViaApi(adminToken, event.id, [{ userId: user.userId }]);
+    await inviteParticipantsViaApi(adminToken, event.id, [
+      { userId: user.userId },
+    ]);
 
     const { status } = await apiRequest(
       auth.token,
@@ -157,7 +171,9 @@ test.describe('Calendar - Enforcement de Backend (403)', () => {
       [CALENDAR_PERMISSIONS.EVENTS_LIST],
       `e2e-cal-403-remove-target-${Date.now()}`
     );
-    await inviteParticipantsViaApi(adminToken, event.id, [{ userId: invited.userId }]);
+    await inviteParticipantsViaApi(adminToken, event.id, [
+      { userId: invited.userId },
+    ]);
 
     const user = await createCalendarUser(
       [CALENDAR_PERMISSIONS.EVENTS_LIST],

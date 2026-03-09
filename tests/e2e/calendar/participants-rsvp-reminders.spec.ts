@@ -104,7 +104,9 @@ test.describe('Calendar - Participantes, RSVP e Lembretes', () => {
     await page.locator('button:has-text("Aceitar")').click();
     await waitForToast(page, 'Convite aceito');
 
-    await expect(page.locator('text=Lembrete')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Lembrete')).toBeVisible({
+      timeout: 10_000,
+    });
     const reminderBox = page.locator('button[role="combobox"]').last();
     await reminderBox.click();
     await page.locator('[role="option"]:has-text("10 minutos antes")').click();

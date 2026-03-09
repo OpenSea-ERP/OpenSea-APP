@@ -183,14 +183,16 @@ export async function listEmailAccountsViaApi(
 /**
  * Build mock email account response data.
  */
-export function buildMockAccount(overrides: Partial<{
-  id: string;
-  address: string;
-  displayName: string;
-  isActive: boolean;
-  isDefault: boolean;
-  visibility: 'PRIVATE' | 'SHARED';
-}> = {}) {
+export function buildMockAccount(
+  overrides: Partial<{
+    id: string;
+    address: string;
+    displayName: string;
+    isActive: boolean;
+    isDefault: boolean;
+    visibility: 'PRIVATE' | 'SHARED';
+  }> = {}
+) {
   const id = overrides.id ?? crypto.randomUUID();
   return {
     id,
@@ -276,18 +278,20 @@ export function buildMockFolders(accountId: string) {
 /**
  * Build a mock message list item.
  */
-export function buildMockMessageItem(overrides: Partial<{
-  id: string;
-  accountId: string;
-  folderId: string;
-  subject: string;
-  fromAddress: string;
-  fromName: string;
-  snippet: string;
-  isRead: boolean;
-  hasAttachments: boolean;
-  receivedAt: string;
-}> = {}) {
+export function buildMockMessageItem(
+  overrides: Partial<{
+    id: string;
+    accountId: string;
+    folderId: string;
+    subject: string;
+    fromAddress: string;
+    fromName: string;
+    snippet: string;
+    isRead: boolean;
+    hasAttachments: boolean;
+    receivedAt: string;
+  }> = {}
+) {
   return {
     id: overrides.id ?? crypto.randomUUID(),
     accountId: overrides.accountId ?? 'mock-account-1',
@@ -305,19 +309,21 @@ export function buildMockMessageItem(overrides: Partial<{
 /**
  * Build a mock message detail response.
  */
-export function buildMockMessageDetail(overrides: Partial<{
-  id: string;
-  accountId: string;
-  folderId: string;
-  subject: string;
-  fromAddress: string;
-  fromName: string;
-  bodyHtmlSanitized: string;
-  bodyText: string;
-  toAddresses: string[];
-  ccAddresses: string[];
-  isRead: boolean;
-}> = {}) {
+export function buildMockMessageDetail(
+  overrides: Partial<{
+    id: string;
+    accountId: string;
+    folderId: string;
+    subject: string;
+    fromAddress: string;
+    fromName: string;
+    bodyHtmlSanitized: string;
+    bodyText: string;
+    toAddresses: string[];
+    ccAddresses: string[];
+    isRead: boolean;
+  }> = {}
+) {
   const id = overrides.id ?? crypto.randomUUID();
   return {
     message: {
@@ -419,17 +425,19 @@ export async function mockEmailMessageRoutes(
     }),
   ];
 
-  const mockDetail = options.messageDetail ?? buildMockMessageDetail({
-    id: mockMessages[0]?.id ?? 'msg-1',
-    accountId,
-    folderId: 'folder-inbox',
-    subject: mockMessages[0]?.subject ?? 'Reuniao de equipe amanha',
-    fromName: mockMessages[0]?.fromName ?? 'Maria Silva',
-    fromAddress: mockMessages[0]?.fromAddress ?? 'maria@empresa.com',
-    bodyHtmlSanitized:
-      '<p>Oi, gostaria de confirmar a <strong>reuniao</strong> de amanha as 10h.</p>',
-    toAddresses: ['eu@empresa.com'],
-  });
+  const mockDetail =
+    options.messageDetail ??
+    buildMockMessageDetail({
+      id: mockMessages[0]?.id ?? 'msg-1',
+      accountId,
+      folderId: 'folder-inbox',
+      subject: mockMessages[0]?.subject ?? 'Reuniao de equipe amanha',
+      fromName: mockMessages[0]?.fromName ?? 'Maria Silva',
+      fromAddress: mockMessages[0]?.fromAddress ?? 'maria@empresa.com',
+      bodyHtmlSanitized:
+        '<p>Oi, gostaria de confirmar a <strong>reuniao</strong> de amanha as 10h.</p>',
+      toAddresses: ['eu@empresa.com'],
+    });
 
   const folders = buildMockFolders(accountId);
 

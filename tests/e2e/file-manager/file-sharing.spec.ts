@@ -86,9 +86,9 @@ test.describe('File Manager - Compartilhamento de Arquivo', () => {
 
     // Check "Proteger com senha"
     await page.locator('#use-password').click();
-    await expect(
-      page.locator('input[type="password"]')
-    ).toBeVisible({ timeout: 3_000 });
+    await expect(page.locator('input[type="password"]')).toBeVisible({
+      timeout: 3_000,
+    });
     await page.locator('input[type="password"]').fill('test123');
 
     await page
@@ -101,9 +101,9 @@ test.describe('File Manager - Compartilhamento de Arquivo', () => {
     );
 
     // Verify link appears in "Links ativos" list
-    await expect(
-      page.locator('text=Links ativos')
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Links ativos')).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ─── S-3 Criar link com data de expiração ─────────────────────────
@@ -140,9 +140,9 @@ test.describe('File Manager - Compartilhamento de Arquivo', () => {
     );
 
     // Verify expiry date info in link list
-    await expect(
-      page.locator('text=Expira em')
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=Expira em')).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ─── S-4 Criar link com limite de downloads ───────────────────────
@@ -174,9 +174,9 @@ test.describe('File Manager - Compartilhamento de Arquivo', () => {
     );
 
     // Verify "0/5 downloads" in link info
-    await expect(
-      page.locator('text=0/5 downloads')
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=0/5 downloads')).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   // ─── S-5 Exibir links ativos para o arquivo ──────────────────────
@@ -197,9 +197,9 @@ test.describe('File Manager - Compartilhamento de Arquivo', () => {
     await openShareDialog(page, fileName);
 
     // Verify "Links ativos (2)" heading
-    await expect(
-      page.locator('text=Links ativos (2)')
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Links ativos (2)')).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   // ─── S-6 Copiar link para a área de transferência ─────────────────
@@ -219,9 +219,9 @@ test.describe('File Manager - Compartilhamento de Arquivo', () => {
     await openShareDialog(page, fileName);
 
     // Wait for active links to load
-    await expect(
-      page.locator('text=Links ativos')
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Links ativos')).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Click copy button (title="Copiar link")
     await page.locator('button[title="Copiar link"]').first().click();
@@ -244,9 +244,9 @@ test.describe('File Manager - Compartilhamento de Arquivo', () => {
     await openShareDialog(page, fileName);
 
     // Wait for active links to load
-    await expect(
-      page.locator('text=Links ativos')
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=Links ativos')).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Click revoke button (title="Revogar link")
     await page.locator('button[title="Revogar link"]').first().click();

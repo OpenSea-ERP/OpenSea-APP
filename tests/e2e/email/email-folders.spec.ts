@@ -267,7 +267,12 @@ test.describe('E-mail - Navegacao de Pastas', () => {
     let found = false;
     for (const name of folderNames) {
       const loc = page.locator(`text=${name}`);
-      if (await loc.first().isVisible({ timeout: 3_000 }).catch(() => false)) {
+      if (
+        await loc
+          .first()
+          .isVisible({ timeout: 3_000 })
+          .catch(() => false)
+      ) {
         found = true;
         break;
       }

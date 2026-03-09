@@ -730,10 +730,14 @@ export async function enterActionPin(page: Page, pin: string): Promise<void> {
 /**
  * List all deleted items (trash) via API.
  */
-export async function listTrashViaApi(
-  token: string
-): Promise<{
-  files: Array<{ id: string; name: string; size: number; path: string; fileType: string }>;
+export async function listTrashViaApi(token: string): Promise<{
+  files: Array<{
+    id: string;
+    name: string;
+    size: number;
+    path: string;
+    fileType: string;
+  }>;
   folders: Array<{ id: string; name: string; path: string }>;
   totalFiles: number;
   totalFolders: number;
@@ -805,9 +809,7 @@ export async function emptyTrashViaApi(
   });
 
   if (!res.ok) {
-    throw new Error(
-      `Empty trash failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`Empty trash failed (${res.status}): ${await res.text()}`);
   }
 
   return res.json();
@@ -949,9 +951,7 @@ export async function bulkDeleteViaApi(
   });
 
   if (!res.ok) {
-    throw new Error(
-      `Bulk delete failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`Bulk delete failed (${res.status}): ${await res.text()}`);
   }
 
   return res.json();
@@ -980,9 +980,7 @@ export async function bulkMoveViaApi(
   });
 
   if (!res.ok) {
-    throw new Error(
-      `Bulk move failed (${res.status}): ${await res.text()}`
-    );
+    throw new Error(`Bulk move failed (${res.status}): ${await res.text()}`);
   }
 
   return res.json();
@@ -995,9 +993,7 @@ export async function bulkMoveViaApi(
 /**
  * Get storage stats via API.
  */
-export async function getStorageStatsViaApi(
-  token: string
-): Promise<{
+export async function getStorageStatsViaApi(token: string): Promise<{
   totalFiles: number;
   totalSize: number;
   filesByType: Record<string, number>;
@@ -1109,7 +1105,14 @@ export async function completeMultipartUploadViaApi(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ key, uploadId, parts, fileName, mimeType, fileSize }),
+    body: JSON.stringify({
+      key,
+      uploadId,
+      parts,
+      fileName,
+      mimeType,
+      fileSize,
+    }),
   });
 
   if (!res.ok) {
@@ -1175,11 +1178,14 @@ export async function downloadSharedFileViaApi(
   const body: Record<string, unknown> = {};
   if (password) body.password = password;
 
-  const res = await fetch(`${API_URL}/v1/public/shared/${shareToken}/download`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const res = await fetch(
+    `${API_URL}/v1/public/shared/${shareToken}/download`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
 
   const data = await res.json().catch(() => null);
   return { status: res.status, data };

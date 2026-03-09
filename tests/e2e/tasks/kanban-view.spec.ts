@@ -21,7 +21,7 @@ let boardId: string;
 test.beforeAll(async () => {
   const user = await createTasksUser(
     TASKS_FULL_PERMISSIONS,
-    `e2e-tasks-kanban-${Date.now().toString(36)}`,
+    `e2e-tasks-kanban-${Date.now().toString(36)}`
   );
   const auth = await getAuthenticatedToken(user.email, user.password);
   userToken = auth.token;
@@ -43,9 +43,15 @@ test.describe('Tasks - Kanban View', () => {
     await navigateToBoard(page, boardId);
 
     // Default columns should be visible (A Fazer, Em Andamento, Concluído)
-    await expect(page.locator('text="A Fazer"').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('text="Em Andamento"').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('text="Concluído"').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text="A Fazer"').first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.locator('text="Em Andamento"').first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.locator('text="Concluído"').first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test('Exibir cartões dentro das colunas', async ({ page }) => {
@@ -56,7 +62,9 @@ test.describe('Tasks - Kanban View', () => {
     await navigateToBoard(page, boardId);
 
     // Card should appear inside a column
-    await expect(page.locator(`text="${cardTitle}"`)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(`text="${cardTitle}"`)).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test('Buscar cartões pelo campo de pesquisa', async ({ page }) => {
@@ -70,7 +78,9 @@ test.describe('Tasks - Kanban View', () => {
     await navigateToBoard(page, boardId);
 
     // Wait for both cards to be visible
-    await expect(page.locator(`text="${searchTarget}"`)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(`text="${searchTarget}"`)).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Use search
     await page.locator('input[placeholder*="Buscar"]').fill(searchTarget);
@@ -79,7 +89,9 @@ test.describe('Tasks - Kanban View', () => {
     await expect(page.locator(`text="${searchTarget}"`)).toBeVisible();
 
     // Other card should be filtered out
-    await expect(page.locator(`text="${otherCard}"`)).not.toBeVisible({ timeout: 5_000 });
+    await expect(page.locator(`text="${otherCard}"`)).not.toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test('Alternar entre visualizações', async ({ page }) => {
@@ -90,12 +102,16 @@ test.describe('Tasks - Kanban View', () => {
     await page.waitForLoadState('networkidle');
 
     // Switch to list view
-    const listButton = page.locator('a[href*="view=lista"], button:has-text("Lista")').first();
+    const listButton = page
+      .locator('a[href*="view=lista"], button:has-text("Lista")')
+      .first();
     await listButton.click();
     await page.waitForURL(/view=lista/, { timeout: 5_000 });
 
     // Switch to table view
-    const tableButton = page.locator('a[href*="view=tabela"], button:has-text("Tabela")').first();
+    const tableButton = page
+      .locator('a[href*="view=tabela"], button:has-text("Tabela")')
+      .first();
     await tableButton.click();
     await page.waitForURL(/view=tabela/, { timeout: 5_000 });
   });

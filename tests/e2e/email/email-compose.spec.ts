@@ -69,7 +69,9 @@ test.describe('E-mail - Composicao de Mensagens', () => {
     );
 
     // At least one of these fields should be visible
-    const hasToField = await toInput.isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasToField = await toInput
+      .isVisible({ timeout: 3_000 })
+      .catch(() => false);
     const hasSubjectField = await subjectInput
       .isVisible({ timeout: 3_000 })
       .catch(() => false);
@@ -86,7 +88,9 @@ test.describe('E-mail - Composicao de Mensagens', () => {
     await expect(dialog).toBeVisible({ timeout: 5_000 });
 
     // Close via X button or Escape
-    const closeBtn = dialog.locator('button[aria-label="Close"], button:has-text("Fechar")').first();
+    const closeBtn = dialog
+      .locator('button[aria-label="Close"], button:has-text("Fechar")')
+      .first();
     if (await closeBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await closeBtn.click();
     } else {
@@ -105,9 +109,7 @@ test.describe('E-mail - Composicao de Mensagens', () => {
     await expect(dialog).toBeVisible({ timeout: 5_000 });
 
     // Fill in recipient
-    const toInput = dialog
-      .locator('input')
-      .first();
+    const toInput = dialog.locator('input').first();
     await toInput.fill('destinatario@test.com');
 
     // Fill subject if available
@@ -147,7 +149,10 @@ test.describe('E-mail - Composicao de Mensagens', () => {
         'button:has-text("Responder"), button[title="Responder"]'
       );
       if (
-        await replyBtn.first().isVisible({ timeout: 5_000 }).catch(() => false)
+        await replyBtn
+          .first()
+          .isVisible({ timeout: 5_000 })
+          .catch(() => false)
       ) {
         await replyBtn.first().click();
 

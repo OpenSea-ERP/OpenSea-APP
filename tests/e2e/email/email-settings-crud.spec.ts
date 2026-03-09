@@ -104,9 +104,9 @@ test.describe('E-mail - Configuracoes (CRUD de Contas)', () => {
     await waitForToast(page, 'Conta criada com sucesso');
 
     // Account should appear in the list
-    await expect(
-      page.locator(`text=e2e-crud-${uid}@test.com`)
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(`text=e2e-crud-${uid}@test.com`)).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test('1.5 - Botao "Salvar conta" deve estar desabilitado com campos vazios', async ({
@@ -171,9 +171,9 @@ test.describe('E-mail - Configuracoes (CRUD de Contas)', () => {
       await configBtn.click();
 
       // Should show edit fields
-      await expect(
-        page.locator('text=Nome de exibição').last()
-      ).toBeVisible({ timeout: 5_000 });
+      await expect(page.locator('text=Nome de exibição').last()).toBeVisible({
+        timeout: 5_000,
+      });
       await expect(page.locator('text=Assinatura').last()).toBeVisible();
       await expect(
         page.locator('button:has-text("Salvar alterações")')

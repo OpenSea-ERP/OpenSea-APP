@@ -155,7 +155,11 @@ test.describe('Email Visual Audit', () => {
 
     // Mock sync
     await page.route('**/v1/email/accounts/*/sync', route => {
-      route.fulfill({ status: 202, contentType: 'application/json', body: '{}' });
+      route.fulfill({
+        status: 202,
+        contentType: 'application/json',
+        body: '{}',
+      });
     });
   }
 

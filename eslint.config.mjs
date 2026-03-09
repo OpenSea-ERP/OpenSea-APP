@@ -14,8 +14,6 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
-    // Generated files
-    'src/types/generated/**',
     'swagger/**',
   ]),
   {

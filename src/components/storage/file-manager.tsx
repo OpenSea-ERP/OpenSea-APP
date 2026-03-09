@@ -359,14 +359,16 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
     // Folder download as ZIP
     const handleDownloadFolder = useCallback(
       async (folder: StorageFolder) => {
-        try {
-          toast.info('Preparando download da pasta...');
-          const result = await downloadFolderMutation.mutateAsync(folder.id);
-          window.open(result.url, '_blank');
-          toast.success('Download iniciado');
-        } catch {
-          toast.error('Erro ao baixar a pasta');
-        }
+        toast.promise(
+          downloadFolderMutation.mutateAsync(folder.id).then((result) => {
+            window.open(result.url, '_blank');
+          }),
+          {
+            loading: 'Preparando download da pasta...',
+            success: 'Download iniciado',
+            error: 'Erro ao baixar a pasta',
+          },
+        );
       },
       [downloadFolderMutation]
     );
@@ -620,7 +622,7 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
           setShowUpload(true);
         }
       },
-      [manager.currentFolderId, canUpload]
+      [canUpload]
     );
 
     // Compress selected files/folders into a ZIP
@@ -632,20 +634,22 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
         .filter(i => i.type === 'folder')
         .map(i => i.id);
 
-      try {
-        toast.info('Compactando arquivos...');
-        await storageFilesService.compressFiles({
+      toast.promise(
+        storageFilesService.compressFiles({
           fileIds,
           folderIds,
           targetFolderId: manager.currentFolderId,
-        });
-        manager.clearSelection();
-        queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-        queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
-        toast.success('Arquivos compactados com sucesso');
-      } catch {
-        toast.error('Erro ao compactar arquivos');
-      }
+        }).then(() => {
+          manager.clearSelection();
+          queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+          queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+        }),
+        {
+          loading: 'Compactando arquivos...',
+          success: 'Arquivos compactados com sucesso',
+          error: 'Erro ao compactar arquivos',
+        },
+      );
     }, [manager, queryClient]);
 
     // Decompress a single ZIP file
@@ -653,31 +657,38 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
       const selected = manager.selectedItems[0];
       if (!selected || selected.type !== 'file') return;
 
-      try {
-        toast.info('Descompactando arquivo...');
-        const result = await storageFilesService.decompressFile(selected.id, {
+      toast.promise(
+        storageFilesService.decompressFile(selected.id, {
           targetFolderId: manager.currentFolderId,
-        });
-        manager.clearSelection();
-        queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-        queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
-        const msg = result.folderCount > 0
-          ? `${result.files.length} arquivo(s) e ${result.folderCount} pasta(s) extraídos`
-          : `${result.files.length} arquivo(s) extraído(s)`;
-        toast.success(msg);
-      } catch {
-        toast.error('Erro ao descompactar arquivo');
-      }
+        }).then((result) => {
+          manager.clearSelection();
+          queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+          queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+          return result;
+        }),
+        {
+          loading: 'Descompactando arquivo...',
+          success: (result) => {
+            return result.folderCount > 0
+              ? `${result.files.length} arquivo(s) e ${result.folderCount} pasta(s) extraídos`
+              : `${result.files.length} arquivo(s) extraído(s)`;
+          },
+          error: 'Erro ao descompactar arquivo',
+        },
+      );
     }, [manager, queryClient]);
 
     const allFolders = manager.contents?.folders ?? [];
     const files = manager.contents?.files ?? [];
 
-    const folders = allFolders.filter(f => {
-      if (f.isFilter) return folderTypeFilter.filter;
-      if (f.isSystem) return folderTypeFilter.system;
-      return folderTypeFilter.personal;
-    });
+    const folders = useMemo(
+      () => allFolders.filter(f => {
+        if (f.isFilter) return folderTypeFilter.filter;
+        if (f.isSystem) return folderTypeFilter.system;
+        return folderTypeFilter.personal;
+      }),
+      [allFolders, folderTypeFilter],
+    );
 
     const toolbarElement = (
       <FileManagerToolbar
@@ -747,6 +758,8 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
 
             {/* Content area */}
             <div
+              aria-live="polite"
+              aria-busy={manager.isLoading}
               className={cn(
                 'flex-1 min-h-0 flex flex-col p-4 relative transition-colors',
                 isDragOver && 'bg-blue-50/50 dark:bg-blue-950/10'
@@ -775,7 +788,7 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
                 </div>
               )}
 
-              {/* Loading state */}
+              {/* Content area — aria-live for screen readers */}
               {manager.isLoading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1">
                   {Array.from({ length: 12 }).map((_, i) => (

@@ -36,9 +36,12 @@ import {
 } from '@/hooks/email/use-email';
 import { emailService } from '@/services/email';
 import type { EmailAccount, EmailMessageListItem } from '@/types/email';
+import { Color, FontSize } from '@tiptap/extension-text-style';
+import ImageExt from '@tiptap/extension-image';
 import LinkExt from '@tiptap/extension-link';
 import PlaceholderExt from '@tiptap/extension-placeholder';
 import TextAlignExt from '@tiptap/extension-text-align';
+import { TextStyle as TextStyleExt } from '@tiptap/extension-text-style';
 import UnderlineExt from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -48,11 +51,13 @@ import {
   AlignRight,
   Bold,
   FileText,
+  ImageIcon,
   Italic,
   Link2,
   List,
   ListOrdered,
   Loader2,
+  Palette,
   Paperclip,
   Send,
   UnderlineIcon,
@@ -250,7 +255,12 @@ export function EmailComposeDialog({
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [imagePopoverOpen, setImagePopoverOpen] = useState(false);
+  const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
+  const [fontSizePopoverOpen, setFontSizePopoverOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
 
   const selectedAccount = accounts.find(a => a.id === accountId);
@@ -265,6 +275,10 @@ export function EmailComposeDialog({
     extensions: [
       StarterKit,
       UnderlineExt,
+      TextStyleExt,
+      Color,
+      FontSize,
+      ImageExt.configure({ inline: true, allowBase64: true }),
       LinkExt.configure({ openOnClick: false }),
       TextAlignExt.configure({ types: ['heading', 'paragraph'] }),
       PlaceholderExt.configure({ placeholder: 'Escreva sua mensagem aqui...' }),
@@ -575,6 +589,69 @@ export function EmailComposeDialog({
     syncMutation,
   ]);
 
+  const FONT_SIZES = [
+    { label: 'Pequeno', value: '12px' },
+    { label: 'Normal', value: '14px' },
+    { label: 'Médio', value: '16px' },
+    { label: 'Grande', value: '20px' },
+    { label: 'Muito grande', value: '24px' },
+    { label: 'Enorme', value: '32px' },
+  ];
+
+  const COLOR_PRESETS = [
+    '#000000', '#434343', '#666666', '#999999', '#cccccc',
+    '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6',
+    '#8b5cf6', '#ec4899', '#14b8a6', '#0ea5e9', '#6366f1',
+  ];
+
+  function handleSetColor(color: string) {
+    editor?.chain().focus().setColor(color).run();
+    setColorPopoverOpen(false);
+  }
+
+  function handleSetFontSize(size: string) {
+    editor?.chain().focus().setFontSize(size).run();
+    setFontSizePopoverOpen(false);
+  }
+
+  function handleInsertImageUrl() {
+    if (!editor || !imageUrl.trim()) return;
+    let url = imageUrl.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      url = `https://${url}`;
+    }
+    try {
+      new URL(url);
+    } catch {
+      toast.error('URL de imagem inválida.');
+      return;
+    }
+    editor.chain().focus().setImage({ src: url }).run();
+    setImageUrl('');
+    setImagePopoverOpen(false);
+  }
+
+  function handleImageFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione um arquivo de imagem.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Imagem muito grande. Máximo: 2 MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      editor.chain().focus().setImage({ src: base64 }).run();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+    setImagePopoverOpen(false);
+  }
+
   function handleInsertLink() {
     if (!editor || !linkUrl.trim()) return;
     let url = linkUrl.trim();
@@ -676,13 +753,20 @@ export function EmailComposeDialog({
           className="sm:max-w-3xl p-0 gap-0 max-h-[90vh] min-h-[400px] flex flex-col sm:rounded-2xl"
           data-testid="email-compose-dialog"
         >
-          {/* Hidden file input */}
+          {/* Hidden file inputs */}
           <input
             ref={fileInputRef}
             type="file"
             multiple
             className="hidden"
             onChange={handleFileChange}
+          />
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageFileUpload}
           />
           <DialogHeader className="px-6 pt-5 pb-3 shrink-0">
             <DialogTitle className="text-base font-semibold">
@@ -829,6 +913,95 @@ export function EmailComposeDialog({
 
             <Separator orientation="vertical" className="h-5 mx-0.5" />
 
+            {/* Font size */}
+            <Popover open={fontSizePopoverOpen} onOpenChange={setFontSizePopoverOpen}>
+              <PopoverTrigger asChild>
+                <div>
+                  <ToolbarButton
+                    onClick={() => setFontSizePopoverOpen(true)}
+                    tooltip="Tamanho da fonte"
+                  >
+                    <span className="text-[10px] font-bold leading-none">A</span>
+                  </ToolbarButton>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-36 p-1" side="bottom" align="start">
+                {FONT_SIZES.map(fs => (
+                  <button
+                    key={fs.value}
+                    type="button"
+                    className="w-full text-left px-2.5 py-1.5 text-sm rounded-md hover:bg-muted transition-colors"
+                    style={{ fontSize: fs.value }}
+                    onClick={() => handleSetFontSize(fs.value)}
+                  >
+                    {fs.label}
+                  </button>
+                ))}
+                <Separator className="my-1" />
+                <button
+                  type="button"
+                  className="w-full text-left px-2.5 py-1.5 text-xs text-muted-foreground rounded-md hover:bg-muted transition-colors"
+                  onClick={() => {
+                    editor?.chain().focus().unsetFontSize().run();
+                    setFontSizePopoverOpen(false);
+                  }}
+                >
+                  Tamanho padrão
+                </button>
+              </PopoverContent>
+            </Popover>
+
+            {/* Text color */}
+            <Popover open={colorPopoverOpen} onOpenChange={setColorPopoverOpen}>
+              <PopoverTrigger asChild>
+                <div>
+                  <ToolbarButton
+                    onClick={() => setColorPopoverOpen(true)}
+                    tooltip="Cor do texto"
+                  >
+                    <Palette className="size-3.5" />
+                  </ToolbarButton>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3" side="bottom" align="start">
+                <p className="text-xs font-medium mb-2">Cor do texto</p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {COLOR_PRESETS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      className="size-6 rounded-md border border-border hover:scale-110 transition-transform"
+                      style={{ backgroundColor: color }}
+                      onClick={() => handleSetColor(color)}
+                      title={color}
+                    />
+                  ))}
+                </div>
+                <Separator className="my-2" />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    className="size-6 cursor-pointer border-0 p-0 bg-transparent"
+                    onChange={e => handleSetColor(e.target.value)}
+                    title="Cor personalizada"
+                  />
+                  <span className="text-xs text-muted-foreground">Personalizada</span>
+                </div>
+                <button
+                  type="button"
+                  className="w-full mt-2 text-left px-2 py-1 text-xs text-muted-foreground rounded-md hover:bg-muted transition-colors"
+                  onClick={() => {
+                    editor?.chain().focus().unsetColor().run();
+                    setColorPopoverOpen(false);
+                  }}
+                >
+                  Remover cor
+                </button>
+              </PopoverContent>
+            </Popover>
+
+            <Separator orientation="vertical" className="h-5 mx-0.5" />
+
             <ToolbarButton
               onClick={() => editor?.chain().focus().toggleBulletList().run()}
               active={editor?.isActive('bulletList')}
@@ -925,6 +1098,71 @@ export function EmailComposeDialog({
                   >
                     Inserir
                   </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Image popover */}
+            <Popover open={imagePopoverOpen} onOpenChange={setImagePopoverOpen}>
+              <PopoverTrigger asChild>
+                <div>
+                  <ToolbarButton
+                    onClick={() => setImagePopoverOpen(true)}
+                    tooltip="Inserir imagem"
+                  >
+                    <ImageIcon className="size-3.5" />
+                  </ToolbarButton>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-72 p-3 space-y-2"
+                side="bottom"
+                align="start"
+              >
+                <p className="text-xs font-medium">Inserir imagem</p>
+                <Input
+                  placeholder="https://exemplo.com/imagem.png"
+                  value={imageUrl}
+                  onChange={e => setImageUrl(e.target.value)}
+                  className="h-8 text-sm"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleInsertImageUrl();
+                    }
+                  }}
+                />
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs gap-1.5"
+                    onClick={() => imageInputRef.current?.click()}
+                  >
+                    <ImageIcon className="size-3" />
+                    Enviar arquivo
+                  </Button>
+                  <div className="flex gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        setImageUrl('');
+                        setImagePopoverOpen(false);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={handleInsertImageUrl}
+                      disabled={!imageUrl.trim()}
+                    >
+                      Inserir
+                    </Button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>

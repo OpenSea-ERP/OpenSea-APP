@@ -17,7 +17,7 @@ import {
 import { useCardActivity } from '@/hooks/tasks/use-activity';
 import { MemberAvatar } from '@/components/tasks/shared/member-avatar';
 import { formatRelativeTime } from '@/components/tasks/tabs/_utils';
-import type { CardActivityType } from '@/types/tasks';
+import type { CardActivity, CardActivityType } from '@/types/tasks';
 
 interface CardActivityTabProps {
   boardId: string;
@@ -39,8 +39,12 @@ const ACTIVITY_ICON: Record<CardActivityType, React.ReactNode> = {
   SUBTASK_UPDATED: <Pencil className="h-3.5 w-3.5 text-blue-400" />,
   SUBTASK_REMOVED: <Minus className="h-3.5 w-3.5 text-red-400" />,
   SUBTASK_REOPENED: <CheckSquare className="h-3.5 w-3.5 text-amber-400" />,
-  CHECKLIST_ITEM_COMPLETED: <CheckSquare className="h-3.5 w-3.5 text-green-500" />,
-  CHECKLIST_ITEM_UNCOMPLETED: <CheckSquare className="h-3.5 w-3.5 text-gray-400" />,
+  CHECKLIST_ITEM_COMPLETED: (
+    <CheckSquare className="h-3.5 w-3.5 text-green-500" />
+  ),
+  CHECKLIST_ITEM_UNCOMPLETED: (
+    <CheckSquare className="h-3.5 w-3.5 text-gray-400" />
+  ),
 };
 
 const PAGE_SIZE = 20;
@@ -52,7 +56,7 @@ export function CardActivityTab({ boardId, cardId }: CardActivityTabProps) {
     limit: PAGE_SIZE,
   });
 
-  const accumulatedRef = useRef<typeof activities>([]);
+  const accumulatedRef = useRef<CardActivity[]>([]);
   const lastPageRef = useRef(0);
 
   const currentPageActivities = data?.activities ?? [];
@@ -61,7 +65,10 @@ export function CardActivityTab({ boardId, cardId }: CardActivityTabProps) {
 
   useEffect(() => {
     if (data && meta && meta.page > lastPageRef.current) {
-      accumulatedRef.current = [...accumulatedRef.current, ...currentPageActivities];
+      accumulatedRef.current = [
+        ...accumulatedRef.current,
+        ...currentPageActivities,
+      ];
       lastPageRef.current = meta.page;
     }
   }, [data, meta, currentPageActivities]);
@@ -73,10 +80,11 @@ export function CardActivityTab({ boardId, cardId }: CardActivityTabProps) {
     setPage(1);
   }, [cardId]);
 
-  const activities = page === 1 ? currentPageActivities : accumulatedRef.current;
+  const activities =
+    page === 1 ? currentPageActivities : accumulatedRef.current;
 
   const handleLoadMore = useCallback(() => {
-    setPage((p) => p + 1);
+    setPage(p => p + 1);
   }, []);
 
   if (isLoading && page === 1) {
@@ -104,7 +112,7 @@ export function CardActivityTab({ boardId, cardId }: CardActivityTabProps) {
         <div className="absolute left-4 top-3 bottom-3 w-px bg-border" />
 
         <div className="space-y-0">
-          {activities.map((item) => (
+          {activities.map(item => (
             <div key={item.id} className="flex items-start gap-3 py-2 relative">
               {/* Icon circle */}
               <div className="relative z-10 flex items-center justify-center h-8 w-8 rounded-full bg-background border border-border shrink-0">
@@ -116,8 +124,12 @@ export function CardActivityTab({ boardId, cardId }: CardActivityTabProps) {
               {/* Content */}
               <div className="flex-1 min-w-0 pt-1">
                 <p className="text-sm">
-                  <span className="font-medium">{item.userName ?? 'Usuário'}</span>{' '}
-                  <span className="text-muted-foreground">{item.description}</span>
+                  <span className="font-medium">
+                    {item.userName ?? 'Usuário'}
+                  </span>{' '}
+                  <span className="text-muted-foreground">
+                    {item.description}
+                  </span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {formatRelativeTime(item.createdAt)}

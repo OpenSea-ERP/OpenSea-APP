@@ -58,16 +58,16 @@ test.beforeAll(async () => {
   }
 
   // Use first active account
-  const activeAccount = accounts.find(
-    (a: { isActive: boolean }) => a.isActive
-  );
+  const activeAccount = accounts.find((a: { isActive: boolean }) => a.isActive);
   if (!activeAccount) {
     throw new Error('No active email account found');
   }
 
   emailAccountId = activeAccount.id;
   emailAccountAddress = activeAccount.address;
-  console.log(`Using email account: ${emailAccountAddress} (${emailAccountId})`);
+  console.log(
+    `Using email account: ${emailAccountAddress} (${emailAccountId})`
+  );
 });
 
 test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
@@ -88,8 +88,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
         accountId: emailAccountId,
         to: [emailAccountAddress],
         subject: `[E2E Test] Envio interno - ${timestamp}`,
-        bodyHtml:
-          '<p>Teste automatizado de envio para o mesmo dominio.</p>',
+        bodyHtml: '<p>Teste automatizado de envio para o mesmo dominio.</p>',
       }),
     });
 
@@ -124,9 +123,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
     console.log(`  Gmail OK - messageId: ${data.messageId}`);
   });
 
-  test('Deve enviar email para Hotmail (dominio externo)', async ({
-    page,
-  }) => {
+  test('Deve enviar email para Hotmail (dominio externo)', async ({ page }) => {
     const timestamp = new Date().toISOString();
     const res = await fetch(`${API_URL}/v1/email/messages/send`, {
       method: 'POST',
@@ -191,9 +188,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
       ) {
         await inputs
           .nth(i)
-          .fill(
-            `[E2E Frontend] Teste completo - ${new Date().toISOString()}`
-          );
+          .fill(`[E2E Frontend] Teste completo - ${new Date().toISOString()}`);
         break;
       }
     }
@@ -209,7 +204,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
 
     // Intercept the send request to capture the response
     const sendPromise = page.waitForResponse(
-      (response) =>
+      response =>
         response.url().includes('/v1/email/messages/send') &&
         response.request().method() === 'POST',
       { timeout: 30_000 }
@@ -219,7 +214,12 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
     const sendBtn = dialog.locator(
       'button:has-text("Enviar"), button:has-text("enviar")'
     );
-    if (await sendBtn.first().isVisible({ timeout: 3_000 }).catch(() => false)) {
+    if (
+      await sendBtn
+        .first()
+        .isVisible({ timeout: 3_000 })
+        .catch(() => false)
+    ) {
       await sendBtn.first().click();
     }
 
@@ -263,9 +263,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
     );
     const firstMessage = messageItems.first();
 
-    if (
-      await firstMessage.isVisible({ timeout: 10_000 }).catch(() => false)
-    ) {
+    if (await firstMessage.isVisible({ timeout: 10_000 }).catch(() => false)) {
       await firstMessage.click();
       await page.waitForTimeout(2000);
 
@@ -276,9 +274,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
         )
         .first();
 
-      if (
-        await replyBtn.isVisible({ timeout: 5_000 }).catch(() => false)
-      ) {
+      if (await replyBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
         await replyBtn.click();
 
         const dialog = page.locator('[role="dialog"]');
@@ -286,29 +282,23 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
 
         // Editor should have quoted content
         const editor = dialog.locator('[contenteditable="true"]');
-        if (
-          await editor.isVisible({ timeout: 3_000 }).catch(() => false)
-        ) {
+        if (await editor.isVisible({ timeout: 3_000 }).catch(() => false)) {
           await editor.click();
           await editor.type('Resposta de teste E2E. ');
         }
 
         // Intercept send
         const sendPromise = page.waitForResponse(
-          (response) =>
+          response =>
             response.url().includes('/v1/email/messages/send') &&
             response.request().method() === 'POST',
           { timeout: 30_000 }
         );
 
         const sendBtn = dialog
-          .locator(
-            'button:has-text("Enviar"), button:has-text("enviar")'
-          )
+          .locator('button:has-text("Enviar"), button:has-text("enviar")')
           .first();
-        if (
-          await sendBtn.isVisible({ timeout: 3_000 }).catch(() => false)
-        ) {
+        if (await sendBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
           await sendBtn.click();
 
           try {
@@ -328,9 +318,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
         );
       }
     } else {
-      console.log(
-        '  Nenhuma mensagem na inbox para testar reply'
-      );
+      console.log('  Nenhuma mensagem na inbox para testar reply');
     }
   });
 
@@ -350,9 +338,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
     );
     const firstMessage = messageItems.first();
 
-    if (
-      await firstMessage.isVisible({ timeout: 10_000 }).catch(() => false)
-    ) {
+    if (await firstMessage.isVisible({ timeout: 10_000 }).catch(() => false)) {
       await firstMessage.click();
       await page.waitForTimeout(2000);
 
@@ -363,9 +349,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
         )
         .first();
 
-      if (
-        await forwardBtn.isVisible({ timeout: 5_000 }).catch(() => false)
-      ) {
+      if (await forwardBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
         await forwardBtn.click();
 
         const dialog = page.locator('[role="dialog"]');
@@ -378,20 +362,16 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
 
         // Intercept send
         const sendPromise = page.waitForResponse(
-          (response) =>
+          response =>
             response.url().includes('/v1/email/messages/send') &&
             response.request().method() === 'POST',
           { timeout: 30_000 }
         );
 
         const sendBtn = dialog
-          .locator(
-            'button:has-text("Enviar"), button:has-text("enviar")'
-          )
+          .locator('button:has-text("Enviar"), button:has-text("enviar")')
           .first();
-        if (
-          await sendBtn.isVisible({ timeout: 3_000 }).catch(() => false)
-        ) {
+        if (await sendBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
           await sendBtn.click();
 
           try {
@@ -411,15 +391,11 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
         );
       }
     } else {
-      console.log(
-        '  Nenhuma mensagem na inbox para testar forward'
-      );
+      console.log('  Nenhuma mensagem na inbox para testar forward');
     }
   });
 
-  test('Servidor nao deve travar apos operacoes de email', async ({
-    page,
-  }) => {
+  test('Servidor nao deve travar apos operacoes de email', async ({ page }) => {
     // After all send operations, verify the server is still responsive
     const healthCheck = await fetch(`${API_URL}/v1/email/accounts`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -439,9 +415,7 @@ test.describe('Email SMTP Delivery - Testes de Entrega Real', () => {
 
       // 200 or 404 (if no folder) are both acceptable - just not 500
       expect(messagesCheck.status).toBeLessThan(500);
-      console.log(
-        `  Listagem de mensagens: status ${messagesCheck.status}`
-      );
+      console.log(`  Listagem de mensagens: status ${messagesCheck.status}`);
     }
   });
 });

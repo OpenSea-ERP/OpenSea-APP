@@ -150,7 +150,7 @@ export function BoardAutomationsDialog({
                 Nenhuma automação configurada.
               </p>
             ) : (
-              automations.map((automation) => (
+              automations.map(automation => (
                 <div
                   key={automation.id}
                   className="flex items-start gap-3 rounded-md border px-3 py-3"
@@ -161,7 +161,11 @@ export function BoardAutomationsDialog({
                     <p className="text-sm font-medium">{automation.name}</p>
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="secondary" className="text-[10px]">
-                        {TRIGGER_LABELS[automation.trigger as AutomationTrigger]}
+                        {
+                          TRIGGER_LABELS[
+                            automation.trigger as AutomationTrigger
+                          ]
+                        }
                       </Badge>
                       <span className="text-xs text-muted-foreground">→</span>
                       <Badge variant="outline" className="text-[10px]">
@@ -202,7 +206,7 @@ export function BoardAutomationsDialog({
                 <Input
                   placeholder="Ex: Mover para concluido"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                 />
               </div>
 
@@ -211,19 +215,22 @@ export function BoardAutomationsDialog({
                 <label className="text-sm font-medium">Gatilho</label>
                 <Select
                   value={trigger}
-                  onValueChange={(v) => setTrigger(v as AutomationTrigger)}
+                  onValueChange={v => setTrigger(v as AutomationTrigger)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.entries(TRIGGER_LABELS) as [AutomationTrigger, string][]).map(
-                      ([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ),
-                    )}
+                    {(
+                      Object.entries(TRIGGER_LABELS) as [
+                        AutomationTrigger,
+                        string,
+                      ][]
+                    ).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -233,19 +240,22 @@ export function BoardAutomationsDialog({
                 <label className="text-sm font-medium">Acao</label>
                 <Select
                   value={action}
-                  onValueChange={(v) => setAction(v as AutomationAction)}
+                  onValueChange={v => setAction(v as AutomationAction)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.entries(ACTION_LABELS) as [AutomationAction, string][]).map(
-                      ([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ),
-                    )}
+                    {(
+                      Object.entries(ACTION_LABELS) as [
+                        AutomationAction,
+                        string,
+                      ][]
+                    ).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -254,12 +264,14 @@ export function BoardAutomationsDialog({
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">
                   Configuração do gatilho{' '}
-                  <span className="text-muted-foreground font-normal">(JSON, opcional)</span>
+                  <span className="text-muted-foreground font-normal">
+                    (JSON, opcional)
+                  </span>
                 </label>
                 <Input
                   placeholder='{"columnId": "..."}'
                   value={triggerConfigJson}
-                  onChange={(e) => setTriggerConfigJson(e.target.value)}
+                  onChange={e => setTriggerConfigJson(e.target.value)}
                   className="font-mono text-xs"
                 />
               </div>
@@ -268,12 +280,14 @@ export function BoardAutomationsDialog({
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">
                   Configuração da ação{' '}
-                  <span className="text-muted-foreground font-normal">(JSON, opcional)</span>
+                  <span className="text-muted-foreground font-normal">
+                    (JSON, opcional)
+                  </span>
                 </label>
                 <Input
                   placeholder='{"targetColumnId": "..."}'
                   value={actionConfigJson}
-                  onChange={(e) => setActionConfigJson(e.target.value)}
+                  onChange={e => setActionConfigJson(e.target.value)}
                   className="font-mono text-xs"
                 />
               </div>

@@ -52,9 +52,9 @@ test.describe('File Manager - Lixeira', () => {
 
     await clickTrashToggle(page);
 
-    await expect(
-      page.locator('text=A lixeira está vazia')
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=A lixeira está vazia')).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(
       page.locator('text=Itens excluídos aparecerão aqui')
     ).toBeVisible();
@@ -81,7 +81,9 @@ test.describe('File Manager - Lixeira', () => {
     await expect(deletedFile).toBeVisible({ timeout: 10_000 });
 
     // Click Restaurar on the file's row
-    const fileRow = page.locator(`div:has(.line-through:text("${fileName}"))`).first();
+    const fileRow = page
+      .locator(`div:has(.line-through:text("${fileName}"))`)
+      .first();
     await fileRow.locator('button:has-text("Restaurar")').click();
 
     await waitForToast(page, `Arquivo "${fileName}" restaurado`);
@@ -119,9 +121,7 @@ test.describe('File Manager - Lixeira', () => {
     await expect(deletedFolder).toBeVisible({ timeout: 10_000 });
 
     // Should show "Pasta · {path}"
-    await expect(
-      page.locator(`text=Pasta`).first()
-    ).toBeVisible();
+    await expect(page.locator(`text=Pasta`).first()).toBeVisible();
 
     // Click Restaurar
     const folderRow = page
@@ -145,8 +145,16 @@ test.describe('File Manager - Lixeira', () => {
     // Create and delete 2 files + 1 folder
     const folder1 = `e2e-trash-cnt-f-${Date.now()}`;
     const f1Id = await createTestFolder(userToken, folder1);
-    const file1Id = await uploadTestFile(userToken, f1Id, `cnt1-${Date.now()}.txt`);
-    const file2Id = await uploadTestFile(userToken, f1Id, `cnt2-${Date.now()}.txt`);
+    const file1Id = await uploadTestFile(
+      userToken,
+      f1Id,
+      `cnt1-${Date.now()}.txt`
+    );
+    const file2Id = await uploadTestFile(
+      userToken,
+      f1Id,
+      `cnt2-${Date.now()}.txt`
+    );
 
     const folder2 = `e2e-trash-cnt-d-${Date.now()}`;
     const f2Id = await createTestFolder(userToken, folder2);
@@ -160,9 +168,9 @@ test.describe('File Manager - Lixeira', () => {
 
     await clickTrashToggle(page);
 
-    await expect(
-      page.locator('text=3 itens na lixeira')
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=3 itens na lixeira')).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   // ─── T-5 Esvaziar lixeira permanentemente ─────────────────────────
@@ -181,9 +189,9 @@ test.describe('File Manager - Lixeira', () => {
     await clickTrashToggle(page);
 
     // Wait for items to appear
-    await expect(
-      page.locator('text=itens na lixeira')
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=itens na lixeira')).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Click "Esvaziar lixeira"
     await page.locator('button:has-text("Esvaziar lixeira")').click();
@@ -195,9 +203,9 @@ test.describe('File Manager - Lixeira', () => {
     await waitForToast(page, 'Lixeira esvaziada');
 
     // Verify empty state
-    await expect(
-      page.locator('text=A lixeira está vazia')
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('text=A lixeira está vazia')).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   // ─── T-6 Restaurar arquivo para raiz se pasta pai excluída ────────
