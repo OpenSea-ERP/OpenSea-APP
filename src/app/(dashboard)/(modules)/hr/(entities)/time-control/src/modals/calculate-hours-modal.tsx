@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { EmployeeSelector } from '@/components/shared/employee-selector';
 import type { WorkedHoursResponse } from '@/services/hr/time-control.service';
 import { Calculator, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -81,14 +82,13 @@ export function CalculateHoursModal({
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="calc-employee">
-              ID do Funcionário <span className="text-red-500">*</span>
+            <Label>
+              Funcionário <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="calc-employee"
+            <EmployeeSelector
               value={employee}
-              onChange={e => setEmployee(e.target.value)}
-              placeholder="ID do funcionário"
+              onChange={id => setEmployee(id)}
+              placeholder="Selecionar funcionário..."
               disabled={!!employeeId}
             />
           </div>
@@ -124,7 +124,6 @@ export function CalculateHoursModal({
 
           {result && (
             <div className="space-y-4 pt-4 border-t">
-              {/* Totais */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40">
                   <p className="text-xs text-muted-foreground">
@@ -154,7 +153,6 @@ export function CalculateHoursModal({
                 </div>
               </div>
 
-              {/* Breakdown diário */}
               {result.dailyBreakdown.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold mb-2">

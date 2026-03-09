@@ -8,12 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { EmployeeSelector } from '@/components/shared/employee-selector';
 import type { ClockInOutRequest } from '@/services/hr/time-control.service';
 import { Loader2, LogIn } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ClockInModalProps {
   isOpen: boolean;
@@ -32,15 +32,11 @@ export function ClockInModal({
 }: ClockInModalProps) {
   const [employee, setEmployee] = useState('');
   const [notes, setNotes] = useState('');
-  const employeeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setEmployee(employeeId ?? '');
       setNotes('');
-      if (!employeeId) {
-        setTimeout(() => employeeRef.current?.focus(), 100);
-      }
     }
   }, [isOpen, employeeId]);
 
@@ -68,15 +64,13 @@ export function ClockInModal({
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="tc-employee">
-              ID do Funcionário <span className="text-red-500">*</span>
+            <Label>
+              Funcionário <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="tc-employee"
-              ref={employeeRef}
+            <EmployeeSelector
               value={employee}
-              onChange={e => setEmployee(e.target.value)}
-              placeholder="ID do funcionário"
+              onChange={id => setEmployee(id)}
+              placeholder="Selecionar funcionário..."
               disabled={!!employeeId}
             />
           </div>

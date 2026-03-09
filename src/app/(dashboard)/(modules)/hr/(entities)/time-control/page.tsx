@@ -3,6 +3,7 @@
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
+import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -100,6 +101,15 @@ function TimeControlPageContent() {
     [clockOut]
   );
 
+  // Filters UI
+  const hasActiveFilters = employeeFilter || startDate || endDate;
+
+  const clearFilters = useCallback(() => {
+    setEmployeeFilter('');
+    setStartDate('');
+    setEndDate('');
+  }, []);
+
   // Header buttons
   const actionButtons = useMemo<HeaderButton[]>(
     () => [
@@ -145,47 +155,41 @@ function TimeControlPageContent() {
       </PageHeader>
 
       <PageBody>
-        {/* Filtros */}
-        <Card className="p-4 mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="filter-employee" className="text-xs">
-                Funcionário
-              </Label>
-              <Input
-                id="filter-employee"
-                placeholder="ID do funcionário"
-                value={employeeFilter}
-                onChange={e => setEmployeeFilter(e.target.value)}
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="filter-start" className="text-xs">
-                Data Início
-              </Label>
-              <Input
-                id="filter-start"
-                type="date"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="filter-end" className="text-xs">
-                Data Fim
-              </Label>
-              <Input
-                id="filter-end"
-                type="date"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                className="h-9"
-              />
-            </div>
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-64">
+            <EmployeeSelector
+              value={employeeFilter}
+              onChange={id => setEmployeeFilter(id)}
+              placeholder="Filtrar por funcionário..."
+            />
           </div>
-        </Card>
+
+          <Input
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            className="w-40"
+            placeholder="Data início"
+          />
+          <Input
+            type="date"
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
+            className="w-40"
+            placeholder="Data fim"
+          />
+
+          {hasActiveFilters && (
+            <Badge
+              variant="secondary"
+              className="cursor-pointer hover:bg-destructive/10"
+              onClick={clearFilters}
+            >
+              Limpar filtros
+            </Badge>
+          )}
+        </div>
 
         {/* Content */}
         {isLoading ? (

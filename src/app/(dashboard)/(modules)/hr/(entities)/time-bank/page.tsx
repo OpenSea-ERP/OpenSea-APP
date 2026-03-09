@@ -3,6 +3,7 @@
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
+import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -11,11 +12,16 @@ import {
 } from '@/components/layout/page-layout';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+  CoreProvider,
+  EntityCard,
+  EntityContextMenu,
+  EntityGrid,
+} from '@/core';
+import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import type { TimeBank } from '@/types/hr';
-import { Hourglass, Minus, Plus, SlidersHorizontal } from 'lucide-react';
+import { Eye, Hourglass, Minus, Plus, SlidersHorizontal } from 'lucide-react';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import {
   formatBalance,
@@ -35,7 +41,7 @@ import {
 export default function TimeBankPage() {
   return (
     <Suspense
-      fallback={<GridLoading count={6} layout="list" size="md" gap="gap-2" />}
+      fallback={<GridLoading count={6} layout="grid" size="md" gap="gap-4" />}
     >
       <TimeBankPageContent />
     </Suspense>
@@ -43,33 +49,55 @@ export default function TimeBankPage() {
 }
 
 function TimeBankPageContent() {
-  // Filters
-  const [employeeFilter, setEmployeeFilter] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
+  // ============================================================================
+  // FILTERS
+  // ============================================================================
 
-  // Modals
-  const [creditOpen, setCreditOpen] = useState(false);
-  const [debitOpen, setDebitOpen] = useState(false);
-  const [adjustOpen, setAdjustOpen] = useState(false);
-  const [viewItem, setViewItem] = useState<TimeBank | null>(null);
+  const [filterEmployeeId, setFilterEmployeeId] = useState('');
+  const [filterYear, setFilterYear] = useState('');
 
-  // Data
-  const params = useMemo(
+  const queryParams = useMemo(
     () => ({
-      employeeId: employeeFilter || undefined,
-      year: yearFilter ? Number(yearFilter) : undefined,
+      employeeId: filterEmployeeId || undefined,
+      year: filterYear ? Number(filterYear) : undefined,
     }),
-    [employeeFilter, yearFilter]
+    [filterEmployeeId, filterYear]
   );
 
-  const { data, isLoading, error, refetch } = useListTimeBanks(params);
+  // ============================================================================
+  // DATA
+  // ============================================================================
+
+  const { data, isLoading, error, refetch } = useListTimeBanks(queryParams);
   const credit = useCreditTimeBank({ onSuccess: () => setCreditOpen(false) });
   const debit = useDebitTimeBank({ onSuccess: () => setDebitOpen(false) });
   const adjust = useAdjustTimeBank({ onSuccess: () => setAdjustOpen(false) });
 
   const timeBanks = data?.timeBanks ?? [];
 
-  // Handlers
+  // ============================================================================
+  // STATE
+  // ============================================================================
+
+  const [creditOpen, setCreditOpen] = useState(false);
+  const [debitOpen, setDebitOpen] = useState(false);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [viewTarget, setViewTarget] = useState<TimeBank | null>(null);
+
+  // ============================================================================
+  // COMPUTED
+  // ============================================================================
+
+  const initialIds = useMemo(
+    () => timeBanks.map(i => i.id),
+    [timeBanks]
+  );
+
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
   const handleCredit = useCallback(
     async (data: { employeeId: string; hours: number; year?: number }) => {
       await credit.mutateAsync(data);
@@ -91,7 +119,118 @@ function TimeBankPageContent() {
     [adjust]
   );
 
-  // Header buttons
+  const handleViewItem = useCallback(
+    (ids: string[]) => {
+      if (ids.length > 0) {
+        const item = timeBanks.find(tb => tb.id === ids[0]);
+        if (item) {
+          setViewTarget(item);
+          setIsViewOpen(true);
+        }
+      }
+    },
+    [timeBanks]
+  );
+
+  // ============================================================================
+  // CONTEXT MENU
+  // ============================================================================
+
+  const contextActions: ContextMenuAction[] = useMemo(
+    () => [
+      {
+        id: 'view',
+        label: 'Visualizar',
+        icon: Eye,
+        onClick: handleViewItem,
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  // ============================================================================
+  // RENDER FUNCTIONS
+  // ============================================================================
+
+  const renderGridCard = (item: TimeBank, isSelected: boolean) => (
+    <EntityContextMenu
+      itemId={item.id}
+      onView={handleViewItem}
+      actions={contextActions}
+    >
+      <EntityCard
+        id={item.id}
+        variant="grid"
+        title={item.employeeId.slice(0, 8) + '...'}
+        subtitle={formatBalance(item.balance)}
+        icon={Hourglass}
+        iconBgColor="bg-linear-to-br from-teal-500 to-teal-600"
+        badges={[
+          { label: formatYear(item.year), variant: 'outline' },
+        ]}
+        metadata={
+          <div className="flex flex-col gap-1">
+            <p
+              className={`text-2xl font-bold font-mono ${getBalanceColor(item.balance)}`}
+            >
+              {formatBalance(item.balance)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Atualizado em{' '}
+              {new Date(item.updatedAt).toLocaleDateString('pt-BR')}
+            </p>
+          </div>
+        }
+        isSelected={isSelected}
+        showSelection={false}
+        clickable={false}
+        createdAt={item.createdAt}
+        updatedAt={item.updatedAt}
+      />
+    </EntityContextMenu>
+  );
+
+  const renderListCard = (item: TimeBank, isSelected: boolean) => (
+    <EntityContextMenu
+      itemId={item.id}
+      onView={handleViewItem}
+      actions={contextActions}
+    >
+      <EntityCard
+        id={item.id}
+        variant="list"
+        title={item.employeeId.slice(0, 8) + '...'}
+        subtitle={formatBalance(item.balance)}
+        icon={Hourglass}
+        iconBgColor="bg-linear-to-br from-teal-500 to-teal-600"
+        badges={[
+          { label: formatYear(item.year), variant: 'outline' },
+        ]}
+        metadata={
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className={`font-bold font-mono ${getBalanceColor(item.balance)}`}>
+              {formatBalance(item.balance)}
+            </span>
+            <span>
+              Atualizado em{' '}
+              {new Date(item.updatedAt).toLocaleDateString('pt-BR')}
+            </span>
+          </div>
+        }
+        isSelected={isSelected}
+        showSelection={false}
+        clickable={false}
+        createdAt={item.createdAt}
+        updatedAt={item.updatedAt}
+      />
+    </EntityContextMenu>
+  );
+
+  // ============================================================================
+  // HEADER BUTTONS
+  // ============================================================================
+
   const actionButtons = useMemo<HeaderButton[]>(
     () => [
       {
@@ -122,134 +261,137 @@ function TimeBankPageContent() {
     []
   );
 
+  // ============================================================================
+  // FILTERS UI
+  // ============================================================================
+
+  const hasActiveFilters = filterEmployeeId || filterYear;
+
+  const clearFilters = useCallback(() => {
+    setFilterEmployeeId('');
+    setFilterYear('');
+  }, []);
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
   return (
-    <PageLayout>
-      <PageHeader>
-        <PageActionBar
-          breadcrumbItems={[
-            { label: 'RH', href: '/hr' },
-            { label: 'Banco de Horas', href: '/hr/time-bank' },
-          ]}
-          buttons={actionButtons}
-        />
-        <Header
-          title="Banco de Horas"
-          description="Gerencie o banco de horas dos funcionários"
-        />
-      </PageHeader>
-
-      <PageBody>
-        {/* Filtros */}
-        <Card className="p-4 mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="filter-employee" className="text-xs">
-                Funcionário
-              </Label>
-              <Input
-                id="filter-employee"
-                placeholder="ID do funcionário"
-                value={employeeFilter}
-                onChange={e => setEmployeeFilter(e.target.value)}
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="filter-year" className="text-xs">
-                Ano
-              </Label>
-              <Input
-                id="filter-year"
-                type="number"
-                min="2020"
-                max="2100"
-                placeholder={String(new Date().getFullYear())}
-                value={yearFilter}
-                onChange={e => setYearFilter(e.target.value)}
-                className="h-9"
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* Content */}
-        {isLoading ? (
-          <GridLoading count={6} layout="list" size="md" gap="gap-2" />
-        ) : error ? (
-          <GridError
-            type="server"
-            title="Erro ao carregar banco de horas"
-            message="Ocorreu um erro ao carregar os registros de banco de horas. Por favor, tente novamente."
-            action={{
-              label: 'Tentar Novamente',
-              onClick: () => {
-                refetch();
-              },
-            }}
+    <CoreProvider
+      selection={{
+        namespace: 'time-bank',
+        initialIds,
+      }}
+    >
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'RH', href: '/hr' },
+              { label: 'Banco de Horas', href: '/hr/time-bank' },
+            ]}
+            buttons={actionButtons}
           />
-        ) : timeBanks.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Hourglass className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">
-              {timeBankConfig.display.labels.emptyState}
-            </p>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {timeBanks.map(tb => (
-              <Card
-                key={tb.id}
-                className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-                onClick={() => setViewItem(tb)}
+          <Header
+            title="Banco de Horas"
+            description="Gerencie o banco de horas dos funcionários"
+          />
+        </PageHeader>
+
+        <PageBody>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-64">
+              <EmployeeSelector
+                value={filterEmployeeId}
+                onChange={id => setFilterEmployeeId(id)}
+                placeholder="Filtrar por funcionário..."
+              />
+            </div>
+
+            <Input
+              type="number"
+              min={2020}
+              max={2100}
+              placeholder={String(new Date().getFullYear())}
+              value={filterYear}
+              onChange={e => setFilterYear(e.target.value)}
+              className="w-28"
+            />
+
+            {hasActiveFilters && (
+              <Badge
+                variant="secondary"
+                className="cursor-pointer hover:bg-destructive/10"
+                onClick={clearFilters}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {tb.employeeId.slice(0, 8)}...
-                  </span>
-                  <Badge variant="outline">{formatYear(tb.year)}</Badge>
-                </div>
-                <p
-                  className={`text-2xl font-bold font-mono ${getBalanceColor(tb.balance)}`}
-                >
-                  {formatBalance(tb.balance)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Atualizado em{' '}
-                  {new Date(tb.updatedAt).toLocaleDateString('pt-BR')}
-                </p>
-              </Card>
-            ))}
+                Limpar filtros
+              </Badge>
+            )}
           </div>
-        )}
 
-        {/* Modals */}
-        <CreditModal
-          isOpen={creditOpen}
-          onClose={() => setCreditOpen(false)}
-          onSubmit={handleCredit}
-          isLoading={credit.isPending}
-        />
+          {isLoading ? (
+            <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
+          ) : error ? (
+            <GridError
+              type="server"
+              title="Erro ao carregar banco de horas"
+              message="Ocorreu um erro ao carregar os registros de banco de horas. Por favor, tente novamente."
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
+            />
+          ) : (
+            <EntityGrid
+              config={timeBankConfig}
+              items={timeBanks}
+              renderGridItem={renderGridCard}
+              renderListItem={renderListCard}
+              isLoading={isLoading}
+              isSearching={false}
+              onItemDoubleClick={item => {
+                setViewTarget(item);
+                setIsViewOpen(true);
+              }}
+              showSorting={true}
+              defaultSortField="createdAt"
+              defaultSortDirection="desc"
+            />
+          )}
 
-        <DebitModal
-          isOpen={debitOpen}
-          onClose={() => setDebitOpen(false)}
-          onSubmit={handleDebit}
-          isLoading={debit.isPending}
-        />
+          <CreditModal
+            isOpen={creditOpen}
+            onClose={() => setCreditOpen(false)}
+            onSubmit={handleCredit}
+            isLoading={credit.isPending}
+          />
 
-        <AdjustModal
-          isOpen={adjustOpen}
-          onClose={() => setAdjustOpen(false)}
-          onSubmit={handleAdjust}
-          isLoading={adjust.isPending}
-        />
+          <DebitModal
+            isOpen={debitOpen}
+            onClose={() => setDebitOpen(false)}
+            onSubmit={handleDebit}
+            isLoading={debit.isPending}
+          />
 
-        <ViewModal
-          isOpen={!!viewItem}
-          onClose={() => setViewItem(null)}
-          timeBank={viewItem}
-        />
-      </PageBody>
-    </PageLayout>
+          <AdjustModal
+            isOpen={adjustOpen}
+            onClose={() => setAdjustOpen(false)}
+            onSubmit={handleAdjust}
+            isLoading={adjust.isPending}
+          />
+
+          <ViewModal
+            isOpen={isViewOpen}
+            onClose={() => {
+              setIsViewOpen(false);
+              setViewTarget(null);
+            }}
+            timeBank={viewTarget}
+          />
+        </PageBody>
+      </PageLayout>
+    </CoreProvider>
   );
 }

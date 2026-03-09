@@ -12,7 +12,6 @@ import {
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -21,6 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  CoreProvider,
+  EntityCard,
+  EntityContextMenu,
+  EntityGrid,
+} from '@/core';
+import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { Payroll, PayrollStatus } from '@/types/hr';
 import {
@@ -34,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import {
+  payrollConfig,
   useListPayrolls,
   useCreatePayroll,
   useCalculatePayroll,
@@ -77,7 +84,6 @@ const STATUS_OPTIONS: { value: PayrollStatus; label: string }[] = [
 export default function PayrollPage() {
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
-  // Permissions
   const canView = hasPermission(HR_PERMISSIONS.PAYROLL.VIEW);
   const canCreate = hasPermission(HR_PERMISSIONS.PAYROLL.CREATE);
   const canProcess = hasPermission(HR_PERMISSIONS.PAYROLL.PROCESS);
@@ -122,6 +128,15 @@ export default function PayrollPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [viewTarget, setViewTarget] = useState<Payroll | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
+
+  // ============================================================================
+  // COMPUTED
+  // ============================================================================
+
+  const initialIds = useMemo(
+    () => payrolls.map(i => i.id),
+    [payrolls]
+  );
 
   // ============================================================================
   // HANDLERS
@@ -183,14 +198,186 @@ export default function PayrollPage() {
     [cancelMutation]
   );
 
-  const handleView = useCallback(
-    (payroll: Payroll) => {
-      if (canView) {
-        setViewTarget(payroll);
-        setIsViewOpen(true);
+  const handleViewItem = useCallback(
+    (ids: string[]) => {
+      if (ids.length > 0 && canView) {
+        const item = payrolls.find(p => p.id === ids[0]);
+        if (item) {
+          setViewTarget(item);
+          setIsViewOpen(true);
+        }
       }
     },
-    [canView]
+    [payrolls, canView]
+  );
+
+  // ============================================================================
+  // CONTEXT MENU
+  // ============================================================================
+
+  const contextActions: ContextMenuAction[] = useMemo(() => {
+    const actions: ContextMenuAction[] = [];
+    if (canView) {
+      actions.push({
+        id: 'view',
+        label: 'Visualizar',
+        icon: Eye,
+        onClick: handleViewItem,
+      });
+    }
+    return actions;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canView]);
+
+  // ============================================================================
+  // RENDER FUNCTIONS
+  // ============================================================================
+
+  const renderGridCard = (item: Payroll, isSelected: boolean) => (
+    <EntityContextMenu
+      itemId={item.id}
+      onView={canView ? handleViewItem : undefined}
+      actions={contextActions}
+    >
+      <EntityCard
+        id={item.id}
+        variant="grid"
+        title={formatMonthYear(item.referenceMonth, item.referenceYear)}
+        subtitle={getStatusLabel(item.status)}
+        icon={CalendarDays}
+        iconBgColor="bg-linear-to-br from-sky-500 to-sky-600"
+        badges={[
+          {
+            label: getStatusLabel(item.status),
+            variant: getStatusColor(item.status),
+          },
+        ]}
+        metadata={
+          <div className="flex flex-col gap-1 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Bruto</span>
+              <span className="font-medium text-green-600">
+                {formatCurrency(item.totalGross)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Deduções</span>
+              <span className="font-medium text-red-600">
+                {formatCurrency(item.totalDeductions)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Líquido</span>
+              <span className="font-bold text-blue-600">
+                {formatCurrency(item.totalNet)}
+              </span>
+            </div>
+          </div>
+        }
+        isSelected={isSelected}
+        showSelection={false}
+        clickable={false}
+        createdAt={item.createdAt}
+        updatedAt={item.updatedAt}
+      >
+        {item.status !== 'PAID' && item.status !== 'CANCELLED' && (
+          <div
+            className="flex items-center gap-2 pt-2 border-t"
+            onClick={e => e.stopPropagation()}
+          >
+            {item.status === 'DRAFT' && canProcess && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                onClick={() => handleCalculate(item.id)}
+                disabled={calculateMutation.isPending}
+              >
+                <Calculator className="h-3.5 w-3.5" />
+                Calcular
+              </Button>
+            )}
+            {item.status === 'CALCULATED' && canApprove && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1 text-green-600 border-green-200 hover:bg-green-50"
+                onClick={() => handleApprove(item.id)}
+                disabled={approveMutation.isPending}
+              >
+                <Check className="h-3.5 w-3.5" />
+                Aprovar
+              </Button>
+            )}
+            {item.status === 'APPROVED' && canProcess && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                onClick={() => handlePay(item.id)}
+                disabled={payMutation.isPending}
+              >
+                <DollarSign className="h-3.5 w-3.5" />
+                Pagar
+              </Button>
+            )}
+            {(item.status === 'DRAFT' ||
+              item.status === 'CALCULATED' ||
+              item.status === 'APPROVED') &&
+              canProcess && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-slate-500 hover:text-destructive"
+                  onClick={() => handleCancel(item.id)}
+                  disabled={cancelMutation.isPending}
+                >
+                  <Ban className="h-3.5 w-3.5" />
+                  Cancelar
+                </Button>
+              )}
+          </div>
+        )}
+      </EntityCard>
+    </EntityContextMenu>
+  );
+
+  const renderListCard = (item: Payroll, isSelected: boolean) => (
+    <EntityContextMenu
+      itemId={item.id}
+      onView={canView ? handleViewItem : undefined}
+      actions={contextActions}
+    >
+      <EntityCard
+        id={item.id}
+        variant="list"
+        title={formatMonthYear(item.referenceMonth, item.referenceYear)}
+        subtitle={`Líquido: ${formatCurrency(item.totalNet)}`}
+        icon={CalendarDays}
+        iconBgColor="bg-linear-to-br from-sky-500 to-sky-600"
+        badges={[
+          {
+            label: getStatusLabel(item.status),
+            variant: getStatusColor(item.status),
+          },
+        ]}
+        metadata={
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="text-green-600">
+              Bruto: {formatCurrency(item.totalGross)}
+            </span>
+            <span className="text-red-600">
+              Ded: {formatCurrency(item.totalDeductions)}
+            </span>
+          </div>
+        }
+        isSelected={isSelected}
+        showSelection={false}
+        clickable={false}
+        createdAt={item.createdAt}
+        updatedAt={item.updatedAt}
+      />
+    </EntityContextMenu>
   );
 
   // ============================================================================
@@ -230,7 +417,7 @@ export default function PayrollPage() {
   }, []);
 
   // ============================================================================
-  // LOADING STATE
+  // LOADING
   // ============================================================================
 
   if (isLoadingPermissions) {
@@ -246,241 +433,127 @@ export default function PayrollPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
-      <PageHeader>
-        <PageActionBar
-          breadcrumbItems={[
-            { label: 'RH', href: '/hr' },
-            { label: 'Folha de Pagamento', href: '/hr/payroll' },
-          ]}
-          buttons={actionButtons}
-        />
-
-        <Header
-          title="Folha de Pagamento"
-          description="Geração, cálculo e pagamento de folhas"
-        />
-      </PageHeader>
-
-      <PageBody>
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <Select value={filterMonth} onValueChange={setFilterMonth}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {MONTHS.map(m => (
-                <SelectItem key={m.value} value={m.value}>
-                  {m.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Input
-            type="number"
-            placeholder="Ano"
-            value={filterYear}
-            onChange={e => setFilterYear(e.target.value)}
-            className="w-[100px]"
-            min={2000}
-            max={2100}
+    <CoreProvider
+      selection={{
+        namespace: 'payroll',
+        initialIds,
+      }}
+    >
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'RH', href: '/hr' },
+              { label: 'Folha de Pagamento', href: '/hr/payroll' },
+            ]}
+            buttons={actionButtons}
           />
-
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map(s => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {hasActiveFilters && (
-            <Badge
-              variant="secondary"
-              className="cursor-pointer hover:bg-destructive/10"
-              onClick={clearFilters}
-            >
-              Limpar filtros
-            </Badge>
-          )}
-        </div>
-
-        {/* Grid */}
-        {isLoading ? (
-          <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
-        ) : error ? (
-          <GridError
-            type="server"
-            title="Erro ao carregar folhas de pagamento"
-            message="Ocorreu um erro ao tentar carregar as folhas. Por favor, tente novamente."
-            action={{
-              label: 'Tentar Novamente',
-              onClick: () => {
-                refetch();
-              },
-            }}
+          <Header
+            title="Folha de Pagamento"
+            description="Geração, cálculo e pagamento de folhas"
           />
-        ) : payrolls.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <CalendarDays className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-semibold text-muted-foreground">
-              Nenhuma folha de pagamento encontrada
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Crie uma nova folha para começar.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {payrolls.map(payroll => (
-              <Card
-                key={payroll.id}
-                className="relative flex flex-col gap-3 p-4 transition-shadow hover:shadow-md"
+        </PageHeader>
+
+        <PageBody>
+          <div className="flex flex-wrap items-center gap-3">
+            <Select value={filterMonth} onValueChange={setFilterMonth}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTHS.map(m => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Input
+              type="number"
+              placeholder="Ano"
+              value={filterYear}
+              onChange={e => setFilterYear(e.target.value)}
+              className="w-[100px]"
+              min={2000}
+              max={2100}
+            />
+
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map(s => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Badge
+                variant="secondary"
+                className="cursor-pointer hover:bg-destructive/10"
+                onClick={clearFilters}
               >
-                {/* Header: icon + title */}
-                <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center text-white shrink-0 bg-linear-to-br from-sky-500 to-sky-600 p-2 rounded-lg">
-                    <CalendarDays className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm truncate">
-                      {formatMonthYear(
-                        payroll.referenceMonth,
-                        payroll.referenceYear
-                      )}
-                    </h3>
-                    <Badge
-                      variant={getStatusColor(payroll.status)}
-                      className="mt-1"
-                    >
-                      {getStatusLabel(payroll.status)}
-                    </Badge>
-                  </div>
-                  {canView && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => handleView(payroll)}
-                      title="Visualizar"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-
-                {/* Values */}
-                <div className="flex flex-col gap-1 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Bruto</span>
-                    <span className="font-medium text-green-600">
-                      {formatCurrency(payroll.totalGross)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Deduções</span>
-                    <span className="font-medium text-red-600">
-                      {formatCurrency(payroll.totalDeductions)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Líquido</span>
-                    <span className="font-bold text-blue-600">
-                      {formatCurrency(payroll.totalNet)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Workflow action buttons */}
-                {payroll.status !== 'PAID' &&
-                  payroll.status !== 'CANCELLED' && (
-                    <div className="flex items-center gap-2 pt-1 border-t">
-                      {payroll.status === 'DRAFT' && canProcess && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
-                          onClick={() => handleCalculate(payroll.id)}
-                          disabled={calculateMutation.isPending}
-                        >
-                          <Calculator className="h-3.5 w-3.5" />
-                          Calcular
-                        </Button>
-                      )}
-
-                      {payroll.status === 'CALCULATED' && canApprove && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 gap-1 text-green-600 border-green-200 hover:bg-green-50"
-                          onClick={() => handleApprove(payroll.id)}
-                          disabled={approveMutation.isPending}
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                          Aprovar
-                        </Button>
-                      )}
-
-                      {payroll.status === 'APPROVED' && canProcess && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-                          onClick={() => handlePay(payroll.id)}
-                          disabled={payMutation.isPending}
-                        >
-                          <DollarSign className="h-3.5 w-3.5" />
-                          Pagar
-                        </Button>
-                      )}
-
-                      {(payroll.status === 'DRAFT' ||
-                        payroll.status === 'CALCULATED' ||
-                        payroll.status === 'APPROVED') &&
-                        canProcess && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="gap-1 text-slate-500 hover:text-destructive"
-                            onClick={() => handleCancel(payroll.id)}
-                            disabled={cancelMutation.isPending}
-                          >
-                            <Ban className="h-3.5 w-3.5" />
-                            Cancelar
-                          </Button>
-                        )}
-                    </div>
-                  )}
-              </Card>
-            ))}
+                Limpar filtros
+              </Badge>
+            )}
           </div>
-        )}
 
-        {/* Create Modal */}
-        <CreateModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
-          onSubmit={handleCreate}
-          isSubmitting={createMutation.isPending}
-        />
+          {isLoading ? (
+            <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
+          ) : error ? (
+            <GridError
+              type="server"
+              title="Erro ao carregar folhas de pagamento"
+              message="Ocorreu um erro ao tentar carregar as folhas. Por favor, tente novamente."
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
+            />
+          ) : (
+            <EntityGrid
+              config={payrollConfig}
+              items={payrolls}
+              renderGridItem={renderGridCard}
+              renderListItem={renderListCard}
+              isLoading={isLoading}
+              isSearching={false}
+              onItemDoubleClick={item => {
+                if (canView) {
+                  setViewTarget(item);
+                  setIsViewOpen(true);
+                }
+              }}
+              showSorting={true}
+              defaultSortField="createdAt"
+              defaultSortDirection="desc"
+            />
+          )}
 
-        {/* View Modal */}
-        <ViewModal
-          isOpen={isViewOpen}
-          onClose={() => {
-            setIsViewOpen(false);
-            setViewTarget(null);
-          }}
-          payroll={viewTarget}
-        />
-      </PageBody>
-    </PageLayout>
+          <CreateModal
+            isOpen={isCreateOpen}
+            onClose={() => setIsCreateOpen(false)}
+            onSubmit={handleCreate}
+            isSubmitting={createMutation.isPending}
+          />
+
+          <ViewModal
+            isOpen={isViewOpen}
+            onClose={() => {
+              setIsViewOpen(false);
+              setViewTarget(null);
+            }}
+            payroll={viewTarget}
+          />
+        </PageBody>
+      </PageLayout>
+    </CoreProvider>
   );
 }
