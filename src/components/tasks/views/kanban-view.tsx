@@ -118,11 +118,14 @@ export function KanbanView({
 
   // Ref to always have the latest cardsByColumn in dragEnd without stale closure
   const cardsByColumnRef = useRef(cardsByColumn);
-  cardsByColumnRef.current = cardsByColumn;
 
   // Ref for columnIds used inside setLocalCards
   const columnIdsRef = useRef(columnIds);
-  columnIdsRef.current = columnIds;
+
+  useEffect(() => {
+    cardsByColumnRef.current = cardsByColumn;
+    columnIdsRef.current = columnIds;
+  }, [cardsByColumn, columnIds]);
 
   // ─── Sensors ───
 
@@ -371,7 +374,11 @@ export function KanbanView({
       onDragCancel={handleDragCancel}
       accessibility={dndAccessibility}
     >
-      <div role="region" aria-label="Quadro Kanban" className="kanban-scroll h-full overflow-x-auto sm:overflow-y-hidden overflow-y-auto pb-2">
+      <div
+        role="region"
+        aria-label="Quadro Kanban"
+        className="kanban-scroll h-full overflow-x-auto sm:overflow-y-hidden overflow-y-auto pb-2"
+      >
         <div className="flex flex-col sm:flex-row gap-3 sm:min-w-max h-full">
           <SortableContext
             items={columnIds}
