@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { TimeBank } from '@/types/hr';
 import { formatBalance, getBalanceColor, formatYear } from '../utils';
 
@@ -17,6 +18,8 @@ interface ViewModalProps {
 }
 
 export function ViewModal({ isOpen, onClose, timeBank }: ViewModalProps) {
+  const { getName } = useEmployeeMap(timeBank ? [timeBank.employeeId] : []);
+
   if (!timeBank) return null;
 
   const balanceColor = getBalanceColor(timeBank.balance);
@@ -31,8 +34,8 @@ export function ViewModal({ isOpen, onClose, timeBank }: ViewModalProps) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Funcionário</p>
-              <p className="text-sm font-mono font-medium">
-                {timeBank.employeeId.slice(0, 8)}...
+              <p className="text-sm font-medium">
+                {getName(timeBank.employeeId)}
               </p>
             </div>
             <div className="space-y-1">

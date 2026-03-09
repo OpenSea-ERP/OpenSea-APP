@@ -21,8 +21,17 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Bonus } from '@/types/hr';
-import { Calendar, Eye, PlusCircle, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Eye, PlusCircle, Plus, Trash2, User } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import {
   bonusesConfig,
@@ -78,6 +87,9 @@ export default function BonusesPage() {
   const deleteMutation = useDeleteBonus();
 
   const bonuses = data?.bonuses ?? [];
+
+  const employeeIds = useMemo(() => bonuses.map(b => b.employeeId), [bonuses]);
+  const { getName } = useEmployeeMap(employeeIds);
 
   // ============================================================================
   // STATE
@@ -212,6 +224,10 @@ export default function BonusesPage() {
           ]}
           metadata={
             <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                {getName(item.employeeId)}
+              </span>
               <span className="line-clamp-1">{item.reason}</span>
               {item.date && (
                 <span className="flex items-center gap-1">
@@ -253,6 +269,10 @@ export default function BonusesPage() {
           ]}
           metadata={
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                {getName(item.employeeId)}
+              </span>
               <span className="line-clamp-1 max-w-[200px]">{item.reason}</span>
               {item.date && (
                 <span className="flex items-center gap-1">
@@ -373,39 +393,42 @@ export default function BonusesPage() {
               />
             </div>
 
-            <select
+            <Select
               value={
                 filterIsPaid === undefined
-                  ? ''
+                  ? 'ALL'
                   : filterIsPaid
                     ? 'true'
                     : 'false'
               }
-              onChange={e => {
-                const v = e.target.value;
-                setFilterIsPaid(v === '' ? undefined : v === 'true');
-              }}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+              onValueChange={v =>
+                setFilterIsPaid(v === 'ALL' ? undefined : v === 'true')
+              }
             >
-              <option value="">Status (todos)</option>
-              <option value="true">Paga</option>
-              <option value="false">Pendente</option>
-            </select>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos os Status</SelectItem>
+                <SelectItem value="true">Paga</SelectItem>
+                <SelectItem value="false">Pendente</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <input
+            <Input
               type="date"
               value={filterStartDate}
               onChange={e => setFilterStartDate(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-              title="Data início"
+              className="w-40"
+              placeholder="Data início"
             />
 
-            <input
+            <Input
               type="date"
               value={filterEndDate}
               onChange={e => setFilterEndDate(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-              title="Data fim"
+              className="w-40"
+              placeholder="Data fim"
             />
 
             {hasActiveFilters && (

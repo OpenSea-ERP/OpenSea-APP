@@ -14,6 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Overtime } from '@/types/hr';
 import { Calendar, Coffee, RefreshCcwDot, X } from 'lucide-react';
 import {
@@ -30,6 +31,10 @@ interface ViewModalProps {
 }
 
 export function ViewModal({ isOpen, onClose, overtime }: ViewModalProps) {
+  const { getName } = useEmployeeMap(
+    overtime ? [overtime.employeeId, ...(overtime.approvedBy ? [overtime.approvedBy] : [])] : []
+  );
+
   if (!overtime) return null;
 
   return (
@@ -92,8 +97,8 @@ export function ViewModal({ isOpen, onClose, overtime }: ViewModalProps) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Funcionário</p>
-                <p className="text-base mt-1 font-mono text-xs">
-                  {overtime.employeeId}
+                <p className="text-base mt-1">
+                  {getName(overtime.employeeId)}
                 </p>
               </div>
               <div className="col-span-2">
@@ -110,8 +115,8 @@ export function ViewModal({ isOpen, onClose, overtime }: ViewModalProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Aprovado por</p>
-                  <p className="text-base mt-1 font-mono text-xs">
-                    {overtime.approvedBy}
+                  <p className="text-base mt-1">
+                    {getName(overtime.approvedBy!)}
                   </p>
                 </div>
                 {overtime.approvedAt && (

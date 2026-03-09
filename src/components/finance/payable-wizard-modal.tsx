@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useCreateFinanceEntry } from '@/hooks/finance';
+import { financeEntriesService } from '@/services/finance';
 import type {
   CostCenterAllocation,
   CreateFinanceEntryData,
@@ -182,8 +183,24 @@ export function PayableWizardModal({
     }
 
     try {
-      await createMutation.mutateAsync(payload);
+      const result = await createMutation.mutateAsync(payload);
       toast.success('Conta a pagar criada com sucesso!');
+
+      // Upload attachment if file was selected
+      if (wizardData.attachmentFile && result?.entry?.id) {
+        try {
+          await financeEntriesService.uploadAttachment(
+            result.entry.id,
+            wizardData.attachmentFile,
+            wizardData.attachmentType
+          );
+        } catch {
+          toast.warning(
+            'Conta criada, mas o anexo nao foi enviado. Voce pode envia-lo pela pagina de detalhes.'
+          );
+        }
+      }
+
       handleOpenChange(false);
       onCreated?.();
     } catch (err) {

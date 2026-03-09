@@ -21,8 +21,17 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Deduction } from '@/types/hr';
-import { Calendar, Eye, MinusCircle, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Eye, MinusCircle, Plus, Trash2, User } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import {
   deductionsConfig,
@@ -89,6 +98,9 @@ export default function DeductionsPage() {
   const deleteMutation = useDeleteDeduction();
 
   const deductions = data?.deductions ?? [];
+
+  const employeeIds = useMemo(() => deductions.map(d => d.employeeId), [deductions]);
+  const { getName } = useEmployeeMap(employeeIds);
 
   // ============================================================================
   // STATE
@@ -231,6 +243,10 @@ export default function DeductionsPage() {
           ]}
           metadata={
             <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                {getName(item.employeeId)}
+              </span>
               <span className="line-clamp-1">{item.reason}</span>
               {item.date && (
                 <span className="flex items-center gap-1">
@@ -280,6 +296,10 @@ export default function DeductionsPage() {
           ]}
           metadata={
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                {getName(item.employeeId)}
+              </span>
               <span className="line-clamp-1 max-w-[200px]">{item.reason}</span>
               {item.date && (
                 <span className="flex items-center gap-1">
@@ -402,58 +422,64 @@ export default function DeductionsPage() {
               />
             </div>
 
-            <select
+            <Select
               value={
                 filterIsApplied === undefined
-                  ? ''
+                  ? 'ALL'
                   : filterIsApplied
                     ? 'true'
                     : 'false'
               }
-              onChange={e => {
-                const v = e.target.value;
-                setFilterIsApplied(v === '' ? undefined : v === 'true');
-              }}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+              onValueChange={v =>
+                setFilterIsApplied(v === 'ALL' ? undefined : v === 'true')
+              }
             >
-              <option value="">Status (todos)</option>
-              <option value="true">Aplicada</option>
-              <option value="false">Pendente</option>
-            </select>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos os Status</SelectItem>
+                <SelectItem value="true">Aplicada</SelectItem>
+                <SelectItem value="false">Pendente</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <select
+            <Select
               value={
                 filterIsRecurring === undefined
-                  ? ''
+                  ? 'ALL'
                   : filterIsRecurring
                     ? 'true'
                     : 'false'
               }
-              onChange={e => {
-                const v = e.target.value;
-                setFilterIsRecurring(v === '' ? undefined : v === 'true');
-              }}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+              onValueChange={v =>
+                setFilterIsRecurring(v === 'ALL' ? undefined : v === 'true')
+              }
             >
-              <option value="">Tipo (todos)</option>
-              <option value="true">Recorrente</option>
-              <option value="false">Avulsa</option>
-            </select>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos os Tipos</SelectItem>
+                <SelectItem value="true">Recorrente</SelectItem>
+                <SelectItem value="false">Avulsa</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <input
+            <Input
               type="date"
               value={filterStartDate}
               onChange={e => setFilterStartDate(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-              title="Data início"
+              className="w-40"
+              placeholder="Data início"
             />
 
-            <input
+            <Input
               type="date"
               value={filterEndDate}
               onChange={e => setFilterEndDate(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-              title="Data fim"
+              className="w-40"
+              placeholder="Data fim"
             />
 
             {hasActiveFilters && (

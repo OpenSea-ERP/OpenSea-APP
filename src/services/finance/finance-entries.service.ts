@@ -7,6 +7,8 @@ import type {
   UpdateFinanceEntryData,
   RegisterPaymentData,
   FinanceEntryPayment,
+  FinanceAttachment,
+  FinanceAttachmentType,
   ParseBoletoRequest,
   ParseBoletoResult,
 } from '@/types/finance';
@@ -118,6 +120,20 @@ export const financeEntriesService = {
     return apiClient.post<ParseBoletoResult>(
       API_ENDPOINTS.FINANCE_DASHBOARD.PARSE_BOLETO,
       data
+    );
+  },
+
+  async uploadAttachment(
+    entryId: string,
+    file: File,
+    type: FinanceAttachmentType
+  ): Promise<{ attachment: FinanceAttachment }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    return apiClient.post<{ attachment: FinanceAttachment }>(
+      API_ENDPOINTS.FINANCE_ENTRIES.UPLOAD_ATTACHMENT(entryId),
+      formData
     );
   },
 };

@@ -28,6 +28,7 @@ import {
   EntityGrid,
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { Absence, AbsenceType, AbsenceStatus } from '@/types/hr';
 import {
@@ -37,6 +38,7 @@ import {
   Clock,
   Eye,
   Plus,
+  User,
   UserX,
   XCircle,
 } from 'lucide-react';
@@ -125,6 +127,9 @@ export default function AbsencesPage() {
   const cancelAbsence = useCancelAbsence();
 
   const absences = data?.absences ?? [];
+
+  const employeeIds = useMemo(() => absences.map(a => a.employeeId), [absences]);
+  const { getName } = useEmployeeMap(employeeIds);
 
   // ============================================================================
   // STATE
@@ -250,6 +255,10 @@ export default function AbsencesPage() {
         metadata={
           <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
+              <User className="h-3 w-3" />
+              <span>{getName(item.employeeId)}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
               <Calendar className="h-3 w-3" />
               <span>
                 {formatDate(item.startDate)} &mdash;{' '}
@@ -343,6 +352,10 @@ export default function AbsencesPage() {
         ]}
         metadata={
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <User className="h-3 w-3" />
+              {getName(item.employeeId)}
+            </span>
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {formatDate(item.startDate)} &mdash; {formatDate(item.endDate)}

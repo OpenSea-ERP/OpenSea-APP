@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Absence } from '@/types/hr';
 import { Calendar, Clock, FileText, UserX } from 'lucide-react';
 import {
@@ -50,6 +51,11 @@ function formatDateTime(dateStr?: string | null): string {
 }
 
 export function ViewModal({ isOpen, onClose, absence }: ViewModalProps) {
+  const idsToResolve = absence
+    ? [absence.employeeId, ...(absence.approvedBy ? [absence.approvedBy] : [])]
+    : [];
+  const { getName } = useEmployeeMap(idsToResolve);
+
   if (!absence) return null;
 
   return (
@@ -130,10 +136,8 @@ export function ViewModal({ isOpen, onClose, absence }: ViewModalProps) {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">
-                  ID do Funcionário
-                </p>
-                <p className="text-sm mt-1 font-mono">{absence.employeeId}</p>
+                <p className="text-sm text-muted-foreground">Funcionário</p>
+                <p className="text-sm mt-1">{getName(absence.employeeId)}</p>
               </div>
               {absence.cid && (
                 <div>
@@ -182,8 +186,8 @@ export function ViewModal({ isOpen, onClose, absence }: ViewModalProps) {
                     <p className="text-sm text-muted-foreground">
                       Aprovado por
                     </p>
-                    <p className="text-sm mt-1 font-mono">
-                      {absence.approvedBy}
+                    <p className="text-sm mt-1">
+                      {getName(absence.approvedBy)}
                     </p>
                   </div>
                 )}

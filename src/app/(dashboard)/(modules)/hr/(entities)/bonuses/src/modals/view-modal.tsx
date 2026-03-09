@@ -14,6 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Bonus } from '@/types/hr';
 import { Calendar, PlusCircle, RefreshCcwDot, X } from 'lucide-react';
 import {
@@ -30,6 +31,8 @@ interface ViewModalProps {
 }
 
 export function ViewModal({ isOpen, onClose, bonus }: ViewModalProps) {
+  const { getName } = useEmployeeMap(bonus ? [bonus.employeeId] : []);
+
   if (!bonus) return null;
 
   return (
@@ -96,8 +99,8 @@ export function ViewModal({ isOpen, onClose, bonus }: ViewModalProps) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Funcionário</p>
-                <p className="text-base mt-1 font-mono text-xs">
-                  {bonus.employeeId}
+                <p className="text-base mt-1">
+                  {getName(bonus.employeeId)}
                 </p>
               </div>
               <div className="col-span-2">

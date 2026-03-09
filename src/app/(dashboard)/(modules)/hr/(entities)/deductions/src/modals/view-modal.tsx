@@ -14,6 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Deduction } from '@/types/hr';
 import { Calendar, MinusCircle, RefreshCcwDot, X } from 'lucide-react';
 import {
@@ -31,6 +32,8 @@ interface ViewModalProps {
 }
 
 export function ViewModal({ isOpen, onClose, deduction }: ViewModalProps) {
+  const { getName } = useEmployeeMap(deduction ? [deduction.employeeId] : []);
+
   if (!deduction) return null;
 
   const installmentInfo = formatInstallments(deduction);
@@ -105,8 +108,8 @@ export function ViewModal({ isOpen, onClose, deduction }: ViewModalProps) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Funcionário</p>
-                <p className="text-base mt-1 font-mono text-xs">
-                  {deduction.employeeId}
+                <p className="text-base mt-1">
+                  {getName(deduction.employeeId)}
                 </p>
               </div>
               <div className="col-span-2">

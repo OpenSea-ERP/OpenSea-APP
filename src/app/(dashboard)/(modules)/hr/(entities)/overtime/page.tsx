@@ -29,9 +29,10 @@ import {
   EntityGrid,
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { Overtime } from '@/types/hr';
-import { Check, Clock, Coffee, Eye, Plus } from 'lucide-react';
+import { Check, Clock, Coffee, Eye, Plus, User } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import {
   overtimeConfig,
@@ -91,6 +92,9 @@ export default function OvertimePage() {
   });
 
   const overtimeList = data?.overtime ?? [];
+
+  const employeeIds = useMemo(() => overtimeList.map(o => o.employeeId), [overtimeList]);
+  const { getName } = useEmployeeMap(employeeIds);
 
   // ============================================================================
   // STATE
@@ -203,6 +207,10 @@ export default function OvertimePage() {
         metadata={
           <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
+              <User className="h-3 w-3" />
+              <span>{getName(item.employeeId)}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
               <Clock className="h-3 w-3" />
               <span>{formatDate(item.date)}</span>
             </div>
@@ -255,6 +263,10 @@ export default function OvertimePage() {
         ]}
         metadata={
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <User className="h-3 w-3" />
+              {getName(item.employeeId)}
+            </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {formatDate(item.date)}

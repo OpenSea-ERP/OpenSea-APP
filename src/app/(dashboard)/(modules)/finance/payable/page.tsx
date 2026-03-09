@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Contas a Pagar (Accounts Payable)
- * Listagem de lançamentos financeiros do tipo PAYABLE
+ * Listagem de lancamentos financeiros do tipo PAYABLE
  */
 
 'use client';
@@ -47,7 +47,9 @@ import {
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { BaixaModal } from '@/components/finance/baixa-modal';
 import { useDeleteFinanceEntry, useFinanceEntries } from '@/hooks/finance';
+import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
 import { usePermissions } from '@/hooks/use-permissions';
 import { normalizePagination } from '@/types/common/pagination';
 import type {
@@ -61,6 +63,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarIcon,
+  DollarSign,
   Eye,
   Filter,
   MoreHorizontal,
@@ -86,6 +89,12 @@ const STATUS_OPTIONS: { value: FinanceEntryStatus; label: string }[] = [
   { value: 'PARTIALLY_PAID', label: 'Parcialmente Pago' },
   { value: 'CANCELLED', label: 'Cancelado' },
   { value: 'SCHEDULED', label: 'Agendado' },
+];
+
+const PAYABLE_STATUSES: FinanceEntryStatus[] = [
+  'PENDING',
+  'OVERDUE',
+  'PARTIALLY_PAID',
 ];
 
 const PERMISSION_CODES = {
@@ -168,6 +177,7 @@ export default function PayablePage() {
   const [statusFilter, setStatusFilter] = useState<FinanceEntryStatus | 'ALL'>(
     'ALL'
   );
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [supplierFilter, setSupplierFilter] = useState('');
   const [dueDateFrom, setDueDateFrom] = useState<Date | undefined>(undefined);
   const [dueDateTo, setDueDateTo] = useState<Date | undefined>(undefined);
@@ -194,6 +204,20 @@ export default function PayablePage() {
   const [pinModalOpen, setPinModalOpen] = useState(false);
 
   // --------------------------------------------------------------------------
+  // Baixa modal state
+  // --------------------------------------------------------------------------
+
+  const [baixaEntry, setBaixaEntry] = useState<FinanceEntry | null>(null);
+  const [baixaOpen, setBaixaOpen] = useState(false);
+
+  // --------------------------------------------------------------------------
+  // Categories for filter and rate lookup
+  // --------------------------------------------------------------------------
+
+  const { data: categoriesData } = useFinanceCategories();
+  const categories = categoriesData?.categories ?? [];
+
+  // --------------------------------------------------------------------------
   // Build query params for the hook
   // --------------------------------------------------------------------------
 
@@ -212,6 +236,10 @@ export default function PayablePage() {
       params.status = statusFilter;
     }
 
+    if (categoryFilter) {
+      params.categoryId = categoryFilter;
+    }
+
     if (supplierFilter.trim()) {
       params.supplierName = supplierFilter.trim();
     }
@@ -225,7 +253,7 @@ export default function PayablePage() {
     }
 
     return params;
-  }, [searchQuery, statusFilter, supplierFilter, dueDateFrom, dueDateTo, page, perPage]);
+  }, [searchQuery, statusFilter, categoryFilter, supplierFilter, dueDateFrom, dueDateTo, page, perPage]);
 
   // --------------------------------------------------------------------------
   // Data fetching
@@ -245,11 +273,12 @@ export default function PayablePage() {
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (statusFilter !== 'ALL') count++;
+    if (categoryFilter) count++;
     if (supplierFilter.trim()) count++;
     if (dueDateFrom) count++;
     if (dueDateTo) count++;
     return count;
-  }, [statusFilter, supplierFilter, dueDateFrom, dueDateTo]);
+  }, [statusFilter, categoryFilter, supplierFilter, dueDateFrom, dueDateTo]);
 
   // --------------------------------------------------------------------------
   // Handlers
@@ -271,6 +300,7 @@ export default function PayablePage() {
 
   const handleClearFilters = useCallback(() => {
     setStatusFilter('ALL');
+    setCategoryFilter('');
     setSupplierFilter('');
     setDueDateFrom(undefined);
     setDueDateTo(undefined);
@@ -301,7 +331,7 @@ export default function PayablePage() {
 
     try {
       await deleteMutation.mutateAsync(deleteTargetId);
-      toast.success('Conta a pagar excluída com sucesso.');
+      toast.success('Conta a pagar excluida com sucesso.');
       setDeleteTargetId(null);
     } catch (err) {
       const message =
@@ -318,6 +348,21 @@ export default function PayablePage() {
     },
     [canView, router]
   );
+
+  const handleOpenBaixa = useCallback((entry: FinanceEntry) => {
+    setBaixaEntry(entry);
+    setBaixaOpen(true);
+  }, []);
+
+  // Get category rates for the selected baixa entry
+  const baixaCategoryRates = useMemo(() => {
+    if (!baixaEntry) return { interestRate: undefined, penaltyRate: undefined };
+    const cat = categories.find((c) => c.id === baixaEntry.categoryId);
+    return {
+      interestRate: cat?.interestRate ?? undefined,
+      penaltyRate: cat?.penaltyRate ?? undefined,
+    };
+  }, [baixaEntry, categories]);
 
   // --------------------------------------------------------------------------
   // Header action buttons (permission-gated)
@@ -417,7 +462,7 @@ export default function PayablePage() {
         {/* Search Bar */}
         <SearchBar
           value={searchQuery}
-          placeholder="Buscar por descrição ou código..."
+          placeholder="Buscar por descricao ou codigo..."
           onSearch={handleSearch}
           onClear={() => handleSearch('')}
           showClear={true}
@@ -484,6 +529,34 @@ export default function PayablePage() {
                 </Select>
               </div>
 
+              {/* Category Filter */}
+              <div className="space-y-1.5">
+                <label htmlFor="filter-category" className="text-sm font-medium text-muted-foreground">
+                  Categoria
+                </label>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={(value) => {
+                    setCategoryFilter(value === 'ALL' ? '' : value);
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as categorias" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todas</SelectItem>
+                    {categories
+                      .filter((c) => c.type === 'EXPENSE' || c.type === 'BOTH')
+                      .map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Supplier Name Filter */}
               <div className="space-y-1.5">
                 <label htmlFor="filter-supplier" className="text-sm font-medium text-muted-foreground">
@@ -541,7 +614,7 @@ export default function PayablePage() {
               {/* Due Date To */}
               <div className="space-y-1.5">
                 <label htmlFor="filter-due-to" className="text-sm font-medium text-muted-foreground">
-                  Vencimento até
+                  Vencimento ate
                 </label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -602,7 +675,7 @@ export default function PayablePage() {
               <p className="text-sm text-muted-foreground mb-4">
                 {activeFilterCount > 0 || searchQuery
                   ? 'Tente ajustar os filtros ou a busca.'
-                  : 'Crie sua primeira conta a pagar para começar.'}
+                  : 'Crie sua primeira conta a pagar para comecar.'}
               </p>
               {canCreate && !searchQuery && activeFilterCount === 0 && (
                 <Button onClick={handleCreateClick}>
@@ -616,8 +689,8 @@ export default function PayablePage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="w-[120px]">Código</TableHead>
-                    <TableHead>Descrição</TableHead>
+                    <TableHead className="w-[120px]">Codigo</TableHead>
+                    <TableHead>Descricao</TableHead>
                     <TableHead>Fornecedor</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     <TableHead>Vencimento</TableHead>
@@ -639,7 +712,16 @@ export default function PayablePage() {
                         {entry.code}
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{entry.description}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{entry.description}</span>
+                          {entry.currentInstallment != null &&
+                            entry.totalInstallments != null &&
+                            entry.totalInstallments > 1 && (
+                              <Badge variant="outline" className="text-xs shrink-0">
+                                Parcela {entry.currentInstallment}/{entry.totalInstallments}
+                              </Badge>
+                            )}
+                        </div>
                         {entry.notes && (
                           <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
                             {entry.notes}
@@ -679,7 +761,7 @@ export default function PayablePage() {
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Ações</span>
+                                <span className="sr-only">Acoes</span>
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -694,6 +776,18 @@ export default function PayablePage() {
                                   Visualizar
                                 </DropdownMenuItem>
                               )}
+                              {canEdit &&
+                                PAYABLE_STATUSES.includes(entry.status) && (
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenBaixa(entry);
+                                    }}
+                                  >
+                                    <DollarSign className="h-4 w-4 mr-2" />
+                                    Registrar Pagamento
+                                  </DropdownMenuItem>
+                                )}
                               {canEdit && (
                                 <DropdownMenuItem
                                   onClick={(e) => {
@@ -745,7 +839,7 @@ export default function PayablePage() {
                     {/* Per page selector */}
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">
-                        Por página:
+                        Por pagina:
                       </span>
                       <Select
                         value={String(perPage)}
@@ -774,7 +868,7 @@ export default function PayablePage() {
                         className="h-9 w-9"
                         onClick={() => handlePageChange(1)}
                         disabled={!meta.hasPrev}
-                        title="Primeira página"
+                        title="Primeira pagina"
                       >
                         <span className="text-xs font-bold">1</span>
                       </Button>
@@ -785,7 +879,7 @@ export default function PayablePage() {
                         className="h-9 w-9"
                         onClick={() => handlePageChange(meta.page - 1)}
                         disabled={!meta.hasPrev}
-                        title="Página anterior"
+                        title="Pagina anterior"
                       >
                         <span className="sr-only">Anterior</span>
                         &#8249;
@@ -828,9 +922,9 @@ export default function PayablePage() {
                         className="h-9 w-9"
                         onClick={() => handlePageChange(meta.page + 1)}
                         disabled={!meta.hasNext}
-                        title="Próxima página"
+                        title="Proxima pagina"
                       >
-                        <span className="sr-only">Próximo</span>
+                        <span className="sr-only">Proximo</span>
                         &#8250;
                       </Button>
 
@@ -840,7 +934,7 @@ export default function PayablePage() {
                         className="h-9 w-9"
                         onClick={() => handlePageChange(meta.totalPages)}
                         disabled={!meta.hasNext}
-                        title="Última página"
+                        title="Ultima pagina"
                       >
                         <span className="text-xs font-bold">
                           {meta.totalPages}
@@ -870,6 +964,20 @@ export default function PayablePage() {
           }}
         />
 
+        {/* Baixa Modal */}
+        {baixaEntry && (
+          <BaixaModal
+            open={baixaOpen}
+            onOpenChange={(v) => {
+              setBaixaOpen(v);
+              if (!v) setBaixaEntry(null);
+            }}
+            entry={baixaEntry}
+            categoryInterestRate={baixaCategoryRates.interestRate}
+            categoryPenaltyRate={baixaCategoryRates.penaltyRate}
+          />
+        )}
+
         {/* Delete PIN Confirmation Modal */}
         <VerifyActionPinModal
           isOpen={pinModalOpen}
@@ -878,8 +986,8 @@ export default function PayablePage() {
             setDeleteTargetId(null);
           }}
           onSuccess={handleDeleteConfirmed}
-          title="Confirmar Exclusão"
-          description="Digite seu PIN de Ação para confirmar a exclusão desta conta a pagar."
+          title="Confirmar Exclusao"
+          description="Digite seu PIN de Acao para confirmar a exclusao desta conta a pagar."
         />
       </PageBody>
     </PageLayout>

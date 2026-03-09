@@ -20,6 +20,7 @@ import {
   EntityGrid,
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { TimeBank } from '@/types/hr';
 import { Eye, Hourglass, Minus, Plus, SlidersHorizontal } from 'lucide-react';
 import { Suspense, useCallback, useMemo, useState } from 'react';
@@ -74,6 +75,9 @@ function TimeBankPageContent() {
   const adjust = useAdjustTimeBank({ onSuccess: () => setAdjustOpen(false) });
 
   const timeBanks = data?.timeBanks ?? [];
+
+  const employeeIds = useMemo(() => timeBanks.map(tb => tb.employeeId), [timeBanks]);
+  const { getName } = useEmployeeMap(employeeIds);
 
   // ============================================================================
   // STATE
@@ -162,7 +166,7 @@ function TimeBankPageContent() {
       <EntityCard
         id={item.id}
         variant="grid"
-        title={item.employeeId.slice(0, 8) + '...'}
+        title={getName(item.employeeId)}
         subtitle={formatBalance(item.balance)}
         icon={Hourglass}
         iconBgColor="bg-linear-to-br from-teal-500 to-teal-600"
@@ -200,7 +204,7 @@ function TimeBankPageContent() {
       <EntityCard
         id={item.id}
         variant="list"
-        title={item.employeeId.slice(0, 8) + '...'}
+        title={getName(item.employeeId)}
         subtitle={formatBalance(item.balance)}
         icon={Hourglass}
         iconBgColor="bg-linear-to-br from-teal-500 to-teal-600"
