@@ -22,7 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { FINANCE_CATEGORY_TYPE_LABELS } from '@/types/finance';
 import type { FinanceCategory, FinanceCategoryType } from '@/types/finance';
 import { Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface CreateCategoryModalProps {
   isOpen: boolean;
@@ -37,6 +37,7 @@ interface CreateCategoryModalProps {
   isSubmitting: boolean;
   nextDisplayOrder: number;
   categories?: FinanceCategory[];
+  defaultType?: FinanceCategoryType;
 }
 
 export function CreateCategoryModal({
@@ -46,15 +47,25 @@ export function CreateCategoryModal({
   isSubmitting,
   nextDisplayOrder,
   categories = [],
+  defaultType = 'EXPENSE',
 }: CreateCategoryModalProps) {
   const [name, setName] = useState('');
-  const [type, setType] = useState<FinanceCategoryType>('EXPENSE');
+  const [type, setType] = useState<FinanceCategoryType>(defaultType);
   const [description, setDescription] = useState('');
-  const [parentId, setParentId] = useState<string>('');
+  const [parentId, setParentId] = useState<string>('none');
 
-  // Only allow nesting up to level 2 (0-based), so filter parents that are level 0 or 1
+  // Sync type when modal opens with a new defaultType
+  useEffect(() => {
+    if (isOpen) {
+      setType(defaultType);
+      setParentId('none');
+      setName('');
+      setDescription('');
+    }
+  }, [isOpen, defaultType]);
+
+  // Only show parents of the same type (or BOTH) and max level 1
   const availableParents = useMemo(() => {
-    // Build a level map
     const levelMap = new Map<string, number>();
 
     function computeLevel(cat: FinanceCategory): number {
@@ -77,14 +88,18 @@ export function CreateCategoryModal({
       computeLevel(cat);
     }
 
-    // Only allow parents at level 0 or 1 (so children would be level 1 or 2)
     return categories
-      .filter(c => (levelMap.get(c.id) ?? 0) < 2)
+      .filter(c => {
+        const catLevel = levelMap.get(c.id) ?? 0;
+        if (catLevel >= 2) return false;
+        // Only same type or BOTH
+        return c.type === type || c.type === 'BOTH';
+      })
       .map(c => ({
         ...c,
         level: levelMap.get(c.id) ?? 0,
       }));
-  }, [categories]);
+  }, [categories, type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,22 +109,21 @@ export function CreateCategoryModal({
       type,
       description: description.trim() || undefined,
       displayOrder: nextDisplayOrder,
-      parentId: parentId && parentId !== 'none' ? parentId : undefined,
+      parentId: parentId !== 'none' ? parentId : undefined,
     });
-    // Reset on success
     setName('');
-    setType('EXPENSE');
     setDescription('');
-    setParentId('');
+    setParentId('none');
   };
 
   const handleClose = () => {
     setName('');
-    setType('EXPENSE');
     setDescription('');
-    setParentId('');
+    setParentId('none');
     onClose();
   };
+
+  const typeLabel = FINANCE_CATEGORY_TYPE_LABELS[type];
 
   return (
     <Dialog
@@ -121,53 +135,29 @@ export function CreateCategoryModal({
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Nova Categoria Financeira</DialogTitle>
+            <DialogTitle>Nova Categoria de {typeLabel}</DialogTitle>
             <DialogDescription>
-              Preencha os dados para criar uma nova categoria.
+              Preencha os dados para criar uma nova categoria de{' '}
+              {typeLabel.toLowerCase()}.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cat-name">Nome *</Label>
-                <Input
-                  id="cat-name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Nome da categoria"
-                  required
-                  autoFocus
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cat-type">Tipo *</Label>
-                <Select
-                  value={type}
-                  onValueChange={v => setType(v as FinanceCategoryType)}
-                >
-                  <SelectTrigger id="cat-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(FINANCE_CATEGORY_TYPE_LABELS).map(
-                      ([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="cat-name">Nome *</Label>
+              <Input
+                id="cat-name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder={`Nome da categoria de ${typeLabel.toLowerCase()}`}
+                required
+                autoFocus
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="cat-parent">Categoria Pai</Label>
-              <Select
-                value={parentId}
-                onValueChange={setParentId}
-              >
+              <Select value={parentId} onValueChange={setParentId}>
                 <SelectTrigger id="cat-parent">
                   <SelectValue placeholder="Nenhuma (raiz)" />
                 </SelectTrigger>

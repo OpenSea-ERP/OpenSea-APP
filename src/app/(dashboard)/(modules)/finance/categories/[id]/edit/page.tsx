@@ -1,11 +1,18 @@
 /**
  * Edit Finance Category Page
- * Standard pattern with PageBreadcrumb and parent category selector
+ * Follows company edit page pattern: PageLayout > PageActionBar (Save/Cancel) > Identity Card > Form
  */
 
 'use client';
 
-import { PageBreadcrumb } from '@/components/layout/page-breadcrumb';
+import { GridLoading } from '@/components/handlers/grid-loading';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,9 +32,9 @@ import {
 } from '@/hooks/finance';
 import { FINANCE_CATEGORY_TYPE_LABELS } from '@/types/finance';
 import type { FinanceCategoryType } from '@/types/finance';
-import { Save } from 'lucide-react';
+import { FolderTree, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function EditFinanceCategoryPage({
@@ -42,6 +49,7 @@ export default function EditFinanceCategoryPage({
   const updateMutation = useUpdateFinanceCategory();
   const category = data?.category;
   const allCategories = allCategoriesData?.categories ?? [];
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -52,6 +60,9 @@ export default function EditFinanceCategoryPage({
     color: '',
     parentId: '',
   });
+
+  // Whether this category is a child (has a parent)
+  const isChild = !!category?.parentId;
 
   useEffect(() => {
     if (category) {
@@ -67,9 +78,8 @@ export default function EditFinanceCategoryPage({
     }
   }, [category]);
 
-  // Available parents: exclude self and own descendants, max level 1 for parents
+  // Available parents: exclude self and own descendants, same type or BOTH, max level 1
   const availableParents = useMemo(() => {
-    // Build descendant set
     const descendants = new Set<string>();
     function addDescendants(parentId: string) {
       for (const cat of allCategories) {
@@ -81,7 +91,6 @@ export default function EditFinanceCategoryPage({
     }
     addDescendants(id);
 
-    // Build level map
     const levelMap = new Map<string, number>();
     function computeLevel(catId: string): number {
       if (levelMap.has(catId)) return levelMap.get(catId)!;
@@ -100,34 +109,64 @@ export default function EditFinanceCategoryPage({
     }
 
     return allCategories
-      .filter(
-        c =>
-          c.id !== id &&
-          !descendants.has(c.id) &&
-          (levelMap.get(c.id) ?? 0) < 2
-      )
+      .filter(c => {
+        if (c.id === id || descendants.has(c.id)) return false;
+        if ((levelMap.get(c.id) ?? 0) >= 2) return false;
+        return c.type === formData.type || c.type === 'BOTH';
+      })
       .map(c => ({
         ...c,
         level: levelMap.get(c.id) ?? 0,
       }));
-  }, [allCategories, id]);
+  }, [allCategories, id, formData.type]);
+
+  // Check if this category has children
+  const hasChildren = useMemo(
+    () => allCategories.some(c => c.parentId === id),
+    [allCategories, id]
+  );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="space-y-4 w-full max-w-2xl">
-          <div className="h-8 bg-muted animate-pulse rounded" />
-          <div className="h-64 bg-muted animate-pulse rounded" />
-        </div>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Categorias', href: '/finance/categories' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <GridLoading count={3} layout="list" size="md" />
+        </PageBody>
+      </PageLayout>
     );
   }
 
   if (!category) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-destructive">Categoria não encontrada.</p>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Categorias', href: '/finance/categories' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <Card className="bg-white/5 p-12 text-center">
+            <FolderTree className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-semibold mb-2">
+              Categoria não encontrada
+            </h2>
+            <Button onClick={() => router.push('/finance/categories')}>
+              Voltar para Categorias
+            </Button>
+          </Card>
+        </PageBody>
+      </PageLayout>
     );
   }
 
@@ -154,11 +193,10 @@ export default function EditFinanceCategoryPage({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex w-full items-center justify-between">
-        <PageBreadcrumb
-          items={[
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={[
             { label: 'Financeiro', href: '/finance' },
             { label: 'Categorias', href: '/finance/categories' },
             {
@@ -167,92 +205,184 @@ export default function EditFinanceCategoryPage({
             },
             { label: 'Editar' },
           ]}
+          buttons={[
+            {
+              id: 'cancel',
+              title: 'Cancelar',
+              icon: X,
+              onClick: () => router.push(`/finance/categories/${id}`),
+              variant: 'outline',
+            },
+            {
+              id: 'save',
+              title: 'Salvar',
+              icon: Save,
+              onClick: () => {
+                if (formRef.current) {
+                  formRef.current.dispatchEvent(
+                    new Event('submit', { cancelable: true, bubbles: true })
+                  );
+                }
+              },
+              disabled: updateMutation.isPending,
+            },
+          ]}
         />
-      </div>
 
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-6">Editar Categoria</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome *</Label>
-              <Input
-                id="name"
-                required
-                value={formData.name}
-                onChange={e =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-start gap-5">
+            <div
+              className="flex h-14 w-14 items-center justify-center rounded-xl shrink-0"
+              style={{
+                background: category.color
+                  ? `linear-gradient(135deg, ${category.color}, ${category.color}cc)`
+                  : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+              }}
+            >
+              <FolderTree className="h-7 w-7 text-white" />
             </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold tracking-tight">
+                {category.name}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Editar Categoria
+              </p>
+            </div>
+            <Badge variant="secondary">Editando</Badge>
+          </div>
+        </Card>
+      </PageHeader>
 
-            <div className="space-y-2">
-              <Label htmlFor="type">Tipo *</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: string) =>
-                  setFormData({
-                    ...formData,
-                    type: value as typeof formData.type,
-                  })
-                }
-              >
-                <SelectTrigger id="type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(FINANCE_CATEGORY_TYPE_LABELS).map(
-                    ([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
+      <PageBody>
+        <Card className="p-4 sm:p-6 w-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
+          <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
+            {/* Row 1: Name + Parent */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">
+                  Nome <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={e =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Nome da categoria"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="parentId">Categoria Pai</Label>
+                <Select
+                  value={formData.parentId || 'none'}
+                  onValueChange={v =>
+                    setFormData({
+                      ...formData,
+                      parentId: v === 'none' ? '' : v,
+                    })
+                  }
+                >
+                  <SelectTrigger id="parentId">
+                    <SelectValue placeholder="Nenhuma (raiz)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma (raiz)</SelectItem>
+                    {availableParents.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {'─'.repeat(cat.level)} {cat.name}
                       </SelectItem>
-                    )
-                  )}
-                </SelectContent>
-              </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="parentId">Categoria Pai</Label>
-              <Select
-                value={formData.parentId || 'none'}
-                onValueChange={v =>
-                  setFormData({
-                    ...formData,
-                    parentId: v === 'none' ? '' : v,
-                  })
-                }
-              >
-                <SelectTrigger id="parentId">
-                  <SelectValue placeholder="Nenhuma (raiz)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma (raiz)</SelectItem>
-                  {availableParents.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {'─'.repeat(cat.level)} {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Row 2: Type + Status + Order */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="type">
+                  Tipo <span className="text-red-500">*</span>
+                </Label>
+                {isChild ? (
+                  <div className="flex items-center h-9 px-3 rounded-md border bg-muted text-sm text-muted-foreground">
+                    {FINANCE_CATEGORY_TYPE_LABELS[formData.type]}
+                    <span className="ml-2 text-xs">(herdado do pai)</span>
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value: string) =>
+                      setFormData({
+                        ...formData,
+                        type: value as FinanceCategoryType,
+                      })
+                    }
+                  >
+                    <SelectTrigger id="type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(FINANCE_CATEGORY_TYPE_LABELS).map(
+                        ([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+                {hasChildren && !isChild && (
+                  <p className="text-xs text-amber-500">
+                    Alterar o tipo irá propagar para todas as subcategorias.
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.isActive ? 'active' : 'inactive'}
+                  onValueChange={v =>
+                    setFormData({ ...formData, isActive: v === 'active' })
+                  }
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Ativa</SelectItem>
+                    <SelectItem value="inactive">Inativa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="displayOrder">Ordem de Exibição</Label>
+                <Input
+                  id="displayOrder"
+                  type="number"
+                  value={formData.displayOrder}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      displayOrder: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="displayOrder">Ordem de Exibição</Label>
-              <Input
-                id="displayOrder"
-                type="number"
-                value={formData.displayOrder}
-                onChange={e =>
-                  setFormData({
-                    ...formData,
-                    displayOrder: parseInt(e.target.value) || 0,
-                  })
-                }
-              />
-            </div>
-
-            <div className="md:col-span-2 space-y-2">
+            {/* Row 3: Description */}
+            <div className="grid gap-2">
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
@@ -260,11 +390,13 @@ export default function EditFinanceCategoryPage({
                 onChange={e =>
                   setFormData({ ...formData, description: e.target.value })
                 }
+                placeholder="Descrição opcional da categoria"
                 rows={3}
               />
             </div>
 
-            <div className="space-y-2">
+            {/* Row 4: Color */}
+            <div className="grid gap-2 max-w-[200px]">
               <Label htmlFor="color">Cor</Label>
               <Input
                 id="color"
@@ -273,44 +405,12 @@ export default function EditFinanceCategoryPage({
                 onChange={e =>
                   setFormData({ ...formData, color: e.target.value })
                 }
+                className="h-10 cursor-pointer"
               />
             </div>
-
-            <div className="flex items-center gap-3 pt-6">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={e =>
-                  setFormData({ ...formData, isActive: e.target.checked })
-                }
-                className="h-4 w-4 rounded border-border"
-              />
-              <Label htmlFor="isActive" className="cursor-pointer">
-                Categoria ativa
-              </Label>
-            </div>
-          </div>
-
-          <div className="flex gap-2 justify-end pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push(`/finance/categories/${id}`)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </div>
-        </form>
-      </Card>
-    </div>
+          </form>
+        </Card>
+      </PageBody>
+    </PageLayout>
   );
 }

@@ -1,13 +1,18 @@
 /**
  * Finance Category Detail Page
- * Follows the manufacturer detail page pattern with PageBreadcrumb, InfoField, MetadataSection
+ * Follows company detail page pattern: PageLayout > PageActionBar > Identity Card > Content
  */
 
 'use client';
 
-import { PageBreadcrumb } from '@/components/layout/page-breadcrumb';
+import { GridLoading } from '@/components/handlers/grid-loading';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
 import { InfoField } from '@/components/shared/info-field';
-import { MetadataSection } from '@/components/shared/metadata-section';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,7 +21,13 @@ import { useDeleteFinanceCategory, useFinanceCategory } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
 import { FINANCE_CATEGORY_TYPE_LABELS } from '@/types/finance';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import { Edit, FolderTree, Info, Trash } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  Edit,
+  FolderTree,
+  Trash,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -50,101 +61,140 @@ export default function FinanceCategoryDetailPage({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="space-y-4 w-full max-w-2xl">
-          <div className="h-8 bg-muted animate-pulse rounded" />
-          <div className="h-64 bg-muted animate-pulse rounded" />
-        </div>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Categorias', href: '/finance/categories' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <GridLoading count={3} layout="list" size="md" />
+        </PageBody>
+      </PageLayout>
     );
   }
 
   if (!category) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-destructive">Categoria não encontrada.</p>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Categorias', href: '/finance/categories' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <Card className="bg-white/5 p-12 text-center">
+            <FolderTree className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-semibold mb-2">
+              Categoria não encontrada
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              A categoria que você está procurando não existe ou foi removida.
+            </p>
+            <Button onClick={() => router.push('/finance/categories')}>
+              Voltar para Categorias
+            </Button>
+          </Card>
+        </PageBody>
+      </PageLayout>
     );
   }
 
+  const actionButtons = [];
+  if (canDelete && !category.isSystem) {
+    actionButtons.push({
+      id: 'delete',
+      title: 'Excluir',
+      icon: Trash,
+      onClick: () => setIsPinOpen(true),
+      variant: 'outline' as const,
+    });
+  }
+  if (canEdit && !category.isSystem) {
+    actionButtons.push({
+      id: 'edit',
+      title: 'Editar',
+      icon: Edit,
+      onClick: () => router.push(`/finance/categories/${id}/edit`),
+    });
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex w-full items-center justify-between">
-        <PageBreadcrumb
-          items={[
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={[
             { label: 'Financeiro', href: '/finance' },
             { label: 'Categorias', href: '/finance/categories' },
-            {
-              label: category.name,
-              href: `/finance/categories/${id}`,
-            },
+            { label: category.name },
           ]}
+          buttons={actionButtons}
         />
-        <div className="flex gap-2">
-          {canDelete && !category.isSystem && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsPinOpen(true)}
-              className="gap-2"
-            >
-              <Trash className="h-4 w-4 text-red-800" />
-              Excluir
-            </Button>
-          )}
 
-          {canEdit && !category.isSystem && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push(`/finance/categories/${id}/edit`)}
-              className="gap-2"
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-start gap-5">
+            <div
+              className="flex h-14 w-14 items-center justify-center rounded-xl shrink-0"
+              style={{
+                background: category.color
+                  ? `linear-gradient(135deg, ${category.color}, ${category.color}cc)`
+                  : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+              }}
             >
-              <Edit className="h-4 w-4 text-sky-500" />
-              Editar
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Hero Card */}
-      <Card className="p-4 sm:p-6">
-        <div className="flex gap-4 sm:flex-row items-center sm:gap-6">
-          <div
-            className="flex items-center justify-center h-10 w-10 md:h-16 md:w-16 rounded-lg shrink-0"
-            style={{
-              backgroundColor: category.color || '#8b5cf6',
-            }}
-          >
-            <FolderTree className="md:h-8 md:w-8 text-white" />
-          </div>
-          <div className="flex justify-between flex-1 gap-4 flex-row items-center">
-            <div>
-              <h1 className="text-lg sm:text-3xl font-bold tracking-tight">
-                {category.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
+              <FolderTree className="h-7 w-7 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight">
+                  {category.name}
+                </h1>
+                <Badge variant={category.isActive ? 'success' : 'secondary'}>
+                  {category.isActive ? 'Ativa' : 'Inativa'}
+                </Badge>
+                {category.isSystem && (
+                  <Badge variant="outline">Sistema</Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5">
                 {FINANCE_CATEGORY_TYPE_LABELS[category.type]}
                 {category.parentName &&
-                  ` • Subcategoria de ${category.parentName}`}
+                  ` · Subcategoria de ${category.parentName}`}
               </p>
             </div>
-            <div className="flex gap-2">
-              <Badge variant={category.isActive ? 'success' : 'secondary'}>
-                {category.isActive ? 'Ativa' : 'Inativa'}
-              </Badge>
-              {category.isSystem && <Badge variant="outline">Sistema</Badge>}
+            <div className="flex flex-col gap-2 shrink-0 text-sm">
+              {category.createdAt && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4 text-blue-500" />
+                  <span>
+                    {new Date(category.createdAt).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              )}
+              {category.updatedAt && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4 text-amber-500" />
+                  <span>
+                    {new Date(category.updatedAt).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </PageHeader>
 
-      {/* Details Card */}
-      <Card className="flex flex-col gap-10 sm:p-6">
-        <div>
-          <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4 text-white/60">
-            <Info className="h-6 w-6" />
+      <PageBody>
+        {/* Details */}
+        <Card className="p-4 sm:p-6 w-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
+          <h3 className="text-lg uppercase font-semibold flex items-center gap-2 mb-4">
+            <FolderTree className="h-5 w-5" />
             Informações
           </h3>
           <div className="grid md:grid-cols-3 gap-6">
@@ -155,10 +205,6 @@ export default function FinanceCategoryDetailPage({
               copyTooltip="Copiar Nome"
             />
             <InfoField label="Slug" value={category.slug} showCopyButton />
-            <InfoField
-              label="Tipo"
-              value={FINANCE_CATEGORY_TYPE_LABELS[category.type]}
-            />
             <InfoField
               label="Ordem de Exibição"
               value={category.displayOrder}
@@ -182,27 +228,16 @@ export default function FinanceCategoryDetailPage({
                 value={category.entryCount}
               />
             )}
+            {category.description && (
+              <InfoField
+                label="Descrição"
+                value={category.description}
+                className="md:col-span-3"
+              />
+            )}
           </div>
-        </div>
-
-        {category.description && (
-          <div>
-            <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4 text-white/60">
-              <FolderTree className="h-6 w-6" />
-              Descrição
-            </h3>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap px-4">
-              {category.description}
-            </p>
-          </div>
-        )}
-      </Card>
-
-      {/* Metadata */}
-      <MetadataSection
-        createdAt={category.createdAt}
-        updatedAt={category.updatedAt}
-      />
+        </Card>
+      </PageBody>
 
       {/* Delete PIN Verification */}
       <VerifyActionPinModal
@@ -212,6 +247,6 @@ export default function FinanceCategoryDetailPage({
         title="Excluir Categoria"
         description="Digite seu PIN de Ação para confirmar a exclusão desta categoria."
       />
-    </div>
+    </PageLayout>
   );
 }
