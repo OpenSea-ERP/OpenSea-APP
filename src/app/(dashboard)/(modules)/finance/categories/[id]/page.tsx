@@ -1,17 +1,25 @@
 /**
  * Finance Category Detail Page
+ * Follows the manufacturer detail page pattern with PageBreadcrumb, InfoField, MetadataSection
  */
 
 'use client';
 
+import { PageBreadcrumb } from '@/components/layout/page-breadcrumb';
+import { InfoField } from '@/components/shared/info-field';
+import { MetadataSection } from '@/components/shared/metadata-section';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useFinanceCategory } from '@/hooks/finance';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
+import { useDeleteFinanceCategory, useFinanceCategory } from '@/hooks/finance';
+import { usePermissions } from '@/hooks/use-permissions';
 import { FINANCE_CATEGORY_TYPE_LABELS } from '@/types/finance';
-import { ArrowLeft, Edit, FolderTree, Trash } from 'lucide-react';
-import Link from 'next/link';
-import { use } from 'react';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { Edit, FolderTree, Info, Trash } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { use, useCallback, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function FinanceCategoryDetailPage({
   params,
@@ -19,8 +27,26 @@ export default function FinanceCategoryDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
+  const { hasPermission } = usePermissions();
   const { data, isLoading } = useFinanceCategory(id);
+  const deleteMutation = useDeleteFinanceCategory();
   const category = data?.category;
+
+  const canEdit = hasPermission(FINANCE_PERMISSIONS.CATEGORIES.UPDATE);
+  const canDelete = hasPermission(FINANCE_PERMISSIONS.CATEGORIES.DELETE);
+
+  const [isPinOpen, setIsPinOpen] = useState(false);
+
+  const handleDelete = useCallback(async () => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Categoria excluída com sucesso!');
+      router.push('/finance/categories');
+    } catch {
+      toast.error('Erro ao excluir categoria.');
+    }
+  }, [id, deleteMutation, router]);
 
   if (isLoading) {
     return (
@@ -41,31 +67,26 @@ export default function FinanceCategoryDetailPage({
     );
   }
 
-  const handleDelete = () => {
-    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-      alert('Funcionalidade de exclusão será implementada');
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/finance/categories">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Voltar para categorias
-            </Button>
-          </Link>
-        </div>
-
+      <div className="flex w-full items-center justify-between">
+        <PageBreadcrumb
+          items={[
+            { label: 'Financeiro', href: '/finance' },
+            { label: 'Categorias', href: '/finance/categories' },
+            {
+              label: category.name,
+              href: `/finance/categories/${id}`,
+            },
+          ]}
+        />
         <div className="flex gap-2">
-          {!category.isSystem && (
+          {canDelete && !category.isSystem && (
             <Button
               variant="outline"
               size="sm"
-              onClick={handleDelete}
+              onClick={() => setIsPinOpen(true)}
               className="gap-2"
             >
               <Trash className="h-4 w-4 text-red-800" />
@@ -73,16 +94,21 @@ export default function FinanceCategoryDetailPage({
             </Button>
           )}
 
-          <Link href={`/finance/categories/${id}/edit`}>
-            <Button variant="outline" size="sm" className="gap-2">
+          {canEdit && !category.isSystem && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/finance/categories/${id}/edit`)}
+              className="gap-2"
+            >
               <Edit className="h-4 w-4 text-sky-500" />
               Editar
             </Button>
-          </Link>
+          )}
         </div>
       </div>
 
-      {/* Category Info Card */}
+      {/* Hero Card */}
       <Card className="p-4 sm:p-6">
         <div className="flex gap-4 sm:flex-row items-center sm:gap-6">
           <div
@@ -115,63 +141,77 @@ export default function FinanceCategoryDetailPage({
       </Card>
 
       {/* Details Card */}
-      <Card className="p-4 sm:p-6">
-        <h2 className="text-lg font-semibold mb-4">Informações</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Nome</p>
-            <p className="font-medium">{category.name}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Slug</p>
-            <p className="font-medium font-mono text-sm">{category.slug}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Tipo</p>
-            <p className="font-medium">
-              {FINANCE_CATEGORY_TYPE_LABELS[category.type]}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">
-              Ordem de Exibição
-            </p>
-            <p className="font-medium">{category.displayOrder}</p>
-          </div>
-          {category.parentName && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Categoria Pai
-              </p>
-              <p className="font-medium">{category.parentName}</p>
-            </div>
-          )}
-          {category.childrenCount !== undefined &&
-            category.childrenCount > 0 && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Subcategorias
-                </p>
-                <p className="font-medium">{category.childrenCount}</p>
-              </div>
+      <Card className="flex flex-col gap-10 sm:p-6">
+        <div>
+          <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4 text-white/60">
+            <Info className="h-6 w-6" />
+            Informações
+          </h3>
+          <div className="grid md:grid-cols-3 gap-6">
+            <InfoField
+              label="Nome"
+              value={category.name}
+              showCopyButton
+              copyTooltip="Copiar Nome"
+            />
+            <InfoField label="Slug" value={category.slug} showCopyButton />
+            <InfoField
+              label="Tipo"
+              value={FINANCE_CATEGORY_TYPE_LABELS[category.type]}
+            />
+            <InfoField
+              label="Ordem de Exibição"
+              value={category.displayOrder}
+            />
+            {category.parentName && (
+              <InfoField
+                label="Categoria Pai"
+                value={category.parentName}
+              />
             )}
-          {category.entryCount !== undefined && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Lançamentos Vinculados
-              </p>
-              <p className="font-medium">{category.entryCount}</p>
-            </div>
-          )}
+            {category.childrenCount !== undefined &&
+              category.childrenCount > 0 && (
+                <InfoField
+                  label="Subcategorias"
+                  value={category.childrenCount}
+                />
+              )}
+            {category.entryCount !== undefined && (
+              <InfoField
+                label="Lançamentos Vinculados"
+                value={category.entryCount}
+              />
+            )}
+          </div>
         </div>
 
         {category.description && (
-          <div className="mt-6">
-            <p className="text-sm text-muted-foreground mb-1">Descrição</p>
-            <p className="font-medium">{category.description}</p>
+          <div>
+            <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4 text-white/60">
+              <FolderTree className="h-6 w-6" />
+              Descrição
+            </h3>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap px-4">
+              {category.description}
+            </p>
           </div>
         )}
       </Card>
+
+      {/* Metadata */}
+      <MetadataSection
+        createdAt={category.createdAt}
+        updatedAt={category.updatedAt}
+      />
+
+      {/* Delete PIN Verification */}
+      <VerifyActionPinModal
+        isOpen={isPinOpen}
+        onClose={() => setIsPinOpen(false)}
+        onSuccess={handleDelete}
+        title="Excluir Categoria"
+        description="Digite seu PIN de Ação para confirmar a exclusão desta categoria."
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /**
  * Finance Categories Page - Grouped Hierarchy Table
- * Tabela agrupada com hierarquia indentada (3 niveis)
+ * Tabela agrupada com hierarquia indentada (3 níveis)
  */
 
 'use client';
@@ -17,7 +17,13 @@ import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -26,6 +32,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
   useCreateFinanceCategory,
@@ -35,14 +48,6 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 import type { FinanceCategory, FinanceCategoryType } from '@/types/finance';
 import { FINANCE_CATEGORY_TYPE_LABELS } from '@/types/finance';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { Edit, Lock, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
@@ -186,6 +191,7 @@ export default function FinanceCategoriesPage() {
       type: FinanceCategoryType;
       description?: string;
       displayOrder?: number;
+      parentId?: string;
     }) => {
       try {
         await createMutation.mutateAsync(formData);
@@ -316,16 +322,18 @@ export default function FinanceCategoriesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50%]">Nome</TableHead>
+                  <TableHead className="w-[45%]">Nome</TableHead>
                   <TableHead className="w-[120px]">Tipo</TableHead>
                   <TableHead className="w-[100px]">Status</TableHead>
-                  <TableHead className="w-[60px]" />
+                  <TableHead className="w-[100px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {hierarchyRows.map(({ category, level }) => {
                   const isRoot = level === 0;
                   const indent = level * 24;
+                  const showActions =
+                    (canEdit || canDelete) && !category.isSystem;
 
                   return (
                     <TableRow
@@ -348,11 +356,18 @@ export default function FinanceCategoriesPage() {
                             type="button"
                             className="text-left hover:underline cursor-pointer"
                             onClick={() =>
-                              router.push(`/finance/categories/${category.id}`)
+                              router.push(
+                                `/finance/categories/${category.id}`
+                              )
                             }
                           >
                             {category.name}
                           </button>
+                          {category.parentName && (
+                            <span className="text-xs text-muted-foreground hidden sm:inline">
+                              ({category.parentName})
+                            </span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -370,46 +385,91 @@ export default function FinanceCategoriesPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {(canEdit || canDelete) && !category.isSystem && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                        {showActions && (
+                          <>
+                            {/* Desktop: direct icon buttons */}
+                            <div className="hidden sm:flex gap-1">
                               {canEdit && (
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    router.push(
-                                      `/finance/categories/${category.id}`
-                                    )
-                                  }
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Editar
-                                </DropdownMenuItem>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() =>
+                                        router.push(
+                                          `/finance/categories/${category.id}/edit`
+                                        )
+                                      }
+                                    >
+                                      <Edit className="h-4 w-4 text-sky-500" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Editar</TooltipContent>
+                                </Tooltip>
                               )}
                               {canDelete && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-destructive"
-                                    onClick={() =>
-                                      handleDeleteRequest(category.id)
-                                    }
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Excluir
-                                  </DropdownMenuItem>
-                                </>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() =>
+                                        handleDeleteRequest(category.id)
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Excluir</TooltipContent>
+                                </Tooltip>
                               )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            </div>
+
+                            {/* Mobile: dropdown menu */}
+                            <div className="sm:hidden">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {canEdit && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        router.push(
+                                          `/finance/categories/${category.id}/edit`
+                                        )
+                                      }
+                                    >
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Editar
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canDelete && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        className="text-destructive"
+                                        onClick={() =>
+                                          handleDeleteRequest(category.id)
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Excluir
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </>
                         )}
                       </TableCell>
                     </TableRow>
@@ -427,6 +487,7 @@ export default function FinanceCategoriesPage() {
           onSubmit={handleCreate}
           isSubmitting={createMutation.isPending}
           nextDisplayOrder={nextDisplayOrder}
+          categories={categories}
         />
 
         {/* Delete PIN Verification */}
