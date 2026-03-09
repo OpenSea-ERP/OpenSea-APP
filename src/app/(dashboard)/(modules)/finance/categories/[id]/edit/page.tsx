@@ -46,7 +46,8 @@ export default function EditFinanceCategoryPage({
   const { id } = use(params);
   const router = useRouter();
   const { data, isLoading } = useFinanceCategory(id);
-  const { data: allCategoriesData } = useFinanceCategories();
+  const { data: allCategoriesData, isLoading: isLoadingCategories } =
+    useFinanceCategories();
   const updateMutation = useUpdateFinanceCategory();
   const queryClient = useQueryClient();
   const category = data?.category;
@@ -113,6 +114,8 @@ export default function EditFinanceCategoryPage({
     return allCategories
       .filter(c => {
         if (c.id === id || descendants.has(c.id)) return false;
+        // Always include the current parent so it shows in the select
+        if (c.id === category?.parentId) return true;
         if ((levelMap.get(c.id) ?? 0) >= 2) return false;
         return c.type === formData.type || c.type === 'BOTH';
       })
@@ -128,7 +131,7 @@ export default function EditFinanceCategoryPage({
     [allCategories, id]
   );
 
-  if (isLoading) {
+  if (isLoading || isLoadingCategories) {
     return (
       <PageLayout>
         <PageHeader>
