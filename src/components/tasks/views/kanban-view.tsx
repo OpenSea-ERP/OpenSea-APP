@@ -1,6 +1,13 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+} from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -122,7 +129,9 @@ export function KanbanView({
   // Ref for columnIds used inside setLocalCards
   const columnIdsRef = useRef(columnIds);
 
-  useEffect(() => {
+  // useLayoutEffect ensures refs are updated synchronously before any event handlers
+  // (e.g. handleDragEnd) can read them — useEffect would cause stale reads during DnD
+  useLayoutEffect(() => {
     cardsByColumnRef.current = cardsByColumn;
     columnIdsRef.current = columnIds;
   }, [cardsByColumn, columnIds]);
