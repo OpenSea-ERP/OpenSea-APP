@@ -25,6 +25,7 @@ export function useCalendarEvents(params: CalendarEventsQuery) {
     queryFn: () => calendarEventsService.list(params),
     enabled: !!params.startDate && !!params.endDate,
     placeholderData: keepPreviousData,
+    staleTime: 60_000,
   });
 }
 
@@ -33,6 +34,7 @@ export function useCalendarEvent(id: string) {
     queryKey: QUERY_KEYS.CALENDAR_EVENT(id),
     queryFn: () => calendarEventsService.get(id),
     enabled: !!id,
+    staleTime: 30_000,
   });
 }
 
@@ -242,9 +244,9 @@ export function useInviteParticipants() {
 export function useRespondToEvent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ eventId, data }: { eventId: string; data: RespondToEventData }) =>
+    mutationFn: ({ eventId, data }: { eventId: string; userId?: string; data: RespondToEventData }) =>
       calendarEventsService.respondToEvent(eventId, data),
-    onMutate: async ({ eventId, data }) => {
+    onMutate: async ({ eventId, userId, data }) => {
       await queryClient.cancelQueries({
         queryKey: QUERY_KEYS.CALENDAR_EVENT(eventId),
       });
@@ -260,11 +262,11 @@ export function useRespondToEvent() {
             ...previousEvent,
             event: {
               ...previousEvent.event,
-              participants: existingParticipants.map((p) => ({
-                ...p,
-                status: data.status,
-                respondedAt: new Date().toISOString(),
-              })),
+              participants: existingParticipants.map((p) =>
+                userId && p.userId === userId
+                  ? { ...p, status: data.status, respondedAt: new Date().toISOString() }
+                  : p,
+              ),
             },
           },
         );

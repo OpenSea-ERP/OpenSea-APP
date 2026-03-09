@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useRef, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -115,6 +115,8 @@ export const CalendarView = forwardRef<CalendarViewRef, CalendarViewProps>(
     );
   };
 
+  const calendarEvents = useMemo(() => mapToFullCalendarEvents(events), [events]);
+
   return (
     <div className={cn('os-calendar h-full', className)}>
       <FullCalendar
@@ -136,7 +138,7 @@ export const CalendarView = forwardRef<CalendarViewRef, CalendarViewProps>(
           list: 'Agenda',
         }}
         allDayText="Dia inteiro"
-        events={mapToFullCalendarEvents(events)}
+        events={calendarEvents}
         eventContent={renderEventContent}
         eventDisplay="block"
         dateClick={handleDateClick}

@@ -18,6 +18,7 @@ export function useMyCalendars() {
   return useQuery<CalendarsResponse>({
     queryKey: QUERY_KEYS.MY_CALENDARS,
     queryFn: () => calendarsService.listMyCalendars(),
+    staleTime: 300_000,
   });
 }
 

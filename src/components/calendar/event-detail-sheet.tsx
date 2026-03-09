@@ -179,6 +179,7 @@ export function EventDetailSheet({
     try {
       await respondToEvent.mutateAsync({
         eventId: event!.id,
+        userId: currentUserId,
         data: { status },
       });
       const labels = { ACCEPTED: 'aceito', DECLINED: 'recusado', TENTATIVE: 'respondido com talvez' };
@@ -237,10 +238,11 @@ export function EventDetailSheet({
   const currentReminderValue =
     myReminders.length > 0 ? String(myReminders[0].minutesBefore) : '0';
 
+  const PARTICIPANT_PAGE_SIZE = 5;
   const visibleParticipants = showAllParticipants
     ? participants
-    : participants.slice(0, 5);
-  const hiddenCount = participants.length - 5;
+    : participants.slice(0, PARTICIPANT_PAGE_SIZE);
+  const hiddenCount = participants.length - PARTICIPANT_PAGE_SIZE;
 
   return (
     <>
@@ -559,7 +561,7 @@ export function EventDetailSheet({
                   {/* Expanded participant list */}
                   {showAllParticipants && (
                     <div className="space-y-1.5">
-                      {visibleParticipants.map((p) => {
+                      {participants.map((p) => {
                         const displayName = p.userName ?? p.userEmail ?? p.userId;
                         const statusRing = STATUS_RING_COLORS[p.status] ?? STATUS_RING_COLORS.PENDING;
                         return (
@@ -595,16 +597,6 @@ export function EventDetailSheet({
                           </div>
                         );
                       })}
-                      {!showAllParticipants && hiddenCount > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full h-7 text-xs text-muted-foreground"
-                          onClick={() => setShowAllParticipants(true)}
-                        >
-                          Mostrar mais {hiddenCount} participantes
-                        </Button>
-                      )}
                       <Button
                         variant="ghost"
                         size="sm"
