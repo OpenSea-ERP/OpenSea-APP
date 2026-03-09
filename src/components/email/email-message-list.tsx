@@ -95,8 +95,8 @@ interface EmailMessageListProps {
   noAccount: boolean;
   searchQuery: string;
   onSearchChange: (q: string) => void;
-  filter: 'all' | 'unread';
-  onFilterChange: (f: 'all' | 'unread') => void;
+  filter: 'all' | 'unread' | 'starred';
+  onFilterChange: (f: 'all' | 'unread' | 'starred') => void;
   folderName?: string;
   hasMore?: boolean;
   isFetchingNextPage?: boolean;
@@ -550,7 +550,7 @@ export function EmailMessageList({
         {/* Tabs */}
         <Tabs
           value={filter}
-          onValueChange={v => onFilterChange(v as 'all' | 'unread')}
+          onValueChange={v => onFilterChange(v as 'all' | 'unread' | 'starred')}
         >
           <TabsList className="h-9 w-full rounded-xl">
             <TabsTrigger value="all" className="flex-1 text-xs rounded-lg">
@@ -564,6 +564,10 @@ export function EmailMessageList({
               {folderUnreadMessages !== undefined && folderUnreadMessages > 0
                 ? ` (${folderUnreadMessages})`
                 : ''}
+            </TabsTrigger>
+            <TabsTrigger value="starred" className="flex-1 text-xs rounded-lg">
+              <Star className="size-3 mr-1 fill-current" />
+              Estrela
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -597,50 +601,62 @@ export function EmailMessageList({
             {selectedIds.size} selecionado{selectedIds.size > 1 ? 's' : ''}
           </span>
           <Separator orientation="vertical" className="h-4" />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs gap-1.5 rounded-lg"
-            onClick={() => {
-              onBulkMarkRead?.(Array.from(selectedIds), true);
-            }}
-          >
-            <MailOpen className="size-3.5" />
-            Lida
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs gap-1.5 rounded-lg"
-            onClick={() => {
-              onBulkMarkRead?.(Array.from(selectedIds), false);
-            }}
-          >
-            <Mail className="size-3.5" />
-            Não lida
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs gap-1.5 rounded-lg"
-            onClick={() => {
-              onBulkArchive?.(Array.from(selectedIds));
-            }}
-          >
-            <Archive className="size-3.5" />
-            Arquivar
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs gap-1.5 rounded-lg text-destructive hover:text-destructive"
-            onClick={() => {
-              onBulkDelete?.(Array.from(selectedIds));
-            }}
-          >
-            <Trash2 className="size-3.5" />
-            Excluir
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-lg"
+                onClick={() => onBulkMarkRead?.(Array.from(selectedIds), true)}
+                aria-label="Marcar como lida"
+              >
+                <MailOpen className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Marcar como lida</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-lg"
+                onClick={() => onBulkMarkRead?.(Array.from(selectedIds), false)}
+                aria-label="Marcar como não lida"
+              >
+                <Mail className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Marcar como não lida</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-lg"
+                onClick={() => onBulkArchive?.(Array.from(selectedIds))}
+                aria-label="Arquivar"
+              >
+                <Archive className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Arquivar</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-lg text-destructive hover:text-destructive"
+                onClick={() => onBulkDelete?.(Array.from(selectedIds))}
+                aria-label="Excluir"
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Excluir</TooltipContent>
+          </Tooltip>
           <div className="flex-1" />
           <Tooltip>
             <TooltipTrigger asChild>
@@ -750,6 +766,20 @@ export function EmailMessageList({
                   </p>
                   <p className="text-xs text-muted-foreground mt-1.5">
                     Você está em dia!
+                  </p>
+                </div>
+              </>
+            ) : filter === 'starred' ? (
+              <>
+                <div className="size-14 rounded-2xl bg-muted flex items-center justify-center">
+                  <Star className="size-7 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    Nenhuma mensagem com estrela
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Marque mensagens importantes com estrela
                   </p>
                 </div>
               </>

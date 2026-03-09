@@ -128,7 +128,7 @@ export function useEmailPage() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(mid);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [messageFilter, setMessageFilter] = useState<'all' | 'unread'>('all');
+  const [messageFilter, setMessageFilter] = useState<'all' | 'unread' | 'starred'>('all');
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeMode, setComposeMode] = useState<ComposeMode>({ type: 'new' });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -320,10 +320,13 @@ export function useEmailPage() {
 
   // ─── Messages ─────────────────────────────────────────────────────────────
 
+  // 'starred' is client-side only — send 'all' to the server
+  const serverFilter = messageFilter === 'starred' ? 'all' : messageFilter;
+
   const messagesQuery = useEmailMessages({
     accountId: isCentralInbox ? null : selectedAccountId,
     folderId: isCentralInbox ? null : selectedFolderId,
-    filter: messageFilter,
+    filter: serverFilter,
     search: debouncedSearch,
   });
 
@@ -331,14 +334,18 @@ export function useEmailPage() {
 
   const centralInbox = useCentralInboxMessages({
     accountIds: allAccountIds,
-    filter: messageFilter,
+    filter: serverFilter,
     search: debouncedSearch,
     enabled: isCentralInbox,
   });
 
-  const messages = isCentralInbox
+  const rawMessages = isCentralInbox
     ? centralInbox.messages
     : (messagesQuery.data?.pages.flatMap(p => p.data) ?? []);
+
+  const messages = messageFilter === 'starred'
+    ? rawMessages.filter(m => m.isFlagged)
+    : rawMessages;
 
   const messagesTotal = isCentralInbox
     ? centralInbox.total
@@ -637,7 +644,7 @@ export function useEmailPage() {
         setSelectedMessageId(null);
       },
       filter: messageFilter,
-      onFilterChange: (f: 'all' | 'unread') => {
+      onFilterChange: (f: 'all' | 'unread' | 'starred') => {
         setMessageFilter(f);
         setSelectedMessageId(null);
       },
