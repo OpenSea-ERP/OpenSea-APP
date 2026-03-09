@@ -11,6 +11,7 @@ import { InfoField } from '@/components/shared/info-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Absence } from '@/types/hr';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -64,6 +65,8 @@ export default function AbsenceDetailPage() {
 
   const approveAbsence = useApproveAbsence();
   const cancelAbsence = useCancelAbsence();
+
+  const { getName } = useEmployeeMap(absence ? [absence.employeeId, ...(absence.approvedBy ? [absence.approvedBy] : [])] : []);
 
   // ============================================================================
   // LOADING STATE
@@ -217,9 +220,9 @@ export default function AbsenceDetailPage() {
             />
             <InfoField
               label="Funcionário"
-              value={absence.employeeId}
+              value={getName(absence.employeeId)}
               showCopyButton
-              copyTooltip="Copiar ID do funcionário"
+              copyTooltip="Copiar nome do funcionário"
             />
             <InfoField
               label="Data de Início"
@@ -286,9 +289,9 @@ export default function AbsenceDetailPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <InfoField
                 label="Aprovado por"
-                value={absence.approvedBy}
+                value={absence.approvedBy ? getName(absence.approvedBy) : null}
                 showCopyButton
-                copyTooltip="Copiar ID do aprovador"
+                copyTooltip="Copiar nome do funcionário"
               />
               <InfoField
                 label="Aprovado em"

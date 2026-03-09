@@ -11,6 +11,7 @@ import { InfoField } from '@/components/shared/info-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { overtimeService } from '@/services/hr/overtime.service';
 import type { Overtime } from '@/types/hr';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -68,6 +69,8 @@ export default function OvertimeDetailPage() {
         });
       },
     });
+
+  const { getName } = useEmployeeMap(overtime ? [overtime.employeeId, ...(overtime.approvedBy ? [overtime.approvedBy] : [])] : []);
 
   // ============================================================================
   // LOADING STATE
@@ -220,10 +223,10 @@ export default function OvertimeDetailPage() {
             />
             <InfoField
               label="Funcionário"
-              value={overtime.employeeId}
+              value={getName(overtime.employeeId)}
               icon={<User className="h-4 w-4" />}
               showCopyButton
-              copyTooltip="Copiar ID do funcionário"
+              copyTooltip="Copiar nome do funcionário"
             />
             <InfoField
               label="Status"
@@ -258,10 +261,10 @@ export default function OvertimeDetailPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <InfoField
                 label="Aprovado por"
-                value={overtime.approvedBy}
+                value={overtime.approvedBy ? getName(overtime.approvedBy) : null}
                 icon={<User className="h-4 w-4" />}
                 showCopyButton
-                copyTooltip="Copiar ID do aprovador"
+                copyTooltip="Copiar nome do funcionário"
               />
               <InfoField
                 label="Data da aprovação"

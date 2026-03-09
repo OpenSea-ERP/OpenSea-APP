@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { VacationPeriod } from '@/types/hr';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -78,6 +79,8 @@ export default function VacationDetailPage() {
   });
 
   const cancelScheduleMutation = useCancelVacationSchedule();
+
+  const { getName } = useEmployeeMap(vacation ? [vacation.employeeId] : []);
 
   // ============================================================================
   // COMPUTED

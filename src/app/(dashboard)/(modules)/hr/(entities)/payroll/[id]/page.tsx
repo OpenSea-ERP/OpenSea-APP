@@ -11,6 +11,7 @@ import { InfoField } from '@/components/shared/info-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { payrollService } from '@/services/hr/payroll.service';
 import type { Payroll } from '@/types/hr';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -83,6 +84,12 @@ export default function PayrollDetailPage() {
     approveMutation.isPending ||
     payMutation.isPending ||
     cancelMutation.isPending;
+
+  const { getName } = useEmployeeMap(payroll ? [
+    ...(payroll.processedBy ? [payroll.processedBy] : []),
+    ...(payroll.approvedBy ? [payroll.approvedBy] : []),
+    ...(payroll.paidBy ? [payroll.paidBy] : []),
+  ] : []);
 
   // ============================================================================
   // WORKFLOW BUTTONS
@@ -309,7 +316,7 @@ export default function PayrollDetailPage() {
             </h3>
             <div className="grid md:grid-cols-2 gap-6">
               {payroll.processedBy && (
-                <InfoField label="Processado por" value={payroll.processedBy} />
+                <InfoField label="Processado por" value={getName(payroll.processedBy)} />
               )}
               {payroll.processedAt && (
                 <InfoField
@@ -318,7 +325,7 @@ export default function PayrollDetailPage() {
                 />
               )}
               {payroll.approvedBy && (
-                <InfoField label="Aprovado por" value={payroll.approvedBy} />
+                <InfoField label="Aprovado por" value={getName(payroll.approvedBy)} />
               )}
               {payroll.approvedAt && (
                 <InfoField
@@ -327,7 +334,7 @@ export default function PayrollDetailPage() {
                 />
               )}
               {payroll.paidBy && (
-                <InfoField label="Pago por" value={payroll.paidBy} />
+                <InfoField label="Pago por" value={getName(payroll.paidBy)} />
               )}
               {payroll.paidAt && (
                 <InfoField label="Pago em" value={formatDate(payroll.paidAt)} />

@@ -10,6 +10,7 @@ import {
 import { InfoField } from '@/components/shared/info-field';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { deductionsService } from '@/services/hr/deductions.service';
 import type { Deduction } from '@/types/hr';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -67,6 +68,8 @@ export default function DeductionDetailPage() {
       router.push('/hr/deductions');
     },
   });
+
+  const { getName } = useEmployeeMap(deduction ? [deduction.employeeId] : []);
 
   // ============================================================================
   // HANDLERS
@@ -251,9 +254,9 @@ export default function DeductionDetailPage() {
           <div className="grid md:grid-cols-2 gap-6 mt-6">
             <InfoField
               label="Funcionário"
-              value={deduction.employeeId}
+              value={getName(deduction.employeeId)}
               showCopyButton
-              copyTooltip="Copiar ID do funcionário"
+              copyTooltip="Copiar nome do funcionário"
             />
             <InfoField
               label="Motivo"

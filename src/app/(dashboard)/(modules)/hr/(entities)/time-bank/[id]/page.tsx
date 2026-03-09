@@ -11,6 +11,7 @@ import { InfoField } from '@/components/shared/info-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { TimeBank } from '@/types/hr';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -49,6 +50,8 @@ export default function TimeBankDetailPage() {
       return timeBanks.find((tb) => tb.id === timeBankId);
     },
   });
+
+  const { getName } = useEmployeeMap(timeBank ? [timeBank.employeeId] : []);
 
   // ============================================================================
   // LOADING STATE
@@ -120,7 +123,7 @@ export default function TimeBankDetailPage() {
           breadcrumbItems={[
             { label: 'RH', href: '/hr' },
             { label: 'Banco de Horas', href: '/hr/time-bank' },
-            { label: `Funcionário ${timeBank.employeeId.slice(0, 8)}...` },
+            { label: getName(timeBank.employeeId) },
           ]}
         />
 
@@ -139,8 +142,8 @@ export default function TimeBankDetailPage() {
                   {formatBalance(timeBank.balance)}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground mt-0.5 font-mono">
-                Funcionário: {timeBank.employeeId.slice(0, 8)}...
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Funcionário: {getName(timeBank.employeeId)}
               </p>
             </div>
             <div className="flex flex-col gap-2 shrink-0 text-sm">
@@ -175,9 +178,9 @@ export default function TimeBankDetailPage() {
           <div className="grid md:grid-cols-3 gap-6">
             <InfoField
               label="Funcionário"
-              value={timeBank.employeeId}
+              value={getName(timeBank.employeeId)}
               showCopyButton
-              copyTooltip="Copiar ID do funcionário"
+              copyTooltip="Copiar nome do funcionário"
             />
             <InfoField
               label="Ano"

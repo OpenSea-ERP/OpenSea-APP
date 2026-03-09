@@ -11,6 +11,7 @@ import { InfoField } from '@/components/shared/info-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Bonus } from '@/types/hr';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -62,6 +63,8 @@ export default function BonusDetailPage() {
       router.push('/hr/bonuses');
     },
   });
+
+  const { getName } = useEmployeeMap(bonus ? [bonus.employeeId] : []);
 
   // ============================================================================
   // HANDLERS
@@ -206,10 +209,10 @@ export default function BonusDetailPage() {
             />
             <InfoField label="Data" value={formatDate(bonus.date)} />
             <InfoField
-              label="ID do Funcionário"
-              value={bonus.employeeId}
+              label="Funcionário"
+              value={getName(bonus.employeeId)}
               showCopyButton
-              copyTooltip="Copiar ID do funcionário"
+              copyTooltip="Copiar nome do funcionário"
             />
           </div>
         </Card>
