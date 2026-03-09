@@ -158,24 +158,20 @@ export function useMoveCard(boardId: string) {
           const dstColumnId = data.columnId;
           const dstPosition = data.position;
 
-          // Remove card from source column and reindex
           const srcCards = cards
             .filter(c => c.columnId === srcColumnId && c.id !== cardId)
             .sort((a, b) => a.position - b.position);
 
-          // Build destination column cards (without the moved card)
           const dstCards =
             srcColumnId === dstColumnId
-              ? srcCards // same column — already removed
+              ? srcCards
               : cards
                   .filter(c => c.columnId === dstColumnId && c.id !== cardId)
                   .sort((a, b) => a.position - b.position);
 
-          // Insert moved card at destination position
           const updatedCard = { ...movedCard, columnId: dstColumnId, position: dstPosition };
           dstCards.splice(dstPosition, 0, updatedCard);
 
-          // Build lookup of new positions: columnId+cardId → position
           const positionMap = new Map<string, { columnId: string; position: number }>();
           srcCards.forEach((c, i) => positionMap.set(c.id, { columnId: srcColumnId, position: i }));
           dstCards.forEach((c, i) => positionMap.set(c.id, { columnId: dstColumnId, position: i }));
@@ -199,9 +195,6 @@ export function useMoveCard(boardId: string) {
           qc.setQueryData(key, data);
         }
       }
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
     },
   });
 }

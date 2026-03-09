@@ -80,8 +80,5 @@ export function useReorderColumns(boardId: string) {
         qc.setQueryData(BOARD_QUERY_KEYS.BOARD(boardId), context.previousBoard);
       }
     },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
-    },
   });
 }
