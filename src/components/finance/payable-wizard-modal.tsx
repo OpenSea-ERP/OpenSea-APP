@@ -88,7 +88,7 @@ const INITIAL_WIZARD_DATA: WizardData = {
   tags: [],
 };
 
-const STEP_LABELS = ['Tipo', 'Dados', 'Parcelas', 'Anexo', 'Confirmacao'];
+const STEP_LABELS = ['Tipo', 'Dados', 'Parcelas', 'Anexo', 'Confirmação'];
 
 // ============================================================================
 // PROPS
@@ -196,7 +196,7 @@ export function PayableWizardModal({
           );
         } catch {
           toast.warning(
-            'Conta criada, mas o anexo nao foi enviado. Voce pode envia-lo pela pagina de detalhes.'
+            'Conta criada, mas o anexo não foi enviado. Você pode enviá-lo pela página de detalhes.'
           );
         }
       }

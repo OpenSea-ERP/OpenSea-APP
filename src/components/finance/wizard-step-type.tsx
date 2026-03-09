@@ -23,22 +23,22 @@ const SUB_TYPE_CONFIG: {
   {
     type: 'BOLETO',
     icon: Barcode,
-    description: 'Pagamento via boleto bancario',
+    description: 'Pagamento via boleto bancário',
   },
   {
     type: 'NOTA_FISCAL',
     icon: FileText,
-    description: 'Nota fiscal de servico ou produto',
+    description: 'Nota fiscal de serviço ou produto',
   },
   {
     type: 'TRANSFERENCIA',
     icon: ArrowRightLeft,
-    description: 'Transferencia bancaria ou PIX',
+    description: 'Transferência bancária ou PIX',
   },
   {
     type: 'CARTAO',
     icon: CreditCard,
-    description: 'Fatura de cartao de credito',
+    description: 'Fatura de cartão de crédito',
   },
   {
     type: 'OUTROS',
