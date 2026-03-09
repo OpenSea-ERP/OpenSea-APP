@@ -14,7 +14,6 @@ import {
 import {
   MoreHorizontal,
   Pencil,
-  CheckCircle2,
   ArrowRightLeft,
   ArrowUpDown,
   Trash2,
@@ -51,13 +50,14 @@ export function ColumnOptionsMenu({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const otherColumns = allColumns.filter(c => c.id !== column.id);
+  const canMoveCards = cards.length > 0 && otherColumns.length > 0;
+  const canSortCards = cards.length > 1;
 
   // ─── Change color ───
   function handleChangeColor(color: string | null) {
     updateColumn.mutate(
       { columnId: column.id, data: { color } },
       {
-        onSuccess: () => toast.success('Cor atualizada!'),
         onError: () => toast.error('Erro ao alterar cor.'),
       }
     );
@@ -69,22 +69,6 @@ export function ColumnOptionsMenu({
       { columnId, data: { wipLimit } },
       {
         onError: () => toast.error('Erro ao definir limite.'),
-      }
-    );
-  }
-
-  // ─── Toggle isDone ───
-  function handleToggleDone() {
-    updateColumn.mutate(
-      { columnId: column.id, data: { isDone: !column.isDone } },
-      {
-        onSuccess: () =>
-          toast.success(
-            column.isDone
-              ? 'Coluna desmarcada como concluída.'
-              : 'Coluna marcada como concluída!'
-          ),
-        onError: () => toast.error('Erro ao atualizar coluna.'),
       }
     );
   }
@@ -104,9 +88,6 @@ export function ColumnOptionsMenu({
           data: { columnId: targetColumnId, position: i },
         });
       }
-      toast.success(
-        `${cards.length} cartão(s) movido(s) para "${targetCol?.title}".`
-      );
     } catch {
       toast.error('Erro ao mover cartões.');
     }
@@ -140,12 +121,6 @@ export function ColumnOptionsMenu({
           })
         )
       );
-      const labels: Record<string, string> = {
-        title: 'nome',
-        priority: 'prioridade',
-        dueDate: 'vencimento',
-      };
-      toast.success(`Cartões ordenados por ${labels[sortBy]}.`);
     } catch {
       toast.error('Erro ao ordenar cartões.');
     }
@@ -154,10 +129,7 @@ export function ColumnOptionsMenu({
   // ─── Delete column ───
   function handleDeleteColumn() {
     deleteColumn.mutate(column.id, {
-      onSuccess: () => {
-        toast.success('Coluna excluída.');
-        setShowDeleteDialog(false);
-      },
+      onSuccess: () => setShowDeleteDialog(false),
       onError: () => toast.error('Erro ao excluir coluna.'),
     });
   }
@@ -179,7 +151,7 @@ export function ColumnOptionsMenu({
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuContent align="start" className="w-60">
           {/* Rename */}
           <DropdownMenuItem
             onClick={() => {
@@ -197,6 +169,8 @@ export function ColumnOptionsMenu({
             onChangeColor={handleChangeColor}
           />
 
+          <DropdownMenuSeparator className="bg-gray-200 dark:bg-white/15" />
+
           {/* WIP Limit */}
           <ColumnWipLimitPopover
             columnId={column.id}
@@ -204,70 +178,62 @@ export function ColumnOptionsMenu({
             onSaveWip={handleSaveWip}
           />
 
-          {/* Toggle isDone */}
-          <DropdownMenuItem onClick={handleToggleDone}>
-            <CheckCircle2
-              className={cn('h-4 w-4 mr-2', column.isDone && 'text-green-500')}
-            />
-            {column.isDone ? 'Desmarcar concluída' : 'Marcar como concluída'}
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
           {/* Move all cards */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger
-              disabled={cards.length === 0 || otherColumns.length === 0}
-            >
-              <ArrowRightLeft className="h-4 w-4 mr-2" />
-              Mover cartões para...
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              {otherColumns.map(col => (
-                <DropdownMenuItem
-                  key={col.id}
-                  onClick={() => handleMoveAllCards(col.id)}
-                >
-                  <span
-                    className="h-2.5 w-2.5 rounded-full shrink-0 mr-2"
-                    style={{ backgroundColor: col.color ?? '#6b7280' }}
-                  />
-                  {col.title}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          {canMoveCards && (
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <ArrowRightLeft className="h-4 w-4 mr-2" />
+                Mover cartões para...
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {otherColumns.map(col => (
+                  <DropdownMenuItem
+                    key={col.id}
+                    onClick={() => handleMoveAllCards(col.id)}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 rounded-full shrink-0 mr-2"
+                      style={{ backgroundColor: col.color ?? '#6b7280' }}
+                    />
+                    {col.title}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          )}
 
           {/* Sort cards */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger disabled={cards.length <= 1}>
-              <ArrowUpDown className="h-4 w-4 mr-2" />
-              Ordenar cartões por...
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => handleSortCards('title')}>
-                Nome (A-Z)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSortCards('priority')}>
-                Prioridade
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSortCards('dueDate')}>
-                Vencimento
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          {canSortCards && (
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                Ordenar cartões por...
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => handleSortCards('title')}>
+                  Nome (A-Z)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSortCards('priority')}>
+                  Prioridade
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSortCards('dueDate')}>
+                  Vencimento
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          )}
 
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className="bg-gray-200 dark:bg-white/15" />
 
           {/* Delete column */}
-          <DropdownMenuItem
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-destructive focus:text-destructive"
-            disabled={column.isDefault}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Excluir coluna
-          </DropdownMenuItem>
+          {!column.isDefault && (
+            <DropdownMenuItem
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2 text-rose-500" />
+              Excluir coluna
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

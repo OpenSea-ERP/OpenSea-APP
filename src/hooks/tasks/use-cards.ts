@@ -89,12 +89,6 @@ export function useUpdateCard(boardId: string) {
         }
       }
     },
-    onSettled: (_, __, variables) => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({
-        queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
-      });
-    },
   });
 }
 

@@ -91,7 +91,6 @@ export function CalendarView({
       updateCard.mutate(
         { cardId, data: { dueDate: newDate.toISOString() } },
         {
-          onSuccess: () => toast.success('Prazo atualizado'),
           onError: () => {
             toast.error('Erro ao atualizar prazo');
             info.revert();

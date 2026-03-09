@@ -137,12 +137,6 @@ export function useUpdateCalendarEvent() {
         }
       }
     },
-    onSettled: (_, __, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.CALENDAR_EVENT(variables.id),
-      });
-    },
   });
 }
 
@@ -175,9 +169,6 @@ export function useDeleteCalendarEvent() {
           queryClient.setQueryData(key, data);
         }
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
     },
   });
 }

@@ -34,18 +34,12 @@ export function ColumnWipLimitPopover({
     }
 
     onSaveWip(columnId, parsed);
-    if (parsed !== null) {
-      toast.success(`Limite WIP definido: ${parsed}`);
-    } else {
-      toast.success('Limite WIP removido.');
-    }
     setShowWipPopover(false);
   }
 
   function handleClearWip() {
     onSaveWip(columnId, null);
     setWipValue('');
-    toast.success('Limite WIP removido.');
     setShowWipPopover(false);
   }
 
@@ -59,7 +53,7 @@ export function ColumnWipLimitPopover({
           }}
         >
           <Gauge className="h-4 w-4 mr-2" />
-          Limite WIP
+          Limite de cartões
           {wipLimit && (
             <span className="ml-auto text-xs text-muted-foreground">
               {wipLimit}

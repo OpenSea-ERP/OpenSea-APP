@@ -208,10 +208,7 @@ function KanbanColumn({
     updateColumn.mutate(
       { columnId: column.id, data: { title: trimmed } },
       {
-        onSuccess: () => {
-          setIsEditing(false);
-          toast.success('Coluna renomeada!');
-        },
+        onSuccess: () => setIsEditing(false),
         onError: () => {
           toast.error('Erro ao renomear coluna.');
           cancelEditing();
