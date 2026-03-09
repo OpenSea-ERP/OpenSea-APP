@@ -47,7 +47,37 @@ export function useUpdateCard(boardId: string) {
   return useMutation({
     mutationFn: ({ cardId, data }: { cardId: string; data: UpdateCardRequest }) =>
       cardsService.update(boardId, cardId, data),
-    onSuccess: (_, variables) => {
+    onMutate: async ({ cardId, data }) => {
+      await qc.cancelQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.cancelQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+
+      const previousCardsQueries = qc.getQueriesData<CardsResponse>({
+        queryKey: CARD_QUERY_KEYS.CARDS(boardId),
+      });
+
+      qc.setQueriesData<CardsResponse>(
+        { queryKey: CARD_QUERY_KEYS.CARDS(boardId) },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            cards: old.cards.map((c) =>
+              c.id === cardId ? { ...c, ...data } : c,
+            ),
+          };
+        },
+      );
+
+      return { previousCardsQueries };
+    },
+    onError: (_, __, context) => {
+      if (context?.previousCardsQueries) {
+        for (const [key, data] of context.previousCardsQueries) {
+          qc.setQueryData(key, data);
+        }
+      }
+    },
+    onSettled: (_, __, variables) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId) });
     },

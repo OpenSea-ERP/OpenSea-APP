@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect, useCallback, Suspense } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback, Suspense, lazy } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useBoard } from '@/hooks/tasks/use-boards';
@@ -14,7 +14,9 @@ import {
 import { KanbanView } from '@/components/tasks/views/kanban-view';
 import { ListView } from '@/components/tasks/views/list-view';
 import { TableView } from '@/components/tasks/views/table-view';
-import { CalendarView } from '@/components/tasks/views/calendar-view';
+const CalendarView = lazy(() =>
+  import('@/components/tasks/views/calendar-view').then(m => ({ default: m.CalendarView }))
+);
 import { CardDetailModal } from '@/components/tasks/cards/card-detail-modal';
 import { BoardSettingsDialog } from '@/components/tasks/boards/board-settings-dialog';
 import { getGradientForBoard } from '@/components/tasks/shared/board-gradients';
@@ -298,13 +300,15 @@ function BoardPageContent() {
         )}
 
         {currentView === 'calendario' && (
-          <CalendarView
-            board={board}
-            cards={filteredCards}
-            boardId={boardId}
-            readOnly={isViewer}
-            onCardClick={handleCardClick}
-          />
+          <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+            <CalendarView
+              board={board}
+              cards={filteredCards}
+              boardId={boardId}
+              readOnly={isViewer}
+              onCardClick={handleCardClick}
+            />
+          </Suspense>
         )}
       </div>
 

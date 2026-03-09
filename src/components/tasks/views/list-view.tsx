@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import type { Board, Card } from '@/types/tasks';
 import { PRIORITY_CONFIG } from '@/types/tasks';
+import { isOverdue, formatDateShort } from '../_utils';
 import { getGradientForBoard } from '../shared/board-gradients';
 import { CardInlineCreate } from '../cards/card-inline-create';
 import { MemberAvatar } from '../shared/member-avatar';
@@ -19,19 +20,6 @@ interface ListViewProps {
   cards: Card[];
   boardId: string;
   onCardClick?: (card: Card) => void;
-}
-
-function isOverdue(dateStr: string | null): boolean {
-  if (!dateStr) return false;
-  return new Date(dateStr) < new Date();
-}
-
-function formatDueDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
 }
 
 export function ListView({
@@ -115,13 +103,13 @@ export function ListView({
             {!isCollapsed && (
               <div className="border-t border-gray-200 dark:border-white/10">
                 {colCards.length === 0 ? (
-                  <div className="px-4 py-3 text-xs text-muted-foreground">
-                    Nenhum cartão nesta coluna
+                  <div role="status" aria-live="polite" className="px-4 py-3 text-xs text-muted-foreground flex items-center justify-between">
+                    <span>Nenhum cartão nesta coluna</span>
                   </div>
                 ) : (
                   colCards.map(card => {
                     const priorityConfig = PRIORITY_CONFIG[card.priority];
-                    const overdue = isOverdue(card.dueDate);
+                    const overdue = isOverdue(card.dueDate, card.status);
                     const hasComments = card._count && card._count.comments > 0;
 
                     return (
@@ -177,7 +165,7 @@ export function ListView({
                             )}
                           >
                             <CalendarClock className="h-3 w-3" />
-                            {formatDueDate(card.dueDate)}
+                            {formatDateShort(card.dueDate)}
                           </span>
                         )}
 

@@ -306,8 +306,8 @@ export function KanbanView({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="kanban-scroll h-full overflow-x-auto overflow-y-hidden pb-2">
-        <div className="flex gap-3 min-w-max h-full">
+      <div role="region" aria-label="Quadro Kanban" className="kanban-scroll h-full overflow-x-auto sm:overflow-y-hidden overflow-y-auto pb-2">
+        <div className="flex flex-col sm:flex-row gap-3 sm:min-w-max h-full">
           <SortableContext
             items={columnIds}
             strategy={horizontalListSortingStrategy}
@@ -450,7 +450,7 @@ function KanbanColumn({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex flex-col w-[280px] shrink-0',
+        'flex flex-col w-full sm:w-[280px] shrink-0',
         isDragging && 'opacity-40'
       )}
     >
@@ -521,6 +521,11 @@ function KanbanColumn({
               ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/15'
               : 'text-muted-foreground bg-muted/50'
           )}
+          aria-label={
+            column.wipLimit
+              ? `${cards.length} de ${column.wipLimit} cartões${isOverWip ? ' (limite excedido)' : ''}`
+              : `${cards.length} cartões`
+          }
         >
           {cards.length}
           {column.wipLimit ? `/${column.wipLimit}` : ''}
@@ -650,7 +655,7 @@ function AddColumnButton({ boardId }: { boardId: string }) {
 
   if (!isAdding) {
     return (
-      <div className="w-[280px] shrink-0">
+      <div className="w-full sm:w-[280px] shrink-0">
         <Button
           variant="ghost"
           size="sm"
@@ -665,7 +670,7 @@ function AddColumnButton({ boardId }: { boardId: string }) {
   }
 
   return (
-    <div className="w-[280px] shrink-0 space-y-2 bg-muted/30 dark:bg-white/[0.02] rounded-xl p-3 border border-gray-200 dark:border-white/10">
+    <div className="w-full sm:w-[280px] shrink-0 space-y-2 bg-muted/30 dark:bg-white/[0.02] rounded-xl p-3 border border-gray-200 dark:border-white/10">
       <input
         autoFocus
         type="text"

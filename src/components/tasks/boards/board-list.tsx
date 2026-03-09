@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/tasks/shared/empty-states';
@@ -15,7 +16,7 @@ interface BoardListProps {
   emptyDescription?: string;
 }
 
-export function BoardList({
+export const BoardList = memo(function BoardList({
   boards,
   isLoading,
   emptyTitle = 'Nenhum quadro encontrado',
@@ -51,6 +52,7 @@ export function BoardList({
           <button
             key={board.id}
             type="button"
+            aria-label={`Abrir quadro ${board.title}`}
             className="group relative overflow-hidden rounded-xl h-32 text-left cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             style={gradient.style}
             onClick={() => router.push(`/tasks/${board.id}`)}
@@ -120,4 +122,4 @@ export function BoardList({
       })}
     </div>
   );
-}
+});

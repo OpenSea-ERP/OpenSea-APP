@@ -1,8 +1,10 @@
 'use client';
 
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { Card } from '@/types/tasks';
 import { PRIORITY_CONFIG } from '@/types/tasks';
+import { isOverdue, formatDueDate, PRIORITY_HEX } from '../_utils';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { MessageSquare, Paperclip, CalendarClock } from 'lucide-react';
@@ -15,48 +17,17 @@ interface CardItemProps {
   isDragOverlay?: boolean;
 }
 
-function isCardOverdue(
-  dueDate: string | null | undefined,
-  status: string
-): boolean {
-  if (!dueDate) return false;
-  if (status === 'DONE' || status === 'CANCELED') return false;
-  return new Date(dueDate) < new Date();
-}
-
-function formatDueDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diff = date.getTime() - now.getTime();
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) return 'Hoje';
-  if (days === 1) return 'Amanhã';
-  if (days === -1) return 'Ontem';
-  if (days < -1) return `${Math.abs(days)}d atrás`;
-  if (days <= 7) return `${days}d`;
-
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-}
-
 function getCardTopColor(card: Card): string | null {
   if (card.labels && card.labels.length > 0) {
     return card.labels[0].color;
   }
   if (card.priority !== 'NONE') {
-    const dotColor = PRIORITY_CONFIG[card.priority].dotColor;
-    const colorMap: Record<string, string> = {
-      'bg-red-500': '#ef4444',
-      'bg-orange-500': '#f97316',
-      'bg-yellow-500': '#eab308',
-      'bg-blue-500': '#3b82f6',
-    };
-    return colorMap[dotColor] ?? null;
+    return PRIORITY_HEX[card.priority];
   }
   return null;
 }
 
-export function CardItem({
+export const CardItem = memo(function CardItem({
   card,
   onClick,
   boardId,
@@ -84,7 +55,7 @@ export function CardItem({
   };
 
   const topColor = getCardTopColor(card);
-  const overdue = isCardOverdue(card.dueDate, card.status);
+  const overdue = isOverdue(card.dueDate, card.status);
   const counts = card._count;
   const hasSubtasks = counts && counts.subtasks > 0;
   const hasComments = counts && counts.comments > 0;
@@ -102,6 +73,9 @@ export function CardItem({
       style={style}
       {...attributes}
       {...listeners}
+      role="button"
+      tabIndex={0}
+      aria-label={`Abrir cartão ${card.title}`}
       className={cn(
         'group relative rounded-lg border bg-white dark:bg-white/[0.06] border-gray-200 dark:border-white/10 overflow-hidden cursor-grab active:cursor-grabbing transition-all duration-150',
         isDragging && 'opacity-30',
@@ -114,6 +88,12 @@ export function CardItem({
         if (isDragging) return;
         e.stopPropagation();
         onClick();
+      }}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (!isDragging) onClick();
+        }
       }}
     >
       {/* Color bar at top */}
@@ -201,4 +181,4 @@ export function CardItem({
       </div>
     </div>
   );
-}
+});

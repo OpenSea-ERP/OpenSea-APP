@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import type { Board, Card } from '@/types/tasks';
 import { PRIORITY_CONFIG } from '@/types/tasks';
+import { isOverdue, formatDateShort } from '../_utils';
 import { getGradientForBoard } from '../shared/board-gradients';
 import { PriorityBadge } from '../shared/priority-badge';
 import { MemberAvatar } from '../shared/member-avatar';
@@ -32,19 +33,6 @@ const PRIORITY_ORDER: Record<string, number> = {
   LOW: 1,
   NONE: 0,
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-function isOverdue(dateStr: string | null): boolean {
-  if (!dateStr) return false;
-  return new Date(dateStr) < new Date();
-}
 
 export function TableView({
   board,
@@ -184,6 +172,7 @@ export function TableView({
               <tr>
                 <td
                   colSpan={7}
+                  role="status"
                   className="px-4 py-8 text-center text-muted-foreground text-sm"
                 >
                   Nenhum cartão encontrado
@@ -194,7 +183,7 @@ export function TableView({
                 const colInfo = columnMap.get(card.columnId);
                 const columnName = colInfo?.title ?? '--';
                 const colColor = colInfo?.color || gradient.from;
-                const overdue = isOverdue(card.dueDate);
+                const overdue = isOverdue(card.dueDate, card.status);
 
                 return (
                   <tr
@@ -256,7 +245,7 @@ export function TableView({
                               : 'text-muted-foreground'
                           )}
                         >
-                          {formatDate(card.dueDate)}
+                          {formatDateShort(card.dueDate)}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">--</span>

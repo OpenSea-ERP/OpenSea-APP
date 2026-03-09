@@ -21,14 +21,14 @@ const SHORTCUT_SECTIONS: { title: string; shortcuts: ShortcutEntry[] }[] = [
   {
     title: 'Geral',
     shortcuts: [
-      { key: 'N', description: 'Novo card' },
-      { key: 'E', description: 'Editar card selecionado' },
+      { key: 'N', description: 'Novo cartão' },
+      { key: 'E', description: 'Editar cartão selecionado' },
       { key: '/', description: 'Abrir busca' },
       { key: '?', description: 'Mostrar atalhos' },
     ],
   },
   {
-    title: 'Card',
+    title: 'Cartão',
     shortcuts: [
       { key: '1', description: 'Prioridade Urgente' },
       { key: '2', description: 'Prioridade Alta' },
@@ -37,18 +37,18 @@ const SHORTCUT_SECTIONS: { title: string; shortcuts: ShortcutEntry[] }[] = [
       { key: 'L', description: 'Atribuir etiqueta' },
       { key: 'M', description: 'Atribuir membro' },
       { key: 'P', description: 'Definir prazo' },
-      { key: 'D', description: 'Duplicar card' },
-      { key: 'Delete', description: 'Arquivar card' },
+      { key: 'D', description: 'Duplicar cartão' },
+      { key: 'Delete', description: 'Arquivar cartão' },
     ],
   },
   {
     title: 'Navegação',
     shortcuts: [
-      { key: '\u2191', description: 'Card acima' },
-      { key: '\u2193', description: 'Card abaixo' },
+      { key: '\u2191', description: 'Cartão acima' },
+      { key: '\u2193', description: 'Cartão abaixo' },
       { key: '\u2190', description: 'Coluna anterior' },
       { key: '\u2192', description: 'Próxima coluna' },
-      { key: 'Enter', description: 'Abrir card selecionado' },
+      { key: 'Enter', description: 'Abrir cartão selecionado' },
     ],
   },
 ];

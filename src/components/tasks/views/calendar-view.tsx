@@ -12,8 +12,9 @@ import type {
   EventContentArg,
 } from '@fullcalendar/core';
 import { cn } from '@/lib/utils';
-import type { Board, Card, CardPriority } from '@/types/tasks';
+import type { Board, Card } from '@/types/tasks';
 import { PRIORITY_CONFIG } from '@/types/tasks';
+import { PRIORITY_HEX } from '../_utils';
 import { useUpdateCard } from '@/hooks/tasks/use-cards';
 import { getGradientForBoard } from '../shared/board-gradients';
 import { toast } from 'sonner';
@@ -25,14 +26,6 @@ interface CalendarViewProps {
   readOnly?: boolean;
   onCardClick?: (card: Card) => void;
 }
-
-const PRIORITY_HEX: Record<CardPriority, string> = {
-  URGENT: '#ef4444',
-  HIGH: '#f97316',
-  MEDIUM: '#eab308',
-  LOW: '#3b82f6',
-  NONE: '#9ca3af',
-};
 
 export function CalendarView({
   board,

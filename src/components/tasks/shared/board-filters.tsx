@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -33,6 +34,8 @@ export function BoardFilters({
   labels = [],
   members = [],
 }: BoardFiltersProps) {
+  const [filterOpen, setFilterOpen] = useState(false);
+
   const activeCount = [
     filters.priority,
     filters.assigneeId,
@@ -45,11 +48,13 @@ export function BoardFilters({
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {/* Filter button */}
-      <Popover>
+      <Popover open={filterOpen} onOpenChange={setFilterOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             size="sm"
+            aria-label="Abrir filtros"
+            aria-expanded={filterOpen}
             className={cn(
               'h-8 gap-1.5 text-xs',
               activeCount > 0 && 'border-blue-500 text-blue-600'
