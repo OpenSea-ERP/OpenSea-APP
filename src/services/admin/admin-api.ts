@@ -104,7 +104,7 @@ export const adminApi = {
   },
 
   manageFeatureFlags: async (id: string, flag: string, enabled: boolean) => {
-    const response = await apiClient.patch<unknown>(
+    const response = await apiClient.put<unknown>(
       API_ENDPOINTS.ADMIN.TENANTS.FEATURE_FLAGS(id),
       { flag, enabled }
     );
