@@ -42,6 +42,7 @@ import {
   UserX,
   XCircle,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import {
   absencesConfig,
@@ -91,6 +92,7 @@ const ABSENCE_STATUS_OPTIONS: { value: AbsenceStatus; label: string }[] = [
 ];
 
 export default function AbsencesPage() {
+  const router = useRouter();
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
   const canView = hasPermission(HR_PERMISSIONS.ABSENCES.VIEW);
@@ -280,7 +282,8 @@ export default function AbsencesPage() {
         }
         isSelected={isSelected}
         showSelection={false}
-        clickable={false}
+        clickable
+        onClick={() => router.push(`/hr/absences/${item.id}`)}
         createdAt={item.createdAt}
         updatedAt={item.updatedAt}
       >
@@ -368,7 +371,8 @@ export default function AbsencesPage() {
         }
         isSelected={isSelected}
         showSelection={false}
-        clickable={false}
+        clickable
+        onClick={() => router.push(`/hr/absences/${item.id}`)}
         createdAt={item.createdAt}
         updatedAt={item.updatedAt}
       />

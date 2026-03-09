@@ -32,6 +32,7 @@ import {
 import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Deduction } from '@/types/hr';
 import { Calendar, Eye, MinusCircle, Plus, Trash2, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import {
   deductionsConfig,
@@ -51,6 +52,7 @@ import {
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 
 export default function DeductionsPage() {
+  const router = useRouter();
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
   // Permissions
@@ -258,7 +260,8 @@ export default function DeductionsPage() {
           }
           isSelected={isSelected}
           showSelection={false}
-          clickable={false}
+          clickable
+          onClick={() => router.push(`/hr/deductions/${item.id}`)}
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
         />
@@ -311,7 +314,8 @@ export default function DeductionsPage() {
           }
           isSelected={isSelected}
           showSelection={false}
-          clickable={false}
+          clickable
+          onClick={() => router.push(`/hr/deductions/${item.id}`)}
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
         />

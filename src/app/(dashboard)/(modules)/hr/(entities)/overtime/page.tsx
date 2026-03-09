@@ -33,6 +33,7 @@ import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { Overtime } from '@/types/hr';
 import { Check, Clock, Coffee, Eye, Plus, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import {
   overtimeConfig,
@@ -50,6 +51,7 @@ import {
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 
 export default function OvertimePage() {
+  const router = useRouter();
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
   const canView = hasPermission(HR_PERMISSIONS.OVERTIME.VIEW);
@@ -218,7 +220,8 @@ export default function OvertimePage() {
         }
         isSelected={isSelected}
         showSelection={false}
-        clickable={false}
+        clickable
+        onClick={() => router.push(`/hr/overtime/${item.id}`)}
         createdAt={item.createdAt}
         updatedAt={item.updatedAt}
       >
@@ -275,7 +278,8 @@ export default function OvertimePage() {
         }
         isSelected={isSelected}
         showSelection={false}
-        clickable={false}
+        clickable
+        onClick={() => router.push(`/hr/overtime/${item.id}`)}
         createdAt={item.createdAt}
         updatedAt={item.updatedAt}
       />

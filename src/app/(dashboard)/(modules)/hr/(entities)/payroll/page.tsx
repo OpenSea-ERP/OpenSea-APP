@@ -38,6 +38,7 @@ import {
   Eye,
   Plus,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import {
   payrollConfig,
@@ -82,6 +83,7 @@ const STATUS_OPTIONS: { value: PayrollStatus; label: string }[] = [
 ];
 
 export default function PayrollPage() {
+  const router = useRouter();
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
   const canView = hasPermission(HR_PERMISSIONS.PAYROLL.VIEW);
@@ -276,7 +278,8 @@ export default function PayrollPage() {
         }
         isSelected={isSelected}
         showSelection={false}
-        clickable={false}
+        clickable
+        onClick={() => router.push(`/hr/payroll/${item.id}`)}
         createdAt={item.createdAt}
         updatedAt={item.updatedAt}
       >
@@ -373,7 +376,8 @@ export default function PayrollPage() {
         }
         isSelected={isSelected}
         showSelection={false}
-        clickable={false}
+        clickable
+        onClick={() => router.push(`/hr/payroll/${item.id}`)}
         createdAt={item.createdAt}
         updatedAt={item.updatedAt}
       />

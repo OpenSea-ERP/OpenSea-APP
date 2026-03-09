@@ -32,6 +32,7 @@ import {
 import { useEmployeeMap } from '@/hooks/use-employee-map';
 import type { Bonus } from '@/types/hr';
 import { Calendar, Eye, PlusCircle, Plus, Trash2, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import {
   bonusesConfig,
@@ -50,6 +51,7 @@ import {
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 
 export default function BonusesPage() {
+  const router = useRouter();
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
   // Permissions
@@ -239,7 +241,8 @@ export default function BonusesPage() {
           }
           isSelected={isSelected}
           showSelection={false}
-          clickable={false}
+          clickable
+          onClick={() => router.push(`/hr/bonuses/${item.id}`)}
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
         />
@@ -284,7 +287,8 @@ export default function BonusesPage() {
           }
           isSelected={isSelected}
           showSelection={false}
-          clickable={false}
+          clickable
+          onClick={() => router.push(`/hr/bonuses/${item.id}`)}
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
         />

@@ -41,6 +41,7 @@ import {
   Plus,
   User,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import {
   vacationsConfig,
@@ -70,6 +71,7 @@ const VACATION_STATUS_OPTIONS: { value: VacationStatus; label: string }[] = [
 ];
 
 export default function VacationsPage() {
+  const router = useRouter();
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
   const canView = hasPermission(HR_PERMISSIONS.VACATIONS.VIEW);
@@ -260,7 +262,8 @@ export default function VacationsPage() {
           }
           isSelected={isSelected}
           showSelection={false}
-          clickable={false}
+          clickable
+          onClick={() => router.push(`/hr/vacations/${item.id}`)}
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
         >
