@@ -1,12 +1,11 @@
 /**
- * OpenSea OS - Finance Categories Page
- * Página de gerenciamento de categorias financeiras usando o sistema OpenSea OS
+ * Finance Categories Page - Grouped Hierarchy Table
+ * Tabela agrupada com hierarquia indentada (3 niveis)
  */
 
 'use client';
 
 import { GridError } from '@/components/handlers/grid-error';
-import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
@@ -17,26 +16,116 @@ import {
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
-  CoreProvider,
-  EntityCard,
-  EntityContextMenu,
-  EntityGrid,
-} from '@/core';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
   useCreateFinanceCategory,
   useDeleteFinanceCategory,
   useFinanceCategories,
 } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
-import type { FinanceCategory } from '@/types/finance';
+import type { FinanceCategory, FinanceCategoryType } from '@/types/finance';
 import { FINANCE_CATEGORY_TYPE_LABELS } from '@/types/finance';
-import { ArrowDownAZ, Calendar, Layers, Plus } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Edit, Lock, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { CreateCategoryModal, financeCategoriesConfig } from './src';
+import { CreateCategoryModal } from './src';
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+function getTypeBadgeVariant(type: FinanceCategoryType) {
+  switch (type) {
+    case 'EXPENSE':
+      return 'destructive' as const;
+    case 'REVENUE':
+      return 'default' as const;
+    case 'BOTH':
+      return 'secondary' as const;
+    default:
+      return 'outline' as const;
+  }
+}
+
+interface HierarchyNode {
+  category: FinanceCategory;
+  level: number;
+  children: HierarchyNode[];
+}
+
+function buildHierarchy(categories: FinanceCategory[]): HierarchyNode[] {
+  const map = new Map<string, HierarchyNode>();
+  const roots: HierarchyNode[] = [];
+
+  // First pass: create nodes
+  for (const cat of categories) {
+    map.set(cat.id, { category: cat, level: 0, children: [] });
+  }
+
+  // Second pass: link parents and children
+  for (const cat of categories) {
+    const node = map.get(cat.id)!;
+    if (cat.parentId && map.has(cat.parentId)) {
+      const parent = map.get(cat.parentId)!;
+      parent.children.push(node);
+      node.level = parent.level + 1;
+    } else {
+      roots.push(node);
+    }
+  }
+
+  // Fix nested levels (walk children)
+  function fixLevels(nodes: HierarchyNode[], level: number) {
+    for (const node of nodes) {
+      node.level = level;
+      fixLevels(node.children, level + 1);
+    }
+  }
+  fixLevels(roots, 0);
+
+  // Sort by displayOrder at each level
+  function sortNodes(nodes: HierarchyNode[]) {
+    nodes.sort((a, b) => a.category.displayOrder - b.category.displayOrder);
+    for (const node of nodes) {
+      sortNodes(node.children);
+    }
+  }
+  sortNodes(roots);
+
+  return roots;
+}
+
+function flattenHierarchy(nodes: HierarchyNode[]): HierarchyNode[] {
+  const result: HierarchyNode[] = [];
+  for (const node of nodes) {
+    result.push(node);
+    result.push(...flattenHierarchy(node.children));
+  }
+  return result;
+}
+
+// =============================================================================
+// PAGE COMPONENT
+// =============================================================================
 
 export default function FinanceCategoriesPage() {
   const router = useRouter();
@@ -45,59 +134,56 @@ export default function FinanceCategoriesPage() {
   const createMutation = useCreateFinanceCategory();
   const deleteMutation = useDeleteFinanceCategory();
 
-  // ============================================================================
-  // PERMISSIONS
-  // ============================================================================
-
+  // Permissions
   const canCreate = hasPermission(FINANCE_PERMISSIONS.CATEGORIES.CREATE);
-  const canView = hasPermission(FINANCE_PERMISSIONS.CATEGORIES.READ);
   const canEdit = hasPermission(FINANCE_PERMISSIONS.CATEGORIES.UPDATE);
   const canDelete = hasPermission(FINANCE_PERMISSIONS.CATEGORIES.DELETE);
 
-  // ============================================================================
-  // STATE
-  // ============================================================================
-
+  // State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<FinanceCategoryType | ''>('');
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [isPinOpen, setIsPinOpen] = useState(false);
 
-  // ============================================================================
-  // DATA
-  // ============================================================================
-
+  // Data
   const categories = data?.categories ?? [];
 
   const filteredCategories = useMemo(() => {
-    if (!searchQuery) return categories;
-    const q = searchQuery.toLowerCase();
-    return categories.filter(
-      c =>
-        c.name.toLowerCase().includes(q) ||
-        c.description?.toLowerCase().includes(q) ||
-        FINANCE_CATEGORY_TYPE_LABELS[c.type].toLowerCase().includes(q)
-    );
-  }, [categories, searchQuery]);
+    let filtered = categories;
+
+    if (typeFilter) {
+      filtered = filtered.filter(c => c.type === typeFilter);
+    }
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        c =>
+          c.name.toLowerCase().includes(q) ||
+          c.description?.toLowerCase().includes(q) ||
+          FINANCE_CATEGORY_TYPE_LABELS[c.type].toLowerCase().includes(q)
+      );
+    }
+
+    return filtered;
+  }, [categories, searchQuery, typeFilter]);
+
+  const hierarchyRows = useMemo(() => {
+    const tree = buildHierarchy(filteredCategories);
+    return flattenHierarchy(tree);
+  }, [filteredCategories]);
 
   const nextDisplayOrder = useMemo(() => {
     if (categories.length === 0) return 1;
     return Math.max(...categories.map(c => c.displayOrder)) + 1;
   }, [categories]);
 
-  const initialIds = useMemo(
-    () => filteredCategories.map(c => c.id),
-    [filteredCategories]
-  );
-
-  // ============================================================================
-  // HANDLERS
-  // ============================================================================
-
+  // Handlers
   const handleCreate = useCallback(
     async (formData: {
       name: string;
-      type: FinanceCategory['type'];
+      type: FinanceCategoryType;
       description?: string;
       displayOrder?: number;
     }) => {
@@ -121,190 +207,14 @@ export default function FinanceCategoriesPage() {
     if (!deleteTarget) return;
     try {
       await deleteMutation.mutateAsync(deleteTarget);
-      toast.success('Categoria excluída com sucesso!');
+      toast.success('Categoria excluida com sucesso!');
       setDeleteTarget(null);
     } catch {
       toast.error('Erro ao excluir categoria.');
     }
   }, [deleteTarget, deleteMutation]);
 
-  const handleView = useCallback(
-    (ids: string[]) => {
-      router.push(`/finance/categories/${ids[0]}`);
-    },
-    [router]
-  );
-
-  const handleEdit = useCallback(
-    (ids: string[]) => {
-      router.push(`/finance/categories/${ids[0]}`);
-    },
-    [router]
-  );
-
-  const handleContextDelete = useCallback(
-    (ids: string[]) => {
-      handleDeleteRequest(ids[0]);
-    },
-    [handleDeleteRequest]
-  );
-
-  // ============================================================================
-  // SORT OPTIONS
-  // ============================================================================
-
-  const sortOptions = useMemo(
-    () => [
-      {
-        field: 'custom' as const,
-        direction: 'asc' as const,
-        label: 'Nome (A-Z)',
-        icon: ArrowDownAZ,
-      },
-      {
-        field: 'custom' as const,
-        direction: 'desc' as const,
-        label: 'Nome (Z-A)',
-        icon: ArrowDownAZ,
-      },
-      {
-        field: 'createdAt' as const,
-        direction: 'desc' as const,
-        label: 'Mais recentes',
-        icon: Calendar,
-      },
-      {
-        field: 'createdAt' as const,
-        direction: 'asc' as const,
-        label: 'Mais antigos',
-        icon: Calendar,
-      },
-    ],
-    []
-  );
-
-  // ============================================================================
-  // HELPERS
-  // ============================================================================
-
-  const getTypeBadgeVariant = (type: string) => {
-    switch (type) {
-      case 'EXPENSE':
-        return 'destructive' as const;
-      case 'REVENUE':
-        return 'default' as const;
-      case 'BOTH':
-        return 'secondary' as const;
-      default:
-        return 'outline' as const;
-    }
-  };
-
-  const getIconGradient = (type: string) => {
-    switch (type) {
-      case 'EXPENSE':
-        return 'bg-linear-to-br from-red-500 to-rose-600';
-      case 'REVENUE':
-        return 'bg-linear-to-br from-green-500 to-emerald-600';
-      case 'BOTH':
-        return 'bg-linear-to-br from-blue-500 to-indigo-600';
-      default:
-        return 'bg-linear-to-br from-gray-500 to-gray-600';
-    }
-  };
-
-  // ============================================================================
-  // RENDER FUNCTIONS
-  // ============================================================================
-
-  const renderGridCard = (item: FinanceCategory, isSelected: boolean) => (
-    <EntityContextMenu
-      itemId={item.id}
-      {...(canView ? { onView: handleView } : {})}
-      {...(canEdit ? { onEdit: handleEdit } : {})}
-      {...(canDelete ? { onDelete: handleContextDelete } : {})}
-    >
-      <EntityCard
-        id={item.id}
-        variant="grid"
-        title={item.name}
-        subtitle={FINANCE_CATEGORY_TYPE_LABELS[item.type]}
-        icon={Layers}
-        iconBgColor={getIconGradient(item.type)}
-        badges={[
-          {
-            label: FINANCE_CATEGORY_TYPE_LABELS[item.type],
-            variant: getTypeBadgeVariant(item.type),
-          },
-          {
-            label: item.isActive ? 'Ativo' : 'Inativo',
-            variant: item.isActive ? 'default' : 'secondary',
-          },
-          ...(item.isSystem
-            ? [{ label: 'Sistema', variant: 'outline' as const }]
-            : []),
-        ]}
-        isSelected={isSelected}
-        showSelection={false}
-        clickable={false}
-        createdAt={item.createdAt}
-        updatedAt={item.updatedAt}
-      >
-        {item.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {item.description}
-          </p>
-        )}
-      </EntityCard>
-    </EntityContextMenu>
-  );
-
-  const renderListCard = (item: FinanceCategory, isSelected: boolean) => (
-    <EntityContextMenu
-      itemId={item.id}
-      {...(canView ? { onView: handleView } : {})}
-      {...(canEdit ? { onEdit: handleEdit } : {})}
-      {...(canDelete ? { onDelete: handleContextDelete } : {})}
-    >
-      <EntityCard
-        id={item.id}
-        variant="list"
-        title={item.name}
-        subtitle={FINANCE_CATEGORY_TYPE_LABELS[item.type]}
-        icon={Layers}
-        iconBgColor={getIconGradient(item.type)}
-        badges={[
-          {
-            label: FINANCE_CATEGORY_TYPE_LABELS[item.type],
-            variant: getTypeBadgeVariant(item.type),
-          },
-          {
-            label: item.isActive ? 'Ativo' : 'Inativo',
-            variant: item.isActive ? 'default' : 'secondary',
-          },
-          ...(item.isSystem
-            ? [{ label: 'Sistema', variant: 'outline' as const }]
-            : []),
-        ]}
-        isSelected={isSelected}
-        showSelection={false}
-        clickable={false}
-        createdAt={item.createdAt}
-        updatedAt={item.updatedAt}
-      >
-        {item.description && (
-          <p className="text-sm text-muted-foreground line-clamp-1">
-            {item.description}
-          </p>
-        )}
-      </EntityCard>
-    </EntityContextMenu>
-  );
-
-  // ============================================================================
-  // HEADER BUTTONS
-  // ============================================================================
-
+  // Header buttons
   const actionButtons = useMemo<HeaderButton[]>(() => {
     const buttons: HeaderButton[] = [];
     if (canCreate) {
@@ -319,98 +229,220 @@ export default function FinanceCategoriesPage() {
     return buttons;
   }, [canCreate]);
 
-  // ============================================================================
+  // ==========================================================================
   // RENDER
-  // ============================================================================
+  // ==========================================================================
 
   return (
-    <CoreProvider
-      selection={{
-        namespace: 'finance-categories',
-        initialIds,
-      }}
-    >
-      <PageLayout>
-        <PageHeader>
-          <PageActionBar
-            breadcrumbItems={[
-              { label: 'Financeiro', href: '/finance' },
-              { label: 'Categorias', href: '/finance/categories' },
-            ]}
-            buttons={actionButtons}
-          />
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={[
+            { label: 'Financeiro', href: '/finance' },
+            { label: 'Categorias', href: '/finance/categories' },
+          ]}
+          buttons={actionButtons}
+        />
 
-          <Header
-            title="Categorias Financeiras"
-            description="Gerencie as categorias de receitas e despesas"
-          />
-        </PageHeader>
+        <Header
+          title="Categorias Financeiras"
+          description="Gerencie as categorias de receitas e despesas organizadas por hierarquia DRE"
+        />
+      </PageHeader>
 
-        <PageBody>
-          {/* Search Bar */}
-          <SearchBar
-            placeholder="Buscar por nome, descrição ou tipo..."
-            value={searchQuery}
-            onSearch={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-            showClear
-            size="md"
-          />
-
-          {/* Grid */}
-          {isLoading ? (
-            <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
-          ) : error ? (
-            <GridError
-              type="server"
-              title="Erro ao carregar categorias"
-              message="Ocorreu um erro ao tentar carregar as categorias. Por favor, tente novamente."
-              action={{
-                label: 'Tentar Novamente',
-                onClick: () => { refetch() },
-              }}
+      <PageBody>
+        {/* Search + Type Filter */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <SearchBar
+              placeholder="Buscar por nome, descricao ou tipo..."
+              value={searchQuery}
+              onSearch={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              showClear
+              size="md"
             />
-          ) : (
-            <EntityGrid
-              config={financeCategoriesConfig}
-              items={filteredCategories}
-              renderGridItem={renderGridCard}
-              renderListItem={renderListCard}
-              isLoading={isLoading}
-              isSearching={!!searchQuery}
-              showSorting
-              defaultSortField="custom"
-              defaultSortDirection="asc"
-              customSortOptions={sortOptions}
-              customSortFn={(a, b, direction) => {
-                const multiplier = direction === 'asc' ? 1 : -1;
-                return a.name.localeCompare(b.name, 'pt-BR') * multiplier;
-              }}
-            />
-          )}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={typeFilter === '' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTypeFilter('')}
+            >
+              Todos
+            </Button>
+            <Button
+              variant={typeFilter === 'REVENUE' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTypeFilter('REVENUE')}
+            >
+              Receita
+            </Button>
+            <Button
+              variant={typeFilter === 'EXPENSE' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTypeFilter('EXPENSE')}
+            >
+              Despesa
+            </Button>
+          </div>
+        </div>
 
-          {/* Create Modal */}
-          <CreateCategoryModal
-            isOpen={isCreateOpen}
-            onClose={() => setIsCreateOpen(false)}
-            onSubmit={handleCreate}
-            isSubmitting={createMutation.isPending}
-            nextDisplayOrder={nextDisplayOrder}
-          />
-
-          {/* Delete PIN Verification */}
-          <VerifyActionPinModal
-            isOpen={isPinOpen}
-            onClose={() => {
-              setIsPinOpen(false);
-              setDeleteTarget(null);
+        {/* Table */}
+        {isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded" />
+            ))}
+          </div>
+        ) : error ? (
+          <GridError
+            type="server"
+            title="Erro ao carregar categorias"
+            message="Ocorreu um erro ao tentar carregar as categorias. Por favor, tente novamente."
+            action={{
+              label: 'Tentar Novamente',
+              onClick: () => {
+                refetch();
+              },
             }}
-            onSuccess={handleDeleteConfirm}
-            title="Excluir Categoria"
-            description="Digite seu PIN de Ação para confirmar a exclusão desta categoria."
           />
-        </PageBody>
-      </PageLayout>
-    </CoreProvider>
+        ) : hierarchyRows.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            {searchQuery || typeFilter
+              ? 'Nenhuma categoria encontrada com os filtros aplicados.'
+              : 'Nenhuma categoria cadastrada.'}
+          </div>
+        ) : (
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50%]">Nome</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[60px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {hierarchyRows.map(({ category, level }) => {
+                  const isRoot = level === 0;
+                  const indent = level * 24;
+
+                  return (
+                    <TableRow
+                      key={category.id}
+                      className={
+                        isRoot
+                          ? 'bg-muted/50 font-semibold'
+                          : 'hover:bg-muted/30'
+                      }
+                    >
+                      <TableCell>
+                        <div
+                          className="flex items-center gap-2"
+                          style={{ paddingLeft: `${indent}px` }}
+                        >
+                          {category.isSystem && (
+                            <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          )}
+                          <button
+                            type="button"
+                            className="text-left hover:underline cursor-pointer"
+                            onClick={() =>
+                              router.push(`/finance/categories/${category.id}`)
+                            }
+                          >
+                            {category.name}
+                          </button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getTypeBadgeVariant(category.type)}>
+                          {FINANCE_CATEGORY_TYPE_LABELS[category.type]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            category.isActive ? 'default' : 'secondary'
+                          }
+                        >
+                          {category.isActive ? 'Ativa' : 'Inativa'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(canEdit || canDelete) && !category.isSystem && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {canEdit && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    router.push(
+                                      `/finance/categories/${category.id}`
+                                    )
+                                  }
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Editar
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() =>
+                                      handleDeleteRequest(category.id)
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {/* Create Modal */}
+        <CreateCategoryModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          onSubmit={handleCreate}
+          isSubmitting={createMutation.isPending}
+          nextDisplayOrder={nextDisplayOrder}
+        />
+
+        {/* Delete PIN Verification */}
+        <VerifyActionPinModal
+          isOpen={isPinOpen}
+          onClose={() => {
+            setIsPinOpen(false);
+            setDeleteTarget(null);
+          }}
+          onSuccess={handleDeleteConfirm}
+          title="Excluir Categoria"
+          description="Digite seu PIN de Acao para confirmar a exclusao desta categoria."
+        />
+      </PageBody>
+    </PageLayout>
   );
 }
