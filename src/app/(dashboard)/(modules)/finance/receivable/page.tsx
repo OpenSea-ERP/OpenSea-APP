@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Contas a Receber (Accounts Receivable)
- * Listagem de lançamentos financeiros do tipo RECEIVABLE
+ * Listagem de lancamentos financeiros do tipo RECEIVABLE
  */
 
 'use client';
@@ -47,7 +47,10 @@ import {
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { BaixaModal } from '@/components/finance/baixa-modal';
+import { ReceivableWizardModal } from '@/components/finance/receivable-wizard-modal';
 import { useDeleteFinanceEntry, useFinanceEntries } from '@/hooks/finance';
+import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
 import { usePermissions } from '@/hooks/use-permissions';
 import { normalizePagination } from '@/types/common/pagination';
 import type {
@@ -61,6 +64,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarIcon,
+  DollarSign,
   Eye,
   Filter,
   MoreHorizontal,
@@ -82,9 +86,16 @@ const STATUS_OPTIONS: { value: FinanceEntryStatus; label: string }[] = [
   { value: 'PENDING', label: 'Pendente' },
   { value: 'OVERDUE', label: 'Vencido' },
   { value: 'RECEIVED', label: 'Recebido' },
+  { value: 'PAID', label: 'Pago' },
   { value: 'PARTIALLY_PAID', label: 'Parcialmente Pago' },
   { value: 'CANCELLED', label: 'Cancelado' },
   { value: 'SCHEDULED', label: 'Agendado' },
+];
+
+const RECEIVABLE_STATUSES: FinanceEntryStatus[] = [
+  'PENDING',
+  'OVERDUE',
+  'PARTIALLY_PAID',
 ];
 
 const PERMISSION_CODES = {
@@ -167,6 +178,7 @@ export default function ReceivablePage() {
   const [statusFilter, setStatusFilter] = useState<FinanceEntryStatus | 'ALL'>(
     'ALL'
   );
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [customerFilter, setCustomerFilter] = useState('');
   const [dueDateFrom, setDueDateFrom] = useState<Date | undefined>(undefined);
   const [dueDateTo, setDueDateTo] = useState<Date | undefined>(undefined);
@@ -180,11 +192,31 @@ export default function ReceivablePage() {
   const [perPage, setPerPage] = useState(20);
 
   // --------------------------------------------------------------------------
+  // Wizard modal state
+  // --------------------------------------------------------------------------
+
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  // --------------------------------------------------------------------------
   // Delete state
   // --------------------------------------------------------------------------
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
+
+  // --------------------------------------------------------------------------
+  // Baixa modal state
+  // --------------------------------------------------------------------------
+
+  const [baixaEntry, setBaixaEntry] = useState<FinanceEntry | null>(null);
+  const [baixaOpen, setBaixaOpen] = useState(false);
+
+  // --------------------------------------------------------------------------
+  // Categories for filter and rate lookup
+  // --------------------------------------------------------------------------
+
+  const { data: categoriesData } = useFinanceCategories();
+  const categories = categoriesData?.categories ?? [];
 
   // --------------------------------------------------------------------------
   // Build query params for the hook
@@ -205,6 +237,10 @@ export default function ReceivablePage() {
       params.status = statusFilter;
     }
 
+    if (categoryFilter) {
+      params.categoryId = categoryFilter;
+    }
+
     if (customerFilter.trim()) {
       params.customerName = customerFilter.trim();
     }
@@ -218,7 +254,7 @@ export default function ReceivablePage() {
     }
 
     return params;
-  }, [searchQuery, statusFilter, customerFilter, dueDateFrom, dueDateTo, page, perPage]);
+  }, [searchQuery, statusFilter, categoryFilter, customerFilter, dueDateFrom, dueDateTo, page, perPage]);
 
   // --------------------------------------------------------------------------
   // Data fetching
@@ -238,11 +274,12 @@ export default function ReceivablePage() {
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (statusFilter !== 'ALL') count++;
+    if (categoryFilter) count++;
     if (customerFilter.trim()) count++;
     if (dueDateFrom) count++;
     if (dueDateTo) count++;
     return count;
-  }, [statusFilter, customerFilter, dueDateFrom, dueDateTo]);
+  }, [statusFilter, categoryFilter, customerFilter, dueDateFrom, dueDateTo]);
 
   // --------------------------------------------------------------------------
   // Handlers
@@ -264,6 +301,7 @@ export default function ReceivablePage() {
 
   const handleClearFilters = useCallback(() => {
     setStatusFilter('ALL');
+    setCategoryFilter('');
     setCustomerFilter('');
     setDueDateFrom(undefined);
     setDueDateTo(undefined);
@@ -294,7 +332,7 @@ export default function ReceivablePage() {
 
     try {
       await deleteMutation.mutateAsync(deleteTargetId);
-      toast.success('Conta a receber excluída com sucesso.');
+      toast.success('Conta a receber excluida com sucesso.');
       setDeleteTargetId(null);
     } catch (err) {
       const message =
@@ -312,13 +350,28 @@ export default function ReceivablePage() {
     [canView, router]
   );
 
+  const handleOpenBaixa = useCallback((entry: FinanceEntry) => {
+    setBaixaEntry(entry);
+    setBaixaOpen(true);
+  }, []);
+
+  // Get category rates for the selected baixa entry
+  const baixaCategoryRates = useMemo(() => {
+    if (!baixaEntry) return { interestRate: undefined, penaltyRate: undefined };
+    const cat = categories.find((c) => c.id === baixaEntry.categoryId);
+    return {
+      interestRate: cat?.interestRate ?? undefined,
+      penaltyRate: cat?.penaltyRate ?? undefined,
+    };
+  }, [baixaEntry, categories]);
+
   // --------------------------------------------------------------------------
   // Header action buttons (permission-gated)
   // --------------------------------------------------------------------------
 
   const handleCreateClick = useCallback(() => {
-    router.push('/finance/receivable/new');
-  }, [router]);
+    setWizardOpen(true);
+  }, []);
 
   const actionButtons = useMemo<ActionButtonWithPermission[]>(
     () => [
@@ -410,7 +463,7 @@ export default function ReceivablePage() {
         {/* Search Bar */}
         <SearchBar
           value={searchQuery}
-          placeholder="Buscar por descrição ou código..."
+          placeholder="Buscar por descricao ou codigo..."
           onSearch={handleSearch}
           onClear={() => handleSearch('')}
           showClear={true}
@@ -477,6 +530,34 @@ export default function ReceivablePage() {
                 </Select>
               </div>
 
+              {/* Category Filter */}
+              <div className="space-y-1.5">
+                <label htmlFor="filter-category" className="text-sm font-medium text-muted-foreground">
+                  Categoria
+                </label>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={(value) => {
+                    setCategoryFilter(value === 'ALL' ? '' : value);
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as categorias" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todas</SelectItem>
+                    {categories
+                      .filter((c) => c.type === 'REVENUE' || c.type === 'BOTH')
+                      .map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Customer Name Filter */}
               <div className="space-y-1.5">
                 <label htmlFor="filter-customer" className="text-sm font-medium text-muted-foreground">
@@ -534,7 +615,7 @@ export default function ReceivablePage() {
               {/* Due Date To */}
               <div className="space-y-1.5">
                 <label htmlFor="filter-due-to" className="text-sm font-medium text-muted-foreground">
-                  Vencimento até
+                  Vencimento ate
                 </label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -595,7 +676,7 @@ export default function ReceivablePage() {
               <p className="text-sm text-muted-foreground mb-4">
                 {activeFilterCount > 0 || searchQuery
                   ? 'Tente ajustar os filtros ou a busca.'
-                  : 'Crie sua primeira conta a receber para começar.'}
+                  : 'Crie sua primeira conta a receber para comecar.'}
               </p>
               {canCreate && !searchQuery && activeFilterCount === 0 && (
                 <Button onClick={handleCreateClick}>
@@ -609,8 +690,8 @@ export default function ReceivablePage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="w-[120px]">Código</TableHead>
-                    <TableHead>Descrição</TableHead>
+                    <TableHead className="w-[120px]">Codigo</TableHead>
+                    <TableHead>Descricao</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     <TableHead>Vencimento</TableHead>
@@ -632,7 +713,16 @@ export default function ReceivablePage() {
                         {entry.code}
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{entry.description}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{entry.description}</span>
+                          {entry.currentInstallment != null &&
+                            entry.totalInstallments != null &&
+                            entry.totalInstallments > 1 && (
+                              <Badge variant="outline" className="text-xs shrink-0">
+                                Parcela {entry.currentInstallment}/{entry.totalInstallments}
+                              </Badge>
+                            )}
+                        </div>
                         {entry.notes && (
                           <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
                             {entry.notes}
@@ -646,7 +736,15 @@ export default function ReceivablePage() {
                         {formatCurrency(entry.expectedAmount)}
                       </TableCell>
                       <TableCell className="text-sm">
-                        {formatDate(entry.dueDate)}
+                        <span
+                          className={cn(
+                            entry.isOverdue && entry.status !== 'RECEIVED' && entry.status !== 'PAID' && entry.status !== 'CANCELLED'
+                              ? 'text-destructive font-medium'
+                              : ''
+                          )}
+                        >
+                          {formatDate(entry.dueDate)}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(entry.status)}>
@@ -664,7 +762,7 @@ export default function ReceivablePage() {
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Ações</span>
+                                <span className="sr-only">Acoes</span>
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -679,6 +777,18 @@ export default function ReceivablePage() {
                                   Visualizar
                                 </DropdownMenuItem>
                               )}
+                              {canEdit &&
+                                RECEIVABLE_STATUSES.includes(entry.status) && (
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenBaixa(entry);
+                                    }}
+                                  >
+                                    <DollarSign className="h-4 w-4 mr-2" />
+                                    Registrar Recebimento
+                                  </DropdownMenuItem>
+                                )}
                               {canEdit && (
                                 <DropdownMenuItem
                                   onClick={(e) => {
@@ -730,7 +840,7 @@ export default function ReceivablePage() {
                     {/* Per page selector */}
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">
-                        Por página:
+                        Por pagina:
                       </span>
                       <Select
                         value={String(perPage)}
@@ -759,7 +869,7 @@ export default function ReceivablePage() {
                         className="h-9 w-9"
                         onClick={() => handlePageChange(1)}
                         disabled={!meta.hasPrev}
-                        title="Primeira página"
+                        title="Primeira pagina"
                       >
                         <span className="text-xs font-bold">1</span>
                       </Button>
@@ -770,7 +880,7 @@ export default function ReceivablePage() {
                         className="h-9 w-9"
                         onClick={() => handlePageChange(meta.page - 1)}
                         disabled={!meta.hasPrev}
-                        title="Página anterior"
+                        title="Pagina anterior"
                       >
                         <span className="sr-only">Anterior</span>
                         &#8249;
@@ -813,9 +923,9 @@ export default function ReceivablePage() {
                         className="h-9 w-9"
                         onClick={() => handlePageChange(meta.page + 1)}
                         disabled={!meta.hasNext}
-                        title="Próxima página"
+                        title="Proxima pagina"
                       >
-                        <span className="sr-only">Próximo</span>
+                        <span className="sr-only">Proximo</span>
                         &#8250;
                       </Button>
 
@@ -825,7 +935,7 @@ export default function ReceivablePage() {
                         className="h-9 w-9"
                         onClick={() => handlePageChange(meta.totalPages)}
                         disabled={!meta.hasNext}
-                        title="Última página"
+                        title="Ultima pagina"
                       >
                         <span className="text-xs font-bold">
                           {meta.totalPages}
@@ -846,6 +956,29 @@ export default function ReceivablePage() {
           )}
         </Card>
 
+        {/* Receivable Wizard Modal */}
+        <ReceivableWizardModal
+          open={wizardOpen}
+          onOpenChange={setWizardOpen}
+          onCreated={() => {
+            refetch();
+          }}
+        />
+
+        {/* Baixa Modal */}
+        {baixaEntry && (
+          <BaixaModal
+            open={baixaOpen}
+            onOpenChange={(v) => {
+              setBaixaOpen(v);
+              if (!v) setBaixaEntry(null);
+            }}
+            entry={baixaEntry}
+            categoryInterestRate={baixaCategoryRates.interestRate}
+            categoryPenaltyRate={baixaCategoryRates.penaltyRate}
+          />
+        )}
+
         {/* Delete PIN Confirmation Modal */}
         <VerifyActionPinModal
           isOpen={pinModalOpen}
@@ -854,8 +987,8 @@ export default function ReceivablePage() {
             setDeleteTargetId(null);
           }}
           onSuccess={handleDeleteConfirmed}
-          title="Confirmar Exclusão"
-          description="Digite seu PIN de Ação para confirmar a exclusão desta conta a receber."
+          title="Confirmar Exclusao"
+          description="Digite seu PIN de Acao para confirmar a exclusao desta conta a receber."
         />
       </PageBody>
     </PageLayout>
