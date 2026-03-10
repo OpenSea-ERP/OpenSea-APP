@@ -592,6 +592,14 @@ export const FINANCE_PERMISSIONS = {
     PAY: 'finance.consortia.pay',
     MANAGE: 'finance.consortia.manage',
   },
+  CONTRACTS: {
+    CREATE: 'finance.contracts.create',
+    READ: 'finance.contracts.read',
+    UPDATE: 'finance.contracts.update',
+    DELETE: 'finance.contracts.delete',
+    LIST: 'finance.contracts.list',
+    MANAGE: 'finance.contracts.manage',
+  },
   DASHBOARD: {
     VIEW: 'finance.dashboard.view',
   },
@@ -976,6 +984,7 @@ export type FinancePermission =
   | (typeof FINANCE_PERMISSIONS.ENTRIES)[keyof typeof FINANCE_PERMISSIONS.ENTRIES]
   | (typeof FINANCE_PERMISSIONS.LOANS)[keyof typeof FINANCE_PERMISSIONS.LOANS]
   | (typeof FINANCE_PERMISSIONS.CONSORTIA)[keyof typeof FINANCE_PERMISSIONS.CONSORTIA]
+  | (typeof FINANCE_PERMISSIONS.CONTRACTS)[keyof typeof FINANCE_PERMISSIONS.CONTRACTS]
   | (typeof FINANCE_PERMISSIONS.DASHBOARD)[keyof typeof FINANCE_PERMISSIONS.DASHBOARD]
   | (typeof FINANCE_PERMISSIONS.EXPORT)[keyof typeof FINANCE_PERMISSIONS.EXPORT];
 
