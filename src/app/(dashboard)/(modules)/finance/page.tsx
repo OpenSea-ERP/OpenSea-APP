@@ -5,6 +5,7 @@
 
 'use client';
 
+import { DailySummaryBanner } from '@/components/finance/notifications/daily-summary-banner';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import { PageDashboardSections } from '@/components/layout/page-dashboard-sections';
 import { PageHeroBanner } from '@/components/layout/page-hero-banner';
@@ -181,6 +182,15 @@ const sections: {
     title: 'Relatórios',
     cards: [
       {
+        id: 'reports',
+        title: 'Relatórios',
+        description: 'DRE, balanço patrimonial e exportação',
+        icon: FileText,
+        href: '/finance/reports',
+        gradient: 'from-violet-500 to-violet-600',
+        hoverBg: 'hover:bg-violet-50 dark:hover:bg-violet-500/10',
+      },
+      {
         id: 'export',
         title: 'Exportação Contábil',
         description: 'Exportar dados para contabilidade',
@@ -203,6 +213,16 @@ const heroBannerButtons: (CardItem & { label: string })[] = [
     href: '/finance/dashboard',
     gradient: 'from-blue-500 to-blue-600',
     hoverBg: 'hover:bg-blue-50 dark:hover:bg-blue-500/10',
+  },
+  {
+    id: 'analytics',
+    title: 'Painel Financeiro',
+    label: 'Painel Financeiro',
+    description: 'Graficos, KPIs e analise financeira',
+    icon: TrendingUp,
+    href: '/finance/analytics',
+    gradient: 'from-emerald-500 to-emerald-600',
+    hoverBg: 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
   },
   {
     id: 'cashflow',
@@ -323,6 +343,8 @@ export default function FinanceLandingPage() {
         breadcrumbItems={[{ label: 'Financeiro', href: '/finance' }]}
         hasPermission={hasPermission}
       />
+
+      <DailySummaryBanner />
 
       <PageHeroBanner
         title="Financeiro"

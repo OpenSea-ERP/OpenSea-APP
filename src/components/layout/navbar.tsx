@@ -5,6 +5,7 @@
 
 'use client';
 
+import { FinanceNotificationBell } from '@/components/finance/notifications/notification-bell';
 import { NotificationsPanel } from '@/components/shared/notifications-panel';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
@@ -49,6 +50,7 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
                 </Button>
               </Link>
             )}
+            <FinanceNotificationBell />
             <PrintQueuePanel />
             <NotificationsPanel />
 
