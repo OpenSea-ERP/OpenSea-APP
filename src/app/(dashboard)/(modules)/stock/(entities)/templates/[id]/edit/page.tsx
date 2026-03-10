@@ -55,6 +55,7 @@ export default function TemplateEditPage() {
     productAttributes: Record<string, unknown>;
     variantAttributes: Record<string, unknown>;
     itemAttributes: Record<string, unknown>;
+    specialModules?: string[];
   }) => {
     try {
       setIsSaving(true);
@@ -65,6 +66,7 @@ export default function TemplateEditPage() {
         productAttributes: data.productAttributes as TemplateAttributes,
         variantAttributes: data.variantAttributes as TemplateAttributes,
         itemAttributes: data.itemAttributes as TemplateAttributes,
+        specialModules: data.specialModules,
       });
       await queryClient.invalidateQueries({ queryKey: ['templates'] });
       toast.success('Template atualizado com sucesso!');
@@ -182,6 +184,7 @@ export default function TemplateEditPage() {
               productAttributes: data.productAttributes || {},
               variantAttributes: data.variantAttributes || {},
               itemAttributes: data.itemAttributes || {},
+              specialModules: data.specialModules,
             });
           }}
         />

@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Template, UnitOfMeasure } from '@/types/stock';
+import { UNIT_OF_MEASURE_LABELS } from '@/types/stock';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronDown,
   ChevronUp,
@@ -88,6 +90,7 @@ interface TemplateFormProps {
     productAttributes: Record<string, unknown>;
     variantAttributes: Record<string, unknown>;
     itemAttributes: Record<string, unknown>;
+    specialModules?: string[];
   }) => void;
 }
 
@@ -100,6 +103,7 @@ export interface TemplateFormRef {
     productAttributes: Record<string, unknown>;
     variantAttributes: Record<string, unknown>;
     itemAttributes: Record<string, unknown>;
+    specialModules?: string[];
   };
 }
 
@@ -118,6 +122,7 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
     const [name, setName] = useState('');
     const [iconUrl, setIconUrl] = useState('');
     const [unitOfMeasure, setUnitOfMeasure] = useState<UnitOfMeasure>('UNITS');
+    const [specialModules, setSpecialModules] = useState<string[]>([]);
     const [productAttributes, setProductAttributes] = useState<Attribute[]>([]);
     const [variantAttributes, setVariantAttributes] = useState<Attribute[]>([]);
     const [itemAttributes, setItemAttributes] = useState<Attribute[]>([]);
@@ -166,6 +171,7 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
       productAttributes: formatAttributes(productAttributes),
       variantAttributes: formatAttributes(variantAttributes),
       itemAttributes: formatAttributes(itemAttributes),
+      specialModules: specialModules.length > 0 ? specialModules : undefined,
     });
 
     // Expor métodos para o componente pai
@@ -184,6 +190,7 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
           name: '',
           iconUrl: '',
           unitOfMeasure: 'UNITS' as UnitOfMeasure,
+          specialModules: [] as string[],
           productAttributes: [],
           variantAttributes: [],
           itemAttributes: [],
@@ -220,6 +227,7 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
         name: template.name,
         iconUrl: template.iconUrl || '',
         unitOfMeasure: template.unitOfMeasure || ('UNITS' as UnitOfMeasure),
+        specialModules: template.specialModules || [],
         productAttributes: convertAttributes(template.productAttributes),
         variantAttributes: convertAttributes(template.variantAttributes),
         itemAttributes: convertAttributes(template.itemAttributes),
@@ -231,6 +239,7 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
       setName(initialValues.name);
       setIconUrl(initialValues.iconUrl);
       setUnitOfMeasure(initialValues.unitOfMeasure);
+      setSpecialModules(initialValues.specialModules);
       setProductAttributes(initialValues.productAttributes);
       setVariantAttributes(initialValues.variantAttributes);
       setItemAttributes(initialValues.itemAttributes);
@@ -632,9 +641,16 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
                   <SelectValue placeholder="Selecione a unidade de medida" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="UNITS">Unidades</SelectItem>
-                  <SelectItem value="KILOGRAMS">Quilogramas</SelectItem>
-                  <SelectItem value="METERS">Metros</SelectItem>
+                  {(
+                    Object.entries(UNIT_OF_MEASURE_LABELS) as [
+                      UnitOfMeasure,
+                      string,
+                    ][]
+                  ).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -674,6 +690,38 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
                   <span className="text-white text-xs">Sem ícone</span>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Módulos Especiais */}
+        <div className="px-6">
+          <div className="space-y-3">
+            <div>
+              <h3 className="font-semibold text-sm">Módulos Especiais</h3>
+              <p className="text-xs text-muted-foreground">
+                Funcionalidades adicionais habilitadas para produtos deste
+                template
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="care-instructions-module"
+                checked={specialModules.includes('CARE_INSTRUCTIONS')}
+                onCheckedChange={checked => {
+                  setSpecialModules(prev =>
+                    checked
+                      ? [...prev, 'CARE_INSTRUCTIONS']
+                      : prev.filter(m => m !== 'CARE_INSTRUCTIONS')
+                  );
+                }}
+              />
+              <Label
+                htmlFor="care-instructions-module"
+                className="cursor-pointer text-sm"
+              >
+                Conservacao Textil (instruções de cuidado ISO 3758)
+              </Label>
             </div>
           </div>
         </div>
