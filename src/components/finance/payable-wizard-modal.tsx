@@ -15,9 +15,12 @@ import type {
   PayableSubType,
   RecurrenceUnit,
 } from '@/types/finance';
+import type { OcrExtractResult } from '@/services/finance';
 import { Check } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import { OcrConfirmationStep, type OcrConfirmedData } from './ocr-confirmation-step';
+import { OcrUploadButton } from './ocr-upload-button';
 import { WizardStepAttachment } from './wizard-step-attachment';
 import { WizardStepConfirmation } from './wizard-step-confirmation';
 import { WizardStepData } from './wizard-step-data';
@@ -113,12 +116,35 @@ export function PayableWizardModal({
   const [wizardData, setWizardData] = useState<WizardData>({
     ...INITIAL_WIZARD_DATA,
   });
+  const [ocrResult, setOcrResult] = useState<OcrExtractResult | null>(null);
 
   const createMutation = useCreateFinanceEntry();
 
   const handleReset = useCallback(() => {
     setCurrentStep(1);
     setWizardData({ ...INITIAL_WIZARD_DATA, issueDate: new Date().toISOString().split('T')[0] });
+    setOcrResult(null);
+  }, []);
+
+  const handleOcrExtracted = useCallback((result: OcrExtractResult) => {
+    setOcrResult(result);
+  }, []);
+
+  const handleOcrConfirm = useCallback((data: OcrConfirmedData) => {
+    const updates: Partial<WizardData> = {};
+    if (data.valor) updates.expectedAmount = data.valor;
+    if (data.vencimento) updates.dueDate = data.vencimento;
+    if (data.beneficiario) updates.supplierName = data.beneficiario;
+    if (data.codigoBarras) updates.boletoBarcode = data.codigoBarras;
+    if (data.linhaDigitavel) updates.boletoDigitLine = data.linhaDigitavel;
+
+    setWizardData((prev) => ({ ...prev, ...updates }));
+    setOcrResult(null);
+    setCurrentStep(2); // Auto-advance to Dados step
+  }, []);
+
+  const handleOcrDiscard = useCallback(() => {
+    setOcrResult(null);
   }, []);
 
   const handleOpenChange = useCallback(
@@ -284,11 +310,28 @@ export function PayableWizardModal({
 
         {/* Step Content */}
         {currentStep === 1 && (
-          <WizardStepType
-            wizardData={wizardData}
-            updateWizardData={updateWizardData}
-            goToStep={goToStep}
-          />
+          <div className="space-y-4">
+            <WizardStepType
+              wizardData={wizardData}
+              updateWizardData={updateWizardData}
+              goToStep={goToStep}
+            />
+
+            {/* OCR Section */}
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Importar dados automaticamente
+              </p>
+              <OcrUploadButton onExtracted={handleOcrExtracted} />
+              {ocrResult && (
+                <OcrConfirmationStep
+                  ocrResult={ocrResult}
+                  onConfirm={handleOcrConfirm}
+                  onDiscard={handleOcrDiscard}
+                />
+              )}
+            </div>
+          </div>
         )}
 
         {currentStep === 2 && (

@@ -22,13 +22,14 @@ import {
   useBankAccounts,
   useFinanceCategories,
   useFinanceSuppliers,
+  useLastSupplierEntry,
 } from '@/hooks/finance';
 import { cn } from '@/lib/utils';
 import { parseBoleto } from '@/lib/boleto-parser';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, ArrowRight, CalendarIcon, Loader2, Plus, Zap } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { ArrowLeft, ArrowRight, CalendarIcon, Lightbulb, Loader2, Plus, Zap } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CostCenterAllocationComponent } from './cost-center-allocation';
 import { InlineBankAccountForm } from './inline-bank-account-form';
@@ -142,6 +143,42 @@ export function WizardStepData({
 
   const { data: bankAccountsData } = useBankAccounts();
   const bankAccounts = bankAccountsData?.bankAccounts ?? [];
+
+  // Supplier pattern learning
+  const { data: supplierSuggestion } = useLastSupplierEntry(
+    wizardData.supplierName,
+  );
+  const lastAppliedSupplier = useRef<string>('');
+
+  useEffect(() => {
+    if (
+      supplierSuggestion &&
+      wizardData.supplierName &&
+      wizardData.supplierName !== lastAppliedSupplier.current &&
+      !wizardData.categoryId // Only suggest if category not yet set
+    ) {
+      lastAppliedSupplier.current = wizardData.supplierName;
+      const updates: Partial<WizardData> = {};
+
+      if (supplierSuggestion.categoryId) {
+        const cat = categories.find(
+          (c) => c.id === supplierSuggestion.categoryId,
+        );
+        if (cat) {
+          updates.categoryId = cat.id;
+          updates.categoryName = cat.name;
+        }
+      }
+
+      if (supplierSuggestion.costCenterId) {
+        updates.costCenterId = supplierSuggestion.costCenterId;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updateWizardData(updates);
+      }
+    }
+  }, [supplierSuggestion, wizardData.supplierName, wizardData.categoryId, categories, updateWizardData]);
 
   // Validation
   const validate = useCallback((): boolean => {
@@ -277,7 +314,16 @@ export function WizardStepData({
 
       {/* Categoria */}
       <div className="space-y-2">
-        <Label>Categoria *</Label>
+        <div className="flex items-center gap-2">
+          <Label>Categoria *</Label>
+          {supplierSuggestion?.categoryId &&
+            wizardData.categoryId === supplierSuggestion.categoryId && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <Lightbulb className="h-3 w-3" />
+                Sugestão baseada no último lançamento
+              </span>
+            )}
+        </div>
         <div className="flex items-center gap-2">
           <Select
             value={wizardData.categoryId}

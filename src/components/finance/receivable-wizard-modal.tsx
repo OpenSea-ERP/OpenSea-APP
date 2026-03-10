@@ -30,6 +30,7 @@ import {
   RECEIVABLE_SUBTYPE_LABELS,
   RECURRENCE_UNIT_LABELS,
 } from '@/types/finance';
+import type { OcrExtractResult } from '@/services/finance';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -44,6 +45,8 @@ import {
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { InstallmentPreview } from './installment-preview';
+import { OcrConfirmationStep, type OcrConfirmedData } from './ocr-confirmation-step';
+import { OcrUploadButton } from './ocr-upload-button';
 import { WizardStepDataReceivable } from './wizard-step-data-receivable';
 import { WizardStepTypeReceivable } from './wizard-step-type-receivable';
 
@@ -163,6 +166,8 @@ export function ReceivableWizardModal({
     ...INITIAL_WIZARD_DATA,
   });
 
+  const [ocrResult, setOcrResult] = useState<OcrExtractResult | null>(null);
+
   const createMutation = useCreateFinanceEntry();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -170,6 +175,26 @@ export function ReceivableWizardModal({
   const handleReset = useCallback(() => {
     setCurrentStep(1);
     setWizardData({ ...INITIAL_WIZARD_DATA, issueDate: new Date().toISOString().split('T')[0] });
+    setOcrResult(null);
+  }, []);
+
+  const handleOcrExtracted = useCallback((result: OcrExtractResult) => {
+    setOcrResult(result);
+  }, []);
+
+  const handleOcrConfirm = useCallback((data: OcrConfirmedData) => {
+    const updates: Partial<ReceivableWizardData> = {};
+    if (data.valor) updates.expectedAmount = data.valor;
+    if (data.vencimento) updates.dueDate = data.vencimento;
+    if (data.beneficiario) updates.customerName = data.beneficiario;
+
+    setWizardData((prev) => ({ ...prev, ...updates }));
+    setOcrResult(null);
+    setCurrentStep(2); // Auto-advance to Dados step
+  }, []);
+
+  const handleOcrDiscard = useCallback(() => {
+    setOcrResult(null);
   }, []);
 
   const handleOpenChange = useCallback(
@@ -374,11 +399,28 @@ export function ReceivableWizardModal({
 
         {/* Step Content */}
         {currentStep === 1 && (
-          <WizardStepTypeReceivable
-            wizardData={wizardData}
-            updateWizardData={updateWizardData}
-            goToStep={goToStep}
-          />
+          <div className="space-y-4">
+            <WizardStepTypeReceivable
+              wizardData={wizardData}
+              updateWizardData={updateWizardData}
+              goToStep={goToStep}
+            />
+
+            {/* OCR Section */}
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                Importar dados automaticamente
+              </p>
+              <OcrUploadButton onExtracted={handleOcrExtracted} />
+              {ocrResult && (
+                <OcrConfirmationStep
+                  ocrResult={ocrResult}
+                  onConfirm={handleOcrConfirm}
+                  onDiscard={handleOcrDiscard}
+                />
+              )}
+            </div>
+          </div>
         )}
 
         {currentStep === 2 && (
