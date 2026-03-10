@@ -26,12 +26,15 @@ import {
 import { logger } from '@/lib/logger';
 import type {
   CreateVariantRequest,
+  Pattern,
   Product,
   Template,
   TemplateAttribute,
   UpdateVariantRequest,
   Variant,
 } from '@/types/stock';
+import { PATTERN_LABELS } from '@/types/stock';
+import { PatternDisplay } from './pattern-display';
 import { AlertCircle, Info, Loader2, Save } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -115,6 +118,15 @@ export function VariantForm({
   const [colorPantone, setColorPantone] = useState(() => {
     return (variant?.colorPantone as string) || '';
   });
+  const [secondaryColorHex, setSecondaryColorHex] = useState(() => {
+    return (variant?.secondaryColorHex as string) || '';
+  });
+  const [secondaryColorPantone, setSecondaryColorPantone] = useState(() => {
+    return (variant?.secondaryColorPantone as string) || '';
+  });
+  const [pattern, setPattern] = useState<Pattern | ''>(() => {
+    return variant?.pattern || '';
+  });
   const [isDiscontinued, setIsDiscontinued] = useState(() => {
     return variant?.outOfLine || false;
   });
@@ -164,6 +176,9 @@ export function VariantForm({
       setReference(variant.reference || '');
       setColorHex(variant.colorHex || '');
       setColorPantone(variant.colorPantone || '');
+      setSecondaryColorHex(variant.secondaryColorHex || '');
+      setSecondaryColorPantone(variant.secondaryColorPantone || '');
+      setPattern(variant.pattern || '');
       setIsDiscontinued(variant.outOfLine || false);
       setIsActive(variant.isActive ?? true);
       setSimilars((variant.similars as unknown[]) || []);
@@ -218,6 +233,9 @@ export function VariantForm({
         reference: reference?.trim() || undefined,
         colorHex: colorHex?.trim() || undefined,
         colorPantone: colorPantone?.trim() || undefined,
+        secondaryColorHex: secondaryColorHex?.trim() || undefined,
+        secondaryColorPantone: secondaryColorPantone?.trim() || undefined,
+        pattern: pattern || undefined,
         outOfLine: isDiscontinued,
         isActive,
         similars: similars.length > 0 ? similars : undefined,
@@ -403,6 +421,77 @@ export function VariantForm({
                 placeholder="Ex: PANTONE 19-4052"
                 disabled={isLoading}
               />
+            </div>
+          </div>
+
+          {/* Linha 3: Cor Secundária */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="secondaryColorHex">Cor Secundária</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={secondaryColorHex || ''}
+                  onChange={e => setSecondaryColorHex(e.target.value)}
+                  placeholder="#000000"
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                <Input
+                  id="secondaryColorHex"
+                  name="secondaryColorHex"
+                  type="color"
+                  value={secondaryColorHex || '#d1d5db'}
+                  onChange={e => setSecondaryColorHex(e.target.value)}
+                  disabled={isLoading}
+                  className="w-16 h-12 p-1 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="secondaryColorPantone">Pantone Secundário</Label>
+              <Input
+                id="secondaryColorPantone"
+                name="secondaryColorPantone"
+                value={secondaryColorPantone}
+                onChange={e => setSecondaryColorPantone(e.target.value)}
+                placeholder="Ex: PANTONE 14-0105"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          {/* Linha 4: Padrão */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="pattern">Padrão</Label>
+              <div className="flex items-center gap-3">
+                <Select
+                  value={pattern}
+                  onValueChange={value => setPattern(value as Pattern)}
+                >
+                  <SelectTrigger id="pattern" className="flex-1">
+                    <SelectValue placeholder="Selecione o padrão..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.entries(PATTERN_LABELS) as [Pattern, string][]).map(
+                      ([key, label]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+                {pattern && (
+                  <PatternDisplay
+                    pattern={pattern}
+                    colorHex={colorHex || undefined}
+                    secondaryColorHex={secondaryColorHex || undefined}
+                    size="lg"
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
