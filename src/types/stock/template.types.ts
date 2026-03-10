@@ -1,7 +1,5 @@
 // Template Types
 
-import type { CareLabel } from './care.types';
-
 /**
  * Tipo do atributo de template
  */
@@ -47,12 +45,29 @@ export interface TemplateAttribute {
  */
 export type TemplateAttributes = Record<string, TemplateAttribute>;
 
-export type UnitOfMeasure = 'METERS' | 'KILOGRAMS' | 'UNITS';
+export type UnitOfMeasure =
+  | 'UNITS'
+  | 'METERS'
+  | 'KILOGRAMS'
+  | 'GRAMS'
+  | 'LITERS'
+  | 'MILLILITERS'
+  | 'SQUARE_METERS'
+  | 'PAIRS'
+  | 'BOXES'
+  | 'PACKS';
 
 export const UNIT_OF_MEASURE_LABELS: Record<UnitOfMeasure, string> = {
+  UNITS: 'Unidades (un)',
   METERS: 'Metros (m)',
   KILOGRAMS: 'Quilogramas (kg)',
-  UNITS: 'Unidades (un)',
+  GRAMS: 'Gramas (g)',
+  LITERS: 'Litros (L)',
+  MILLILITERS: 'Mililitros (mL)',
+  SQUARE_METERS: 'Metros quadrados (m²)',
+  PAIRS: 'Pares (par)',
+  BOXES: 'Caixas (cx)',
+  PACKS: 'Pacotes (pct)',
 };
 
 /**
@@ -69,7 +84,7 @@ export interface Template {
   productAttributes?: TemplateAttributes;
   variantAttributes?: TemplateAttributes;
   itemAttributes?: TemplateAttributes;
-  careLabel?: CareLabel | null;
+  specialModules: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt?: string | null;
@@ -84,7 +99,7 @@ export interface CreateTemplateRequest {
   productAttributes?: TemplateAttributes;
   variantAttributes?: TemplateAttributes;
   itemAttributes?: TemplateAttributes;
-  careLabel?: CareLabel | null;
+  specialModules?: string[];
 }
 
 export interface UpdateTemplateRequest {
@@ -95,7 +110,7 @@ export interface UpdateTemplateRequest {
   productAttributes?: TemplateAttributes;
   variantAttributes?: TemplateAttributes;
   itemAttributes?: TemplateAttributes;
-  careLabel?: CareLabel | null;
+  specialModules?: string[];
 }
 
 export interface TemplatesResponse {
