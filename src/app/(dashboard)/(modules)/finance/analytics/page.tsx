@@ -100,7 +100,7 @@ export default function FinanceAnalyticsPage() {
 
       <PeriodSelector value={dateRange} onChange={setDateRange} />
 
-      <KPICards data={dashboardData?.dashboard} isLoading={dashLoading} />
+      <KPICards data={dashboardData} isLoading={dashLoading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RevenueExpenseChart

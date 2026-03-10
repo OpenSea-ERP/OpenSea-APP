@@ -24,7 +24,8 @@ export default function ExportPage() {
   const defaultRange = getMonthRange();
   const [startDate, setStartDate] = useState(defaultRange.start);
   const [endDate, setEndDate] = useState(defaultRange.end);
-  const [format, setFormat] = useState<'csv' | 'sped'>('csv');
+  const [format, setFormat] = useState<'CSV' | 'PDF' | 'XLSX' | 'DOCX'>('CSV');
+  const [reportType, setReportType] = useState<'ENTRIES' | 'DRE' | 'BALANCE' | 'CASHFLOW'>('ENTRIES');
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -43,7 +44,7 @@ export default function ExportPage() {
 
     setMessage(null);
     exportAccounting(
-      { startDate, endDate, format },
+      { startDate, endDate, format, reportType },
       {
         onSuccess: () => {
           setMessage({
@@ -126,30 +127,50 @@ export default function ExportPage() {
           </div>
 
           <div className="space-y-3">
+            <Label>Tipo de Relatório</Label>
+            <div className="flex flex-wrap gap-4">
+              {([
+                ['ENTRIES', 'Lançamentos'],
+                ['DRE', 'DRE'],
+                ['BALANCE', 'Balanço'],
+                ['CASHFLOW', 'Fluxo de Caixa'],
+              ] as const).map(([value, label]) => (
+                <label key={value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="reportType"
+                    value={value}
+                    checked={reportType === value}
+                    onChange={() => setReportType(value)}
+                    className="accent-blue-600"
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
             <Label>Formato de Exportação</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="format"
-                  value="csv"
-                  checked={format === 'csv'}
-                  onChange={() => setFormat('csv')}
-                  className="accent-blue-600"
-                />
-                CSV (Valores Separados por Vírgula)
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="format"
-                  value="sped"
-                  checked={format === 'sped'}
-                  onChange={() => setFormat('sped')}
-                  className="accent-blue-600"
-                />
-                SPED (Escrituração Digital)
-              </label>
+            <div className="flex flex-wrap gap-4">
+              {([
+                ['CSV', 'CSV'],
+                ['PDF', 'PDF'],
+                ['XLSX', 'Excel (XLSX)'],
+                ['DOCX', 'Word (DOCX)'],
+              ] as const).map(([value, label]) => (
+                <label key={value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="format"
+                    value={value}
+                    checked={format === value}
+                    onChange={() => setFormat(value)}
+                    className="accent-blue-600"
+                  />
+                  {label}
+                </label>
+              ))}
             </div>
           </div>
 
@@ -182,12 +203,17 @@ export default function ExportPage() {
             <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-400">
               <li>
                 <strong>CSV:</strong> Formato universal compatível com Excel,
-                Google Sheets e outros sistemas de planilhas.
+                Google Sheets e sistemas contábeis.
               </li>
               <li>
-                <strong>SPED:</strong> Formato específico para integração com
-                sistemas contábeis brasileiros que seguem o padrão da Receita
-                Federal.
+                <strong>PDF:</strong> Documento formatado para impressão e
+                arquivamento.
+              </li>
+              <li>
+                <strong>XLSX:</strong> Planilha Excel com formatação e bordas.
+              </li>
+              <li>
+                <strong>DOCX:</strong> Documento Word com tabelas formatadas.
               </li>
             </ul>
           </div>

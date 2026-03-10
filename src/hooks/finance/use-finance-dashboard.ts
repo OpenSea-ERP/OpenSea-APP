@@ -39,9 +39,13 @@ export function useFinanceCashflow(params: {
 export function useExportAccounting() {
   return useMutation({
     mutationFn: (params: {
+      reportType: 'ENTRIES' | 'DRE' | 'BALANCE' | 'CASHFLOW';
+      format: 'CSV' | 'PDF' | 'XLSX' | 'DOCX';
       startDate: string;
       endDate: string;
-      format?: 'csv' | 'sped';
+      type?: string;
+      costCenterId?: string;
+      categoryId?: string;
     }) => financeDashboardService.exportAccounting(params),
   });
 }

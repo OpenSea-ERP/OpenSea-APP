@@ -6,13 +6,9 @@ import type {
   ForecastResponse,
 } from '@/types/finance';
 
-export interface FinanceDashboardResponse {
-  dashboard: FinanceDashboard;
-}
-
 export const financeAnalyticsService = {
-  async getDashboard(): Promise<FinanceDashboardResponse> {
-    return apiClient.get<FinanceDashboardResponse>(
+  async getDashboard(): Promise<FinanceDashboard> {
+    return apiClient.get<FinanceDashboard>(
       API_ENDPOINTS.FINANCE_DASHBOARD.OVERVIEW,
     );
   },

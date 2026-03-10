@@ -7,13 +7,9 @@ import type {
   ForecastResponse,
 } from '@/types/finance';
 
-export interface FinanceDashboardResponse {
-  dashboard: FinanceDashboard;
-}
-
 export const financeDashboardService = {
-  async getDashboard(): Promise<FinanceDashboardResponse> {
-    return apiClient.get<FinanceDashboardResponse>(
+  async getDashboard(): Promise<FinanceDashboard> {
+    return apiClient.get<FinanceDashboard>(
       API_ENDPOINTS.FINANCE_DASHBOARD.OVERVIEW
     );
   },
@@ -55,19 +51,40 @@ export const financeDashboardService = {
   },
 
   async exportAccounting(params: {
+    reportType: 'ENTRIES' | 'DRE' | 'BALANCE' | 'CASHFLOW';
+    format: 'CSV' | 'PDF' | 'XLSX' | 'DOCX';
     startDate: string;
     endDate: string;
-    format?: 'csv' | 'sped';
+    type?: string;
+    costCenterId?: string;
+    categoryId?: string;
   }): Promise<Blob> {
-    const query = new URLSearchParams({
-      startDate: params.startDate,
-      endDate: params.endDate,
-    });
-    if (params.format) query.append('format', params.format);
+    const baseUrl =
+      typeof window !== 'undefined'
+        ? process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3333'
+        : 'http://127.0.0.1:3333';
 
-    return apiClient.post<Blob>(
-      `${API_ENDPOINTS.FINANCE_DASHBOARD.EXPORT_ACCOUNTING}?${query.toString()}`,
-      {}
+    const token =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('auth_token')
+        : null;
+
+    const response = await fetch(
+      `${baseUrl}${API_ENDPOINTS.FINANCE_DASHBOARD.EXPORT_ACCOUNTING}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(params),
+      },
     );
+
+    if (!response.ok) {
+      throw new Error(`Erro ao exportar: ${response.statusText}`);
+    }
+
+    return response.blob();
   },
 };

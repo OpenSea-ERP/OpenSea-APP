@@ -171,7 +171,7 @@ export default function FinanceReportsPage() {
       )}
 
       {activeReport === 'balance' && (
-        <BalanceSheet data={dashboardData?.dashboard} isLoading={dashLoading} />
+        <BalanceSheet data={dashboardData} isLoading={dashLoading} />
       )}
 
       {activeReport === 'cashflow' && (
