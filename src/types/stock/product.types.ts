@@ -36,7 +36,6 @@ export interface Product {
   status: ProductStatus;
   outOfLine: boolean;
   attributes: Record<string, unknown>;
-  careInstructionIds: string[];
   templateId: string;
   template?: {
     id: string;

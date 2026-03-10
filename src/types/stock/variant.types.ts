@@ -2,6 +2,23 @@
 
 import type { PaginationMeta, PaginatedQuery } from '../pagination';
 
+export type Pattern =
+  | 'SOLID'
+  | 'STRIPED'
+  | 'PLAID'
+  | 'PRINTED'
+  | 'GRADIENT'
+  | 'JACQUARD';
+
+export const PATTERN_LABELS: Record<Pattern, string> = {
+  SOLID: 'Sólido',
+  STRIPED: 'Listrado',
+  PLAID: 'Xadrez',
+  PRINTED: 'Estampado',
+  GRADIENT: 'Degradê',
+  JACQUARD: 'Jacquard',
+};
+
 export interface Variant {
   id: string;
   productId: string;
@@ -10,7 +27,6 @@ export interface Variant {
   sequentialCode?: number;
   name: string;
   price: number;
-  imageUrl?: string;
   attributes: Record<string, unknown>;
   costPrice?: number;
   profitMargin?: number;
@@ -20,6 +36,9 @@ export interface Variant {
   upcCode?: string;
   colorHex?: string;
   colorPantone?: string;
+  secondaryColorHex?: string;
+  secondaryColorPantone?: string;
+  pattern?: Pattern;
   minStock?: number;
   maxStock?: number;
   reorderPoint?: number;
@@ -38,7 +57,6 @@ export interface CreateVariantRequest {
   sku?: string; // Opcional - sera auto-gerado se nao fornecido (max: 100)
   name: string; // Obrigatorio (1-255 chars)
   price?: number; // Opcional, default 0 (nonnegative)
-  imageUrl?: string;
   attributes?: Record<string, unknown>;
   costPrice?: number; // Positive
   profitMargin?: number;
@@ -49,6 +67,9 @@ export interface CreateVariantRequest {
   reference?: string; // Max: 128
   colorHex?: string; // Max: 7 (hex color)
   colorPantone?: string; // Max: 50
+  secondaryColorHex?: string; // Max: 7
+  secondaryColorPantone?: string; // Max: 50
+  pattern?: Pattern;
   minStock?: number; // Int, min: 0
   maxStock?: number; // Int, min: 0
   reorderPoint?: number; // Int, min: 0
@@ -62,7 +83,6 @@ export interface UpdateVariantRequest {
   sku?: string; // Max: 100
   name?: string; // 1-255 chars
   price?: number; // Nonnegative
-  imageUrl?: string;
   attributes?: Record<string, unknown>;
   costPrice?: number; // Positive
   profitMargin?: number;
@@ -72,6 +92,9 @@ export interface UpdateVariantRequest {
   upcCode?: string; // Max: 100
   colorHex?: string; // Max: 7
   colorPantone?: string; // Max: 50
+  secondaryColorHex?: string; // Max: 7
+  secondaryColorPantone?: string; // Max: 50
+  pattern?: Pattern;
   minStock?: number; // Int, min: 0
   maxStock?: number; // Int, min: 0
   reorderPoint?: number; // Int, min: 0
