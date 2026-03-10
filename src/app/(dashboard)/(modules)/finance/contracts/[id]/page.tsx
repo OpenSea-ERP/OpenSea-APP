@@ -17,25 +17,31 @@ import {
   useSupplierHistory,
 } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
+import { storageFilesService } from '@/services/storage/files.service';
 import type { ContractStatus } from '@/types/finance';
 import {
   CONTRACT_STATUS_LABELS,
   PAYMENT_FREQUENCY_LABELS,
 } from '@/types/finance';
+import type { StorageFile } from '@/types/storage';
 import {
   AlertTriangle,
   ArrowLeft,
   Building2,
   Calendar,
   DollarSign,
+  Download,
   Edit,
   FileText,
+  Loader2,
+  Paperclip,
   Play,
   Trash2,
+  Upload,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { use, useCallback, useState } from 'react';
+import { use, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // =============================================================================
@@ -128,6 +134,50 @@ export default function ContractDetailPage({
 
   // Delete modal
   const [pinModalOpen, setPinModalOpen] = useState(false);
+
+  // Attachments
+  const [attachments, setAttachments] = useState<StorageFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!contract) return;
+    storageFilesService
+      .listFiles({ entityType: 'CONTRACT', entityId: contract.id, limit: 50 })
+      .then((res) => setAttachments(res.files ?? []))
+      .catch(() => {});
+  }, [contract]);
+
+  const handleUploadFile = useCallback(
+    async (file: File) => {
+      if (!contract) return;
+      setUploading(true);
+      try {
+        const result = await storageFilesService.uploadFile(null, file, {
+          entityType: 'CONTRACT',
+          entityId: contract.id,
+        });
+        setAttachments((prev) => [...prev, result.file]);
+        toast.success('Documento enviado com sucesso!');
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Erro ao enviar documento.';
+        toast.error(message);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [contract]
+  );
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) handleUploadFile(file);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    },
+    [handleUploadFile]
+  );
 
   const handleDelete = useCallback(async () => {
     try {
@@ -470,6 +520,80 @@ export default function ContractDetailPage({
               </div>
             </Card>
           )}
+
+          {/* Attachments */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                Documentos
+                {attachments.length > 0 && (
+                  <Badge variant="secondary">{attachments.length}</Badge>
+                )}
+              </h2>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                Enviar Documento
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                onChange={handleFileSelect}
+              />
+            </div>
+            {attachments.length > 0 ? (
+              <div className="space-y-2">
+                {attachments.map((file) => (
+                  <div
+                    key={file.id}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">{file.name}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>
+                            {file.size
+                              ? `${(file.size / 1024).toFixed(1)} KB`
+                              : ''}
+                          </span>
+                          <span>{formatDate(file.createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href={storageFilesService.getServeUrl(file.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                    >
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </a>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Nenhum documento anexado. Envie PDFs, aditivos ou outros
+                documentos do contrato.
+              </p>
+            )}
+          </Card>
 
           {/* Metadata */}
           <Card className="p-6">
