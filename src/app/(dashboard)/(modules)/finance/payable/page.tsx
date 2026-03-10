@@ -47,6 +47,7 @@ import {
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { FilterPresets } from '@/components/finance/filter-presets';
 import { BaixaModal } from '@/components/finance/baixa-modal';
 import { useDeleteFinanceEntry, useFinanceEntries } from '@/hooks/finance';
 import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
@@ -498,6 +499,37 @@ export default function PayablePage() {
             </Button>
           )}
         </div>
+
+        {/* Filter Presets */}
+        <FilterPresets
+          pageKey="payable"
+          currentFilters={{
+            status: statusFilter !== 'ALL' ? statusFilter : undefined,
+            categoryId: categoryFilter || undefined,
+            supplierName: supplierFilter || undefined,
+            dueDateFrom: dueDateFrom ? dueDateFrom.toISOString().split('T')[0] : undefined,
+            dueDateTo: dueDateTo ? dueDateTo.toISOString().split('T')[0] : undefined,
+          }}
+          onApply={(filters) => {
+            setStatusFilter((filters.status as FinanceEntryStatus) ?? 'ALL');
+            setCategoryFilter(filters.categoryId ?? '');
+            setSupplierFilter(filters.supplierName ?? '');
+            setDueDateFrom(filters.dueDateFrom ? new Date(filters.dueDateFrom) : undefined);
+            setDueDateTo(filters.dueDateTo ? new Date(filters.dueDateTo) : undefined);
+            setPage(1);
+          }}
+          quickPresets={[
+            { label: 'Vencidas', filters: { status: 'OVERDUE' } },
+            { label: 'Pendentes', filters: { status: 'PENDING' } },
+            {
+              label: 'Proximos 7 dias',
+              filters: {
+                dueDateFrom: new Date().toISOString().split('T')[0],
+                dueDateTo: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+              },
+            },
+          ]}
+        />
 
         {/* Filter Panel */}
         {showFilters && (

@@ -27,17 +27,38 @@ interface CalendarViewProps {
   className?: string;
 }
 
+function isFinancePaid(event: CalendarEvent): boolean {
+  return event.type === 'FINANCE_DUE' &&
+    (event.title.includes('[Pago]') || event.title.includes('[Recebido]'));
+}
+
+function getFinanceDueColor(event: CalendarEvent): string {
+  if (isFinancePaid(event)) return '#94a3b8'; // muted slate for paid
+  // Check title pattern: "A Pagar:" or "A Receber:" from calendar sync
+  if (event.title.includes('A Receber') || event.title.includes('[Recebido]')) {
+    return '#10b981'; // green for receivable
+  }
+  return '#f59e0b'; // amber for payable
+}
+
 function mapToFullCalendarEvents(events: CalendarEvent[]): EventInput[] {
-  return events.map((event) => ({
-    id: event.id + (event.occurrenceDate ?? ''),
-    title: event.title,
-    start: event.occurrenceDate ?? event.startDate,
-    end: event.endDate,
-    allDay: event.isAllDay,
-    backgroundColor: event.color ?? EVENT_TYPE_COLORS[event.type] ?? '#64748b',
-    borderColor: event.color ?? EVENT_TYPE_COLORS[event.type] ?? '#64748b',
-    extendedProps: { calendarEvent: event },
-  }));
+  return events.map((event) => {
+    const isFinance = event.type === 'FINANCE_DUE';
+    const color = isFinance
+      ? getFinanceDueColor(event)
+      : (event.color ?? EVENT_TYPE_COLORS[event.type] ?? '#64748b');
+
+    return {
+      id: event.id + (event.occurrenceDate ?? ''),
+      title: event.title,
+      start: event.occurrenceDate ?? event.startDate,
+      end: event.endDate,
+      allDay: event.isAllDay,
+      backgroundColor: color,
+      borderColor: color,
+      extendedProps: { calendarEvent: event },
+    };
+  });
 }
 
 export const CalendarView = forwardRef<CalendarViewRef, CalendarViewProps>(
@@ -83,10 +104,22 @@ export const CalendarView = forwardRef<CalendarViewRef, CalendarViewProps>(
 
   const renderEventContent = (arg: EventContentArg) => {
     const calendarEvent = arg.event.extendedProps.calendarEvent as CalendarEvent | undefined;
-    const icon = calendarEvent ? EVENT_TYPE_ICONS[calendarEvent.type] : null;
     const isListView = arg.view.type === 'listWeek';
     const isMonthView = arg.view.type === 'dayGridMonth';
     const isTimeGrid = arg.view.type === 'timeGridWeek' || arg.view.type === 'timeGridDay';
+
+    // Finance event special icon: arrow-down for payable, arrow-up for receivable
+    let icon = calendarEvent ? EVENT_TYPE_ICONS[calendarEvent.type] : null;
+    const isPaid = calendarEvent ? isFinancePaid(calendarEvent) : false;
+
+    if (calendarEvent?.type === 'FINANCE_DUE') {
+      const isReceivable =
+        calendarEvent.title.includes('A Receber') ||
+        calendarEvent.title.includes('[Recebido]');
+      icon = isReceivable
+        ? <span className="w-3 h-3 text-[0.65rem] font-bold">{'\u2191'}</span>
+        : <span className="w-3 h-3 text-[0.65rem] font-bold">{'\u2193'}</span>;
+    }
 
     // Format time for month view
     const timeText = isMonthView && !arg.event.allDay && arg.event.start
@@ -103,6 +136,7 @@ export const CalendarView = forwardRef<CalendarViewRef, CalendarViewProps>(
         <span className={cn(
           'truncate font-medium leading-tight flex-1 min-w-0',
           isListView ? 'text-xs' : 'text-[0.75rem]',
+          isPaid && 'line-through opacity-60',
         )}>
           {arg.event.title}
         </span>
