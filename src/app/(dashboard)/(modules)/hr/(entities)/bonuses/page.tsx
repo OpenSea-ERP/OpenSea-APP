@@ -35,21 +35,23 @@ import type { Bonus } from '@/types/hr';
 import { Calendar, Download, ExternalLink, Eye, Plus, PlusCircle, Trash2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
 import { useCallback, useMemo, useState } from 'react';
 import {
   bonusesConfig,
   useListBonuses,
   useCreateBonus,
   useDeleteBonus,
-  CreateModal,
-  DeleteConfirmModal,
-  ViewModal,
   formatCurrency,
   formatDate,
   getPaidLabel,
   getPaidColor,
   type BonusFilters,
 } from './src';
+
+const CreateModal = dynamic(() => import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })), { ssr: false });
+const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
+const DeleteConfirmModal = dynamic(() => import('./src/modals/delete-confirm-modal').then(m => ({ default: m.DeleteConfirmModal })), { ssr: false });
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 

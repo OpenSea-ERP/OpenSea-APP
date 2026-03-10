@@ -11,10 +11,12 @@ import type {
 } from '@/types/hr';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Trash2, Users } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { companyStakeholdersApi } from '../api';
-import { StakeholderModal } from '../modals/stakeholder-modal';
+
+const StakeholderModal = dynamic(() => import('../modals/stakeholder-modal').then(m => ({ default: m.StakeholderModal })), { ssr: false });
 
 interface StakeholdersEditTabProps {
   companyId: string;

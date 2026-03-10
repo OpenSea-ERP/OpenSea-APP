@@ -47,20 +47,22 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
 import { useCallback, useMemo, useState } from 'react';
 import {
   absencesConfig,
   useListAbsences,
   useApproveAbsence,
   useCancelAbsence,
-  RequestSickLeaveModal,
-  RejectModal,
-  ViewModal,
   getTypeLabel,
   getStatusLabel,
   getStatusColor,
   getTypeColor,
 } from './src';
+
+const RequestSickLeaveModal = dynamic(() => import('./src/modals/request-sick-leave-modal').then(m => ({ default: m.RequestSickLeaveModal })), { ssr: false });
+const RejectModal = dynamic(() => import('./src/modals/reject-modal').then(m => ({ default: m.RejectModal })), { ssr: false });
+const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 

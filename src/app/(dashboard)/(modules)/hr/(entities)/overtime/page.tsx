@@ -36,20 +36,22 @@ import type { Overtime } from '@/types/hr';
 import { Check, Clock, Coffee, Download, ExternalLink, Eye, Plus, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
 import { useCallback, useMemo, useState } from 'react';
 import {
   overtimeConfig,
   useListOvertime,
   useCreateOvertime,
   useApproveOvertime,
-  CreateModal,
-  ApproveModal,
-  ViewModal,
   formatDate,
   formatHours,
   getApprovalLabel,
   getApprovalColor,
 } from './src';
+
+const CreateModal = dynamic(() => import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })), { ssr: false });
+const ApproveModal = dynamic(() => import('./src/modals/approve-modal').then(m => ({ default: m.ApproveModal })), { ssr: false });
+const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 

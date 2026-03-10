@@ -12,7 +12,9 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import { InfoField } from '@/components/shared/info-field';
-import { PhotoUploadDialog } from '@/components/shared/photo-upload-dialog';
+import dynamic from 'next/dynamic';
+
+const PhotoUploadDialog = dynamic(() => import('@/components/shared/photo-upload-dialog').then(m => ({ default: m.PhotoUploadDialog })), { ssr: false });
 import { FileManager } from '@/components/storage';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';

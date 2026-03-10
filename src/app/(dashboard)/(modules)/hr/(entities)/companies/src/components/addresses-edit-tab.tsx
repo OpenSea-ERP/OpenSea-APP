@@ -13,10 +13,12 @@ import type {
 } from '@/types/hr';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, MapPin, Plus, Trash2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { companyAddressesApi } from '../api';
-import { AddressModal } from '../modals/address-modal';
+
+const AddressModal = dynamic(() => import('../modals/address-modal').then(m => ({ default: m.AddressModal })), { ssr: false });
 
 interface AddressesEditTabProps {
   companyId: string;

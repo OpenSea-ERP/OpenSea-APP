@@ -11,10 +11,12 @@ import type {
 } from '@/types/hr';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { companyFiscalSettingsApi } from '../api';
-import { FiscalSettingsModal } from '../modals/fiscal-settings-modal';
+
+const FiscalSettingsModal = dynamic(() => import('../modals/fiscal-settings-modal').then(m => ({ default: m.FiscalSettingsModal })), { ssr: false });
 
 interface FiscalEditTabProps {
   companyId: string;

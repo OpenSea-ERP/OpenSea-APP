@@ -25,6 +25,7 @@ import { exportToCSV } from '@/lib/csv-export';
 import type { TimeBank } from '@/types/hr';
 import { Download, ExternalLink, Eye, Hourglass, Minus, Plus, SlidersHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import {
   formatBalance,
@@ -35,11 +36,12 @@ import {
   useCreditTimeBank,
   useDebitTimeBank,
   useAdjustTimeBank,
-  CreditModal,
-  DebitModal,
-  AdjustModal,
-  ViewModal,
 } from './src';
+
+const CreditModal = dynamic(() => import('./src/modals/credit-modal').then(m => ({ default: m.CreditModal })), { ssr: false });
+const DebitModal = dynamic(() => import('./src/modals/debit-modal').then(m => ({ default: m.DebitModal })), { ssr: false });
+const AdjustModal = dynamic(() => import('./src/modals/adjust-modal').then(m => ({ default: m.AdjustModal })), { ssr: false });
+const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
 export default function TimeBankPage() {

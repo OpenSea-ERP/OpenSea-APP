@@ -42,6 +42,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useCallback, useMemo, useState } from 'react';
 import {
   payrollConfig,
@@ -51,14 +52,15 @@ import {
   useApprovePayroll,
   usePayPayroll,
   useCancelPayroll,
-  CreateModal,
-  ViewModal,
   formatCurrency,
   formatMonthYear,
   getStatusLabel,
   getStatusColor,
   type PayrollFilters,
 } from './src';
+
+const CreateModal = dynamic(() => import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })), { ssr: false });
+const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 

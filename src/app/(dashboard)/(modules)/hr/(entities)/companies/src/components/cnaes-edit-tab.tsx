@@ -9,10 +9,12 @@ import { formatCNAE } from '@/helpers/formatters';
 import type { CompanyCnae, CreateCompanyCnaeData } from '@/types/hr';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, FileCheck, Plus, Trash2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { companyCnaesApi } from '../api';
-import { CnaeModal } from '../modals/cnae-modal';
+
+const CnaeModal = dynamic(() => import('../modals/cnae-modal').then(m => ({ default: m.CnaeModal })), { ssr: false });
 
 interface CnaesEditTabProps {
   companyId: string;

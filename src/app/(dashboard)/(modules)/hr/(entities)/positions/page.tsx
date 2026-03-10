@@ -37,23 +37,25 @@ import {
   Upload,
   Users,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo } from 'react';
 import { useListCompanies } from '../companies/src';
 import { useListDepartments } from '../departments/src';
 import {
-  CreateModal,
   createPosition,
-  DeleteConfirmModal,
   deletePosition,
-  DuplicateConfirmModal,
   duplicatePosition,
-  EditModal,
   positionsApi,
   positionsConfig,
   updatePosition,
-  ViewModal,
 } from './src';
+
+const CreateModal = dynamic(() => import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })), { ssr: false });
+const EditModal = dynamic(() => import('./src/modals/edit-modal').then(m => ({ default: m.EditModal })), { ssr: false });
+const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
+const DeleteConfirmModal = dynamic(() => import('./src/modals/delete-confirm-modal').then(m => ({ default: m.DeleteConfirmModal })), { ssr: false });
+const DuplicateConfirmModal = dynamic(() => import('./src/modals/duplicate-confirm-modal').then(m => ({ default: m.DuplicateConfirmModal })), { ssr: false });
 
 export default function PositionsPage() {
   return (

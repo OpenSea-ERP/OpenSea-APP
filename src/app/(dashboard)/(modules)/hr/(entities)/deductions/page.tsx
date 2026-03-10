@@ -35,15 +35,13 @@ import type { Deduction } from '@/types/hr';
 import { Calendar, Download, ExternalLink, Eye, MinusCircle, Plus, Trash2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import {
   deductionsConfig,
   useListDeductions,
   useCreateDeduction,
   useDeleteDeduction,
-  CreateModal,
-  DeleteConfirmModal,
-  ViewModal,
   formatCurrency,
   formatDate,
   getAppliedLabel,
@@ -51,6 +49,10 @@ import {
   formatInstallments,
   type DeductionFilters,
 } from './src';
+
+const CreateModal = dynamic(() => import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })), { ssr: false });
+const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
+const DeleteConfirmModal = dynamic(() => import('./src/modals/delete-confirm-modal').then(m => ({ default: m.DeleteConfirmModal })), { ssr: false });
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 

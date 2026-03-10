@@ -45,6 +45,7 @@ import {
   User,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useCallback, useMemo, useState } from 'react';
 import {
   vacationsConfig,
@@ -52,15 +53,16 @@ import {
   useScheduleVacation,
   useSellVacationDays,
   useCancelVacationSchedule,
-  CreateModal,
-  ScheduleModal,
-  SellDaysModal,
-  ViewModal,
   formatDate,
   getStatusLabel,
   getStatusColor,
   formatDaysInfo,
 } from './src';
+
+const CreateModal = dynamic(() => import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })), { ssr: false });
+const ScheduleModal = dynamic(() => import('./src/modals/schedule-modal').then(m => ({ default: m.ScheduleModal })), { ssr: false });
+const SellDaysModal = dynamic(() => import('./src/modals/sell-days-modal').then(m => ({ default: m.SellDaysModal })), { ssr: false });
+const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 
