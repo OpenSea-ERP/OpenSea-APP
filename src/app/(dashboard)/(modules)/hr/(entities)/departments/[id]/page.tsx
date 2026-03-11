@@ -4,7 +4,7 @@
 
 'use client';
 
-import { companiesApi } from '@/app/(dashboard)/(modules)/hr/(entities)/companies/src/api';
+import { companiesApi } from '@/app/(dashboard)/(modules)/admin/(entities)/companies/src/api';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {

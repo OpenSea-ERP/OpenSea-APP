@@ -1,4 +1,4 @@
-import { HR_PERMISSIONS } from '@/config/rbac/permission-codes';
+import { ADMIN_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { defineEntityConfig } from '@/core/types';
 import type { Company } from '@/types/hr';
 import { Building2, Copy, Edit, Eye, Plus, Trash2 } from 'lucide-react';
@@ -12,26 +12,26 @@ export const companiesConfig = defineEntityConfig<Company>()({
   icon: Building2,
 
   api: {
-    baseUrl: '/api/v1/hr/companies',
+    baseUrl: '/api/v1/admin/companies',
     queryKey: 'companies',
     queryKeys: {
       list: ['companies'],
       detail: (id: string) => ['companies', id],
     },
     endpoints: {
-      list: '/v1/hr/companies',
-      get: '/v1/hr/companies/:id',
-      create: '/v1/hr/companies',
-      update: '/v1/hr/companies/:id',
-      delete: '/v1/hr/companies/:id',
+      list: '/v1/admin/companies',
+      get: '/v1/admin/companies/:id',
+      create: '/v1/admin/companies',
+      update: '/v1/admin/companies/:id',
+      delete: '/v1/admin/companies/:id',
     },
   },
 
   routes: {
-    list: '/hr/companies',
-    detail: '/hr/companies/:id',
-    create: '/hr/companies/new',
-    edit: '/hr/companies/:id/edit',
+    list: '/admin/companies',
+    detail: '/admin/companies/:id',
+    create: '/admin/companies/new',
+    edit: '/admin/companies/:id/edit',
   },
 
   display: {
@@ -217,12 +217,12 @@ export const companiesConfig = defineEntityConfig<Company>()({
   },
 
   permissions: {
-    view: HR_PERMISSIONS.COMPANIES.READ,
-    create: HR_PERMISSIONS.COMPANIES.CREATE,
-    update: HR_PERMISSIONS.COMPANIES.UPDATE,
-    delete: HR_PERMISSIONS.COMPANIES.DELETE,
-    export: HR_PERMISSIONS.COMPANIES.MANAGE,
-    import: HR_PERMISSIONS.COMPANIES.MANAGE,
+    view: ADMIN_PERMISSIONS.COMPANIES.READ,
+    create: ADMIN_PERMISSIONS.COMPANIES.CREATE,
+    update: ADMIN_PERMISSIONS.COMPANIES.UPDATE,
+    delete: ADMIN_PERMISSIONS.COMPANIES.DELETE,
+    export: ADMIN_PERMISSIONS.COMPANIES.MANAGE,
+    import: ADMIN_PERMISSIONS.COMPANIES.MANAGE,
   },
 
   features: {
@@ -254,7 +254,7 @@ export const companiesConfig = defineEntityConfig<Company>()({
         label: 'Nova Empresa',
         icon: Plus,
         variant: 'default',
-        permission: HR_PERMISSIONS.COMPANIES.CREATE,
+        permission: ADMIN_PERMISSIONS.COMPANIES.CREATE,
         onClick: () => {},
       },
     ],
@@ -264,28 +264,28 @@ export const companiesConfig = defineEntityConfig<Company>()({
         label: 'Visualizar',
         icon: Eye,
         onClick: () => {},
-        permission: HR_PERMISSIONS.COMPANIES.READ,
+        permission: ADMIN_PERMISSIONS.COMPANIES.READ,
       },
       {
         id: 'edit',
         label: 'Editar',
         icon: Edit,
         onClick: () => {},
-        permission: HR_PERMISSIONS.COMPANIES.UPDATE,
+        permission: ADMIN_PERMISSIONS.COMPANIES.UPDATE,
       },
       {
         id: 'duplicate',
         label: 'Duplicar',
         icon: Copy,
         onClick: () => {},
-        permission: HR_PERMISSIONS.COMPANIES.CREATE,
+        permission: ADMIN_PERMISSIONS.COMPANIES.CREATE,
       },
       {
         id: 'delete',
         label: 'Excluir',
         icon: Trash2,
         onClick: () => {},
-        permission: HR_PERMISSIONS.COMPANIES.DELETE,
+        permission: ADMIN_PERMISSIONS.COMPANIES.DELETE,
         confirm: true,
         confirmTitle: 'Excluir Empresa',
         confirmMessage: 'Tem certeza que deseja excluir esta empresa?',
@@ -298,7 +298,7 @@ export const companiesConfig = defineEntityConfig<Company>()({
         icon: Trash2,
         onClick: () => {},
         variant: 'destructive',
-        permission: HR_PERMISSIONS.COMPANIES.DELETE,
+        permission: ADMIN_PERMISSIONS.COMPANIES.DELETE,
         confirm: true,
         confirmTitle: 'Excluir Empresas',
         confirmMessage:

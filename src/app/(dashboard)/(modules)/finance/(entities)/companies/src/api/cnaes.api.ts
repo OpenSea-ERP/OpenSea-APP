@@ -1,8 +1,8 @@
-import { companiesService } from '@/services/hr';
+import { companiesService } from '@/services/admin/companies.service';
 import type {
   CompanyCnaeResponse,
   CompanyCnaesResponse,
-} from '@/services/hr/companies.service';
+} from '@/services/admin/companies.service';
 import type {
   CompanyCnae,
   CreateCompanyCnaeData,

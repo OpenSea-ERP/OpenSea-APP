@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { companiesService } from '@/services/hr';
+import { companiesService } from '@/services/admin/companies.service';
 import { useQuery } from '@tanstack/react-query';
 import { Building2, Loader2, Unlink } from 'lucide-react';
 import { useState } from 'react';
@@ -69,7 +69,12 @@ export function LinkCompanyModal({
 
   if (mode === 'unlink') {
     return (
-      <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
+      <Dialog
+        open={isOpen}
+        onOpenChange={open => {
+          if (!open) handleClose();
+        }}
+      >
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -83,7 +88,11 @@ export function LinkCompanyModal({
           </DialogHeader>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleClose} disabled={isLoading}>
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isLoading}
+            >
               Cancelar
             </Button>
             <Button
@@ -102,7 +111,12 @@ export function LinkCompanyModal({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={open => { if (!open) handleClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={open => {
+        if (!open) handleClose();
+      }}
+    >
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -120,7 +134,11 @@ export function LinkCompanyModal({
             onValueChange={setSelectedCompanyId}
           >
             <SelectTrigger>
-              <SelectValue placeholder={isLoadingCompanies ? 'Carregando...' : 'Selecione uma empresa'} />
+              <SelectValue
+                placeholder={
+                  isLoadingCompanies ? 'Carregando...' : 'Selecione uma empresa'
+                }
+              />
             </SelectTrigger>
             <SelectContent>
               {companies.map(company => (

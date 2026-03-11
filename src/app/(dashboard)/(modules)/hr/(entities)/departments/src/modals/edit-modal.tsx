@@ -16,7 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { companiesApi } from '@/app/(dashboard)/(modules)/hr/(entities)/companies/src/api';
+import { companiesApi } from '@/app/(dashboard)/(modules)/admin/(entities)/companies/src/api';
 import type { Company, Department } from '@/types/hr';
 import { useQuery } from '@tanstack/react-query';
 import {

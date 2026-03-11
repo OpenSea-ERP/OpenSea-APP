@@ -3,7 +3,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { companiesService } from '@/services/hr/companies.service';
+import { companiesService } from '@/services/admin/companies.service';
 import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 import { translateError } from '@/lib/errors';

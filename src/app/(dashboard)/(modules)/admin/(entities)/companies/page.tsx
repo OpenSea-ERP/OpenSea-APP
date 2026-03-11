@@ -51,12 +51,40 @@ import {
   updateCompany,
 } from './src';
 
-const CNPJLookupModal = dynamic(() => import('./src/modals/cnpj-lookup-modal').then(m => ({ default: m.CNPJLookupModal })), { ssr: false });
-const CreateModal = dynamic(() => import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })), { ssr: false });
-const EditModal = dynamic(() => import('./src/modals/edit-modal').then(m => ({ default: m.EditModal })), { ssr: false });
-const ViewModal = dynamic(() => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })), { ssr: false });
-const DeleteConfirmModal = dynamic(() => import('./src/modals/delete-confirm-modal').then(m => ({ default: m.DeleteConfirmModal })), { ssr: false });
-const DuplicateConfirmModal = dynamic(() => import('./src/modals/duplicate-confirm-modal').then(m => ({ default: m.DuplicateConfirmModal })), { ssr: false });
+const CNPJLookupModal = dynamic(
+  () =>
+    import('./src/modals/cnpj-lookup-modal').then(m => ({
+      default: m.CNPJLookupModal,
+    })),
+  { ssr: false }
+);
+const CreateModal = dynamic(
+  () =>
+    import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })),
+  { ssr: false }
+);
+const EditModal = dynamic(
+  () => import('./src/modals/edit-modal').then(m => ({ default: m.EditModal })),
+  { ssr: false }
+);
+const ViewModal = dynamic(
+  () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
+  { ssr: false }
+);
+const DeleteConfirmModal = dynamic(
+  () =>
+    import('./src/modals/delete-confirm-modal').then(m => ({
+      default: m.DeleteConfirmModal,
+    })),
+  { ssr: false }
+);
+const DuplicateConfirmModal = dynamic(
+  () =>
+    import('./src/modals/duplicate-confirm-modal').then(m => ({
+      default: m.DuplicateConfirmModal,
+    })),
+  { ssr: false }
+);
 import { createCompanyFromBrasilAPI } from './src/utils/create-from-brasilapi';
 
 type ActionButtonWithPermission = HeaderButton & {
@@ -76,7 +104,7 @@ export default function CompaniesPage() {
     entityName: 'Empresa',
     entityNamePlural: 'Empresas',
     queryKey: ['companies'],
-    baseUrl: '/api/v1/hr/companies',
+    baseUrl: '/api/v1/admin/companies',
     listFn: async () => {
       try {
         const response = await companiesApi.list({
@@ -116,7 +144,7 @@ export default function CompaniesPage() {
     entityNamePlural: 'Empresas',
     queryKey: ['companies'],
     crud,
-    viewRoute: id => `/hr/companies/${id}`,
+    viewRoute: id => `/admin/companies/${id}`,
     filterFn: (item, query) => {
       const q = query.toLowerCase();
       const legal = item.legalName?.toLowerCase() || '';
@@ -388,8 +416,8 @@ export default function CompaniesPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'RH', href: '/hr' },
-              { label: 'Empresas', href: '/hr/companies' },
+              { label: 'Administração', href: '/admin' },
+              { label: 'Empresas', href: '/admin/companies' },
             ]}
             buttons={visibleActionButtons}
           />

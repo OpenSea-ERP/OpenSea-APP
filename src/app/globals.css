@@ -100,6 +100,7 @@
   --os-yellow-500: 234 179 8;
   --os-orange-400: 251 146 60;
   --os-orange-500: 249 115 22;
+  --os-orange-700: 194 65 12;
 
   /* Purple (Accent) */
   --os-purple-50: 250 245 255;
@@ -598,7 +599,7 @@
   --badge-success-border: rgb(var(--os-green-500) / 0.2);
 
   --badge-warning-bg: rgb(var(--os-orange-500) / 0.1);
-  --badge-warning-text: rgb(var(--os-orange-500));
+  --badge-warning-text: rgb(var(--os-orange-700));
   --badge-warning-border: rgb(var(--os-orange-500) / 0.2);
 }
 

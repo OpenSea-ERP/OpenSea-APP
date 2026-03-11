@@ -1,8 +1,8 @@
-import { companiesService } from '@/services/hr';
+import { companiesService } from '@/services/admin/companies.service';
 import type {
   CompanyAddressResponse,
   CompanyAddressesResponse,
-} from '@/services/hr/companies.service';
+} from '@/services/admin/companies.service';
 import type {
   CompanyAddress,
   CreateCompanyAddressData,

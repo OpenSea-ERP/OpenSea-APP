@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { companiesService } from '@/services/hr';
+import { companiesService } from '@/services/admin/companies.service';
 import type { CreateBankAccountData, PixKeyType } from '@/types/finance';
 import {
   BANK_ACCOUNT_TYPE_LABELS,

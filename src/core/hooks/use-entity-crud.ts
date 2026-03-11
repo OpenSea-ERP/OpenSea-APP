@@ -142,7 +142,6 @@ export function useEntityCrud<T extends BaseEntity>(
 
   const {
     entityName,
-    entityNamePlural,
     queryKey,
     listFn,
     getFn,
@@ -174,14 +173,26 @@ export function useEntityCrud<T extends BaseEntity>(
   });
 
   // =============================================================================
+  // HELPERS
+  // =============================================================================
+
+  /**
+   * Força invalidação e refetch dos dados.
+   * Usa refetchType: 'all' para ignorar staleTime global.
+   */
+  const forceRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
+  }, [queryClient, queryKey]);
+
+  // =============================================================================
   // MUTATIONS
   // =============================================================================
 
   // Create
   const createMutation = useMutation({
     mutationFn: createFn,
-    onSuccess: data => {
-      queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
+    onSuccess: async data => {
+      await forceRefresh();
       toast.success(
         messages.createSuccess || `${entityName} criado com sucesso!`
       );
@@ -199,8 +210,8 @@ export function useEntityCrud<T extends BaseEntity>(
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<T> }) =>
       updateFn(id, data),
-    onSuccess: data => {
-      queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
+    onSuccess: async data => {
+      await forceRefresh();
       toast.success(
         messages.updateSuccess || `${entityName} atualizado com sucesso!`
       );
@@ -214,11 +225,18 @@ export function useEntityCrud<T extends BaseEntity>(
     },
   });
 
-  // Delete
+  // Delete (with optimistic removal)
   const deleteMutation = useMutation({
     mutationFn: deleteFn,
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousItems = queryClient.getQueryData<T[]>(queryKey);
+      queryClient.setQueryData<T[]>(queryKey, old =>
+        old ? old.filter(item => item.id !== id) : old
+      );
+      return { previousItems };
+    },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
       if (!silentModeRef.current) {
         toast.success(
           messages.deleteSuccess || `${entityName} excluído com sucesso!`
@@ -226,7 +244,10 @@ export function useEntityCrud<T extends BaseEntity>(
       }
       onDeleteSuccess?.(id);
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _, context) => {
+      if (context?.previousItems) {
+        queryClient.setQueryData(queryKey, context.previousItems);
+      }
       if (!silentModeRef.current) {
         toast.error(
           messages.deleteError || `Erro ao excluir ${entityName.toLowerCase()}`
@@ -240,8 +261,8 @@ export function useEntityCrud<T extends BaseEntity>(
   const duplicateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data?: Partial<T> }) =>
       duplicateFn!(id, data),
-    onSuccess: data => {
-      queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
+    onSuccess: async data => {
+      await forceRefresh();
       toast.success(
         messages.duplicateSuccess || `${entityName} duplicado com sucesso!`
       );
@@ -308,12 +329,10 @@ export function useEntityCrud<T extends BaseEntity>(
   );
 
   const invalidate = useCallback(async () => {
-    logger.debug('[invalidate] Invalidating cache', { queryKey });
-    await queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
-    logger.debug('[invalidate] Refetching data after invalidation');
-    await refetch();
-    logger.debug('[invalidate] Refetch complete');
-  }, [queryClient, queryKey, refetch]);
+    logger.debug('[invalidate] Force refreshing queries', { queryKey });
+    await forceRefresh();
+    logger.debug('[invalidate] Force refresh complete');
+  }, [forceRefresh, queryKey]);
 
   const clearCache = useCallback(() => {
     queryClient.removeQueries({ queryKey });

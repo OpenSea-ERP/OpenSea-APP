@@ -1,5 +1,5 @@
-import { companiesService } from '@/services/hr';
-import type { CompanyFiscalSettingsResponse } from '@/services/hr/companies.service';
+import { companiesService } from '@/services/admin/companies.service';
+import type { CompanyFiscalSettingsResponse } from '@/services/admin/companies.service';
 import type {
   CompanyFiscalSettings,
   CreateCompanyFiscalSettingsData,

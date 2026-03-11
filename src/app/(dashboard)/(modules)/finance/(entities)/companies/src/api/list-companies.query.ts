@@ -5,7 +5,7 @@
  */
 
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
-import { companiesService } from '@/services/hr/companies.service';
+import { companiesService } from '@/services/admin/companies.service';
 import type { Company } from '@/types/hr';
 import { companyKeys, type CompanyFilters } from './keys';
 

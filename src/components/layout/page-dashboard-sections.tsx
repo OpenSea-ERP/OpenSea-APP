@@ -92,14 +92,19 @@ export function PageDashboardSections({
                 <div key={card.id}>
                   <Link href={card.href}>
                     <Card
-                      className={`p-6 h-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10 transition-all group ${card.hoverBg}`}
+                      aria-label={
+                        card.countKey && counts[card.countKey] != null
+                          ? `${card.title} - ${counts[card.countKey]!.toLocaleString('pt-BR')} registros`
+                          : card.title
+                      }
+                      className={`p-3 sm:p-4 md:p-6 h-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10 transition-all group ${card.hoverBg}`}
                     >
                       <div className="flex flex-col h-full">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-2 sm:mb-3 md:mb-4">
                           <div
-                            className={`w-12 h-12 rounded-xl bg-linear-to-br ${card.gradient} flex items-center justify-center`}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl bg-linear-to-br ${card.gradient} flex items-center justify-center`}
                           >
-                            <card.icon className="h-6 w-6 text-white" />
+                            <card.icon className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                           </div>
                           {card.countKey && (
                             <CountBadge
@@ -108,11 +113,11 @@ export function PageDashboardSections({
                             />
                           )}
                         </div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1 flex items-center gap-2">
                           {card.title}
                           <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-white/60">
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60">
                           {card.description}
                         </p>
                       </div>

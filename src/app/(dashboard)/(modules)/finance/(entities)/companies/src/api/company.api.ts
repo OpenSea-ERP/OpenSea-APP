@@ -1,9 +1,9 @@
-import { companiesService } from '@/services/hr';
+import { companiesService } from '@/services/admin/companies.service';
 import type {
   CheckCnpjResponse,
   CompaniesResponse,
   CompanyResponse,
-} from '@/services/hr/companies.service';
+} from '@/services/admin/companies.service';
 import type { Company, CreateCompanyData, UpdateCompanyData } from '@/types/hr';
 
 export interface ListCompaniesParams {

@@ -4,7 +4,7 @@
 
 'use client';
 
-import { companiesApi } from '@/app/(dashboard)/(modules)/hr/(entities)/companies/src';
+import { companiesApi } from '@/app/(dashboard)/(modules)/admin/(entities)/companies/src';
 import { departmentsApi } from '@/app/(dashboard)/(modules)/hr/(entities)/departments/src';
 import { positionsApi } from '@/app/(dashboard)/(modules)/hr/(entities)/positions/src';
 import { GridLoading } from '@/components/handlers/grid-loading';

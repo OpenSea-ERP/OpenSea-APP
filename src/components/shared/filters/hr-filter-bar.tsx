@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { logger } from '@/lib/logger';
-import { companiesService } from '@/services/hr/companies.service';
+import { companiesService } from '@/services/admin/companies.service';
 import { departmentsService } from '@/services/hr/departments.service';
 import { positionsService } from '@/services/hr/positions.service';
 import type { Company, Department, Position } from '@/types/hr';

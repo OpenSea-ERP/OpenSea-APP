@@ -146,13 +146,12 @@ export const companiesService = {
     if (params?.type) query.append('type', params.type);
     if (params?.isPrimary !== undefined)
       query.append('isPrimary', String(params.isPrimary));
-    if (params?.includeDeleted)
-      query.append('includeDeleted', 'true');
+    if (params?.includeDeleted) query.append('includeDeleted', 'true');
 
     const suffix = query.toString() ? `?${query.toString()}` : '';
 
     return apiClient.get<CompanyAddressesResponse>(
-      `/v1/hr/companies/${companyId}/addresses${suffix}`
+      `/v1/admin/companies/${companyId}/addresses${suffix}`
     );
   },
 
@@ -161,7 +160,7 @@ export const companiesService = {
     data: CreateCompanyAddressData
   ): Promise<CompanyAddressResponse> {
     return apiClient.post<CompanyAddressResponse>(
-      `/v1/hr/companies/${companyId}/addresses`,
+      `/v1/admin/companies/${companyId}/addresses`,
       data
     );
   },
@@ -171,7 +170,7 @@ export const companiesService = {
     addressId: string
   ): Promise<CompanyAddressResponse> {
     return apiClient.get<CompanyAddressResponse>(
-      `/v1/hr/companies/${companyId}/addresses/${addressId}`
+      `/v1/admin/companies/${companyId}/addresses/${addressId}`
     );
   },
 
@@ -181,14 +180,14 @@ export const companiesService = {
     data: UpdateCompanyAddressData
   ): Promise<CompanyAddressResponse> {
     return apiClient.put<CompanyAddressResponse>(
-      `/v1/hr/companies/${companyId}/addresses/${addressId}`,
+      `/v1/admin/companies/${companyId}/addresses/${addressId}`,
       data
     );
   },
 
   async deleteAddress(companyId: string, addressId: string): Promise<void> {
     await apiClient.delete<void>(
-      `/v1/hr/companies/${companyId}/addresses/${addressId}`
+      `/v1/admin/companies/${companyId}/addresses/${addressId}`
     );
   },
 
@@ -219,7 +218,7 @@ export const companiesService = {
     if (params?.status) query.append('status', params.status);
 
     return apiClient.get<CompanyCnaesResponse>(
-      `/v1/hr/companies/${companyId}/cnaes?${query.toString()}`
+      `/v1/admin/companies/${companyId}/cnaes?${query.toString()}`
     );
   },
 
@@ -228,13 +227,13 @@ export const companiesService = {
     cnaeId: string
   ): Promise<CompanyCnaeResponse> {
     return apiClient.get<CompanyCnaeResponse>(
-      `/v1/hr/companies/${companyId}/cnaes/${cnaeId}`
+      `/v1/admin/companies/${companyId}/cnaes/${cnaeId}`
     );
   },
 
   async getPrimaryCnae(companyId: string): Promise<CompanyCnaeResponse> {
     return apiClient.get<CompanyCnaeResponse>(
-      `/v1/hr/companies/${companyId}/cnaes/primary`
+      `/v1/admin/companies/${companyId}/cnaes/primary`
     );
   },
 
@@ -243,7 +242,7 @@ export const companiesService = {
     data: CreateCompanyCnaeData
   ): Promise<CompanyCnaeResponse> {
     return apiClient.post<CompanyCnaeResponse>(
-      `/v1/hr/companies/${companyId}/cnaes`,
+      `/v1/admin/companies/${companyId}/cnaes`,
       data
     );
   },
@@ -254,14 +253,14 @@ export const companiesService = {
     data: UpdateCompanyCnaeData
   ): Promise<CompanyCnaeResponse> {
     return apiClient.put<CompanyCnaeResponse>(
-      `/v1/hr/companies/${companyId}/cnaes/${cnaeId}`,
+      `/v1/admin/companies/${companyId}/cnaes/${cnaeId}`,
       data
     );
   },
 
   async deleteCnae(companyId: string, cnaeId: string): Promise<void> {
     await apiClient.delete<void>(
-      `/v1/hr/companies/${companyId}/cnaes/${cnaeId}`
+      `/v1/admin/companies/${companyId}/cnaes/${cnaeId}`
     );
   },
 
@@ -274,7 +273,7 @@ export const companiesService = {
     data: CreateCompanyFiscalSettingsData
   ): Promise<CompanyFiscalSettingsResponse> {
     return apiClient.post<CompanyFiscalSettingsResponse>(
-      `/v1/hr/companies/${companyId}/fiscal-settings`,
+      `/v1/admin/companies/${companyId}/fiscal-settings`,
       data
     );
   },
@@ -283,7 +282,7 @@ export const companiesService = {
     companyId: string
   ): Promise<CompanyFiscalSettingsResponse> {
     return apiClient.get<CompanyFiscalSettingsResponse>(
-      `/v1/hr/companies/${companyId}/fiscal-settings`
+      `/v1/admin/companies/${companyId}/fiscal-settings`
     );
   },
 
@@ -292,14 +291,14 @@ export const companiesService = {
     data: UpdateCompanyFiscalSettingsData
   ): Promise<CompanyFiscalSettingsResponse> {
     return apiClient.patch<CompanyFiscalSettingsResponse>(
-      `/v1/hr/companies/${companyId}/fiscal-settings`,
+      `/v1/admin/companies/${companyId}/fiscal-settings`,
       data
     );
   },
 
   async deleteFiscalSettings(companyId: string): Promise<void> {
     await apiClient.delete<void>(
-      `/v1/hr/companies/${companyId}/fiscal-settings`
+      `/v1/admin/companies/${companyId}/fiscal-settings`
     );
   },
 
@@ -320,7 +319,7 @@ export const companiesService = {
     const suffix = query.toString() ? `?${query.toString()}` : '';
 
     return apiClient.get<CompanyStakeholdersResponse>(
-      `/v1/hr/companies/${companyId}/stakeholders${suffix}`
+      `/v1/admin/companies/${companyId}/stakeholders${suffix}`
     );
   },
 
@@ -329,7 +328,7 @@ export const companiesService = {
     stakeholderId: string
   ): Promise<CompanyStakeholderResponse> {
     return apiClient.get<CompanyStakeholderResponse>(
-      `/v1/hr/companies/${companyId}/stakeholders/${stakeholderId}`
+      `/v1/admin/companies/${companyId}/stakeholders/${stakeholderId}`
     );
   },
 
@@ -338,7 +337,7 @@ export const companiesService = {
     data: CreateCompanyStakeholderData
   ): Promise<CompanyStakeholderResponse> {
     return apiClient.post<CompanyStakeholderResponse>(
-      `/v1/hr/companies/${companyId}/stakeholders`,
+      `/v1/admin/companies/${companyId}/stakeholders`,
       data
     );
   },
@@ -349,7 +348,7 @@ export const companiesService = {
     data: UpdateCompanyStakeholderData
   ): Promise<CompanyStakeholderResponse> {
     return apiClient.patch<CompanyStakeholderResponse>(
-      `/v1/hr/companies/${companyId}/stakeholders/${stakeholderId}`,
+      `/v1/admin/companies/${companyId}/stakeholders/${stakeholderId}`,
       data
     );
   },
@@ -359,7 +358,7 @@ export const companiesService = {
     stakeholderId: string
   ): Promise<void> {
     await apiClient.delete<void>(
-      `/v1/hr/companies/${companyId}/stakeholders/${stakeholderId}`
+      `/v1/admin/companies/${companyId}/stakeholders/${stakeholderId}`
     );
   },
 
@@ -367,7 +366,7 @@ export const companiesService = {
     companyId: string
   ): Promise<CompanyStakeholderResponse> {
     return apiClient.get<CompanyStakeholderResponse>(
-      `/v1/hr/companies/${companyId}/stakeholders/legal-representative`
+      `/v1/admin/companies/${companyId}/stakeholders/legal-representative`
     );
   },
 
@@ -376,7 +375,7 @@ export const companiesService = {
     overwriteExisting = false
   ): Promise<{ sync_result: unknown }> {
     return apiClient.post<{ sync_result: unknown }>(
-      `/v1/hr/companies/${companyId}/stakeholders/sync-from-cnpj-api`,
+      `/v1/admin/companies/${companyId}/stakeholders/sync-from-cnpj-api`,
       { overwrite_existing: overwriteExisting }
     );
   },
@@ -387,7 +386,7 @@ export const companiesService = {
     format: 'JSON' | 'CSV' = 'JSON'
   ): Promise<{ request: unknown }> {
     return apiClient.post<{ request: unknown }>(
-      `/v1/hr/companies/${companyId}/stakeholders/${stakeholderId}/request-data-portability`,
+      `/v1/admin/companies/${companyId}/stakeholders/${stakeholderId}/request-data-portability`,
       { format }
     );
   },

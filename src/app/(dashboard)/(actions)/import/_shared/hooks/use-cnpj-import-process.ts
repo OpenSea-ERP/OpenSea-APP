@@ -64,7 +64,9 @@ export function useCNPJImportProcess({
   // Use entity definition endpoint, with correct fallbacks per entity type
   const apiEndpoint =
     entityDef?.apiEndpoint ||
-    (entityType === 'manufacturers' ? '/v1/manufacturers' : '/v1/hr/companies');
+    (entityType === 'manufacturers'
+      ? '/v1/manufacturers'
+      : '/v1/admin/companies');
 
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 

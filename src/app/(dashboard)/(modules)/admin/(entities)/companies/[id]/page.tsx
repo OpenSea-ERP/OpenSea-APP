@@ -185,8 +185,8 @@ export default function CompanyDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
-              { label: 'Empresas', href: '/hr/companies' },
+              { label: 'Administração', href: '/admin' },
+              { label: 'Empresas', href: '/admin/companies' },
             ]}
           />
         </PageHeader>
@@ -203,8 +203,8 @@ export default function CompanyDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
-              { label: 'Empresas', href: '/hr/companies' },
+              { label: 'Administração', href: '/admin' },
+              { label: 'Empresas', href: '/admin/companies' },
             ]}
           />
         </PageHeader>
@@ -217,7 +217,7 @@ export default function CompanyDetailPage() {
             <p className="text-muted-foreground mb-6">
               A empresa que você está procurando não existe ou foi removida.
             </p>
-            <Button onClick={() => router.push('/hr/companies')}>
+            <Button onClick={() => router.push('/admin/companies')}>
               Voltar para Empresas
             </Button>
           </Card>
@@ -235,7 +235,7 @@ export default function CompanyDetailPage() {
       await deleteCompany(companyId);
       await queryClient.invalidateQueries({ queryKey: ['companies'] });
       toast.success('Empresa excluída com sucesso!');
-      router.push('/hr/companies');
+      router.push('/admin/companies');
     } catch (error) {
       logger.error(
         'Erro ao excluir empresa',
@@ -246,7 +246,7 @@ export default function CompanyDetailPage() {
   };
 
   const handleEdit = () => {
-    router.push(`/hr/companies/${companyId}/edit`);
+    router.push(`/admin/companies/${companyId}/edit`);
   };
 
   return (
@@ -467,8 +467,15 @@ export default function CompanyDetailPage() {
           />
 
           {/* Aba Documentos */}
-          <TabsContent value="documents" className="space-y-6 w-full flex flex-col">
-            <FileManager entityType="company" entityId={companyId} className="h-[600px]" />
+          <TabsContent
+            value="documents"
+            className="space-y-6 w-full flex flex-col"
+          >
+            <FileManager
+              entityType="company"
+              entityId={companyId}
+              className="h-[600px]"
+            />
           </TabsContent>
         </Tabs>
       </PageBody>

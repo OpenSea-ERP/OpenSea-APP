@@ -329,14 +329,12 @@ export function useEntityPage<T extends BaseEntity>(
 
     try {
       // Deletar todos os itens em modo silencioso (sem toast individual)
+      // O onMutate do useEntityCrud remove cada item otimisticamente do cache
       for (const id of ids) {
         logger.debug('[handleDeleteConfirm] Deleting item', { id });
         await crud.deleteItem(id, true);
         logger.debug('[handleDeleteConfirm] Item deleted successfully', { id });
       }
-
-      // Invalidar cache para refetch
-      await crud.invalidate();
 
       // Mostrar toast consolidado
       toast.success(

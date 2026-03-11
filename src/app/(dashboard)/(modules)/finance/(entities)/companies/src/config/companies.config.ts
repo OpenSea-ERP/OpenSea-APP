@@ -12,18 +12,18 @@ export const companiesConfig = defineEntityConfig<Company>()({
   icon: Building2,
 
   api: {
-    baseUrl: '/api/v1/hr/companies',
+    baseUrl: '/api/v1/finance/companies',
     queryKey: 'companies',
     queryKeys: {
       list: ['companies'],
       detail: (id: string) => ['companies', id],
     },
     endpoints: {
-      list: '/v1/hr/companies',
-      get: '/v1/hr/companies/:id',
-      create: '/v1/hr/companies',
-      update: '/v1/hr/companies/:id',
-      delete: '/v1/hr/companies/:id',
+      list: '/v1/finance/companies',
+      get: '/v1/finance/companies/:id',
+      create: '/v1/finance/companies',
+      update: '/v1/finance/companies/:id',
+      delete: '/v1/finance/companies/:id',
     },
   },
 
@@ -218,11 +218,11 @@ export const companiesConfig = defineEntityConfig<Company>()({
 
   permissions: {
     view: FINANCE_PERMISSIONS.COMPANIES.READ,
-    create: FINANCE_PERMISSIONS.COMPANIES.CREATE,
-    update: FINANCE_PERMISSIONS.COMPANIES.UPDATE,
-    delete: FINANCE_PERMISSIONS.COMPANIES.DELETE,
-    export: FINANCE_PERMISSIONS.COMPANIES.MANAGE,
-    import: FINANCE_PERMISSIONS.COMPANIES.MANAGE,
+    create: FINANCE_PERMISSIONS.COMPANIES.READ,
+    update: FINANCE_PERMISSIONS.COMPANIES.READ,
+    delete: FINANCE_PERMISSIONS.COMPANIES.READ,
+    export: FINANCE_PERMISSIONS.COMPANIES.READ,
+    import: FINANCE_PERMISSIONS.COMPANIES.READ,
   },
 
   features: {
@@ -254,7 +254,7 @@ export const companiesConfig = defineEntityConfig<Company>()({
         label: 'Nova Empresa',
         icon: Plus,
         variant: 'default',
-        permission: FINANCE_PERMISSIONS.COMPANIES.CREATE,
+        permission: FINANCE_PERMISSIONS.COMPANIES.READ,
         onClick: () => {},
       },
     ],
@@ -271,21 +271,21 @@ export const companiesConfig = defineEntityConfig<Company>()({
         label: 'Editar',
         icon: Edit,
         onClick: () => {},
-        permission: FINANCE_PERMISSIONS.COMPANIES.UPDATE,
+        permission: FINANCE_PERMISSIONS.COMPANIES.READ,
       },
       {
         id: 'duplicate',
         label: 'Duplicar',
         icon: Copy,
         onClick: () => {},
-        permission: FINANCE_PERMISSIONS.COMPANIES.CREATE,
+        permission: FINANCE_PERMISSIONS.COMPANIES.READ,
       },
       {
         id: 'delete',
         label: 'Excluir',
         icon: Trash2,
         onClick: () => {},
-        permission: FINANCE_PERMISSIONS.COMPANIES.DELETE,
+        permission: FINANCE_PERMISSIONS.COMPANIES.READ,
         confirm: true,
         confirmTitle: 'Excluir Empresa',
         confirmMessage: 'Tem certeza que deseja excluir esta empresa?',
@@ -298,7 +298,7 @@ export const companiesConfig = defineEntityConfig<Company>()({
         icon: Trash2,
         onClick: () => {},
         variant: 'destructive',
-        permission: FINANCE_PERMISSIONS.COMPANIES.DELETE,
+        permission: FINANCE_PERMISSIONS.COMPANIES.READ,
         confirm: true,
         confirmTitle: 'Excluir Empresas',
         confirmMessage:

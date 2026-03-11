@@ -64,7 +64,7 @@ export default function CompanyEditPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['companies'] });
       toast.success('Empresa atualizada com sucesso');
-      router.push(`/hr/companies/${companyId}`);
+      router.push(`/admin/companies/${companyId}`);
     },
     onError: error => {
       logger.error(
@@ -111,7 +111,7 @@ export default function CompanyEditPage() {
               Empresa não encontrada
             </h2>
             <Button
-              onClick={() => router.push('/hr/companies')}
+              onClick={() => router.push('/admin/companies')}
               className="mt-4"
             >
               Voltar para Empresas
@@ -127,11 +127,11 @@ export default function CompanyEditPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
-            { label: 'Empresas', href: '/hr/companies' },
+            { label: 'Administração', href: '/admin' },
+            { label: 'Empresas', href: '/admin/companies' },
             {
               label: company.legalName,
-              href: `/hr/companies/${companyId}`,
+              href: `/admin/companies/${companyId}`,
             },
             { label: 'Editar' },
           ]}
@@ -140,7 +140,7 @@ export default function CompanyEditPage() {
               id: 'cancel',
               title: 'Cancelar',
               icon: X,
-              onClick: () => router.push(`/hr/companies/${companyId}`),
+              onClick: () => router.push(`/admin/companies/${companyId}`),
               variant: 'outline',
             },
             {

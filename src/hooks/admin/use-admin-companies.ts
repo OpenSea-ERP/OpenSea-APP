@@ -23,7 +23,7 @@ async function fetchAdminCompanies(params?: AdminCompaniesQuery) {
   if (params?.search) query.append('search', params.search);
 
   const response = await apiClient.get<Company[]>(
-    `/v1/hr/companies?${query.toString()}`
+    `/v1/admin/companies?${query.toString()}`
   );
 
   // Backend returns raw array

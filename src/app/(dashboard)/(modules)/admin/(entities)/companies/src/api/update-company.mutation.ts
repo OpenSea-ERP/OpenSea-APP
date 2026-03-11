@@ -21,7 +21,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { companiesService } from '@/services/hr/companies.service';
+import { companiesService } from '@/services/admin/companies.service';
 import type { Company, UpdateCompanyData } from '@/types/hr';
 import { toast } from 'sonner';
 import { translateError } from '@/lib/errors';

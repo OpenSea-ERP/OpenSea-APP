@@ -88,14 +88,14 @@ export const API_ENDPOINTS = {
     UPLOAD_PHOTO: (id: string) => `/v1/hr/employees/${id}/photo`,
     DELETE_PHOTO: (id: string) => `/v1/hr/employees/${id}/photo`,
   },
-  // HR - Companies
+  // Admin - Companies
   COMPANIES: {
-    LIST: '/v1/hr/companies',
-    GET: (id: string) => `/v1/hr/companies/${id}`,
-    CREATE: '/v1/hr/companies',
-    UPDATE: (id: string) => `/v1/hr/companies/${id}`,
-    DELETE: (id: string) => `/v1/hr/companies/${id}`,
-    CHECK_CNPJ: '/v1/hr/companies/check-cnpj',
+    LIST: '/v1/admin/companies',
+    GET: (id: string) => `/v1/admin/companies/${id}`,
+    CREATE: '/v1/admin/companies',
+    UPDATE: (id: string) => `/v1/admin/companies/${id}`,
+    DELETE: (id: string) => `/v1/admin/companies/${id}`,
+    CHECK_CNPJ: '/v1/admin/companies/check-cnpj',
   },
   // Stock - Products
   PRODUCTS: {
@@ -566,8 +566,10 @@ export const API_ENDPOINTS = {
     SEARCH: '/v1/storage/search',
     TRASH: {
       LIST: '/v1/storage/trash',
-      RESTORE_FILE: (fileId: string) => `/v1/storage/trash/restore-file/${fileId}`,
-      RESTORE_FOLDER: (folderId: string) => `/v1/storage/trash/restore-folder/${folderId}`,
+      RESTORE_FILE: (fileId: string) =>
+        `/v1/storage/trash/restore-file/${fileId}`,
+      RESTORE_FOLDER: (folderId: string) =>
+        `/v1/storage/trash/restore-folder/${folderId}`,
       EMPTY: '/v1/storage/trash/empty',
     },
     SHARING: {
@@ -607,8 +609,7 @@ export const API_ENDPOINTS = {
       DELETE: (id: string) => `/v1/calendar/events/${id}`,
       INVITE: (eventId: string) =>
         `/v1/calendar/events/${eventId}/participants`,
-      RESPOND: (eventId: string) =>
-        `/v1/calendar/events/${eventId}/respond`,
+      RESPOND: (eventId: string) => `/v1/calendar/events/${eventId}/respond`,
       REMOVE_PARTICIPANT: (eventId: string, userId: string) =>
         `/v1/calendar/events/${eventId}/participants/${userId}`,
       MANAGE_REMINDERS: (eventId: string) =>
@@ -633,78 +634,134 @@ export const API_ENDPOINTS = {
       ARCHIVE: (boardId: string) => `/v1/tasks/boards/${boardId}/archive`,
       MEMBERS: {
         INVITE: (boardId: string) => `/v1/tasks/boards/${boardId}/members`,
-        UPDATE: (boardId: string, memberId: string) => `/v1/tasks/boards/${boardId}/members/${memberId}`,
-        REMOVE: (boardId: string, memberId: string) => `/v1/tasks/boards/${boardId}/members/${memberId}`,
+        UPDATE: (boardId: string, memberId: string) =>
+          `/v1/tasks/boards/${boardId}/members/${memberId}`,
+        REMOVE: (boardId: string, memberId: string) =>
+          `/v1/tasks/boards/${boardId}/members/${memberId}`,
       },
     },
     COLUMNS: {
       CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/columns`,
-      UPDATE: (boardId: string, columnId: string) => `/v1/tasks/boards/${boardId}/columns/${columnId}`,
-      DELETE: (boardId: string, columnId: string) => `/v1/tasks/boards/${boardId}/columns/${columnId}`,
-      REORDER: (boardId: string) => `/v1/tasks/boards/${boardId}/columns/reorder`,
+      UPDATE: (boardId: string, columnId: string) =>
+        `/v1/tasks/boards/${boardId}/columns/${columnId}`,
+      DELETE: (boardId: string, columnId: string) =>
+        `/v1/tasks/boards/${boardId}/columns/${columnId}`,
+      REORDER: (boardId: string) =>
+        `/v1/tasks/boards/${boardId}/columns/reorder`,
     },
     CARDS: {
       LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/cards`,
       CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/cards`,
-      GET: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}`,
-      UPDATE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}`,
-      DELETE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}`,
-      MOVE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/move`,
-      ASSIGN: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/assign`,
-      ARCHIVE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/archive`,
-      LABELS: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/labels`,
+      GET: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}`,
+      UPDATE: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}`,
+      DELETE: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}`,
+      MOVE: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/move`,
+      ASSIGN: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/assign`,
+      ARCHIVE: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/archive`,
+      LABELS: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/labels`,
     },
     LABELS: {
       LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/labels`,
       CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/labels`,
-      UPDATE: (boardId: string, labelId: string) => `/v1/tasks/boards/${boardId}/labels/${labelId}`,
-      DELETE: (boardId: string, labelId: string) => `/v1/tasks/boards/${boardId}/labels/${labelId}`,
+      UPDATE: (boardId: string, labelId: string) =>
+        `/v1/tasks/boards/${boardId}/labels/${labelId}`,
+      DELETE: (boardId: string, labelId: string) =>
+        `/v1/tasks/boards/${boardId}/labels/${labelId}`,
     },
     COMMENTS: {
-      LIST: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments`,
-      CREATE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments`,
-      UPDATE: (boardId: string, cardId: string, commentId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}`,
-      DELETE: (boardId: string, cardId: string, commentId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}`,
-      ADD_REACTION: (boardId: string, cardId: string, commentId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}/reactions`,
-      REMOVE_REACTION: (boardId: string, cardId: string, commentId: string, emoji: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}/reactions/${emoji}`,
+      LIST: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/comments`,
+      CREATE: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/comments`,
+      UPDATE: (boardId: string, cardId: string, commentId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}`,
+      DELETE: (boardId: string, cardId: string, commentId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}`,
+      ADD_REACTION: (boardId: string, cardId: string, commentId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}/reactions`,
+      REMOVE_REACTION: (
+        boardId: string,
+        cardId: string,
+        commentId: string,
+        emoji: string
+      ) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/comments/${commentId}/reactions/${emoji}`,
     },
     SUBTASKS: {
-      LIST: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks`,
-      CREATE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks`,
-      UPDATE: (boardId: string, cardId: string, subtaskId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}`,
-      DELETE: (boardId: string, cardId: string, subtaskId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}`,
-      COMPLETE: (boardId: string, cardId: string, subtaskId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}/complete`,
+      LIST: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks`,
+      CREATE: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks`,
+      UPDATE: (boardId: string, cardId: string, subtaskId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}`,
+      DELETE: (boardId: string, cardId: string, subtaskId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}`,
+      COMPLETE: (boardId: string, cardId: string, subtaskId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/subtasks/${subtaskId}/complete`,
     },
     CHECKLISTS: {
-      CREATE: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists`,
-      UPDATE: (boardId: string, cardId: string, checklistId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}`,
-      DELETE: (boardId: string, cardId: string, checklistId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}`,
-      ADD_ITEM: (boardId: string, cardId: string, checklistId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items`,
-      TOGGLE_ITEM: (boardId: string, cardId: string, checklistId: string, itemId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items/${itemId}/toggle`,
-      DELETE_ITEM: (boardId: string, cardId: string, checklistId: string, itemId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items/${itemId}`,
+      CREATE: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists`,
+      UPDATE: (boardId: string, cardId: string, checklistId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}`,
+      DELETE: (boardId: string, cardId: string, checklistId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}`,
+      ADD_ITEM: (boardId: string, cardId: string, checklistId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items`,
+      TOGGLE_ITEM: (
+        boardId: string,
+        cardId: string,
+        checklistId: string,
+        itemId: string
+      ) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items/${itemId}/toggle`,
+      DELETE_ITEM: (
+        boardId: string,
+        cardId: string,
+        checklistId: string,
+        itemId: string
+      ) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/checklists/${checklistId}/items/${itemId}`,
     },
     CUSTOM_FIELDS: {
       LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/custom-fields`,
       CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/custom-fields`,
-      UPDATE: (boardId: string, fieldId: string) => `/v1/tasks/boards/${boardId}/custom-fields/${fieldId}`,
-      DELETE: (boardId: string, fieldId: string) => `/v1/tasks/boards/${boardId}/custom-fields/${fieldId}`,
-      SET_VALUES: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/custom-fields`,
+      UPDATE: (boardId: string, fieldId: string) =>
+        `/v1/tasks/boards/${boardId}/custom-fields/${fieldId}`,
+      DELETE: (boardId: string, fieldId: string) =>
+        `/v1/tasks/boards/${boardId}/custom-fields/${fieldId}`,
+      SET_VALUES: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/custom-fields`,
     },
     ATTACHMENTS: {
-      LIST: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments`,
-      UPLOAD: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments`,
-      DELETE: (boardId: string, cardId: string, attachmentId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments/${attachmentId}`,
+      LIST: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments`,
+      UPLOAD: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments`,
+      DELETE: (boardId: string, cardId: string, attachmentId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments/${attachmentId}`,
     },
     AUTOMATIONS: {
       LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/automations`,
       CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/automations`,
-      UPDATE: (boardId: string, automationId: string) => `/v1/tasks/boards/${boardId}/automations/${automationId}`,
-      DELETE: (boardId: string, automationId: string) => `/v1/tasks/boards/${boardId}/automations/${automationId}`,
-      TOGGLE: (boardId: string, automationId: string) => `/v1/tasks/boards/${boardId}/automations/${automationId}/toggle`,
+      UPDATE: (boardId: string, automationId: string) =>
+        `/v1/tasks/boards/${boardId}/automations/${automationId}`,
+      DELETE: (boardId: string, automationId: string) =>
+        `/v1/tasks/boards/${boardId}/automations/${automationId}`,
+      TOGGLE: (boardId: string, automationId: string) =>
+        `/v1/tasks/boards/${boardId}/automations/${automationId}/toggle`,
     },
     ACTIVITY: {
       BOARD: (boardId: string) => `/v1/tasks/boards/${boardId}/activity`,
-      CARD: (boardId: string, cardId: string) => `/v1/tasks/boards/${boardId}/cards/${cardId}/activity`,
+      CARD: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/activity`,
     },
   },
   // Core - Teams

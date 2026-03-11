@@ -10,8 +10,8 @@
  *
  * // Uso com hook
  * const { hasPermission } = usePermissions();
- * if (hasPermission(HR_PERMISSIONS.COMPANIES.CREATE)) {
- *   // Pode criar empresas
+ * if (hasPermission(HR_PERMISSIONS.COMPANIES.VIEW)) {
+ *   // Pode visualizar empresas
  * }
  *
  * // Uso com componente
@@ -33,20 +33,11 @@ import {
 export const HR_PERMISSIONS = {
   /**
    * Permissões de Empresas (Companies)
+   * Somente leitura — CRUD completo foi movido para ADMIN_PERMISSIONS
    */
   COMPANIES: {
-    /** Listar empresas */
-    LIST: HR_CODES.COMPANIES.LIST,
-    /** Visualizar detalhes de empresa */
+    /** Visualizar empresas (somente leitura) */
     VIEW: HR_CODES.COMPANIES.READ,
-    /** Criar nova empresa */
-    CREATE: HR_CODES.COMPANIES.CREATE,
-    /** Atualizar empresa existente */
-    UPDATE: HR_CODES.COMPANIES.UPDATE,
-    /** Excluir empresa */
-    DELETE: HR_CODES.COMPANIES.DELETE,
-    /** Gerenciamento completo */
-    MANAGE: HR_CODES.COMPANIES.MANAGE,
   },
 
   /**
@@ -459,13 +450,10 @@ export function hasEntityCrudPermissions(
   hasPermission: (code: string) => boolean,
   entity: keyof typeof HR_PERMISSIONS
 ): boolean {
-  const permissions = HR_PERMISSIONS[entity];
-  return (
-    hasPermission(permissions.LIST) &&
-    hasPermission(permissions.VIEW) &&
-    hasPermission(permissions.CREATE) &&
-    hasPermission(permissions.UPDATE) &&
-    hasPermission(permissions.DELETE)
+  const permissions = HR_PERMISSIONS[entity] as Record<string, string>;
+  const requiredKeys = ['LIST', 'VIEW', 'CREATE', 'UPDATE', 'DELETE'];
+  return requiredKeys.every(
+    key => !(key in permissions) || hasPermission(permissions[key])
   );
 }
 
@@ -483,13 +471,13 @@ export function hasEntityCrudPermissions(
  * ```
  */
 export function getPermissionMap(entity: keyof typeof HR_PERMISSIONS): {
-  canList: string;
+  canList?: string;
   canView: string;
-  canCreate: string;
-  canUpdate: string;
-  canDelete: string;
+  canCreate?: string;
+  canUpdate?: string;
+  canDelete?: string;
 } {
-  const permissions = HR_PERMISSIONS[entity];
+  const permissions = HR_PERMISSIONS[entity] as Record<string, string>;
   return {
     canList: permissions.LIST,
     canView: permissions.VIEW,

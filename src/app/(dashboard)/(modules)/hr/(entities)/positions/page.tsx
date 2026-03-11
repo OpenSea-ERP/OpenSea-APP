@@ -40,7 +40,7 @@ import {
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo } from 'react';
-import { useListCompanies } from '../companies/src';
+import { useListCompanies } from '@/app/(dashboard)/(modules)/admin/(entities)/companies/src';
 import { useListDepartments } from '../departments/src';
 import {
   createPosition,

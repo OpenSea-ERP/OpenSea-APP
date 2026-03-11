@@ -1,6 +1,6 @@
 /**
  * Finance Companies Page - Read-Only
- * Visualização somente leitura das empresas via /v1/hr/companies
+ * Visualização somente leitura das empresas via /v1/finance/companies
  */
 
 'use client';

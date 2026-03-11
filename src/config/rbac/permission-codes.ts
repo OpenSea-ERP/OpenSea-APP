@@ -388,12 +388,7 @@ export const AUDIT_PERMISSIONS = {
 
 export const HR_PERMISSIONS = {
   COMPANIES: {
-    CREATE: 'hr.companies.create',
     READ: 'hr.companies.read',
-    UPDATE: 'hr.companies.update',
-    DELETE: 'hr.companies.delete',
-    LIST: 'hr.companies.list',
-    MANAGE: 'hr.companies.manage',
   },
   EMPLOYEES: {
     CREATE: 'hr.employees.create',
@@ -533,12 +528,7 @@ export const HR_PERMISSIONS = {
 
 export const FINANCE_PERMISSIONS = {
   COMPANIES: {
-    CREATE: 'finance.companies.create',
     READ: 'finance.companies.read',
-    UPDATE: 'finance.companies.update',
-    DELETE: 'finance.companies.delete',
-    LIST: 'finance.companies.list',
-    MANAGE: 'finance.companies.manage',
   },
   COST_CENTERS: {
     CREATE: 'finance.cost-centers.create',
@@ -909,6 +899,20 @@ export const WILDCARD_PERMISSIONS = {
 } as const;
 
 // =============================================================================
+// ADMIN - Administração de empresas (CRUD centralizado)
+// =============================================================================
+
+export const ADMIN_PERMISSIONS = {
+  COMPANIES: {
+    CREATE: 'admin.companies.create',
+    READ: 'admin.companies.read',
+    UPDATE: 'admin.companies.update',
+    DELETE: 'admin.companies.delete',
+    MANAGE: 'admin.companies.manage',
+  },
+} as const;
+
+// =============================================================================
 // EXPORTS AGREGADOS
 // =============================================================================
 
@@ -924,6 +928,7 @@ export const PermissionCodes = {
   AUDIT: AUDIT_PERMISSIONS,
   HR: HR_PERMISSIONS,
   FINANCE: FINANCE_PERMISSIONS,
+  ADMIN: ADMIN_PERMISSIONS,
   SELF: SELF_PERMISSIONS,
   NOTIFICATIONS: NOTIFICATIONS_PERMISSIONS,
   SETTINGS: SETTINGS_PERMISSIONS,
@@ -987,6 +992,9 @@ export type FinancePermission =
   | (typeof FINANCE_PERMISSIONS.CONTRACTS)[keyof typeof FINANCE_PERMISSIONS.CONTRACTS]
   | (typeof FINANCE_PERMISSIONS.DASHBOARD)[keyof typeof FINANCE_PERMISSIONS.DASHBOARD]
   | (typeof FINANCE_PERMISSIONS.EXPORT)[keyof typeof FINANCE_PERMISSIONS.EXPORT];
+
+export type AdminPermission =
+  (typeof ADMIN_PERMISSIONS.COMPANIES)[keyof typeof ADMIN_PERMISSIONS.COMPANIES];
 
 export type UIPermission =
   | (typeof UI_PERMISSIONS.MENU)[keyof typeof UI_PERMISSIONS.MENU]

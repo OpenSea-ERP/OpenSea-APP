@@ -11,8 +11,8 @@ import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import { HR_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useTenant } from '@/contexts/tenant-context';
 import { usePermissions } from '@/hooks/use-permissions';
+import { companiesService } from '@/services/admin/companies.service';
 import {
-  companiesService,
   departmentsService,
   employeesService,
   positionsService,
@@ -61,10 +61,10 @@ const sections: {
         title: 'Empresas',
         description: 'Cadastro de empresas e filiais',
         icon: Building2,
-        href: '/hr/companies',
+        href: '/admin/companies',
         gradient: 'from-purple-500 to-purple-600',
         hoverBg: 'hover:bg-purple-50 dark:hover:bg-purple-500/10',
-        permission: HR_PERMISSIONS.COMPANIES.LIST,
+        permission: HR_PERMISSIONS.COMPANIES.READ,
         countKey: 'companies',
       },
       {
@@ -248,10 +248,16 @@ export default function HRLandingPage() {
         if (result.status !== 'fulfilled') return null;
         const v = result.value as Record<string, unknown> | unknown[];
         if (Array.isArray(v)) return v.length;
-        const meta = (v as Record<string, unknown>)?.meta as Record<string, unknown> | undefined;
-        const total = (v as Record<string, unknown>)?.total as number | undefined;
-        const entityArr = (v as Record<string, unknown>)?.[entityKey] as unknown[] | undefined;
-        return meta?.total as number ?? total ?? entityArr?.length ?? null;
+        const meta = (v as Record<string, unknown>)?.meta as
+          | Record<string, unknown>
+          | undefined;
+        const total = (v as Record<string, unknown>)?.total as
+          | number
+          | undefined;
+        const entityArr = (v as Record<string, unknown>)?.[entityKey] as
+          | unknown[]
+          | undefined;
+        return (meta?.total as number) ?? total ?? entityArr?.length ?? null;
       };
 
       setCounts({

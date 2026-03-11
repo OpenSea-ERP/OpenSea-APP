@@ -12,6 +12,7 @@
 
 import type { CreatePermissionGroupDTO } from '@/types/rbac';
 import {
+  ADMIN_PERMISSIONS,
   AUDIT_PERMISSIONS,
   CORE_PERMISSIONS,
   HR_PERMISSIONS,
@@ -170,8 +171,10 @@ export const baseGroups: Array<
       { code: SALES_PERMISSIONS.PROMOTIONS.MANAGE, effect: 'allow' },
       { code: SALES_PERMISSIONS.RESERVATIONS.MANAGE, effect: 'allow' },
 
+      // Admin - Companies
+      { code: ADMIN_PERMISSIONS.COMPANIES.MANAGE, effect: 'allow' },
+
       // HR - acesso total
-      { code: HR_PERMISSIONS.COMPANIES.MANAGE, effect: 'allow' },
       { code: HR_PERMISSIONS.DEPARTMENTS.MANAGE, effect: 'allow' },
       { code: HR_PERMISSIONS.POSITIONS.MANAGE, effect: 'allow' },
       { code: HR_PERMISSIONS.EMPLOYEES.MANAGE, effect: 'allow' },

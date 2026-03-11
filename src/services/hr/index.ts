@@ -1,6 +1,5 @@
 export * from './absences.service';
 export * from './bonuses.service';
-export * from './companies.service';
 export * from './deductions.service';
 export * from './departments.service';
 export * from './employees.service';
