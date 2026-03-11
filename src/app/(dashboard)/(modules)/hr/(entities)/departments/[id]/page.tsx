@@ -309,7 +309,7 @@ export default function DepartmentDetailPage() {
             <p className="text-muted-foreground">Carregando empresa...</p>
           ) : linkedCompany ? (
             <Link
-              href={`/hr/companies/${linkedCompany.id}`}
+              href={`/admin/companies/${linkedCompany.id}`}
               className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent transition-colors group"
             >
               <div className="flex items-center gap-4">

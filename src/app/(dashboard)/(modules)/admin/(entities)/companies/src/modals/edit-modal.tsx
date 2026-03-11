@@ -55,7 +55,7 @@ export function EditModal({
                   size="sm"
                   onClick={() => {
                     onClose();
-                    router.push(`/hr/companies/${company.id}/edit`);
+                    router.push(`/admin/companies/${company.id}/edit`);
                   }}
                   className="text-muted-foreground hover:text-foreground"
                 >

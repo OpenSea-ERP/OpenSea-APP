@@ -8,7 +8,7 @@
  * ```tsx
  * const { mutate: createCompany, isPending } = useCreateCompany({
  *   onSuccess: (company) => {
- *     router.push(`/hr/companies/${company.id}`);
+ *     router.push(`/admin/companies/${company.id}`);
  *   },
  * });
  *

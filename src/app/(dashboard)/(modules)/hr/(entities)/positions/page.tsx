@@ -588,7 +588,7 @@ function PositionsPageContent() {
                     footerAction={{
                       icon: ExternalLink,
                       label: 'Ver todas as empresas',
-                      onClick: () => router.push('/hr/companies'),
+                      onClick: () => router.push('/admin/companies'),
                       color: 'emerald',
                     }}
                   />

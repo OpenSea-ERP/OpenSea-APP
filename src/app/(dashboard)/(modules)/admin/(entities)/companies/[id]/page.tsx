@@ -254,8 +254,8 @@ export default function CompanyDetailPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
-            { label: 'Empresas', href: '/hr/companies' },
+            { label: 'Administração', href: '/admin' },
+            { label: 'Empresas', href: '/admin/companies' },
             { label: company.legalName },
           ]}
           buttons={[

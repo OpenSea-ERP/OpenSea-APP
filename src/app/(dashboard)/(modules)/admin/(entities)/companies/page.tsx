@@ -375,7 +375,7 @@ export default function CompaniesPage() {
         id: 'import-companies',
         title: 'Importar',
         icon: Upload,
-        onClick: () => router.push('/import/hr/companies'),
+        onClick: () => router.push('/import/admin/companies'),
         variant: 'outline',
         permission: companiesConfig.permissions?.import,
       },

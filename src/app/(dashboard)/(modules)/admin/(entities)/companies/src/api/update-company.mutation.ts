@@ -8,7 +8,7 @@
  * ```tsx
  * const { mutate: updateCompany, isPending } = useUpdateCompany({
  *   onSuccess: () => {
- *     router.push('/hr/companies');
+ *     router.push('/admin/companies');
  *   },
  * });
  *

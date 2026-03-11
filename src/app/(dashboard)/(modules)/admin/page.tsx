@@ -9,6 +9,7 @@ import { PageActionBar } from '@/components/layout/page-action-bar';
 import { PageDashboardSections } from '@/components/layout/page-dashboard-sections';
 import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import {
+  ADMIN_PERMISSIONS,
   AUDIT_PERMISSIONS,
   CORE_PERMISSIONS,
   RBAC_PERMISSIONS,
@@ -17,8 +18,9 @@ import { teamsService } from '@/services/core/teams.service';
 import { usePermissions } from '@/hooks/use-permissions';
 import { usersService } from '@/services/auth/users.service';
 import { listPermissionGroups } from '@/services/rbac/rbac.service';
+import { companiesService } from '@/services/admin/companies.service';
 
-import { History, Settings, Shield } from 'lucide-react';
+import { Building2, History, Settings, Shield } from 'lucide-react';
 import { PiUserDuotone, PiUsersThreeDuotone } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
 
@@ -64,6 +66,17 @@ const sections: {
         countKey: 'teams',
       },
       {
+        id: 'companies',
+        title: 'Empresas',
+        description: 'Cadastro de empresas, filiais e configurações fiscais',
+        icon: Building2,
+        href: '/admin/companies',
+        gradient: 'from-emerald-500 to-teal-600',
+        hoverBg: 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
+        permission: ADMIN_PERMISSIONS.COMPANIES.READ,
+        countKey: 'companies',
+      },
+      {
         id: 'permission-groups',
         title: 'Grupos de Permissões',
         description: 'Configure grupos e controle de acesso granular',
@@ -99,16 +112,18 @@ export default function AdminLandingPage() {
 
   useEffect(() => {
     async function fetchCounts() {
-      const [users, groups, teams] = await Promise.allSettled([
+      const [users, groups, teams, companies] = await Promise.allSettled([
         usersService.listUsers(),
         listPermissionGroups(),
         teamsService.listTeams({ limit: 1 }),
+        companiesService.listCompanies({ perPage: 1 }),
       ]);
 
       setCounts({
         users: users.status === 'fulfilled' ? users.value.users.length : null,
         groups: groups.status === 'fulfilled' ? groups.value.length : null,
         teams: teams.status === 'fulfilled' ? teams.value.meta.total : null,
+        companies: companies.status === 'fulfilled' ? companies.value.meta.total : null,
       });
       setCountsLoading(false);
     }

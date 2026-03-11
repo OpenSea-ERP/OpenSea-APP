@@ -289,7 +289,7 @@ export default function PositionDetailPage() {
                   Empresa
                 </p>
                 <Link
-                  href={`/hr/companies/${position.department.company.id}`}
+                  href={`/admin/companies/${position.department.company.id}`}
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors group"
                 >
                   <span className="font-medium">

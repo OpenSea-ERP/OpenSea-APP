@@ -81,8 +81,8 @@ export default function CompanyEditPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
-              { label: 'Empresas', href: '/hr/companies' },
+              { label: 'Administração', href: '/admin' },
+              { label: 'Empresas', href: '/admin/companies' },
             ]}
           />
         </PageHeader>
@@ -99,8 +99,8 @@ export default function CompanyEditPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
-              { label: 'Empresas', href: '/hr/companies' },
+              { label: 'Administração', href: '/admin' },
+              { label: 'Empresas', href: '/admin/companies' },
             ]}
           />
         </PageHeader>

@@ -1070,8 +1070,8 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     fields: companyFields,
     apiEndpoint: '/v1/admin/companies',
     batchEndpoint: '/v1/admin/companies/batch',
-    basePath: '/import/hr/companies',
-    module: 'hr',
+    basePath: '/import/admin/companies',
+    module: 'admin',
   },
   departments: {
     entityType: 'departments',
