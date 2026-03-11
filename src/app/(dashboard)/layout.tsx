@@ -105,7 +105,7 @@ export default function DashboardLayout({
             />
 
             {/* Main Content */}
-            <main id="main-content" tabIndex={-1} className="pt-28 px-6 pb-12">
+            <main id="main-content" tabIndex={-1} className="pt-28 px-3 sm:px-4 md:px-6 pb-12">
               <div className="max-w-[1600px] mx-auto">{children}</div>
             </main>
           </div>

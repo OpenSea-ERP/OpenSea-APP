@@ -57,7 +57,7 @@ export function RenameProductModal({
               Renomear Produto
             </div>
           </DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Fechar">
             <X className="w-4 h-4" />
           </Button>
         </DialogHeader>

@@ -26,6 +26,7 @@ export function useProducts() {
   return useQuery({
     queryKey: QUERY_KEYS.PRODUCTS,
     queryFn: () => productsService.listProducts(),
+    staleTime: 30_000,
   });
 }
 

@@ -9,12 +9,22 @@ import { InfoField } from '@/components/shared/info-field';
 import { MetadataSection } from '@/components/shared/metadata-section';
 import { FileManager } from '@/components/storage';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCNPJ } from '@/lib/masks';
 import type { Manufacturer } from '@/types/stock';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Edit,
   Factory,
@@ -26,6 +36,7 @@ import {
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { manufacturersApi } from '../src';
 
 export default function ManufacturerDetailPage() {
@@ -34,11 +45,25 @@ export default function ManufacturerDetailPage() {
   const manufacturerId = params.id as string;
 
   const [activeTab, setActiveTab] = useState('general');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: manufacturer, isLoading } = useQuery<Manufacturer>({
     queryKey: ['manufacturers', manufacturerId],
     queryFn: () => manufacturersApi.get(manufacturerId),
     enabled: !!manufacturerId,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => manufacturersApi.delete(manufacturerId),
+    onSuccess: () => {
+      toast.success('Fabricante excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['manufacturers'] });
+      router.push('/stock/manufacturers');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao excluir fabricante', { description: error.message });
+    },
   });
 
   if (isLoading) {
@@ -59,8 +84,8 @@ export default function ManufacturerDetailPage() {
     );
   }
 
-  const handleDelete = (id: string) => {
-    router.push(`/stock/manufacturers/${id}`);
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
   };
   const handleEdit = (id: string) => {
     router.push(`/stock/manufacturers/${id}/edit`);
@@ -84,7 +109,7 @@ export default function ManufacturerDetailPage() {
           <Button
             variant="outline"
             size={'sm'}
-            onClick={() => handleDelete(manufacturer.id)}
+            onClick={() => handleDelete()}
             className="gap-2 self-start sm:self-auto"
           >
             <Trash className="h-4 w-4 text-red-800" />
@@ -303,6 +328,31 @@ export default function ManufacturerDetailPage() {
           <FileManager entityType="manufacturer" entityId={manufacturerId} className="h-[600px]" />
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o fabricante &quot;{manufacturer.name}&quot;?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

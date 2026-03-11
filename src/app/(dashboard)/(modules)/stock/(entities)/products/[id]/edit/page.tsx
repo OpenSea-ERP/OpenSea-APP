@@ -437,7 +437,7 @@ export default function EditProductPage() {
                   <NotebookText className="h-6 w-6" />
                   Dados do Produto
                 </h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="name">
                       Nome do Produto <span className="text-red-500">*</span>
@@ -501,7 +501,7 @@ export default function EditProductPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   <div className="flex items-center justify-between p-4 rounded-lg border border-slate-700 bg-slate-800/50">
                     <div className="space-y-0.5">
                       <Label
@@ -549,7 +549,7 @@ export default function EditProductPage() {
 
               {template?.productAttributes &&
               Object.keys(template.productAttributes).length > 0 ? (
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Object.entries(template.productAttributes)
                     .sort(([, a], [, b]) => {
                       const labelA = (a as TemplateAttribute)?.label || '';

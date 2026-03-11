@@ -26,6 +26,7 @@ export function useItems() {
   return useQuery({
     queryKey: QUERY_KEYS.ITEMS,
     queryFn: () => itemsService.listItems(),
+    staleTime: 30_000,
   });
 }
 
@@ -105,5 +106,6 @@ export function useItemMovements(query?: ItemMovementsQuery) {
       ? QUERY_KEYS.MOVEMENTS_FILTERED(query)
       : QUERY_KEYS.MOVEMENTS,
     queryFn: () => itemMovementsService.listMovements(query),
+    staleTime: 30_000,
   });
 }

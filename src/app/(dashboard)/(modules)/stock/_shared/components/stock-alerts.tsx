@@ -70,6 +70,14 @@ function AlertItem({ alert, onClick }: AlertItemProps) {
         styles.border,
         onClick && 'cursor-pointer hover:opacity-80'
       )}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      } : undefined}
       onClick={onClick}
     >
       <Icon className={cn('h-5 w-5 mt-0.5 shrink-0', styles.icon)} />

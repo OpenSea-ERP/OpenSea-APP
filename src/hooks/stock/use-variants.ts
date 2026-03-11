@@ -32,6 +32,7 @@ export function useVariants() {
   return useQuery({
     queryKey: QUERY_KEYS.VARIANTS,
     queryFn: () => variantsService.listVariants(),
+    staleTime: 30_000,
   });
 }
 

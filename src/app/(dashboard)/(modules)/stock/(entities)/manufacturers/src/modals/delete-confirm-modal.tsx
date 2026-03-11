@@ -37,8 +37,7 @@ export function DeleteConfirmModal({
             {itemCount === 1
               ? 'o fabricante selecionado'
               : `${itemCount} fabricantes selecionados`}
-            . Esta operação é reversível apenas se houver soft delete no
-            backend.
+            . Esta ação não pode ser desfeita.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex justify-end gap-2">

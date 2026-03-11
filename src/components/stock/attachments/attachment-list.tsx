@@ -62,7 +62,7 @@ export function AttachmentList({
           <FileIcon mimeType={attachment.mimeType} />
 
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate text-gray-900 dark:text-white">
+            <p className="text-sm font-medium truncate text-foreground">
               {attachment.fileName}
             </p>
             <p className="text-xs text-muted-foreground">
@@ -83,7 +83,7 @@ export function AttachmentList({
             rel="noopener noreferrer"
             className="shrink-0"
           >
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Baixar anexo">
               <MdDownload className="h-4 w-4" />
             </Button>
           </a>
@@ -96,6 +96,7 @@ export function AttachmentList({
               className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={() => onDelete(attachment.id)}
               disabled={isDeleting}
+              aria-label="Excluir anexo"
             >
               <MdDelete className="h-4 w-4" />
             </Button>

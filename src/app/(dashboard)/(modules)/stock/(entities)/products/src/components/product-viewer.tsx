@@ -780,9 +780,9 @@ export function ProductViewer({
       {/* Two-column layout - Variantes e Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* LEFT COLUMN - Variants */}
-        <div className="flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="flex flex-col bg-background rounded-lg border shadow-sm overflow-hidden">
           {/* Variants Header */}
-          <div className="p-4 bg-linear-to-r from-gray-100 to-gray-50 dark:from-muted/30 dark:to-muted/30 border-b">
+          <div className="p-4 bg-linear-to-r from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/30 border-b">
             <div className="flex items-center justify-between mb-3 min-h-[28px]">
               <div className="flex items-center gap-2">
                 <Palette className="w-4 h-4 text-muted-foreground" />
@@ -857,11 +857,11 @@ export function ProductViewer({
         </div>
 
         {/* RIGHT COLUMN - Items */}
-        <div className="flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="flex flex-col bg-background rounded-lg border shadow-sm overflow-hidden">
           {selectedVariant ? (
             <>
               {/* Items Header */}
-              <div className="p-4 bg-linear-to-r from-gray-100 to-gray-50 dark:from-muted/30 dark:to-muted/30 border-b">
+              <div className="p-4 bg-linear-to-r from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/30 border-b">
                 <div className="flex items-center justify-between mb-3 min-h-[28px]">
                   <div className="flex items-center gap-2">
                     <Box className="w-4 h-4 text-muted-foreground" />

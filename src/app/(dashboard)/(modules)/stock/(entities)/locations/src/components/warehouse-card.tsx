@@ -40,7 +40,7 @@ export function WarehouseCard({
   const occupancyPercentage = stats?.occupancyPercentage ?? 0;
 
   const getOccupancyColor = (percentage: number) => {
-    if (percentage === 0) return 'bg-gray-200 dark:bg-gray-700';
+    if (percentage === 0) return 'bg-muted';
     if (percentage < 50) return 'bg-green-500';
     if (percentage < 80) return 'bg-yellow-500';
     if (percentage < 95) return 'bg-orange-500';
@@ -186,23 +186,23 @@ export function WarehouseCard({
 export function WarehouseCardSkeleton() {
   return (
     <Card className="overflow-hidden">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-muted animate-pulse" />
       <CardHeader className="pb-2">
         <div className="flex items-start gap-3">
-          <div className="h-12 w-12 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-12 w-12 rounded-lg bg-muted animate-pulse" />
           <div className="space-y-2">
-            <div className="h-5 w-20 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-            <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-5 w-20 rounded bg-muted animate-pulse" />
+            <div className="h-4 w-32 rounded bg-muted animate-pulse" />
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <div className="h-4 w-20 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-          <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-4 w-20 rounded bg-muted animate-pulse" />
+          <div className="h-4 w-24 rounded bg-muted animate-pulse" />
         </div>
-        <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
-        <div className="h-9 w-full rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+        <div className="h-2 w-full rounded-full bg-muted animate-pulse" />
+        <div className="h-9 w-full rounded bg-muted animate-pulse" />
       </CardContent>
     </Card>
   );

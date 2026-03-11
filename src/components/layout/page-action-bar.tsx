@@ -76,7 +76,7 @@ export function PageActionBar({
                   <Button
                     size="sm"
                     variant={btn.variant || 'default'}
-                    className="gap-2"
+                    className="gap-2 min-h-[44px]"
                   >
                     <btn.icon className="h-4 w-4" />
                     {btn.label}
@@ -95,6 +95,7 @@ export function PageActionBar({
                 onClick={button.onClick}
                 title={button.title}
                 disabled={button.disabled}
+                className="min-h-[44px]"
               >
                 {button.icon && (
                   <button.icon

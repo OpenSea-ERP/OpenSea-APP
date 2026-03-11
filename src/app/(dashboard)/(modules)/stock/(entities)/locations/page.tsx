@@ -263,7 +263,7 @@ export default function LocationsPage() {
 
   const renderWarehouseFormFields = (idPrefix: string) => (
     <div className="space-y-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor={`${idPrefix}-code`}>
             Código <span className="text-destructive">*</span>

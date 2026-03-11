@@ -89,8 +89,9 @@ export function PropertiesPanel({
             <Label className="text-xs text-muted-foreground">Posição</Label>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">X</Label>
+                <Label htmlFor="zone-prop-aisle-x" className="text-xs">X</Label>
                 <Input
+                  id="zone-prop-aisle-x"
                   type="number"
                   value={selectedAisle.x}
                   onChange={e =>
@@ -102,8 +103,9 @@ export function PropertiesPanel({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Y</Label>
+                <Label htmlFor="zone-prop-aisle-y" className="text-xs">Y</Label>
                 <Input
+                  id="zone-prop-aisle-y"
                   type="number"
                   value={selectedAisle.y}
                   onChange={e =>
@@ -203,8 +205,9 @@ export function PropertiesPanel({
         <CardContent className="space-y-4">
           {/* Label personalizado */}
           <div className="space-y-1">
-            <Label className="text-xs">Texto</Label>
+            <Label htmlFor="zone-prop-label" className="text-xs">Texto</Label>
             <Input
+              id="zone-prop-label"
               value={selectedAnnotation.label || ''}
               onChange={e =>
                 onUpdateAnnotation?.(selectedAnnotation.id, {
@@ -221,8 +224,9 @@ export function PropertiesPanel({
             <Label className="text-xs text-muted-foreground">Posição</Label>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">X</Label>
+                <Label htmlFor="zone-prop-ann-x" className="text-xs">X</Label>
                 <Input
+                  id="zone-prop-ann-x"
                   type="number"
                   value={selectedAnnotation.x}
                   onChange={e =>
@@ -234,8 +238,9 @@ export function PropertiesPanel({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Y</Label>
+                <Label htmlFor="zone-prop-ann-y" className="text-xs">Y</Label>
                 <Input
+                  id="zone-prop-ann-y"
                   type="number"
                   value={selectedAnnotation.y}
                   onChange={e =>
@@ -254,8 +259,9 @@ export function PropertiesPanel({
             <Label className="text-xs text-muted-foreground">Tamanho</Label>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs">Largura</Label>
+                <Label htmlFor="zone-prop-width" className="text-xs">Largura</Label>
                 <Input
+                  id="zone-prop-width"
                   type="number"
                   value={selectedAnnotation.width}
                   onChange={e =>
@@ -267,8 +273,9 @@ export function PropertiesPanel({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Altura</Label>
+                <Label htmlFor="zone-prop-height" className="text-xs">Altura</Label>
                 <Input
+                  id="zone-prop-height"
                   type="number"
                   value={selectedAnnotation.height}
                   onChange={e =>
@@ -284,9 +291,10 @@ export function PropertiesPanel({
 
           {/* Cor */}
           <div className="space-y-1">
-            <Label className="text-xs">Cor</Label>
+            <Label htmlFor="zone-prop-color" className="text-xs">Cor</Label>
             <div className="flex gap-2">
               <Input
+                id="zone-prop-color"
                 type="color"
                 value={selectedAnnotation.color || defaults.color}
                 onChange={e =>
@@ -297,6 +305,7 @@ export function PropertiesPanel({
                 className="h-8 w-14 p-1 cursor-pointer"
               />
               <Input
+                id="zone-prop-color-text"
                 value={selectedAnnotation.color || defaults.color}
                 onChange={e =>
                   onUpdateAnnotation?.(selectedAnnotation.id, {

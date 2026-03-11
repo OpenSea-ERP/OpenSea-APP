@@ -179,8 +179,8 @@ export default function ProductCategoriesPage() {
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
         >
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 h-10">
-            {item.description || 'Sem descricao'}
+          <p className="text-sm text-muted-foreground line-clamp-2 h-10">
+            {item.description || 'Sem descrição'}
           </p>
         </EntityCard>
       </EntityContextMenu>
@@ -222,8 +222,8 @@ export default function ProductCategoriesPage() {
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
         >
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-            {item.description || 'Sem descricao'}
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {item.description || 'Sem descrição'}
           </p>
         </EntityCard>
       </EntityContextMenu>
