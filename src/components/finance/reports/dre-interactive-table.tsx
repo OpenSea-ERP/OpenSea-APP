@@ -192,13 +192,13 @@ export function DREInteractiveTable({
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <Table>
+          <Table aria-label="Demonstração do Resultado do Exercício">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[40%]">Categoria</TableHead>
-                <TableHead className="text-right">Periodo Atual</TableHead>
-                <TableHead className="text-right">Periodo Anterior</TableHead>
-                <TableHead className="text-right">Variacao %</TableHead>
+                <TableHead className="text-right">Período Atual</TableHead>
+                <TableHead className="text-right">Período Anterior</TableHead>
+                <TableHead className="text-right">Variação %</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -227,7 +227,7 @@ export function DREInteractiveTable({
               </TableRow>
 
               <TableRow className="font-bold text-lg border-t-2">
-                <TableCell className="pl-4">Resultado Liquido</TableCell>
+                <TableCell className="pl-4">Resultado Líquido</TableCell>
                 <TableCell
                   className={`text-right font-mono ${
                     (netResult ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'

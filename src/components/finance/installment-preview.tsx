@@ -112,7 +112,7 @@ export function InstallmentPreview({
 
   return (
     <div className="max-h-64 overflow-y-auto border rounded-lg">
-      <Table>
+      <Table aria-label="Tabela de pré-visualização de parcelas">
         <TableHeader>
           <TableRow>
             <TableHead>Parcela</TableHead>

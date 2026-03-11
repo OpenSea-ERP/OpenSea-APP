@@ -89,7 +89,7 @@ export function AmortizationTable({
         </h2>
       </div>
       <div className="overflow-x-auto">
-        <Table>
+        <Table aria-label="Tabela de amortização do empréstimo">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Parcela</TableHead>

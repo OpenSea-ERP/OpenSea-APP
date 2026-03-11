@@ -74,7 +74,7 @@ export function RecurringList({
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table aria-label="Tabela de recorrências financeiras">
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead>Descrição</TableHead>

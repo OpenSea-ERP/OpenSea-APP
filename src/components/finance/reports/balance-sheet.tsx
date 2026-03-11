@@ -99,7 +99,7 @@ export function BalanceSheet({ data, isLoading }: BalanceSheetProps) {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <Table>
+          <Table aria-label="Balanço Patrimonial">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[60%]">Descrição</TableHead>
