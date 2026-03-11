@@ -42,12 +42,12 @@ export interface Product {
     name: string;
     unitOfMeasure: string;
     sequentialCode?: number;
-    productAttributes?: TemplateAttributes;
-    variantAttributes?: TemplateAttributes;
-    itemAttributes?: TemplateAttributes;
+    productAttributes: Record<string, unknown>;
+    variantAttributes: Record<string, unknown>;
+    itemAttributes: Record<string, unknown>;
     isActive: boolean;
-    createdAt: Date;
-    updatedAt?: Date;
+    createdAt: string;
+    updatedAt?: string;
   };
   supplierId?: string;
   supplier?: Supplier | null;
@@ -64,29 +64,30 @@ export interface Product {
     price: number;
     costPrice?: number;
     profitMargin?: number;
-    imageUrl?: string;
     barcode?: string;
     isActive: boolean;
-    createdAt: Date;
-    updatedAt?: Date;
+    createdAt: string;
+    updatedAt?: string;
   }>;
   productCategories?: ProductCategory[];
   productTags?: ProductTag[];
-  createdAt: Date;
-  updatedAt?: Date;
-  deletedAt?: Date;
+  createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string;
 }
 
 export interface CreateProductRequest {
   name: string;
   // fullCode e sequentialCode sao gerados pelo backend (nao enviar)
   description?: string;
-  // status omitido - sera ACTIVE por padrao no backend
+  status?: ProductStatus;
+  outOfLine?: boolean;
   // unitOfMeasure removido - vem do Template
   attributes?: Record<string, unknown>;
   templateId: string;
   supplierId?: string;
   manufacturerId?: string;
+  categoryIds?: string[];
 }
 
 export interface UpdateProductRequest {

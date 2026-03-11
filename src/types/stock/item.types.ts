@@ -85,7 +85,7 @@ export interface Item {
   binId?: string; // ID da bin onde o item esta armazenado
   locationId?: string; // @deprecated - use binId (mantido para retrocompatibilidade)
   resolvedAddress?: string; // Endereco resolvido da bin (ex: "FAB-EST-102-B")
-  lastKnownAddress?: string; // Ultimo endereco conhecido (persistido mesmo quando bin e removido)
+  lastKnownAddress?: string | null; // Ultimo endereco conhecido (persistido mesmo quando bin e removido)
   uniqueCode?: string;
   fullCode?: string;
   sequentialCode?: number;
@@ -94,14 +94,14 @@ export interface Item {
   unitCost?: number;
   totalCost?: number;
   status: ItemStatus;
-  entryDate: Date;
+  entryDate: string;
   attributes: Record<string, unknown>;
   batchNumber?: string;
-  manufacturingDate?: Date;
-  expiryDate?: Date;
-  createdAt: Date;
-  updatedAt?: Date;
-  deletedAt?: Date;
+  manufacturingDate?: string;
+  expiryDate?: string;
+  createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string;
   // Campos desnormalizados do produto/variante
   productCode: string;
   productName: string;
@@ -120,7 +120,7 @@ export interface Item {
   bin?: {
     id: string;
     address: string;
-    zone?: {
+    zone: {
       id: string;
       warehouseId: string;
       code: string;
@@ -218,8 +218,8 @@ export interface RegisterItemEntryRequest {
   unitCost?: number;
   attributes?: Record<string, unknown>;
   batchNumber?: string;
-  manufacturingDate?: Date;
-  expiryDate?: Date;
+  manufacturingDate?: string;
+  expiryDate?: string;
   notes?: string;
 }
 
@@ -252,7 +252,7 @@ export interface BatchTransferResponse {
 
 export interface LocationHistoryEntry {
   id: string;
-  date: Date;
+  date: string;
   type: string;
   from: string | null;
   to: string | null;
@@ -303,7 +303,7 @@ export interface ItemMovement {
   notes?: string | null;
   approvedBy?: string | null;
   salesOrderId?: string | null;
-  createdAt: Date;
+  createdAt: string;
   user?: { id: string; name: string } | null;
 }
 
@@ -325,7 +325,7 @@ export interface ItemMovementsResponse {
 export interface ItemExtended extends Item {
   volumeId?: string;
   categoryId?: string;
-  lastMovementAt?: Date;
+  lastMovementAt?: string;
   variant?: Variant;
   location?: Location;
 }
@@ -335,9 +335,9 @@ export interface ItemExtended extends Item {
 export interface ItemMovementExtended extends ItemMovement {
   status: MovementStatus;
   approvedBy?: string;
-  approvedAt?: Date;
+  approvedAt?: string;
   rejectedBy?: string;
-  rejectedAt?: Date;
+  rejectedAt?: string;
   rejectionReason?: string;
   unitCost?: number;
   unitPrice?: number;
@@ -347,7 +347,7 @@ export interface ItemMovementExtended extends ItemMovement {
   invoiceNumber?: string;
   invoiceAccessKey?: string;
   invoiceSeries?: string;
-  invoiceDate?: Date;
+  invoiceDate?: string;
   invoiceDescription?: string;
   // Relations
   item?: Item;
@@ -364,7 +364,7 @@ export interface RegisterItemEntryExtendedRequest
   invoiceNumber?: string;
   invoiceAccessKey?: string;
   invoiceSeries?: string;
-  invoiceDate?: Date;
+  invoiceDate?: string;
   invoiceDescription?: string;
 }
 
@@ -383,7 +383,7 @@ export interface BatchEntryRequest {
     invoiceNumber?: string;
     invoiceAccessKey?: string;
     invoiceSeries?: string;
-    invoiceDate?: Date;
+    invoiceDate?: string;
   };
 }
 

@@ -36,9 +36,9 @@ export interface Variant {
   upcCode?: string;
   colorHex?: string;
   colorPantone?: string;
-  secondaryColorHex?: string;
-  secondaryColorPantone?: string;
-  pattern?: Pattern;
+  secondaryColorHex?: string | null;
+  secondaryColorPantone?: string | null;
+  pattern?: Pattern | null;
   minStock?: number;
   maxStock?: number;
   reorderPoint?: number;
@@ -47,9 +47,9 @@ export interface Variant {
   similars?: unknown[];
   outOfLine: boolean;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt?: Date;
-  deletedAt?: Date;
+  createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string;
 }
 
 export interface CreateVariantRequest {
