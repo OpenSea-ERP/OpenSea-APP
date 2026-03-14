@@ -36,7 +36,13 @@ export function useMe(enabled = true) {
     queryKey: meKeys.detail(),
     queryFn: () => meService.getMe(),
     enabled,
-    retry: false, // Não tentar novamente em caso de erro (ex: token inválido)
+    retry: (failureCount, error) => {
+      // Don't retry auth errors (401/403)
+      const status = (error as Error & { status?: number }).status;
+      if (status === 401 || status === 403) return false;
+      // Retry network errors up to 2 times
+      return failureCount < 2;
+    },
     staleTime: 2 * 60 * 1000, // 2 minutos - reduzido para detectar problemas mais rápido
     refetchOnWindowFocus: true, // Revalida quando o usuário volta para a aba
     refetchInterval: 5 * 60 * 1000, // Revalida a cada 5 minutos em background

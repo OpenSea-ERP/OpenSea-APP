@@ -74,8 +74,13 @@ export function usePermissions(): UsePermissionsReturn {
     enabled: !!user?.id && !!currentTenant,
     staleTime: 15 * 60 * 1000, // 15 minutos
     gcTime: 30 * 60 * 1000, // 30 minutos (antes era cacheTime)
-    retry: 2,
+    retry: (failureCount, error) => {
+      const status = (error as Error & { status?: number }).status;
+      if (status === 401 || status === 403) return false;
+      return failureCount < 3;
+    },
     throwOnError: false,
+    refetchOnMount: true, // Always refetch when component mounts (tenant may have changed)
   });
 
   // Criar mapa de permissões para verificação rápida

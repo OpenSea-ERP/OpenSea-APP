@@ -92,6 +92,10 @@ export class TokenManager {
   }
 
   clearTokens(): void {
+    // CRITICAL: Null the refresh promise FIRST to prevent in-flight refresh
+    // from re-populating tokens after they're cleared
+    this.refreshPromise = null;
+
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
@@ -294,7 +298,40 @@ export class TokenManager {
   }
 
   handleRefreshFailure(_isNetworkError = false): void {
+    // Quando o erro é de rede (servidor temporariamente indisponível), verificar
+    // se o access token atual ainda é válido. Se sim, NÃO destruir a sessão —
+    // apenas reagendar o refresh para daqui a 60s. O usuário continua autenticado.
+    if (_isNetworkError) {
+      const token = this.getToken();
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const exp = payload.exp as number;
+          const now = Math.floor(Date.now() / 1000);
+          if (exp && exp > now) {
+            logger.warn(
+              '[API] Erro de rede no refresh mas access token ainda válido — mantendo sessão e reagendando refresh em 60s'
+            );
+            if (this.refreshTimer) {
+              clearTimeout(this.refreshTimer);
+              this.refreshTimer = null;
+            }
+            this.refreshTimer = setTimeout(() => {
+              this.refreshTimer = null;
+              this.refreshAccessToken().catch(() => {});
+            }, 60_000);
+            return;
+          }
+        } catch {
+          // Token inválido ou não-decodificável — prossegue com o logout normal
+        }
+      }
+    }
+
     logger.debug('[API] Limpando tokens após falha de refresh...');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('selected_tenant_id');
+    }
     this.clearTokens();
     // Auth-context handles redirect via token change detection
   }

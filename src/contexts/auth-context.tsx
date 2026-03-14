@@ -4,11 +4,12 @@ import { authConfig } from '@/config/api';
 import { useLogin, useLogout, useMe, useRegister } from '@/hooks';
 import { useRoutineCheck } from '@/hooks/use-routine-check';
 import { apiClient } from '@/lib/api-client';
-import { saveAccount } from '@/lib/saved-accounts';
-import { authService } from '@/services';
 import { logger } from '@/lib/logger';
+import { saveAccount } from '@/lib/saved-accounts';
+import { queryClient } from '@/providers/query-provider';
+import { authService } from '@/services';
 import type { LoginCredentials, RegisterData, User } from '@/types';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import React, {
   createContext,
   useCallback,
@@ -154,7 +155,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check if api-client is currently refreshing the token
     const tm = apiClient.getTokenManager();
     if (tm.isRefreshing) {
-      logger.debug('Token refresh em andamento, aguardando antes de deslogar...');
+      logger.debug(
+        'Token refresh em andamento, aguardando antes de deslogar...'
+      );
       let attempts = 0;
       const checkInterval = setInterval(() => {
         attempts++;
@@ -162,7 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           clearInterval(checkInterval);
           const newToken = localStorage.getItem(authConfig.tokenKey);
           if (newToken) {
-            logger.debug('Refresh concluído com sucesso, ignorando erro anterior');
+            logger.debug(
+              'Refresh concluído com sucesso, ignorando erro anterior'
+            );
             refetchUser();
           } else {
             performLogout();
@@ -181,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.debug('Token inválido, limpando...');
       localStorage.removeItem(authConfig.tokenKey);
       localStorage.removeItem(authConfig.refreshTokenKey);
+      localStorage.removeItem('selected_tenant_id');
       setHasToken(false);
       if (!isPublicRoute) {
         logger.debug('Redirecionando para login...');
@@ -344,23 +350,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Logout
   const logout = useCallback(async () => {
+    // CRITICAL: Clear tokens FIRST to prevent refresh race condition
+    const tm = apiClient.getTokenManager();
+    tm.clearTokens();
+
+    // Clear all React Query cache (prevents stale data on re-login with different user)
+    queryClient.clear();
+
+    // Clear all localStorage auth state
+    localStorage.removeItem(authConfig.tokenKey);
+    localStorage.removeItem(authConfig.refreshTokenKey);
+    localStorage.removeItem('session_id');
+    localStorage.removeItem('selected_tenant_id');
+    setHasToken(false);
+
+    // Notify backend (fire-and-forget, tokens already cleared)
     try {
       await logoutMutation.mutateAsync();
     } catch (error) {
-      logger.error('Erro ao fazer logout', error as Error, {
+      logger.error('Erro ao notificar backend sobre logout', error as Error, {
         action: 'logout',
         userId: user?.id,
       });
-    } finally {
-      // Limpa os tokens independentemente do resultado
-      localStorage.removeItem(authConfig.tokenKey);
-      localStorage.removeItem(authConfig.refreshTokenKey);
-      localStorage.removeItem('session_id');
-      setHasToken(false);
-
-      // Redireciona para login
-      router.push('/fast-login');
     }
+
+    router.push('/fast-login');
   }, [logoutMutation, user?.id, router]);
 
   const value = useMemo<AuthContextType>(

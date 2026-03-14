@@ -183,19 +183,28 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Listen for auth changes to refresh tenants
+  // Listen for auth changes to clear or refresh tenants
   useEffect(() => {
     const handleAuthChange = () => {
       const token = localStorage.getItem(authConfig.tokenKey);
       if (!token) {
+        // Token removed — clear tenant state
         setCurrentTenant(null);
         setTenants([]);
+        setIsInitialized(false);
+        initAttempted.current = false; // Allow re-init on next login
+      } else {
+        // Token appeared or changed — refresh tenants
+        // This handles re-login and tenant selection
+        refreshTenants().then(() => {
+          setIsInitialized(true);
+        });
       }
     };
     window.addEventListener('auth-token-change', handleAuthChange);
     return () =>
       window.removeEventListener('auth-token-change', handleAuthChange);
-  }, []);
+  }, [refreshTenants]);
 
   // Validate tenant context against JWT payload
   useEffect(() => {
@@ -210,7 +219,18 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
       const storedTenantId = localStorage.getItem('selected_tenant_id');
       if (storedTenantId && !payload.tenantId) {
-        clearAuthAndTenant();
+        // O token não tem escopo de tenant (ex: token de login limpo) mas
+        // selected_tenant_id ainda está definido no localStorage.
+        // NÃO destruir os tokens de auth — o usuário ainda está autenticado.
+        // Limpar apenas o estado do tenant para que o usuário seja direcionado
+        // ao /select-tenant onde pode re-selecionar enquanto ainda autenticado.
+        logger.warn(
+          '[TenantContext] Token sem tenantId com selected_tenant_id definido — limpando estado do tenant sem revogar autenticação'
+        );
+        setCurrentTenant(null);
+        setTenants([]);
+        localStorage.removeItem('selected_tenant_id');
+        queryClient.clear();
       }
     };
 
@@ -218,7 +238,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('auth-token-change', validateTenantToken);
     return () =>
       window.removeEventListener('auth-token-change', validateTenantToken);
-  }, [clearAuthAndTenant]);
+  }, [queryClient]);
 
   // Listener para tenant atualizado via refresh
   useEffect(() => {

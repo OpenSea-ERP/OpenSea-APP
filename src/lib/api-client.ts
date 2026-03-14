@@ -104,10 +104,7 @@ class ApiClient {
 
           if (!retryResponse.ok) {
             if (retryResponse.status === 401 || retryResponse.status === 403) {
-              if (typeof window !== 'undefined') {
-                localStorage.removeItem('selected_tenant_id');
-                localStorage.removeItem('user');
-              }
+              // Auth still failing after refresh — session is truly invalid
               this.tokenManager.handleRefreshFailure(false);
             }
 
