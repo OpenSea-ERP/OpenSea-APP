@@ -176,7 +176,7 @@ export function CreateTemplateModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-white/95 dark:bg-gray-900/95 border-gray-200/50 dark:border-white/10 max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-2xl">
             {initialData ? 'Editar Template' : 'Novo Template'}

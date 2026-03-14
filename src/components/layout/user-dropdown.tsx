@@ -65,6 +65,7 @@ export function UserDropdown() {
             surname={user?.profile?.surname}
             avatarUrl={user?.profile?.avatarUrl}
             size="sm"
+            className="ring-2 ring-gray-300 dark:ring-white/70"
           />
         </Button>
       </DropdownMenuTrigger>

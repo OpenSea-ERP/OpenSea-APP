@@ -1,6 +1,6 @@
 /**
  * Notifications Panel
- * Painel de notificações com dados reais do backend
+ * Painel unificado de notificações com dados reais do backend
  */
 
 'use client';
@@ -11,7 +11,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -166,7 +165,7 @@ export function NotificationsPanel() {
   useAutoEmailSync();
 
   // Fetch notifications — polls every 30s
-  const { data, isLoading, isFetching } = useNotificationsList({
+  const { data, isLoading } = useNotificationsList({
     limit: 30,
   });
 
@@ -233,119 +232,131 @@ export function NotificationsPanel() {
         sideOffset={22}
         className="w-96 bg-white/95 dark:bg-slate-900/95 border-gray-200 dark:border-white/10 p-0"
       >
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-white/10">
-          <div className="flex items-center justify-between">
-            <DropdownMenuLabel className="p-0 text-lg font-bold">
-              Notificações
-            </DropdownMenuLabel>
+        {/* Row 1 — Title */}
+        <div className="px-4 pt-4 pb-2">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            Notificações
+          </h3>
+        </div>
 
-            <div className="flex items-center gap-1.5">
-              {unreadCount > 0 && (
-                <Badge
-                  variant="default"
-                  className="bg-rose-500 text-white text-xs"
+        {/* Row 2 — Count + Actions */}
+        <div className="px-4 pb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 ? (
+              <Badge
+                variant="default"
+                className="bg-rose-500 text-white text-xs"
+              >
+                {unreadCount} nova{unreadCount !== 1 && 's'}
+              </Badge>
+            ) : (
+              <span className="text-xs text-gray-500 dark:text-white/40">
+                {notifications.length} notificaç{notifications.length !== 1 ? 'ões' : 'ão'}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            {/* Sync icon / badge state machine */}
+            <AnimatePresence mode="wait">
+              {syncStatus === 'idle' && (
+                <motion.div
+                  key="sync-btn"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
                 >
-                  {unreadCount} nova{unreadCount !== 1 && 's'}
-                </Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleForceCheck}
+                        className="h-7 w-7 p-0"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 text-gray-500 dark:text-white/50" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Verificar notificações</TooltipContent>
+                  </Tooltip>
+                </motion.div>
               )}
 
-              {/* Sync icon / badge state machine */}
-              <AnimatePresence mode="wait">
-                {syncStatus === 'idle' && (
-                  <motion.div
-                    key="sync-btn"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.2, ease: 'easeInOut' }}
-                  >
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleForceCheck}
-                          className="h-7 w-7 p-0"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5 text-gray-500 dark:text-white/50" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Verificar notificações</TooltipContent>
-                    </Tooltip>
-                  </motion.div>
-                )}
+              {syncStatus === 'syncing' && (
+                <motion.div
+                  key="sync-badge"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                >
+                  <Badge className="h-7 px-2.5 text-xs gap-1.5 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Sincronizando
+                  </Badge>
+                </motion.div>
+              )}
 
-                {syncStatus === 'syncing' && (
-                  <motion.div
-                    key="sync-badge"
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.85 }}
-                    transition={{ duration: 0.25, ease: 'easeOut' }}
-                  >
-                    <Badge className="h-7 px-2.5 text-xs gap-1.5 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Sincronizando
-                    </Badge>
-                  </motion.div>
-                )}
+              {syncStatus === 'done' && (
+                <motion.div
+                  key="sync-done"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                >
+                  <Badge className="h-7 px-2.5 text-xs gap-1.5 bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30">
+                    <Check className="w-3.5 h-3.5" />
+                    Atualizado
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                {syncStatus === 'done' && (
-                  <motion.div
-                    key="sync-done"
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.85 }}
-                    transition={{ duration: 0.25, ease: 'easeOut' }}
+            {/* Mark all as read */}
+            {unreadCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => markAllAsRead.mutate()}
+                    disabled={markAllAsRead.isPending}
+                    className="h-7 w-7 p-0"
                   >
-                    <Badge className="h-7 px-2.5 text-xs gap-1.5 bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30">
-                      <Check className="w-3.5 h-3.5" />
-                      Atualizado
-                    </Badge>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <CheckCheck className="w-3.5 h-3.5 text-gray-500 dark:text-white/50" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Marcar todas como lidas</TooltipContent>
+              </Tooltip>
+            )}
 
-              {/* Mark all as read / Archive all */}
-              {unreadCount > 0 ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => markAllAsRead.mutate()}
-                      disabled={markAllAsRead.isPending}
-                      className="h-7 w-7 p-0"
-                    >
-                      <CheckCheck className="w-3.5 h-3.5 text-gray-500 dark:text-white/50" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Marcar todas como lidas</TooltipContent>
-                </Tooltip>
-              ) : notifications.length > 0 ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        notifications.forEach(n => deleteNotif.mutate(n.id));
-                      }}
-                      className="h-7 w-7 p-0"
-                    >
-                      <Archive className="w-3.5 h-3.5 text-gray-500 dark:text-white/50" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Arquivar todas</TooltipContent>
-                </Tooltip>
-              ) : null}
-            </div>
+            {/* Archive all (only when all read) */}
+            {unreadCount === 0 && notifications.length > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      notifications.forEach(n => deleteNotif.mutate(n.id));
+                    }}
+                    className="h-7 w-7 p-0"
+                  >
+                    <Archive className="w-3.5 h-3.5 text-gray-500 dark:text-white/50" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Arquivar todas</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
 
+        <DropdownMenuSeparator className="my-0" />
+
         {/* Notifications List */}
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="h-[380px]">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-3" />
@@ -392,7 +403,7 @@ export function NotificationsPanel() {
                           handleNotificationClick(notification);
                         }}
                       >
-                        <div className="flex gap-2.5 w-full">
+                        <div className="flex gap-2.5 w-full min-w-0 overflow-hidden">
                           {/* Col 1 — Icon */}
                           <div
                             className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
@@ -410,32 +421,50 @@ export function NotificationsPanel() {
                             />
                           </div>
 
-                          {/* Col 2 — Content */}
-                          <div className="flex-1 min-w-0">
-                            <h4
-                              className={`text-sm truncate ${
-                                isUnread
-                                  ? 'font-semibold text-gray-900 dark:text-white'
-                                  : 'font-medium text-gray-600 dark:text-white/60'
-                              }`}
-                            >
-                              {title}
-                            </h4>
-                            <p className="text-xs text-gray-500 dark:text-white/40 truncate mt-0.5">
-                              {subtitle}
-                            </p>
-                          </div>
-
-                          {/* Col 3 — Time + Actions */}
-                          <div className="flex flex-col items-end justify-between shrink-0 max-w-[4.5rem]">
-                            <span className="text-[10px] text-gray-400 dark:text-white/30 truncate max-w-full text-right">
-                              {formatTimeAgo(notification.createdAt)}
-                            </span>
-                            <div
-                              className="flex gap-0.5"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              {isUnread && (
+                          {/* Col 2 — Content (flexible, truncated) */}
+                          <div className="flex-1 min-w-0 max-w-[calc(100%-3rem)] overflow-hidden">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <h4
+                                className={`text-sm truncate ${
+                                  isUnread
+                                    ? 'font-semibold text-gray-900 dark:text-white'
+                                    : 'font-medium text-gray-600 dark:text-white/60'
+                                }`}
+                              >
+                                {title}
+                              </h4>
+                              <span className="text-[10px] text-gray-400 dark:text-white/30 shrink-0 whitespace-nowrap">
+                                {formatTimeAgo(notification.createdAt)}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 mt-0.5">
+                              <p className="text-xs text-gray-500 dark:text-white/40 truncate">
+                                {subtitle}
+                              </p>
+                              <div
+                                className="flex gap-0.5 shrink-0"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                {isUnread && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          markAsRead.mutate(notification.id);
+                                        }}
+                                        className="h-5 w-5 p-0"
+                                      >
+                                        <Check className="w-3 h-3 text-gray-400 dark:text-white/40" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      Marcar como lida
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
@@ -443,36 +472,18 @@ export function NotificationsPanel() {
                                       size="sm"
                                       onClick={e => {
                                         e.stopPropagation();
-                                        markAsRead.mutate(notification.id);
+                                        deleteNotif.mutate(notification.id);
                                       }}
                                       className="h-5 w-5 p-0"
                                     >
-                                      <Check className="w-3 h-3 text-gray-400 dark:text-white/40" />
+                                      <X className="w-3 h-3 text-gray-400 dark:text-white/40" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    Marcar como lida
+                                    Remover notificação
                                   </TooltipContent>
                                 </Tooltip>
-                              )}
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      deleteNotif.mutate(notification.id);
-                                    }}
-                                    className="h-5 w-5 p-0"
-                                  >
-                                    <Archive className="w-3 h-3 text-gray-400 dark:text-white/40" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Arquivar notificação
-                                </TooltipContent>
-                              </Tooltip>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -486,7 +497,7 @@ export function NotificationsPanel() {
         </ScrollArea>
 
         {/* Footer — always visible */}
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="my-0" />
         <div className="p-2">
           <Button
             variant="ghost"

@@ -615,7 +615,8 @@
   --scrollbar-thumb-hover: rgb(var(--os-slate-600) / 0.6);
 
   /* Modal */
-  --modal-bg: rgb(var(--os-gray-800));
+  --modal-bg: rgb(var(--os-slate-800));
+  --modal-border: rgb(var(--os-slate-700) / 0.6);
   --modal-overlay: rgb(var(--os-black) / 0.8);
 }
 

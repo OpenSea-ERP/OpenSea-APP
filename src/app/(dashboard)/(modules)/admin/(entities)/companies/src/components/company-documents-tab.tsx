@@ -67,6 +67,7 @@ const DOCUMENT_TYPE_SUGGESTIONS = [
   'Licença Sanitária',
   'Procuração',
   'Comprovante de Endereço',
+  'Outros',
 ];
 
 function formatFileSize(bytes: number): string {

@@ -1,26 +1,52 @@
 import type { UnitOfMeasure } from '@/types/stock';
 
 export type PresetCategory =
-  | 'TEXTIL'
-  | 'TECIDOS'
+  | 'VESTUARIO'
   | 'CALCADOS'
-  | 'ALIMENTOS'
-  | 'FARMACIA'
-  | 'ELETRONICOS'
+  | 'ENXOVAL'
+  | 'TEXTIL'
   | 'SERIGRAFIA'
-  | 'VAREJO';
+  | 'ELETRONICOS'
+  | 'FARMACIA'
+  | 'MERCADO'
+  | 'LIVRARIA'
+  | 'HOSPITALAR';
 
 export type SpecialModule = 'CARE_INSTRUCTIONS';
 
 export const PRESET_CATEGORY_LABELS: Record<PresetCategory, string> = {
-  TEXTIL: 'Têxtil / Vestuário',
-  TECIDOS: 'Tecidos / Malhas',
-  CALCADOS: 'Calçados',
-  ALIMENTOS: 'Alimentos',
-  FARMACIA: 'Farmácia',
-  ELETRONICOS: 'Eletrônicos',
+  VESTUARIO: 'Vestuário',
+  CALCADOS: 'Calçado',
+  ENXOVAL: 'Enxoval',
+  TEXTIL: 'Têxtil',
   SERIGRAFIA: 'Serigrafia',
-  VAREJO: 'Mercado / Varejo',
+  ELETRONICOS: 'Eletrônicos',
+  FARMACIA: 'Farmácia',
+  MERCADO: 'Mercado',
+  LIVRARIA: 'Livraria',
+  HOSPITALAR: 'Hospitalar',
+};
+
+/** Categorias visíveis no modal de seleção de template */
+export const VISIBLE_CATEGORIES: PresetCategory[] = [
+  'VESTUARIO',
+  'CALCADOS',
+  'TEXTIL',
+  'HOSPITALAR',
+];
+
+/** Subcategorias por categoria para exibição na sidebar */
+export const CATEGORY_SUBCATEGORIES: Record<PresetCategory, string[]> = {
+  VESTUARIO: ['Camiseta', 'Calças', 'Vestido'],
+  CALCADOS: ['Tênis', 'Sapatos', 'Sandálias'],
+  ENXOVAL: ['Lençol', 'Fronha', 'Toalha'],
+  TEXTIL: ['Tecido', 'Malha', 'Linha', 'Aviamento'],
+  SERIGRAFIA: ['Tinta', 'Tela', 'Rodo', 'Substrato'],
+  ELETRONICOS: ['Computador', 'Celular', 'Placas'],
+  FARMACIA: ['Medicamento', 'Perfumaria', 'Cosmético'],
+  MERCADO: ['Alimento', 'Bebida', 'Limpeza', 'Higiene'],
+  LIVRARIA: ['Livro', 'Catálogo'],
+  HOSPITALAR: ['Scrub', 'Campo Fenestrado'],
 };
 
 export interface TemplateAttribute {
@@ -110,7 +136,7 @@ const camiseta: TemplatePreset = {
   name: 'Camiseta',
   description: 'Camisetas, regatas e blusas de malha',
   icon: 'GiTShirt',
-  category: 'TEXTIL',
+  category: 'VESTUARIO',
   unitOfMeasure: 'UNITS',
   specialModules: ['CARE_INSTRUCTIONS'],
   productAttributes: {
@@ -142,7 +168,7 @@ const calca: TemplatePreset = {
   name: 'Calça',
   description: 'Calças, bermudas e shorts',
   icon: 'GiArmoredPants',
-  category: 'TEXTIL',
+  category: 'VESTUARIO',
   unitOfMeasure: 'UNITS',
   specialModules: ['CARE_INSTRUCTIONS'],
   productAttributes: {
@@ -186,7 +212,7 @@ const vestido: TemplatePreset = {
   name: 'Vestido',
   description: 'Vestidos, saias e macacões',
   icon: 'GiLargeDress',
-  category: 'TEXTIL',
+  category: 'VESTUARIO',
   unitOfMeasure: 'UNITS',
   specialModules: ['CARE_INSTRUCTIONS'],
   productAttributes: {
@@ -223,7 +249,7 @@ const lencol: TemplatePreset = {
   name: 'Lençol',
   description: 'Lençóis, fronhas e jogos de cama',
   icon: 'GiPillow',
-  category: 'TEXTIL',
+  category: 'ENXOVAL',
   unitOfMeasure: 'UNITS',
   specialModules: ['CARE_INSTRUCTIONS'],
   productAttributes: {
@@ -255,7 +281,7 @@ const toalha: TemplatePreset = {
   name: 'Toalha',
   description: 'Toalhas de banho, rosto, praia e piso',
   icon: 'GiTowel',
-  category: 'TEXTIL',
+  category: 'ENXOVAL',
   unitOfMeasure: 'UNITS',
   specialModules: ['CARE_INSTRUCTIONS'],
   productAttributes: {
@@ -315,7 +341,7 @@ const tecido: TemplatePreset = {
   name: 'Tecido',
   description: 'Tecidos planos (vendidos por metro)',
   icon: 'GiSewingMachine',
-  category: 'TECIDOS',
+  category: 'TEXTIL',
   unitOfMeasure: 'METERS',
   specialModules: ['CARE_INSTRUCTIONS'],
   productAttributes: {
@@ -352,7 +378,7 @@ const malha: TemplatePreset = {
   name: 'Malha',
   description: 'Malhas e tecidos de malharia (vendidos por quilo)',
   icon: 'GiRolledCloth',
-  category: 'TECIDOS',
+  category: 'TEXTIL',
   unitOfMeasure: 'KILOGRAMS',
   specialModules: ['CARE_INSTRUCTIONS'],
   productAttributes: {
@@ -389,7 +415,7 @@ const linha: TemplatePreset = {
   name: 'Linha',
   description: 'Linhas e fios para costura',
   icon: 'GiSewingString',
-  category: 'TECIDOS',
+  category: 'TEXTIL',
   unitOfMeasure: 'UNITS',
   specialModules: ['CARE_INSTRUCTIONS'],
   productAttributes: {
@@ -408,7 +434,7 @@ const aviamento: TemplatePreset = {
   name: 'Aviamento',
   description: 'Botões, zíperes, elásticos e aviamentos em geral',
   icon: 'GiShirtButton',
-  category: 'TECIDOS',
+  category: 'TEXTIL',
   unitOfMeasure: 'UNITS',
   specialModules: [],
   productAttributes: {
@@ -547,7 +573,7 @@ const alimento: TemplatePreset = {
   name: 'Alimento',
   description: 'Alimentos embalados e industrializados',
   icon: 'GiFruitBowl',
-  category: 'ALIMENTOS',
+  category: 'MERCADO',
   unitOfMeasure: 'UNITS',
   specialModules: [],
   productAttributes: {
@@ -581,7 +607,7 @@ const bebida: TemplatePreset = {
   name: 'Bebida',
   description: 'Bebidas em geral',
   icon: 'GiSodaCan',
-  category: 'ALIMENTOS',
+  category: 'MERCADO',
   unitOfMeasure: 'UNITS',
   specialModules: [],
   productAttributes: {
@@ -905,7 +931,7 @@ const produtoGenerico: TemplatePreset = {
   name: 'Produto Genérico',
   description: 'Produto genérico para varejo',
   icon: 'GiShoppingCart',
-  category: 'VAREJO',
+  category: 'MERCADO',
   unitOfMeasure: 'UNITS',
   specialModules: [],
   productAttributes: {
@@ -927,7 +953,7 @@ const limpeza: TemplatePreset = {
   name: 'Limpeza',
   description: 'Produtos de limpeza e higiene doméstica',
   icon: 'GiSpray',
-  category: 'VAREJO',
+  category: 'MERCADO',
   unitOfMeasure: 'UNITS',
   specialModules: [],
   productAttributes: {
@@ -953,7 +979,7 @@ const higiene: TemplatePreset = {
   name: 'Higiene',
   description: 'Produtos de higiene pessoal',
   icon: 'GiSoap',
-  category: 'VAREJO',
+  category: 'MERCADO',
   unitOfMeasure: 'UNITS',
   specialModules: [],
   productAttributes: {
@@ -981,44 +1007,108 @@ const higiene: TemplatePreset = {
 };
 
 // ──────────────────────────────────────────────
+// HOSPITALAR
+// ──────────────────────────────────────────────
+
+const scrub: TemplatePreset = {
+  id: 'scrub',
+  name: 'Scrub',
+  description: 'Uniformes cirúrgicos e pijamas hospitalares',
+  icon: 'GiTShirt',
+  category: 'HOSPITALAR',
+  unitOfMeasure: 'UNITS',
+  specialModules: ['CARE_INSTRUCTIONS'],
+  productAttributes: {
+    composicao,
+    gramatura,
+    tipoTecido,
+  },
+  variantAttributes: {
+    tamanho: {
+      name: 'Tamanho',
+      type: 'select',
+      required: true,
+      options: ['PP', 'P', 'M', 'G', 'GG', 'XG'],
+    },
+    acabamento,
+    antiOdor,
+  },
+  itemAttributes: {
+    lote,
+    dataFabricacao,
+  },
+};
+
+const campoFenestrado: TemplatePreset = {
+  id: 'campo-fenestrado',
+  name: 'Campo Fenestrado',
+  description: 'Campos cirúrgicos fenestrados e não fenestrados',
+  icon: 'GiRolledCloth',
+  category: 'HOSPITALAR',
+  unitOfMeasure: 'UNITS',
+  specialModules: [],
+  productAttributes: {
+    material: { name: 'Material', type: 'text', required: true },
+    tipo: {
+      name: 'Tipo',
+      type: 'select',
+      options: ['Fenestrado', 'Não Fenestrado', 'Adesivo'],
+    },
+    dimensao: { name: 'Dimensão', type: 'text' },
+    esteril: { name: 'Estéril', type: 'boolean' },
+  },
+  variantAttributes: {
+    tamanho: { name: 'Tamanho', type: 'text', required: true },
+  },
+  itemAttributes: {
+    lote,
+    dataFabricacao,
+    dataValidade,
+  },
+};
+
+// ──────────────────────────────────────────────
 // Exports
 // ──────────────────────────────────────────────
 
 export const TEMPLATE_PRESETS: TemplatePreset[] = [
-  // Têxtil / Vestuário
+  // Vestuário
   camiseta,
   calca,
   vestido,
+  // Calçado
+  tenis,
+  sapato,
+  sandalia,
+  // Enxoval
   lencol,
   toalha,
-  // Tecidos / Malhas
+  // Têxtil
   tecido,
   malha,
   linha,
   aviamento,
-  // Calçados
-  tenis,
-  sapato,
-  sandalia,
-  // Alimentos
-  alimento,
-  bebida,
-  // Farmácia
-  medicamento,
-  cosmetico,
-  suplemento,
-  // Eletrônicos
-  eletronico,
-  celular,
-  notebookPreset,
   // Serigrafia
   tintaSerigrafia,
   telaSerigrafia,
   substrato,
-  // Mercado / Varejo
+  // Eletrônicos
+  eletronico,
+  celular,
+  notebookPreset,
+  // Farmácia
+  medicamento,
+  cosmetico,
+  suplemento,
+  // Mercado
+  alimento,
+  bebida,
   produtoGenerico,
   limpeza,
   higiene,
+  // Hospitalar
+  scrub,
+  campoFenestrado,
 ];
 
 export const PRESETS_BY_CATEGORY = TEMPLATE_PRESETS.reduce(
