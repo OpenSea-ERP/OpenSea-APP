@@ -53,7 +53,8 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { CreateProductForm, EditProductForm } from './src/components';
+import { EditProductForm } from './src/components';
+import { CreateProductWizard } from './src/components/create-product-wizard';
 import {
   AssignCategoryModal,
   AssignManufacturerModal,
@@ -861,24 +862,14 @@ function ProductsPageContent() {
             />
           )}
 
-          {/* Create Modal */}
-          <Dialog
+          {/* Create Wizard */}
+          <CreateProductWizard
             open={page.modals.isOpen('create')}
             onOpenChange={open => !open && page.modals.close('create')}
-          >
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Novo Produto</DialogTitle>
-              </DialogHeader>
-              <CreateProductForm
-                onSubmit={async data => {
-                  await crud.create(data);
-                }}
-                onCancel={() => page.modals.close('create')}
-                isSubmitting={crud.isCreating}
-              />
-            </DialogContent>
-          </Dialog>
+            onSubmit={async data => {
+              await crud.create(data);
+            }}
+          />
 
           {/* Edit Modal */}
           <Dialog
