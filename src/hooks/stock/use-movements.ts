@@ -77,16 +77,16 @@ export function useApproveMovement() {
   return useMutation({
     mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
       movementsService.approveMovement(id, { notes }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: MOVEMENT_QUERY_KEYS.MOVEMENTS,
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: MOVEMENT_QUERY_KEYS.PENDING_APPROVALS,
       });
       // Items quantity may have changed
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
+      await queryClient.invalidateQueries({ queryKey: ['items'] });
+      await queryClient.invalidateQueries({ queryKey: ['variants'] });
     },
   });
 }
@@ -98,11 +98,11 @@ export function useRejectMovement() {
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       movementsService.rejectMovement(id, { reason }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: MOVEMENT_QUERY_KEYS.MOVEMENTS,
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: MOVEMENT_QUERY_KEYS.PENDING_APPROVALS,
       });
     },
@@ -116,15 +116,15 @@ export function useBatchApproveMovements() {
   return useMutation({
     mutationFn: (data: BatchApprovalRequest) =>
       movementsService.approveBatch(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: MOVEMENT_QUERY_KEYS.MOVEMENTS,
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: MOVEMENT_QUERY_KEYS.PENDING_APPROVALS,
       });
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
+      await queryClient.invalidateQueries({ queryKey: ['items'] });
+      await queryClient.invalidateQueries({ queryKey: ['variants'] });
     },
   });
 }

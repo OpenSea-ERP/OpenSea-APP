@@ -42,10 +42,10 @@ export function useCreateFinanceSupplier() {
   return useMutation({
     mutationFn: (data: CreateSupplierRequest) =>
       suppliersService.createSupplier(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_SUPPLIERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_SUPPLIERS });
       // Also invalidate stock suppliers so stock pages stay in sync
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      await queryClient.invalidateQueries({ queryKey: ['suppliers'] });
     },
   });
 }

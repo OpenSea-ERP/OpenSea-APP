@@ -34,8 +34,8 @@ export function useCreateCategory() {
   return useMutation({
     mutationFn: (data: CreateCategoryRequest) =>
       categoriesService.createCategory(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATEGORIES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATEGORIES });
     },
   });
 }
@@ -47,9 +47,9 @@ export function useUpdateCategory() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateCategoryRequest }) =>
       categoriesService.updateCategory(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATEGORIES });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATEGORIES });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CATEGORY(variables.id),
       });
     },
@@ -62,8 +62,8 @@ export function useDeleteCategory() {
 
   return useMutation({
     mutationFn: (id: string) => categoriesService.deleteCategory(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATEGORIES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATEGORIES });
     },
   });
 }
@@ -75,8 +75,8 @@ export function useReorderCategories() {
   return useMutation({
     mutationFn: (items: Array<{ id: string; displayOrder: number }>) =>
       categoriesService.reorderCategories(items),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATEGORIES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATEGORIES });
     },
   });
 }

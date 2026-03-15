@@ -40,8 +40,8 @@ export function useGenerateSerializedLabels() {
   return useMutation({
     mutationFn: (data: GenerateSerializedLabelsRequest) =>
       labelsService.generateSerializedLabels(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: LABEL_QUERY_KEYS.SERIALIZED_LABELS,
       });
     },
@@ -55,11 +55,11 @@ export function useLinkSerializedLabel() {
   return useMutation({
     mutationFn: ({ code, data }: { code: string; data: LinkLabelRequest }) =>
       labelsService.linkSerializedLabel(code, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
         queryKey: LABEL_QUERY_KEYS.SERIALIZED_LABELS,
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: LABEL_QUERY_KEYS.SERIALIZED_LABEL(variables.code),
       });
     },
@@ -72,11 +72,11 @@ export function useVoidSerializedLabel() {
 
   return useMutation({
     mutationFn: (code: string) => labelsService.voidSerializedLabel(code),
-    onSuccess: (_, code) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, code) => {
+      await queryClient.invalidateQueries({
         queryKey: LABEL_QUERY_KEYS.SERIALIZED_LABELS,
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: LABEL_QUERY_KEYS.SERIALIZED_LABEL(code),
       });
     },

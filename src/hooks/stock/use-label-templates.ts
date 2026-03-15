@@ -60,8 +60,8 @@ export function useCreateLabelTemplate() {
   return useMutation({
     mutationFn: (data: CreateLabelTemplateInput) =>
       labelTemplatesService.createTemplate(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       toast.success('Template criado com sucesso!');
     },
     onError: (error: Error & { response?: { data?: { error?: string } } }) => {
@@ -85,9 +85,9 @@ export function useUpdateLabelTemplate() {
       id: string;
       data: UpdateLabelTemplateInput;
     }) => labelTemplatesService.updateTemplate(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      await queryClient.invalidateQueries({
         queryKey: [QUERY_KEY, 'detail', variables.id],
       });
       toast.success('Template atualizado com sucesso!');
@@ -112,8 +112,8 @@ export function useDeleteLabelTemplate() {
 
   return useMutation({
     mutationFn: (id: string) => labelTemplatesService.deleteTemplate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       toast.success('Template excluído com sucesso!');
     },
     onError: (error: Error & { response?: { data?: { error?: string } } }) => {
@@ -137,8 +137,8 @@ export function useDuplicateLabelTemplate() {
   return useMutation({
     mutationFn: ({ id, newName }: { id: string; newName: string }) =>
       labelTemplatesService.duplicateTemplate(id, newName),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       toast.success('Template duplicado com sucesso!');
     },
     onError: (error: Error & { response?: { data?: { error?: string } } }) => {
@@ -168,8 +168,8 @@ export function useUpdateThumbnail() {
       file: Blob;
       filename?: string;
     }) => labelTemplatesService.updateThumbnail(id, file, filename),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
         queryKey: [QUERY_KEY, 'detail', variables.id],
       });
     },

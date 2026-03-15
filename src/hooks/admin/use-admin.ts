@@ -56,9 +56,9 @@ export function useChangeTenantStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       adminApi.changeTenantStatus(id, status),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
     },
   });
 }
@@ -68,9 +68,9 @@ export function useChangeTenantPlan() {
   return useMutation({
     mutationFn: ({ id, planId }: { id: string; planId: string }) =>
       adminApi.changeTenantPlan(id, planId),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
     },
   });
 }
@@ -95,9 +95,9 @@ export function useManageFeatureFlags() {
       flag: string;
       enabled: boolean;
     }) => adminApi.manageFeatureFlags(id, flag, enabled),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenantFlags(id) });
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenantFlags(id) });
     },
   });
 }
@@ -107,8 +107,8 @@ export function useCreateTenant() {
   return useMutation({
     mutationFn: (data: Parameters<typeof adminApi.createTenant>[0]) =>
       adminApi.createTenant(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
     },
   });
 }
@@ -123,9 +123,9 @@ export function useUpdateTenant() {
       id: string;
       data: Parameters<typeof adminApi.updateTenant>[1];
     }) => adminApi.updateTenant(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
     },
   });
 }
@@ -134,8 +134,8 @@ export function useDeleteTenant() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => adminApi.deleteTenant(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenants() });
     },
   });
 }
@@ -155,8 +155,8 @@ export function useCreateTenantUser() {
         role?: string;
       };
     }) => adminApi.createTenantUser(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.tenantUsers(id) });
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.tenantUsers(id) });
     },
   });
 }
@@ -166,8 +166,8 @@ export function useRemoveTenantUser() {
   return useMutation({
     mutationFn: ({ tenantId, userId }: { tenantId: string; userId: string }) =>
       adminApi.removeTenantUser(tenantId, userId),
-    onSuccess: (_, { tenantId }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, { tenantId }) => {
+      await queryClient.invalidateQueries({
         queryKey: adminKeys.tenantUsers(tenantId),
       });
     },
@@ -209,8 +209,8 @@ export function useCreatePlan() {
   return useMutation({
     mutationFn: (data: Parameters<typeof adminApi.createPlan>[0]) =>
       adminApi.createPlan(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.plans() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.plans() });
     },
   });
 }
@@ -225,9 +225,9 @@ export function useUpdatePlan() {
       id: string;
       data: Parameters<typeof adminApi.updatePlan>[1];
     }) => adminApi.updatePlan(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.plan(id) });
-      queryClient.invalidateQueries({ queryKey: adminKeys.plans() });
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.plan(id) });
+      await queryClient.invalidateQueries({ queryKey: adminKeys.plans() });
     },
   });
 }
@@ -236,8 +236,8 @@ export function useDeletePlan() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => adminApi.deletePlan(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.plans() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.plans() });
     },
   });
 }
@@ -247,8 +247,8 @@ export function useSetPlanModules() {
   return useMutation({
     mutationFn: ({ id, modules }: { id: string; modules: string[] }) =>
       adminApi.setPlanModules(id, modules),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.plan(id) });
+    onSuccess: async (_, { id }) => {
+      await queryClient.invalidateQueries({ queryKey: adminKeys.plan(id) });
     },
   });
 }

@@ -24,12 +24,12 @@ export function useUploadAttachment(boardId: string, cardId: string) {
   return useMutation({
     mutationFn: (data: AddAttachmentRequest) =>
       attachmentsService.upload(boardId, cardId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: ATTACHMENT_QUERY_KEYS.ATTACHMENTS(boardId, cardId),
       });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -39,12 +39,12 @@ export function useDeleteAttachment(boardId: string, cardId: string) {
   return useMutation({
     mutationFn: (attachmentId: string) =>
       attachmentsService.delete(boardId, cardId, attachmentId),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: ATTACHMENT_QUERY_KEYS.ATTACHMENTS(boardId, cardId),
       });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }

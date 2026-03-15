@@ -31,8 +31,8 @@ export function useCreateLoan() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateLoanData) => loansService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOANS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOANS });
     },
   });
 }
@@ -42,9 +42,9 @@ export function useUpdateLoan() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateLoanData }) =>
       loansService.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOANS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOANS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.LOAN(variables.id),
       });
     },
@@ -55,8 +55,8 @@ export function useDeleteLoan() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => loansService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOANS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOANS });
     },
   });
 }
@@ -71,9 +71,9 @@ export function usePayLoanInstallment() {
       loanId: string;
       data: PayLoanInstallmentData;
     }) => loansService.registerPayment(loanId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOANS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LOANS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.LOAN(variables.loanId),
       });
     },

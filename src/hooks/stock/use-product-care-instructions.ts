@@ -34,8 +34,8 @@ export function useAddProductCareInstruction(productId: string) {
         data
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['products', productId, 'care-instructions'],
       });
     },
@@ -54,8 +54,8 @@ export function useDeleteProductCareInstruction(productId: string) {
         `/v1/products/${productId}/care-instructions/${careInstructionId}`
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['products', productId, 'care-instructions'],
       });
     },

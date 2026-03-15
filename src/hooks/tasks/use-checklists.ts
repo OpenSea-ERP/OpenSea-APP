@@ -20,9 +20,9 @@ export function useCreateChecklist(boardId: string, cardId: string) {
   return useMutation({
     mutationFn: (data: CreateChecklistRequest) =>
       checklistsService.create(boardId, cardId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -37,9 +37,9 @@ export function useUpdateChecklist(boardId: string, cardId: string) {
       checklistId: string;
       data: UpdateChecklistRequest;
     }) => checklistsService.update(boardId, cardId, checklistId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -49,9 +49,9 @@ export function useDeleteChecklist(boardId: string, cardId: string) {
   return useMutation({
     mutationFn: (checklistId: string) =>
       checklistsService.delete(boardId, cardId, checklistId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -66,9 +66,9 @@ export function useAddChecklistItem(boardId: string, cardId: string) {
       checklistId: string;
       data: CreateChecklistItemRequest;
     }) => checklistsService.addItem(boardId, cardId, checklistId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -83,9 +83,9 @@ export function useToggleChecklistItem(boardId: string, cardId: string) {
       checklistId: string;
       itemId: string;
     }) => checklistsService.toggleItem(boardId, cardId, checklistId, itemId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -100,9 +100,9 @@ export function useDeleteChecklistItem(boardId: string, cardId: string) {
       checklistId: string;
       itemId: string;
     }) => checklistsService.deleteItem(boardId, cardId, checklistId, itemId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }

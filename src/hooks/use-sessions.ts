@@ -91,9 +91,9 @@ export function useRefreshToken() {
     RefreshTokenRequest | undefined
   >({
     mutationFn: data => sessionsService.refreshToken(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['me'] });
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      await queryClient.invalidateQueries({ queryKey: sessionsKeys.all });
     },
   });
 }
@@ -125,8 +125,8 @@ export function useRevokeSession() {
 
   return useMutation<void, Error, string>({
     mutationFn: sessionId => sessionsService.revokeSession(sessionId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: sessionsKeys.all });
     },
   });
 }
@@ -142,8 +142,8 @@ export function useExpireSession() {
 
   return useMutation<void, Error, string>({
     mutationFn: sessionId => sessionsService.expireSession(sessionId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: sessionsKeys.all });
     },
   });
 }

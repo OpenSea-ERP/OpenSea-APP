@@ -22,8 +22,8 @@ export function useCreateShareLink(fileId: string) {
   return useMutation({
     mutationFn: (data: CreateShareLinkRequest) =>
       storageSharingService.createShareLink(fileId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: SHARING_KEYS.LINKS(fileId),
       });
     },
@@ -36,8 +36,8 @@ export function useRevokeShareLink(fileId: string) {
   return useMutation({
     mutationFn: (linkId: string) =>
       storageSharingService.revokeShareLink(linkId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: SHARING_KEYS.LINKS(fileId),
       });
     },

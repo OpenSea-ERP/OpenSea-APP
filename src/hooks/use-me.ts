@@ -113,8 +113,8 @@ export function useUpdateProfile() {
 
   return useMutation<UserResponse, Error, UpdateProfileRequest>({
     mutationFn: data => meService.updateProfile(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: meKeys.all });
     },
   });
 }
@@ -128,8 +128,8 @@ export function useUpdateEmail() {
 
   return useMutation<UserResponse, Error, UpdateEmailRequest>({
     mutationFn: data => meService.updateEmail(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: meKeys.all });
     },
   });
 }
@@ -143,8 +143,8 @@ export function useUpdateUsername() {
 
   return useMutation<UserResponse, Error, UpdateUsernameRequest>({
     mutationFn: data => meService.updateUsername(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: meKeys.all });
     },
   });
 }

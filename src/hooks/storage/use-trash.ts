@@ -21,11 +21,11 @@ export function useRestoreFile() {
 
   return useMutation({
     mutationFn: (fileId: string) => storageTrashService.restoreFile(fileId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['storage-trash'] });
-      queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
-      queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['storage-trash'] });
+      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
     },
   });
 }
@@ -36,11 +36,11 @@ export function useRestoreFolder() {
   return useMutation({
     mutationFn: (folderId: string) =>
       storageTrashService.restoreFolder(folderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['storage-trash'] });
-      queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
-      queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['storage-trash'] });
+      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
+      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
     },
   });
 }
@@ -50,9 +50,9 @@ export function useEmptyTrash() {
 
   return useMutation({
     mutationFn: () => storageTrashService.emptyTrash(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['storage-trash'] });
-      queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['storage-trash'] });
+      await queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
     },
   });
 }

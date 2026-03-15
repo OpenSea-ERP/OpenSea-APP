@@ -22,8 +22,8 @@ export function useSetAccessPin() {
 
   return useMutation({
     mutationFn: (data: SetAccessPinRequest) => meService.setAccessPin(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: meKeys.all });
     },
   });
 }
@@ -33,8 +33,8 @@ export function useSetActionPin() {
 
   return useMutation({
     mutationFn: (data: SetActionPinRequest) => meService.setActionPin(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: meKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: meKeys.all });
     },
   });
 }
@@ -51,8 +51,8 @@ export function useForceAccessPinReset() {
 
   return useMutation({
     mutationFn: (userId: string) => usersService.forceAccessPinReset(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }
@@ -62,8 +62,8 @@ export function useForceActionPinReset() {
 
   return useMutation({
     mutationFn: (userId: string) => usersService.forceActionPinReset(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }

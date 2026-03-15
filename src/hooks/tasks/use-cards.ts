@@ -40,9 +40,9 @@ export function useCreateCard(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateCardRequest) => cardsService.create(boardId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -122,9 +122,9 @@ export function useDeleteCard(boardId: string) {
         }
       }
     },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+    onSettled: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -214,9 +214,9 @@ export function useAssignCard(boardId: string) {
       cardId: string;
       assigneeId: string | null;
     }) => cardsService.assign(boardId, cardId, { assigneeId }),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({
         queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
       });
     },
@@ -228,9 +228,9 @@ export function useArchiveCard(boardId: string) {
   return useMutation({
     mutationFn: ({ cardId, archive }: { cardId: string; archive: boolean }) =>
       cardsService.archive(boardId, cardId, archive),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({
         queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
       });
     },
@@ -247,9 +247,9 @@ export function useManageCardLabels(boardId: string) {
       cardId: string;
       labelIds: string[];
     }) => cardsService.manageLabels(boardId, cardId, { labelIds }),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({
         queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
       });
     },

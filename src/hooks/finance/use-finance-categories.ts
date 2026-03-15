@@ -31,8 +31,8 @@ export function useCreateFinanceCategory() {
   return useMutation({
     mutationFn: (data: CreateFinanceCategoryData) =>
       financeCategoriesService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FINANCE_CATEGORIES,
       });
     },
@@ -49,11 +49,11 @@ export function useUpdateFinanceCategory() {
       id: string;
       data: UpdateFinanceCategoryData;
     }) => financeCategoriesService.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FINANCE_CATEGORIES,
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FINANCE_CATEGORY(variables.id),
       });
     },
@@ -64,8 +64,8 @@ export function useDeleteFinanceCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => financeCategoriesService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FINANCE_CATEGORIES,
       });
     },

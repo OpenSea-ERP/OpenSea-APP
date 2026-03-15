@@ -65,9 +65,9 @@ export function useRegisterItemEntry() {
   return useMutation({
     mutationFn: (data: RegisterItemEntryRequest) =>
       itemsService.registerEntry(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ITEMS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MOVEMENTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ITEMS });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MOVEMENTS });
     },
   });
 }
@@ -79,9 +79,9 @@ export function useRegisterItemExit() {
   return useMutation({
     mutationFn: (data: RegisterItemExitRequest) =>
       itemsService.registerExit(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ITEMS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MOVEMENTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ITEMS });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MOVEMENTS });
     },
   });
 }
@@ -92,9 +92,9 @@ export function useTransferItem() {
 
   return useMutation({
     mutationFn: (data: TransferItemRequest) => itemsService.transferItem(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ITEMS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MOVEMENTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ITEMS });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MOVEMENTS });
     },
   });
 }

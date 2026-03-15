@@ -69,8 +69,8 @@ export function useImportProducts() {
 
   return useMutation({
     mutationFn: (data: ImportRequest) => importService.importProducts(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }
@@ -81,8 +81,8 @@ export function useImportVariants() {
 
   return useMutation({
     mutationFn: (data: ImportRequest) => importService.importVariants(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['variants'] });
     },
   });
 }
@@ -93,9 +93,9 @@ export function useImportItems() {
 
   return useMutation({
     mutationFn: (data: ImportRequest) => importService.importItems(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['items'] });
+      await queryClient.invalidateQueries({ queryKey: ['variants'] });
     },
   });
 }
@@ -111,8 +111,8 @@ export function useBatchCreateVariants() {
   return useMutation({
     mutationFn: (variants: CreateVariantRequest[]) =>
       importService.batchCreateVariants(variants),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['variants'] });
     },
   });
 }
@@ -123,10 +123,10 @@ export function useBatchEntryItems() {
 
   return useMutation({
     mutationFn: (data: BatchEntryRequest) => importService.batchEntry(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
-      queryClient.invalidateQueries({ queryKey: ['movements'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['items'] });
+      await queryClient.invalidateQueries({ queryKey: ['variants'] });
+      await queryClient.invalidateQueries({ queryKey: ['movements'] });
     },
   });
 }
@@ -138,9 +138,9 @@ export function useBatchTransferItems() {
   return useMutation({
     mutationFn: (data: BatchTransferRequest) =>
       importService.batchTransfer(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['movements'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['items'] });
+      await queryClient.invalidateQueries({ queryKey: ['movements'] });
     },
   });
 }

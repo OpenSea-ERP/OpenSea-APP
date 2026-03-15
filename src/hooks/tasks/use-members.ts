@@ -15,8 +15,8 @@ export function useInviteMember(boardId: string) {
   return useMutation({
     mutationFn: (data: AddBoardMemberRequest) =>
       membersService.invite(boardId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -31,8 +31,8 @@ export function useUpdateMemberRole(boardId: string) {
       memberId: string;
       data: UpdateBoardMemberRequest;
     }) => membersService.updateRole(boardId, memberId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -41,8 +41,8 @@ export function useRemoveMember(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (memberId: string) => membersService.remove(boardId, memberId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }

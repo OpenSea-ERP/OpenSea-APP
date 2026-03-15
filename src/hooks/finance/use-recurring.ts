@@ -33,8 +33,8 @@ export function useCreateRecurringConfig() {
   return useMutation({
     mutationFn: (data: CreateRecurringConfigRequest) =>
       financeRecurringService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
     },
   });
 }
@@ -49,9 +49,9 @@ export function useUpdateRecurringConfig() {
       id: string;
       data: UpdateRecurringConfigRequest;
     }) => financeRecurringService.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.RECURRING_CONFIG(variables.id),
       });
     },
@@ -62,8 +62,8 @@ export function usePauseRecurring() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => financeRecurringService.pause(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
     },
   });
 }
@@ -72,8 +72,8 @@ export function useResumeRecurring() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => financeRecurringService.resume(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
     },
   });
 }
@@ -82,8 +82,8 @@ export function useCancelRecurring() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => financeRecurringService.cancel(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
     },
   });
 }

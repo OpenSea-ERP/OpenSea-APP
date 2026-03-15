@@ -32,9 +32,9 @@ export function useLogin() {
   return useMutation<AuthResponse, Error, LoginCredentials>({
     mutationKey: authKeys.login(),
     mutationFn: credentials => authService.login(credentials),
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate user queries after successful login
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 }
@@ -82,9 +82,9 @@ export function useRefreshToken() {
   return useMutation<AuthResponse, Error, void>({
     mutationKey: authKeys.refresh(),
     mutationFn: () => authService.refreshToken(),
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate user queries after successful refresh
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 }

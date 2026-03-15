@@ -35,8 +35,8 @@ export function useCreateFinanceEntry() {
   return useMutation({
     mutationFn: (data: CreateFinanceEntryData) =>
       financeEntriesService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
     },
   });
 }
@@ -46,9 +46,9 @@ export function useUpdateFinanceEntry() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateFinanceEntryData }) =>
       financeEntriesService.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FINANCE_ENTRY(variables.id),
       });
     },
@@ -59,8 +59,8 @@ export function useDeleteFinanceEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => financeEntriesService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
     },
   });
 }
@@ -69,9 +69,9 @@ export function useCancelFinanceEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => financeEntriesService.cancel(id),
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, id) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FINANCE_ENTRY(id),
       });
     },
@@ -88,9 +88,9 @@ export function useRegisterPayment() {
       entryId: string;
       data: RegisterPaymentData;
     }) => financeEntriesService.registerPayment(entryId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FINANCE_ENTRY(variables.entryId),
       });
     },
@@ -101,8 +101,8 @@ export function useCheckOverdue() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => financeEntriesService.checkOverdue(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_ENTRIES });
     },
   });
 }

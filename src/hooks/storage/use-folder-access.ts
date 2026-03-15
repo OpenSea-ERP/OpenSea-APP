@@ -29,8 +29,8 @@ export function useSetFolderAccess() {
       folderId: string;
       data: SetFolderAccessRequest;
     }) => storageAccessService.setAccess(folderId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.ACCESS(variables.folderId),
       });
     },
@@ -44,8 +44,8 @@ export function useRemoveFolderAccess() {
   return useMutation({
     mutationFn: ({ folderId, ruleId }: { folderId: string; ruleId: string }) =>
       storageAccessService.removeAccess(folderId, ruleId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.ACCESS(variables.folderId),
       });
     },

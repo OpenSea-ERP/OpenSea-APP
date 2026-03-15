@@ -104,8 +104,8 @@ export function useCreateUser() {
 
   return useMutation<UserResponse, Error, CreateUserRequest>({
     mutationFn: data => usersService.createUser(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
     },
   });
 }
@@ -125,9 +125,9 @@ export function useUpdateUserEmail() {
   >({
     mutationFn: ({ userId, data }) =>
       usersService.updateUserEmail(userId, data),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
-      queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+    onSuccess: async (_, { userId }) => {
+      await queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
+      await queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
     },
   });
 }
@@ -147,9 +147,9 @@ export function useUpdateUserUsername() {
   >({
     mutationFn: ({ userId, data }) =>
       usersService.updateUserUsername(userId, data),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
-      queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+    onSuccess: async (_, { userId }) => {
+      await queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
+      await queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
     },
   });
 }
@@ -185,9 +185,9 @@ export function useUpdateUserProfile() {
   >({
     mutationFn: ({ userId, data }) =>
       usersService.updateUserProfile(userId, data),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
-      queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+    onSuccess: async (_, { userId }) => {
+      await queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
+      await queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
     },
   });
 }
@@ -202,8 +202,8 @@ export function useDeleteUser() {
 
   return useMutation<void, Error, string>({
     mutationFn: userId => usersService.deleteUser(userId),
-    onSuccess: (_, userId) => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+    onSuccess: async (_, userId) => {
+      await queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
       queryClient.removeQueries({ queryKey: usersKeys.detail(userId) });
     },
   });

@@ -77,8 +77,8 @@ export function useCreateInventoryCycle() {
   return useMutation({
     mutationFn: (data: CreateInventoryCycleRequest) =>
       inventoryService.createCycle(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
     },
   });
 }
@@ -90,12 +90,12 @@ export function useStartInventoryCycle() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data?: StartCycleRequest }) =>
       inventoryService.startCycle(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+      await queryClient.invalidateQueries({
         queryKey: INVENTORY_QUERY_KEYS.CYCLE(variables.id),
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: INVENTORY_QUERY_KEYS.ACTIVE_CYCLES,
       });
     },
@@ -109,17 +109,17 @@ export function useCompleteInventoryCycle() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data?: CompleteCycleRequest }) =>
       inventoryService.completeCycle(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+      await queryClient.invalidateQueries({
         queryKey: INVENTORY_QUERY_KEYS.CYCLE(variables.id),
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: INVENTORY_QUERY_KEYS.ACTIVE_CYCLES,
       });
       // Items may have been adjusted
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
+      await queryClient.invalidateQueries({ queryKey: ['items'] });
+      await queryClient.invalidateQueries({ queryKey: ['variants'] });
     },
   });
 }
@@ -140,9 +140,9 @@ export function useSubmitInventoryCount() {
       countId: string;
       data: SubmitCountRequest;
     }) => inventoryService.submitCount(countId, data),
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate all cycle-related queries as we don't know which cycle this count belongs to
-      queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
     },
   });
 }
@@ -159,11 +159,11 @@ export function useAdjustInventoryCount() {
       countId: string;
       data: AdjustCountRequest;
     }) => inventoryService.adjustCount(countId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
       // Items may have been adjusted
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
+      await queryClient.invalidateQueries({ queryKey: ['items'] });
+      await queryClient.invalidateQueries({ queryKey: ['variants'] });
     },
   });
 }

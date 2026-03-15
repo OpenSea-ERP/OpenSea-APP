@@ -45,8 +45,8 @@ export function useCreateVariantPromotion() {
   return useMutation({
     mutationFn: (data: CreateVariantPromotionRequest) =>
       variantPromotionsService.createPromotion(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROMOTIONS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROMOTIONS });
     },
   });
 }
@@ -62,9 +62,9 @@ export function useUpdateVariantPromotion() {
       id: string;
       data: UpdateVariantPromotionRequest;
     }) => variantPromotionsService.updatePromotion(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROMOTIONS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROMOTIONS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PROMOTION(variables.id),
       });
     },
@@ -76,8 +76,8 @@ export function useDeleteVariantPromotion() {
 
   return useMutation({
     mutationFn: (id: string) => variantPromotionsService.deletePromotion(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROMOTIONS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROMOTIONS });
     },
   });
 }
@@ -105,8 +105,8 @@ export function useCreateItemReservation() {
   return useMutation({
     mutationFn: (data: CreateItemReservationRequest) =>
       itemReservationsService.createReservation(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RESERVATIONS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RESERVATIONS });
     },
   });
 }
@@ -122,9 +122,9 @@ export function useReleaseItemReservation() {
       id: string;
       data: ReleaseItemReservationRequest;
     }) => itemReservationsService.releaseReservation(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RESERVATIONS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RESERVATIONS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.RESERVATION(variables.id),
       });
     },
@@ -154,8 +154,8 @@ export function useCreateNotificationPreference() {
   return useMutation({
     mutationFn: (data: CreateNotificationPreferenceRequest) =>
       notificationPreferencesService.createPreference(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
     },
   });
 }
@@ -171,9 +171,9 @@ export function useUpdateNotificationPreference() {
       id: string;
       data: UpdateNotificationPreferenceRequest;
     }) => notificationPreferencesService.updatePreference(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.NOTIFICATION(variables.id),
       });
     },
@@ -186,8 +186,8 @@ export function useDeleteNotificationPreference() {
   return useMutation({
     mutationFn: (id: string) =>
       notificationPreferencesService.deletePreference(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
     },
   });
 }

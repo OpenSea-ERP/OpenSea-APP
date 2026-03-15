@@ -32,8 +32,8 @@ export function useCreateConsortium() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateConsortiumData) => consortiaService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
     },
   });
 }
@@ -43,9 +43,9 @@ export function useUpdateConsortium() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateConsortiumData }) =>
       consortiaService.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CONSORTIUM(variables.id),
       });
     },
@@ -56,8 +56,8 @@ export function useDeleteConsortium() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => consortiaService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
     },
   });
 }
@@ -72,9 +72,9 @@ export function usePayConsortiumInstallment() {
       consortiumId: string;
       data: PayConsortiumInstallmentData;
     }) => consortiaService.registerPayment(consortiumId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CONSORTIUM(variables.consortiumId),
       });
     },
@@ -86,9 +86,9 @@ export function useMarkContemplated() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: MarkContemplatedData }) =>
       consortiaService.markContemplated(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONSORTIA });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CONSORTIUM(variables.id),
       });
     },

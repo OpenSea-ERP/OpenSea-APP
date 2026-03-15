@@ -30,8 +30,8 @@ export function useCreateCostCenter() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateCostCenterData) => costCentersService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COST_CENTERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COST_CENTERS });
     },
   });
 }
@@ -41,9 +41,9 @@ export function useUpdateCostCenter() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateCostCenterData }) =>
       costCentersService.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COST_CENTERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COST_CENTERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.COST_CENTER(variables.id),
       });
     },
@@ -54,8 +54,8 @@ export function useDeleteCostCenter() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => costCentersService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COST_CENTERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COST_CENTERS });
     },
   });
 }

@@ -28,8 +28,8 @@ export function useCreateTeamCalendar() {
   return useMutation({
     mutationFn: (data: CreateTeamCalendarData) =>
       calendarsService.createTeamCalendar(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
     },
   });
 }
@@ -40,8 +40,8 @@ export function useUpdateCalendar() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateCalendarData }) =>
       calendarsService.updateCalendar(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
     },
   });
 }
@@ -51,8 +51,8 @@ export function useDeleteCalendar() {
 
   return useMutation({
     mutationFn: (id: string) => calendarsService.deleteCalendar(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
     },
   });
 }
@@ -63,8 +63,8 @@ export function useUpdateTeamCalendarPermissions() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: TeamCalendarPermissions }) =>
       calendarsService.updateTeamCalendarPermissions(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
     },
   });
 }

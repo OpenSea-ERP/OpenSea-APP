@@ -54,8 +54,8 @@ export function useCreateBoard() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateBoardRequest) => boardsService.create(data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
     },
   });
 }
@@ -70,9 +70,9 @@ export function useUpdateBoard() {
       boardId: string;
       data: UpdateBoardRequest;
     }) => boardsService.update(boardId, data),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
-      qc.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
+      await qc.invalidateQueries({
         queryKey: BOARD_QUERY_KEYS.BOARD(variables.boardId),
       });
     },
@@ -109,8 +109,8 @@ export function useDeleteBoard() {
         }
       }
     },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
+    onSettled: async () => {
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
     },
   });
 }
@@ -120,9 +120,9 @@ export function useArchiveBoard() {
   return useMutation({
     mutationFn: ({ boardId, archive }: { boardId: string; archive: boolean }) =>
       boardsService.archive(boardId, archive),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
-      qc.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
+      await qc.invalidateQueries({
         queryKey: BOARD_QUERY_KEYS.BOARD(variables.boardId),
       });
     },

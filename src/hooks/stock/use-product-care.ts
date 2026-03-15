@@ -11,9 +11,9 @@ export function useProductCare(productId: string) {
     mutationFn: async (careInstructionIds: string[]) => {
       return careService.setProductCare(productId, { careInstructionIds });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidar cache do produto para refletir as mudanças
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ['products', productId],
       });
     },

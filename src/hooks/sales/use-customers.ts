@@ -34,8 +34,8 @@ export function useCreateCustomer() {
   return useMutation({
     mutationFn: (data: CreateCustomerRequest) =>
       customersService.createCustomer(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOMERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOMERS });
     },
   });
 }
@@ -52,9 +52,9 @@ export function useUpdateCustomer() {
       customerId: string;
       data: UpdateCustomerRequest;
     }) => customersService.updateCustomer(customerId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOMERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOMERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CUSTOMER(variables.customerId),
       });
     },
@@ -68,8 +68,8 @@ export function useDeleteCustomer() {
   return useMutation({
     mutationFn: (customerId: string) =>
       customersService.deleteCustomer(customerId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOMERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOMERS });
     },
   });
 }

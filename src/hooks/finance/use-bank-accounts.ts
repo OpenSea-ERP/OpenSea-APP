@@ -31,8 +31,8 @@ export function useCreateBankAccount() {
   return useMutation({
     mutationFn: (data: CreateBankAccountData) =>
       bankAccountsService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BANK_ACCOUNTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BANK_ACCOUNTS });
     },
   });
 }
@@ -42,9 +42,9 @@ export function useUpdateBankAccount() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateBankAccountData }) =>
       bankAccountsService.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BANK_ACCOUNTS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BANK_ACCOUNTS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.BANK_ACCOUNT(variables.id),
       });
     },
@@ -55,8 +55,8 @@ export function useDeleteBankAccount() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => bankAccountsService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BANK_ACCOUNTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BANK_ACCOUNTS });
     },
   });
 }

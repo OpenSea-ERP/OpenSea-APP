@@ -25,11 +25,11 @@ export function useCreateCustomField(boardId: string) {
   return useMutation({
     mutationFn: (data: CreateCustomFieldRequest) =>
       customFieldsService.create(boardId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: CUSTOM_FIELD_QUERY_KEYS.CUSTOM_FIELDS(boardId),
       });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -44,11 +44,11 @@ export function useUpdateCustomField(boardId: string) {
       fieldId: string;
       data: UpdateCustomFieldRequest;
     }) => customFieldsService.update(boardId, fieldId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: CUSTOM_FIELD_QUERY_KEYS.CUSTOM_FIELDS(boardId),
       });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -58,11 +58,11 @@ export function useDeleteCustomField(boardId: string) {
   return useMutation({
     mutationFn: (fieldId: string) =>
       customFieldsService.delete(boardId, fieldId),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: CUSTOM_FIELD_QUERY_KEYS.CUSTOM_FIELDS(boardId),
       });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -77,12 +77,12 @@ export function useSetCustomFieldValues(boardId: string) {
       cardId: string;
       values: SetCustomFieldValueRequest['values'];
     }) => customFieldsService.setValues(boardId, cardId, { values }),
-    onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({
         queryKey: CARD_QUERY_KEYS.CARD(boardId, variables.cardId),
       });
-      qc.invalidateQueries({
+      await qc.invalidateQueries({
         queryKey: CUSTOM_FIELD_QUERY_KEYS.CUSTOM_FIELDS(boardId),
       });
     },

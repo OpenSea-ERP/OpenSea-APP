@@ -57,8 +57,8 @@ export function useCreatePurchaseOrder() {
   return useMutation({
     mutationFn: (data: CreatePurchaseOrderRequest) =>
       purchaseOrdersService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
     },
   });
 }
@@ -70,9 +70,9 @@ export function useUpdatePurchaseOrderStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: PurchaseOrderStatus }) =>
       purchaseOrdersService.updateStatus(id, status),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PURCHASE_ORDER(variables.id),
       });
     },
@@ -85,9 +85,9 @@ export function useCancelPurchaseOrder() {
 
   return useMutation({
     mutationFn: (id: string) => purchaseOrdersService.cancel(id),
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, id) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PURCHASE_ORDER(id),
       });
     },
@@ -106,13 +106,13 @@ export function useReceivePurchaseOrder() {
       id: string;
       items: Array<{ itemId: string; receivedQuantity: number }>;
     }) => purchaseOrdersService.receive(id, items),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PURCHASE_ORDER(variables.id),
       });
       // Also invalidate items since receiving creates new items
-      queryClient.invalidateQueries({ queryKey: ['items'] });
+      await queryClient.invalidateQueries({ queryKey: ['items'] });
     },
   });
 }

@@ -24,12 +24,12 @@ export function useCreateSubtask(boardId: string, cardId: string) {
   return useMutation({
     mutationFn: (data: CreateSubtaskRequest) =>
       subtasksService.create(boardId, cardId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: SUBTASK_QUERY_KEYS.SUBTASKS(boardId, cardId),
       });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -44,12 +44,12 @@ export function useUpdateSubtask(boardId: string, cardId: string) {
       subtaskId: string;
       data: UpdateCardRequest;
     }) => subtasksService.update(boardId, cardId, subtaskId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: SUBTASK_QUERY_KEYS.SUBTASKS(boardId, cardId),
       });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -59,12 +59,12 @@ export function useDeleteSubtask(boardId: string, cardId: string) {
   return useMutation({
     mutationFn: (subtaskId: string) =>
       subtasksService.delete(boardId, cardId, subtaskId),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: SUBTASK_QUERY_KEYS.SUBTASKS(boardId, cardId),
       });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }
@@ -79,12 +79,12 @@ export function useCompleteSubtask(boardId: string, cardId: string) {
       subtaskId: string;
       completed: boolean;
     }) => subtasksService.complete(boardId, cardId, subtaskId, completed),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: SUBTASK_QUERY_KEYS.SUBTASKS(boardId, cardId),
       });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
     },
   });
 }

@@ -31,8 +31,8 @@ export function useAddVariantAttachment(variantId: string) {
         data
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['variants', variantId, 'attachments'],
       });
     },
@@ -51,8 +51,8 @@ export function useDeleteVariantAttachment(variantId: string) {
         `/v1/variants/${variantId}/attachments/${attachmentId}`
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['variants', variantId, 'attachments'],
       });
     },

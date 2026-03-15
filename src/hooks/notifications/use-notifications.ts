@@ -151,8 +151,8 @@ export function useMarkNotificationAsRead() {
         }
       );
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
     },
   });
 }
@@ -180,8 +180,8 @@ export function useMarkAllNotificationsAsRead() {
         }
       );
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
     },
   });
 }
@@ -208,8 +208,8 @@ export function useDeleteNotification() {
         }
       );
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
     },
   });
 }
@@ -242,8 +242,8 @@ export function useForceNotificationCheck() {
       // 3. Small delay to let inline sync complete
       await new Promise(resolve => setTimeout(resolve, 2_000));
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.all });
     },
   });
 }

@@ -73,10 +73,10 @@ export function useCreateVariant() {
   return useMutation({
     mutationFn: (data: CreateVariantRequest) =>
       variantsService.createVariant(data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIANTS });
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIANTS });
       if (variables.productId) {
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.VARIANTS_BY_PRODUCT(variables.productId),
         });
       }
@@ -91,15 +91,15 @@ export function useUpdateVariant() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateVariantRequest }) =>
       variantsService.updateVariant(id, data),
-    onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIANTS });
-      queryClient.invalidateQueries({
+    onSuccess: async (response, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIANTS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.VARIANT(variables.id),
       });
       // Invalidate product-specific variants if productId is available
       const productId = response.variant.productId;
       if (productId) {
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.VARIANTS_BY_PRODUCT(productId),
         });
       }
@@ -116,12 +116,12 @@ export function useDeleteVariant() {
       const id = typeof params === 'string' ? params : params.id;
       return variantsService.deleteVariant(id);
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIANTS });
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIANTS });
       const productId =
         typeof variables === 'string' ? undefined : variables.productId;
       if (productId) {
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.VARIANTS_BY_PRODUCT(productId),
         });
       }

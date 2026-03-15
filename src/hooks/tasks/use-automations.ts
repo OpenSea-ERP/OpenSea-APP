@@ -23,11 +23,11 @@ export function useCreateAutomation(boardId: string) {
   return useMutation({
     mutationFn: (data: CreateAutomationRequest) =>
       automationsService.create(boardId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: AUTOMATION_QUERY_KEYS.AUTOMATIONS(boardId),
       });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -42,11 +42,11 @@ export function useUpdateAutomation(boardId: string) {
       automationId: string;
       data: UpdateAutomationRequest;
     }) => automationsService.update(boardId, automationId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: AUTOMATION_QUERY_KEYS.AUTOMATIONS(boardId),
       });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -56,11 +56,11 @@ export function useDeleteAutomation(boardId: string) {
   return useMutation({
     mutationFn: (automationId: string) =>
       automationsService.delete(boardId, automationId),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: AUTOMATION_QUERY_KEYS.AUTOMATIONS(boardId),
       });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -70,11 +70,11 @@ export function useToggleAutomation(boardId: string) {
   return useMutation({
     mutationFn: (automationId: string) =>
       automationsService.toggle(boardId, automationId),
-    onSuccess: () => {
-      qc.invalidateQueries({
+    onSuccess: async () => {
+      await qc.invalidateQueries({
         queryKey: AUTOMATION_QUERY_KEYS.AUTOMATIONS(boardId),
       });
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }

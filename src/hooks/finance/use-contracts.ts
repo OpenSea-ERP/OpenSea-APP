@@ -36,8 +36,8 @@ export function useCreateContract() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateContractData) => contractsService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTRACTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTRACTS });
     },
   });
 }
@@ -47,9 +47,9 @@ export function useUpdateContract() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateContractData }) =>
       contractsService.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTRACTS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTRACTS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CONTRACT(variables.id),
       });
     },
@@ -60,8 +60,8 @@ export function useDeleteContract() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => contractsService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTRACTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTRACTS });
     },
   });
 }
@@ -70,8 +70,8 @@ export function useGenerateContractEntries() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => contractsService.generateEntries(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTRACTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTRACTS });
     },
   });
 }

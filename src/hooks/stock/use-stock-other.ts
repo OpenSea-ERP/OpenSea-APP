@@ -57,8 +57,8 @@ export function useCreateManufacturer() {
   return useMutation({
     mutationFn: (data: CreateManufacturerRequest) =>
       manufacturersService.createManufacturer(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
     },
   });
 }
@@ -74,9 +74,9 @@ export function useUpdateManufacturer() {
       id: string;
       data: UpdateManufacturerRequest;
     }) => manufacturersService.updateManufacturer(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.MANUFACTURER(variables.id),
       });
     },
@@ -88,8 +88,8 @@ export function useDeleteManufacturer() {
 
   return useMutation({
     mutationFn: (id: string) => manufacturersService.deleteManufacturer(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
     },
   });
 }
@@ -117,8 +117,8 @@ export function useCreateSupplier() {
   return useMutation({
     mutationFn: (data: CreateSupplierRequest) =>
       suppliersService.createSupplier(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SUPPLIERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SUPPLIERS });
     },
   });
 }
@@ -129,9 +129,9 @@ export function useUpdateSupplier() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateSupplierRequest }) =>
       suppliersService.updateSupplier(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SUPPLIERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SUPPLIERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.SUPPLIER(variables.id),
       });
     },
@@ -143,8 +143,8 @@ export function useDeleteSupplier() {
 
   return useMutation({
     mutationFn: (id: string) => suppliersService.deleteSupplier(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SUPPLIERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SUPPLIERS });
     },
   });
 }
@@ -171,8 +171,8 @@ export function useCreateTag() {
 
   return useMutation({
     mutationFn: (data: CreateTagRequest) => tagsService.createTag(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TAGS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TAGS });
     },
   });
 }
@@ -183,9 +183,9 @@ export function useUpdateTag() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTagRequest }) =>
       tagsService.updateTag(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TAGS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TAGS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.TAG(variables.id),
       });
     },
@@ -197,8 +197,8 @@ export function useDeleteTag() {
 
   return useMutation({
     mutationFn: (id: string) => tagsService.deleteTag(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TAGS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TAGS });
     },
   });
 }
@@ -234,8 +234,8 @@ export function useCreateTemplate() {
       const response = await templatesService.createTemplate(data);
       return response.template;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TEMPLATES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TEMPLATES });
     },
   });
 }
@@ -254,9 +254,9 @@ export function useUpdateTemplate() {
       const response = await templatesService.updateTemplate(id, data);
       return response.template;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TEMPLATES });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TEMPLATES });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.TEMPLATE(variables.id),
       });
     },
@@ -268,8 +268,8 @@ export function useDeleteTemplate() {
 
   return useMutation({
     mutationFn: (id: string) => templatesService.deleteTemplate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TEMPLATES });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TEMPLATES });
     },
   });
 }
@@ -297,8 +297,8 @@ export function useCreatePurchaseOrder() {
   return useMutation({
     mutationFn: (data: CreatePurchaseOrderRequest) =>
       purchaseOrdersService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
     },
   });
 }
@@ -314,9 +314,9 @@ export function useUpdatePurchaseOrderStatus() {
       id: string;
       status: import('@/types/stock').PurchaseOrderStatus;
     }) => purchaseOrdersService.updateStatus(id, status),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PURCHASE_ORDER(variables.id),
       });
     },

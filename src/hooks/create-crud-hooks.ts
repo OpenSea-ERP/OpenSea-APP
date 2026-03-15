@@ -208,9 +208,9 @@ export function createCrudHooks<
     return useMutation<TEntity, Error, TCreateRequest>({
       mutationFn: service.create,
       ...options,
-      onSuccess: (...args) => {
+      onSuccess: async (...args) => {
         // Invalidar lista após criar
-        queryClient.invalidateQueries({ queryKey: queryKeys.all });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.all });
         // Chamar onSuccess customizado se existir
         options?.onSuccess?.(...args);
       },
@@ -234,11 +234,11 @@ export function createCrudHooks<
     return useMutation<TEntity, Error, { id: string; data: TUpdateRequest }>({
       mutationFn: ({ id, data }) => service.update!(id, data),
       ...options,
-      onSuccess: (...args) => {
+      onSuccess: async (...args) => {
         const [, variables] = args;
         // Invalidar lista e detalhe específico
-        queryClient.invalidateQueries({ queryKey: queryKeys.all });
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({ queryKey: queryKeys.all });
+        await queryClient.invalidateQueries({
           queryKey: queryKeys.detail(variables.id),
         });
         // Chamar onSuccess customizado se existir
@@ -261,11 +261,11 @@ export function createCrudHooks<
     return useMutation<void, Error, string>({
       mutationFn: service.delete,
       ...options,
-      onSuccess: (...args) => {
+      onSuccess: async (...args) => {
         const [, id] = args;
         // Invalidar lista e detalhe específico
-        queryClient.invalidateQueries({ queryKey: queryKeys.all });
-        queryClient.invalidateQueries({ queryKey: queryKeys.detail(id) });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.all });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.detail(id) });
         // Chamar onSuccess customizado se existir
         options?.onSuccess?.(...args);
       },

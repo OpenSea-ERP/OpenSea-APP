@@ -56,8 +56,8 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: (data: CreateProductRequest) =>
       productsService.createProduct(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS });
     },
   });
 }
@@ -74,9 +74,9 @@ export function useUpdateProduct() {
       productId: string;
       data: UpdateProductRequest;
     }) => productsService.updateProduct(productId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PRODUCT(variables.productId),
       });
     },
@@ -89,8 +89,8 @@ export function useDeleteProduct() {
 
   return useMutation({
     mutationFn: (productId: string) => productsService.deleteProduct(productId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS });
     },
   });
 }

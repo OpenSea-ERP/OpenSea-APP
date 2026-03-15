@@ -40,8 +40,8 @@ export function useCreateSalesOrder() {
   return useMutation({
     mutationFn: (data: CreateSalesOrderRequest) =>
       salesOrdersService.createSalesOrder(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
     },
   });
 }
@@ -58,9 +58,9 @@ export function useUpdateSalesOrderStatus() {
       id: string;
       data: UpdateSalesOrderStatusRequest;
     }) => salesOrdersService.updateSalesOrderStatus(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.SALES_ORDER(variables.id),
       });
     },
@@ -73,8 +73,8 @@ export function useDeleteSalesOrder() {
 
   return useMutation({
     mutationFn: (id: string) => salesOrdersService.deleteSalesOrder(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
     },
   });
 }
@@ -106,9 +106,9 @@ export function useCreateComment() {
   return useMutation({
     mutationFn: (data: CreateCommentRequest) =>
       commentsService.createComment(data),
-    onSuccess: response => {
+    onSuccess: async response => {
       // Invalida os comentários do pedido específico
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.COMMENTS(response.comment.entityId),
       });
     },
@@ -127,11 +127,11 @@ export function useUpdateComment() {
       commentId: string;
       data: UpdateCommentRequest;
     }) => commentsService.updateComment(commentId, data),
-    onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (response, variables) => {
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.COMMENTS(response.comment.entityId),
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.COMMENT(variables.commentId),
       });
     },
@@ -144,9 +144,9 @@ export function useDeleteComment() {
 
   return useMutation({
     mutationFn: (commentId: string) => commentsService.deleteComment(commentId),
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalida todas as listas de comentários
-      queryClient.invalidateQueries({ queryKey: ['comments'] });
+      await queryClient.invalidateQueries({ queryKey: ['comments'] });
     },
   });
 }

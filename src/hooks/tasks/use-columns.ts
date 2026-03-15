@@ -18,8 +18,8 @@ export function useCreateColumn(boardId: string) {
   return useMutation({
     mutationFn: (data: CreateColumnRequest) =>
       columnsService.create(boardId, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
 }
@@ -92,8 +92,8 @@ export function useDeleteColumn(boardId: string) {
         qc.setQueryData(BOARD_QUERY_KEYS.BOARD(boardId), context.previousBoard);
       }
     },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
+    onSettled: async () => {
+      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
     },
   });
 }

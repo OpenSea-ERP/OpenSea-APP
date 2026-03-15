@@ -31,8 +31,8 @@ export function useAddProductAttachment(productId: string) {
         data
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['products', productId, 'attachments'],
       });
     },
@@ -51,8 +51,8 @@ export function useDeleteProductAttachment(productId: string) {
         `/v1/products/${productId}/attachments/${attachmentId}`
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['products', productId, 'attachments'],
       });
     },
