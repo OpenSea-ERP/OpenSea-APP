@@ -502,7 +502,7 @@ export function CreateProductWizard({
     queryKey: ['templates'],
     queryFn: async () => {
       const response = await templatesService.listTemplates();
-      return response?.templates ?? [];
+      return Array.isArray(response?.templates) ? response.templates : [];
     },
     enabled: open,
   });
@@ -512,7 +512,9 @@ export function CreateProductWizard({
       queryKey: ['manufacturers'],
       queryFn: async () => {
         const response = await manufacturersService.listManufacturers();
-        return response?.manufacturers ?? [];
+        return Array.isArray(response?.manufacturers)
+          ? response.manufacturers
+          : [];
       },
       enabled: open,
     });
