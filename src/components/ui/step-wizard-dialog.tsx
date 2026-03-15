@@ -3,11 +3,11 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export interface WizardStep {
-  title: string;
+  title: ReactNode;
   description?: string;
   /** Icon rendered centered in the left 200px column */
   icon: ReactNode;
@@ -17,6 +17,8 @@ export interface WizardStep {
   isValid?: boolean;
   /** Custom footer replacing default back/next. Pass `<></>` for empty footer. */
   footer?: ReactNode;
+  /** When set, renders a back arrow before the title in the header */
+  onBack?: () => void;
 }
 
 interface StepWizardDialogProps {
@@ -75,15 +77,27 @@ export function StepWizardDialog({
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
           <div className="flex items-center justify-between px-6 pt-5 pb-3">
-            <div>
-              <h2 className="text-lg font-semibold leading-none">
-                {step.title}
-              </h2>
-              {step.description && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {step.description}
-                </p>
+            <div className="flex items-center gap-2">
+              {step.onBack && (
+                <button
+                  type="button"
+                  onClick={step.onBack}
+                  className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shrink-0 -ml-1"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="sr-only">Voltar</span>
+                </button>
               )}
+              <div>
+                <h2 className="text-lg font-semibold leading-none">
+                  {step.title}
+                </h2>
+                {step.description && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {step.description}
+                  </p>
+                )}
+              </div>
             </div>
             <button
               type="button"
