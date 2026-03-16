@@ -29,7 +29,8 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 import { productsService, templatesService } from '@/services/stock';
 import type { Template } from '@/types/stock';
-import { Copy, Import, Package, Pencil, Plus, Shirt, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { ChevronRight, Copy, Import, Package, Pencil, Plus, Shirt, SlidersHorizontal, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GrObjectGroup } from 'react-icons/gr';
@@ -327,22 +328,23 @@ export default function TemplatesPage() {
           thumbnailFallback={<GrObjectGroup className="w-5 h-5 text-white" />}
           iconBgColor="bg-linear-to-br from-purple-500 to-pink-600"
           badges={getTemplateBadges(item)}
-          footer={{
-            type: 'single',
-            button: {
-              icon: Package,
-              label: `${productsCount} produto${productsCount !== 1 ? 's' : ''}`,
-              href: `/stock/products?template=${item.id}`,
-              color: 'blue',
-            },
-          }}
           isSelected={isSelected}
           showSelection={false}
           clickable={false}
           createdAt={item.createdAt}
           updatedAt={item.updatedAt ?? undefined}
           showStatusBadges={true}
-        />
+        >
+          <Link
+            href={`/stock/products?template=${item.id}`}
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
+            onClick={e => e.stopPropagation()}
+          >
+            <Package className="h-3.5 w-3.5" />
+            {productsCount} produto{productsCount !== 1 ? 's' : ''}
+            <ChevronRight className="h-3 w-3" />
+          </Link>
+        </EntityCard>
       </EntityContextMenu>
     );
   };
