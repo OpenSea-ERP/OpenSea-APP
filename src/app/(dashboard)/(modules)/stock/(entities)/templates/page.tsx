@@ -329,6 +329,13 @@ export default function TemplatesPage() {
               <span className="font-semibold text-gray-900 dark:text-white truncate">
                 {item.name}
               </span>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {getUnitLabel(item.unitOfMeasure).match(/\(([^)]+)\)/)?.[1] || getUnitLabel(item.unitOfMeasure)}
+              </span>
+            </span>
+          }
+          metadata={
+            <div className="flex items-center gap-1.5 mt-0.5">
               {listBadges.map((badge, i) => (
                 <span
                   key={i}
@@ -341,9 +348,8 @@ export default function TemplatesPage() {
                   {badge.label}
                 </span>
               ))}
-            </span>
+            </div>
           }
-          subtitle={getUnitLabel(item.unitOfMeasure)}
           thumbnail={item.iconUrl}
           thumbnailFallback={<GrObjectGroup className="w-5 h-5 text-white" />}
           iconBgColor="bg-linear-to-br from-purple-500 to-pink-600"
