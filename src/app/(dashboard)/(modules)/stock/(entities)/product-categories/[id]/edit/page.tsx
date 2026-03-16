@@ -1,13 +1,12 @@
 /**
  * Edit Category Page
- * Página de edição de categoria - seguindo padrão template/[id]/edit
+ * Follows the template edit page pattern (Identity Card + Form Card + VerifyActionPinModal)
  */
 
 'use client';
 
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
-import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -15,19 +14,9 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -37,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import {
   useCategories,
@@ -47,7 +37,7 @@ import {
 } from '@/hooks/stock/use-categories';
 import { logger } from '@/lib/logger';
 import type { Category, UpdateCategoryRequest } from '@/types/stock';
-import { FolderTree, Save, Trash2, X } from 'lucide-react';
+import { FolderTree, Loader2, Save, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useMemo, useRef, useState } from 'react';
@@ -92,9 +82,8 @@ export default function EditCategoryPage({
   // FORM STATE
   // ============================================================================
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [iconUrl, setIconUrl] = useState('');
@@ -146,15 +135,14 @@ export default function EditCategoryPage({
   // HANDLERS
   // ============================================================================
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
+  const handleSubmit = async () => {
     if (!name.trim()) {
       toast.error('Nome é obrigatório');
       return;
     }
 
     try {
-      setIsLoading(true);
+      setIsSaving(true);
       const data: UpdateCategoryRequest = {
         name: name.trim(),
         description: description.trim() || undefined,
@@ -179,17 +167,12 @@ export default function EditCategoryPage({
         error instanceof Error ? error.message : 'Erro desconhecido';
       toast.error('Erro ao atualizar categoria', { description: message });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
-  };
-
-  const handleDeleteClick = () => {
-    setShowDeleteDialog(true);
   };
 
   const handleDeleteConfirm = async () => {
     try {
-      setIsDeleting(true);
       await deleteCategoryMutation.mutateAsync(categoryId);
       toast.success('Categoria excluída com sucesso!');
       router.push('/stock/product-categories');
@@ -202,46 +185,35 @@ export default function EditCategoryPage({
         error instanceof Error ? error.message : 'Erro desconhecido';
       toast.error('Erro ao deletar categoria', { description: message });
     } finally {
-      setIsDeleting(false);
-      setShowDeleteDialog(false);
+      setDeleteModalOpen(false);
     }
   };
 
   // ============================================================================
-  // HEADER BUTTONS
+  // ACTION BAR BUTTONS
   // ============================================================================
 
-  const actionButtons: HeaderButton[] = useMemo(
-    () => [
-      {
-        id: 'delete-category',
-        title: 'Excluir',
-        icon: Trash2,
-        onClick: handleDeleteClick,
-        variant: 'destructive' as const,
-        disabled: isLoading || isDeleting,
-      },
-      {
-        id: 'cancel-edit',
-        title: 'Cancelar',
-        icon: X,
-        onClick: () => router.push(`/stock/product-categories/${categoryId}`),
-        variant: 'outline' as const,
-      },
-      {
-        id: 'save-category',
-        title: isLoading ? 'Salvando...' : 'Salvar',
-        icon: Save,
-        onClick: () => handleSubmit(),
-        variant: 'default' as const,
-        disabled: isLoading || isDeleting || !name.trim(),
-      },
-    ],
-    [isLoading, isDeleting, name, router, categoryId]
-  );
+  const actionButtons: HeaderButton[] = [
+    {
+      id: 'delete',
+      title: 'Excluir',
+      icon: Trash2,
+      onClick: () => setDeleteModalOpen(true),
+      variant: 'destructive',
+      disabled: isSaving,
+    },
+    {
+      id: 'save',
+      title: isSaving ? 'Salvando...' : 'Salvar alterações',
+      icon: isSaving ? Loader2 : Save,
+      onClick: handleSubmit,
+      variant: 'default',
+      disabled: isSaving || !name.trim(),
+    },
+  ];
 
   // ============================================================================
-  // LOADING / ERROR / NOT FOUND
+  // LOADING STATE
   // ============================================================================
 
   if (isLoadingCategory) {
@@ -256,14 +228,17 @@ export default function EditCategoryPage({
               { label: 'Editar' },
             ]}
           />
-          <Header title="Carregando..." />
         </PageHeader>
         <PageBody>
-          <GridLoading count={2} layout="list" size="md" />
+          <GridLoading count={3} layout="list" size="md" />
         </PageBody>
       </PageLayout>
     );
   }
+
+  // ============================================================================
+  // ERROR STATE
+  // ============================================================================
 
   if (error) {
     return (
@@ -273,9 +248,9 @@ export default function EditCategoryPage({
             breadcrumbItems={[
               { label: 'Estoque', href: '/stock' },
               { label: 'Categorias', href: '/stock/product-categories' },
+              { label: 'Erro' },
             ]}
           />
-          <Header title="Erro" />
         </PageHeader>
         <PageBody>
           <GridError
@@ -300,9 +275,9 @@ export default function EditCategoryPage({
             breadcrumbItems={[
               { label: 'Estoque', href: '/stock' },
               { label: 'Categorias', href: '/stock/product-categories' },
+              { label: 'Erro' },
             ]}
           />
-          <Header title="Categoria não encontrada" />
         </PageHeader>
         <PageBody>
           <GridError
@@ -323,6 +298,11 @@ export default function EditCategoryPage({
   // RENDER
   // ============================================================================
 
+  const formattedDate = new Date(category.createdAt).toLocaleDateString(
+    'pt-BR',
+    { day: '2-digit', month: 'long', year: 'numeric' }
+  );
+
   return (
     <PageLayout>
       <PageHeader>
@@ -338,43 +318,48 @@ export default function EditCategoryPage({
           ]}
           buttons={actionButtons}
         />
-
-        <Header
-          title="Editar Categoria"
-          description={`Editando: ${category.name}`}
-        />
       </PageHeader>
 
       <PageBody>
-        {/* Entity Banner */}
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-white/95 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600 shadow-lg overflow-hidden">
-            {category.iconUrl ? (
-              <Image
-                src={category.iconUrl}
-                alt={category.name}
-                width={28}
-                height={28}
-                className="h-7 w-7 object-contain brightness-0 invert"
-                unoptimized
-                onError={e => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <PiFolderOpenDuotone className="h-7 w-7 text-white" />
-            )}
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600 shadow-lg">
+              {category.iconUrl ? (
+                <Image
+                  src={category.iconUrl}
+                  alt={category.name}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 object-contain brightness-0 invert"
+                  unoptimized
+                  onError={e => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <PiFolderOpenDuotone className="h-7 w-7 text-white" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-muted-foreground">
+                Editando categoria
+              </p>
+              <h1 className="text-xl font-bold truncate">{category.name}</h1>
+            </div>
+            <div className="hidden sm:flex flex-col items-end text-right gap-0.5">
+              <p className="text-xs text-muted-foreground">
+                Criado em {formattedDate}
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-sm text-muted-foreground">Editando categoria</p>
-            <h1 className="text-xl font-bold">{category.name}</h1>
-          </div>
-        </div>
+        </Card>
 
-        {/* Form */}
-        <Card className="p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
+        {/* Form Card */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            {/* Row 1: Nome, Categoria Pai, Ícone */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">
                   Nome <span className="text-red-500">*</span>
@@ -386,49 +371,6 @@ export default function EditCategoryPage({
                   placeholder="Nome da categoria"
                   required
                 />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder="Descrição da categoria"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                <div className="grid gap-2">
-                  <Label htmlFor="iconUrl">URL do Ícone (SVG)</Label>
-                  <Input
-                    id="iconUrl"
-                    placeholder="https://exemplo.com/icone.svg"
-                    value={iconUrl}
-                    onChange={e => setIconUrl(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Preview do Ícone</Label>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-slate-600 to-slate-800 overflow-hidden">
-                    {iconUrl ? (
-                      <Image
-                        src={iconUrl}
-                        alt="Preview"
-                        width={24}
-                        height={24}
-                        className="h-6 w-6 object-contain brightness-0 invert"
-                        unoptimized
-                        onError={e => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <PiFolderOpenDuotone className="h-6 w-6 text-white" />
-                    )}
-                  </div>
-                </div>
               </div>
 
               <div className="grid gap-2">
@@ -448,74 +390,104 @@ export default function EditCategoryPage({
                 </Select>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isActive"
-                  checked={isActive}
-                  onCheckedChange={checked => setIsActive(checked as boolean)}
-                />
-                <Label htmlFor="isActive" className="cursor-pointer">
-                  Categoria ativa
-                </Label>
+              <div className="grid gap-2">
+                <Label htmlFor="iconUrl">Ícone (URL)</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="iconUrl"
+                    placeholder="https://exemplo.com/icone.svg"
+                    value={iconUrl}
+                    onChange={e => setIconUrl(e.target.value)}
+                    className="flex-1"
+                  />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border overflow-hidden">
+                    {iconUrl ? (
+                      <Image
+                        src={iconUrl}
+                        alt="Preview"
+                        width={24}
+                        height={24}
+                        className="h-6 w-6 object-contain"
+                        unoptimized
+                        onError={e => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <PiFolderOpenDuotone className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </form>
+
+            {/* Row 2: Descrição */}
+            <div className="grid gap-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Descrição da categoria"
+                rows={3}
+              />
+            </div>
+
+            {/* Row 3: Status toggle */}
+            <div className="flex items-center justify-between w-full rounded-lg border border-border bg-white dark:bg-slate-800/60 p-4">
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-sm font-medium">Categoria Ativa</p>
+                  <p className="text-xs text-muted-foreground">
+                    Categorias inativas não aparecem nas listagens
+                  </p>
+                </div>
+              </div>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
+            </div>
+          </div>
         </Card>
 
         {/* Subcategories Section */}
         {subcategories.length > 0 && (
-          <Card className="p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <FolderTree className="h-5 w-5" />
-                Subcategorias ({subcategories.length})
-              </h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (subcategorySortableRef.current) {
-                    reorderMutation.mutate(
-                      subcategorySortableRef.current.getReorderedItems()
-                    );
-                  }
-                }}
-              >
-                Salvar Ordem
-              </Button>
+          <Card className="bg-white/5 py-2 overflow-hidden">
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <FolderTree className="h-5 w-5" />
+                  Subcategorias ({subcategories.length})
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (subcategorySortableRef.current) {
+                      reorderMutation.mutate(
+                        subcategorySortableRef.current.getReorderedItems()
+                      );
+                    }
+                  }}
+                >
+                  Salvar Ordem
+                </Button>
+              </div>
+              <SortableCategoryList
+                ref={subcategorySortableRef}
+                items={subcategories}
+              />
             </div>
-            <SortableCategoryList
-              ref={subcategorySortableRef}
-              items={subcategories}
-            />
           </Card>
         )}
       </PageBody>
 
-      {/* Delete Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a categoria &ldquo;{category.name}
-              &rdquo;? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? 'Excluindo...' : 'Excluir'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Confirmation */}
+      <VerifyActionPinModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onSuccess={handleDeleteConfirm}
+        title="Excluir Categoria"
+        description={`Digite seu PIN de ação para excluir a categoria "${category.name}". Esta ação não pode ser desfeita.`}
+      />
     </PageLayout>
   );
 }
