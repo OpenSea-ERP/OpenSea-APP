@@ -1,20 +1,38 @@
 /**
- * OpenSea OS - Create Category Modal
+ * OpenSea OS - Create Category Wizard
+ * Modal de criação de categoria em 2 passos
  */
 
 'use client';
 
-import { logger } from '@/lib/logger';
-import { DialogHeader } from '@/components/shared/modals/dialog-header';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  StepWizardDialog,
+  type WizardStep,
+} from '@/components/ui/step-wizard-dialog';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { categoriesService } from '@/services/stock';
 import type { Category } from '@/types/stock';
+import { logger } from '@/lib/logger';
+import {
+  FolderTree,
+  ImageIcon,
+  Loader2,
+  Sparkles,
+  TextCursorInput,
+} from 'lucide-react';
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PiFolderOpenDuotone } from 'react-icons/pi';
 
 interface CreateModalProps {
@@ -24,25 +42,62 @@ interface CreateModalProps {
 }
 
 export function CreateModal({ isOpen, onClose, onSubmit }: CreateModalProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [formData, setFormData] = useState<Partial<Category>>({
-    name: '',
-    description: '',
-    iconUrl: '',
-    isActive: true,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // ============================================================================
+  // STATE
+  // ============================================================================
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState('');
+  const [parentId, setParentId] = useState('none');
+  const [description, setDescription] = useState('');
+  const [iconUrl, setIconUrl] = useState('');
+  const [iconError, setIconError] = useState(false);
+  const [isActive, setIsActive] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // ============================================================================
+  // LOAD CATEGORIES FOR PARENT SELECT
+  // ============================================================================
+
+  useEffect(() => {
+    if (!isOpen) return;
+    categoriesService
+      .listCategories()
+      .then(r => setCategories(r.categories || []))
+      .catch(() => setCategories([]));
+  }, [isOpen]);
+
+  // ============================================================================
+  // RESET ON CLOSE
+  // ============================================================================
+
+  useEffect(() => {
+    if (!isOpen) {
+      setStep(1);
+      setName('');
+      setParentId('none');
+      setDescription('');
+      setIconUrl('');
+      setIconError(false);
+      setIsActive(true);
+    }
+  }, [isOpen]);
+
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
+  const handleSubmit = async () => {
+    if (!name.trim()) return;
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
-      setFormData({
-        name: '',
-        description: '',
-        iconUrl: '',
-        isActive: true,
+      await onSubmit({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        iconUrl: iconUrl.trim() || undefined,
+        parentId: parentId === 'none' ? undefined : parentId,
+        isActive,
       });
       onClose();
     } catch (error) {
@@ -55,123 +110,181 @@ export function CreateModal({ isOpen, onClose, onSubmit }: CreateModalProps) {
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        ref={containerRef}
-        onOpenAutoFocus={event => {
-          event.preventDefault();
-          const form = containerRef.current?.querySelector('form');
-          const firstFocusable = form?.querySelector<HTMLElement>(
-            'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
-          );
-          firstFocusable?.focus();
-        }}
-        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
-      >
-        <form onSubmit={handleSubmit}>
-          <DialogHeader
-            title="Nova Categoria"
-            description="Crie uma nova categoria de produtos"
-            icon={PiFolderOpenDuotone}
-            align="between"
-            variant="default"
-            iconBgClassName="bg-linear-to-br from-blue-500 to-purple-600 text-white"
-            onClose={onClose}
-          />
+  const hasValidIcon = iconUrl.trim() && !iconError;
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">
-                Nome <span className="text-red-500">*</span>
+  // ============================================================================
+  // WIZARD STEPS
+  // ============================================================================
+
+  const steps: WizardStep[] = useMemo(
+    () => [
+      // ── Step 1: Informações Essenciais ──
+      {
+        title: 'Informações da Categoria',
+        description: 'Defina o nome e a hierarquia',
+        icon: (
+          <TextCursorInput className="h-16 w-16 text-blue-400 opacity-50" />
+        ),
+        isValid: name.trim().length > 0,
+        content: (
+          <div className="space-y-5 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="wizard-name">
+                Nome da Categoria <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={e =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Ex: Eletrônicos"
-                required
+                id="wizard-name"
+                placeholder="Ex: Eletrônicos, Roupas, Alimentos..."
+                value={name}
+                onChange={e => setName(e.target.value)}
+                autoFocus
+                className="h-11"
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Descrição</Label>
+            <div className="space-y-2">
+              <Label htmlFor="wizard-parent">Categoria Pai</Label>
+              <Select value={parentId} onValueChange={setParentId}>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Selecione uma categoria pai" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    <span className="flex items-center gap-2">
+                      <FolderTree className="h-3.5 w-3.5 text-muted-foreground" />
+                      Nenhuma (categoria raiz)
+                    </span>
+                  </SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Deixe vazio para criar uma categoria no nível raiz
+              </p>
+            </div>
+          </div>
+        ),
+      },
+
+      // ── Step 2: Detalhes Opcionais ──
+      {
+        title: 'Detalhes da Categoria',
+        description: 'Personalize com descrição e ícone',
+        icon: <Sparkles className="h-16 w-16 text-purple-400 opacity-50" />,
+        isValid: true,
+        onBack: () => setStep(1),
+        content: (
+          <div className="space-y-5 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="wizard-description">Descrição</Label>
               <Textarea
-                id="description"
-                value={formData.description}
-                onChange={e =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Descrição da categoria"
+                id="wizard-description"
+                placeholder="Descreva o propósito desta categoria..."
+                value={description}
+                onChange={e => setDescription(e.target.value)}
                 rows={3}
+                className="resize-none"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-              <div className="grid gap-2">
-                <Label htmlFor="iconUrl">URL do Ícone (SVG)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="wizard-icon">Ícone (SVG)</Label>
+              <div className="flex items-center gap-2">
                 <Input
-                  id="iconUrl"
+                  id="wizard-icon"
                   placeholder="https://exemplo.com/icone.svg"
-                  value={formData.iconUrl || ''}
-                  onChange={e =>
-                    setFormData({ ...formData, iconUrl: e.target.value })
-                  }
+                  value={iconUrl}
+                  onChange={e => {
+                    setIconUrl(e.target.value);
+                    setIconError(false);
+                  }}
+                  className="h-11 flex-1"
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label>Preview do Ícone</Label>
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-slate-600 to-slate-800 overflow-hidden">
-                  {formData.iconUrl ? (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border overflow-hidden">
+                  {hasValidIcon ? (
                     <Image
-                      src={formData.iconUrl}
-                      alt="Preview"
-                      width={24}
-                      height={24}
-                      className="h-6 w-6 object-contain brightness-0 invert"
+                      src={iconUrl}
+                      alt="Ícone"
+                      width={22}
+                      height={22}
+                      className="h-[22px] w-[22px] object-contain dark:brightness-0 dark:invert"
                       unoptimized
-                      onError={e => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
+                      onError={() => setIconError(true)}
                     />
                   ) : (
-                    <PiFolderOpenDuotone className="h-6 w-6 text-white" />
+                    <PiFolderOpenDuotone className="h-4 w-4 text-muted-foreground" />
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isActive"
-                checked={formData.isActive}
-                onCheckedChange={checked =>
-                  setFormData({ ...formData, isActive: checked as boolean })
-                }
-              />
-              <Label htmlFor="isActive" className="cursor-pointer">
-                Categoria ativa
-              </Label>
+            <div className="flex items-center justify-between w-full rounded-lg border border-border bg-white dark:bg-slate-800/60 p-4">
+              <div>
+                <p className="text-sm font-medium">Categoria Ativa</p>
+                <p className="text-xs text-muted-foreground">
+                  Categorias inativas não aparecem nas listagens
+                </p>
+              </div>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
           </div>
-
-          <DialogFooter>
+        ),
+        footer: (
+          <div className="flex items-center justify-end gap-2 w-full">
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
+              onClick={() => setStep(1)}
             >
-              Cancelar
+              ← Voltar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Criando...' : 'Criar Categoria'}
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !name.trim()}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Criando...
+                </>
+              ) : (
+                'Criar Categoria'
+              )}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </div>
+        ),
+      },
+    ],
+    [
+      name,
+      parentId,
+      description,
+      iconUrl,
+      iconError,
+      isActive,
+      isSubmitting,
+      hasValidIcon,
+      categories,
+    ]
+  );
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
+  return (
+    <StepWizardDialog
+      open={isOpen}
+      onOpenChange={open => !open && onClose()}
+      steps={steps}
+      currentStep={step}
+      onStepChange={setStep}
+      onClose={onClose}
+    />
   );
 }
