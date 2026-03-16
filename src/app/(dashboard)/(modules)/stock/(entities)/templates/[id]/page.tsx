@@ -17,27 +17,24 @@ import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { productsService, templatesService } from '@/services/stock';
 import type { Template, TemplateAttribute } from '@/types/stock';
 import { useQuery } from '@tanstack/react-query';
 import {
   Calendar,
+  CalendarCheck,
   Clock,
   Hash,
-  Info,
   Layers,
+  List,
   Pencil,
   Puzzle,
   Settings,
+  ShieldCheck,
   Shirt,
   SlidersHorizontal,
-  ShieldCheck,
+  ToggleLeft,
+  Type,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
@@ -50,10 +47,29 @@ import {
   MdVisibilityOff,
 } from 'react-icons/md';
 import { getUnitLabel } from '../src/constants/unit-labels';
-import { ATTRIBUTE_TYPE_LABELS } from '../src/types/templates.types';
 
 // ============================================================================
-// SECTION HEADER (read-only, non-collapsible)
+// TYPE ICON MAP
+// ============================================================================
+
+const TYPE_ICONS: Record<string, React.ElementType> = {
+  string: Type,
+  number: Hash,
+  boolean: ToggleLeft,
+  date: CalendarCheck,
+  select: List,
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  string: 'Texto',
+  number: 'Número',
+  boolean: 'Sim/Não',
+  date: 'Data',
+  select: 'Seleção',
+};
+
+// ============================================================================
+// SECTION HEADER
 // ============================================================================
 
 function SectionHeader({
@@ -99,128 +115,127 @@ function AttributeCard({
     attr.unitOfMeasure || attr.mask || attr.placeholder || attr.description;
   const hasDefaultValue =
     attr.defaultValue !== undefined && attr.defaultValue !== '';
+  const TypeIcon = TYPE_ICONS[attr.type] || Type;
 
   return (
-    <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-white/[0.04] border-b border-white/[0.06]">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium truncate">
-            {attr.label || attrKey}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {ATTRIBUTE_TYPE_LABELS[attr.type] || attr.type}
-          </span>
+    <div className="rounded-lg border border-border bg-white dark:bg-slate-800/60 p-4 space-y-3">
+      {/* Single row: icon + label | badges */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-slate-100 dark:from-slate-700 to-transparent">
+          <TypeIcon className="h-4 w-4 text-muted-foreground" />
         </div>
-      </div>
 
-      {/* Body: toggle chips */}
-      <div className="px-4 py-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm font-medium truncate flex-1">
+          {attr.label || attrKey}
+        </span>
+
+        <div className="flex items-center gap-1.5 shrink-0">
           <span
-            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium border ${
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium border ${
               attr.required
                 ? 'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300'
                 : 'border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-muted-foreground'
             }`}
           >
-            <ShieldCheck className="h-3 w-3" />
+            <ShieldCheck className="h-2.5 w-2.5" />
             {attr.required ? 'Obrigatório' : 'Opcional'}
           </span>
 
           <span
-            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium border ${
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium border ${
               attr.enablePrint
                 ? 'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300'
                 : 'border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-muted-foreground'
             }`}
           >
             {attr.enablePrint ? (
-              <MdPrint className="h-3 w-3" />
+              <MdPrint className="h-2.5 w-2.5" />
             ) : (
-              <MdPrintDisabled className="h-3 w-3" />
+              <MdPrintDisabled className="h-2.5 w-2.5" />
             )}
-            Campo de Etiqueta
+            Etiqueta
           </span>
 
           <span
-            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium border ${
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium border ${
               attr.enableView
                 ? 'border-teal-600/25 dark:border-teal-500/20 bg-teal-50 dark:bg-teal-500/8 text-teal-700 dark:text-teal-300'
                 : 'border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-muted-foreground'
             }`}
           >
             {attr.enableView ? (
-              <MdVisibility className="h-3 w-3" />
+              <MdVisibility className="h-2.5 w-2.5" />
             ) : (
-              <MdVisibilityOff className="h-3 w-3" />
+              <MdVisibilityOff className="h-2.5 w-2.5" />
             )}
-            Visível em Relatórios
+            Relatórios
           </span>
         </div>
+      </div>
 
-        {/* Select options */}
-        {attr.type === 'select' &&
-          attr.options &&
-          attr.options.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-white/[0.06]">
-              <p className="text-xs text-muted-foreground mb-2">Opções</p>
-              <div className="flex flex-wrap gap-1.5">
-                {attr.options.map((option, idx) => (
-                  <Badge key={idx} variant="outline" className="text-xs">
-                    {option}
-                  </Badge>
-                ))}
+      {/* Select options */}
+      {attr.type === 'select' &&
+        attr.options &&
+        attr.options.length > 0 && (
+          <div className="pt-3 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-2">
+              Opções de escolha
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {attr.options.map((option, idx) => (
+                <Badge key={idx} variant="outline" className="text-xs">
+                  {option}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {/* Advanced details */}
+      {(hasAdvanced || hasDefaultValue) && (
+        <div className="pt-3 border-t border-border">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {attr.unitOfMeasure && (
+              <div>
+                <p className="text-xs text-muted-foreground">Unidade</p>
+                <p className="text-sm">{attr.unitOfMeasure}</p>
               </div>
-            </div>
-          )}
-
-        {/* Advanced details */}
-        {(hasAdvanced || hasDefaultValue) && (
-          <div className="mt-3 pt-3 border-t border-white/[0.06]">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {attr.unitOfMeasure && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Unidade</p>
-                  <p className="text-sm">{attr.unitOfMeasure}</p>
-                </div>
-              )}
-              {attr.mask && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Máscara</p>
-                  <p className="text-sm font-mono">{attr.mask}</p>
-                </div>
-              )}
-              {attr.placeholder && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Placeholder</p>
-                  <p className="text-sm text-muted-foreground italic">
-                    {attr.placeholder}
-                  </p>
-                </div>
-              )}
-              {hasDefaultValue && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Valor Padrão</p>
-                  <p className="text-sm">
-                    {attr.type === 'boolean'
-                      ? attr.defaultValue
-                        ? 'Sim'
-                        : 'Não'
-                      : String(attr.defaultValue)}
-                  </p>
-                </div>
-              )}
-            </div>
-            {attr.description && (
-              <div className="mt-3">
-                <p className="text-xs text-muted-foreground">Descrição</p>
-                <p className="text-sm mt-0.5">{attr.description}</p>
+            )}
+            {attr.mask && (
+              <div>
+                <p className="text-xs text-muted-foreground">Máscara</p>
+                <p className="text-sm font-mono">{attr.mask}</p>
+              </div>
+            )}
+            {attr.placeholder && (
+              <div>
+                <p className="text-xs text-muted-foreground">Placeholder</p>
+                <p className="text-sm text-muted-foreground italic">
+                  {attr.placeholder}
+                </p>
+              </div>
+            )}
+            {hasDefaultValue && (
+              <div>
+                <p className="text-xs text-muted-foreground">Valor Padrão</p>
+                <p className="text-sm">
+                  {attr.type === 'boolean'
+                    ? attr.defaultValue
+                      ? 'Sim'
+                      : 'Não'
+                    : String(attr.defaultValue)}
+                </p>
               </div>
             )}
           </div>
-        )}
-      </div>
+          {attr.description && (
+            <div className="mt-3">
+              <p className="text-xs text-muted-foreground">Descrição</p>
+              <p className="text-sm mt-0.5">{attr.description}</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -296,15 +311,26 @@ export default function TemplateDetailPage() {
   // ACTION BAR
   // ============================================================================
 
-  const actionButtons: HeaderButton[] = [
-    {
-      id: 'edit',
-      title: 'Editar',
-      icon: Pencil,
-      onClick: () => router.push(`/stock/templates/${templateId}/edit`),
-      variant: 'default',
-    },
-  ];
+  const actionButtons: HeaderButton[] = [];
+
+  if (productsCount !== null && productsCount > 0) {
+    actionButtons.push({
+      id: 'view-products',
+      title: `Ver ${productsCount} Produto${productsCount !== 1 ? 's' : ''}`,
+      icon: Layers,
+      onClick: () =>
+        router.push(`/stock/products?template=${templateId}`),
+      variant: 'outline',
+    });
+  }
+
+  actionButtons.push({
+    id: 'edit',
+    title: 'Editar',
+    icon: Pencil,
+    onClick: () => router.push(`/stock/templates/${templateId}/edit`),
+    variant: 'default',
+  });
 
   // ============================================================================
   // LOADING
@@ -415,57 +441,36 @@ export default function TemplateDetailPage() {
 
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold truncate">{template.name}</h1>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Calendar className="h-3 w-3 text-sky-400" />
-                  {formattedCreatedAt}
-                </span>
-                {formattedUpdatedAt && (
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-amber-400" />
-                    {formattedUpdatedAt}
-                  </span>
+              <div className="flex items-center gap-2 mt-1.5">
+                <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2 py-1 text-xs text-muted-foreground">
+                  <Hash className="h-3 w-3" />
+                  {getUnitLabel(template.unitOfMeasure)}
+                </div>
+                <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2 py-1 text-xs text-muted-foreground">
+                  <SlidersHorizontal className="h-3 w-3" />
+                  {totalAttributes} atributo{totalAttributes !== 1 ? 's' : ''}
+                </div>
+                {productsCount !== null && (
+                  <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2 py-1 text-xs text-muted-foreground">
+                    <Layers className="h-3 w-3" />
+                    {productsCount} produto{productsCount !== 1 ? 's' : ''}
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Stats (desktop) */}
-            <div className="hidden md:flex items-center gap-2">
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2.5 py-1.5 text-xs text-muted-foreground">
-                      <Hash className="h-3 w-3" />
-                      {getUnitLabel(template.unitOfMeasure)}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Unidade de medida</TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2.5 py-1.5 text-xs text-muted-foreground">
-                      <SlidersHorizontal className="h-3 w-3" />
-                      {totalAttributes} atributo
-                      {totalAttributes !== 1 ? 's' : ''}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Total de atributos</TooltipContent>
-                </Tooltip>
-
-                {productsCount !== null && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2.5 py-1.5 text-xs text-muted-foreground">
-                        <Layers className="h-3 w-3" />
-                        {productsCount} produto
-                        {productsCount !== 1 ? 's' : ''}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>Produtos usando este template</TooltipContent>
-                  </Tooltip>
-                )}
-              </TooltipProvider>
+            {/* Metadata (right) */}
+            <div className="hidden sm:flex flex-col items-end text-right gap-0.5">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-sky-400" />
+                Criado em {formattedCreatedAt}
+              </p>
+              {formattedUpdatedAt && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-amber-400" />
+                  Atualizado em {formattedUpdatedAt}
+                </p>
+              )}
             </div>
           </div>
         </Card>
@@ -473,60 +478,6 @@ export default function TemplateDetailPage() {
         {/* ── Content Card ── */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
-            {/* ── Seção: Informações Gerais ── */}
-            <div className="space-y-5">
-              <SectionHeader
-                icon={Info}
-                title="Informações Gerais"
-                subtitle="Dados básicos do template"
-              />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Nome</p>
-                  <p className="text-sm font-medium">{template.name}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">
-                    Unidade de Medida
-                  </p>
-                  <p className="text-sm font-medium">
-                    {getUnitLabel(template.unitOfMeasure)}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Ícone</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border overflow-hidden">
-                      {template.iconUrl ? (
-                        <Image
-                          src={template.iconUrl}
-                          alt="Ícone"
-                          width={18}
-                          height={18}
-                          className="h-[18px] w-[18px] object-contain dark:brightness-0 dark:invert"
-                          unoptimized
-                        />
-                      ) : (
-                        <GrObjectGroup className="h-3.5 w-3.5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <span className="text-sm text-muted-foreground truncate">
-                      {template.iconUrl || 'Padrão'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {template.code && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Código</p>
-                  <p className="text-sm font-mono font-medium">
-                    {template.code}
-                  </p>
-                </div>
-              )}
-            </div>
-
             {/* ── Seção: Módulos Especiais ── */}
             <div className="space-y-5">
               <SectionHeader
@@ -556,10 +507,7 @@ export default function TemplateDetailPage() {
                           </p>
                         </div>
                       </div>
-                      <Badge
-                        variant="default"
-                        className="text-xs shrink-0"
-                      >
+                      <Badge variant="default" className="text-xs shrink-0">
                         Ativado
                       </Badge>
                     </div>
@@ -576,9 +524,10 @@ export default function TemplateDetailPage() {
                 subtitle="Campos personalizados para produtos, variantes e itens"
                 badge={
                   totalAttributes > 0 ? (
-                    <span className="text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2 py-1 text-xs text-muted-foreground">
+                      <SlidersHorizontal className="h-3 w-3" />
                       {totalAttributes} total
-                    </span>
+                    </div>
                   ) : undefined
                 }
               />
@@ -617,84 +566,53 @@ export default function TemplateDetailPage() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="product" className="space-y-4 mt-2">
-                  <div className="w-full p-6 rounded-xl bg-white dark:bg-slate-800/60 border border-border">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Layers className="w-5 h-5 text-foreground" />
-                      <h3 className="font-semibold">Atributos de Produtos</h3>
-                    </div>
-                    {!productAttributes ||
-                    Object.keys(productAttributes).length === 0 ? (
-                      <p className="text-center py-8 text-muted-foreground">
-                        Nenhum atributo configurado.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {Object.entries(productAttributes).map(
-                          ([key, attr]) => (
-                            <AttributeCard
-                              key={key}
-                              attrKey={key}
-                              attr={attr}
-                            />
-                          )
+                {(['product', 'variant', 'item'] as const).map(tab => {
+                  const attrs =
+                    tab === 'product'
+                      ? productAttributes
+                      : tab === 'variant'
+                        ? variantAttributes
+                        : itemAttributes;
+                  const label =
+                    tab === 'product'
+                      ? 'Produtos'
+                      : tab === 'variant'
+                        ? 'Variantes'
+                        : 'Itens';
+                  const TabIcon = tab === 'item' ? Settings : Layers;
+
+                  return (
+                    <TabsContent
+                      key={tab}
+                      value={tab}
+                      className="space-y-4 mt-2"
+                    >
+                      <div className="w-full p-6 rounded-xl bg-white dark:bg-slate-800/60 border border-border">
+                        <div className="flex items-center gap-2 mb-4">
+                          <TabIcon className="w-5 h-5 text-foreground" />
+                          <h3 className="font-semibold">
+                            Atributos de {label}
+                          </h3>
+                        </div>
+                        {!attrs || Object.keys(attrs).length === 0 ? (
+                          <p className="text-center py-8 text-muted-foreground">
+                            Nenhum atributo configurado.
+                          </p>
+                        ) : (
+                          <div className="space-y-3">
+                            {Object.entries(attrs).map(([key, attr]) => (
+                              <AttributeCard
+                                key={key}
+                                attrKey={key}
+                                attr={attr}
+                              />
+                            ))}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="variant" className="space-y-4 mt-2">
-                  <div className="w-full p-6 rounded-xl bg-white dark:bg-slate-800/60 border border-border">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Layers className="w-5 h-5 text-foreground" />
-                      <h3 className="font-semibold">Atributos de Variantes</h3>
-                    </div>
-                    {!variantAttributes ||
-                    Object.keys(variantAttributes).length === 0 ? (
-                      <p className="text-center py-8 text-muted-foreground">
-                        Nenhum atributo configurado.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {Object.entries(variantAttributes).map(
-                          ([key, attr]) => (
-                            <AttributeCard
-                              key={key}
-                              attrKey={key}
-                              attr={attr}
-                            />
-                          )
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="item" className="space-y-4 mt-2">
-                  <div className="w-full p-6 rounded-xl bg-white dark:bg-slate-800/60 border border-border">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Settings className="w-5 h-5 text-foreground" />
-                      <h3 className="font-semibold">Atributos de Itens</h3>
-                    </div>
-                    {!itemAttributes ||
-                    Object.keys(itemAttributes).length === 0 ? (
-                      <p className="text-center py-8 text-muted-foreground">
-                        Nenhum atributo configurado.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {Object.entries(itemAttributes).map(([key, attr]) => (
-                          <AttributeCard
-                            key={key}
-                            attrKey={key}
-                            attr={attr}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
+                    </TabsContent>
+                  );
+                })}
               </Tabs>
             </div>
           </div>
