@@ -255,10 +255,11 @@ export default function TemplateEditPage() {
               <p className="text-sm text-muted-foreground">Editando template</p>
               <h1 className="text-xl font-bold truncate">{template.name}</h1>
             </div>
-            <div className="hidden sm:flex flex-col items-end text-right gap-0.5">
-              <p className="text-xs text-muted-foreground">
-                Criado em {formattedDate}
-              </p>
+            <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
+              <div className="text-right">
+                <p className="text-xs font-semibold">Status</p>
+                <p className="text-[11px] text-muted-foreground">{template.isActive ? 'Ativo' : 'Inativo'}</p>
+              </div>
             </div>
           </div>
         </Card>
