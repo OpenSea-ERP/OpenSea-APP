@@ -36,10 +36,10 @@ export const templatesConfig = defineEntityConfig<Template>()({
 
   // ======================== ROTAS ========================
   routes: {
-    list: '/stock/assets/templates',
-    detail: '/stock/assets/templates/:id',
-    create: '/stock/assets/templates/new',
-    edit: '/stock/assets/templates/:id/edit',
+    list: '/stock/templates',
+    detail: '/stock/templates/:id',
+    create: '/stock/templates/new',
+    edit: '/stock/templates/:id/edit',
   },
 
   // ======================== DISPLAY ========================

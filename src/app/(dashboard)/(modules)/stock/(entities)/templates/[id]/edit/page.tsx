@@ -5,11 +5,18 @@
 
 'use client';
 
-import { logger } from '@/lib/logger';
-import { PageBreadcrumb } from '@/components/layout/page-breadcrumb';
-import { Button } from '@/components/ui/button';
+import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
+import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { logger } from '@/lib/logger';
 import { templatesService } from '@/services/stock';
 import type {
   Template,
@@ -17,11 +24,11 @@ import type {
   UnitOfMeasure,
 } from '@/types/stock';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Loader2, Save, Trash2 } from 'lucide-react';
 import Image from 'next/image';
-import { GrObjectGroup } from 'react-icons/gr';
 import { useParams, useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { GrObjectGroup } from 'react-icons/gr';
 import { toast } from 'sonner';
 import {
   TemplateForm,
@@ -35,8 +42,18 @@ export default function TemplateEditPage() {
   const templateId = params.id as string;
   const formRef = useRef<TemplateFormRef>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const { data: template, isLoading } = useQuery<Template>({
+  // ============================================================================
+  // DATA FETCHING
+  // ============================================================================
+
+  const {
+    data: template,
+    isLoading,
+    error,
+  } = useQuery<Template>({
     queryKey: ['templates', templateId],
     queryFn: async () => {
       const response = await templatesService.getTemplate(templateId);
@@ -44,9 +61,9 @@ export default function TemplateEditPage() {
     },
   });
 
-  const handleBack = () => {
-    router.push(`/stock/templates/${templateId}`);
-  };
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
 
   const handleSave = async (data: {
     name: string;
@@ -71,16 +88,13 @@ export default function TemplateEditPage() {
       await queryClient.invalidateQueries({ queryKey: ['templates'] });
       toast.success('Template atualizado com sucesso!');
       router.push(`/stock/templates/${templateId}`);
-    } catch (error) {
+    } catch (err) {
       logger.error(
         'Failed to save template',
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          templateId,
-        }
+        err instanceof Error ? err : new Error(String(err)),
+        { templateId }
       );
       toast.error('Erro ao salvar template');
-      throw error;
     } finally {
       setIsSaving(false);
     }
@@ -93,102 +107,188 @@ export default function TemplateEditPage() {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await templatesService.deleteTemplate(templateId);
+      await queryClient.invalidateQueries({ queryKey: ['templates'] });
+      toast.success('Template excluído com sucesso!');
+      router.push('/stock/templates');
+    } catch (err) {
+      logger.error(
+        'Failed to delete template',
+        err instanceof Error ? err : new Error(String(err)),
+        { templateId }
+      );
+      toast.error('Erro ao excluir template');
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+    }
+  };
+
+  // ============================================================================
+  // ACTION BAR BUTTONS
+  // ============================================================================
+
+  const actionButtons: HeaderButton[] = [
+    {
+      id: 'delete',
+      title: 'Excluir',
+      icon: Trash2,
+      onClick: () => setDeleteModalOpen(true),
+      variant: 'destructive',
+      disabled: isDeleting,
+    },
+    {
+      id: 'save',
+      title: isSaving ? 'Salvando...' : 'Salvar alterações',
+      icon: isSaving ? Loader2 : Save,
+      onClick: handleSaveClick,
+      variant: 'default',
+      disabled: isSaving,
+    },
+  ];
+
+  // ============================================================================
+  // LOADING STATE
+  // ============================================================================
+
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Estoque', href: '/stock' },
+              { label: 'Templates', href: '/stock/templates' },
+              { label: '...' },
+              { label: 'Editar' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <GridLoading count={3} layout="list" size="md" />
+        </PageBody>
+      </PageLayout>
     );
   }
 
-  if (!template) {
+  // ============================================================================
+  // ERROR STATE
+  // ============================================================================
+
+  if (error || !template) {
     return (
-      <div className="container mx-auto p-6">
-        <Card className="p-12 text-center">
-          <GrObjectGroup className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-semibold mb-2">
-            {'Template não encontrado'}
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            O template que você está procurando não existe ou foi removido.
-          </p>
-          <Button onClick={handleBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-        </Card>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Estoque', href: '/stock' },
+              { label: 'Templates', href: '/stock/templates' },
+              { label: 'Erro' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <GridError
+            type="not-found"
+            title="Template não encontrado"
+            message="O template que você está procurando não existe ou foi removido."
+            action={{
+              label: 'Voltar para Templates',
+              onClick: () => router.push('/stock/templates'),
+            }}
+          />
+        </PageBody>
+      </PageLayout>
     );
   }
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
+  const formattedDate = new Date(template.createdAt).toLocaleDateString(
+    'pt-BR',
+    { day: '2-digit', month: 'long', year: 'numeric' }
+  );
 
   return (
-    <div className="min-h-screen px-6">
-      {/* Header */}
-      <div className="max-w-8xl flex w-full items-center justify-between mb-6">
-        <PageBreadcrumb
-          items={[
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={[
             { label: 'Estoque', href: '/stock' },
             { label: 'Templates', href: '/stock/templates' },
             {
-              label: template?.name || '...',
+              label: template.name,
               href: `/stock/templates/${templateId}`,
             },
-            { label: 'Editar', href: `/stock/templates/${templateId}/edit` },
+            { label: 'Editar' },
           ]}
+          buttons={actionButtons}
         />
-        <Button
-          size={'sm'}
-          onClick={handleSaveClick}
-          disabled={isSaving}
-          className="gap-2"
-        >
-          <Save className="h-4 w-4" />
-          {isSaving ? 'Salvando...' : 'Salvar alterações'}
-        </Button>
-      </div>
+      </PageHeader>
 
-      {/* Form */}
-      <div className="max-w-8xl mx-auto space-y-6">
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-linear-to-r from-slate-50 to-gray-50 dark:from-slate-800/50 dark:to-gray-800/50 border border-gray-200 dark:border-gray-700">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br from-slate-600 to-slate-800 shadow-lg">
-            {template.iconUrl ? (
-              <Image
-                src={template.iconUrl}
-                alt={template.name}
-                width={28}
-                height={28}
-                className="h-7 w-7 object-contain brightness-0 invert"
-                unoptimized
-              />
-            ) : (
-              <span className="text-2xl font-bold text-white">
-                {template.name.charAt(0).toUpperCase()}
-              </span>
-            )}
+      <PageBody>
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-purple-500 to-pink-600 shadow-lg">
+              {template.iconUrl ? (
+                <Image
+                  src={template.iconUrl}
+                  alt={template.name}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 object-contain brightness-0 invert"
+                  unoptimized
+                />
+              ) : (
+                <GrObjectGroup className="h-6 w-6 text-white" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-muted-foreground">Editando template</p>
+              <h1 className="text-xl font-bold truncate">{template.name}</h1>
+            </div>
+            <div className="hidden sm:flex flex-col items-end text-right gap-0.5">
+              <p className="text-xs text-muted-foreground">
+                Criado em {formattedDate}
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-sm text-muted-foreground">Editando template</p>
-            <h1 className="text-xl font-bold">{template.name}</h1>
-          </div>
-        </div>
+        </Card>
 
-        <TemplateForm
-          ref={formRef}
-          template={template}
-          onSubmit={async data => {
-            await handleSave({
-              name: data.name,
-              iconUrl: data.iconUrl,
-              unitOfMeasure: data.unitOfMeasure,
-              productAttributes: data.productAttributes || {},
-              variantAttributes: data.variantAttributes || {},
-              itemAttributes: data.itemAttributes || {},
-              specialModules: data.specialModules,
-            });
-          }}
-        />
-      </div>
-    </div>
+        {/* Template Form */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <TemplateForm
+            ref={formRef}
+            template={template}
+            onSubmit={async data => {
+              await handleSave({
+                name: data.name,
+                iconUrl: data.iconUrl,
+                unitOfMeasure: data.unitOfMeasure,
+                productAttributes: data.productAttributes || {},
+                variantAttributes: data.variantAttributes || {},
+                itemAttributes: data.itemAttributes || {},
+                specialModules: data.specialModules,
+              });
+            }}
+          />
+        </Card>
+      </PageBody>
+
+      {/* Delete Confirmation */}
+      <VerifyActionPinModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onSuccess={handleDelete}
+        title="Excluir Template"
+        description={`Digite seu PIN de ação para excluir o template "${template.name}". Esta ação não pode ser desfeita.`}
+      />
+    </PageLayout>
   );
 }

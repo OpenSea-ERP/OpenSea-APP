@@ -54,7 +54,7 @@ export function ViewModal({ isOpen, onClose, template }: ViewModalProps) {
                   onClick={() => {
                     onClose();
                     router.push(
-                      `/stock/assets/templates/${template.id}?action=edit`
+                      `/stock/templates/${template.id}/edit`
                     );
                   }}
                   className="gap-2"

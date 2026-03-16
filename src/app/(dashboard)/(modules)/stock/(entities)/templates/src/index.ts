@@ -21,6 +21,7 @@ export { CreateModal } from './modals/create-modal';
 export { DeleteConfirmModal } from './modals/delete-confirm-modal';
 export { DuplicateConfirmModal } from './modals/duplicate-confirm-modal';
 export { EditModal } from './modals/edit-modal';
+export { RenameTemplateModal } from './modals/rename-template-modal';
 export { ViewModal } from './modals/view-modal';
 
 // Types

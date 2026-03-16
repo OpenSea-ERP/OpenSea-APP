@@ -16,7 +16,6 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { MultiViewModal } from '@/components/stock/multi-view-modal';
 import {
   CoreProvider,
   EntityCard,
@@ -30,7 +29,7 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 import { productsService, templatesService } from '@/services/stock';
 import type { Template } from '@/types/stock';
-import { Import, Package, Plus } from 'lucide-react';
+import { Copy, Import, Package, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GrObjectGroup } from 'react-icons/gr';
@@ -41,11 +40,10 @@ import {
   deleteTemplate,
   DuplicateConfirmModal,
   duplicateTemplate,
-  EditModal,
   getUnitLabel,
+  RenameTemplateModal,
   templatesConfig,
   updateTemplate,
-  ViewModal,
 } from './src';
 
 type ActionButtonWithPermission = HeaderButton & {
@@ -60,9 +58,9 @@ export default function TemplatesPage() {
   // STATE
   // ============================================================================
 
-  const [multiViewOpen, setMultiViewOpen] = useState(false);
-  const [multiViewTemplates, setMultiViewTemplates] = useState<Template[]>([]);
   const [createFormKey, setCreateFormKey] = useState(0);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [renameTemplate, setRenameTemplate] = useState<Template | null>(null);
   const [productsCountByTemplateId, setProductsCountByTemplateId] = useState<
     Record<string, number>
   >({});
@@ -143,7 +141,6 @@ export default function TemplatesPage() {
       if (isMounted) {
         setProductsCountByTemplateId(prev => {
           const next = Object.fromEntries(entries);
-          // Evita re-render desnecessário se nada mudou
           const same =
             Object.keys(next).length === Object.keys(prev).length &&
             Object.entries(next).every(([k, v]) => prev[k] === v);
@@ -168,34 +165,36 @@ export default function TemplatesPage() {
   // HANDLERS
   // ============================================================================
 
-  // Context menu handlers
   const handleContextView = (ids: string[]) => {
-    if (ids.length > 1) {
-      // Visualização múltipla - usar MultiViewModal
-      const templates = page.filteredItems.filter(item =>
-        ids.includes(item.id)
-      );
-      setMultiViewTemplates(templates);
-      setMultiViewOpen(true);
-    } else {
-      // Visualização única - usar modal padrão
-      page.handlers.handleItemsView(ids);
+    if (ids.length === 1) {
+      router.push(`/stock/templates/${ids[0]}`);
     }
   };
 
   const handleContextEdit = (ids: string[]) => {
-    if (ids.length > 1) {
-      // Edição múltipla - usar MultiViewModal com ?action=edit
-      const templates = page.filteredItems.filter(item =>
-        ids.includes(item.id)
-      );
-      setMultiViewTemplates(templates);
-      setMultiViewOpen(true);
-    } else {
-      // Edição única - usar modal padrão ou navegar para página
-      page.handlers.handleItemsEdit(ids);
+    if (ids.length === 1) {
+      router.push(`/stock/templates/${ids[0]}/edit`);
     }
   };
+
+  const handleContextRename = useCallback(
+    (ids: string[]) => {
+      const template = crud.items?.find(t => t.id === ids[0]) || null;
+      setRenameTemplate(template);
+      setRenameModalOpen(true);
+    },
+    [crud.items]
+  );
+
+  const handleRenameSubmit = useCallback(
+    async (id: string, data: { name: string }) => {
+      await crud.update(id, data as Partial<Template>);
+      await crud.invalidate();
+      setRenameModalOpen(false);
+      setRenameTemplate(null);
+    },
+    [crud]
+  );
 
   const handleContextDuplicate = (ids: string[]) => {
     page.handlers.handleItemsDuplicate(ids);
@@ -205,6 +204,38 @@ export default function TemplatesPage() {
     page.modals.setItemsToDelete(ids);
     page.modals.open('delete');
   };
+
+  // ============================================================================
+  // CONTEXT MENU ACTIONS
+  // ============================================================================
+
+  const contextActions = useMemo(
+    () => [
+      {
+        id: 'rename',
+        label: 'Renomear',
+        icon: Pencil,
+        onClick: handleContextRename,
+        hidden: (ids: string[]) => ids.length > 1,
+      },
+      {
+        id: 'duplicate',
+        label: 'Duplicar',
+        icon: Copy,
+        onClick: handleContextDuplicate,
+        separator: 'before' as const,
+      },
+      {
+        id: 'delete',
+        label: 'Excluir',
+        icon: Trash2,
+        onClick: handleContextDelete,
+        variant: 'destructive' as const,
+        separator: 'before' as const,
+      },
+    ],
+    [handleContextRename]
+  );
 
   // ============================================================================
   // RENDER FUNCTIONS
@@ -222,8 +253,7 @@ export default function TemplatesPage() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={handleContextEdit}
-        onDuplicate={handleContextDuplicate}
-        onDelete={handleContextDelete}
+        actions={contextActions}
       >
         <EntityCard
           id={item.id}
@@ -268,8 +298,7 @@ export default function TemplatesPage() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={handleContextEdit}
-        onDuplicate={handleContextDuplicate}
-        onDelete={handleContextDelete}
+        actions={contextActions}
       >
         <EntityCard
           id={item.id}
@@ -314,7 +343,6 @@ export default function TemplatesPage() {
     [page.filteredItems]
   );
 
-  // Função de ordenação customizada por unidade de medida
   const customSortByUnit = (
     a: Template,
     b: Template,
@@ -466,11 +494,16 @@ export default function TemplatesPage() {
             />
           )}
 
-          {/* View Modal */}
-          <ViewModal
-            isOpen={page.modals.isOpen('view')}
-            onClose={() => page.modals.close('view')}
-            template={page.modals.viewingItem}
+          {/* Rename Modal */}
+          <RenameTemplateModal
+            isOpen={renameModalOpen}
+            onClose={() => {
+              setRenameModalOpen(false);
+              setRenameTemplate(null);
+            }}
+            template={renameTemplate}
+            isSubmitting={crud.isUpdating}
+            onSubmit={handleRenameSubmit}
           />
 
           {/* Create Modal */}
@@ -482,28 +515,8 @@ export default function TemplatesPage() {
             focusTrigger={createFormKey}
             onSubmit={async data => {
               await crud.create(data);
-              // Após criar, reseta o formulário e mantém o modal aberto focando no primeiro campo
               setCreateFormKey(prev => prev + 1);
             }}
-          />
-
-          {/* Edit Modal */}
-          <EditModal
-            isOpen={page.modals.isOpen('edit')}
-            onClose={() => page.modals.close('edit')}
-            template={page.modals.editingItem}
-            isSubmitting={crud.isUpdating}
-            onSubmit={async (id, data) => {
-              await crud.update(id, data);
-            }}
-          />
-
-          {/* Multi View Modal */}
-          <MultiViewModal
-            isOpen={multiViewOpen}
-            onClose={() => setMultiViewOpen(false)}
-            templates={multiViewTemplates}
-            availableTemplates={page.filteredItems}
           />
 
           {/* Delete Confirmation */}

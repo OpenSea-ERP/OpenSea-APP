@@ -16,16 +16,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Template, UnitOfMeasure } from '@/types/stock';
 import { UNIT_OF_MEASURE_LABELS } from '@/types/stock';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   ChevronDown,
-  ChevronUp,
+  Info,
   Layers,
+  type LucideIcon,
+  Puzzle,
   Plus,
   Settings,
+  ShieldCheck,
+  Shirt,
+  SlidersHorizontal,
   Trash2,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -35,6 +40,7 @@ import {
   MdVisibility,
   MdVisibilityOff,
 } from 'react-icons/md';
+import { GrObjectGroup } from 'react-icons/gr';
 import {
   Tooltip,
   TooltipContent,
@@ -117,6 +123,95 @@ const generateSlug = (label: string): string => {
     .replace(/^_+|_+$/g, '');
 };
 
+// ============================================================================
+// COLLAPSIBLE SECTION
+// ============================================================================
+
+function CollapsibleSection({
+  icon: Icon,
+  title,
+  subtitle,
+  children,
+  defaultOpen = true,
+}: {
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="space-y-3">
+        <button
+          type="button"
+          onClick={() => setOpen(prev => !prev)}
+          className="flex w-full items-center justify-between group cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <Icon className="h-5 w-5 text-foreground" />
+            <div className="text-left">
+              <h3 className="text-base font-semibold">{title}</h3>
+              <p className="text-sm text-muted-foreground">{subtitle}</p>
+            </div>
+          </div>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground group-hover:text-foreground group-hover:border-foreground/20 transition-colors">
+            <ChevronDown
+              className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            />
+          </div>
+        </button>
+        <div className="border-b border-border" />
+      </div>
+
+      {/* Content */}
+      {open && children}
+    </div>
+  );
+}
+
+// ============================================================================
+// MODULE CARD
+// ============================================================================
+
+function ModuleCard({
+  id,
+  title,
+  subtitle,
+  icon: Icon,
+  active,
+  onToggle,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: React.ElementType;
+  active: boolean;
+  onToggle: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between w-full rounded-lg border border-border bg-white dark:bg-slate-800/60 p-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-purple-500/20 to-pink-500/20">
+          <Icon className="h-4 w-4 text-purple-400" />
+        </div>
+        <div>
+          <p className="text-sm font-medium">{title}</p>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
+        </div>
+      </div>
+      <Switch id={id} checked={active} onCheckedChange={onToggle} />
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN FORM
+// ============================================================================
+
 export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
   function TemplateForm({ template, onSubmit }, ref) {
     const [name, setName] = useState('');
@@ -126,6 +221,7 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
     const [productAttributes, setProductAttributes] = useState<Attribute[]>([]);
     const [variantAttributes, setVariantAttributes] = useState<Attribute[]>([]);
     const [itemAttributes, setItemAttributes] = useState<Attribute[]>([]);
+    const [iconError, setIconError] = useState(false);
 
     // Função para formatar atributos
     const formatAttributes = (
@@ -243,9 +339,13 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
       setProductAttributes(initialValues.productAttributes);
       setVariantAttributes(initialValues.variantAttributes);
       setItemAttributes(initialValues.itemAttributes);
+      setIconError(false);
     }, [initialValues]);
 
-    // Funções para Products
+    // ========================================================================
+    // ATTRIBUTE CRUD FUNCTIONS
+    // ========================================================================
+
     const addProductAttribute = () => {
       setProductAttributes([
         ...productAttributes,
@@ -277,7 +377,6 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
       setProductAttributes(updated);
     };
 
-    // Funções para Variants
     const addVariantAttribute = () => {
       setVariantAttributes([
         ...variantAttributes,
@@ -309,7 +408,6 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
       setVariantAttributes(updated);
     };
 
-    // Funções para Items
     const addItemAttribute = () => {
       setItemAttributes([
         ...itemAttributes,
@@ -341,6 +439,10 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
       setItemAttributes(updated);
     };
 
+    // ========================================================================
+    // EXPANDED ATTRIBUTES STATE
+    // ========================================================================
+
     const [expandedAttributes, setExpandedAttributes] = useState<
       Record<string, boolean>
     >({});
@@ -351,6 +453,10 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
         [key]: !prev[key],
       }));
     };
+
+    // ========================================================================
+    // RENDER ATTRIBUTE FIELDS
+    // ========================================================================
 
     const renderAttributeFields = (
       attributes: Attribute[],
@@ -365,34 +471,58 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
       return attributes.map((attr, index) => {
         const attrKey = `${prefix}-${index}`;
         const isExpanded = expandedAttributes[attrKey] ?? false;
+        const displayName = attr.label || `Atributo ${index + 1}`;
 
         return (
           <div
             key={index}
-            className="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="rounded-lg border border-white/[0.06] bg-white/[0.02] overflow-hidden"
           >
-            {/* Linha principal sempre visível */}
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>Rótulo</Label>
+            {/* ── Header: nome resumido + ações ── */}
+            <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-white/[0.04] border-b border-white/[0.06]">
+              <span className="text-sm font-medium truncate">
+                {displayName}
+              </span>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => removeFn(index)}
+                      className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Remover</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {/* ── Body ── */}
+            <div className="p-4 space-y-4">
+              {/* Linha 1: Label + Tipo */}
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">
+                    Rótulo
+                  </Label>
                   <Input
                     placeholder="ex: Marca, Cor, Tamanho..."
                     value={attr.label}
                     onChange={e => updateFn(index, 'label', e.target.value)}
-                    className="h-11"
+                    className="h-10"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Tipo</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Tipo</Label>
                   <Select
                     value={attr.type}
                     onValueChange={value =>
                       updateFn(index, 'type', value as AttributeType)
                     }
                   >
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -404,125 +534,86 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Configurações</Label>
-                  <div className="flex gap-1">
-                    <Button
-                      type="button"
-                      variant={attr.required ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() =>
-                        updateFn(index, 'required', !attr.required)
-                      }
-                      className={
-                        attr.required
-                          ? 'flex-1 h-11'
-                          : 'flex-1 h-11 bg-white dark:bg-gray-900'
-                      }
-                    >
-                      {attr.required ? 'Obrigatório' : 'Opcional'}
-                    </Button>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              updateFn(index, 'enablePrint', !attr.enablePrint)
-                            }
-                            className={`h-11 w-11 p-0 ${
-                              attr.enablePrint
-                                ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500'
-                                : 'bg-white dark:bg-gray-900'
-                            }`}
-                          >
-                            {attr.enablePrint ? (
-                              <MdPrint className="h-4 w-4" />
-                            ) : (
-                              <MdPrintDisabled className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {attr.enablePrint
-                            ? 'Imprime na etiqueta'
-                            : 'Não imprime na etiqueta'}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              updateFn(index, 'enableView', !attr.enableView)
-                            }
-                            className={`h-11 w-11 p-0 ${
-                              attr.enableView
-                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500'
-                                : 'bg-white dark:bg-gray-900'
-                            }`}
-                          >
-                            {attr.enableView ? (
-                              <MdVisibility className="h-4 w-4" />
-                            ) : (
-                              <MdVisibilityOff className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {attr.enableView ? 'Visível' : 'Oculto'}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Ações</Label>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleAttributeExpanded(attrKey)}
-                      className="flex-1 h-11 bg-white dark:bg-gray-900 gap-2"
-                    >
-                      {isExpanded ? (
-                        <>
-                          <ChevronUp className="w-4 h-4" />
-                          Menos
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="w-4 h-4" />
-                          Mais
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFn(index)}
-                      className="h-11 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
               </div>
 
-              {/* Opções para select - sempre visível quando tipo é select */}
+              {/* Linha 2: Toggles + botão de configurações avançadas */}
+              <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => updateFn(index, 'required', !attr.required)}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer border ${
+                      attr.required
+                        ? 'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300'
+                        : 'border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-muted-foreground hover:bg-gray-50 dark:hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    <ShieldCheck className="h-3 w-3" />
+                    Preenchimento Obrigatório
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateFn(index, 'enablePrint', !attr.enablePrint)
+                    }
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer border ${
+                      attr.enablePrint
+                        ? 'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300'
+                        : 'border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-muted-foreground hover:bg-gray-50 dark:hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    {attr.enablePrint ? (
+                      <MdPrint className="h-3 w-3" />
+                    ) : (
+                      <MdPrintDisabled className="h-3 w-3" />
+                    )}
+                    Campo de Etiqueta
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateFn(index, 'enableView', !attr.enableView)
+                    }
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer border ${
+                      attr.enableView
+                        ? 'border-teal-600/25 dark:border-teal-500/20 bg-teal-50 dark:bg-teal-500/8 text-teal-700 dark:text-teal-300'
+                        : 'border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-muted-foreground hover:bg-gray-50 dark:hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    {attr.enableView ? (
+                      <MdVisibility className="h-3 w-3" />
+                    ) : (
+                      <MdVisibilityOff className="h-3 w-3" />
+                    )}
+                    Visível em Relatórios
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleAttributeExpanded(attrKey)}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer border shrink-0 ${
+                    isExpanded
+                      ? 'border-purple-600/25 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-500/8 text-purple-700 dark:text-purple-300'
+                      : 'border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-muted-foreground hover:bg-gray-50 dark:hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <Settings className="h-3 w-3" />
+                  Configurações Avançadas
+                  <ChevronDown
+                    className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+
+              {/* Condicional: Opções do tipo select */}
               {attr.type === 'select' && (
-                <div className="mt-4 space-y-2">
-                  <Label>Opções (separadas por vírgula)</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">
+                    Opções (separadas por vírgula)
+                  </Label>
                   <Input
                     placeholder="ex: Nike, Adidas, Puma"
                     value={attr.options?.join(', ') || ''}
@@ -533,71 +624,83 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
                         e.target.value.split(',').map(s => s.trim())
                       )
                     }
-                    className="h-11 bg-white dark:bg-gray-900"
+                    className="h-10"
                   />
                 </div>
               )}
             </div>
 
-            {/* Campos expandidos */}
+            {/* ── Expandido: campos avançados ── */}
             {isExpanded && (
-              <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-gray-700 bg-gray-100/50 dark:bg-gray-900/50">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Unidade de Medida</Label>
-                    <Input
-                      placeholder="ex: kg, cm, m²"
-                      value={attr.unitOfMeasure || ''}
-                      onChange={e =>
-                        updateFn(index, 'unitOfMeasure', e.target.value)
-                      }
-                      className="h-11 bg-white dark:bg-gray-900"
-                    />
+              <div className="px-4 pb-4 pt-4 border-t border-white/[0.06] bg-white/[0.02]">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">
+                        Unidade
+                      </Label>
+                      <Input
+                        placeholder="ex: kg, cm, m²"
+                        value={attr.unitOfMeasure || ''}
+                        onChange={e =>
+                          updateFn(index, 'unitOfMeasure', e.target.value)
+                        }
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">
+                        Máscara
+                      </Label>
+                      <Input
+                        placeholder="ex: ###.###-##"
+                        value={attr.mask || ''}
+                        onChange={e => updateFn(index, 'mask', e.target.value)}
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">
+                        Placeholder
+                      </Label>
+                      <Input
+                        placeholder="Texto de ajuda"
+                        value={attr.placeholder || ''}
+                        onChange={e =>
+                          updateFn(index, 'placeholder', e.target.value)
+                        }
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">
+                        Valor Padrão
+                      </Label>
+                      <Input
+                        placeholder="Valor inicial"
+                        value={attr.defaultValue || ''}
+                        onChange={e =>
+                          updateFn(index, 'defaultValue', e.target.value)
+                        }
+                        className="h-10"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Máscara</Label>
-                    <Input
-                      placeholder="ex: ###.###.###-##"
-                      value={attr.mask || ''}
-                      onChange={e => updateFn(index, 'mask', e.target.value)}
-                      className="h-11 bg-white dark:bg-gray-900"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Placeholder</Label>
-                    <Input
-                      placeholder="Texto de ajuda no campo"
-                      value={attr.placeholder || ''}
-                      onChange={e =>
-                        updateFn(index, 'placeholder', e.target.value)
-                      }
-                      className="h-11 bg-white dark:bg-gray-900"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Valor Padrão</Label>
-                    <Input
-                      placeholder="Valor inicial do campo"
-                      value={attr.defaultValue || ''}
-                      onChange={e =>
-                        updateFn(index, 'defaultValue', e.target.value)
-                      }
-                      className="h-11 bg-white dark:bg-gray-900"
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>Descrição</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">
+                      Descrição
+                    </Label>
                     <Textarea
                       placeholder="Descrição detalhada do atributo..."
                       value={attr.description || ''}
                       onChange={e =>
                         updateFn(index, 'description', e.target.value)
                       }
-                      className="bg-white dark:bg-gray-900 min-h-[80px] resize-none"
+                      className="min-h-[72px] resize-none"
                     />
                   </div>
                 </div>
@@ -608,14 +711,27 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
       });
     };
 
+    // ========================================================================
+    // RENDER
+    // ========================================================================
+
+    const hasValidIcon = iconUrl.trim() && !iconError;
+
     return (
-      <div className="space-y-6">
-        {/* Nome e Unidade em 2 colunas */}
-        <div className="px-6 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-8 px-6 py-4">
+        {/* ================================================================
+            SEÇÃO 1 — Informações Gerais
+            ================================================================ */}
+        <CollapsibleSection
+          icon={Info}
+          title="Informações Gerais"
+          subtitle="Defina o nome, unidade de medida e ícone do template"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Nome */}
             <div className="space-y-2">
               <Label htmlFor="name">
-                Nome do Template <span className="text-red-500">*</span>
+                Nome <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
@@ -627,6 +743,7 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
               />
             </div>
 
+            {/* Unidade de Medida */}
             <div className="space-y-2">
               <Label htmlFor="unitOfMeasure">
                 Unidade de Medida <span className="text-red-500">*</span>
@@ -654,220 +771,213 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
                 </SelectContent>
               </Select>
             </div>
-          </div>
-        </div>
 
-        {/* URL do ícone e Preview em 2 colunas */}
-        <div className="px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            {/* Ícone (URL + Preview inline) */}
             <div className="space-y-2">
-              <Label htmlFor="iconUrl">URL do Ícone (SVG)</Label>
-              <Input
-                id="iconUrl"
-                placeholder="https://exemplo.com/icone.svg"
-                value={iconUrl}
-                onChange={e => setIconUrl(e.target.value)}
-                className="h-11"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Preview do Ícone</Label>
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-slate-600 to-slate-800 overflow-hidden">
-                {iconUrl ? (
-                  <Image
-                    src={iconUrl}
-                    alt="Preview"
-                    width={24}
-                    height={24}
-                    className="h-6 w-6 object-contain brightness-0 invert"
-                    unoptimized
-                    onError={e => {
-                      (e.target as HTMLImageElement).style.display = 'none';
+              <Label htmlFor="iconUrl">Ícone (SVG)</Label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    id="iconUrl"
+                    placeholder="https://exemplo.com/icone.svg"
+                    value={iconUrl}
+                    onChange={e => {
+                      setIconUrl(e.target.value);
+                      setIconError(false);
                     }}
+                    className="h-11"
                   />
-                ) : (
-                  <span className="text-white text-xs">Sem ícone</span>
-                )}
+                </div>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border overflow-hidden">
+                  {hasValidIcon ? (
+                    <Image
+                      src={iconUrl}
+                      alt="Ícone"
+                      width={22}
+                      height={22}
+                      className="h-[22px] w-[22px] object-contain dark:brightness-0 dark:invert"
+                      unoptimized
+                      onError={() => setIconError(true)}
+                    />
+                  ) : (
+                    <GrObjectGroup className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
-        {/* Módulos Especiais */}
-        <div className="px-6">
+        {/* ================================================================
+            SEÇÃO 2 — Módulos Especiais
+            ================================================================ */}
+        <CollapsibleSection
+          icon={Puzzle}
+          title="Módulos Especiais"
+          subtitle="Funcionalidades adicionais habilitadas para produtos deste template"
+        >
+
           <div className="space-y-3">
-            <div>
-              <h3 className="font-semibold text-sm">Módulos Especiais</h3>
-              <p className="text-xs text-muted-foreground">
-                Funcionalidades adicionais habilitadas para produtos deste
-                template
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="care-instructions-module"
-                checked={specialModules.includes('CARE_INSTRUCTIONS')}
-                onCheckedChange={checked => {
-                  setSpecialModules(prev =>
-                    checked
-                      ? [...prev, 'CARE_INSTRUCTIONS']
-                      : prev.filter(m => m !== 'CARE_INSTRUCTIONS')
-                  );
-                }}
-              />
-              <Label
-                htmlFor="care-instructions-module"
-                className="cursor-pointer text-sm"
-              >
-                Conservacao Textil (instruções de cuidado ISO 3758)
-              </Label>
-            </div>
+            <ModuleCard
+              id="care-instructions-module"
+              title="Conservação Têxtil"
+              subtitle="Instruções de cuidado segundo a norma ISO 3758"
+              icon={Shirt}
+              active={specialModules.includes('CARE_INSTRUCTIONS')}
+              onToggle={checked => {
+                setSpecialModules(prev =>
+                  checked
+                    ? [...prev, 'CARE_INSTRUCTIONS']
+                    : prev.filter(m => m !== 'CARE_INSTRUCTIONS')
+                );
+              }}
+            />
           </div>
-        </div>
+        </CollapsibleSection>
 
-        {/* Tabs para atributos */}
-        <Tabs defaultValue="product" className="w-full">
-          <div className="w-full px-6">
-            <TabsList className="grid w-full grid-cols-3 h-12">
+        {/* ================================================================
+            SEÇÃO 3 — Atributos
+            ================================================================ */}
+        <CollapsibleSection
+          icon={SlidersHorizontal}
+          title="Atributos"
+          subtitle="Configure os campos personalizados para produtos, variantes e itens"
+        >
+
+          <Tabs defaultValue="product" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 h-12 mb-4">
               <TabsTrigger value="product" className="gap-2">
-                <Layers className="w-4 h-4" />
+                <Layers className="w-4 h-4 hidden sm:inline" />
                 Produtos
               </TabsTrigger>
               <TabsTrigger value="variant" className="gap-2">
-                <Layers className="w-4 h-4" />
+                <Layers className="w-4 h-4 hidden sm:inline" />
                 Variantes
               </TabsTrigger>
               <TabsTrigger value="item" className="gap-2">
-                <Settings className="w-4 h-4" />
+                <Settings className="w-4 h-4 hidden sm:inline" />
                 Itens
               </TabsTrigger>
             </TabsList>
-          </div>
 
-          {/* Tab: Produtos */}
-          <TabsContent
-            value="product"
-            className="w-full space-y-4 mt-6 px-6 pb-6"
-          >
-            <div className="w-full p-6 rounded-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-semibold">Atributos de Produtos</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Defina os campos que cada produto terá
-                  </p>
+            {/* Tab: Produtos */}
+            <TabsContent value="product" className="w-full space-y-4 mt-2">
+              <div className="w-full p-6 rounded-xl bg-white dark:bg-slate-800/60 border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold">Atributos de Produtos</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Defina os campos que cada produto terá
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addProductAttribute}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addProductAttribute}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar
-                </Button>
+
+                {productAttributes.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum atributo adicionado. Clique em
+                    &quot;Adicionar&quot; para começar.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {renderAttributeFields(
+                      productAttributes,
+                      updateProductAttribute,
+                      removeProductAttribute,
+                      'product'
+                    )}
+                  </div>
+                )}
               </div>
+            </TabsContent>
 
-              {productAttributes.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Nenhum atributo adicionado. Clique em &quot;Adicionar&quot;
-                  para começar.
+            {/* Tab: Variantes */}
+            <TabsContent value="variant" className="w-full space-y-4 mt-2">
+              <div className="w-full p-6 rounded-xl bg-white dark:bg-slate-800/60 border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold">Atributos de Variantes</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Defina os campos que cada variante terá
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addVariantAttribute}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar
+                  </Button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {renderAttributeFields(
-                    productAttributes,
-                    updateProductAttribute,
-                    removeProductAttribute,
-                    'product'
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
 
-          {/* Tab: Variantes */}
-          <TabsContent
-            value="variant"
-            className="w-full space-y-4 mt-6 px-6 pb-6"
-          >
-            <div className="w-full p-6 rounded-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-semibold">Atributos de Variantes</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Defina os campos que cada variante terá
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addVariantAttribute}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar
-                </Button>
+                {variantAttributes.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum atributo adicionado. Clique em
+                    &quot;Adicionar&quot; para começar.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {renderAttributeFields(
+                      variantAttributes,
+                      updateVariantAttribute,
+                      removeVariantAttribute,
+                      'variant'
+                    )}
+                  </div>
+                )}
               </div>
+            </TabsContent>
 
-              {variantAttributes.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Nenhum atributo adicionado. Clique em &quot;Adicionar&quot;
-                  para começar.
+            {/* Tab: Itens */}
+            <TabsContent value="item" className="w-full space-y-4 mt-2">
+              <div className="w-full p-6 rounded-xl bg-white dark:bg-slate-800/60 border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold">Atributos de Itens</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Defina os campos que cada item terá
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addItemAttribute}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar
+                  </Button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {renderAttributeFields(
-                    variantAttributes,
-                    updateVariantAttribute,
-                    removeVariantAttribute,
-                    'variant'
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
 
-          {/* Tab: Itens */}
-          <TabsContent value="item" className="w-full space-y-4 mt-6 px-6 pb-6">
-            <div className="w-full p-6 rounded-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-semibold">Atributos de Itens</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Defina os campos que cada item terá
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addItemAttribute}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar
-                </Button>
+                {itemAttributes.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum atributo adicionado. Clique em
+                    &quot;Adicionar&quot; para começar.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {renderAttributeFields(
+                      itemAttributes,
+                      updateItemAttribute,
+                      removeItemAttribute,
+                      'item'
+                    )}
+                  </div>
+                )}
               </div>
-
-              {itemAttributes.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Nenhum atributo adicionado. Clique em &quot;Adicionar&quot;
-                  para começar.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {renderAttributeFields(
-                    itemAttributes,
-                    updateItemAttribute,
-                    removeItemAttribute,
-                    'item'
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+        </CollapsibleSection>
       </div>
     );
   }

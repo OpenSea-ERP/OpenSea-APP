@@ -94,9 +94,11 @@ Filters go **inside** EntityGrid via `toolbarStart` prop, NOT as a separate `<di
     <EntityGrid toolbarStart={/* filters */} ... />
   )}
   {hasSelection && <SelectionToolbar ... />}
-  {/* Modals: Create, Edit, View, Delete */}
+  {/* Modals: Rename, Create, Delete, Duplicate — NO View/Edit modals */}
 </PageBody>
 ```
+
+**Important**: We no longer use View or Edit modals on listing pages. View navigates to `/entity/[id]`, Edit navigates to `/entity/[id]/edit`.
 
 ### 5. EntityContextMenu — Action Group Order
 
@@ -166,10 +168,24 @@ const api = {
 
 ### 9. Detail/Edit Pages — Visual Patterns
 
-- All `<Card>` inside detail pages: `className="bg-white/5 p-5"`
-- Row items: `className="bg-linear-to-r from-slate-200/80 dark:from-slate-800 to-transparent"`
-- TabsList: always `className="grid w-full grid-cols-N h-10 mb-4"`
-- Title card: Icon with gradient + title + subtitle + date badges (Calendar blue, Clock amber)
+- **Layout**: Always `PageLayout > PageHeader (PageActionBar) > PageBody`
+- **Identity Card**: `<Card className="bg-white/5 p-5">` — icon + name + creation date (no chips/badges)
+- **Form Card**: `<Card className="bg-white/5 py-2 overflow-hidden">` — reduced vertical padding
+- **Action Bar**: Delete (destructive) + Save (default) buttons, `size="sm"`
+- **Loading/Error**: Full layout with `PageActionBar` breadcrumbs + `GridLoading`/`GridError`
+- **TabsList**: `className="grid w-full grid-cols-N h-12 mb-4"`
+- **ModuleCard bg**: `bg-white dark:bg-slate-800/60 border border-border`
+- **Attribute wrapper bg**: Same as ModuleCard (`bg-white dark:bg-slate-800/60 border border-border`)
+- **Form sections**: Use `CollapsibleSection` with icon + title + subtitle + collapse toggle
+- **Toggle chips**: Dual-theme (light: `bg-{color}-50 text-{color}-700`, dark: `bg-{color}-500/8 text-{color}-300`)
+
+### 9.1 Color System
+
+- **Destructive = Rose** (NOT Red) — warmer tone, better UI integration
+- **Button default**: `shadow-sm` (not `shadow-lg`)
+- **Button destructive**: flat (no shadow)
+- **Button sm**: `h-9 px-2.5 rounded-lg text-sm` — compact for action bars
+- **Tabs light**: `slate-100/0.6` bg (not heavy gray)
 
 ### 10. Labels & Text — Portuguese
 

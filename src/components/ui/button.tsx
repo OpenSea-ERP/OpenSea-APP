@@ -10,9 +10,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-[rgb(var(--btn-primary-bg))] hover:bg-[rgb(var(--btn-primary-bg-hover))] text-[rgb(var(--btn-primary-text))] border-[var(--btn-primary-border)] shadow-lg',
+          'bg-[rgb(var(--btn-primary-bg))] hover:bg-[rgb(var(--btn-primary-bg-hover))] text-[rgb(var(--btn-primary-text))] border-[var(--btn-primary-border)] shadow-sm',
         destructive:
-          'bg-[rgb(var(--btn-destructive-bg))] hover:bg-[rgb(var(--btn-destructive-bg-hover))] text-[rgb(var(--btn-destructive-text))] border-[var(--btn-destructive-border)] shadow-lg',
+          'bg-[rgb(var(--btn-destructive-bg))] hover:bg-[rgb(var(--btn-destructive-bg-hover))] text-[rgb(var(--btn-destructive-text))] border-[var(--btn-destructive-border)]',
         outline:
           'border border-[rgb(var(--btn-outline-border))] bg-[var(--btn-outline-bg)] hover:bg-[rgb(var(--btn-outline-bg-hover))] text-[rgb(var(--btn-outline-text))]',
         secondary:
@@ -24,7 +24,7 @@ const buttonVariants = cva(
       },
       size: {
         default: 'h-11 px-6 rounded-2xl',
-        sm: 'h-9 px-4 rounded-xl',
+        sm: 'h-9 px-2.5 rounded-lg text-sm',
         plan: 'h-9',
         lg: 'h-12 px-8 rounded-2xl',
         icon: 'size-10 rounded-2xl',

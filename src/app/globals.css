@@ -109,6 +109,18 @@
   --os-purple-400: 192 132 252;
   --os-purple-500: 168 85 247;
   --os-purple-600: 147 51 234;
+
+  /* Rose (Destructive) */
+  --os-rose-50: 255 241 242;
+  --os-rose-100: 255 228 230;
+  --os-rose-200: 254 205 211;
+  --os-rose-300: 253 164 175;
+  --os-rose-400: 251 113 133;
+  --os-rose-500: 244 63 94;
+  --os-rose-600: 225 29 72;
+  --os-rose-700: 190 18 60;
+  --os-rose-800: 159 18 57;
+  --os-rose-900: 136 19 55;
 }
 
 /* ===========================================
@@ -129,9 +141,9 @@
   --color-foreground-inverted: var(--os-white);
 
   /* === PRIMARY (Actions, Links) === */
-  --color-primary: var(--os-blue-500);
-  --color-primary-hover: var(--os-blue-600);
-  --color-primary-active: var(--os-blue-700);
+  --color-primary: var(--os-blue-600);
+  --color-primary-hover: var(--os-blue-700);
+  --color-primary-active: var(--os-blue-800);
   --color-primary-subtle: var(--os-blue-50);
   --color-primary-foreground: var(--os-white);
 
@@ -141,9 +153,9 @@
   --color-secondary-foreground: var(--os-slate-800);
 
   /* === DESTRUCTIVE === */
-  --color-destructive: var(--os-red-500);
-  --color-destructive-hover: var(--os-red-600);
-  --color-destructive-subtle: var(--os-red-50);
+  --color-destructive: var(--os-rose-500);
+  --color-destructive-hover: var(--os-rose-600);
+  --color-destructive-subtle: var(--os-rose-50);
   --color-destructive-foreground: var(--os-white);
 
   /* === SUCCESS === */
@@ -162,7 +174,7 @@
   --color-border: var(--os-gray-200);
   --color-border-muted: var(--os-gray-100);
   --color-border-focus: var(--os-blue-500);
-  --color-border-error: var(--os-red-500);
+  --color-border-error: var(--os-rose-500);
 
   /* === RING (Focus) === */
   --color-ring: var(--os-blue-500);
@@ -211,9 +223,9 @@
   --color-foreground-inverted: var(--os-white);
 
   /* === PRIMARY (Actions, Links) === */
-  --color-primary: var(--os-blue-500);
-  --color-primary-hover: var(--os-blue-600);
-  --color-primary-active: var(--os-blue-700);
+  --color-primary: var(--os-blue-600);
+  --color-primary-hover: var(--os-blue-700);
+  --color-primary-active: var(--os-blue-800);
   --color-primary-subtle: var(--os-blue-50);
   --color-primary-foreground: var(--os-white);
 
@@ -223,9 +235,9 @@
   --color-secondary-foreground: var(--os-slate-800);
 
   /* === DESTRUCTIVE === */
-  --color-destructive: var(--os-red-500);
-  --color-destructive-hover: var(--os-red-600);
-  --color-destructive-subtle: var(--os-red-50);
+  --color-destructive: var(--os-rose-500);
+  --color-destructive-hover: var(--os-rose-600);
+  --color-destructive-subtle: var(--os-rose-50);
   --color-destructive-foreground: var(--os-white);
 
   /* === SUCCESS === */
@@ -244,7 +256,7 @@
   --color-border: var(--os-gray-200);
   --color-border-muted: var(--os-gray-100);
   --color-border-focus: var(--os-blue-500);
-  --color-border-error: var(--os-red-500);
+  --color-border-error: var(--os-rose-500);
 
   /* === RING (Focus) === */
   --color-ring: var(--os-blue-500);
@@ -305,9 +317,9 @@
   --color-secondary-foreground: var(--os-slate-50);
 
   /* === DESTRUCTIVE === */
-  --color-destructive: var(--os-red-600);
-  --color-destructive-hover: var(--os-red-500);
-  --color-destructive-subtle: var(--os-red-900);
+  --color-destructive: var(--os-rose-600);
+  --color-destructive-hover: var(--os-rose-700);
+  --color-destructive-subtle: var(--os-rose-900);
   --color-destructive-foreground: var(--os-white);
 
   /* === SUCCESS === */
@@ -326,7 +338,7 @@
   --color-border: var(--os-slate-700);
   --color-border-muted: var(--os-slate-800);
   --color-border-focus: var(--os-blue-500);
-  --color-border-error: var(--os-red-500);
+  --color-border-error: var(--os-rose-500);
 
   /* === RING (Focus) === */
   --color-ring: var(--os-blue-500);
@@ -464,9 +476,9 @@
   --badge-secondary-text: rgb(var(--os-gray-400));
   --badge-secondary-border: rgb(var(--os-gray-500) / 0.3);
 
-  --badge-destructive-bg: rgb(var(--os-red-500) / 0.2);
-  --badge-destructive-text: rgb(var(--os-red-400));
-  --badge-destructive-border: rgb(var(--os-red-500) / 0.3);
+  --badge-destructive-bg: rgb(var(--os-rose-500) / 0.12);
+  --badge-destructive-text: rgb(var(--os-rose-400));
+  --badge-destructive-border: rgb(var(--os-rose-500) / 0.2);
 
   --badge-success-bg: rgb(var(--os-green-500) / 0.2);
   --badge-success-text: rgb(var(--os-green-400));
@@ -510,12 +522,12 @@
   --dropdown-shortcut: var(--color-foreground-muted);
 
   /* ==================== TABS ==================== */
-  --tabs-list-bg: rgb(var(--os-gray-100) / 0.8);
+  --tabs-list-bg: rgb(var(--os-slate-100) / 0.6);
   --tabs-trigger-text: var(--color-foreground-muted);
-  --tabs-trigger-hover: rgb(var(--os-white) / 0.5);
+  --tabs-trigger-hover: rgb(var(--os-white) / 0.7);
   --tabs-trigger-active-bg: rgb(var(--os-white));
   --tabs-trigger-active-text: var(--color-foreground);
-  --tabs-trigger-active-shadow: rgb(var(--shadow-color) / 0.05);
+  --tabs-trigger-active-shadow: rgb(var(--shadow-color) / 0.04);
 
   /* ==================== TOOLTIP ==================== */
   --tooltip-bg: var(--color-foreground);
@@ -590,9 +602,9 @@
   --badge-secondary-text: rgb(var(--os-gray-600));
   --badge-secondary-border: rgb(var(--os-gray-500) / 0.2);
 
-  --badge-destructive-bg: rgb(var(--os-red-500) / 0.1);
-  --badge-destructive-text: rgb(var(--os-red-700));
-  --badge-destructive-border: rgb(var(--os-red-500) / 0.2);
+  --badge-destructive-bg: rgb(var(--os-rose-500) / 0.08);
+  --badge-destructive-text: rgb(var(--os-rose-600));
+  --badge-destructive-border: rgb(var(--os-rose-500) / 0.15);
 
   --badge-success-bg: rgb(var(--os-green-500) / 0.1);
   --badge-success-text: rgb(var(--os-green-700));
