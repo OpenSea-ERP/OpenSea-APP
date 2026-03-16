@@ -1,5 +1,6 @@
 # Logs
 .claude
+.playwright-cli/
 nul
 # Logs
 logs
