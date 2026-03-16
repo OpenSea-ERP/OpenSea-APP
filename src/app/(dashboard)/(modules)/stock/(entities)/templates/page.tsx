@@ -362,7 +362,7 @@ export default function TemplatesPage() {
         >
           <Link
             href={`/stock/products?template=${item.id}`}
-            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium whitespace-nowrap bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-colors"
             onClick={e => e.stopPropagation()}
           >
             <Package className="h-3.5 w-3.5" />
