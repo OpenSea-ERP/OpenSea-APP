@@ -506,7 +506,7 @@ export function useDeleteMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => emailService.deleteMessage(id),
-    onMutate: async (id) => {
+    onMutate: async id => {
       await queryClient.cancelQueries({ queryKey: ['email', 'messages'] });
 
       // Remove message from all infinite query pages
@@ -770,7 +770,7 @@ export function useBulkDelete() {
   return useMutation({
     mutationFn: (ids: string[]) =>
       runBulkQueue(ids, id => emailService.deleteMessage(id)),
-    onMutate: async (ids) => {
+    onMutate: async ids => {
       await queryClient.cancelQueries({ queryKey: ['email', 'messages'] });
 
       const idSet = new Set(ids);
