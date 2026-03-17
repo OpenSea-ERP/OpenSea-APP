@@ -593,14 +593,18 @@ export function useSendMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: emailService.sendMessage.bind(emailService),
+    onMutate: () => {
+      toast.loading('Enviando e-mail...', { id: 'email-send' });
+    },
     onSuccess: async () => {
-      toast.success('E-mail enviado com sucesso');
-      await queryClient.invalidateQueries({ queryKey: ['email'] });
+      toast.success('E-mail enviado com sucesso', { id: 'email-send' });
+      await queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
+      await queryClient.invalidateQueries({ queryKey: ['email', 'accounts'] });
     },
     onError: (error: Error) => {
       const message = error.message || 'Erro desconhecido';
       console.error('[Email Send] Falha ao enviar:', message, error);
-      toast.error(`Falha ao enviar e-mail: ${message}`);
+      toast.error(`Falha ao enviar e-mail: ${message}`, { id: 'email-send' });
     },
   });
 }
@@ -611,7 +615,7 @@ export function useSaveDraft() {
     mutationFn: emailService.saveDraft.bind(emailService),
     onSuccess: async () => {
       toast.success('Rascunho salvo');
-      await queryClient.invalidateQueries({ queryKey: ['email'] });
+      await queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
     },
     onError: () => toast.error('Falha ao salvar rascunho'),
   });

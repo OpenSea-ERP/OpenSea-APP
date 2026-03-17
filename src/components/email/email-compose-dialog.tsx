@@ -568,38 +568,40 @@ export function EmailComposeDialog({
       attachments: attachmentFiles.length,
     });
 
-    sendMutation.mutate(
-      {
-        accountId,
-        to: toChips,
-        cc: ccChips.length ? ccChips : undefined,
-        bcc: bccChips.length ? bccChips : undefined,
-        subject,
-        bodyHtml,
-        ...(mode.type === 'reply' || mode.type === 'replyAll'
-          ? {
-              inReplyTo: mode.rfcMessageId ?? undefined,
-              references: mode.rfcMessageId ? [mode.rfcMessageId] : undefined,
-            }
-          : {}),
-        ...(mode.type === 'forward' && mode.rfcMessageId
-          ? { references: [mode.rfcMessageId] }
-          : {}),
-        attachments: attachmentFiles.length ? attachmentFiles : undefined,
+    // Gmail-style: close dialog immediately, send in background
+    const sendData = {
+      accountId,
+      to: toChips,
+      cc: ccChips.length ? ccChips : undefined,
+      bcc: bccChips.length ? bccChips : undefined,
+      subject,
+      bodyHtml,
+      ...(mode.type === 'reply' || mode.type === 'replyAll'
+        ? {
+            inReplyTo: mode.rfcMessageId ?? undefined,
+            references: mode.rfcMessageId ? [mode.rfcMessageId] : undefined,
+          }
+        : {}),
+      ...(mode.type === 'forward' && mode.rfcMessageId
+        ? { references: [mode.rfcMessageId] }
+        : {}),
+      attachments: attachmentFiles.length ? attachmentFiles : undefined,
+    };
+
+    sendMutation.mutate(sendData, {
+      onSuccess: () => {
+        // Fire-and-forget sync — do NOT await or chain errors,
+        // otherwise a 401 on sync would log the user out.
+        syncMutation.mutate(accountId, {
+          onError: () => {},
+        });
       },
-      {
-        onSuccess: () => {
-          setAttachmentFiles([]);
-          localStorage.removeItem(DRAFT_STORAGE_KEY);
-          onClose();
-          // Fire-and-forget sync — do NOT await or chain errors,
-          // otherwise a 401 on sync would log the user out.
-          syncMutation.mutate(accountId, {
-            onError: () => {},
-          });
-        },
-      }
-    );
+    });
+
+    // Close immediately — toast feedback comes from the hook
+    setAttachmentFiles([]);
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    onClose();
   }, [
     editor,
     toChips,
@@ -1555,14 +1557,10 @@ export function EmailComposeDialog({
               <Button
                 size="default"
                 className="gap-2 rounded-xl px-5"
-                disabled={isBusy || toChips.length === 0 || !accountId}
+                disabled={toChips.length === 0 || !accountId}
                 onClick={handleSend}
               >
-                {sendMutation.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
+                <Send className="size-4" />
                 Enviar
               </Button>
             </div>
