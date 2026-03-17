@@ -10,10 +10,16 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import type { EmailAccount, EmailFolder } from '@/types/email';
+import { useEmailAccountsHealth } from '@/hooks/email/use-email';
+import type {
+  EmailAccount,
+  EmailAccountHealth,
+  EmailFolder,
+} from '@/types/email';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
+  AlertTriangle,
   ChevronDown,
   Folder,
   Layers,
@@ -92,6 +98,16 @@ function groupAccounts(accounts: EmailAccount[]): AccountGroup[] {
   return groups;
 }
 
+function getAccountHealthIssues(health: EmailAccountHealth): string[] {
+  const issues: string[] = [];
+  if (health.imap.status === 'error') issues.push('IMAP: Falha na conexão');
+  if (health.smtp.status === 'error') issues.push('SMTP: Falha na conexão');
+  if (health.worker.status === 'stale')
+    issues.push('Worker: Sem sync recente');
+  if (health.worker.status === 'error') issues.push('Worker: Falha no sync');
+  return issues;
+}
+
 export function EmailSidebar({
   accounts,
   folders,
@@ -139,6 +155,18 @@ export function EmailSidebar({
           0
         )
       : Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
+
+  // Health checks for all accounts
+  const accountIds = useMemo(() => accounts.map(a => a.id), [accounts]);
+  const healthQueries = useEmailAccountsHealth(accountIds);
+  const healthByAccountId = useMemo(() => {
+    const map: Record<string, EmailAccountHealth> = {};
+    accountIds.forEach((id, i) => {
+      const data = healthQueries[i]?.data;
+      if (data) map[id] = data;
+    });
+    return map;
+  }, [accountIds, healthQueries]);
 
   // Group accounts by personal vs team
   const accountGroups = useMemo(() => groupAccounts(accounts), [accounts]);
@@ -305,6 +333,26 @@ export function EmailSidebar({
                                 </p>
                               )}
                             </div>
+
+                            {/* Health alert icon */}
+                            {(() => {
+                              const health = healthByAccountId[account.id];
+                              if (!health) return null;
+                              const issues = getAccountHealthIssues(health);
+                              if (issues.length === 0) return null;
+                              return (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="shrink-0">
+                                      <AlertTriangle className="size-3.5 text-amber-500" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {issues.join(' \u2022 ')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })()}
 
                             {/* Unread badge — hidden on group hover (replaced by settings icon) */}
                             {accountUnread > 0 && (

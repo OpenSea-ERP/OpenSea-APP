@@ -1,4 +1,5 @@
 export { EmailAccountEditDialog } from './email-account-edit-dialog';
+export { EmailHealthCards } from './email-health-cards';
 export { EmailAccountWizard } from './email-account-wizard';
 export { EmailComposeDialog } from './email-compose-dialog';
 export { EmailEmptyState } from './email-empty-state';

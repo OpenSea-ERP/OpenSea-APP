@@ -64,6 +64,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { EmailHealthCards } from './email-health-cards';
 
 type SectionId = 'general' | 'signature' | 'connection';
 
@@ -763,6 +764,9 @@ export function EmailAccountEditDialog({
               {/* ─── CONEXÃO ──────────────────────────────────── */}
               {activeSection === 'connection' && (
                 <>
+                  {/* Health Cards */}
+                  <EmailHealthCards accountId={account.id} />
+
                   {/* IMAP */}
                   <div className="space-y-3">
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
