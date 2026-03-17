@@ -405,11 +405,11 @@ export function CreateProductForm({
         </div>
       </div>
 
-      {/* Atributos Personalizados */}
+      {/* Atributos Exclusivos */}
       {selectedTemplate?.productAttributes &&
         Object.keys(selectedTemplate.productAttributes).length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">Atributos Personalizados</h3>
+            <h3 className="text-sm font-medium">Atributos Exclusivos</h3>
             <div className="grid grid-cols-3 gap-4">
               {Object.entries(selectedTemplate.productAttributes)
                 .sort((a, b) => {

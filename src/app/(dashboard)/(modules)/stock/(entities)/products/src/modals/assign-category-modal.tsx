@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Combobox } from '@/components/ui/combobox';
+import { CategoryCombobox } from '@/components/ui/category-combobox';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,9 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useCategories } from '@/hooks/stock/use-categories';
+import type { Category } from '@/types/stock';
 import { Loader2, Tag, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 interface AssignCategoryModalProps {
   isOpen: boolean;
@@ -29,13 +30,9 @@ export function AssignCategoryModal({
 }: AssignCategoryModalProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const { data: categoriesData } = useCategories();
-
-  const categoryOptions = useMemo(() => {
-    const categories = categoriesData?.categories || [];
-    return categories
-      .filter(c => c.isActive)
-      .map(c => ({ value: c.id, label: c.name }));
-  }, [categoriesData]);
+  const categories =
+    (categoriesData as { categories: Category[] } | undefined)?.categories ??
+    [];
 
   const count = productIds.length;
   const title =
@@ -74,13 +71,11 @@ export function AssignCategoryModal({
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label>Categoria</Label>
-            <Combobox
-              options={categoryOptions}
+            <CategoryCombobox
+              categories={categories}
               value={selectedCategoryId}
               onValueChange={setSelectedCategoryId}
               placeholder="Selecione uma categoria..."
-              searchPlaceholder="Buscar categoria..."
-              emptyText="Nenhuma categoria encontrada."
             />
           </div>
 

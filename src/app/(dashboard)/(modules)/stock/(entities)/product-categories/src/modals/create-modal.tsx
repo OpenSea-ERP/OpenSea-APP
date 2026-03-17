@@ -6,15 +6,9 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { CategoryCombobox } from '@/components/ui/category-combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   StepWizardDialog,
   type WizardStep,
@@ -22,7 +16,7 @@ import {
 import { categoriesService } from '@/services/stock';
 import type { Category } from '@/types/stock';
 import { logger } from '@/lib/logger';
-import { FolderTree, Loader2, TextCursorInput } from 'lucide-react';
+import { Loader2, TextCursorInput } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 interface CreateModalProps {
@@ -33,7 +27,7 @@ interface CreateModalProps {
 
 export function CreateModal({ isOpen, onClose, onSubmit }: CreateModalProps) {
   const [name, setName] = useState('');
-  const [parentId, setParentId] = useState('none');
+  const [parentId, setParentId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -48,7 +42,7 @@ export function CreateModal({ isOpen, onClose, onSubmit }: CreateModalProps) {
   useEffect(() => {
     if (!isOpen) {
       setName('');
-      setParentId('none');
+      setParentId('');
     }
   }, [isOpen]);
 
@@ -58,11 +52,11 @@ export function CreateModal({ isOpen, onClose, onSubmit }: CreateModalProps) {
     try {
       await onSubmit({
         name: name.trim(),
-        parentId: parentId === 'none' ? undefined : parentId,
+        parentId: parentId || undefined,
         isActive: true,
       });
       setName('');
-      setParentId('none');
+      setParentId('');
     } catch (error) {
       logger.error(
         'Erro ao criar categoria',
@@ -105,25 +99,13 @@ export function CreateModal({ isOpen, onClose, onSubmit }: CreateModalProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wizard-parent">Categoria Pai</Label>
-              <Select value={parentId} onValueChange={setParentId}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Selecione uma categoria pai" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">
-                    <span className="flex items-center gap-2">
-                      <FolderTree className="h-3.5 w-3.5 text-muted-foreground" />
-                      Nenhuma (categoria raiz)
-                    </span>
-                  </SelectItem>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Categoria Pai</Label>
+              <CategoryCombobox
+                categories={categories}
+                value={parentId}
+                onValueChange={setParentId}
+                placeholder="Nenhuma (categoria raiz)"
+              />
               <p className="text-xs text-muted-foreground">
                 Deixe vazio para criar uma categoria no nível raiz
               </p>

@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
   TooltipContent,
@@ -33,6 +34,7 @@ import { usePrintQueue } from '@/core/print-queue';
 import { useSelection } from '@/core/selection/hooks/use-selection';
 import { formatQuantity, formatUnitOfMeasure } from '@/helpers/formatters';
 import { useCareOptions } from '@/hooks/stock';
+import { useProductCareInstructions } from '@/hooks/stock/use-product-care-instructions';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import {
@@ -44,13 +46,18 @@ import type { ExitMovementType, Item, Product, Variant } from '@/types/stock';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
+  Calendar,
+  Clock,
   Edit,
   Expand,
+  Info,
   Package,
   Palette,
   Plus,
   Printer,
   Search,
+  Shirt,
+  SlidersHorizontal,
   Upload,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -67,6 +74,29 @@ import {
   VariantFormModal,
 } from '../modals';
 import type { ExitType } from '../types/products.types';
+
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ElementType;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Icon className="h-5 w-5 text-foreground" />
+        <div>
+          <h3 className="text-base font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        </div>
+      </div>
+      <div className="border-b border-border" />
+    </div>
+  );
+}
 
 export interface ProductViewerProps {
   product: Product;
@@ -122,7 +152,10 @@ export function ProductViewer({
   // DATA FETCHING - CARE OPTIONS
   // ============================================================================
 
-  const { data: careOptionsData, isLoading: isLoadingCare } = useCareOptions();
+  const { data: careOptionsData } = useCareOptions();
+  const { data: productCareInstructions } = useProductCareInstructions(
+    product.id
+  );
 
   // ============================================================================
   // DATA FETCHING - VARIANT STATS
@@ -327,16 +360,23 @@ export function ProductViewer({
     product.template?.unitOfMeasure || 'UNITS'
   );
 
-  // Mapear care options selecionadas
-  // TODO: migrate to ProductCareInstruction API
+  // Mapear care options selecionadas usando ProductCareInstruction API
   const selectedCareOptions = useMemo((): Array<{
     code: string;
     assetPath: string;
     label: string;
   }> => {
-    if (!careOptionsData) return [];
-    return [];
-  }, [careOptionsData]);
+    if (!careOptionsData || !productCareInstructions?.length) return [];
+    const allOptions = Object.values(careOptionsData).flat();
+    const savedIds = productCareInstructions.map(ci => ci.careInstructionId);
+    return allOptions
+      .filter(opt => savedIds.includes(opt.code))
+      .map(opt => ({
+        code: opt.code,
+        assetPath: opt.assetPath,
+        label: opt.label,
+      }));
+  }, [careOptionsData, productCareInstructions]);
 
   // ============================================================================
   // HANDLERS
@@ -588,10 +628,10 @@ export function ProductViewer({
   // ============================================================================
 
   return (
-    <div className={className}>
+    <div className={cn('space-y-6', className)}>
       {/* Header com Breadcrumb e Editar */}
       {showHeader && (
-        <div className="flex w-full items-center justify-between mb-6">
+        <div className="flex w-full items-center justify-between">
           <PageBreadcrumb
             items={[
               { label: 'Estoque', href: '/stock' },
@@ -619,378 +659,442 @@ export function ProductViewer({
         </div>
       )}
 
-      {/* Product Info Card */}
-      <Card className="p-6 mb-6">
-        <div className="flex items-center w-full justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-cyan-500">
-              <Package className="h-8 w-8 text-white" />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">
-                  {product.template?.name} {product.name}
-                </h1>
-                {product.outOfLine && (
-                  <span className="px-2 py-1 text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-md">
-                    Fora de Linha
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {product.manufacturer
-                  ? product.manufacturer?.name
-                  : 'Fabricante não informado'}
-              </p>
-            </div>
+      {/* Identity Card */}
+      <Card className="bg-white/5 p-5">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-cyan-600 shadow-lg">
+            <Package className="h-7 w-7 text-white" />
           </div>
-          {/* Modo de Conservação - Care Symbols */}
-          {selectedCareOptions.length > 0 && (
-            <div className="flex items-center gap-3">
-              {isLoadingCare ? (
-                <div className="flex gap-2">
-                  {[1, 2, 3].map(i => (
-                    <div
-                      key={i}
-                      className="h-10 w-10 rounded-md bg-gray-200 dark:bg-slate-700 animate-pulse"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <TooltipProvider>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCareOptions.map(option => (
-                      <Tooltip key={option.code} delayDuration={150}>
-                        <TooltipTrigger asChild>
-                          <div className="p-2 bg-white dark:bg-slate-800 rounded-md border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-                            <CareIcon
-                              assetPath={option.assetPath}
-                              size={32}
-                              className="dark:brightness-0 dark:invert"
-                              alt={option.label}
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="bottom"
-                          className="max-w-xs space-y-1"
-                        >
-                          <p className="text-sm font-semibold">
-                            {option.label}
-                          </p>
-                          <p className="text-xs text-muted-foreground leading-snug">
-                            Código: {option.code}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </div>
-                </TooltipProvider>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold truncate">{product.name}</h1>
+              <span
+                className={cn(
+                  'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0',
+                  product.status === 'ACTIVE'
+                    ? 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
+                    : 'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400'
+                )}
+              >
+                {product.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}
+              </span>
+              {product.outOfLine && (
+                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0 border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300">
+                  Fora de Linha
+                </span>
               )}
             </div>
-          )}
-        </div>
-      </Card>
-      {/* Product Details */}
-      <Card className="p-6 mb-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <InfoField
-            label="Template"
-            value={product.template?.name || 'Não informado'}
-            showCopyButton
-          />
-          <InfoField
-            label="Código"
-            value={product.fullCode || 'Não informado'}
-            showCopyButton
-          />
-          <InfoField
-            label="Categoria"
-            value={product.productCategories?.[0]?.name || 'Sem categoria'}
-            showCopyButton
-          />
-          <InfoField
-            label="Descrição"
-            value={product.description || 'Sem descrição'}
-            truncate
-            action={
-              product.description ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 opacity-50 hover:opacity-100"
-                  onClick={() => setShowDescriptionModal(true)}
-                  title="Ver descrição completa"
-                >
-                  <Expand className="h-3.5 w-3.5" />
-                </Button>
-              ) : undefined
-            }
-          />
-        </div>
-      </Card>
-
-      {/* Atributos Personalizados */}
-      {(() => {
-        const attrs = product.template?.productAttributes || {};
-        return Object.keys(attrs).length > 0 ? (
-          <Card className="p-6 mb-6">
-            <h3 className="text-lg font-semibold mb-4">
-              Atributos Personalizados
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.entries(attrs)
-                .sort(([keyA, configA], [keyB, configB]) => {
-                  const labelA = (configA.label || keyA).toLowerCase();
-                  const labelB = (configB.label || keyB).toLowerCase();
-                  return labelA.localeCompare(labelB);
-                })
-                .map(([key, config]) => {
-                  const value = product.attributes?.[key];
-                  const baseLabel = config.label || key;
-                  const label = config.unitOfMeasure
-                    ? `${baseLabel} (${config.unitOfMeasure})`
-                    : baseLabel;
-
-                  const renderValue = () => {
-                    if (value === null || value === undefined) {
-                      return 'NÃO INFORMADO';
-                    }
-                    if (typeof value === 'boolean') {
-                      return value ? 'Sim' : 'Não';
-                    }
-                    if (typeof value === 'object') {
-                      return JSON.stringify(value);
-                    }
-                    return String(value);
-                  };
-
-                  return (
-                    <InfoField
-                      key={key}
-                      label={label}
-                      value={renderValue()}
-                      showCopyButton
-                    />
-                  );
-                })}
-            </div>
-          </Card>
-        ) : null;
-      })()}
-
-      {/* Two-column layout - Variantes e Items */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* LEFT COLUMN - Variants */}
-        <div className="flex flex-col bg-background rounded-lg border shadow-sm overflow-hidden">
-          {/* Variants Header */}
-          <div className="p-4 bg-linear-to-r from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/30 border-b">
-            <div className="flex items-center justify-between mb-3 min-h-[28px]">
-              <div className="flex items-center gap-2">
-                <Palette className="w-4 h-4 text-muted-foreground" />
-                <h3 className="font-medium">Variantes</h3>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {filteredVariants.length} de {variants.length}
-              </span>
-            </div>
-
-            {/* Variants Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Buscar variantes..."
-                value={variantsSearch}
-                onChange={e => setVariantsSearch(e.target.value)}
-                className="pl-9 h-9"
-              />
-            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {product.manufacturer?.name || 'Fabricante não informado'}
+            </p>
           </div>
 
-          {/* Variants List */}
-          <div className="flex-1 overflow-auto p-4 space-y-2">
-            {isLoadingVariants ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            ) : filteredVariants.length === 0 ? (
-              <div className="p-8 text-center">
-                <Palette className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  {variantsSearch
-                    ? 'Nenhuma variante encontrada'
-                    : 'Nenhuma variante cadastrada'}
-                </p>
-              </div>
-            ) : (
-              filteredVariants.map(variant => (
-                <VariantRow
-                  key={variant.id}
-                  variant={variant}
-                  itemsCount={variantStatsMap?.[variant.id]?.count || 0}
-                  totalQuantity={variantStatsMap?.[variant.id]?.totalQty || 0}
-                  unitLabel={unitOfMeasure}
-                  isSelected={selectedVariant?.id === variant.id}
-                  onClick={() => handleVariantSelect(variant)}
-                  onEdit={v => {
-                    setEditingVariant(v);
-                    setShowEditVariantModal(true);
-                  }}
-                  variantAttributes={product.template?.variantAttributes}
-                />
-              ))
+          {/* Metadata (right) */}
+          <div className="hidden flex-col items-end gap-0.5 text-right sm:flex">
+            {product.createdAt && (
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3 text-sky-400" />
+                Criado em{' '}
+                {new Date(product.createdAt).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
+            )}
+            {product.updatedAt && product.updatedAt !== product.createdAt && (
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3 text-amber-400" />
+                Atualizado em{' '}
+                {new Date(product.updatedAt).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
             )}
           </div>
-
-          {/* Add Variant Button */}
-          <div className="p-4 border-t">
-            <Button
-              variant="outline"
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
-              onClick={() => setShowAddVariantModal(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Variante
-            </Button>
-          </div>
         </div>
+      </Card>
 
-        {/* RIGHT COLUMN - Items */}
-        <div className="flex flex-col bg-background rounded-lg border shadow-sm overflow-hidden">
-          {selectedVariant ? (
-            <>
-              {/* Items Header */}
+      {/* Tabs */}
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 h-12 mb-4">
+          <TabsTrigger value="general">Informações Gerais</TabsTrigger>
+          <TabsTrigger value="variants">Variantes & Itens</TabsTrigger>
+        </TabsList>
+
+        {/* TAB: Informações Gerais */}
+        <TabsContent value="general" className="flex-col w-full space-y-6">
+          {/* Section: Informações Gerais */}
+          <Card className="bg-white/5 py-2 overflow-hidden">
+            <div className="px-6 py-4 space-y-8">
+              <div className="space-y-5">
+                <SectionHeader
+                  icon={Info}
+                  title="Informações Gerais"
+                  subtitle="Dados de identificação do produto"
+                />
+                <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <InfoField
+                      label="Código"
+                      value={product.fullCode || 'Não informado'}
+                      showCopyButton
+                    />
+                    <InfoField
+                      label="Template"
+                      value={product.template?.name || 'Não informado'}
+                      showCopyButton
+                    />
+                    <InfoField
+                      label="Categoria"
+                      value={
+                        product.productCategories?.[0]?.name || 'Sem categoria'
+                      }
+                      showCopyButton
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Section: Atributos Exclusivos */}
+          {(() => {
+            const attrs = product.template?.productAttributes || {};
+            return Object.keys(attrs).length > 0 ? (
+              <Card className="bg-white/5 py-2 overflow-hidden">
+                <div className="px-6 py-4 space-y-8">
+                  <div className="space-y-5">
+                    <SectionHeader
+                      icon={SlidersHorizontal}
+                      title="Atributos Exclusivos"
+                      subtitle={`Definidos pelo template "${product.template?.name}"`}
+                    />
+                    <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {Object.entries(attrs)
+                          .sort(([keyA, configA], [keyB, configB]) => {
+                            const labelA = (
+                              configA.label || keyA
+                            ).toLowerCase();
+                            const labelB = (
+                              configB.label || keyB
+                            ).toLowerCase();
+                            return labelA.localeCompare(labelB);
+                          })
+                          .map(([key, config]) => {
+                            const value = product.attributes?.[key];
+                            const baseLabel = config.label || key;
+                            const label = config.unitOfMeasure
+                              ? `${baseLabel} (${config.unitOfMeasure})`
+                              : baseLabel;
+
+                            const renderValue = () => {
+                              if (value === null || value === undefined) {
+                                return 'Não informado';
+                              }
+                              if (typeof value === 'boolean') {
+                                return value ? 'Sim' : 'Não';
+                              }
+                              if (typeof value === 'object') {
+                                return JSON.stringify(value);
+                              }
+                              return String(value);
+                            };
+
+                            return (
+                              <InfoField
+                                key={key}
+                                label={label}
+                                value={renderValue()}
+                                showCopyButton
+                              />
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ) : null;
+          })()}
+
+          {/* Section: Instruções de Cuidado */}
+          {selectedCareOptions.length > 0 && (
+            <Card className="bg-white/5 py-2 overflow-hidden">
+              <div className="px-6 py-4 space-y-8">
+                <div className="space-y-5">
+                  <SectionHeader
+                    icon={Shirt}
+                    title="Instruções de Cuidado"
+                    subtitle="Instruções de conservação ISO 3758"
+                  />
+                  <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                    <div className="flex flex-wrap gap-3">
+                      {selectedCareOptions.map(option => (
+                        <div
+                          key={option.code}
+                          className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-border bg-white dark:bg-slate-800/60 hover:shadow-sm transition-shadow"
+                          title={option.label}
+                        >
+                          <CareIcon
+                            assetPath={option.assetPath}
+                            size={32}
+                            className="dark:brightness-0 dark:invert"
+                            alt={option.label}
+                          />
+                          <span className="text-[10px] text-muted-foreground text-center max-w-[60px] leading-tight truncate">
+                            {option.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Section: Descrição */}
+          {product.description && (
+            <Card className="bg-white/5 py-2 overflow-hidden">
+              <div className="px-6 py-4 space-y-8">
+                <div className="space-y-5">
+                  <SectionHeader
+                    icon={Expand}
+                    title="Descrição"
+                    subtitle="Descrição detalhada do produto"
+                  />
+                  <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                      {product.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* TAB: Variantes & Itens */}
+        <TabsContent value="variants" className="flex-col w-full space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* LEFT COLUMN - Variants */}
+            <div className="flex flex-col bg-background rounded-lg border shadow-sm overflow-hidden">
+              {/* Variants Header */}
               <div className="p-4 bg-linear-to-r from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/30 border-b">
                 <div className="flex items-center justify-between mb-3 min-h-[28px]">
                   <div className="flex items-center gap-2">
-                    <Box className="w-4 h-4 text-muted-foreground" />
-                    <h3 className="font-medium">{selectedVariant.name}</h3>
+                    <Palette className="w-4 h-4 text-muted-foreground" />
+                    <h3 className="font-medium">Variantes</h3>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {filteredItems.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handlePrintAllItems}
-                        className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-500/10"
-                      >
-                        <Printer className="w-3.5 h-3.5 mr-1" />
-                        Imprimir Todos
-                      </Button>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {filteredItems.length} itens •{' '}
-                      {formatQuantity(totalItemsQuantity)} {unitOfMeasure}
-                    </span>
-                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {filteredVariants.length} de {variants.length}
+                  </span>
                 </div>
 
-                {/* Hide exited items switch + Search */}
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Buscar itens..."
-                      value={itemsSearch}
-                      onChange={e => setItemsSearch(e.target.value)}
-                      className="pl-9 h-9"
-                    />
-                  </div>
-                  {items.some((i: Item) => i.currentQuantity === 0) && (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Switch
-                        id="hide-exited"
-                        checked={hideExitedItems}
-                        onCheckedChange={setHideExitedItems}
-                        className="scale-75"
-                      />
-                      <Label
-                        htmlFor="hide-exited"
-                        className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap"
-                      >
-                        Ocultar saídas
-                      </Label>
-                    </div>
-                  )}
+                {/* Variants Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar variantes..."
+                    value={variantsSearch}
+                    onChange={e => setVariantsSearch(e.target.value)}
+                    className="pl-9 h-9"
+                  />
                 </div>
               </div>
 
-              {/* Items List */}
+              {/* Variants List */}
               <div className="flex-1 overflow-auto p-4 space-y-2">
-                {isLoadingItems ? (
+                {isLoadingVariants ? (
                   <div className="space-y-2">
                     {[1, 2, 3].map(i => (
                       <Skeleton key={i} className="h-16 w-full" />
                     ))}
                   </div>
-                ) : itemsError ? (
+                ) : filteredVariants.length === 0 ? (
                   <div className="p-8 text-center">
-                    <p className="text-destructive text-sm">
-                      Erro ao carregar itens
-                    </p>
-                  </div>
-                ) : filteredItems.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <Box className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                    <Palette className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
                     <p className="text-sm text-muted-foreground">
-                      {itemsSearch
-                        ? 'Nenhum item encontrado'
-                        : 'Nenhum item cadastrado'}
+                      {variantsSearch
+                        ? 'Nenhuma variante encontrada'
+                        : 'Nenhuma variante cadastrada'}
                     </p>
                   </div>
                 ) : (
-                  filteredItems.map((item: Item) => (
-                    <ItemRow
-                      key={item.id}
-                      item={item}
+                  filteredVariants.map(variant => (
+                    <VariantRow
+                      key={variant.id}
+                      variant={variant}
+                      itemsCount={variantStatsMap?.[variant.id]?.count || 0}
+                      totalQuantity={
+                        variantStatsMap?.[variant.id]?.totalQty || 0
+                      }
                       unitLabel={unitOfMeasure}
-                      itemAttributes={product.template?.itemAttributes}
-                      isSelected={selectionActions.isSelected(item.id)}
-                      onClick={e => handleItemClick(item, e)}
-                      onDoubleClick={() => handleItemDoubleClick(item)}
-                      onPrint={handlePrintItem}
-                      onExit={handleExitItem}
-                      lastExitReasonCode={exitReasonMap[item.id]}
+                      isSelected={selectedVariant?.id === variant.id}
+                      onClick={() => handleVariantSelect(variant)}
+                      onEdit={v => {
+                        setEditingVariant(v);
+                        setShowEditVariantModal(true);
+                      }}
+                      variantAttributes={product.template?.variantAttributes}
                     />
                   ))
                 )}
               </div>
 
-              {/* Add Item Button */}
+              {/* Add Variant Button */}
               <div className="p-4 border-t">
                 <Button
                   variant="outline"
-                  className="w-full bg-purple-600 hover:bg-purple-500 text-white"
-                  onClick={() => setShowAddItemModal(true)}
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+                  onClick={() => setShowAddVariantModal(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Registrar Entrada
+                  Adicionar Variante
                 </Button>
               </div>
-            </>
-          ) : (
-            /* Empty state when no variant selected */
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div
-                className={cn(
-                  'w-16 h-16 rounded-full flex items-center justify-center mb-4',
-                  'bg-muted'
-                )}
-              >
-                <Box className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="font-medium mb-1">Selecione uma variante</h3>
-              <p className="text-sm text-muted-foreground max-w-[200px]">
-                Clique em uma variante à esquerda para ver seus itens
-              </p>
             </div>
-          )}
-        </div>
-      </div>
+
+            {/* RIGHT COLUMN - Items */}
+            <div className="flex flex-col bg-background rounded-lg border shadow-sm overflow-hidden">
+              {selectedVariant ? (
+                <>
+                  {/* Items Header */}
+                  <div className="p-4 bg-linear-to-r from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/30 border-b">
+                    <div className="flex items-center justify-between mb-3 min-h-[28px]">
+                      <div className="flex items-center gap-2">
+                        <Box className="w-4 h-4 text-muted-foreground" />
+                        <h3 className="font-medium">{selectedVariant.name}</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {filteredItems.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handlePrintAllItems}
+                            className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-500/10"
+                          >
+                            <Printer className="w-3.5 h-3.5 mr-1" />
+                            Imprimir Todos
+                          </Button>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {filteredItems.length} itens •{' '}
+                          {formatQuantity(totalItemsQuantity)} {unitOfMeasure}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Hide exited items switch + Search */}
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          type="text"
+                          placeholder="Buscar itens..."
+                          value={itemsSearch}
+                          onChange={e => setItemsSearch(e.target.value)}
+                          className="pl-9 h-9"
+                        />
+                      </div>
+                      {items.some((i: Item) => i.currentQuantity === 0) && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Switch
+                            id="hide-exited"
+                            checked={hideExitedItems}
+                            onCheckedChange={setHideExitedItems}
+                            className="scale-75"
+                          />
+                          <Label
+                            htmlFor="hide-exited"
+                            className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap"
+                          >
+                            Ocultar saídas
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Items List */}
+                  <div className="flex-1 overflow-auto p-4 space-y-2">
+                    {isLoadingItems ? (
+                      <div className="space-y-2">
+                        {[1, 2, 3].map(i => (
+                          <Skeleton key={i} className="h-16 w-full" />
+                        ))}
+                      </div>
+                    ) : itemsError ? (
+                      <div className="p-8 text-center">
+                        <p className="text-destructive text-sm">
+                          Erro ao carregar itens
+                        </p>
+                      </div>
+                    ) : filteredItems.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <Box className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                        <p className="text-sm text-muted-foreground">
+                          {itemsSearch
+                            ? 'Nenhum item encontrado'
+                            : 'Nenhum item cadastrado'}
+                        </p>
+                      </div>
+                    ) : (
+                      filteredItems.map((item: Item) => (
+                        <ItemRow
+                          key={item.id}
+                          item={item}
+                          unitLabel={unitOfMeasure}
+                          itemAttributes={product.template?.itemAttributes}
+                          isSelected={selectionActions.isSelected(item.id)}
+                          onClick={e => handleItemClick(item, e)}
+                          onDoubleClick={() => handleItemDoubleClick(item)}
+                          onPrint={handlePrintItem}
+                          onExit={handleExitItem}
+                          lastExitReasonCode={exitReasonMap[item.id]}
+                        />
+                      ))
+                    )}
+                  </div>
+
+                  {/* Add Item Button */}
+                  <div className="p-4 border-t">
+                    <Button
+                      variant="outline"
+                      className="w-full bg-purple-600 hover:bg-purple-500 text-white"
+                      onClick={() => setShowAddItemModal(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Registrar Entrada
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                /* Empty state when no variant selected */
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                  <div
+                    className={cn(
+                      'w-16 h-16 rounded-full flex items-center justify-center mb-4',
+                      'bg-muted'
+                    )}
+                  >
+                    <Box className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="font-medium mb-1">Selecione uma variante</h3>
+                  <p className="text-sm text-muted-foreground max-w-[200px]">
+                    Clique em uma variante à esquerda para ver seus itens
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Delete Product Confirmation */}
       <VerifyActionPinModal

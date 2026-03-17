@@ -30,9 +30,19 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import { productsService, templatesService } from '@/services/stock';
 import type { Template } from '@/types/stock';
-import { ChevronRight, Copy, Import, Package, Pencil, Plus, Shirt, SlidersHorizontal, Trash2 } from 'lucide-react';
+import {
+  ChevronRight,
+  Copy,
+  Import,
+  Package,
+  Pencil,
+  Plus,
+  Shirt,
+  SlidersHorizontal,
+  Trash2,
+} from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GrObjectGroup } from 'react-icons/gr';
 import {
@@ -54,6 +64,7 @@ type ActionButtonWithPermission = HeaderButton & {
 
 export default function TemplatesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { hasPermission } = usePermissions();
 
   // ============================================================================
@@ -114,6 +125,17 @@ export default function TemplatesPage() {
       }),
     },
   });
+
+  // ==========================================================================
+  // OPEN CREATE MODAL VIA URL PARAM
+  // ==========================================================================
+  useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      page.modals.open('create');
+      window.history.replaceState(null, '', '/stock/templates');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // ==========================================================================
   // LOAD PRODUCTS COUNT FOR EACH TEMPLATE (guarded by stable id key)
@@ -249,12 +271,18 @@ export default function TemplatesPage() {
       (Object.keys(item.variantAttributes || {}).length || 0) +
       (Object.keys(item.itemAttributes || {}).length || 0);
 
-    const badges: { label: string; variant: 'outline'; icon?: typeof Package; color?: string }[] = [
+    const badges: {
+      label: string;
+      variant: 'outline';
+      icon?: typeof Package;
+      color?: string;
+    }[] = [
       {
         label: `${count} atributo${count !== 1 ? 's' : ''}`,
         variant: 'outline',
         icon: SlidersHorizontal,
-        color: 'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+        color:
+          'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
       },
     ];
     if (item.specialModules?.includes('CARE_INSTRUCTIONS')) {
@@ -262,11 +290,17 @@ export default function TemplatesPage() {
         label: 'Conservação Têxtil',
         variant: 'outline',
         icon: Shirt,
-        color: 'border-purple-600/25 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-500/8 text-purple-700 dark:text-purple-300',
+        color:
+          'border-purple-600/25 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-500/8 text-purple-700 dark:text-purple-300',
       });
     }
     if (!item.isActive) {
-      badges.push({ label: 'Inativo', variant: 'outline', color: 'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300' });
+      badges.push({
+        label: 'Inativo',
+        variant: 'outline',
+        color:
+          'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+      });
     }
     return badges;
   };
@@ -330,7 +364,8 @@ export default function TemplatesPage() {
                 {item.name}
               </span>
               <span className="text-xs text-muted-foreground shrink-0">
-                {getUnitLabel(item.unitOfMeasure).match(/\(([^)]+)\)/)?.[1] || getUnitLabel(item.unitOfMeasure)}
+                {getUnitLabel(item.unitOfMeasure).match(/\(([^)]+)\)/)?.[1] ||
+                  getUnitLabel(item.unitOfMeasure)}
               </span>
             </span>
           }

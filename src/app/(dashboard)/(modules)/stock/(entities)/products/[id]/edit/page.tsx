@@ -1,26 +1,23 @@
 /**
  * OpenSea OS - Edit Product Page
- * Página de edição de produto
+ * Follows the standard edit page pattern: PageLayout > PageHeader > PageBody
  */
 
 'use client';
 
-import { logger } from '@/lib/logger';
-import { PageBreadcrumb } from '@/components/layout/page-breadcrumb';
-import { CareIcon, CareSelector } from '@/components/care';
-import { VariantManager } from '@/components/stock/variants';
+import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
+import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
+import type { HeaderButton } from '@/components/layout/types/header.types';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { CareSelector } from '@/components/care';
 import { Card } from '@/components/ui/card';
+import { CategoryCombobox } from '@/components/ui/category-combobox';
 import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,14 +31,9 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useCareOptions } from '@/hooks/stock';
 import { useCategories } from '@/hooks/stock/use-categories';
+import { useProductCareInstructions } from '@/hooks/stock/use-product-care-instructions';
+import { logger } from '@/lib/logger';
 import {
   manufacturersService,
   productsService,
@@ -55,10 +47,48 @@ import type {
   TemplateAttribute,
 } from '@/types/stock';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { NotebookText, Package, Save, Trash2 } from 'lucide-react';
+import {
+  Loader2,
+  NotebookText,
+  Package,
+  Save,
+  SlidersHorizontal,
+  Trash2,
+} from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+// =============================================================================
+// SECTION HEADER
+// =============================================================================
+
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ElementType;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Icon className="h-5 w-5 text-foreground" />
+        <div>
+          <h3 className="text-base font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        </div>
+      </div>
+      <div className="border-b border-border" />
+    </div>
+  );
+}
+
+// =============================================================================
+// PAGE
+// =============================================================================
 
 export default function EditProductPage() {
   const params = useParams();
@@ -70,7 +100,11 @@ export default function EditProductPage() {
   // DATA FETCHING
   // ============================================================================
 
-  const { data: product, isLoading: isLoadingProduct } = useQuery<Product>({
+  const {
+    data: product,
+    isLoading: isLoadingProduct,
+    error,
+  } = useQuery<Product>({
     queryKey: ['products', productId],
     queryFn: async () => {
       const response = await productsService.getProduct(productId);
@@ -78,10 +112,10 @@ export default function EditProductPage() {
     },
   });
 
-  const { data: careOptions, isLoading: isLoadingCareOptions } =
-    useCareOptions();
-
   const { data: categoriesData } = useCategories();
+  const categories =
+    (categoriesData as { categories: Category[] } | undefined)?.categories ??
+    [];
 
   const { data: template } = useQuery<Template>({
     queryKey: ['templates', product?.templateId],
@@ -93,17 +127,23 @@ export default function EditProductPage() {
     enabled: !!product?.templateId,
   });
 
+  const hasCareInstructions =
+    template?.specialModules?.includes('CARE_INSTRUCTIONS');
+
+  const { data: savedCareInstructions } = useProductCareInstructions(productId);
+  const savedCareIds =
+    savedCareInstructions?.map(ci => ci.careInstructionId) ?? [];
+
   // ============================================================================
   // STATE
   // ============================================================================
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [name, setName] = useState('');
-  const [categoryId, setCategoryId] = useState<string>('');
+  const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
-  const [manufacturerId, setManufacturerId] = useState<string>('');
+  const [manufacturerId, setManufacturerId] = useState('');
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [attributes, setAttributes] = useState<Record<string, unknown>>({});
   const [outOfLine, setOutOfLine] = useState(false);
@@ -114,20 +154,15 @@ export default function EditProductPage() {
   // ============================================================================
 
   useEffect(() => {
-    // Load manufacturers
-    const loadManufacturers = async () => {
-      try {
-        const response = await manufacturersService.listManufacturers();
-        setManufacturers(response.manufacturers || []);
-      } catch (error) {
+    manufacturersService
+      .listManufacturers()
+      .then(r => setManufacturers(r.manufacturers || []))
+      .catch(err =>
         logger.error(
           'Erro ao carregar fabricantes',
-          error instanceof Error ? error : undefined
-        );
-      }
-    };
-
-    loadManufacturers();
+          err instanceof Error ? err : undefined
+        )
+      );
   }, []);
 
   useEffect(() => {
@@ -140,89 +175,23 @@ export default function EditProductPage() {
       if (product.manufacturer?.id) {
         setManufacturerId(product.manufacturer.id);
       }
-      // Categoria única: ler a primeira (e única) categoria associada
       const currentCategory = product.productCategories?.[0];
       setCategoryId(currentCategory?.id ?? '');
     }
   }, [product]);
 
-  // Construir opções de categorias com hierarquia (raíz → filhos) ordenadas por displayOrder
-  const hierarchicalCategoryOptions = useMemo(() => {
-    const categories = (
-      categoriesData as { categories: Category[] } | undefined
-    )?.categories;
-    if (!categories) return [];
-
-    const activeCategories = categories.filter(c => c.isActive);
-
-    // Separar raízes e filhos
-    const roots = activeCategories
-      .filter(c => !c.parentId)
-      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
-
-    const childrenMap = new Map<string, Category[]>();
-    for (const cat of activeCategories) {
-      if (cat.parentId) {
-        const siblings = childrenMap.get(cat.parentId) || [];
-        siblings.push(cat);
-        childrenMap.set(cat.parentId, siblings);
-      }
-    }
-
-    // Ordenar filhos por displayOrder
-    for (const [key, children] of childrenMap) {
-      childrenMap.set(
-        key,
-        children.sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
-      );
-    }
-
-    // Montar lista plana com indentação
-    const options: Array<{ value: string; label: string; depth: number }> = [];
-    const addCategory = (cat: Category, depth: number) => {
-      const prefix = depth > 0 ? '\u00A0\u00A0'.repeat(depth) + '└ ' : '';
-      options.push({
-        value: cat.id,
-        label: `${prefix}${cat.name}`,
-        depth,
-      });
-      const children = childrenMap.get(cat.id) || [];
-      for (const child of children) {
-        addCategory(child, depth + 1);
-      }
-    };
-
-    for (const root of roots) {
-      addCategory(root, 0);
-    }
-
-    return options;
-  }, [categoriesData]);
-
-  // Seleções de cuidado atuais do produto para exibir ícones no cabeçalho
-  // TODO: migrate to ProductCareInstruction API
-  const selectedCareOptions = useMemo((): Array<{
-    code: string;
-    assetPath: string;
-    label: string;
-  }> => {
-    if (!careOptions) return [];
-    return [];
-  }, [careOptions]);
-
   // ============================================================================
   // HANDLERS
   // ============================================================================
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!name.trim()) {
       toast.error('Nome é obrigatório');
       return;
     }
 
     try {
-      setIsLoading(true);
+      setIsSaving(true);
       await productsService.updateProduct(productId, {
         name: name.trim(),
         description: description.trim() || undefined,
@@ -234,7 +203,6 @@ export default function EditProductPage() {
       });
 
       toast.success('Produto atualizado com sucesso!');
-      // Invalidar tanto o produto quanto as variantes
       await queryClient.invalidateQueries({
         queryKey: ['products', productId],
       });
@@ -242,455 +210,448 @@ export default function EditProductPage() {
         queryKey: ['variants', 'product', productId],
       });
       router.push(`/stock/products/${productId}`);
-    } catch (error) {
+    } catch (err) {
       logger.error(
         'Erro ao atualizar produto',
-        error instanceof Error ? error : undefined
+        err instanceof Error ? err : undefined
       );
-      const message =
-        error instanceof Error ? error.message : 'Erro desconhecido';
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
       toast.error('Erro ao atualizar produto', { description: message });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
-  };
-
-  const handleDeleteClick = () => {
-    setShowDeleteDialog(true);
   };
 
   const handleDeleteConfirm = async () => {
     try {
-      setIsDeleting(true);
       await productsService.deleteProduct(productId);
       toast.success('Produto excluído com sucesso!');
       router.push('/stock/products');
-    } catch (error) {
+    } catch (err) {
       logger.error(
         'Erro ao deletar produto',
-        error instanceof Error ? error : undefined
+        err instanceof Error ? err : undefined
       );
-      const message =
-        error instanceof Error ? error.message : 'Erro desconhecido';
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
       toast.error('Erro ao deletar produto', { description: message });
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteDialog(false);
     }
   };
 
   // ============================================================================
-  // LOADING STATE
+  // ACTION BUTTONS
   // ============================================================================
+
+  const actionButtons: HeaderButton[] = [
+    {
+      id: 'delete',
+      title: 'Excluir',
+      icon: Trash2,
+      onClick: () => setDeleteModalOpen(true),
+      variant: 'default',
+      className:
+        'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+    },
+    {
+      id: 'save',
+      title: isSaving ? 'Salvando...' : 'Salvar',
+      icon: isSaving ? Loader2 : Save,
+      onClick: handleSubmit,
+      variant: 'default',
+      disabled: isSaving || !name.trim(),
+    },
+  ];
+
+  // ============================================================================
+  // LOADING / ERROR
+  // ============================================================================
+
+  const breadcrumbItems = [
+    { label: 'Estoque', href: '/stock' },
+    { label: 'Produtos', href: '/stock/products' },
+    {
+      label: product?.name || '...',
+      href: `/stock/products/${productId}`,
+    },
+    { label: 'Editar' },
+  ];
 
   if (isLoadingProduct) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="p-8">
-          <div className="flex items-center justify-center">
-            <p className="text-muted-foreground">Carregando produto...</p>
-          </div>
-        </Card>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridLoading count={3} layout="list" size="md" />
+        </PageBody>
+      </PageLayout>
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="p-8">
-          <div className="flex items-center justify-center">
-            <p className="text-red-500">Produto não encontrado</p>
-          </div>
-        </Card>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridError
+            type="not-found"
+            title="Produto não encontrado"
+            message="O produto solicitado não foi encontrado."
+            action={{
+              label: 'Voltar para Produtos',
+              onClick: () => router.push('/stock/products'),
+            }}
+          />
+        </PageBody>
+      </PageLayout>
     );
   }
+
+  // ============================================================================
+  // TEMPLATE ATTRIBUTES
+  // ============================================================================
+
+  const templateAttrs = template?.productAttributes
+    ? Object.entries(template.productAttributes).sort(([, a], [, b]) => {
+        const labelA = ((a as TemplateAttribute)?.label || '').toLowerCase();
+        const labelB = ((b as TemplateAttribute)?.label || '').toLowerCase();
+        return labelA.localeCompare(labelB);
+      })
+    : [];
 
   // ============================================================================
   // RENDER
   // ============================================================================
 
   return (
-    <div className="max-w-8xl mx-auto space-y-6 px-6 gap-6">
-      {/* Header com Breadcrumb */}
-      <div className="flex w-full items-center justify-between">
-        <PageBreadcrumb
-          items={[
-            { label: 'Estoque', href: '/stock' },
-            { label: 'Produtos', href: '/stock/products' },
-            {
-              label: product?.name || '...',
-              href: `/stock/products/${productId}`,
-            },
-            { label: 'Editar', href: `/stock/products/${productId}/edit` },
-          ]}
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={breadcrumbItems}
+          buttons={actionButtons}
         />
-        <div className="flex items-center gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleDeleteClick}
-            disabled={isLoading || isDeleting}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Excluir
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isLoading || isDeleting || !name.trim()}
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {isLoading ? 'Salvando...' : 'Salvar'}
-          </Button>
-        </div>
-      </div>
+      </PageHeader>
 
-      {/* Product Info Card */}
-      <Card className="p-6 mb-6">
-        <div className="flex items-center w-full justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-cyan-500">
-              <Package className="h-8 w-8 text-white" />
+      <PageBody>
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-cyan-600 shadow-lg">
+              <Package className="h-7 w-7 text-white" />
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">
-                  {product.template?.name} {product.name}
-                </h1>
-                {product.outOfLine && (
-                  <span className="px-2 py-1 text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-md">
-                    Fora de Linha
-                  </span>
-                )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-muted-foreground">Editando produto</p>
+              <h1 className="text-xl font-bold truncate">{product.name}</h1>
+            </div>
+            <div className="hidden sm:flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-2">
+                <div className="text-right">
+                  <p className="text-xs font-semibold">Fora de Linha</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {outOfLine ? 'Sim' : 'Não'}
+                  </p>
+                </div>
+                <Switch checked={outOfLine} onCheckedChange={setOutOfLine} />
               </div>
-              <p className="text-sm text-muted-foreground">
-                {product.manufacturer
-                  ? product.manufacturer?.name
-                  : 'Fabricante não informado'}
-              </p>
+              <div className="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-2">
+                <div className="text-right">
+                  <p className="text-xs font-semibold">Status</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {isActive ? 'Ativo' : 'Inativo'}
+                  </p>
+                </div>
+                <Switch checked={isActive} onCheckedChange={setIsActive} />
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {isLoadingCareOptions ? (
-              <div className="flex gap-2">
-                {[1, 2, 3].map(i => (
-                  <div
-                    key={i}
-                    className="h-10 w-10 rounded-md bg-gray-200 dark:bg-slate-700 animate-pulse"
-                  />
-                ))}
-              </div>
-            ) : selectedCareOptions.length > 0 ? (
-              <TooltipProvider>
-                <div className="flex flex-wrap gap-2">
-                  {selectedCareOptions.map(option => (
-                    <Tooltip key={option.code} delayDuration={150}>
-                      <TooltipTrigger asChild>
-                        <div className="p-2 bg-white dark:bg-slate-800 rounded-md border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-                          <CareIcon
-                            assetPath={option.assetPath}
-                            size={32}
-                            className="dark:brightness-0 dark:invert"
-                            alt={option.label}
-                          />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        className="max-w-xs space-y-1"
-                      >
-                        <p className="text-sm font-semibold">{option.label}</p>
-                        <p className="text-xs text-muted-foreground leading-snug">
-                          Código: {option.code}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </div>
-              </TooltipProvider>
-            ) : (
-              <span className="text-sm text-muted-foreground">
-                Nenhuma instrução definida
-              </span>
+        </Card>
+
+        {/* Tabs + Form Card */}
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList
+            className={`grid w-full h-12 mb-4 ${hasCareInstructions ? 'grid-cols-2' : 'grid-cols-1'}`}
+          >
+            <TabsTrigger value="general">Informações Gerais</TabsTrigger>
+            {hasCareInstructions && (
+              <TabsTrigger value="conservation">
+                Modo de Conservação
+              </TabsTrigger>
             )}
-          </div>
-        </div>
-      </Card>
+          </TabsList>
 
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="flex w-full justify-start gap-2 mb-4">
-          <TabsTrigger value="general" className="rounded-lg">
-            Informações Gerais
-          </TabsTrigger>
-          <TabsTrigger value="variants" className="rounded-lg">
-            Variantes
-          </TabsTrigger>
-          <TabsTrigger value="conservation" className="rounded-lg">
-            Modo de Conservação
-          </TabsTrigger>
-        </TabsList>
-
-        {/* TAB: Informações Gerais */}
-        <TabsContent value="general">
-          <form onSubmit={handleSubmit} className="flex flex-col w-full gap-6">
-            <Card className="w-full p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4 text-white/60">
-                  <NotebookText className="h-6 w-6" />
-                  Dados do Produto
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">
-                      Nome do Produto <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      placeholder="Nome do produto"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="category">Categoria do Produto</Label>
-                    <Combobox
-                      value={categoryId}
-                      onValueChange={setCategoryId}
-                      options={[
-                        { value: '', label: 'Nenhuma categoria' },
-                        ...hierarchicalCategoryOptions.map(option => ({
-                          value: option.value,
-                          label: option.label,
-                        })),
-                      ]}
-                      placeholder="Nenhuma categoria"
-                      searchPlaceholder="Buscar categoria..."
-                      emptyText="Nenhuma categoria encontrada"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="manufacturer">
-                      Fabricante do Produto{' '}
-                      <span className="text-red-500">*</span>
-                    </Label>
-                    <Combobox
-                      value={manufacturerId}
-                      onValueChange={setManufacturerId}
-                      options={[
-                        { value: '', label: 'Não informado' },
-                        ...manufacturers.map(mfg => ({
-                          value: mfg.id,
-                          label: mfg.name,
-                        })),
-                      ]}
-                      placeholder="Fabricante não informado"
-                      searchPlaceholder="Buscar fabricante..."
-                      emptyText="Nenhum fabricante encontrado"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Descrição</Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    placeholder="Descrição do produto"
-                    rows={4}
+          {/* TAB: Informações Gerais */}
+          <TabsContent value="general" className="flex-col w-full space-y-6">
+            {/* Section: Dados do Produto */}
+            <Card className="bg-white/5 py-2 overflow-hidden">
+              <div className="px-6 py-4 space-y-8">
+                <div className="space-y-5">
+                  <SectionHeader
+                    icon={NotebookText}
+                    title="Dados do Produto"
+                    subtitle="Informações básicas de identificação"
                   />
-                </div>
+                  <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="name">
+                          Nome <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="name"
+                          value={name}
+                          onChange={e => setName(e.target.value)}
+                          placeholder="Nome do produto"
+                          required
+                        />
+                      </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-slate-700 bg-slate-800/50">
-                    <div className="space-y-0.5">
-                      <Label
-                        htmlFor="outOfLine"
-                        className="text-base font-medium"
-                      >
-                        Fora de Linha
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        Indica que o produto não está mais disponível para novos
-                        pedidos
-                      </p>
+                      <div className="grid gap-2">
+                        <Label>Categoria</Label>
+                        <CategoryCombobox
+                          categories={categories}
+                          value={categoryId}
+                          onValueChange={setCategoryId}
+                          placeholder="Selecione uma categoria..."
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label>
+                          Fabricante <span className="text-red-500">*</span>
+                        </Label>
+                        <Combobox
+                          value={manufacturerId}
+                          onValueChange={setManufacturerId}
+                          options={[
+                            { value: '', label: 'Não informado' },
+                            ...manufacturers.map(mfg => ({
+                              value: mfg.id,
+                              label: mfg.name,
+                            })),
+                          ]}
+                          placeholder="Selecione um fabricante..."
+                          searchPlaceholder="Buscar fabricante..."
+                          emptyText="Nenhum fabricante encontrado"
+                        />
+                      </div>
                     </div>
-                    <Switch
-                      id="outOfLine"
-                      checked={outOfLine}
-                      onCheckedChange={setOutOfLine}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-slate-700 bg-slate-800/50">
-                    <div className="space-y-0.5">
-                      <Label
-                        htmlFor="isActive"
-                        className="text-base font-medium"
-                      >
-                        Produto Ativo
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        Define se o produto está ativo no sistema
-                      </p>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="description">Descrição</Label>
+                      <Textarea
+                        id="description"
+                        value={description}
+                        onChange={e => setDescription(e.target.value)}
+                        placeholder="Descrição do produto"
+                        rows={3}
+                      />
                     </div>
-                    <Switch
-                      id="isActive"
-                      checked={isActive}
-                      onCheckedChange={setIsActive}
-                    />
+
+                    {/* Mobile toggles */}
+                    <div className="grid grid-cols-1 sm:hidden gap-4">
+                      <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-white dark:bg-slate-800/60">
+                        <div className="space-y-0.5">
+                          <Label className="text-base font-medium">
+                            Fora de Linha
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            {outOfLine ? 'Sim' : 'Não'}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={outOfLine}
+                          onCheckedChange={setOutOfLine}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-white dark:bg-slate-800/60">
+                        <div className="space-y-0.5">
+                          <Label className="text-base font-medium">
+                            Status
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            {isActive ? 'Ativo' : 'Inativo'}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={isActive}
+                          onCheckedChange={setIsActive}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4 mt-6 text-white/60">
-                <NotebookText className="h-6 w-6" />
-                Atributos Personalizados
-              </h3>
-
-              {template?.productAttributes &&
-              Object.keys(template.productAttributes).length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(template.productAttributes)
-                    .sort(([, a], [, b]) => {
-                      const labelA = (a as TemplateAttribute)?.label || '';
-                      const labelB = (b as TemplateAttribute)?.label || '';
-                      return labelA.localeCompare(labelB);
-                    })
-                    .map(([key, config]) => {
-                      const attrConfig = config as TemplateAttribute;
-                      const fieldType = attrConfig?.type || 'text';
-                      const label = attrConfig?.label || key;
-                      const options = attrConfig?.options || [];
-
-                      if (fieldType === 'boolean') {
-                        return (
-                          <div key={key} className="grid gap-2">
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id={`attr-${key}`}
-                                checked={attributes[key] === true}
-                                onCheckedChange={checked =>
-                                  setAttributes(prev => ({
-                                    ...prev,
-                                    [key]: checked,
-                                  }))
-                                }
-                              />
-                              <Label htmlFor={`attr-${key}`}>{label}</Label>
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      if (fieldType === 'select' && options.length > 0) {
-                        return (
-                          <div key={key} className="grid gap-2">
-                            <Label htmlFor={`attr-${key}`}>{label}</Label>
-                            <Select
-                              value={String(attributes[key] ?? '')}
-                              onValueChange={value =>
-                                setAttributes(prev => ({
-                                  ...prev,
-                                  [key]: value,
-                                }))
-                              }
-                            >
-                              <SelectTrigger id={`attr-${key}`}>
-                                <SelectValue placeholder="Selecione..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {options.map((option: string) => (
-                                  <SelectItem key={option} value={option}>
-                                    {option}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div key={key} className="grid gap-2">
-                          <Label htmlFor={`attr-${key}`}>{label}</Label>
-                          <Input
-                            id={`attr-${key}`}
-                            type={
-                              fieldType === 'number'
-                                ? 'number'
-                                : fieldType === 'date'
-                                  ? 'date'
-                                  : 'text'
-                            }
-                            value={String(attributes[key] ?? '')}
-                            onChange={e =>
-                              setAttributes(prev => ({
-                                ...prev,
-                                [key]: e.target.value,
-                              }))
-                            }
-                            placeholder={`Insira ${label.toLowerCase()}`}
-                          />
-                        </div>
-                      );
-                    })}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum atributo personalizado definido para este template.
-                </p>
-              )}
             </Card>
-          </form>
-        </TabsContent>
 
-        {/* TAB: Variantes */}
-        <TabsContent value="variants">
-          <Card className="w-full p-6">
-            <div className="space-y-6">
-              <VariantManager productId={productId} />
-            </div>
-          </Card>
-        </TabsContent>
+            {/* Section: Atributos Exclusivos */}
+            {templateAttrs.length > 0 && (
+              <Card className="bg-white/5 py-2 overflow-hidden">
+                <div className="px-6 py-4 space-y-8">
+                  <div className="space-y-5">
+                    <SectionHeader
+                      icon={SlidersHorizontal}
+                      title="Atributos Exclusivos"
+                      subtitle={`Definidos pelo template "${template?.name}"`}
+                    />
+                    <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {templateAttrs.map(([key, config]) => {
+                          const cfg = config as TemplateAttribute;
+                          const fieldType = cfg?.type || 'text';
+                          const baseLabel = cfg?.label || key;
+                          const displayLabel = cfg?.unitOfMeasure
+                            ? `${baseLabel} (${cfg.unitOfMeasure})`
+                            : baseLabel;
+                          const options = cfg?.options || [];
+                          const placeholder =
+                            cfg?.placeholder ||
+                            (cfg?.mask
+                              ? cfg.mask
+                              : `Insira ${baseLabel.toLowerCase()}`);
 
-        {/* TAB: Modo de Conservação */}
-        <TabsContent value="conservation">
-          <Card className="w-full p-6">
-            <div className="space-y-6">
-              <CareSelector productId={productId} initialSelectedIds={[]} />
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                          if (fieldType === 'boolean') {
+                            return (
+                              <div
+                                key={key}
+                                className="flex items-center space-x-2"
+                              >
+                                <Switch
+                                  id={`attr-${key}`}
+                                  checked={attributes[key] === true}
+                                  onCheckedChange={checked =>
+                                    setAttributes(prev => ({
+                                      ...prev,
+                                      [key]: checked,
+                                    }))
+                                  }
+                                />
+                                <Label htmlFor={`attr-${key}`}>
+                                  {displayLabel}
+                                </Label>
+                              </div>
+                            );
+                          }
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o produto &quot;
-              {product?.name}&quot;? Esta ação não pode ser desfeita e todas as
-              variantes associadas serão removidas.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          if (fieldType === 'select' && options.length > 0) {
+                            return (
+                              <div key={key} className="grid gap-2">
+                                <Label htmlFor={`attr-${key}`}>
+                                  {displayLabel}
+                                </Label>
+                                <Select
+                                  value={String(attributes[key] ?? '')}
+                                  onValueChange={value =>
+                                    setAttributes(prev => ({
+                                      ...prev,
+                                      [key]: value,
+                                    }))
+                                  }
+                                >
+                                  <SelectTrigger id={`attr-${key}`}>
+                                    <SelectValue placeholder="Selecione..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {options.map((option: string) => (
+                                      <SelectItem key={option} value={option}>
+                                        {option}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            );
+                          }
+
+                          const mask = cfg?.mask;
+                          const isNumericMask = mask && /^#+$/.test(mask);
+                          const inputType =
+                            fieldType === 'number' || isNumericMask
+                              ? 'text'
+                              : fieldType === 'date'
+                                ? 'date'
+                                : 'text';
+
+                          const handleMaskedChange = (
+                            e: React.ChangeEvent<HTMLInputElement>
+                          ) => {
+                            let val = e.target.value;
+                            if (isNumericMask) {
+                              val = val.replace(/\D/g, '');
+                              if (mask && val.length > mask.length) {
+                                val = val.slice(0, mask.length);
+                              }
+                            }
+                            setAttributes(prev => ({
+                              ...prev,
+                              [key]:
+                                fieldType === 'number'
+                                  ? parseFloat(val) || val
+                                  : val,
+                            }));
+                          };
+
+                          return (
+                            <div key={key} className="grid gap-2">
+                              <Label htmlFor={`attr-${key}`}>
+                                {displayLabel}
+                              </Label>
+                              <Input
+                                id={`attr-${key}`}
+                                type={inputType}
+                                inputMode={
+                                  isNumericMask || fieldType === 'number'
+                                    ? 'numeric'
+                                    : undefined
+                                }
+                                maxLength={
+                                  isNumericMask && mask
+                                    ? mask.length
+                                    : undefined
+                                }
+                                value={String(attributes[key] ?? '')}
+                                onChange={handleMaskedChange}
+                                placeholder={placeholder}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* TAB: Modo de Conservação */}
+          {hasCareInstructions && (
+            <TabsContent
+              value="conservation"
+              className="flex-col w-full space-y-6"
             >
-              {isDeleting ? 'Excluindo...' : 'Excluir'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+              <Card className="bg-white/5 py-2 overflow-hidden">
+                <div className="px-6 py-4">
+                  <CareSelector
+                    productId={productId}
+                    initialSelectedIds={savedCareIds}
+                  />
+                </div>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
+      </PageBody>
+
+      {/* Delete PIN Modal */}
+      <VerifyActionPinModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onSuccess={handleDeleteConfirm}
+        title="Excluir Produto"
+        description={`Digite seu PIN de ação para excluir o produto "${product.name}". Esta ação não pode ser desfeita e todas as variantes associadas serão removidas.`}
+      />
+    </PageLayout>
   );
 }

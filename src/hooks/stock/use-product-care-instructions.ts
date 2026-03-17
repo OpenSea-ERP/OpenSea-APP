@@ -13,9 +13,9 @@ export function useProductCareInstructions(productId: string) {
     queryKey: ['products', productId, 'care-instructions'],
     queryFn: async () => {
       const response = await apiClient.get<{
-        careInstructions: ProductCareInstruction[];
+        productCareInstructions: ProductCareInstruction[];
       }>(`/v1/products/${productId}/care-instructions`);
-      return response.careInstructions;
+      return response.productCareInstructions ?? [];
     },
     enabled: !!productId,
   });

@@ -263,7 +263,7 @@ export const variantsConfig = defineEntityConfig<Variant>()({
       },
       {
         id: 'attributes',
-        title: 'Atributos Personalizados',
+        title: 'Atributos Exclusivos',
         description: 'Atributos específicos desta variante',
         fields: [
           {

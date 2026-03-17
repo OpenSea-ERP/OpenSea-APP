@@ -6,6 +6,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { CategoryCombobox } from '@/components/ui/category-combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -21,9 +22,16 @@ import {
   type WizardStep,
 } from '@/components/ui/step-wizard-dialog';
 import { Switch } from '@/components/ui/switch';
+import { usePermissions } from '@/hooks/use-permissions';
 import { logger } from '@/lib/logger';
-import { manufacturersService, templatesService } from '@/services/stock';
+import {
+  categoriesService,
+  manufacturersService,
+  templatesService,
+} from '@/services/stock';
+import { STOCK_PERMISSIONS } from '@/app/(dashboard)/(modules)/stock/_shared/constants/stock-permissions';
 import type {
+  Category,
   CreateProductRequest,
   Manufacturer,
   Template,
@@ -308,32 +316,38 @@ function StepSelectManufacturer({
 function StepProductData({
   selectedTemplate,
   name,
-  description,
+  categoryId,
   attributes,
+  categories,
+  loadingCategories,
   onNameChange,
-  onDescriptionChange,
+  onCategoryChange,
   onAttributeChange,
   isSubmitting,
 }: {
   selectedTemplate: Template | null;
   name: string;
-  description: string;
+  categoryId: string;
   attributes: Record<string, unknown>;
+  categories: Category[];
+  loadingCategories: boolean;
   onNameChange: (value: string) => void;
-  onDescriptionChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
   onAttributeChange: (key: string, value: unknown) => void;
   isSubmitting: boolean;
 }) {
-  const templateAttrs = selectedTemplate?.productAttributes
-    ? Object.entries(selectedTemplate.productAttributes).sort((a, b) => {
-        const labelA = (
-          (a[1] as TemplateAttribute)?.label || a[0]
-        ).toLowerCase();
-        const labelB = (
-          (b[1] as TemplateAttribute)?.label || b[0]
-        ).toLowerCase();
-        return labelA.localeCompare(labelB);
-      })
+  const requiredAttrs = selectedTemplate?.productAttributes
+    ? Object.entries(selectedTemplate.productAttributes)
+        .filter(([, config]) => (config as TemplateAttribute)?.required)
+        .sort((a, b) => {
+          const labelA = (
+            (a[1] as TemplateAttribute)?.label || a[0]
+          ).toLowerCase();
+          const labelB = (
+            (b[1] as TemplateAttribute)?.label || b[0]
+          ).toLowerCase();
+          return labelA.localeCompare(labelB);
+        })
     : [];
 
   return (
@@ -353,35 +367,41 @@ function StepProductData({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="product-description">Descrição</Label>
-        <Input
-          id="product-description"
-          value={description}
-          onChange={e => onDescriptionChange(e.target.value)}
-          placeholder="Descrição opcional do produto"
-          disabled={isSubmitting}
+        <Label>Categoria</Label>
+        <CategoryCombobox
+          categories={categories}
+          value={categoryId}
+          onValueChange={onCategoryChange}
+          placeholder="Selecione uma categoria..."
+          disabled={isSubmitting || loadingCategories}
         />
       </div>
 
-      {templateAttrs.length > 0 && (
+      {requiredAttrs.length > 0 && (
         <div className="space-y-3 pt-2">
           <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-            Atributos do Template
+            Atributos Obrigatórios
           </Label>
-          <div className="grid grid-cols-2 gap-3">
-            {templateAttrs.map(([key, config]) => {
+          <div className="space-y-3">
+            {requiredAttrs.map(([key, config]) => {
               const cfg = config as TemplateAttribute;
-              const label = cfg?.label || key;
+              const baseLabel = cfg?.label || key;
+              const displayLabel = cfg?.unitOfMeasure
+                ? `${baseLabel} (${cfg.unitOfMeasure})`
+                : baseLabel;
               const type: string = cfg?.type || 'text';
               const value = attributes[key] as
                 | string
                 | boolean
                 | number
                 | undefined;
+              const placeholder =
+                cfg?.placeholder ||
+                (cfg?.mask ? cfg.mask : `Insira ${baseLabel.toLowerCase()}`);
 
               if (type === 'boolean' || type === 'sim/nao') {
                 return (
-                  <div key={key} className="flex items-center gap-2 col-span-2">
+                  <div key={key} className="flex items-center gap-2">
                     <Switch
                       id={`attr-${key}`}
                       checked={
@@ -396,10 +416,8 @@ function StepProductData({
                       htmlFor={`attr-${key}`}
                       className="text-sm font-normal cursor-pointer"
                     >
-                      {label}
-                      {cfg?.required && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
+                      {displayLabel}
+                      <span className="text-red-500 ml-1">*</span>
                     </Label>
                   </div>
                 );
@@ -407,19 +425,17 @@ function StepProductData({
 
               if (type === 'select') {
                 return (
-                  <div key={key} className="space-y-1">
-                    <Label htmlFor={`attr-${key}`} className="text-xs">
-                      {label}
-                      {cfg?.required && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
+                  <div key={key} className="space-y-2">
+                    <Label htmlFor={`attr-${key}`}>
+                      {displayLabel}
+                      <span className="text-red-500 ml-1">*</span>
                     </Label>
                     <Select
                       value={String(value ?? '')}
                       onValueChange={val => onAttributeChange(key, val)}
                       disabled={isSubmitting}
                     >
-                      <SelectTrigger id={`attr-${key}`} className="h-9">
+                      <SelectTrigger id={`attr-${key}`}>
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -434,36 +450,45 @@ function StepProductData({
                 );
               }
 
+              const mask = cfg?.mask;
+              const isNumericMask = mask && /^#+$/.test(mask);
+              const inputType =
+                type === 'number' || isNumericMask
+                  ? 'text'
+                  : type === 'date'
+                    ? 'date'
+                    : 'text';
+
               return (
-                <div key={key} className="space-y-1">
-                  <Label htmlFor={`attr-${key}`} className="text-xs">
-                    {label}
-                    {cfg?.required && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
+                <div key={key} className="space-y-2">
+                  <Label htmlFor={`attr-${key}`}>
+                    {displayLabel}
+                    <span className="text-red-500 ml-1">*</span>
                   </Label>
                   <Input
                     id={`attr-${key}`}
-                    type={
-                      type === 'number'
-                        ? 'number'
-                        : type === 'date'
-                          ? 'date'
-                          : 'text'
+                    type={inputType}
+                    inputMode={
+                      isNumericMask || type === 'number' ? 'numeric' : undefined
                     }
+                    maxLength={isNumericMask && mask ? mask.length : undefined}
                     value={String(value ?? '')}
-                    onChange={e =>
+                    onChange={e => {
+                      let val = e.target.value;
+                      if (isNumericMask) {
+                        val = val.replace(/\D/g, '');
+                        if (mask && val.length > mask.length) {
+                          val = val.slice(0, mask.length);
+                        }
+                      }
                       onAttributeChange(
                         key,
-                        type === 'number'
-                          ? parseFloat(e.target.value) || 0
-                          : e.target.value
-                      )
-                    }
-                    placeholder={cfg?.placeholder || ''}
-                    required={cfg?.required}
+                        type === 'number' ? parseFloat(val) || val : val
+                      );
+                    }}
+                    placeholder={placeholder}
+                    required
                     disabled={isSubmitting}
-                    className="h-9"
                   />
                 </div>
               );
@@ -485,13 +510,19 @@ export function CreateProductWizard({
   onSubmit,
   initialTemplateId,
 }: CreateProductWizardProps) {
+  const { hasPermission } = usePermissions();
+  const canCreateTemplate = hasPermission(STOCK_PERMISSIONS.TEMPLATES.CREATE);
+  const canCreateManufacturer = hasPermission(
+    STOCK_PERMISSIONS.MANUFACTURERS.CREATE
+  );
+
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
     null
   );
   const [selectedManufacturerId, setSelectedManufacturerId] = useState('');
   const [productName, setProductName] = useState('');
-  const [productDescription, setProductDescription] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [attributes, setAttributes] = useState<Record<string, unknown>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -520,6 +551,15 @@ export function CreateProductWizard({
       ? (manufacturersData as Manufacturer[])
       : [];
 
+  const { data: categoriesData, isLoading: loadingCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesService.listCategories(),
+    enabled: open,
+  });
+  const categories = Array.isArray(categoriesData?.categories)
+    ? categoriesData.categories
+    : [];
+
   // Auto-select initial template
   if (initialTemplateId && !selectedTemplate && templates.length > 0) {
     const found = templates.find(t => t.id === initialTemplateId);
@@ -533,6 +573,7 @@ export function CreateProductWizard({
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template);
     setAttributes({});
+    setCurrentStep(2);
   };
 
   const handleAttributeChange = (key: string, value: unknown) => {
@@ -547,8 +588,8 @@ export function CreateProductWizard({
       await onSubmit({
         templateId: selectedTemplate.id,
         name: productName,
-        description: productDescription || undefined,
         manufacturerId: selectedManufacturerId,
+        categoryIds: selectedCategoryId ? [selectedCategoryId] : undefined,
         attributes,
       });
 
@@ -568,10 +609,15 @@ export function CreateProductWizard({
     setSelectedTemplate(null);
     setSelectedManufacturerId('');
     setProductName('');
-    setProductDescription('');
+    setSelectedCategoryId('');
     setAttributes({});
     setIsSubmitting(false);
     onOpenChange(false);
+  };
+
+  const handleManufacturerSelect = (id: string) => {
+    setSelectedManufacturerId(id);
+    setCurrentStep(3);
   };
 
   // Steps
@@ -595,20 +641,41 @@ export function CreateProductWizard({
         />
       ),
       isValid: !!selectedTemplate,
+      footer: canCreateTemplate ? (
+        <Button type="button" asChild>
+          <Link href="/stock/templates?action=create">
+            <Plus className="h-4 w-4 mr-1" />
+            Criar Novo Template
+          </Link>
+        </Button>
+      ) : (
+        <></>
+      ),
     },
     {
       title: 'Selecione o Fabricante',
       description: 'Informe quem fabrica este produto.',
       icon: <Factory className="h-16 w-16 text-sky-400" strokeWidth={1.2} />,
+      onBack: () => setCurrentStep(1),
       content: (
         <StepSelectManufacturer
           manufacturers={manufacturers}
           isLoading={loadingManufacturers}
           selectedId={selectedManufacturerId}
-          onSelect={setSelectedManufacturerId}
+          onSelect={handleManufacturerSelect}
         />
       ),
       isValid: !!selectedManufacturerId,
+      footer: canCreateManufacturer ? (
+        <Button type="button" asChild>
+          <Link href="/stock/manufacturers?action=create">
+            <Plus className="h-4 w-4 mr-1" />
+            Criar Novo Fabricante
+          </Link>
+        </Button>
+      ) : (
+        <></>
+      ),
     },
     {
       title: 'Dados do Produto',
@@ -618,42 +685,35 @@ export function CreateProductWizard({
       icon: (
         <Package className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />
       ),
+      onBack: () => setCurrentStep(2),
       content: (
         <StepProductData
           selectedTemplate={selectedTemplate}
           name={productName}
-          description={productDescription}
+          categoryId={selectedCategoryId}
           attributes={attributes}
+          categories={categories}
+          loadingCategories={loadingCategories}
           onNameChange={setProductName}
-          onDescriptionChange={setProductDescription}
+          onCategoryChange={setSelectedCategoryId}
           onAttributeChange={handleAttributeChange}
           isSubmitting={isSubmitting}
         />
       ),
       isValid: !!productName.trim(),
       footer: (
-        <>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setCurrentStep(2)}
-            disabled={isSubmitting}
-          >
-            ← Voltar
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !productName.trim()}
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Check className="h-4 w-4 mr-2" />
-            )}
-            Criar Produto
-          </Button>
-        </>
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting || !productName.trim()}
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <Check className="h-4 w-4 mr-2" />
+          )}
+          Criar Produto
+        </Button>
       ),
     },
   ];

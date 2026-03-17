@@ -17,15 +17,9 @@ import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { CategoryCombobox } from '@/components/ui/category-combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -80,30 +74,12 @@ export default function EditCategoryPage({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [iconUrl, setIconUrl] = useState('');
-  const [parentId, setParentId] = useState('none');
+  const [parentId, setParentId] = useState('');
   const [isActive, setIsActive] = useState(true);
 
   // ============================================================================
   // COMPUTED
   // ============================================================================
-
-  const availableParents = useMemo(
-    () =>
-      categories.filter((c: Category) => {
-        if (c.id === categoryId) return false;
-        let current = c;
-        while (current.parentId) {
-          if (current.parentId === categoryId) return false;
-          const parent = categories.find(
-            (cat: Category) => cat.id === current.parentId
-          );
-          if (!parent) break;
-          current = parent;
-        }
-        return true;
-      }),
-    [categories, categoryId]
-  );
 
   // ============================================================================
   // SYNC FORM WITH DATA
@@ -114,7 +90,7 @@ export default function EditCategoryPage({
       setName(category.name || '');
       setDescription(category.description || '');
       setIconUrl(category.iconUrl || '');
-      setParentId(category.parentId || 'none');
+      setParentId(category.parentId || '');
       setIsActive(category.isActive ?? true);
     }
   }, [category]);
@@ -135,7 +111,7 @@ export default function EditCategoryPage({
         name: name.trim(),
         description: description.trim() || undefined,
         iconUrl: iconUrl.trim() || undefined,
-        parentId: parentId === 'none' ? undefined : parentId || undefined,
+        parentId: parentId || undefined,
         isActive,
       };
 
@@ -340,7 +316,9 @@ export default function EditCategoryPage({
             <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
               <div className="text-right">
                 <p className="text-xs font-semibold">Status</p>
-                <p className="text-[11px] text-muted-foreground">{isActive ? 'Ativa' : 'Inativa'}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isActive ? 'Ativa' : 'Inativa'}
+                </p>
               </div>
               <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
@@ -356,92 +334,89 @@ export default function EditCategoryPage({
                 <div className="flex items-center gap-3">
                   <FolderTree className="h-5 w-5 text-foreground" />
                   <div>
-                    <h3 className="text-base font-semibold">Informações Gerais</h3>
-                    <p className="text-sm text-muted-foreground">Dados básicos da categoria</p>
+                    <h3 className="text-base font-semibold">
+                      Informações Gerais
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Dados básicos da categoria
+                    </p>
                   </div>
                 </div>
                 <div className="border-b border-border" />
               </div>
 
-            {/* Row 1: Nome, Categoria Pai, Ícone */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">
-                  Nome <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Nome da categoria"
-                  required
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="parentId">Categoria Pai</Label>
-                <Select value={parentId} onValueChange={setParentId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma categoria pai" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhuma (raiz)</SelectItem>
-                    {availableParents.map(parent => (
-                      <SelectItem key={parent.id} value={parent.id}>
-                        {parent.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="iconUrl">Ícone (URL)</Label>
-                <div className="flex items-center gap-3">
+              {/* Row 1: Nome, Categoria Pai, Ícone */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">
+                    Nome <span className="text-red-500">*</span>
+                  </Label>
                   <Input
-                    id="iconUrl"
-                    placeholder="https://exemplo.com/icone.svg"
-                    value={iconUrl}
-                    onChange={e => setIconUrl(e.target.value)}
-                    className="flex-1"
+                    id="name"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Nome da categoria"
+                    required
                   />
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border overflow-hidden">
-                    {iconUrl ? (
-                      <Image
-                        src={iconUrl}
-                        alt="Preview"
-                        width={24}
-                        height={24}
-                        className="h-6 w-6 object-contain"
-                        unoptimized
-                        onError={e => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <PiFolderOpenDuotone className="h-5 w-5 text-muted-foreground" />
-                    )}
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Categoria Pai</Label>
+                  <CategoryCombobox
+                    categories={categories}
+                    value={parentId}
+                    onValueChange={setParentId}
+                    placeholder="Nenhuma (raiz)"
+                    excludeId={categoryId}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="iconUrl">Ícone (URL)</Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      id="iconUrl"
+                      placeholder="https://exemplo.com/icone.svg"
+                      value={iconUrl}
+                      onChange={e => setIconUrl(e.target.value)}
+                      className="flex-1"
+                    />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border overflow-hidden">
+                      {iconUrl ? (
+                        <Image
+                          src={iconUrl}
+                          alt="Preview"
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 object-contain"
+                          unoptimized
+                          onError={e => {
+                            (e.target as HTMLImageElement).style.display =
+                              'none';
+                          }}
+                        />
+                      ) : (
+                        <PiFolderOpenDuotone className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Row 2: Descrição */}
-            <div className="grid gap-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder="Descrição da categoria"
-                rows={3}
-              />
-            </div>
-
+              {/* Row 2: Descrição */}
+              <div className="grid gap-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Descrição da categoria"
+                  rows={3}
+                />
+              </div>
             </div>
           </div>
         </Card>
-
       </PageBody>
 
       {/* Delete Confirmation */}

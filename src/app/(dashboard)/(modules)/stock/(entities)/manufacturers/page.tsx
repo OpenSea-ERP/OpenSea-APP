@@ -49,9 +49,9 @@ import {
   Upload,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { CircleFlag } from 'react-circle-flags';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CreateManufacturerWizard,
   createManufacturer,
@@ -70,6 +70,7 @@ type ActionButtonWithPermission = HeaderButton & {
 
 export default function ManufacturersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { hasPermission } = usePermissions();
 
   // ============================================================================
@@ -157,6 +158,17 @@ export default function ManufacturersPage() {
       }),
     },
   });
+
+  // ============================================================================
+  // OPEN CREATE MODAL VIA URL PARAM
+  // ============================================================================
+  useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      page.modals.open('create');
+      window.history.replaceState(null, '', '/stock/manufacturers');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // ============================================================================
   // HANDLERS
@@ -273,7 +285,10 @@ export default function ManufacturersPage() {
     badges.push({
       label: item.country || '—',
       variant: 'outline',
-      icon: cc && cc !== 'OTHER' ? (makeFlagIcon(cc.toLowerCase()) as unknown as typeof Globe) : Globe,
+      icon:
+        cc && cc !== 'OTHER'
+          ? (makeFlagIcon(cc.toLowerCase()) as unknown as typeof Globe)
+          : Globe,
       color:
         'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
       flag: cc && cc !== 'OTHER' ? cc.toLowerCase() : undefined,
@@ -427,7 +442,12 @@ export default function ManufacturersPage() {
                   )}
                 >
                   {badge.flag ? (
-                    <CircleFlag countryCode={badge.flag} height={12} width={12} className="shrink-0" />
+                    <CircleFlag
+                      countryCode={badge.flag}
+                      height={12}
+                      width={12}
+                      className="shrink-0"
+                    />
                   ) : badge.icon ? (
                     <badge.icon className="w-3 h-3" />
                   ) : null}

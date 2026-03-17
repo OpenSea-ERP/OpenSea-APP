@@ -44,6 +44,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -513,6 +514,13 @@ function ProductsPageContent() {
           badges={[
             { label: templateName, variant: 'default' },
             { label: unitOfMeasure, variant: 'default' },
+            {
+              label: categoryNames,
+              variant: 'outline' as const,
+              icon: Tag,
+              color:
+                'border-teal-600/25 dark:border-teal-500/20 bg-teal-50 dark:bg-teal-500/8 text-teal-700 dark:text-teal-300',
+            },
             ...(item.outOfLine
               ? [{ label: 'Fora de Linha', variant: 'warning' as const }]
               : []),
@@ -540,13 +548,7 @@ function ProductsPageContent() {
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
           showStatusBadges={true}
-        >
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Tag className="w-3.5 h-3.5 shrink-0" />
-            <span className="font-medium">Categoria:</span>
-            <span className="truncate">{categoryNames}</span>
-          </div>
-        </EntityCard>
+        />
       </EntityContextMenu>
     );
   };
@@ -557,13 +559,62 @@ function ProductsPageContent() {
       item.template?.unitOfMeasure || 'UNITS'
     );
     const manufacturerName = item.manufacturer?.name;
-    const variantLabel = item.variants?.length
-      ? `${item.variants.length} variante${item.variants.length !== 1 ? 's' : ''}`
+    const variantCount = item.variants?.length ?? 0;
+    const variantLabel = variantCount
+      ? `${variantCount} variante${variantCount !== 1 ? 's' : ''}`
       : 'Ver variantes';
     const categoryNames =
       item.productCategories && item.productCategories.length > 0
         ? item.productCategories.map(c => c.name).join(', ')
         : 'Sem categoria';
+
+    const listBadges: {
+      label: string;
+      variant: 'outline';
+      icon?: typeof Tag;
+      color: string;
+    }[] = [
+      {
+        label: templateName,
+        variant: 'outline',
+        icon: Blocks,
+        color:
+          'border-purple-600/25 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-500/8 text-purple-700 dark:text-purple-300',
+      },
+      {
+        label: unitOfMeasure,
+        variant: 'outline',
+        color:
+          'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+      },
+      {
+        label: categoryNames,
+        variant: 'outline',
+        icon: Tag,
+        color:
+          'border-teal-600/25 dark:border-teal-500/20 bg-teal-50 dark:bg-teal-500/8 text-teal-700 dark:text-teal-300',
+      },
+      ...(item.outOfLine
+        ? [
+            {
+              label: 'Fora de Linha',
+              variant: 'outline' as const,
+              color:
+                'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+            },
+          ]
+        : []),
+      ...(item.status !== 'ACTIVE'
+        ? [
+            {
+              label: item.status === 'INACTIVE' ? 'Inativo' : 'Arquivado',
+              variant: 'outline' as const,
+              color:
+                'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
+            },
+          ]
+        : []),
+    ];
 
     return (
       <EntityContextMenu
@@ -604,47 +655,55 @@ function ProductsPageContent() {
         <EntityCard
           id={item.id}
           variant="list"
-          title={item.name}
-          subtitle={manufacturerName || item.fullCode}
-          icon={Package}
-          iconBgColor="bg-linear-to-br from-blue-500 to-cyan-600"
-          badges={[
-            { label: templateName, variant: 'default' },
-            { label: unitOfMeasure, variant: 'default' },
-            ...(item.outOfLine
-              ? [{ label: 'Fora de Linha', variant: 'warning' as const }]
-              : []),
-            ...(item.status !== 'ACTIVE'
-              ? [
-                  {
-                    label: item.status === 'INACTIVE' ? 'Inativo' : 'Arquivado',
-                    variant: 'secondary' as const,
-                  },
-                ]
-              : []),
-          ]}
+          title={
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-gray-900 dark:text-white truncate">
+                {item.name}
+              </span>
+              {manufacturerName && (
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {manufacturerName}
+                </span>
+              )}
+            </span>
+          }
           metadata={
-            <div className="flex items-center gap-1.5">
-              <Tag className="w-3 h-3 shrink-0" />
-              <span className="truncate">{categoryNames}</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {listBadges.map((badge, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0',
+                    badge.color
+                  )}
+                >
+                  {badge.icon && <badge.icon className="w-3 h-3" />}
+                  {badge.label}
+                </span>
+              ))}
             </div>
           }
-          footer={{
-            type: 'single',
-            button: {
-              icon: Grid3x3,
-              label: variantLabel,
-              onClick: () => handleProductClick(item),
-              color: 'blue',
-            },
-          }}
+          icon={Package}
+          iconBgColor="bg-linear-to-br from-blue-500 to-cyan-600"
           isSelected={isSelected}
           showSelection={false}
           clickable={false}
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
           showStatusBadges={true}
-        />
+        >
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              handleProductClick(item);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/15 transition-colors cursor-pointer"
+          >
+            <Grid3x3 className="h-3.5 w-3.5" />
+            {variantLabel}
+          </button>
+        </EntityCard>
       </EntityContextMenu>
     );
   };
@@ -768,6 +827,7 @@ function ProductsPageContent() {
             <EntityGrid
               config={productsConfig}
               items={displayedProducts}
+              showItemCount={false}
               toolbarStart={
                 <>
                   <FilterDropdown
@@ -827,6 +887,12 @@ function ProductsPageContent() {
                       color: 'cyan',
                     }}
                   />
+                  <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    Total de {displayedProducts.length}{' '}
+                    {displayedProducts.length === 1 ? 'produto' : 'produtos'}
+                    {selectedIds.length > 0 &&
+                      ` · ${selectedIds.length} selecionado${selectedIds.length > 1 ? 's' : ''}`}
+                  </p>
                 </>
               }
               renderGridItem={renderGridCard}

@@ -5,13 +5,19 @@
 
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
+import type { HeaderButton } from '@/components/layout/types/header.types';
 import { productsService, variantsService } from '@/services/stock';
 import type { Product } from '@/types/stock';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Package } from 'lucide-react';
+import { Edit, Upload } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProductViewer } from '../src/components';
 
@@ -24,13 +30,17 @@ export default function ProductDetailPage() {
   // DATA FETCHING
   // ============================================================================
 
-  const { data: product, isLoading: isLoadingProduct } = useQuery<Product>({
+  const {
+    data: product,
+    isLoading: isLoadingProduct,
+    error,
+  } = useQuery<Product>({
     queryKey: ['products', productId],
     queryFn: async () => {
       const response = await productsService.getProduct(productId);
       return response.product;
     },
-    refetchOnMount: 'always', // Sempre buscar dados frescos ao montar
+    refetchOnMount: 'always',
   });
 
   const { data: variantsData, isLoading: isLoadingVariants } = useQuery({
@@ -38,49 +48,78 @@ export default function ProductDetailPage() {
     queryFn: async () => {
       return variantsService.listVariants(productId);
     },
-    refetchOnMount: 'always', // Sempre buscar dados frescos ao montar
+    refetchOnMount: 'always',
   });
 
   const variants = variantsData?.variants;
 
   // ============================================================================
-  // HANDLERS
+  // ACTION BUTTONS
   // ============================================================================
 
-  const handleDelete = () => {
-    router.push('/stock/products');
-  };
+  const actionButtons: HeaderButton[] = [
+    {
+      id: 'import',
+      title: 'Importar Variantes',
+      icon: Upload,
+      onClick: () =>
+        router.push(`/import/stock/variants/by-product/${productId}`),
+      variant: 'outline',
+    },
+    {
+      id: 'edit',
+      title: 'Editar Produto',
+      icon: Edit,
+      onClick: () => router.push(`/stock/products/${productId}/edit`),
+      variant: 'default',
+    },
+  ];
 
   // ============================================================================
-  // LOADING STATE
+  // BREADCRUMBS
+  // ============================================================================
+
+  const breadcrumbItems = [
+    { label: 'Estoque', href: '/stock' },
+    { label: 'Produtos', href: '/stock/products' },
+    { label: product?.name || '...' },
+  ];
+
+  // ============================================================================
+  // LOADING / ERROR
   // ============================================================================
 
   if (isLoadingProduct) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridLoading count={3} layout="list" size="md" />
+        </PageBody>
+      </PageLayout>
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
-      <div className="container mx-auto p-6">
-        <Card className="p-12 text-center">
-          <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-semibold mb-2">
-            Produto não encontrado
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            O produto que você está procurando não existe ou foi removido.
-          </p>
-          <Button onClick={() => router.push('/stock/products')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para Produtos
-          </Button>
-        </Card>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridError
+            type="not-found"
+            title="Produto não encontrado"
+            message="O produto que você está procurando não existe ou foi removido."
+            action={{
+              label: 'Voltar para Produtos',
+              onClick: () => router.push('/stock/products'),
+            }}
+          />
+        </PageBody>
+      </PageLayout>
     );
   }
 
@@ -89,17 +128,22 @@ export default function ProductDetailPage() {
   // ============================================================================
 
   return (
-    <div className="min-h-screen from-purple-50 via-gray-50 to-pink-50 dark:from-gray-900 dark:via-slate-900 dark:to-slate-800 px-6">
-      {/* Content - ProductViewer */}
-      <div className="max-w-8xl mx-auto space-y-6">
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={breadcrumbItems}
+          buttons={actionButtons}
+        />
+      </PageHeader>
+      <PageBody>
         <ProductViewer
           product={product}
           variants={variants || []}
           isLoadingVariants={isLoadingVariants}
-          showHeader={true}
-          onDelete={handleDelete}
+          showHeader={false}
+          onDelete={() => router.push('/stock/products')}
         />
-      </div>
-    </div>
+      </PageBody>
+    </PageLayout>
   );
 }
