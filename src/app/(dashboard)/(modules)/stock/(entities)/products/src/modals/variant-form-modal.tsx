@@ -391,8 +391,7 @@ export function VariantFormModal({
       colorHex: formData.colorHex.trim() || undefined,
       colorPantone: formData.colorPantone.trim() || undefined,
       secondaryColorHex: formData.secondaryColorHex.trim() || undefined,
-      secondaryColorPantone:
-        formData.secondaryColorPantone.trim() || undefined,
+      secondaryColorPantone: formData.secondaryColorPantone.trim() || undefined,
       pattern:
         formData.pattern && formData.pattern !== 'none'
           ? (formData.pattern as Pattern)
@@ -715,9 +714,7 @@ function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
           </div>
           <Input
             value={formData.secondaryColorPantone}
-            onChange={e =>
-              updateField('secondaryColorPantone', e.target.value)
-            }
+            onChange={e => updateField('secondaryColorPantone', e.target.value)}
             placeholder="Ex: PANTONE 19-4052"
             maxLength={32}
             disabled={isPending}
@@ -881,9 +878,7 @@ function PricingSection({
 
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <Label htmlFor="vfm-calculatedMargin">
-                Margem Calculada (%)
-              </Label>
+              <Label htmlFor="vfm-calculatedMargin">Margem Calculada (%)</Label>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
@@ -1053,9 +1048,7 @@ function AttributesSection({
                         currentValue === 'sim' ||
                         currentValue === '1'
                       }
-                      onCheckedChange={checked =>
-                        updateAttribute(key, checked)
-                      }
+                      onCheckedChange={checked => updateAttribute(key, checked)}
                       disabled={isPending}
                     />
                   </div>
@@ -1103,10 +1096,7 @@ function AttributesSection({
                         type="number"
                         value={currentValue}
                         onChange={e =>
-                          updateAttribute(
-                            key,
-                            parseFloat(e.target.value) || 0
-                          )
+                          updateAttribute(key, parseFloat(e.target.value) || 0)
                         }
                         placeholder={config.placeholder || ''}
                         disabled={isPending}

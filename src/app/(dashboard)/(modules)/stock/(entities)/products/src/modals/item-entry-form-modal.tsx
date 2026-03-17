@@ -805,9 +805,7 @@ function AttributesSection({
                         currentValue === 'sim' ||
                         currentValue === '1'
                       }
-                      onCheckedChange={checked =>
-                        updateAttribute(key, checked)
-                      }
+                      onCheckedChange={checked => updateAttribute(key, checked)}
                       disabled={isPending}
                     />
                   </div>
@@ -855,10 +853,7 @@ function AttributesSection({
                         type="number"
                         value={currentValue}
                         onChange={e =>
-                          updateAttribute(
-                            key,
-                            parseFloat(e.target.value) || 0
-                          )
+                          updateAttribute(key, parseFloat(e.target.value) || 0)
                         }
                         placeholder={config.placeholder || ''}
                         disabled={isPending}
