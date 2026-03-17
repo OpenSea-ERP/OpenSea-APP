@@ -424,10 +424,53 @@ export function useMoveMessage() {
   return useMutation({
     mutationFn: ({ id, folderId }: { id: string; folderId: string }) =>
       emailService.moveMessage(id, folderId),
+    onMutate: async ({ id, folderId }) => {
+      await queryClient.cancelQueries({ queryKey: ['email', 'messages'] });
+
+      // Remove message from all infinite query pages
+      queryClient.setQueriesData(
+        { queryKey: ['email', 'messages'] },
+        (old: unknown) => {
+          const data = old as
+            | {
+                pages?: Array<{
+                  data: Array<{ id: string }>;
+                  meta: unknown;
+                }>;
+              }
+            | undefined;
+          if (!data?.pages) return old;
+          return {
+            ...data,
+            pages: data.pages.map(page => ({
+              ...page,
+              data: page.data.filter(msg => msg.id !== id),
+            })),
+          };
+        }
+      );
+
+      // Update single message detail cache with new folderId
+      queryClient.setQueriesData(
+        { queryKey: ['email', 'message', id] },
+        (old: unknown) => {
+          if (!old) return old;
+          const data = old as { message?: { id: string; folderId: string } };
+          if (data.message) {
+            return { ...data, message: { ...data.message, folderId } };
+          }
+          return old;
+        }
+      );
+    },
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
+      await queryClient.invalidateQueries({ queryKey: ['email', 'accounts'] });
+    },
+    onError: async () => {
+      toast.error('Erro ao mover mensagem');
       await queryClient.invalidateQueries({ queryKey: ['email'] });
     },
-    onError: () => toast.error('Erro ao mover mensagem'),
   });
 }
 
@@ -435,11 +478,43 @@ export function useDeleteMessage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => emailService.deleteMessage(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['email', 'messages'] });
+
+      // Remove message from all infinite query pages
+      queryClient.setQueriesData(
+        { queryKey: ['email', 'messages'] },
+        (old: unknown) => {
+          const data = old as
+            | {
+                pages?: Array<{
+                  data: Array<{ id: string }>;
+                  meta: unknown;
+                }>;
+              }
+            | undefined;
+          if (!data?.pages) return old;
+          return {
+            ...data,
+            pages: data.pages.map(page => ({
+              ...page,
+              data: page.data.filter(msg => msg.id !== id),
+            })),
+          };
+        }
+      );
+
+      // Remove from detail cache
+      queryClient.removeQueries({ queryKey: ['email', 'message', id] });
+    },
     onSuccess: async () => {
-      toast.success('Mensagem excluída permanentemente');
+      await queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
+      await queryClient.invalidateQueries({ queryKey: ['email', 'accounts'] });
+    },
+    onError: async () => {
+      toast.error('Erro ao excluir mensagem');
       await queryClient.invalidateQueries({ queryKey: ['email'] });
     },
-    onError: () => toast.error('Erro ao excluir mensagem'),
   });
 }
 
@@ -606,19 +681,55 @@ export function useBulkMove() {
   return useMutation({
     mutationFn: ({ ids, folderId }: { ids: string[]; folderId: string }) =>
       runBulkQueue(ids, id => emailService.moveMessage(id, folderId)),
+    onMutate: async ({ ids }) => {
+      await queryClient.cancelQueries({ queryKey: ['email', 'messages'] });
+
+      const idSet = new Set(ids);
+
+      // Remove all messages from infinite query pages
+      queryClient.setQueriesData(
+        { queryKey: ['email', 'messages'] },
+        (old: unknown) => {
+          const data = old as
+            | {
+                pages?: Array<{
+                  data: Array<{ id: string }>;
+                  meta: unknown;
+                }>;
+              }
+            | undefined;
+          if (!data?.pages) return old;
+          return {
+            ...data,
+            pages: data.pages.map(page => ({
+              ...page,
+              data: page.data.filter(msg => !idSet.has(msg.id)),
+            })),
+          };
+        }
+      );
+    },
     onSuccess: async result => {
       if (result.failed.length === 0) {
         toast.success('Mensagens movidas');
+        await queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
+        await queryClient.invalidateQueries({
+          queryKey: ['email', 'accounts'],
+        });
       } else if (result.success > 0) {
         toast.warning(
           `${result.success}/${result.total} mensagens movidas. ${result.failed.length} falharam.`
         );
+        await queryClient.invalidateQueries({ queryKey: ['email'] });
       } else {
         toast.error('Falha ao mover mensagens');
+        await queryClient.invalidateQueries({ queryKey: ['email'] });
       }
+    },
+    onError: async () => {
+      toast.error('Falha ao mover mensagens');
       await queryClient.invalidateQueries({ queryKey: ['email'] });
     },
-    onError: () => toast.error('Falha ao mover mensagens'),
   });
 }
 
@@ -627,18 +738,59 @@ export function useBulkDelete() {
   return useMutation({
     mutationFn: (ids: string[]) =>
       runBulkQueue(ids, id => emailService.deleteMessage(id)),
+    onMutate: async (ids) => {
+      await queryClient.cancelQueries({ queryKey: ['email', 'messages'] });
+
+      const idSet = new Set(ids);
+
+      // Remove all messages from infinite query pages
+      queryClient.setQueriesData(
+        { queryKey: ['email', 'messages'] },
+        (old: unknown) => {
+          const data = old as
+            | {
+                pages?: Array<{
+                  data: Array<{ id: string }>;
+                  meta: unknown;
+                }>;
+              }
+            | undefined;
+          if (!data?.pages) return old;
+          return {
+            ...data,
+            pages: data.pages.map(page => ({
+              ...page,
+              data: page.data.filter(msg => !idSet.has(msg.id)),
+            })),
+          };
+        }
+      );
+
+      // Remove from detail caches
+      for (const id of ids) {
+        queryClient.removeQueries({ queryKey: ['email', 'message', id] });
+      }
+    },
     onSuccess: async result => {
       if (result.failed.length === 0) {
         toast.success('Mensagens excluídas');
+        await queryClient.invalidateQueries({ queryKey: ['email', 'folders'] });
+        await queryClient.invalidateQueries({
+          queryKey: ['email', 'accounts'],
+        });
       } else if (result.success > 0) {
         toast.warning(
           `${result.success}/${result.total} mensagens excluídas. ${result.failed.length} falharam.`
         );
+        await queryClient.invalidateQueries({ queryKey: ['email'] });
       } else {
         toast.error('Falha ao excluir mensagens');
+        await queryClient.invalidateQueries({ queryKey: ['email'] });
       }
+    },
+    onError: async () => {
+      toast.error('Falha ao excluir mensagens');
       await queryClient.invalidateQueries({ queryKey: ['email'] });
     },
-    onError: () => toast.error('Falha ao excluir mensagens'),
   });
 }
