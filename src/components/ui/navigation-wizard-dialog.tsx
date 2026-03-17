@@ -192,22 +192,44 @@ export function NavigationWizardDialog({
 
         {/* Right column — header + content + footer */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <div className="flex items-center justify-end px-6 pt-4 pb-2 shrink-0">
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handleClose}
-              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-40"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Fechar</span>
-            </button>
-          </div>
+          {/* Header — active section title */}
+          {(() => {
+            const active = visibleSections.find(s => s.id === activeSection);
+            return (
+              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-border/50 shrink-0">
+                <div className="flex items-center gap-3">
+                  {active && (
+                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                      {active.icon}
+                    </span>
+                  )}
+                  <div>
+                    <h3 className="text-base font-semibold leading-none">
+                      {active?.label ?? ''}
+                    </h3>
+                    {active?.description && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {active.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleClose}
+                  className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Fechar</span>
+                </button>
+              </div>
+            );
+          })()}
 
           {/* Content */}
           <ScrollArea className="flex-1 min-w-0">
-            <div className="px-6 pb-6">{children}</div>
+            <div className="p-6">{children}</div>
           </ScrollArea>
 
           {/* Footer */}
