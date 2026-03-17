@@ -264,7 +264,8 @@ export function useEmailMessages(params: {
         : undefined,
     enabled: Boolean(params.accountId) && canRead,
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    // 30s fallback — IDLE provides real-time for INBOX
+    refetchInterval: 30_000,
   });
 }
 
@@ -299,7 +300,8 @@ export function useCentralInboxMessages(params: {
         limit: 50,
       }),
     enabled: params.enabled && canRead && params.accountIds.length > 0,
-    refetchInterval: 60_000,
+    // 30s fallback — IDLE provides real-time for INBOX
+    refetchInterval: 30_000,
     staleTime: 30_000,
   });
 
