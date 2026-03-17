@@ -636,93 +636,17 @@ function BasicSection({
 // ---------------------------------------------------------------------------
 
 function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
+  const pattern = formData.pattern || '';
+  const isNoPattern = !pattern || pattern === 'none';
+  const isSolid = pattern === 'SOLID';
+
+  // Disable colors when no pattern; disable secondary when solid
+  const primaryDisabled = isPending || isNoPattern;
+  const secondaryDisabled = isPending || isNoPattern || isSolid;
+
   return (
     <div className="space-y-6">
-      {/* Cor Primária */}
-      <div className="space-y-1.5">
-        <Label>Cor Primária</Label>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={formData.colorHex || '#000000'}
-              onChange={e => updateField('colorHex', e.target.value)}
-              className="h-9 w-12 cursor-pointer rounded border border-input bg-transparent p-0.5"
-              disabled={isPending}
-            />
-            <Input
-              value={formData.colorHex}
-              onChange={e => updateField('colorHex', e.target.value)}
-              placeholder="#000000"
-              maxLength={7}
-              className="flex-1"
-              disabled={isPending}
-            />
-            {formData.colorHex && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground"
-                onClick={() => updateField('colorHex', '')}
-              >
-                Limpar
-              </Button>
-            )}
-          </div>
-          <Input
-            value={formData.colorPantone}
-            onChange={e => updateField('colorPantone', e.target.value)}
-            placeholder="Ex: PANTONE 19-4052"
-            maxLength={32}
-            disabled={isPending}
-          />
-        </div>
-      </div>
-
-      {/* Cor Secundária */}
-      <div className="space-y-1.5">
-        <Label>Cor Secundária</Label>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={formData.secondaryColorHex || '#000000'}
-              onChange={e => updateField('secondaryColorHex', e.target.value)}
-              className="h-9 w-12 cursor-pointer rounded border border-input bg-transparent p-0.5"
-              disabled={isPending}
-            />
-            <Input
-              value={formData.secondaryColorHex}
-              onChange={e => updateField('secondaryColorHex', e.target.value)}
-              placeholder="#000000"
-              maxLength={7}
-              className="flex-1"
-              disabled={isPending}
-            />
-            {formData.secondaryColorHex && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground"
-                onClick={() => updateField('secondaryColorHex', '')}
-              >
-                Limpar
-              </Button>
-            )}
-          </div>
-          <Input
-            value={formData.secondaryColorPantone}
-            onChange={e => updateField('secondaryColorPantone', e.target.value)}
-            placeholder="Ex: PANTONE 19-4052"
-            maxLength={32}
-            disabled={isPending}
-          />
-        </div>
-      </div>
-
-      {/* Padrão */}
+      {/* Padrão — first, because it controls color availability */}
       <div className="space-y-1.5">
         <Label>Padrão</Label>
         <Select
@@ -744,9 +668,231 @@ function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
             ))}
           </SelectContent>
         </Select>
+        {isNoPattern && (
+          <p className="text-xs text-muted-foreground">
+            Selecione um padrão para definir as cores
+          </p>
+        )}
+      </div>
+
+      {/* Preview */}
+      <PatternPreview
+        pattern={pattern}
+        primaryColor={formData.colorHex}
+        secondaryColor={formData.secondaryColorHex}
+      />
+
+      {/* Cor Primária */}
+      <div className={cn('space-y-1.5', primaryDisabled && 'opacity-50')}>
+        <Label>Cor Primária</Label>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={formData.colorHex || '#000000'}
+              onChange={e => updateField('colorHex', e.target.value)}
+              className="h-9 w-12 cursor-pointer rounded border border-input bg-transparent p-0.5"
+              disabled={primaryDisabled}
+            />
+            <Input
+              value={formData.colorHex}
+              onChange={e => updateField('colorHex', e.target.value)}
+              placeholder="#000000"
+              maxLength={7}
+              className="flex-1"
+              disabled={primaryDisabled}
+            />
+            {formData.colorHex && !primaryDisabled && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => updateField('colorHex', '')}
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+          <Input
+            value={formData.colorPantone}
+            onChange={e => updateField('colorPantone', e.target.value)}
+            placeholder="Ex: PANTONE 19-4052"
+            maxLength={32}
+            disabled={primaryDisabled}
+          />
+        </div>
+      </div>
+
+      {/* Cor Secundária */}
+      <div className={cn('space-y-1.5', secondaryDisabled && 'opacity-50')}>
+        <div className="flex items-center gap-2">
+          <Label>Cor Secundária</Label>
+          {isSolid && !isNoPattern && (
+            <span className="text-[10px] text-muted-foreground">
+              (não aplicável para padrão sólido)
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={formData.secondaryColorHex || '#000000'}
+              onChange={e => updateField('secondaryColorHex', e.target.value)}
+              className="h-9 w-12 cursor-pointer rounded border border-input bg-transparent p-0.5"
+              disabled={secondaryDisabled}
+            />
+            <Input
+              value={formData.secondaryColorHex}
+              onChange={e => updateField('secondaryColorHex', e.target.value)}
+              placeholder="#000000"
+              maxLength={7}
+              className="flex-1"
+              disabled={secondaryDisabled}
+            />
+            {formData.secondaryColorHex && !secondaryDisabled && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => updateField('secondaryColorHex', '')}
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+          <Input
+            value={formData.secondaryColorPantone}
+            onChange={e => updateField('secondaryColorPantone', e.target.value)}
+            placeholder="Ex: PANTONE 19-4052"
+            maxLength={32}
+            disabled={secondaryDisabled}
+          />
+        </div>
       </div>
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Pattern Preview
+// ---------------------------------------------------------------------------
+
+interface PatternPreviewProps {
+  pattern: string;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
+function PatternPreview({
+  pattern,
+  primaryColor,
+  secondaryColor,
+}: PatternPreviewProps) {
+  const primary = primaryColor || '#cbd5e1'; // slate-300 fallback
+  const secondary = secondaryColor || '#94a3b8'; // slate-400 fallback
+  const isNoPattern = !pattern || pattern === 'none';
+  const patternLabel =
+    PATTERN_LABELS[pattern as keyof typeof PATTERN_LABELS] || '';
+
+  if (isNoPattern) {
+    return (
+      <div className="flex items-center justify-center h-20 rounded-xl border border-dashed border-border bg-muted/30">
+        <p className="text-xs text-muted-foreground">
+          Selecione um padrão para visualizar
+        </p>
+      </div>
+    );
+  }
+
+  const bgStyle = getPatternBackground(pattern, primary, secondary);
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <Label className="text-xs">Pré-visualização</Label>
+        <span className="text-[10px] text-muted-foreground">
+          {patternLabel}
+        </span>
+      </div>
+      <div
+        className="h-20 rounded-xl border border-border overflow-hidden"
+        style={bgStyle}
+      />
+    </div>
+  );
+}
+
+function getPatternBackground(
+  pattern: string,
+  primary: string,
+  secondary: string
+): React.CSSProperties {
+  switch (pattern) {
+    case 'SOLID':
+      return { background: primary };
+
+    case 'STRIPED':
+      return {
+        background: `repeating-linear-gradient(
+          45deg,
+          ${primary},
+          ${primary} 10px,
+          ${secondary} 10px,
+          ${secondary} 20px
+        )`,
+      };
+
+    case 'PLAID':
+      return {
+        background: `
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 14px,
+            ${secondary}33 14px,
+            ${secondary}33 28px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 14px,
+            ${secondary}33 14px,
+            ${secondary}33 28px
+          ),
+          ${primary}`,
+      };
+
+    case 'PRINTED':
+      return {
+        background: `
+          radial-gradient(circle 6px at 25% 25%, ${secondary} 99%, transparent),
+          radial-gradient(circle 4px at 75% 60%, ${secondary} 99%, transparent),
+          radial-gradient(circle 5px at 50% 80%, ${secondary} 99%, transparent),
+          radial-gradient(circle 3px at 15% 70%, ${secondary} 99%, transparent),
+          radial-gradient(circle 4px at 85% 25%, ${secondary} 99%, transparent),
+          ${primary}`,
+      };
+
+    case 'GRADIENT':
+      return {
+        background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+      };
+
+    case 'JACQUARD':
+      return {
+        background: `
+          repeating-conic-gradient(
+            ${primary} 0% 25%,
+            ${secondary} 0% 50%
+          ) 0 0 / 20px 20px`,
+      };
+
+    default:
+      return { background: primary };
+  }
 }
 
 // ---------------------------------------------------------------------------
