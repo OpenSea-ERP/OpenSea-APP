@@ -188,6 +188,32 @@ export function useUnshareEmailAccount() {
   });
 }
 
+// ─── Health Check ───────────────────────────────────────────────────────────
+
+export function useEmailAccountHealth(accountId: string | null) {
+  return useQuery({
+    queryKey: ['email', 'health', accountId],
+    queryFn: () => emailService.checkHealth(accountId!),
+    enabled: !!accountId,
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
+    retry: 1,
+  });
+}
+
+export function useEmailAccountsHealth(accountIds: string[]) {
+  return useQueries({
+    queries: accountIds.map(id => ({
+      queryKey: ['email', 'health', id],
+      queryFn: () => emailService.checkHealth(id),
+      staleTime: 60_000,
+      refetchInterval: 5 * 60_000,
+      retry: 1,
+      enabled: !!id,
+    })),
+  });
+}
+
 // ─── Folders ─────────────────────────────────────────────────────────────────
 
 export function useEmailFolders(accountId: string | null) {

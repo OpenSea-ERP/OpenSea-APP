@@ -74,6 +74,29 @@ export interface EmailAccountAccess {
   canManage: boolean;
 }
 
+// ─── Health Check Types ──────────────────────────────────────────────────────
+
+export interface EmailServiceHealth {
+  status: 'connected' | 'error';
+  latencyMs: number | null;
+  error: string | null;
+}
+
+export interface EmailWorkerHealth {
+  status: 'active' | 'stale' | 'error';
+  lastSyncAt: string | null;
+  lastJobState: string | null;
+  error: string | null;
+}
+
+export interface EmailAccountHealth {
+  imap: EmailServiceHealth;
+  smtp: EmailServiceHealth;
+  worker: EmailWorkerHealth;
+}
+
+// ─── Response Types ──────────────────────────────────────────────────────────
+
 export interface EmailAccountsResponse {
   data: EmailAccount[];
 }

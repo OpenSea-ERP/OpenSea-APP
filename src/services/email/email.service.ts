@@ -3,6 +3,7 @@ import { apiClient } from '@/lib/api-client';
 import type {
   CentralInboxQuery,
   CreateEmailAccountRequest,
+  EmailAccountHealth,
   EmailAccountResponse,
   EmailAccountsResponse,
   EmailContactSuggestResponse,
@@ -63,6 +64,12 @@ export const emailService = {
     return apiClient.post<{ message: string }>(
       API_ENDPOINTS.EMAIL.ACCOUNTS.SYNC(id),
       {}
+    );
+  },
+
+  async checkHealth(id: string): Promise<EmailAccountHealth> {
+    return apiClient.get<EmailAccountHealth>(
+      API_ENDPOINTS.EMAIL.ACCOUNTS.HEALTH(id)
     );
   },
 

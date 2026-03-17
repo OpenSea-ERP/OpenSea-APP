@@ -319,6 +319,7 @@ export const API_ENDPOINTS = {
       DELETE: (id: string) => `/v1/email/accounts/${id}`,
       TEST: (id: string) => `/v1/email/accounts/${id}/test`,
       SYNC: (id: string) => `/v1/email/accounts/${id}/sync`,
+      HEALTH: (id: string) => `/v1/email/accounts/${id}/health`,
       SHARE: (id: string) => `/v1/email/accounts/${id}/share`,
       UNSHARE: (id: string, userId: string) =>
         `/v1/email/accounts/${id}/share/${userId}`,
