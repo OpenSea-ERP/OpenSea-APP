@@ -196,7 +196,7 @@ export function NavigationWizardDialog({
           {(() => {
             const active = visibleSections.find(s => s.id === activeSection);
             return (
-              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-border/50 shrink-0">
+              <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border/50 shrink-0">
                 <div className="flex items-center gap-3">
                   {active && (
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
