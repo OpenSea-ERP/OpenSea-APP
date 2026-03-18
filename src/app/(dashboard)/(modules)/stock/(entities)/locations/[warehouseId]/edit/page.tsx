@@ -25,6 +25,9 @@ import { useRouter } from 'next/navigation';
 import { use, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { usePermissions } from '@/hooks/use-permissions';
+import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
+
 import {
   useDeleteWarehouse,
   useUpdateWarehouse,
@@ -38,6 +41,8 @@ interface PageProps {
 export default function WarehouseEditPage({ params }: PageProps) {
   const { warehouseId } = use(params);
   const router = useRouter();
+  const { hasPermission } = usePermissions();
+  const canDelete = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.DELETE);
 
   // ============================================================================
   // DATA FETCHING
@@ -159,15 +164,19 @@ export default function WarehouseEditPage({ params }: PageProps) {
               variant: 'ghost' as const,
               onClick: () => router.back(),
             },
-            {
-              id: 'delete',
-              title: 'Excluir',
-              variant: 'outline' as const,
-              icon: Trash2,
-              onClick: () => setDeleteOpen(true),
-              className:
-                'bg-slate-200 hover:bg-rose-600 hover:text-white dark:bg-slate-700 dark:hover:bg-rose-600',
-            },
+            ...(canDelete
+              ? [
+                  {
+                    id: 'delete',
+                    title: 'Excluir',
+                    variant: 'outline' as const,
+                    icon: Trash2,
+                    onClick: () => setDeleteOpen(true),
+                    className:
+                      'bg-slate-200 hover:bg-rose-600 hover:text-white dark:bg-slate-700 dark:hover:bg-rose-600',
+                  },
+                ]
+              : []),
             {
               id: 'save',
               title: updateMutation.isPending ? 'Salvando...' : 'Salvar alterações',

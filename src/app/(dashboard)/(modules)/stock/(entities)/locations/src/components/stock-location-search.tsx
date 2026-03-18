@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/core/hooks/use-debounce';
-import { useLocationSearch, useBinSuggestions } from '../api';
+import { apiClient } from '@/lib/api-client';
+import type { BinDetailResponse } from '@/types/stock';
+import { useLocationSearch, useBinSuggestions, API_ENDPOINTS } from '../api';
 
 export function StockLocationSearch() {
   const [query, setQuery] = useState('');
@@ -37,13 +39,22 @@ export function StockLocationSearch() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSuggestionClick = (address: string) => {
-    // Navigate to the warehouse with bin highlighted
-    // The address format is like "FAB-EST-01-01-A", we need to find the warehouse
+  const handleSuggestionClick = async (address: string) => {
     setIsOpen(false);
     setQuery('');
-    // For now, search results provide warehouse info
-    // Suggestions only have address - user can use search results for navigation
+    try {
+      // Get bin by address, then fetch detail to get warehouseId
+      const binRes = await apiClient.get<{ bin: { id: string } }>(
+        API_ENDPOINTS.bins.getByAddress(address)
+      );
+      const binId = binRes.bin.id;
+      const detailRes = await apiClient.get<BinDetailResponse>(
+        `${API_ENDPOINTS.bins.get(binId)}/detail`
+      );
+      router.push(`/stock/locations/${detailRes.warehouse.id}?highlight=${binId}`);
+    } catch {
+      // Fallback: if we can't resolve, do nothing
+    }
   };
 
   const handleItemClick = (item: {

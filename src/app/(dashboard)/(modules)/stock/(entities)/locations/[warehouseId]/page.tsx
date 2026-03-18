@@ -30,11 +30,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { usePermissions } from '@/hooks/use-permissions';
+import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
   useDeleteWarehouse,
   useDeleteZone,
   useWarehouse,
   useZones,
+  useBinDetail,
 } from '../src/api';
 import { ZoneExpandableCard } from '../src/components';
 import {
@@ -53,6 +56,14 @@ export default function WarehouseDetailPage({ params }: PageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const highlightBinId = searchParams.get('highlight');
+  const { hasPermission } = usePermissions();
+
+  const canEditWarehouse = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.UPDATE);
+  const canDeleteWarehouse = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.DELETE);
+  const canCreateZone = hasPermission(STOCK_PERMISSIONS.ZONES.CREATE);
+  const canEditZone = hasPermission(STOCK_PERMISSIONS.ZONES.UPDATE);
+  const canDeleteZone = hasPermission(STOCK_PERMISSIONS.ZONES.DELETE);
+  const canConfigureZone = hasPermission(STOCK_PERMISSIONS.ZONES.CONFIGURE);
 
   // ============================================================================
   // DATA FETCHING
@@ -70,6 +81,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
     error: zonesError,
     refetch: refetchZones,
   } = useZones(warehouseId);
+  const { data: highlightBinDetail } = useBinDetail(highlightBinId ?? '');
 
   // ============================================================================
   // STATE
@@ -95,12 +107,18 @@ export default function WarehouseDetailPage({ params }: PageProps) {
   // ============================================================================
 
   useEffect(() => {
-    if (highlightBinId && zones && zones.length > 0) {
-      // Expand all zones when a bin highlight is present
-      // The correct zone will show the highlighted bin
-      setExpandedZoneIds(new Set(zones.map((z) => z.id)));
+    if (highlightBinId && zones && zones.length > 0 && highlightBinDetail) {
+      // Only expand the zone that contains the highlighted bin
+      const targetZoneId = highlightBinDetail.zone?.id;
+      if (targetZoneId) {
+        setExpandedZoneIds(new Set([targetZoneId]));
+      }
+      // Remove highlight param from URL after scroll completes
+      setTimeout(() => {
+        router.replace(`/stock/locations/${warehouseId}`, { scroll: false });
+      }, 500);
     }
-  }, [highlightBinId, zones]);
+  }, [highlightBinId, zones, highlightBinDetail, router, warehouseId]);
 
   // ============================================================================
   // HANDLERS
@@ -145,22 +163,30 @@ export default function WarehouseDetailPage({ params }: PageProps) {
 
   const actionButtons = useMemo(
     () => [
-      {
-        id: 'delete-warehouse',
-        title: 'Excluir',
-        icon: Trash2,
-        onClick: () => setDeleteWarehouseOpen(true),
-        variant: 'outline' as const,
-      },
-      {
-        id: 'edit-warehouse',
-        title: 'Editar',
-        icon: Pencil,
-        onClick: () => router.push(`/stock/locations/${warehouseId}/edit`),
-        variant: 'default' as const,
-      },
+      ...(canDeleteWarehouse
+        ? [
+            {
+              id: 'delete-warehouse',
+              title: 'Excluir',
+              icon: Trash2,
+              onClick: () => setDeleteWarehouseOpen(true),
+              variant: 'outline' as const,
+            },
+          ]
+        : []),
+      ...(canEditWarehouse
+        ? [
+            {
+              id: 'edit-warehouse',
+              title: 'Editar',
+              icon: Pencil,
+              onClick: () => router.push(`/stock/locations/${warehouseId}/edit`),
+              variant: 'default' as const,
+            },
+          ]
+        : []),
     ],
-    [router, warehouseId]
+    [router, warehouseId, canDeleteWarehouse, canEditWarehouse]
   );
 
   // ============================================================================
@@ -276,14 +302,16 @@ export default function WarehouseDetailPage({ params }: PageProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Zonas</h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCreateZoneOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              Nova Zona
-            </Button>
+            {canCreateZone && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCreateZoneOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Nova Zona
+              </Button>
+            )}
           </div>
 
           {isLoadingZones ? (
@@ -312,9 +340,9 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                   onDelete={() => setDeletingZone(zone)}
                   onConfigureStructure={() => setConfiguringZone(zone)}
                   onBinClick={(binId) => setSelectedBinId(binId)}
-                  hasEditPermission={true}
-                  hasDeletePermission={true}
-                  hasConfigurePermission={true}
+                  hasEditPermission={canEditZone}
+                  hasDeletePermission={canDeleteZone}
+                  hasConfigurePermission={canConfigureZone}
                 />
               ))}
             </div>
@@ -325,10 +353,12 @@ export default function WarehouseDetailPage({ params }: PageProps) {
               <p className="text-sm text-muted-foreground mb-4">
                 Crie zonas para organizar este armazém
               </p>
-              <Button onClick={() => setCreateZoneOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Criar Zona
-              </Button>
+              {canCreateZone && (
+                <Button onClick={() => setCreateZoneOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar Zona
+                </Button>
+              )}
             </div>
           )}
         </div>

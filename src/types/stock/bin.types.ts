@@ -61,9 +61,9 @@ export function getOccupancyLevel(bin: BinOccupancy): OccupancyLevel {
   const percentage = (bin.currentOccupancy / bin.capacity) * 100;
 
   if (percentage === 0) return 'empty';
-  if (percentage < 50) return 'low';
-  if (percentage < 80) return 'medium';
-  if (percentage < 95) return 'high';
+  if (percentage < 34) return 'low';
+  if (percentage < 67) return 'medium';
+  if (percentage < 100) return 'high';
   return 'full';
 }
 

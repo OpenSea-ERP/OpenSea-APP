@@ -26,6 +26,7 @@ import {
   useEntityCrud,
   useEntityPage,
 } from '@/core';
+import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { warehousesConfig } from '@/config/entities/warehouses.config';
 import { usePermissions } from '@/hooks/use-permissions';
 import { apiClient } from '@/lib/api-client';
@@ -139,12 +140,16 @@ function LocationsDashboardContent() {
   // RENDER FUNCTIONS
   // ============================================================================
 
+  const canEdit = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.UPDATE);
+  const canDelete = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.DELETE);
+  const canCreate = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.CREATE);
+
   const renderGridCard = (item: Warehouse, isSelected: boolean) => {
     return (
       <EntityContextMenu
         itemId={item.id}
         onView={handleContextView}
-        onEdit={handleContextEdit}
+        onEdit={canEdit ? handleContextEdit : undefined}
         actions={[
           {
             id: 'delete',
@@ -153,6 +158,7 @@ function LocationsDashboardContent() {
             onClick: handleContextDelete,
             variant: 'destructive',
             separator: 'before',
+            hidden: () => !canDelete,
           },
         ]}
       >
@@ -173,7 +179,7 @@ function LocationsDashboardContent() {
       <EntityContextMenu
         itemId={item.id}
         onView={handleContextView}
-        onEdit={handleContextEdit}
+        onEdit={canEdit ? handleContextEdit : undefined}
         actions={[
           {
             id: 'delete',
@@ -182,6 +188,7 @@ function LocationsDashboardContent() {
             onClick: handleContextDelete,
             variant: 'destructive',
             separator: 'before',
+            hidden: () => !canDelete,
           },
         ]}
       >
@@ -266,15 +273,19 @@ function LocationsDashboardContent() {
         onClick: () => router.push('/stock/locations/labels'),
         variant: 'outline',
       },
-      {
-        id: 'create-warehouse',
-        title: 'Novo Armazém',
-        icon: Plus,
-        onClick: () => setWizardOpen(true),
-        variant: 'default',
-      },
+      ...(canCreate
+        ? [
+            {
+              id: 'create-warehouse',
+              title: 'Novo Armazém',
+              icon: Plus,
+              onClick: () => setWizardOpen(true),
+              variant: 'default' as const,
+            },
+          ]
+        : []),
     ],
-    [router]
+    [router, canCreate]
   );
 
   // ============================================================================
