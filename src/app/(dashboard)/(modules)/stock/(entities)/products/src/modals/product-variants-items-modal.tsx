@@ -346,8 +346,8 @@ export function ProductVariantsItemsModal({
           {/* LEFT COLUMN — Product context + Variants */}
           {/* ================================================================ */}
           <div className="w-[380px] shrink-0 flex flex-col border-r border-border/50 bg-slate-50 dark:bg-white/[0.03]">
-            {/* Product Header */}
-            <div className="px-4 pt-5 pb-4 border-b border-border/30">
+            {/* Product Header — min-h matches variant header for aligned border */}
+            <div className="px-4 pt-5 pb-4 border-b border-border/30 min-h-[88px] flex items-center">
               <div className="flex items-start gap-3">
                 <div className="shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
                   <Package className="w-5 h-5 text-white" />
@@ -624,8 +624,8 @@ function VariantDetailHeader({
   const patternLabel = PATTERN_LABELS[variant.pattern as Pattern] || '';
 
   return (
-    <div className="shrink-0 border-b border-border/30 px-5 py-4">
-      <div className="flex items-start justify-between gap-4">
+    <div className="shrink-0 border-b border-border/30 px-5 py-4 min-h-[88px] flex items-center">
+      <div className="flex items-start justify-between gap-4 w-full">
         {/* Left: name + meta */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
