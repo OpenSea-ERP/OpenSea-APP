@@ -806,7 +806,12 @@ function PatternPreview({
     );
   }
 
-  const bgStyle = getPatternBackground(pattern, primary, secondary, hasSecondary);
+  const bgStyle = getPatternBackground(
+    pattern,
+    primary,
+    secondary,
+    hasSecondary
+  );
 
   return (
     <div className="space-y-1.5">
@@ -845,9 +850,9 @@ function getPatternBackground(
         background: `repeating-linear-gradient(
           45deg,
           ${primary},
-          ${primary} 5px,
-          ${secondary} 5px,
-          ${secondary} 10px
+          ${primary} 8px,
+          ${secondary} 8px,
+          ${secondary} 16px
         )`,
       };
 
@@ -856,17 +861,21 @@ function getPatternBackground(
         background: `
           repeating-linear-gradient(
             0deg,
-            transparent,
-            transparent 8px,
-            ${secondary}40 8px,
-            ${secondary}40 10px
+            ${secondary}00 0px,
+            ${secondary}00 10px,
+            ${secondary}BB 10px,
+            ${secondary}BB 14px,
+            ${secondary}00 14px,
+            ${secondary}00 24px
           ),
           repeating-linear-gradient(
             90deg,
-            transparent,
-            transparent 8px,
-            ${secondary}40 8px,
-            ${secondary}40 10px
+            ${secondary}00 0px,
+            ${secondary}00 10px,
+            ${secondary}BB 10px,
+            ${secondary}BB 14px,
+            ${secondary}00 14px,
+            ${secondary}00 24px
           ),
           ${primary}`,
       };
