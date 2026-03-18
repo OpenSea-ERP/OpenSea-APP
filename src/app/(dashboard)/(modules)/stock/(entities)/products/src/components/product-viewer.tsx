@@ -937,11 +937,6 @@ export function ProductViewer({
                       unitLabel={unitOfMeasure}
                       isSelected={selectedVariant?.id === variant.id}
                       onClick={() => handleVariantSelect(variant)}
-                      onEdit={v => {
-                        setEditingVariant(v);
-                        setShowEditVariantModal(true);
-                      }}
-                      variantAttributes={product.template?.variantAttributes}
                     />
                   ))
                 )}

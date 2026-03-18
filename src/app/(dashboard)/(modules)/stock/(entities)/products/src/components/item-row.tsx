@@ -1,8 +1,6 @@
 /**
- * ItemRow - Item display with selection support
- * Exibe: Code + Copy + Print | Location | Atributos Visíveis | Qty | Saída
- * Suporta seleção com click, ctrl+click, shift+click
- * Items com qty=0 (saídos) mostram badge de motivo e não são interativos
+ * ItemRow - Item card for the management modal
+ * Clean card design with status indicator, code, location, quantity, and hover actions.
  */
 
 'use client';
@@ -18,84 +16,69 @@ import {
 import { formatQuantity } from '@/helpers/formatters';
 import { cn } from '@/lib/utils';
 import type { Item, TemplateAttribute } from '@/types/stock';
-import { Copy, LogOut, Printer } from 'lucide-react';
+import { Copy, LogOut, MapPin, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 
-/** Badge config para itens que saíram do estoque (qty=0) */
 const EXIT_REASON_BADGE: Record<string, { label: string; className: string }> =
   {
     SALE: {
       label: 'Vendido',
       className:
-        'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30',
+        'bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30',
     },
     SUPPLIER_RETURN: {
       label: 'Devolvido',
       className:
-        'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30',
+        'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30',
     },
     INTERNAL_USE: {
       label: 'Utilizado',
       className:
-        'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30',
+        'bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/30',
     },
     LOSS: {
       label: 'Perdido',
       className:
-        'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30',
+        'bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30',
     },
     PRODUCTION: {
       label: 'Utilizado',
       className:
-        'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30',
+        'bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/30',
     },
     SAMPLE: {
       label: 'Amostra',
       className:
-        'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/30',
+        'bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30',
     },
   };
+
+const STATUS_INDICATOR: Record<string, { color: string; label: string }> = {
+  AVAILABLE: { color: 'bg-emerald-500', label: 'Disponível' },
+  RESERVED: { color: 'bg-amber-500', label: 'Reservado' },
+  IN_TRANSIT: { color: 'bg-blue-500', label: 'Em Trânsito' },
+  DAMAGED: { color: 'bg-rose-500', label: 'Danificado' },
+  EXPIRED: { color: 'bg-rose-500', label: 'Expirado' },
+  DISPOSED: { color: 'bg-gray-400', label: 'Descartado' },
+};
 
 export interface ItemRowProps {
   item: Item;
   unitLabel?: string;
-  /** Atributos de item do template (para exibir os visíveis) */
   itemAttributes?: Record<string, TemplateAttribute>;
-  /** Se o item está selecionado */
   isSelected?: boolean;
-  /** Callback ao clicar no item */
   onClick?: (e: React.MouseEvent) => void;
-  /** Callback ao dar double-click no item */
   onDoubleClick?: () => void;
-  /** Callback ao clicar no botão de impressão */
   onPrint?: (item: Item) => void;
-  /** Callback ao clicar no botão de saída */
   onExit?: (item: Item) => void;
-  /** Reason code da última saída (para badge de itens com qty=0) */
   lastExitReasonCode?: string;
 }
-
-const STATUS_CONFIG: Record<
-  string,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
-  }
-> = {
-  AVAILABLE: { label: 'Disponível', variant: 'default' },
-  RESERVED: { label: 'Reservado', variant: 'secondary' },
-  IN_TRANSIT: { label: 'Em Trânsito', variant: 'outline' },
-  DAMAGED: { label: 'Danificado', variant: 'destructive' },
-  EXPIRED: { label: 'Expirado', variant: 'destructive' },
-  DISPOSED: { label: 'Descartado', variant: 'secondary' },
-};
 
 export function ItemRow({
   item,
   unitLabel = 'un',
-  itemAttributes,
   isSelected = false,
   onClick,
   onDoubleClick,
@@ -103,27 +86,22 @@ export function ItemRow({
   onExit,
   lastExitReasonCode,
 }: ItemRowProps) {
-  // Item com qty=0 é considerado "saído" - sem ações e não selecionável
   const isExited = item.currentQuantity === 0;
   const exitBadge = isExited
     ? EXIT_REASON_BADGE[lastExitReasonCode || ''] || {
         label: 'Saiu',
         className:
-          'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30',
+          'bg-gray-500/15 text-gray-700 dark:text-gray-400 border-gray-500/30',
       }
     : null;
 
-  // Resolver endereço da localização: bin.address > resolvedAddress > binId > locationId
   const locationAddress =
     item.bin?.address || item.resolvedAddress || item.binId || item.locationId;
-
-  // Resolver código do item: fullCode > uniqueCode > id (primeiros 8 chars)
   const itemCode = item.fullCode || item.uniqueCode || item.id.substring(0, 8);
+  const statusInfo =
+    STATUS_INDICATOR[item.status] || STATUS_INDICATOR.AVAILABLE;
+  const showStatus = item.status !== 'AVAILABLE';
 
-  const statusConfig = STATUS_CONFIG[item.status] || STATUS_CONFIG.AVAILABLE;
-  const showStatusBadge = item.status !== 'AVAILABLE';
-
-  // Construir URL da localização
   const locationUrl = useMemo(() => {
     if (
       item.bin?.id &&
@@ -139,26 +117,6 @@ export function ItemRow({
     return null;
   }, [item.bin]);
 
-  // Filtrar atributos visíveis (enableView = true)
-  const visibleAttributes = useMemo(() => {
-    if (!itemAttributes) return [];
-    return Object.entries(itemAttributes)
-      .filter(([, attr]) => attr.enableView === true)
-      .map(([key, attr]) => ({
-        key,
-        label: attr.label || key,
-        unitOfMeasure: attr.unitOfMeasure,
-        value: item.attributes?.[key],
-      }));
-  }, [itemAttributes, item.attributes]);
-
-  // Formatar valor do atributo
-  const formatValue = (value: unknown): string => {
-    if (value === null || value === undefined || value === '') return '—';
-    if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
-    return String(value);
-  };
-
   const handleCopyCode = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -170,43 +128,105 @@ export function ItemRow({
   };
 
   const handleLocationClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Não propagar para o onClick do row
-  };
-
-  const handlePrintClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onPrint?.(item);
-  };
-
-  const handleExitClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onExit?.(item);
   };
 
   return (
     <div
       className={cn(
-        'flex items-center gap-3 p-3 rounded-lg border transition-colors select-none',
+        'group flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-150 select-none',
         isExited
-          ? 'bg-muted/50 dark:bg-slate-800/30 border-border opacity-60 cursor-default'
+          ? 'bg-muted/30 border-border/40 opacity-50 cursor-default'
           : isSelected
-            ? 'bg-linear-to-r from-blue-100 to-violet-100 dark:from-sky-500/20 dark:to-sky-500/20 border-sky-500 cursor-pointer'
-            : 'bg-linear-to-r from-blue-50 to-violet-50 dark:from-slate-800/50 dark:to-slate-800/50 hover:from-blue-100 hover:to-violet-100 dark:hover:from-slate-700/50 dark:hover:to-slate-700/50 border-border cursor-pointer'
+            ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-500/40 cursor-pointer'
+            : 'hover:bg-muted/40 border-border/60 cursor-pointer'
       )}
       onClick={isExited ? undefined : onClick}
       onDoubleClick={onDoubleClick}
     >
-      {/* Column 1: Code + Copy + Print + Status */}
+      {/* Status indicator dot */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className={cn(
+                'shrink-0 w-2 h-2 rounded-full',
+                isExited ? 'bg-gray-300 dark:bg-gray-600' : statusInfo.color
+              )}
+            />
+          </TooltipTrigger>
+          <TooltipContent>
+            {isExited ? exitBadge?.label : statusInfo.label}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Code + location */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1">
-          <p className="font-mono text-sm truncate">{itemCode}</p>
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-xs font-medium truncate">
+            {itemCode}
+          </span>
+          {isExited && exitBadge && (
+            <Badge
+              variant="outline"
+              className={cn('text-[9px] h-4 px-1 border', exitBadge.className)}
+            >
+              {exitBadge.label}
+            </Badge>
+          )}
+          {showStatus && !isExited && (
+            <Badge variant="outline" className="text-[9px] h-4 px-1">
+              {statusInfo.label}
+            </Badge>
+          )}
+        </div>
+        {locationAddress && (
+          <div className="flex items-center gap-1 mt-0.5">
+            <MapPin className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
+            {locationUrl ? (
+              <Link
+                href={locationUrl}
+                target="_blank"
+                onClick={handleLocationClick}
+                className="text-[11px] font-mono text-blue-500 hover:text-blue-600 truncate"
+              >
+                {locationAddress}
+              </Link>
+            ) : (
+              <span className="text-[11px] font-mono text-muted-foreground truncate">
+                {locationAddress}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Quantity */}
+      <div className="shrink-0 text-right">
+        <span
+          className={cn(
+            'text-sm font-semibold tabular-nums',
+            isExited ? 'text-muted-foreground' : 'text-foreground'
+          )}
+        >
+          {formatQuantity(item.currentQuantity)}
+          <span className="text-[10px] font-normal text-muted-foreground">
+            {unitLabel}
+          </span>
+        </span>
+      </div>
+
+      {/* Hover actions */}
+      {!isExited && (
+        <div className="shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="shrink-0 h-6 w-6 opacity-50 hover:opacity-100"
+                  className="h-7 w-7"
                   onClick={handleCopyCode}
                   aria-label="Copiar código"
                 >
@@ -215,14 +235,18 @@ export function ItemRow({
               </TooltipTrigger>
               <TooltipContent>Copiar código</TooltipContent>
             </Tooltip>
-            {onPrint && !isExited && (
+
+            {onPrint && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="shrink-0 h-6 w-6 opacity-50 hover:opacity-100"
-                    onClick={handlePrintClick}
+                    className="h-7 w-7"
+                    onClick={e => {
+                      e.stopPropagation();
+                      onPrint(item);
+                    }}
                     aria-label="Imprimir etiqueta"
                   >
                     <Printer className="h-3 w-3" />
@@ -231,122 +255,28 @@ export function ItemRow({
                 <TooltipContent>Imprimir etiqueta</TooltipContent>
               </Tooltip>
             )}
-          </TooltipProvider>
-        </div>
-        {isExited && exitBadge ? (
-          <Badge
-            variant="outline"
-            className={cn('text-xs mt-1 border', exitBadge.className)}
-          >
-            {exitBadge.label}
-          </Badge>
-        ) : showStatusBadge ? (
-          <Badge variant={statusConfig.variant} className="text-xs mt-1">
-            {statusConfig.label}
-          </Badge>
-        ) : null}
-      </div>
 
-      {/* Column 2: Location */}
-      <div className="shrink-0">
-        <p className="text-[10px] text-muted-foreground">Localização</p>
-        <div className="text-sm">
-          {locationUrl ? (
-            <Link
-              href={locationUrl}
-              target="_blank"
-              onClick={handleLocationClick}
-              className="font-mono text-blue-500 hover:text-blue-600 transition-colors"
-            >
-              {locationAddress || '—'}
-            </Link>
-          ) : (
-            <span className="font-mono text-muted-foreground">
-              {locationAddress || '—'}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Colunas dinâmicas: Atributos Visíveis (label + valor em duas linhas) */}
-      {visibleAttributes.length > 0 && (
-        <TooltipProvider>
-          <div className="flex items-center gap-3 shrink-0">
-            {visibleAttributes.slice(0, 3).map(attr => (
-              <div key={attr.key} className="text-center min-w-[60px]">
-                <p className="text-[10px] text-muted-foreground truncate">
-                  {attr.label}
-                  {attr.unitOfMeasure && ` (${attr.unitOfMeasure})`}
-                </p>
-                <p className="text-xs font-medium truncate max-w-[80px]">
-                  {formatValue(attr.value)}
-                </p>
-              </div>
-            ))}
-            {visibleAttributes.length > 3 && (
+            {onExit && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge
-                    variant="secondary"
-                    className="text-xs cursor-pointer hover:bg-muted"
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                    onClick={e => {
+                      e.stopPropagation();
+                      onExit(item);
+                    }}
+                    aria-label="Dar saída"
                   >
-                    +{visibleAttributes.length - 3}
-                  </Badge>
+                    <LogOut className="h-3 w-3" />
+                  </Button>
                 </TooltipTrigger>
-                <TooltipContent className="p-3">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    {visibleAttributes.slice(3).map(attr => (
-                      <div key={attr.key} className="text-left">
-                        <p className="text-[10px] text-muted-foreground">
-                          {attr.label}
-                          {attr.unitOfMeasure && ` (${attr.unitOfMeasure})`}
-                        </p>
-                        <p className="text-xs font-medium">
-                          {formatValue(attr.value)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </TooltipContent>
+                <TooltipContent>Dar saída</TooltipContent>
               </Tooltip>
             )}
-          </div>
-        </TooltipProvider>
-      )}
-
-      {/* Column 3: Quantity */}
-      <div className="shrink-0 w-20 text-right">
-        <p className="text-[10px] text-muted-foreground">{unitLabel}</p>
-        <span
-          className={cn(
-            'text-sm font-medium',
-            item.currentQuantity === 0
-              ? 'text-muted-foreground'
-              : 'text-foreground'
-          )}
-        >
-          {formatQuantity(item.currentQuantity)}
-        </span>
-      </div>
-
-      {/* Column 4: Exit */}
-      {onExit && !isExited && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
-                onClick={handleExitClick}
-                aria-label="Dar saída"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Dar saída</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+          </TooltipProvider>
+        </div>
       )}
     </div>
   );

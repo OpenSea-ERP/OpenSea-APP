@@ -1,13 +1,12 @@
 /**
  * VariantRow - Variant card for the management modal
- * Shows: Pattern preview | Name + Reference + Badges | Items | Quantity | Edit
- * No price column (stock focus = quantity).
+ * Shows: Pattern preview | Name + items badge + Badges | Quantity (right)
+ * No edit button (edit lives in variant header).
+ * No SKU display (shown in variant header).
  */
 
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
@@ -16,10 +15,8 @@ import {
 } from '@/components/ui/tooltip';
 import { formatQuantity } from '@/helpers/formatters';
 import { cn } from '@/lib/utils';
-import type { Pattern, TemplateAttribute, Variant } from '@/types/stock';
-import { PATTERN_LABELS } from '@/types/stock';
-import { Edit, Palette, Slash } from 'lucide-react';
-import { useMemo } from 'react';
+import type { Pattern, Variant } from '@/types/stock';
+import { Palette, Slash } from 'lucide-react';
 
 interface VariantRowProps {
   variant: Variant;
@@ -28,8 +25,6 @@ interface VariantRowProps {
   unitLabel?: string;
   isSelected?: boolean;
   onClick: () => void;
-  onEdit?: (variant: Variant) => void;
-  variantAttributes?: Record<string, TemplateAttribute>;
 }
 
 export function VariantRow({
@@ -39,28 +34,7 @@ export function VariantRow({
   unitLabel = 'un',
   isSelected = false,
   onClick,
-  onEdit,
-  variantAttributes,
 }: VariantRowProps) {
-  const visibleAttributes = useMemo(() => {
-    if (!variantAttributes) return [];
-    return Object.entries(variantAttributes)
-      .filter(([, attr]) => attr.enableView === true)
-      .map(([key, attr]) => ({
-        key,
-        label: attr.label || key,
-        unitOfMeasure: attr.unitOfMeasure,
-        value: variant.attributes?.[key],
-      }));
-  }, [variantAttributes, variant.attributes]);
-
-  const formatValue = (value: unknown, unitOfMeasure?: string): string => {
-    if (value === null || value === undefined || value === '') return '—';
-    if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
-    const strValue = String(value);
-    return unitOfMeasure ? `${strValue} ${unitOfMeasure}` : strValue;
-  };
-
   const hasPattern = variant.pattern && variant.pattern !== ('none' as string);
   const hasColor = !!variant.colorHex;
   const hasVisual = hasPattern || hasColor;
@@ -96,10 +70,32 @@ export function VariantRow({
         )}
       </div>
 
-      {/* Name + Reference + Badges */}
+      {/* Name + items badge + status badges */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="text-sm font-medium truncate">{variant.name}</p>
+          {/* Items count badge */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className={cn(
+                    'shrink-0 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold rounded-full',
+                    itemsCount > 0
+                      ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                >
+                  {itemsCount}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {itemsCount === 0
+                  ? 'Nenhum item em estoque'
+                  : `${itemsCount} ${itemsCount === 1 ? 'item' : 'itens'} em estoque`}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           {variant.outOfLine && (
             <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-orange-500/15 text-orange-600 dark:text-orange-400 rounded">
               FL
@@ -112,105 +108,30 @@ export function VariantRow({
           )}
         </div>
         <p className="text-[11px] text-muted-foreground truncate">
-          {[
-            variant.reference && `Ref: ${variant.reference}`,
-            variant.sku && `SKU: ${variant.sku}`,
-          ]
-            .filter(Boolean)
-            .join(' · ') || 'Sem referência'}
+          {variant.reference ? `Ref: ${variant.reference}` : 'Sem referência'}
         </p>
       </div>
 
-      {/* Visible attributes */}
-      {visibleAttributes.length > 0 && (
-        <TooltipProvider>
-          <div className="flex items-center gap-2.5 shrink-0">
-            {visibleAttributes.slice(0, 2).map(attr => (
-              <div key={attr.key} className="text-center min-w-[50px]">
-                <p className="text-[9px] text-muted-foreground truncate">
-                  {attr.label}
-                </p>
-                <p className="text-[11px] font-medium truncate max-w-[70px]">
-                  {formatValue(attr.value, attr.unitOfMeasure)}
-                </p>
-              </div>
-            ))}
-            {visibleAttributes.length > 2 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] cursor-pointer hover:bg-muted"
-                  >
-                    +{visibleAttributes.length - 2}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent className="p-3">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    {visibleAttributes.slice(2).map(attr => (
-                      <div key={attr.key} className="text-left">
-                        <p className="text-[10px] text-muted-foreground">
-                          {attr.label}
-                        </p>
-                        <p className="text-xs font-medium">
-                          {formatValue(attr.value, attr.unitOfMeasure)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </TooltipProvider>
-      )}
-
-      {/* Items + Quantity */}
+      {/* Quantity (right) */}
       <div className="shrink-0 text-right">
-        <p className="text-[10px] text-muted-foreground">
-          {itemsCount} {itemsCount === 1 ? 'item' : 'itens'}
-        </p>
         <span
           className={cn(
             'text-sm font-semibold tabular-nums',
             totalQuantity === 0 ? 'text-muted-foreground' : 'text-foreground'
           )}
         >
-          {formatQuantity(totalQuantity)}{' '}
+          {formatQuantity(totalQuantity)}
           <span className="text-[10px] font-normal text-muted-foreground">
             {unitLabel}
           </span>
         </span>
       </div>
-
-      {/* Edit */}
-      {onEdit && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 h-7 w-7 opacity-50 hover:opacity-100"
-                onClick={e => {
-                  e.stopPropagation();
-                  onEdit(variant);
-                }}
-                aria-label="Editar variante"
-              >
-                <Edit className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Editar variante</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Pattern preview helper (reuses logic from variant-form-modal)
+// Pattern preview helper
 // ---------------------------------------------------------------------------
 
 function getVariantPreviewStyle(variant: Variant): React.CSSProperties {
@@ -263,7 +184,6 @@ function getVariantPreviewStyle(variant: Variant): React.CSSProperties {
       };
 
     default:
-      // No pattern but has color
       return { background: primary };
   }
 }
