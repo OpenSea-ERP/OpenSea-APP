@@ -1,7 +1,6 @@
 /**
- * OpenSea OS - Locations Page
- * Pagina de gerenciamento de localizacoes (armazens, zonas, nichos)
- * usando o sistema padronizado de layout OpenSea OS
+ * OpenSea OS - Locations Dashboard Page
+ * Página de gerenciamento de localizações (armazéns) usando o sistema padronizado OpenSea OS
  */
 
 'use client';
@@ -17,330 +16,248 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+  CoreProvider,
+  EntityCard,
+  EntityContextMenu,
+  EntityGrid,
+  SelectionToolbar,
+  useEntityCrud,
+  useEntityPage,
+} from '@/core';
+import { warehousesConfig } from '@/config/entities/warehouses.config';
+import { usePermissions } from '@/hooks/use-permissions';
+import { apiClient } from '@/lib/api-client';
+import type {
+  Warehouse,
+  WarehousesResponse,
+  WarehouseResponse,
+} from '@/types/stock';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, Tag, Warehouse } from 'lucide-react';
+  Pencil,
+  Plus,
+  Tag,
+  Trash2,
+  Warehouse as WarehouseIcon,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import {
-  useCreateWarehouse,
-  useDeleteWarehouse,
-  useUpdateWarehouse,
-  useWarehouses,
-  WarehouseCard,
-  PLACEHOLDERS,
-  SUCCESS_MESSAGES,
-  defaultWarehouseFormData,
-  normalizeCode,
-  validateWarehouseForm,
-} from './src';
-import type { WarehouseFormData, Warehouse as WarehouseType } from './src';
+import { Suspense, useMemo, useState } from 'react';
+import { StockLocationSearch, LocationHealthCards, WarehouseCardNew } from './src/components';
+import { LocationSetupWizard } from './src/modals';
 
 export default function LocationsPage() {
+  return (
+    <Suspense
+      fallback={<GridLoading count={9} layout="grid" size="md" gap="gap-4" />}
+    >
+      <LocationsDashboardContent />
+    </Suspense>
+  );
+}
+
+function LocationsDashboardContent() {
   const router = useRouter();
-
-  // ============================================================================
-  // DATA FETCHING
-  // ============================================================================
-
-  const { data: warehouses, isLoading, error, refetch } = useWarehouses();
+  const { hasPermission } = usePermissions();
 
   // ============================================================================
   // STATE
   // ============================================================================
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedWarehouse, setSelectedWarehouse] =
-    useState<WarehouseType | null>(null);
-  const [formData, setFormData] = useState<WarehouseFormData>(
-    defaultWarehouseFormData
-  );
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   // ============================================================================
-  // MUTATIONS
+  // CRUD SETUP
   // ============================================================================
 
-  const createWarehouse = useCreateWarehouse();
-  const updateWarehouse = useUpdateWarehouse();
-  const deleteWarehouse = useDeleteWarehouse();
+  const crud = useEntityCrud<Warehouse>({
+    entityName: 'Armazém',
+    entityNamePlural: 'Armazéns',
+    queryKey: ['warehouses'],
+    baseUrl: '/api/v1/warehouses',
+    listFn: async () => {
+      const response = await apiClient.get<WarehousesResponse>('/v1/warehouses');
+      return response.warehouses;
+    },
+    getFn: async (id: string) => {
+      const response = await apiClient.get<WarehouseResponse>(`/v1/warehouses/${id}`);
+      return response.warehouse;
+    },
+    createFn: async (data) => {
+      const response = await apiClient.post<WarehouseResponse>('/v1/warehouses', data);
+      return response.warehouse;
+    },
+    updateFn: async (id, data) => {
+      const response = await apiClient.patch<WarehouseResponse>(`/v1/warehouses/${id}`, data);
+      return response.warehouse;
+    },
+    deleteFn: async (id: string) => {
+      await apiClient.delete(`/v1/warehouses/${id}`);
+    },
+  });
 
   // ============================================================================
-  // COMPUTED VALUES
+  // PAGE SETUP
   // ============================================================================
 
-  const filteredWarehouses = useMemo(() => {
-    if (!warehouses) return [];
-    if (!searchQuery.trim()) return warehouses;
-
-    const normalizedQuery = searchQuery.toLowerCase();
-    return warehouses.filter(
-      warehouse =>
-        warehouse.code.toLowerCase().includes(normalizedQuery) ||
-        warehouse.name.toLowerCase().includes(normalizedQuery) ||
-        warehouse.description?.toLowerCase().includes(normalizedQuery)
-    );
-  }, [warehouses, searchQuery]);
+  const page = useEntityPage<Warehouse>({
+    entityName: 'Armazém',
+    entityNamePlural: 'Armazéns',
+    queryKey: ['warehouses'],
+    crud,
+    viewRoute: (id) => `/stock/locations/${id}`,
+    filterFn: (item, query) => {
+      const q = query.toLowerCase();
+      return (
+        item.code.toLowerCase().includes(q) ||
+        item.name.toLowerCase().includes(q) ||
+        (item.description?.toLowerCase().includes(q) ?? false)
+      );
+    },
+  });
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
 
-  const handleOpenCreate = useCallback(() => {
-    setFormData(defaultWarehouseFormData);
-    setFormErrors({});
-    setIsCreateModalOpen(true);
-  }, []);
-
-  const handleOpenEdit = (warehouse: WarehouseType) => {
-    setSelectedWarehouse(warehouse);
-    setFormData({
-      code: warehouse.code,
-      name: warehouse.name,
-      description: warehouse.description || '',
-      address: warehouse.address || '',
-      isActive: warehouse.isActive,
-    });
-    setFormErrors({});
-    setIsEditModalOpen(true);
+  const handleContextView = (ids: string[]) => {
+    page.handlers.handleItemsView(ids);
   };
 
-  const handleOpenDelete = (warehouse: WarehouseType) => {
-    setSelectedWarehouse(warehouse);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleCreateSubmit = async () => {
-    const validation = validateWarehouseForm(formData);
-    if (!validation.isValid) {
-      setFormErrors(validation.errors);
-      return;
-    }
-
-    try {
-      await createWarehouse.mutateAsync({
-        code: normalizeCode(formData.code),
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        address: formData.address.trim() || undefined,
-        isActive: formData.isActive,
-      });
-
-      toast.success(SUCCESS_MESSAGES.WAREHOUSE_CREATED);
-      setIsCreateModalOpen(false);
-      setFormData(defaultWarehouseFormData);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao criar armazém');
+  const handleContextEdit = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/stock/locations/${ids[0]}/edit`);
     }
   };
 
-  const handleEditSubmit = async () => {
-    if (!selectedWarehouse) return;
-
-    const validation = validateWarehouseForm(formData);
-    if (!validation.isValid) {
-      setFormErrors(validation.errors);
-      return;
-    }
-
-    try {
-      await updateWarehouse.mutateAsync({
-        id: selectedWarehouse.id,
-        data: {
-          code: normalizeCode(formData.code),
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          address: formData.address.trim() || undefined,
-          isActive: formData.isActive,
-        },
-      });
-
-      toast.success(SUCCESS_MESSAGES.WAREHOUSE_UPDATED);
-      setIsEditModalOpen(false);
-      setSelectedWarehouse(null);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Erro ao atualizar armazém'
-      );
-    }
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedWarehouse) return;
-
-    try {
-      await deleteWarehouse.mutateAsync(selectedWarehouse.id);
-      toast.success(SUCCESS_MESSAGES.WAREHOUSE_DELETED);
-      setIsDeleteDialogOpen(false);
-      setSelectedWarehouse(null);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Erro ao excluir armazém'
-      );
-    }
-  };
-
-  const handleInputChange = (
-    field: keyof WarehouseFormData,
-    value: string | boolean
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (formErrors[field]) {
-      setFormErrors(prev => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
+  const handleContextDelete = (ids: string[]) => {
+    page.modals.setItemsToDelete(ids);
+    page.modals.open('delete');
   };
 
   // ============================================================================
   // RENDER FUNCTIONS
   // ============================================================================
 
-  const renderWarehouseGrid = () => (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {filteredWarehouses.map(warehouse => (
-        <WarehouseCard
-          key={warehouse.id}
-          warehouse={warehouse}
-          onEdit={handleOpenEdit}
-          onDelete={handleOpenDelete}
+  const renderGridCard = (item: Warehouse, isSelected: boolean) => {
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={handleContextView}
+        onEdit={handleContextEdit}
+        actions={[
+          {
+            id: 'delete',
+            label: 'Excluir',
+            icon: Trash2,
+            onClick: handleContextDelete,
+            variant: 'destructive',
+            separator: 'before',
+          },
+        ]}
+      >
+        <WarehouseCardNew warehouse={item} isSelected={isSelected} />
+      </EntityContextMenu>
+    );
+  };
+
+  const renderListCard = (item: Warehouse, isSelected: boolean) => {
+    const stats = item.stats;
+    const zoneLabel = stats
+      ? `${stats.totalZones} ${stats.totalZones === 1 ? 'zona' : 'zonas'}`
+      : '';
+    const binLabel = stats ? `${stats.totalBins.toLocaleString()} bins` : '';
+    const occupancy = stats ? `${stats.occupancyPercentage.toFixed(0)}% ocupação` : '';
+
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={handleContextView}
+        onEdit={handleContextEdit}
+        actions={[
+          {
+            id: 'delete',
+            label: 'Excluir',
+            icon: Trash2,
+            onClick: handleContextDelete,
+            variant: 'destructive',
+            separator: 'before',
+          },
+        ]}
+      >
+        <EntityCard
+          id={item.id}
+          variant="list"
+          title={
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="font-mono font-bold text-sm text-foreground shrink-0">
+                {item.code}
+              </span>
+              <span className="font-semibold text-gray-900 dark:text-white truncate">
+                {item.name}
+              </span>
+            </span>
+          }
+          metadata={
+            stats ? (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0 border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300">
+                  {zoneLabel}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0 border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300">
+                  {binLabel}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0 border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300">
+                  {occupancy}
+                </span>
+              </div>
+            ) : undefined
+          }
+          icon={WarehouseIcon}
+          iconBgColor="bg-linear-to-br from-blue-500 to-indigo-600"
+          badges={[
+            {
+              label: item.isActive ? 'Ativo' : 'Inativo',
+              variant: item.isActive ? 'default' : ('secondary' as const),
+            },
+          ]}
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={true}
         />
-      ))}
-    </div>
+      </EntityContextMenu>
+    );
+  };
+
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
+
+  const selectedIds = useMemo(
+    () => Array.from(page.selection?.state.selectedIds || []),
+    [page.selection?.state.selectedIds]
   );
 
-  const renderEmptyState = () => (
-    <div className="flex flex-col items-center justify-center min-h-[300px] rounded-lg border border-dashed">
-      <Warehouse className="h-12 w-12 text-muted-foreground/50 mb-4" />
-      {searchQuery ? (
-        <>
-          <p className="text-lg font-medium">Nenhum armazém encontrado</p>
-          <p className="text-sm text-muted-foreground">
-            Tente buscar por outro termo
-          </p>
-        </>
-      ) : (
-        <>
-          <p className="text-lg font-medium">Nenhum armazém cadastrado</p>
-          <p className="text-sm text-muted-foreground mb-4">
-            Comece criando seu primeiro armazém
-          </p>
-          <Button onClick={handleOpenCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            Criar Armazém
-          </Button>
-        </>
-      )}
-    </div>
-  );
+  const hasSelection = selectedIds.length > 0;
 
-  const renderWarehouseFormFields = (idPrefix: string) => (
-    <div className="space-y-4 py-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-code`}>
-            Código <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id={`${idPrefix}-code`}
-            placeholder={PLACEHOLDERS.WAREHOUSE_CODE}
-            value={formData.code}
-            onChange={e =>
-              handleInputChange('code', e.target.value.toUpperCase())
-            }
-            maxLength={5}
-            className={formErrors.code ? 'border-destructive' : ''}
-          />
-          {formErrors.code && (
-            <p className="text-xs text-destructive">{formErrors.code}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-name`}>
-            Nome <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id={`${idPrefix}-name`}
-            placeholder={PLACEHOLDERS.WAREHOUSE_NAME}
-            value={formData.name}
-            onChange={e => handleInputChange('name', e.target.value)}
-            className={formErrors.name ? 'border-destructive' : ''}
-          />
-          {formErrors.name && (
-            <p className="text-xs text-destructive">{formErrors.name}</p>
-          )}
-        </div>
-      </div>
+  const displayedWarehouses = page.filteredItems || [];
 
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-description`}>Descrição</Label>
-        <Textarea
-          id={`${idPrefix}-description`}
-          placeholder={PLACEHOLDERS.WAREHOUSE_DESCRIPTION}
-          value={formData.description}
-          onChange={e => handleInputChange('description', e.target.value)}
-          rows={2}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-address`}>Endereço</Label>
-        <Input
-          id={`${idPrefix}-address`}
-          placeholder={PLACEHOLDERS.WAREHOUSE_ADDRESS}
-          value={formData.address}
-          onChange={e => handleInputChange('address', e.target.value)}
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="space-y-0.5">
-          <Label htmlFor={`${idPrefix}-isActive`}>Ativo</Label>
-          <p className="text-xs text-muted-foreground">
-            Armazéns inativos não aparecem em buscas
-          </p>
-        </div>
-        <Switch
-          id={`${idPrefix}-isActive`}
-          checked={formData.isActive}
-          onCheckedChange={checked => handleInputChange('isActive', checked)}
-        />
-      </div>
-    </div>
+  const initialIds = useMemo(
+    () =>
+      (Array.isArray(displayedWarehouses) ? displayedWarehouses : []).map(
+        (i) => i.id
+      ),
+    [displayedWarehouses]
   );
 
   // ============================================================================
   // HEADER BUTTONS CONFIGURATION
   // ============================================================================
 
-  const actionButtons: HeaderButton[] = useMemo(
+  const actionButtons = useMemo<HeaderButton[]>(
     () => [
       {
         id: 'labels-link',
@@ -353,11 +270,11 @@ export default function LocationsPage() {
         id: 'create-warehouse',
         title: 'Novo Armazém',
         icon: Plus,
-        onClick: handleOpenCreate,
+        onClick: () => setWizardOpen(true),
         variant: 'default',
       },
     ],
-    [handleOpenCreate, router]
+    [router]
   );
 
   // ============================================================================
@@ -365,141 +282,127 @@ export default function LocationsPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
-      <PageHeader>
-        <PageActionBar
-          breadcrumbItems={[
-            { label: 'Estoque', href: '/stock' },
-            { label: 'Localizações', href: '/stock/locations' },
-          ]}
-          buttons={actionButtons}
-        />
-
-        <Header
-          title="Localizações"
-          description="Gerencie armazéns, zonas, corredores, prateleiras e nichos"
-        />
-      </PageHeader>
-
-      <PageBody>
-        {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          placeholder="Buscar armazéns..."
-          onSearch={value => setSearchQuery(value)}
-          onClear={() => setSearchQuery('')}
-          showClear={true}
-          size="md"
-        />
-
-        {/* Grid */}
-        {isLoading ? (
-          <GridLoading count={8} layout="grid" size="md" gap="gap-4" />
-        ) : error ? (
-          <GridError
-            type="server"
-            title="Erro ao carregar armazéns"
-            message="Ocorreu um erro ao tentar carregar os armazéns. Por favor, tente novamente."
-            action={{
-              label: 'Tentar Novamente',
-              onClick: () => void refetch(),
-            }}
+    <CoreProvider
+      selection={{
+        namespace: 'locations',
+        initialIds,
+      }}
+    >
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Estoque', href: '/stock' },
+              { label: 'Localizações', href: '/stock/locations' },
+            ]}
+            buttons={actionButtons}
           />
-        ) : filteredWarehouses.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          renderWarehouseGrid()
-        )}
 
-        {/* Create Modal */}
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Novo Armazém</DialogTitle>
-              <DialogDescription>
-                Crie um novo armazém para organizar suas localizações
-              </DialogDescription>
-            </DialogHeader>
+          <Header
+            title="Localizações"
+            description="Gerencie armazéns, zonas, corredores, prateleiras e nichos"
+          />
+        </PageHeader>
 
-            {renderWarehouseFormFields('create')}
+        <PageBody>
+          {/* Busca global por endereço, produto ou SKU */}
+          <StockLocationSearch />
 
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleCreateSubmit}
-                disabled={createWarehouse.isPending}
-              >
-                {createWarehouse.isPending ? 'Criando...' : 'Criar Armazém'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          {/* Cards de saúde */}
+          <LocationHealthCards />
 
-        {/* Edit Modal */}
-        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar Armazém</DialogTitle>
-              <DialogDescription>
-                Atualize as informações do armazém {selectedWarehouse?.code}
-              </DialogDescription>
-            </DialogHeader>
+          {/* Barra de busca de armazéns */}
+          <SearchBar
+            placeholder="Buscar armazéns por código ou nome..."
+            value={page.searchQuery}
+            onSearch={(value) => page.handlers.handleSearch(value)}
+            onClear={() => page.handlers.handleSearch('')}
+            showClear={true}
+            size="md"
+          />
 
-            {renderWarehouseFormFields('edit')}
+          {/* Grid */}
+          {page.isLoading ? (
+            <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
+          ) : page.error ? (
+            <GridError
+              type="server"
+              title="Erro ao carregar armazéns"
+              message="Ocorreu um erro ao tentar carregar os armazéns. Por favor, tente novamente."
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => crud.refetch(),
+              }}
+            />
+          ) : (
+            <EntityGrid
+              config={warehousesConfig}
+              items={displayedWarehouses}
+              showItemCount={false}
+              toolbarStart={
+                <p className="text-sm text-muted-foreground whitespace-nowrap">
+                  Total de {displayedWarehouses.length}{' '}
+                  {displayedWarehouses.length === 1 ? 'armazém' : 'armazéns'}
+                  {selectedIds.length > 0 &&
+                    ` · ${selectedIds.length} selecionado${selectedIds.length > 1 ? 's' : ''}`}
+                </p>
+              }
+              renderGridItem={renderGridCard}
+              renderListItem={renderListCard}
+              isLoading={page.isLoading}
+              isSearching={!!page.searchQuery}
+              onItemClick={(item, e) => page.handlers.handleItemClick(item, e)}
+              onItemDoubleClick={(item) =>
+                page.handlers.handleItemDoubleClick(item)
+              }
+              showSorting={true}
+              defaultSortField="name"
+              defaultSortDirection="asc"
+            />
+          )}
 
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleEditSubmit}
-                disabled={updateWarehouse.isPending}
-              >
-                {updateWarehouse.isPending
-                  ? 'Salvando...'
-                  : 'Salvar Alterações'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          {/* Selection Toolbar */}
+          {hasSelection && (
+            <SelectionToolbar
+              selectedIds={selectedIds}
+              totalItems={displayedWarehouses.length}
+              onClear={() => page.selection?.actions.clear()}
+              onSelectAll={() => page.selection?.actions.selectAll()}
+              defaultActions={{
+                view: true,
+                edit: true,
+                duplicate: false,
+                delete: true,
+              }}
+              handlers={{
+                onView: page.handlers.handleItemsView,
+                onEdit: page.handlers.handleItemsEdit,
+                onDelete: page.handlers.handleItemsDelete,
+              }}
+            />
+          )}
 
-        {/* Delete Confirmation */}
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir Armazém?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir o armazém{' '}
-                <strong>{selectedWarehouse?.code}</strong>?
-                <br />
-                <br />
-                Esta ação não pode ser desfeita e irá excluir todas as zonas,
-                corredores, prateleiras e nichos associados.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {deleteWarehouse.isPending ? 'Excluindo...' : 'Excluir'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </PageBody>
-    </PageLayout>
+          {/* Delete Confirmation */}
+          <VerifyActionPinModal
+            isOpen={page.modals.isOpen('delete')}
+            onClose={() => page.modals.close('delete')}
+            onSuccess={() => page.handlers.handleDeleteConfirm()}
+            title="Confirmar Exclusão"
+            description={
+              page.modals.itemsToDelete.length === 1
+                ? 'Digite seu PIN de ação para excluir este armazém. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de ação para excluir ${page.modals.itemsToDelete.length} armazéns. Esta ação não pode ser desfeita.`
+            }
+          />
+
+          {/* Setup Wizard */}
+          <LocationSetupWizard
+            open={wizardOpen}
+            onOpenChange={setWizardOpen}
+            onSuccess={(id) => router.push(`/stock/locations/${id}`)}
+          />
+        </PageBody>
+      </PageLayout>
+    </CoreProvider>
   );
 }

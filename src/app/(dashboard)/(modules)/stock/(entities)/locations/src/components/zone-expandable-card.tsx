@@ -35,6 +35,7 @@ interface ZoneExpandableCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onConfigureStructure: () => void;
+  onBinClick?: (binId: string) => void;
   hasEditPermission?: boolean;
   hasDeletePermission?: boolean;
   hasConfigurePermission?: boolean;
@@ -59,6 +60,7 @@ export function ZoneExpandableCard({
   onEdit,
   onDelete,
   onConfigureStructure,
+  onBinClick: onBinClickProp,
   hasEditPermission,
   hasDeletePermission,
   hasConfigurePermission,
@@ -77,9 +79,8 @@ export function ZoneExpandableCard({
   );
 
   const handleBinClick = useCallback((binId: string) => {
-    // Will be handled by parent (open modal/sheet)
-    console.log('Bin clicked:', binId);
-  }, []);
+    onBinClickProp?.(binId);
+  }, [onBinClickProp]);
 
   const getStatusBadge = () => {
     if (!zone.isActive) {
