@@ -1,20 +1,13 @@
 /**
- * ProductVariantsItemsModal - Two-column modal for variants and items
- * Desktop: Side-by-side columns
- * Left: Product header, variants search, variants list, add variant button
- * Right: Selected variant info, items search, items list, add item button
- * Supports: hide exited items, double-click history, exit reason badges
+ * ProductVariantsItemsModal - Two-column management modal
+ * Left: Product context (bg-slate-50) + variants list
+ * Right: Selected variant header with pattern preview + items list
  */
 
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,11 +21,19 @@ import {
   itemsService,
   variantsService,
 } from '@/services/stock';
-import type { ExitMovementType, Item, Product, Variant } from '@/types/stock';
+import type {
+  ExitMovementType,
+  Item,
+  Pattern,
+  Product,
+  Variant,
+} from '@/types/stock';
+import { PATTERN_LABELS } from '@/types/stock';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
-  Copy,
+  Edit,
   Package,
   Palette,
   Plus,
@@ -89,9 +90,9 @@ export function ProductVariantsItemsModal({
     if (itemsSearch !== '') setItemsSearch('');
   }
 
-  // ============================================================================
+  // ==========================================================================
   // DATA FETCHING
-  // ============================================================================
+  // ==========================================================================
 
   const {
     data: variantsData,
@@ -142,9 +143,9 @@ export function ProductVariantsItemsModal({
     enabled: !!selectedVariant?.id && open,
   });
 
-  // ============================================================================
-  // EXIT REASONS (for exited items badges)
-  // ============================================================================
+  // ==========================================================================
+  // EXIT REASONS
+  // ==========================================================================
 
   const items = useMemo(() => itemsData?.items || [], [itemsData]);
 
@@ -190,9 +191,9 @@ export function ProductVariantsItemsModal({
     [fetchedExitReasons, sessionExitReasonMap]
   );
 
-  // ============================================================================
+  // ==========================================================================
   // COMPUTED
-  // ============================================================================
+  // ==========================================================================
 
   const variants = useMemo(() => variantsData?.variants || [], [variantsData]);
 
@@ -240,9 +241,9 @@ export function ProductVariantsItemsModal({
     [filteredItems]
   );
 
-  // ============================================================================
+  // ==========================================================================
   // HANDLERS
-  // ============================================================================
+  // ==========================================================================
 
   const handleVariantSelect = useCallback((variant: Variant) => {
     setSelectedVariant(variant);
@@ -295,9 +296,8 @@ export function ProductVariantsItemsModal({
     setExitModalOpen(true);
   }, []);
 
-  // Map ExitType to backend's ExitMovementType (now 1:1 except TRANSFER)
   const mapExitType = (exitType: ExitType): ExitMovementType => {
-    if (exitType === 'TRANSFER') return 'LOSS'; // fallback, TRANSFER uses different flow
+    if (exitType === 'TRANSFER') return 'LOSS';
     return exitType as ExitMovementType;
   };
 
@@ -340,9 +340,9 @@ export function ProductVariantsItemsModal({
     [exitItem, queryClient, selectedVariant, product]
   );
 
-  // ============================================================================
+  // ==========================================================================
   // RENDER
-  // ============================================================================
+  // ==========================================================================
 
   if (!product) return null;
 
@@ -355,281 +355,260 @@ export function ProductVariantsItemsModal({
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[1100px] h-[600px] overflow-hidden flex flex-col p-0">
-          {/* Product Header */}
-          <DialogHeader className="p-6 pb-2 shrink-0">
-            <div className="flex items-start gap-4">
-              <div className="shrink-0 w-12 h-12 rounded-lg bg-linear-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex gap-2 items-center">
-                  <DialogTitle className="text-xl">
-                    {templateName} {product.name}
-                  </DialogTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 h-7 w-7 opacity-50 hover:opacity-100"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(product.id);
-                        toast.success('ID copiado!');
-                      } catch {
-                        toast.error('Erro ao copiar ID');
-                      }
-                    }}
-                    title="Copiar ID do produto"
-                    aria-label="Copiar ID do produto"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
+        <DialogContent className="sm:max-w-[1200px] h-[650px] overflow-hidden flex flex-row p-0 gap-0">
+          <VisuallyHidden>
+            <DialogTitle>Variantes e Itens — {product.name}</DialogTitle>
+          </VisuallyHidden>
+
+          {/* ================================================================ */}
+          {/* LEFT COLUMN — Product context + Variants */}
+          {/* ================================================================ */}
+          <div className="w-[380px] shrink-0 flex flex-col border-r border-border/50 bg-slate-50 dark:bg-white/[0.03]">
+            {/* Product Header */}
+            <div className="px-4 pt-5 pb-4 border-b border-border/30">
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+                  <Package className="w-5 h-5 text-white" />
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {manufacturerName || 'Fabricante não informado'}
-                </p>
-              </div>
-            </div>
-          </DialogHeader>
-
-          {/* Two-column layout */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 min-h-0 overflow-hidden">
-            {/* LEFT COLUMN - Variants */}
-            <div className="flex flex-col border-r border-border overflow-hidden">
-              {/* Variants Header */}
-              <div className="p-4 pb-3 bg-linear-to-r from-gray-100 to-gray-50 dark:from-muted/30 dark:to-muted/30">
-                <div className="flex items-center justify-between mb-3 min-h-[28px]">
-                  <div className="flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-muted-foreground" />
-                    <h3 className="font-medium">Variantes</h3>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">
+                    {product.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {manufacturerName || 'Fabricante não informado'}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
+                      {templateName}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {unitOfMeasure}
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {filteredVariants.length} de {variants.length}
-                  </span>
                 </div>
-
-                {/* Variants Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Buscar variantes..."
-                    value={variantsSearch}
-                    onChange={e => setVariantsSearch(e.target.value)}
-                    className="pl-9 h-9"
-                  />
-                </div>
-              </div>
-
-              {/* Variants List */}
-              <div className="flex-1 overflow-auto p-4 pt-2 space-y-2">
-                {isLoadingVariants ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3].map(i => (
-                      <Skeleton key={i} className="h-16 w-full" />
-                    ))}
-                  </div>
-                ) : variantsError ? (
-                  <div className="p-8 text-center">
-                    <p className="text-destructive text-sm">
-                      Erro ao carregar variantes
-                    </p>
-                  </div>
-                ) : filteredVariants.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <Palette className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-sm text-muted-foreground">
-                      {variantsSearch
-                        ? 'Nenhuma variante encontrada'
-                        : 'Nenhuma variante cadastrada'}
-                    </p>
-                  </div>
-                ) : (
-                  filteredVariants.map(variant => (
-                    <VariantRow
-                      key={variant.id}
-                      variant={variant}
-                      itemsCount={variantStatsMap?.[variant.id]?.count || 0}
-                      totalQuantity={
-                        variantStatsMap?.[variant.id]?.totalQty || 0
-                      }
-                      unitLabel={unitOfMeasure}
-                      isSelected={selectedVariant?.id === variant.id}
-                      onClick={() => handleVariantSelect(variant)}
-                      onEdit={v => {
-                        setEditingVariant(v);
-                        setShowEditVariantModal(true);
-                      }}
-                    />
-                  ))
-                )}
-              </div>
-
-              {/* Add Variant Button */}
-              <div className="p-4 border-t">
-                <Button
-                  variant="outline"
-                  className="w-full bg-emerald-600 hover:bg-emerald-500"
-                  onClick={() => setShowAddVariantModal(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Variante
-                </Button>
               </div>
             </div>
 
-            {/* RIGHT COLUMN - Items */}
-            <div className="flex flex-col overflow-hidden">
-              {selectedVariant ? (
-                <>
-                  {/* Items Header */}
-                  <div className="p-4 pb-3 bg-linear-to-r from-gray-100 to-gray-50 dark:from-muted/30 dark:to-muted/30">
-                    <div className="flex items-center justify-between mb-3 min-h-[28px]">
-                      <div className="flex items-center gap-2">
-                        <Box className="w-4 h-4 text-muted-foreground" />
-                        <h3 className="font-medium">{selectedVariant.name}</h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {filteredItems.length > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handlePrintAllItems}
-                            className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-500/10"
-                          >
-                            <Printer className="w-3.5 h-3.5 mr-1" />
-                            Imprimir Todos
-                          </Button>
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                          {filteredItems.length} itens •{' '}
-                          {formatQuantity(totalItemsQuantity)} {unitOfMeasure}
-                        </span>
-                      </div>
-                    </div>
+            {/* Variants Search */}
+            <div className="px-3 pt-3 pb-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Buscar variantes..."
+                  value={variantsSearch}
+                  onChange={e => setVariantsSearch(e.target.value)}
+                  className="pl-9 h-8 text-sm bg-white dark:bg-white/5"
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2 px-0.5">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                  Variantes
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {filteredVariants.length} de {variants.length}
+                </span>
+              </div>
+            </div>
 
-                    {/* Hide exited items switch + Search */}
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          type="text"
-                          placeholder="Buscar itens..."
-                          value={itemsSearch}
-                          onChange={e => setItemsSearch(e.target.value)}
-                          className="pl-9 h-9"
-                        />
-                      </div>
-                      {items.some((i: Item) => i.currentQuantity === 0) && (
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Switch
-                            id="hide-exited-modal"
-                            checked={hideExitedItems}
-                            onCheckedChange={setHideExitedItems}
-                            className="scale-75"
-                          />
-                          <Label
-                            htmlFor="hide-exited-modal"
-                            className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap"
-                          >
-                            Ocultar saídas
-                          </Label>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Items List */}
-                  <div className="flex-1 overflow-auto p-4 pt-2 space-y-2">
-                    {isLoadingItems ? (
-                      <div className="space-y-2">
-                        {[1, 2, 3].map(i => (
-                          <Skeleton key={i} className="h-16 w-full" />
-                        ))}
-                      </div>
-                    ) : itemsError ? (
-                      <div className="p-8 text-center">
-                        <p className="text-destructive text-sm">
-                          Erro ao carregar itens
-                        </p>
-                      </div>
-                    ) : filteredItems.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <Box className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                        <p className="text-sm text-muted-foreground">
-                          {itemsSearch
-                            ? 'Nenhum item encontrado'
-                            : 'Nenhum item cadastrado'}
-                        </p>
-                      </div>
-                    ) : (
-                      filteredItems.map((item: Item) => (
-                        <ItemRow
-                          key={item.id}
-                          item={item}
-                          unitLabel={unitOfMeasure}
-                          onDoubleClick={() => handleItemDoubleClick(item)}
-                          onPrint={handlePrintItem}
-                          onExit={handleItemExit}
-                          lastExitReasonCode={exitReasonMap[item.id]}
-                        />
-                      ))
-                    )}
-                  </div>
-
-                  {/* Add Item Button */}
-                  <div className="p-4 border-t">
-                    <Button
-                      variant="outline"
-                      className="w-full bg-purple-600 hover:bg-purple-500"
-                      onClick={() => setShowAddItemModal(true)}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Registrar Entrada
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                /* Empty state when no variant selected */
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                  <div
-                    className={cn(
-                      'w-16 h-16 rounded-full flex items-center justify-center mb-4',
-                      'bg-muted'
-                    )}
-                  >
-                    <Box className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="font-medium mb-1">Selecione uma variante</h3>
-                  <p className="text-sm text-muted-foreground max-w-[200px]">
-                    Clique em uma variante à esquerda para ver seus itens
+            {/* Variants List */}
+            <div className="flex-1 overflow-auto px-3 pb-2 space-y-1">
+              {isLoadingVariants ? (
+                <div className="space-y-1.5 pt-1">
+                  {[1, 2, 3].map(i => (
+                    <Skeleton key={i} className="h-14 w-full rounded-xl" />
+                  ))}
+                </div>
+              ) : variantsError ? (
+                <div className="p-8 text-center">
+                  <p className="text-destructive text-sm">
+                    Erro ao carregar variantes
                   </p>
                 </div>
+              ) : filteredVariants.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Palette className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {variantsSearch
+                      ? 'Nenhuma variante encontrada'
+                      : 'Nenhuma variante cadastrada'}
+                  </p>
+                </div>
+              ) : (
+                filteredVariants.map(variant => (
+                  <VariantRow
+                    key={variant.id}
+                    variant={variant}
+                    itemsCount={variantStatsMap?.[variant.id]?.count || 0}
+                    totalQuantity={variantStatsMap?.[variant.id]?.totalQty || 0}
+                    unitLabel={unitOfMeasure}
+                    isSelected={selectedVariant?.id === variant.id}
+                    onClick={() => handleVariantSelect(variant)}
+                    onEdit={v => {
+                      setEditingVariant(v);
+                      setShowEditVariantModal(true);
+                    }}
+                  />
+                ))
               )}
             </div>
+
+            {/* Add Variant Footer */}
+            <div className="px-3 py-3 border-t border-border/30">
+              <Button
+                size="sm"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+                onClick={() => setShowAddVariantModal(true)}
+              >
+                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                Adicionar Variante
+              </Button>
+            </div>
+          </div>
+
+          {/* ================================================================ */}
+          {/* RIGHT COLUMN — Variant detail + Items */}
+          {/* ================================================================ */}
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+            {selectedVariant ? (
+              <>
+                {/* Variant Header */}
+                <VariantDetailHeader
+                  variant={selectedVariant}
+                  itemsCount={variantStatsMap?.[selectedVariant.id]?.count || 0}
+                  totalQuantity={
+                    variantStatsMap?.[selectedVariant.id]?.totalQty || 0
+                  }
+                  unitLabel={unitOfMeasure}
+                  onEdit={() => {
+                    setEditingVariant(selectedVariant);
+                    setShowEditVariantModal(true);
+                  }}
+                  onPrintAll={handlePrintAllItems}
+                  hasPrintableItems={filteredItems.length > 0}
+                />
+
+                {/* Items Search + Filters */}
+                <div className="px-4 pt-3 pb-2 border-b border-border/30">
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Buscar itens..."
+                        value={itemsSearch}
+                        onChange={e => setItemsSearch(e.target.value)}
+                        className="pl-9 h-8 text-sm"
+                      />
+                    </div>
+                    {items.some((i: Item) => i.currentQuantity === 0) && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Switch
+                          id="hide-exited-modal"
+                          checked={hideExitedItems}
+                          onCheckedChange={setHideExitedItems}
+                          className="scale-75"
+                        />
+                        <Label
+                          htmlFor="hide-exited-modal"
+                          className="text-[11px] text-muted-foreground cursor-pointer whitespace-nowrap"
+                        >
+                          Ocultar saídas
+                        </Label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Items List */}
+                <div className="flex-1 overflow-auto p-4 pt-2 space-y-1.5">
+                  {isLoadingItems ? (
+                    <div className="space-y-1.5">
+                      {[1, 2, 3].map(i => (
+                        <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                      ))}
+                    </div>
+                  ) : itemsError ? (
+                    <div className="p-8 text-center">
+                      <p className="text-destructive text-sm">
+                        Erro ao carregar itens
+                      </p>
+                    </div>
+                  ) : filteredItems.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <Box className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-xs text-muted-foreground">
+                        {itemsSearch
+                          ? 'Nenhum item encontrado'
+                          : 'Nenhum item cadastrado'}
+                      </p>
+                    </div>
+                  ) : (
+                    filteredItems.map((item: Item) => (
+                      <ItemRow
+                        key={item.id}
+                        item={item}
+                        unitLabel={unitOfMeasure}
+                        onDoubleClick={() => handleItemDoubleClick(item)}
+                        onPrint={handlePrintItem}
+                        onExit={handleItemExit}
+                        lastExitReasonCode={exitReasonMap[item.id]}
+                      />
+                    ))
+                  )}
+                </div>
+
+                {/* Items Footer */}
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border/30">
+                  <span className="text-xs text-muted-foreground">
+                    {filteredItems.length} itens ·{' '}
+                    {formatQuantity(totalItemsQuantity)} {unitOfMeasure}
+                  </span>
+                  <Button
+                    size="sm"
+                    className="bg-violet-600 hover:bg-violet-500 text-white"
+                    onClick={() => setShowAddItemModal(true)}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1.5" />
+                    Registrar Entrada
+                  </Button>
+                </div>
+              </>
+            ) : (
+              /* Empty state */
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                  <Box className="w-7 h-7 text-muted-foreground" />
+                </div>
+                <h3 className="font-medium text-sm mb-1">
+                  Selecione uma variante
+                </h3>
+                <p className="text-xs text-muted-foreground max-w-[200px]">
+                  Clique em uma variante à esquerda para ver seus itens
+                </p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Item History Modal */}
+      {/* Sub-modals */}
       <ItemHistoryModal
         open={historyModalOpen}
         onOpenChange={setHistoryModalOpen}
         item={historyItem}
       />
 
-      {/* Exit Items Modal */}
       <ExitItemsModal
         open={exitModalOpen}
-        onOpenChange={open => {
-          setExitModalOpen(open);
-          if (!open) setExitItem(null);
+        onOpenChange={o => {
+          setExitModalOpen(o);
+          if (!o) setExitItem(null);
         }}
         selectedItems={exitItem ? [exitItem] : []}
         onConfirm={handleExitConfirm}
       />
 
-      {/* Edit Variant Modal */}
       <VariantFormModal
         product={product}
         variant={editingVariant}
@@ -637,14 +616,12 @@ export function ProductVariantsItemsModal({
         onOpenChange={setShowEditVariantModal}
       />
 
-      {/* Add Variant Modal */}
       <VariantFormModal
         product={product}
         open={showAddVariantModal}
         onOpenChange={setShowAddVariantModal}
       />
 
-      {/* Quick Add Item Modal */}
       <ItemEntryFormModal
         product={product}
         variant={selectedVariant}
@@ -653,4 +630,199 @@ export function ProductVariantsItemsModal({
       />
     </>
   );
+}
+
+// ============================================================================
+// Variant Detail Header — rich header for the right column
+// ============================================================================
+
+interface VariantDetailHeaderProps {
+  variant: Variant;
+  itemsCount: number;
+  totalQuantity: number;
+  unitLabel: string;
+  onEdit: () => void;
+  onPrintAll: () => void;
+  hasPrintableItems: boolean;
+}
+
+function VariantDetailHeader({
+  variant,
+  itemsCount,
+  totalQuantity,
+  unitLabel,
+  onEdit,
+  onPrintAll,
+  hasPrintableItems,
+}: VariantDetailHeaderProps) {
+  const hasPattern = variant.pattern && variant.pattern !== ('none' as string);
+  const hasColor = !!variant.colorHex;
+  const hasVisual = hasPattern || hasColor;
+  const patternLabel = PATTERN_LABELS[variant.pattern as Pattern] || '';
+
+  const previewStyle = hasVisual ? getHeaderPreviewStyle(variant) : undefined;
+
+  return (
+    <div className="shrink-0 border-b border-border/30">
+      {/* Pattern preview strip */}
+      {hasVisual && previewStyle && (
+        <div className="h-2" style={previewStyle} />
+      )}
+
+      <div className="px-5 py-4">
+        <div className="flex items-start justify-between gap-4">
+          {/* Left: name + details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-semibold truncate">
+                {variant.name}
+              </h3>
+              {variant.outOfLine && (
+                <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-orange-500/15 text-orange-600 dark:text-orange-400 rounded">
+                  Fora de Linha
+                </span>
+              )}
+              {!variant.isActive && (
+                <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-gray-500/15 text-gray-500 rounded">
+                  Inativo
+                </span>
+              )}
+            </div>
+
+            {/* Meta row */}
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {variant.sku && (
+                <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+                  SKU: {variant.sku}
+                </span>
+              )}
+              {variant.reference && (
+                <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  Ref: {variant.reference}
+                </span>
+              )}
+              {patternLabel && (
+                <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  {patternLabel}
+                </span>
+              )}
+              {hasColor && (
+                <span className="flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full inline-block ring-1 ring-black/10"
+                    style={{ background: variant.colorHex! }}
+                  />
+                  {variant.secondaryColorHex && (
+                    <span
+                      className="w-2.5 h-2.5 rounded-full inline-block ring-1 ring-black/10 -ml-1"
+                      style={{ background: variant.secondaryColorHex }}
+                    />
+                  )}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: stats + actions */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Stats */}
+            <div className="text-right">
+              <p className="text-lg font-bold tabular-nums leading-none">
+                {formatQuantity(totalQuantity)}
+                <span className="text-xs font-normal text-muted-foreground ml-1">
+                  {unitLabel}
+                </span>
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {itemsCount} {itemsCount === 1 ? 'item' : 'itens'} em estoque
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-1 border-l border-border/50 pl-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onEdit}
+                title="Editar variante"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              {hasPrintableItems && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={onPrintAll}
+                  title="Imprimir todos os itens"
+                >
+                  <Printer className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Pattern preview helpers
+// ============================================================================
+
+function getHeaderPreviewStyle(variant: Variant): React.CSSProperties {
+  const primary = variant.colorHex || '#cbd5e1';
+  const secondary = variant.secondaryColorHex || '';
+  const pattern = variant.pattern || '';
+  const hasSecondary = !!secondary;
+  const sec = secondary || '#94a3b8';
+
+  switch (pattern) {
+    case 'SOLID':
+      if (hasSecondary) {
+        return {
+          background: `linear-gradient(90deg, ${primary} 50%, ${sec} 50%)`,
+        };
+      }
+      return { background: primary };
+
+    case 'STRIPED':
+      return {
+        background: `repeating-linear-gradient(45deg, ${primary}, ${primary} 4px, ${sec} 4px, ${sec} 8px)`,
+      };
+
+    case 'PLAID':
+      return {
+        background: `
+          repeating-linear-gradient(0deg, ${sec}00 0px, ${sec}00 4px, ${sec}BB 4px, ${sec}BB 6px, ${sec}00 6px, ${sec}00 10px),
+          repeating-linear-gradient(90deg, ${sec}00 0px, ${sec}00 4px, ${sec}BB 4px, ${sec}BB 6px, ${sec}00 6px, ${sec}00 10px),
+          ${primary}`,
+      };
+
+    case 'PRINTED':
+      return {
+        background: `
+          radial-gradient(circle 1.5px at 15% 50%, ${sec} 99%, transparent),
+          radial-gradient(circle 1px at 35% 30%, ${sec} 99%, transparent),
+          radial-gradient(circle 1.5px at 55% 70%, ${sec} 99%, transparent),
+          radial-gradient(circle 1px at 75% 40%, ${sec} 99%, transparent),
+          radial-gradient(circle 1.5px at 90% 55%, ${sec} 99%, transparent),
+          ${primary}`,
+      };
+
+    case 'GRADIENT':
+      return {
+        background: `linear-gradient(90deg, ${primary}, ${sec})`,
+      };
+
+    case 'JACQUARD':
+      return {
+        background: `repeating-conic-gradient(${primary} 0% 25%, ${sec} 0% 50%) 0 0 / 6px 6px`,
+      };
+
+    default:
+      return { background: primary };
+  }
 }

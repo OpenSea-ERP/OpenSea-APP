@@ -1,6 +1,7 @@
 /**
- * VariantRow - Simplified variant display for two-column modal
- * Exibe: Cor | Nome + Referência + Badge | Atributos Visíveis | Itens | Quantidade | Preço | Edit
+ * VariantRow - Variant card for the management modal
+ * Shows: Pattern preview | Name + Reference + Badges | Items | Quantity | Edit
+ * No price column (stock focus = quantity).
  */
 
 'use client';
@@ -14,8 +15,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { formatQuantity } from '@/helpers/formatters';
-import { cn, formatCurrency } from '@/lib/utils';
-import type { TemplateAttribute, Variant } from '@/types/stock';
+import { cn } from '@/lib/utils';
+import type { Pattern, TemplateAttribute, Variant } from '@/types/stock';
+import { PATTERN_LABELS } from '@/types/stock';
 import { Edit, Palette, Slash } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -27,7 +29,6 @@ interface VariantRowProps {
   isSelected?: boolean;
   onClick: () => void;
   onEdit?: (variant: Variant) => void;
-  /** Atributos de variante do template (para exibir os visíveis) */
   variantAttributes?: Record<string, TemplateAttribute>;
 }
 
@@ -41,7 +42,6 @@ export function VariantRow({
   onEdit,
   variantAttributes,
 }: VariantRowProps) {
-  // Filtrar atributos visíveis (enableView = true)
   const visibleAttributes = useMemo(() => {
     if (!variantAttributes) return [];
     return Object.entries(variantAttributes)
@@ -54,7 +54,6 @@ export function VariantRow({
       }));
   }, [variantAttributes, variant.attributes]);
 
-  // Formatar valor do atributo
   const formatValue = (value: unknown, unitOfMeasure?: string): string => {
     if (value === null || value === undefined || value === '') return '—';
     if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
@@ -62,85 +61,99 @@ export function VariantRow({
     return unitOfMeasure ? `${strValue} ${unitOfMeasure}` : strValue;
   };
 
+  const hasPattern = variant.pattern && variant.pattern !== ('none' as string);
+  const hasColor = !!variant.colorHex;
+  const hasVisual = hasPattern || hasColor;
+
   return (
     <div
       className={cn(
-        'flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors',
+        'flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all duration-200',
         isSelected
-          ? 'bg-linear-to-r from-violet-100 to-blue-100 dark:from-sky-500/20 dark:to-sky-500/20 border-emerald-500'
-          : 'bg-linear-to-r from-violet-50 to-blue-50 dark:from-slate-800/50 dark:to-slate-800/50 hover:from-violet-100 hover:to-blue-100 dark:hover:from-slate-700/50 dark:hover:to-slate-700/50 border-border'
+          ? 'bg-white dark:bg-white/10 shadow-sm ring-1 ring-blue-500/30 border-blue-500/50'
+          : 'hover:bg-white/60 dark:hover:bg-white/[0.04] border-border/60'
       )}
       onClick={onClick}
     >
-      {/* Column 1: Cor */}
+      {/* Pattern/Color preview */}
       <div className="shrink-0">
-        {variant.colorHex ? (
+        {hasVisual ? (
           <div
-            className="h-8 w-12 rounded border border-gray-200 dark:border-slate-700"
-            style={{ backgroundColor: variant.colorHex }}
-            title={variant.colorHex}
+            className="h-9 w-14 rounded-lg overflow-hidden"
+            style={{
+              ...getVariantPreviewStyle(variant),
+              boxShadow: `inset 0 0 0 1px ${variant.colorHex || '#94a3b8'}30`,
+            }}
           />
         ) : (
           <div
-            className="flex items-center gap-1 text-muted-foreground h-8 w-12 justify-center"
-            title="Cor não definida"
+            className="flex items-center gap-0.5 text-muted-foreground h-9 w-14 justify-center rounded-lg bg-muted/50"
+            title="Sem cor definida"
           >
-            <Palette className="h-4 w-4" />
-            <Slash className="h-3 w-3" />
+            <Palette className="h-3.5 w-3.5" />
+            <Slash className="h-2.5 w-2.5" />
           </div>
         )}
       </div>
 
-      {/* Column 2: Nome + Referência + Badge */}
+      {/* Name + Reference + Badges */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-medium truncate">{variant.name}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium truncate">{variant.name}</p>
           {variant.outOfLine && (
-            <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded">
-              Fora de Linha
+            <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-orange-500/15 text-orange-600 dark:text-orange-400 rounded">
+              FL
+            </span>
+          )}
+          {!variant.isActive && (
+            <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-gray-500/15 text-gray-500 rounded">
+              Inativo
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">
-          {variant.reference ? `Ref: ${variant.reference}` : 'Sem referência'}
+        <p className="text-[11px] text-muted-foreground truncate">
+          {[
+            variant.reference && `Ref: ${variant.reference}`,
+            variant.sku && `SKU: ${variant.sku}`,
+          ]
+            .filter(Boolean)
+            .join(' · ') || 'Sem referência'}
         </p>
       </div>
 
-      {/* Colunas dinâmicas: Atributos Visíveis (label acima do valor) */}
+      {/* Visible attributes */}
       {visibleAttributes.length > 0 && (
         <TooltipProvider>
-          <div className="flex items-center gap-3 shrink-0">
-            {visibleAttributes.slice(0, 3).map(attr => (
-              <div key={attr.key} className="text-center min-w-[60px]">
-                <p className="text-[10px] text-muted-foreground truncate">
+          <div className="flex items-center gap-2.5 shrink-0">
+            {visibleAttributes.slice(0, 2).map(attr => (
+              <div key={attr.key} className="text-center min-w-[50px]">
+                <p className="text-[9px] text-muted-foreground truncate">
                   {attr.label}
-                  {attr.unitOfMeasure && ` (${attr.unitOfMeasure})`}
                 </p>
-                <p className="text-xs font-medium truncate max-w-[80px]">
-                  {formatValue(attr.value)}
+                <p className="text-[11px] font-medium truncate max-w-[70px]">
+                  {formatValue(attr.value, attr.unitOfMeasure)}
                 </p>
               </div>
             ))}
-            {visibleAttributes.length > 3 && (
+            {visibleAttributes.length > 2 && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge
                     variant="secondary"
-                    className="text-xs cursor-pointer hover:bg-muted"
+                    className="text-[10px] cursor-pointer hover:bg-muted"
                   >
-                    +{visibleAttributes.length - 3}
+                    +{visibleAttributes.length - 2}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent className="p-3">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    {visibleAttributes.slice(3).map(attr => (
+                    {visibleAttributes.slice(2).map(attr => (
                       <div key={attr.key} className="text-left">
                         <p className="text-[10px] text-muted-foreground">
                           {attr.label}
-                          {attr.unitOfMeasure && ` (${attr.unitOfMeasure})`}
                         </p>
                         <p className="text-xs font-medium">
-                          {formatValue(attr.value)}
+                          {formatValue(attr.value, attr.unitOfMeasure)}
                         </p>
                       </div>
                     ))}
@@ -152,41 +165,25 @@ export function VariantRow({
         </TooltipProvider>
       )}
 
-      {/* Column 3: Items Count */}
-      <div className="shrink-0 w-14 text-right">
-        <p className="text-[10px] text-muted-foreground">itens</p>
+      {/* Items + Quantity */}
+      <div className="shrink-0 text-right">
+        <p className="text-[10px] text-muted-foreground">
+          {itemsCount} {itemsCount === 1 ? 'item' : 'itens'}
+        </p>
         <span
           className={cn(
-            'text-sm font-medium',
-            itemsCount === 0 ? 'text-muted-foreground' : 'text-foreground'
-          )}
-        >
-          {itemsCount}
-        </span>
-      </div>
-
-      {/* Column 4: Total Quantity */}
-      <div className="shrink-0 w-20 text-right">
-        <p className="text-[10px] text-muted-foreground">{unitLabel}</p>
-        <span
-          className={cn(
-            'text-sm font-medium',
+            'text-sm font-semibold tabular-nums',
             totalQuantity === 0 ? 'text-muted-foreground' : 'text-foreground'
           )}
         >
-          {formatQuantity(totalQuantity)}
+          {formatQuantity(totalQuantity)}{' '}
+          <span className="text-[10px] font-normal text-muted-foreground">
+            {unitLabel}
+          </span>
         </span>
       </div>
 
-      {/* Column 5: Price */}
-      <div className="shrink-0 text-right">
-        <p className="text-[10px] text-muted-foreground">Preço (R$)</p>
-        <Badge variant="secondary" className="font-mono text-foreground">
-          {formatCurrency(variant.price)}
-        </Badge>
-      </div>
-
-      {/* Column 6: Edit */}
+      {/* Edit */}
       {onEdit && (
         <TooltipProvider>
           <Tooltip>
@@ -194,14 +191,14 @@ export function VariantRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="shrink-0 h-8 w-8"
+                className="shrink-0 h-7 w-7 opacity-50 hover:opacity-100"
                 onClick={e => {
                   e.stopPropagation();
                   onEdit(variant);
                 }}
                 aria-label="Editar variante"
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Editar variante</TooltipContent>
@@ -210,4 +207,63 @@ export function VariantRow({
       )}
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Pattern preview helper (reuses logic from variant-form-modal)
+// ---------------------------------------------------------------------------
+
+function getVariantPreviewStyle(variant: Variant): React.CSSProperties {
+  const primary = variant.colorHex || '#cbd5e1';
+  const secondary = variant.secondaryColorHex || '';
+  const pattern = variant.pattern || '';
+  const hasSecondary = !!secondary;
+  const sec = secondary || '#94a3b8';
+
+  switch (pattern) {
+    case 'SOLID':
+      if (hasSecondary) {
+        return {
+          background: `linear-gradient(135deg, ${primary} 50%, ${sec} 50%)`,
+        };
+      }
+      return { background: primary };
+
+    case 'STRIPED':
+      return {
+        background: `repeating-linear-gradient(45deg, ${primary}, ${primary} 4px, ${sec} 4px, ${sec} 8px)`,
+      };
+
+    case 'PLAID':
+      return {
+        background: `
+          repeating-linear-gradient(0deg, ${sec}00 0px, ${sec}00 6px, ${sec}BB 6px, ${sec}BB 8px, ${sec}00 8px, ${sec}00 14px),
+          repeating-linear-gradient(90deg, ${sec}00 0px, ${sec}00 6px, ${sec}BB 6px, ${sec}BB 8px, ${sec}00 8px, ${sec}00 14px),
+          ${primary}`,
+      };
+
+    case 'PRINTED':
+      return {
+        background: `
+          radial-gradient(circle 2px at 25% 30%, ${sec} 99%, transparent),
+          radial-gradient(circle 1.5px at 60% 20%, ${sec} 99%, transparent),
+          radial-gradient(circle 2px at 80% 60%, ${sec} 99%, transparent),
+          radial-gradient(circle 1.5px at 40% 75%, ${sec} 99%, transparent),
+          ${primary}`,
+      };
+
+    case 'GRADIENT':
+      return {
+        background: `linear-gradient(135deg, ${primary}, ${sec})`,
+      };
+
+    case 'JACQUARD':
+      return {
+        background: `repeating-conic-gradient(${primary} 0% 25%, ${sec} 0% 50%) 0 0 / 8px 8px`,
+      };
+
+    default:
+      // No pattern but has color
+      return { background: primary };
+  }
 }
