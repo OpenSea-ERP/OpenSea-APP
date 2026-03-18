@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { Warehouse, Zone, ZoneStructure } from '../../types';
+import type { Warehouse, Zone, ZoneStructure } from '@/types/stock';
 
 interface LabelBinRangeSelectorProps {
   warehouses: Warehouse[];

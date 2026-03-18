@@ -8,8 +8,8 @@ import type {
   EditorState,
   EditorTool,
   AnnotationType,
-} from '../../types';
-import { defaultEditorState, ANNOTATION_DEFAULTS } from '../../types';
+} from '@/types/stock';
+import { defaultEditorState, ANNOTATION_DEFAULTS } from '@/types/stock';
 
 interface UseLayoutEditorOptions {
   initialLayout: ZoneLayout;

@@ -13,8 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import type { Bin, OccupancyLevel } from '../types';
-import { getOccupancyLevel } from '../types';
+import type { Bin, OccupancyLevel } from '@/types/stock';
+import { getOccupancyLevel } from '@/types/stock';
 import { OCCUPANCY_BADGE_CLASSES, OCCUPANCY_LABELS } from '../constants';
 
 interface BinCardProps {

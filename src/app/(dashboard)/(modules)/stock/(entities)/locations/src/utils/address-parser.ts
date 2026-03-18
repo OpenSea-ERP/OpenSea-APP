@@ -2,7 +2,7 @@
 // ADDRESS PARSER
 // ============================================
 
-import type { AddressComponents } from '../types';
+import type { AddressComponents } from '@/types/stock';
 
 /**
  * Resultado do parsing de um endereço

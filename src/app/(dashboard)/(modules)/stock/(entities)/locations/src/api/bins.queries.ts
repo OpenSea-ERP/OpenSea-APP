@@ -14,7 +14,7 @@ import type {
   BinSuggestionsResponse,
   BinDetailResponse,
   UpdateBinRequest,
-} from '../types';
+} from '@/types/stock';
 
 // ============================================
 // QUERIES

@@ -21,7 +21,7 @@ import {
 } from '../../api';
 import { useWarehouses } from '../../api/warehouses.queries';
 import { useAllZones } from '../../api/zones.queries';
-import type { Bin } from '../../types';
+import type { Bin } from '@/types/stock';
 
 export interface BinSelectorProps {
   /** Current value (bin address) */

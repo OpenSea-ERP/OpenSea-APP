@@ -36,7 +36,7 @@ import {
   QUERY_KEYS,
 } from '../../../src/api';
 import { ZoneMap } from '../../../src/components';
-import type { BinOccupancy, BinResponse } from '../../../src/types';
+import type { BinOccupancy, BinResponse } from '@/types/stock';
 import { apiClient } from '@/lib/api-client';
 import { itemsService } from '@/services/stock/items.service';
 import { useQueryClient } from '@tanstack/react-query';

@@ -11,7 +11,7 @@ import type {
   LabelData,
   LabelSize,
   LABEL_SIZES,
-} from '../../types';
+} from '@/types/stock';
 
 interface LabelPreviewProps {
   config: LabelConfig;

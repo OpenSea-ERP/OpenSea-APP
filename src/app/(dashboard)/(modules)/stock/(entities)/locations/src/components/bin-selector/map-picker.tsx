@@ -18,7 +18,7 @@ import type {
   Zone,
   Bin,
   OccupancyLevel,
-} from '../../types';
+} from '@/types/stock';
 
 export interface MapPickerProps {
   warehouses: WarehouseType[];

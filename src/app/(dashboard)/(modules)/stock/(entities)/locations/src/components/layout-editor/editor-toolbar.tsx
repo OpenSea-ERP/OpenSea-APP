@@ -33,8 +33,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import type { EditorTool, AnnotationType } from '../../types';
-import { ANNOTATION_DEFAULTS } from '../../types';
+import type { EditorTool, AnnotationType } from '@/types/stock';
+import { ANNOTATION_DEFAULTS } from '@/types/stock';
 
 interface EditorToolbarProps {
   currentTool: EditorTool;

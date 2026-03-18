@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Box, Copy, Grid3X3, Layers, Plus, Trash2 } from 'lucide-react';
 import { BIN_DIRECTION_LABELS, STRUCTURE_LIMITS } from '../../constants';
-import type { AisleConfig } from '../../types';
+import type { AisleConfig } from '@/types/stock';
 
 interface StepAislesProps {
   aisles: AisleConfig[];

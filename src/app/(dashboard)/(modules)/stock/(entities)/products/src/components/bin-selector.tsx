@@ -25,7 +25,7 @@ import {
   useWarehouses,
   useAllZones,
 } from '@/app/(dashboard)/(modules)/stock/(entities)/locations/src/api';
-import type { Bin } from '@/app/(dashboard)/(modules)/stock/(entities)/locations/src/types';
+import type { Bin } from '@/types/stock';
 import {
   Check,
   ChevronsUpDown,

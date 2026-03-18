@@ -11,7 +11,7 @@ import type {
   WarehouseResponse,
   CreateWarehouseRequest,
   UpdateWarehouseRequest,
-} from '../types';
+} from '@/types/stock';
 
 // ============================================
 // QUERIES

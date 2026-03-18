@@ -21,7 +21,7 @@ import {
   Warehouse,
 } from 'lucide-react';
 import Link from 'next/link';
-import type { Warehouse as WarehouseType } from '../types';
+import type { Warehouse as WarehouseType } from '@/types/stock';
 
 interface WarehouseCardProps {
   warehouse: WarehouseType;

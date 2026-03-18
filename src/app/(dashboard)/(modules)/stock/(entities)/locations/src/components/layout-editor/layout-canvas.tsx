@@ -10,8 +10,8 @@ import type {
   EditorState,
   AnnotationType,
   LayoutAnnotation,
-} from '../../types';
-import { ANNOTATION_DEFAULTS } from '../../types';
+} from '@/types/stock';
+import { ANNOTATION_DEFAULTS } from '@/types/stock';
 
 interface LayoutCanvasProps {
   layout: ZoneLayout;

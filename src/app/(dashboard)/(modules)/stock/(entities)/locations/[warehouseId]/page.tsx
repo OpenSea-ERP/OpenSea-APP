@@ -50,8 +50,8 @@ import {
 } from '../src/api';
 import { ZoneCard } from '../src/components';
 import { PLACEHOLDERS, SUCCESS_MESSAGES } from '../src/constants';
-import type { Zone, ZoneFormData } from '../src/types';
-import { defaultZoneFormData } from '../src/types';
+import type { Zone, ZoneFormData } from '@/types/stock';
+import { defaultZoneFormData } from '@/types/stock';
 import { normalizeCode, validateZoneForm } from '../src/utils';
 
 interface PageProps {

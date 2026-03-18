@@ -25,7 +25,7 @@ import type {
   Warehouse,
   Zone,
   defaultLabelConfig,
-} from '../../types';
+} from '@/types/stock';
 
 // ============================================
 // Types

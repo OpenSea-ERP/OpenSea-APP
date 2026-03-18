@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { SEPARATOR_LABELS, BIN_LABELING_LABELS } from '../../constants';
-import type { ZoneStructureFormData } from '../../types';
+import type { ZoneStructureFormData } from '@/types/stock';
 
 type CodePatternFields =
   | 'separator'

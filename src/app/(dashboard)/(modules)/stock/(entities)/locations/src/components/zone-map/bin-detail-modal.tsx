@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import { useBinDetail } from '../../api';
-import type { BinItem, BinOccupancy, Zone } from '../../types';
+import type { BinItem, BinOccupancy, Zone } from '@/types/stock';
 import { formatBinPosition } from '../../utils';
 
 interface BinDetailModalProps {

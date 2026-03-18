@@ -19,7 +19,7 @@ import type {
   ZoneLayout,
   LayoutResponse,
   SaveLayoutRequest,
-} from '../types';
+} from '@/types/stock';
 
 // ============================================
 // QUERIES

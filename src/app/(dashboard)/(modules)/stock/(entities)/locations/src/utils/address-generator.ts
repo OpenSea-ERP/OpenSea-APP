@@ -2,7 +2,7 @@
 // ADDRESS GENERATOR
 // ============================================
 
-import type { CodePattern, AddressComponents, AisleConfig } from '../types';
+import type { CodePattern, AddressComponents, AisleConfig } from '@/types/stock';
 
 /**
  * Gera o endereço completo de um bin

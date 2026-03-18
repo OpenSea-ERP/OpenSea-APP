@@ -6,7 +6,7 @@ import { LayoutCanvas } from './layout-canvas';
 import { PropertiesPanel } from './properties-panel';
 import { AnnotationsPanel } from './annotations-panel';
 import { useLayoutEditor } from './use-layout-editor';
-import type { ZoneLayout, ZoneStructure, AnnotationType } from '../../types';
+import type { ZoneLayout, ZoneStructure, AnnotationType } from '@/types/stock';
 
 export interface LayoutEditorProps {
   initialLayout: ZoneLayout;

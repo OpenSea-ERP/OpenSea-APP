@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Box, Grid3X3, Layers, Minus, Plus } from 'lucide-react';
 import { BIN_DIRECTION_LABELS, STRUCTURE_LIMITS } from '../../constants';
-import type { ZoneStructureFormData } from '../../types';
+import type { ZoneStructureFormData } from '@/types/stock';
 
 interface StepDimensionsProps {
   formData: ZoneStructureFormData;

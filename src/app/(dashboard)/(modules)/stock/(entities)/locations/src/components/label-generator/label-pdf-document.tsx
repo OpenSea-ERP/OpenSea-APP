@@ -14,7 +14,7 @@ import type {
   LabelData,
   LabelSize,
   PDFPageConfig,
-} from '../../types';
+} from '@/types/stock';
 
 // Register a monospace font for better code display
 Font.register({

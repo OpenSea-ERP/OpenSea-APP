@@ -5,7 +5,7 @@ import { MapPin, Package, Lock, AlertCircle, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { BinSuggestion, OccupancyLevel, Bin } from '../../types';
+import type { BinSuggestion, OccupancyLevel, Bin } from '@/types/stock';
 
 export interface SuggestionsProps {
   suggestions: BinSuggestion[] | Bin[];

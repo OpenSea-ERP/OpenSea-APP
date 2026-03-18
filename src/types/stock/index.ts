@@ -17,6 +17,13 @@ export * from './analytics.types';
 export * from './label.types';
 export * from './attachment.types';
 export * from './product-care-instruction.types';
+export * from './zone.types';
+export * from './bin.types';
+export * from './layout.types';
+export * from './location-label.types';
+export * from './health.types';
+export * from './search-location.types';
+export * from './location-setup.types';
 
 // Re-export pagination types (they were re-exported from old stock.ts)
 export type { PaginationMeta, PaginatedQuery } from '../pagination';

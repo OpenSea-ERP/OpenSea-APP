@@ -3,7 +3,7 @@
 import React, { memo, useRef, useState, useCallback } from 'react';
 import { RotateCw, Move, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { AislePosition, ZoneStructure } from '../../types';
+import type { AislePosition, ZoneStructure } from '@/types/stock';
 
 interface DraggableAisleProps {
   position: AislePosition;

@@ -22,7 +22,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { toast } from 'sonner';
 import { MoveItemModal } from '../../modals/move-item-modal';
-import type { Bin, BinItem, BinOccupancy, Zone } from '../../types';
+import type { Bin, BinItem, BinOccupancy, Zone } from '@/types/stock';
 import { AisleRow } from './aisle-row';
 import { BinDetailModal } from './bin-detail-modal';
 import { MapLegend } from './map-legend';

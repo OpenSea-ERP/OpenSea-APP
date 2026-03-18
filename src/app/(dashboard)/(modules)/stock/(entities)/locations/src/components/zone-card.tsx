@@ -23,7 +23,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
-import type { Zone } from '../types';
+import type { Zone } from '@/types/stock';
 
 interface ZoneCardProps {
   zone: Zone;

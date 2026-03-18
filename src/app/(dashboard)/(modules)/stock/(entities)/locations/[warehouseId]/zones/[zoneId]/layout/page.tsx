@@ -28,7 +28,7 @@ import {
   useResetZoneLayout,
 } from '../../../../src/api';
 import { LayoutEditor } from '../../../../src/components';
-import type { ZoneLayout, AislePosition } from '../../../../src/types';
+import type { ZoneLayout, AislePosition } from '@/types/stock';
 
 interface PageProps {
   params: Promise<{

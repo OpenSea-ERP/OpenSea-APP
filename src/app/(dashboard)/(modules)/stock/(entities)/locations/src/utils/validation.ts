@@ -7,7 +7,7 @@ import type {
   ZoneStructureFormData,
   WarehouseFormData,
   ZoneFormData,
-} from '../types';
+} from '@/types/stock';
 
 /**
  * Resultado de validação

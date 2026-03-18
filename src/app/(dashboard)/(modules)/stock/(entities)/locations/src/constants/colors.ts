@@ -2,7 +2,7 @@
 // OCCUPANCY COLORS
 // ============================================
 
-import type { OccupancyLevel } from '../types';
+import type { OccupancyLevel } from '@/types/stock';
 
 /**
  * Cores para representar níveis de ocupação

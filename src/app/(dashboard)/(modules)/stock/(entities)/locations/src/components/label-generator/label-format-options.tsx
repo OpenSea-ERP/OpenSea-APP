@@ -7,8 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { LabelConfig, LabelFormat, LabelSize } from '../../types';
-import { LABEL_SIZES } from '../../types';
+import type { LabelConfig, LabelFormat, LabelSize } from '@/types/stock';
+import { LABEL_SIZES } from '@/types/stock';
 
 interface LabelFormatOptionsProps {
   config: LabelConfig;

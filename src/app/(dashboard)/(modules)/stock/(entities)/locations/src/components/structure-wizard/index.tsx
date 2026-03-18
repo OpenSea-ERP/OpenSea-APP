@@ -27,8 +27,8 @@ import type {
   CodePattern,
   ZoneStructure,
   AisleConfig,
-} from '../../types';
-import { defaultAisleConfig } from '../../types';
+} from '@/types/stock';
+import { defaultAisleConfig } from '@/types/stock';
 
 import { StepAisles } from './step-aisles';
 import { StepCodePattern } from './step-code-pattern';

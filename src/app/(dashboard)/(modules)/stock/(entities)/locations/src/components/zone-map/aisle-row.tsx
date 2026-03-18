@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { memo, useState } from 'react';
-import type { AisleConfig, BinOccupancy, ZoneStructure } from '../../types';
+import type { AisleConfig, BinOccupancy, ZoneStructure } from '@/types/stock';
 import { BinCell } from './bin-cell';
 
 interface ShelfData {

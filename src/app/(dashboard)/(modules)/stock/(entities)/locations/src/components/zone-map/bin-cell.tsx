@@ -11,8 +11,8 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useBinDetail } from '../../api';
-import type { BinOccupancy, OccupancyLevel } from '../../types';
-import { getOccupancyLevel } from '../../types';
+import type { BinOccupancy, OccupancyLevel } from '@/types/stock';
+import { getOccupancyLevel } from '@/types/stock';
 
 interface BinCellProps {
   bin: BinOccupancy | null;

@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { LayoutAnnotation, AnnotationType } from '../../types';
-import { ANNOTATION_DEFAULTS } from '../../types';
+import type { LayoutAnnotation, AnnotationType } from '@/types/stock';
+import { ANNOTATION_DEFAULTS } from '@/types/stock';
 
 interface AnnotationsPanelProps {
   annotations: LayoutAnnotation[];

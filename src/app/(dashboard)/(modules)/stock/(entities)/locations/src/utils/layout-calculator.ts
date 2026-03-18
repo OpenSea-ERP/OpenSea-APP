@@ -2,7 +2,7 @@
 // LAYOUT CALCULATOR
 // ============================================
 
-import type { ZoneLayout, AislePosition, ZoneStructure } from '../types';
+import type { ZoneLayout, AislePosition, ZoneStructure } from '@/types/stock';
 import { MAP_DEFAULTS } from '../constants';
 
 /**

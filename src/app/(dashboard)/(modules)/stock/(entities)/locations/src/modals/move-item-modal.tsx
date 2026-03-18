@@ -25,7 +25,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { BinSelector } from '../components/bin-selector';
-import type { BinItem, Bin } from '../types';
+import type { BinItem, Bin } from '@/types/stock';
 
 export interface MoveItemModalProps {
   open: boolean;

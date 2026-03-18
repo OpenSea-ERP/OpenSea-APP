@@ -25,7 +25,7 @@ import {
 import type {
   ZoneStructureFormData,
   ReconfigurationPreviewResponse,
-} from '../../types';
+} from '@/types/stock';
 
 interface StepConfirmProps {
   formData: ZoneStructureFormData;

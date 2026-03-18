@@ -5,7 +5,7 @@ import { Layers, Grid3X3, Box } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { ZoneStructureFormData, AisleConfig } from '../../types';
+import type { ZoneStructureFormData, AisleConfig } from '@/types/stock';
 
 interface StepPreviewProps {
   formData: ZoneStructureFormData;

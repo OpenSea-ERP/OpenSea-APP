@@ -11,8 +11,8 @@ import type {
   AislePosition,
   LayoutAnnotation,
   ZoneStructure,
-} from '../../types';
-import { ANNOTATION_DEFAULTS } from '../../types';
+} from '@/types/stock';
+import { ANNOTATION_DEFAULTS } from '@/types/stock';
 
 interface PropertiesPanelProps {
   selectedAisle: AislePosition | null;
