@@ -88,6 +88,18 @@ export const WIZARD_STEP_DESCRIPTIONS: Record<string, string> = {
 };
 
 /**
+ * Limites de estrutura
+ */
+export const STRUCTURE_LIMITS = {
+  minAisles: 1,
+  maxAisles: 99,
+  minShelvesPerAisle: 1,
+  maxShelvesPerAisle: 999,
+  minBinsPerShelf: 1,
+  maxBinsPerShelf: 26, // A-Z
+};
+
+/**
  * Mensagens de erro
  */
 export const ERROR_MESSAGES = {

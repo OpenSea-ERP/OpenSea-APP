@@ -12,9 +12,6 @@ export * from './components';
 // Modals
 export * from './modals';
 
-// Types
-export * from './types';
-
 // Utils
 export * from './utils';
 
