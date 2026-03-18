@@ -39,6 +39,7 @@ import {
   Palette,
   Plus,
   Search,
+  X,
 } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -337,7 +338,10 @@ export function ProductVariantsItemsModal({
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[1200px] h-[650px] overflow-hidden flex flex-row p-0 gap-0">
+        <DialogContent
+          showCloseButton={false}
+          className="sm:max-w-[1200px] h-[650px] overflow-hidden flex flex-row p-0 gap-0"
+        >
           <VisuallyHidden>
             <DialogTitle>Variantes e Itens — {product.name}</DialogTitle>
           </VisuallyHidden>
@@ -454,6 +458,7 @@ export function ProductVariantsItemsModal({
                     setShowEditVariantModal(true);
                   }}
                   onPrintListing={handlePrintListing}
+                  onClose={handleClose}
                 />
 
                 {/* Items Search + Section Header */}
@@ -611,6 +616,7 @@ interface VariantDetailHeaderProps {
   totalQuantity: number;
   onEdit: () => void;
   onPrintListing: () => void;
+  onClose: () => void;
 }
 
 function VariantDetailHeader({
@@ -619,13 +625,14 @@ function VariantDetailHeader({
   totalQuantity,
   onEdit,
   onPrintListing,
+  onClose,
 }: VariantDetailHeaderProps) {
   const hasColor = !!variant.colorHex;
   const patternLabel = PATTERN_LABELS[variant.pattern as Pattern] || '';
 
   return (
     <div className="shrink-0 border-b border-border/30 px-5 py-4 min-h-[88px] flex items-center">
-      <div className="flex items-start justify-between gap-4 w-full">
+      <div className="flex items-center justify-between gap-4 w-full">
         {/* Left: name + meta */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -705,6 +712,15 @@ function VariantDetailHeader({
               title="Imprimir listagem"
             >
               <FileText className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onClose}
+              title="Fechar"
+            >
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
