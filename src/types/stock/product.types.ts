@@ -120,7 +120,13 @@ export interface ProductsQuery extends PaginatedQuery {
   supplierId?: string;
 }
 
+/** Response shape from GET /v1/products (backend uses `meta` with `pages`) */
 export interface PaginatedProductsResponse {
   products: Product[];
-  pagination: PaginationMeta;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }

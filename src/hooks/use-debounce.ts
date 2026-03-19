@@ -1,0 +1,21 @@
+import { useEffect, useState } from 'react';
+
+/**
+ * Debounce a value by the specified delay.
+ * Returns the debounced value that only updates after `delay` ms of inactivity.
+ *
+ * @example
+ * const [search, setSearch] = useState('');
+ * const debouncedSearch = useDebounce(search, 300);
+ * // debouncedSearch updates 300ms after the last setSearch call
+ */
+export function useDebounce<T>(value: T, delay: number = 300): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}

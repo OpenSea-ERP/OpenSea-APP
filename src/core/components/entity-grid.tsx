@@ -110,6 +110,8 @@ export interface EntityGridProps<T extends BaseEntity> {
   gridColumns?: string;
   /** Conteúdo renderizado no início da toolbar (ex: filtros) */
   toolbarStart?: React.ReactNode;
+  /** Callback para sorting server-side. Quando presente, sorting interno é desabilitado. */
+  onSortChange?: (sortField: SortField, sortDirection: SortDirection) => void;
 }
 
 // =============================================================================
@@ -148,6 +150,7 @@ export function EntityGrid<T extends BaseEntity>({
   itemsClassName,
   gridColumns = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
   toolbarStart,
+  onSortChange,
 }: EntityGridProps<T>) {
   // Selection context (opcional)
   const selectionContext = useOptionalSelectionContext();
@@ -217,9 +220,10 @@ export function EntityGrid<T extends BaseEntity>({
 
   const sortOptions = customSortOptions ?? defaultSortOptions;
 
-  // Itens ordenados
+  // Itens ordenados (skip sorting when server-side via onSortChange)
   const sortedItems = useMemo(() => {
     if (!items || items.length === 0) return items;
+    if (onSortChange) return items;
 
     return [...items].sort((a, b) => {
       const multiplier = sortDirection === 'asc' ? 1 : -1;
@@ -265,7 +269,8 @@ export function EntityGrid<T extends BaseEntity>({
     const [field, direction] = value.split('-') as [SortField, SortDirection];
     setSortField(field);
     setSortDirection(direction);
-  }, []);
+    onSortChange?.(field, direction);
+  }, [onSortChange]);
 
   // Valor atual da ordenação
   const currentSortValue = `${sortField}-${sortDirection}`;

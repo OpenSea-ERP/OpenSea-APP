@@ -18,6 +18,8 @@ export interface ProductsFilters {
   templateId?: string;
   manufacturerId?: string;
   categoryId?: string;
+  sortBy?: 'name' | 'createdAt' | 'updatedAt';
+  sortOrder?: 'asc' | 'desc';
 }
 
 const QUERY_KEYS = {
@@ -54,7 +56,7 @@ export function useProductsPaginated(query?: ProductsQuery) {
   });
 }
 
-// GET /v1/products - Infinite scroll com filtros server-side
+// GET /v1/products - Infinite scroll com filtros e sorting server-side
 const PRODUCTS_PAGE_SIZE = 20;
 
 export function useProductsInfinite(filters?: ProductsFilters) {
@@ -68,21 +70,10 @@ export function useProductsInfinite(filters?: ProductsFilters) {
         templateId: filters?.templateId || undefined,
         manufacturerId: filters?.manufacturerId || undefined,
         categoryId: filters?.categoryId || undefined,
+        sortBy: filters?.sortBy || undefined,
+        sortOrder: filters?.sortOrder || undefined,
       });
-      // Backend retorna { products, meta: { total, page, limit, pages } }
-      // mas o tipo usa { products, pagination }. Normalizamos aqui.
-      const raw = response as unknown as Record<string, unknown>;
-      const products = (raw.products ?? []) as Product[];
-      const meta = (raw.meta ?? raw.pagination ?? {}) as Record<string, number>;
-      return {
-        products,
-        meta: {
-          total: meta.total ?? 0,
-          page: meta.page ?? pageParam,
-          limit: meta.limit ?? PRODUCTS_PAGE_SIZE,
-          pages: meta.totalPages ?? meta.pages ?? 1,
-        },
-      };
+      return response;
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {

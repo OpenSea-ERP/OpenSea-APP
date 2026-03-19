@@ -59,15 +59,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useDebounce } from '@/hooks/use-debounce';
 import { CreateProductWizard } from './src/components/create-product-wizard';
 import {
   AssignCategoryModal,
@@ -116,13 +110,11 @@ function ProductsPageContent() {
   }, [searchParams]);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  // Sorting state (server-side)
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // ============================================================================
   // STATE
@@ -148,11 +140,13 @@ function ProductsPageContent() {
   const filters: ProductsFilters = useMemo(
     () => ({
       search: debouncedSearch || undefined,
-      templateId: templateIds[0] || undefined,
-      manufacturerId: manufacturerIds[0] || undefined,
-      categoryId: categoryIds[0] || undefined,
+      templateId: templateIds.length > 0 ? templateIds.join(',') : undefined,
+      manufacturerId: manufacturerIds.length > 0 ? manufacturerIds.join(',') : undefined,
+      categoryId: categoryIds.length > 0 ? categoryIds.join(',') : undefined,
+      sortBy,
+      sortOrder,
     }),
-    [debouncedSearch, templateIds, manufacturerIds, categoryIds]
+    [debouncedSearch, templateIds, manufacturerIds, categoryIds, sortBy, sortOrder]
   );
 
   const {
@@ -818,8 +812,14 @@ function ProductsPageContent() {
                   router.push(`/stock/products/${item.id}`)
                 }
                 showSorting={true}
-                defaultSortField="name"
-                defaultSortDirection="asc"
+                defaultSortField="createdAt"
+                defaultSortDirection="desc"
+                onSortChange={(field, direction) => {
+                  if (field !== 'custom') {
+                    setSortBy(field as 'name' | 'createdAt' | 'updatedAt');
+                    setSortOrder(direction);
+                  }
+                }}
               />
 
               {/* Infinite scroll sentinel */}
