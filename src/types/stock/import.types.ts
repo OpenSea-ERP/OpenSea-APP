@@ -108,3 +108,46 @@ export interface BulkCreateProductsResponse {
   skipped: Array<{ name: string; reason: string }>;
   errors: Array<{ index: number; name: string; message: string }>;
 }
+
+// Variant bulk validation
+export interface BulkValidateVariantsRequest {
+  productNames: string[];
+  templateId: string;
+}
+
+export interface BulkValidateVariantsResponse {
+  existingProducts: EntityRef[];
+  missingProducts: string[];
+  templateValid: boolean;
+}
+
+// Variant bulk create
+export interface BulkCreateVariantInput {
+  name: string;
+  productId: string;
+  sku?: string;
+  price?: number;
+  costPrice?: number;
+  profitMargin?: number;
+  colorHex?: string;
+  colorPantone?: string;
+  reference?: string;
+  minStock?: number;
+  maxStock?: number;
+  outOfLine?: boolean;
+  isActive?: boolean;
+  attributes?: Record<string, unknown>;
+}
+
+export interface BulkCreateVariantsRequest {
+  variants: BulkCreateVariantInput[];
+  options: {
+    skipDuplicates: boolean;
+  };
+}
+
+export interface BulkCreateVariantsResponse {
+  created: Array<{ id: string; name: string; fullCode: string; productId: string }>;
+  skipped: Array<{ name: string; reason: string }>;
+  errors: Array<{ index: number; name: string; message: string }>;
+}

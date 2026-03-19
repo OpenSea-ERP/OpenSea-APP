@@ -43,6 +43,8 @@ import type {
   BulkValidateResponse,
   BulkCreateProductInput,
   BulkCreateProductsResponse,
+  BulkCreateVariantInput,
+  BulkCreateVariantsResponse,
 } from '@/types/stock';
 import type {
   GroupedProduct,
@@ -68,7 +70,8 @@ type ImportPhase =
   | 'validation-failed'
   | 'validation-passed'
   | 'creating-manufacturers'
-  | 'importing'
+  | 'importing-products'
+  | 'importing-variants'
   | 'completed';
 
 interface ServerValidation {
@@ -80,6 +83,14 @@ interface ServerValidation {
 }
 
 interface ImportSummary {
+  totalCreated: number;
+  totalSkipped: number;
+  totalErrors: number;
+  allErrors: Array<{ index: number; name: string; message: string }>;
+  allSkipped: Array<{ name: string; reason: string }>;
+}
+
+interface VariantImportSummary {
   totalCreated: number;
   totalSkipped: number;
   totalErrors: number;
@@ -110,6 +121,8 @@ export function StepImport({
   const [importSummary, setImportSummary] = useState<ImportSummary | null>(
     null
   );
+  const [variantSummary, setVariantSummary] =
+    useState<VariantImportSummary | null>(null);
   const [currentBatch, setCurrentBatch] = useState(0);
   const [totalBatches, setTotalBatches] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -314,7 +327,7 @@ export function StepImport({
   ]);
 
   // ============================================
-  // PHASE 3: BATCH IMPORT
+  // PHASE 3: BATCH PRODUCT IMPORT
   // ============================================
 
   const runBatchImport = useCallback(async () => {
@@ -329,7 +342,7 @@ export function StepImport({
     }
 
     // Phase 3: Build product inputs
-    setPhase('importing');
+    setPhase('importing-products');
     const startedAt = new Date();
 
     const products: BulkCreateProductInput[] = groupedProducts.map(product => {
@@ -398,10 +411,23 @@ export function StepImport({
       allSkipped: [],
     };
 
+    // Accumulate created product name→id for variant import
+    const productNameToId = new Map<string, string>();
+
+    // Pre-populate with already-existing (duplicate) products from validation
+    for (const dup of serverValidation.response.duplicateProducts) {
+      productNameToId.set(dup.name, dup.id);
+    }
+
+    const totalVariants = groupedProducts.reduce(
+      (sum, p) => sum + p.variants.length,
+      0
+    );
+
     onImportProgressChange({
       status: 'importing',
       totalProducts: products.length,
-      totalVariants: 0,
+      totalVariants,
       importedProducts: 0,
       importedVariants: 0,
       failedProducts: 0,
@@ -413,10 +439,11 @@ export function StepImport({
     for (let i = 0; i < batches.length; i++) {
       // Check for cancel
       if (cancelRef.current) {
+        setImportSummary(summary);
         onImportProgressChange({
           status: 'cancelled',
           totalProducts: products.length,
-          totalVariants: 0,
+          totalVariants,
           importedProducts: summary.totalCreated,
           importedVariants: 0,
           failedProducts: summary.totalErrors,
@@ -428,7 +455,6 @@ export function StepImport({
           startedAt,
           completedAt: new Date(),
         });
-        setImportSummary(summary);
         setPhase('completed');
         return;
       }
@@ -452,6 +478,11 @@ export function StepImport({
         summary.totalErrors += result.errors.length;
         summary.allErrors.push(...result.errors);
         summary.allSkipped.push(...result.skipped);
+
+        // Collect created product name→id
+        for (const created of result.created) {
+          productNameToId.set(created.name, created.id);
+        }
       } catch (error) {
         // Entire batch failed
         const batchSize = batches[i].length;
@@ -470,7 +501,7 @@ export function StepImport({
       onImportProgressChange({
         status: 'importing',
         totalProducts: products.length,
-        totalVariants: 0,
+        totalVariants,
         importedProducts: summary.totalCreated,
         importedVariants: 0,
         failedProducts: summary.totalErrors,
@@ -483,24 +514,169 @@ export function StepImport({
       });
     }
 
-    // Phase 4: Complete
     setImportSummary(summary);
+
+    // ============================================
+    // PHASE 4: BATCH VARIANT IMPORT
+    // ============================================
+
+    if (cancelRef.current) {
+      onImportProgressChange({
+        status: 'cancelled',
+        totalProducts: products.length,
+        totalVariants,
+        importedProducts: summary.totalCreated,
+        importedVariants: 0,
+        failedProducts: summary.totalErrors,
+        failedVariants: 0,
+        errors: summary.allErrors.map(e => ({
+          productName: e.name,
+          message: e.message,
+        })),
+        startedAt,
+        completedAt: new Date(),
+      });
+      setPhase('completed');
+      return;
+    }
+
+    setPhase('importing-variants');
+
+    // Build variant inputs from grouped data
+    const variantInputs: BulkCreateVariantInput[] = [];
+
+    for (const group of groupedProducts) {
+      const productName = String(group.productData.name || '');
+      const productId = productNameToId.get(productName);
+
+      if (!productId) {
+        // Product was not created or found — skip its variants
+        continue;
+      }
+
+      for (const variant of group.variants) {
+        const data = variant.data;
+        const input: BulkCreateVariantInput = {
+          name: String(data.name || ''),
+          productId,
+          sku: data.sku as string | undefined,
+          price: data.price as number | undefined,
+          costPrice: data.costPrice as number | undefined,
+          colorHex: data.colorHex as string | undefined,
+          colorPantone: data.colorPantone as string | undefined,
+          reference: data.reference as string | undefined,
+          minStock: data.minStock as number | undefined,
+          maxStock: data.maxStock as number | undefined,
+          isActive: data.isActive as boolean | undefined,
+          attributes: data.attributes as Record<string, unknown> | undefined,
+        };
+        variantInputs.push(input);
+      }
+    }
+
+    // Split variants into batches
+    const variantBatches: BulkCreateVariantInput[][] = [];
+    for (let i = 0; i < variantInputs.length; i += BATCH_SIZE) {
+      variantBatches.push(variantInputs.slice(i, i + BATCH_SIZE));
+    }
+
+    setCurrentBatch(0);
+    setTotalBatches(variantBatches.length);
+
+    const vSummary: VariantImportSummary = {
+      totalCreated: 0,
+      totalSkipped: 0,
+      totalErrors: 0,
+      allErrors: [],
+      allSkipped: [],
+    };
+
+    for (let i = 0; i < variantBatches.length; i++) {
+      if (cancelRef.current) break;
+
+      // Check for pause
+      while (pauseRef.current && !cancelRef.current) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      setCurrentBatch(i + 1);
+
+      try {
+        const result: BulkCreateVariantsResponse =
+          await importService.bulkCreateVariants({
+            variants: variantBatches[i],
+            options: { skipDuplicates: true },
+          });
+
+        vSummary.totalCreated += result.created.length;
+        vSummary.totalSkipped += result.skipped.length;
+        vSummary.totalErrors += result.errors.length;
+        vSummary.allErrors.push(...result.errors);
+        vSummary.allSkipped.push(...result.skipped);
+      } catch (error) {
+        const batchSize = variantBatches[i].length;
+        vSummary.totalErrors += batchSize;
+        for (const variant of variantBatches[i]) {
+          vSummary.allErrors.push({
+            index: 0,
+            name: variant.name,
+            message:
+              error instanceof Error ? error.message : 'Erro desconhecido',
+          });
+        }
+      }
+
+      // Update progress after each variant batch
+      onImportProgressChange({
+        status: 'importing',
+        totalProducts: products.length,
+        totalVariants: variantInputs.length,
+        importedProducts: summary.totalCreated,
+        importedVariants: vSummary.totalCreated,
+        failedProducts: summary.totalErrors,
+        failedVariants: vSummary.totalErrors,
+        errors: [
+          ...summary.allErrors.map(e => ({
+            productName: e.name,
+            message: e.message,
+          })),
+          ...vSummary.allErrors.map(e => ({
+            productName: e.name,
+            message: e.message,
+          })),
+        ],
+        startedAt,
+      });
+    }
+
+    setVariantSummary(vSummary);
+
+    // ============================================
+    // PHASE 5: COMPLETE
+    // ============================================
+
+    const totalErrors = summary.totalErrors + vSummary.totalErrors;
+    const totalCreated = summary.totalCreated + vSummary.totalCreated;
 
     onImportProgressChange({
       status:
-        summary.totalErrors > 0 && summary.totalCreated === 0
-          ? 'failed'
-          : 'completed',
+        totalErrors > 0 && totalCreated === 0 ? 'failed' : 'completed',
       totalProducts: products.length,
-      totalVariants: 0,
+      totalVariants: variantInputs.length,
       importedProducts: summary.totalCreated,
-      importedVariants: 0,
+      importedVariants: vSummary.totalCreated,
       failedProducts: summary.totalErrors,
-      failedVariants: 0,
-      errors: summary.allErrors.map(e => ({
-        productName: e.name,
-        message: e.message,
-      })),
+      failedVariants: vSummary.totalErrors,
+      errors: [
+        ...summary.allErrors.map(e => ({
+          productName: e.name,
+          message: e.message,
+        })),
+        ...vSummary.allErrors.map(e => ({
+          productName: e.name,
+          message: e.message,
+        })),
+      ],
       startedAt,
       completedAt: new Date(),
     });
@@ -524,6 +700,7 @@ export function StepImport({
     pauseRef.current = false;
     setIsPaused(false);
     setImportSummary(null);
+    setVariantSummary(null);
     setCurrentBatch(0);
     setTotalBatches(0);
 
@@ -565,23 +742,40 @@ export function StepImport({
   // COMPUTED VALUES
   // ============================================
 
-  const progressPercent =
-    importProgress.totalProducts > 0
+  const isProductPhase = phase === 'importing-products';
+  const isVariantPhase = phase === 'importing-variants';
+
+  const progressPercent = isProductPhase
+    ? importProgress.totalProducts > 0
       ? Math.round(
           ((importProgress.importedProducts + importProgress.failedProducts) /
             importProgress.totalProducts) *
             100
         )
+      : 0
+    : isVariantPhase
+      ? importProgress.totalVariants > 0
+        ? Math.round(
+            ((importProgress.importedVariants + importProgress.failedVariants) /
+              importProgress.totalVariants) *
+              100
+          )
+        : 0
       : 0;
 
-  const isRunning = phase === 'importing' && !isPaused;
-  const isPausedState = phase === 'importing' && isPaused;
+  const isRunning = (isProductPhase || isVariantPhase) && !isPaused;
+  const isPausedState = (isProductPhase || isVariantPhase) && isPaused;
 
   // ============================================
   // RENDER: IDLE
   // ============================================
 
   if (phase === 'idle') {
+    const totalVariants = groupedProducts.reduce(
+      (sum, p) => sum + p.variants.length,
+      0
+    );
+
     return (
       <Card>
         <CardContent className="py-12">
@@ -592,8 +786,8 @@ export function StepImport({
             <div>
               <h3 className="text-lg font-semibold">Pronto para Importar</h3>
               <p className="text-muted-foreground mt-1">
-                {validationResult.totalProducts} produtos serão validados no
-                servidor e importados em lote.
+                {validationResult.totalProducts} produtos e {totalVariants}{' '}
+                variantes serão validados no servidor e importados em lote.
               </p>
             </div>
             <Button size="lg" onClick={startImport}>
@@ -725,6 +919,11 @@ export function StepImport({
   // ============================================
 
   if (phase === 'validation-passed' && serverValidation) {
+    const totalVariants = groupedProducts.reduce(
+      (sum, p) => sum + p.variants.length,
+      0
+    );
+
     return (
       <div className="space-y-6">
         {/* Success header */}
@@ -785,6 +984,20 @@ export function StepImport({
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Produtos a importar
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <Layers className="h-8 w-8 text-indigo-500" />
+                <div>
+                  <p className="text-2xl font-bold">{totalVariants}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Variantes a importar
                   </p>
                 </div>
               </div>
@@ -879,10 +1092,22 @@ export function StepImport({
   }
 
   // ============================================
-  // RENDER: IMPORTING
+  // RENDER: IMPORTING (PRODUCTS & VARIANTS)
   // ============================================
 
-  if (phase === 'importing') {
+  if (phase === 'importing-products' || phase === 'importing-variants') {
+    const phaseLabel = isProductPhase
+      ? `Importando produtos — lote ${currentBatch} de ${totalBatches}...`
+      : `Importando variantes — lote ${currentBatch} de ${totalBatches}...`;
+
+    const progressCount = isProductPhase
+      ? `${importProgress.importedProducts} de ${importProgress.totalProducts} produtos`
+      : `${importProgress.importedVariants} de ${importProgress.totalVariants} variantes`;
+
+    const failedCount = isProductPhase
+      ? importProgress.failedProducts
+      : importProgress.failedVariants;
+
     return (
       <div className="space-y-6">
         {/* Progress card */}
@@ -897,9 +1122,7 @@ export function StepImport({
                     <Loader2 className="h-5 w-5 text-primary animate-spin" />
                   )}
                   <span className="font-medium">
-                    {isPausedState
-                      ? 'Importação Pausada'
-                      : `Importando lote ${currentBatch} de ${totalBatches}...`}
+                    {isPausedState ? 'Importação Pausada' : phaseLabel}
                   </span>
                 </div>
                 <span className="text-2xl font-bold">{progressPercent}%</span>
@@ -908,16 +1131,26 @@ export function StepImport({
               <Progress value={progressPercent} className="h-3" />
 
               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>
-                  {importProgress.importedProducts} de{' '}
-                  {importProgress.totalProducts} produtos
-                </span>
-                {importProgress.failedProducts > 0 && (
+                <span>{progressCount}</span>
+                {failedCount > 0 && (
                   <span className="text-rose-500">
-                    {importProgress.failedProducts} com erro
+                    {failedCount} com erro
                   </span>
                 )}
               </div>
+
+              {/* Show product results while importing variants */}
+              {isVariantPhase && importSummary && (
+                <div className="border-t pt-3 mt-2">
+                  <p className="text-xs text-muted-foreground">
+                    Produtos: {importSummary.totalCreated} criados
+                    {importSummary.totalSkipped > 0 &&
+                      `, ${importSummary.totalSkipped} pulados`}
+                    {importSummary.totalErrors > 0 &&
+                      `, ${importSummary.totalErrors} erros`}
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -982,9 +1215,12 @@ export function StepImport({
   // ============================================
 
   if (phase === 'completed' && importSummary) {
-    const hasErrors = importSummary.totalErrors > 0;
-    const allFailed =
-      importSummary.totalCreated === 0 && importSummary.totalErrors > 0;
+    const productErrors = importSummary.totalErrors;
+    const variantErrors = variantSummary?.totalErrors ?? 0;
+    const totalErrors = productErrors + variantErrors;
+    const totalCreated =
+      importSummary.totalCreated + (variantSummary?.totalCreated ?? 0);
+    const allFailed = totalCreated === 0 && totalErrors > 0;
 
     return (
       <div className="space-y-6">
@@ -1031,61 +1267,123 @@ export function StepImport({
           </CardContent>
         </Card>
 
-        {/* Statistics */}
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* Created */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-8 w-8 text-emerald-500" />
-                <div>
-                  <p className="text-2xl font-bold">
-                    {importSummary.totalCreated}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Produtos criados
-                  </p>
+        {/* Product Statistics */}
+        <div>
+          <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Produtos
+          </h4>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-8 w-8 text-emerald-500" />
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {importSummary.totalCreated}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Produtos criados
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Skipped */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <SkipForward className="h-8 w-8 text-amber-500" />
-                <div>
-                  <p className="text-2xl font-bold">
-                    {importSummary.totalSkipped}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Produtos pulados (já existiam)
-                  </p>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <SkipForward className="h-8 w-8 text-amber-500" />
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {importSummary.totalSkipped}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Produtos pulados
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Errors */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-8 w-8 text-rose-500" />
-                <div>
-                  <p className="text-2xl font-bold">
-                    {importSummary.totalErrors}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Erros
-                  </p>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-8 w-8 text-rose-500" />
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {importSummary.totalErrors}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Erros
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Skipped list */}
+        {/* Variant Statistics */}
+        {variantSummary && (
+          <div>
+            <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Variantes
+            </h4>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-8 w-8 text-emerald-500" />
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {variantSummary.totalCreated}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Variantes criadas
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <SkipForward className="h-8 w-8 text-amber-500" />
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {variantSummary.totalSkipped}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Variantes puladas
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="h-8 w-8 text-rose-500" />
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {variantSummary.totalErrors}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Erros
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Skipped products list */}
         {importSummary.allSkipped.length > 0 && (
           <Card className="border-amber-200 dark:border-amber-900">
             <CardHeader>
@@ -1116,25 +1414,70 @@ export function StepImport({
           </Card>
         )}
 
-        {/* Error list */}
-        {importSummary.allErrors.length > 0 && (
+        {/* Skipped variants list */}
+        {variantSummary && variantSummary.allSkipped.length > 0 && (
+          <Card className="border-amber-200 dark:border-amber-900">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                <SkipForward className="h-5 w-5" />
+                Variantes ignoradas ({variantSummary.allSkipped.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="max-h-[200px]">
+                <ul className="space-y-2 text-sm">
+                  {variantSummary.allSkipped.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <Badge
+                        variant="secondary"
+                        className="bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300 flex-shrink-0"
+                      >
+                        Duplicada
+                      </Badge>
+                      <span>
+                        <strong>{item.name}</strong>: {item.reason}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Error list (combined) */}
+        {(importSummary.allErrors.length > 0 ||
+          (variantSummary && variantSummary.allErrors.length > 0)) && (
           <Card className="border-rose-200 dark:border-rose-900">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2 text-rose-600 dark:text-rose-400">
                 <AlertCircle className="h-5 w-5" />
-                Erros ({importSummary.allErrors.length})
+                Erros ({importSummary.allErrors.length + (variantSummary?.allErrors.length ?? 0)})
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="max-h-[200px]">
                 <ul className="space-y-2 text-sm">
                   {importSummary.allErrors.map((error, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
+                    <li key={`p-${idx}`} className="flex items-start gap-2">
                       <Badge
                         variant="secondary"
                         className="bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300 flex-shrink-0"
                       >
-                        Erro
+                        Produto
+                      </Badge>
+                      <span>
+                        <strong>{error.name}</strong>: {error.message}
+                      </span>
+                    </li>
+                  ))}
+                  {variantSummary?.allErrors.map((error, idx) => (
+                    <li key={`v-${idx}`} className="flex items-start gap-2">
+                      <Badge
+                        variant="secondary"
+                        className="bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300 flex-shrink-0"
+                      >
+                        Variante
                       </Badge>
                       <span>
                         <strong>{error.name}</strong>: {error.message}
@@ -1178,7 +1521,8 @@ export function StepImport({
             <div>
               <h3 className="text-lg font-semibold">Importação Cancelada</h3>
               <p className="text-muted-foreground mt-1">
-                {importProgress.importedProducts} produtos foram importados
+                {importProgress.importedProducts} produtos e{' '}
+                {importProgress.importedVariants} variantes foram importados
                 antes do cancelamento.
               </p>
             </div>

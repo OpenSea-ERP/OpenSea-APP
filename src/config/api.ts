@@ -247,6 +247,8 @@ export const API_ENDPOINTS = {
     ITEMS_TRANSFER_BATCH: '/v1/items/transfer/batch',
     PRODUCTS_BULK_VALIDATE: '/v1/products/bulk/validate',
     PRODUCTS_BULK: '/v1/products/bulk',
+    VARIANTS_BULK_VALIDATE: '/v1/variants/bulk/validate',
+    VARIANTS_BULK: '/v1/variants/bulk',
   },
   // Stock - Scan
   SCAN: {
