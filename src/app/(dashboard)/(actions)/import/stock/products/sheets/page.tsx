@@ -182,10 +182,12 @@ function SortableColumnItem({ field, onToggle }: SortableColumnItemProps) {
         onCheckedChange={onToggle}
         disabled={field.required}
       />
-      <span className="text-sm flex-1 truncate">{field.label}</span>
-      {field.isAttribute && (
-        <Sparkles className="w-3 h-3 text-muted-foreground shrink-0" />
-      )}
+      <span className="text-sm flex-1 truncate flex items-center gap-1">
+        {field.label}
+        {field.isAttribute && (
+          <Sparkles className="w-3 h-3 text-muted-foreground shrink-0" />
+        )}
+      </span>
       {field.required && (
         <Badge variant="secondary" className="text-xs shrink-0">
           Obrigatório
