@@ -213,18 +213,16 @@ export function useAvailableBins(zoneId?: string) {
   return useQuery({
     queryKey: [...QUERY_KEYS.bins, 'available', zoneId],
     queryFn: async () => {
-      const params: Record<string, string> = {};
-      if (zoneId) params.zoneId = zoneId;
-
       const response = await apiClient.get<BinsResponse>(
         API_ENDPOINTS.bins.available,
         {
-          params,
+          params: { zoneId: zoneId! },
         }
       );
       return response.bins;
     },
-    staleTime: 1000 * 30, // 30 segundos
+    enabled: !!zoneId,
+    staleTime: 1000 * 30,
   });
 }
 

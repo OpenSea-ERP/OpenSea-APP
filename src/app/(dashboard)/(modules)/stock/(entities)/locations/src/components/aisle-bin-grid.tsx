@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { BinOccupancy } from '@/types/stock';
@@ -18,8 +18,8 @@ interface AisleBinGridProps {
   filter?: 'all' | 'empty' | 'occupied' | 'full' | 'blocked';
 }
 
-function getStorageKey(zoneId: string) {
-  return `opensea:location:zone:${zoneId}:shelfOrder`;
+function getStorageKey(zoneId: string, aisleNumber: number) {
+  return `opensea:location:zone:${zoneId}:aisle:${aisleNumber}:shelfOrder`;
 }
 
 export function AisleBinGrid({
@@ -32,16 +32,23 @@ export function AisleBinGrid({
 }: AisleBinGridProps) {
   const highlightRef = useRef<HTMLDivElement>(null);
 
-  const [shelfOrder, setShelfOrder] = useState<'asc' | 'desc'>(() => {
-    if (typeof window === 'undefined') return 'asc';
-    return (localStorage.getItem(getStorageKey(zoneId)) as 'asc' | 'desc') ?? 'asc';
-  });
+  const [shelfOrders, setShelfOrders] = useState<Record<number, 'asc' | 'desc'>>({});
 
-  const toggleShelfOrder = useCallback(() => {
-    setShelfOrder((prev) => {
-      const next = prev === 'asc' ? 'desc' : 'asc';
-      localStorage.setItem(getStorageKey(zoneId), next);
-      return next;
+  const getShelfOrder = useCallback((aisleNumber: number): 'asc' | 'desc' => {
+    if (shelfOrders[aisleNumber]) return shelfOrders[aisleNumber];
+    if (typeof window === 'undefined') return 'asc';
+    return (localStorage.getItem(getStorageKey(zoneId, aisleNumber)) as 'asc' | 'desc') ?? 'asc';
+  }, [shelfOrders, zoneId]);
+
+  const toggleShelfOrder = useCallback((aisleNumber: number) => {
+    setShelfOrders((prev) => {
+      const current = prev[aisleNumber] ??
+        (typeof window !== 'undefined'
+          ? (localStorage.getItem(getStorageKey(zoneId, aisleNumber)) as 'asc' | 'desc') ?? 'asc'
+          : 'asc');
+      const next = current === 'asc' ? 'desc' : 'asc';
+      localStorage.setItem(getStorageKey(zoneId, aisleNumber), next);
+      return { ...prev, [aisleNumber]: next };
     });
   }, [zoneId]);
 
@@ -52,9 +59,9 @@ export function AisleBinGrid({
       const level = getOccupancyLevel(bin);
       switch (filter) {
         case 'empty':
-          return bin.currentOccupancy === 0 && !bin.isBlocked;
+          return bin.itemCount === 0 && !bin.isBlocked;
         case 'occupied':
-          return bin.currentOccupancy > 0 && !bin.isBlocked;
+          return bin.itemCount > 0 && !bin.isBlocked;
         case 'full':
           return level === 'full';
         case 'blocked':
@@ -82,8 +89,9 @@ export function AisleBinGrid({
 
     return sortedAisles.map(([aisleNumber, aisleBins]) => {
       // Find unique shelves and positions
+      const order = getShelfOrder(aisleNumber);
       const shelves = [...new Set(aisleBins.map((b) => b.shelf))].sort(
-        (a, b) => (shelfOrder === 'asc' ? a - b : b - a)
+        (a, b) => (order === 'asc' ? a - b : b - a)
       );
       const positions = [...new Set(aisleBins.map((b) => b.position))].sort(
         (a, b) => {
@@ -100,7 +108,7 @@ export function AisleBinGrid({
         binMap.set(`${bin.shelf}-${bin.position}`, bin);
       }
 
-      const occupiedCount = aisleBins.filter((b) => b.currentOccupancy > 0).length;
+      const occupiedCount = aisleBins.filter((b) => b.itemCount > 0).length;
 
       return {
         aisleNumber,
@@ -111,7 +119,7 @@ export function AisleBinGrid({
         occupiedCount,
       };
     });
-  }, [filteredBins, shelfOrder]);
+  }, [filteredBins, getShelfOrder]);
 
   // Determine highlighted bins from search
   const highlightedBySearch = useMemo(() => {
@@ -138,93 +146,96 @@ export function AisleBinGrid({
   if (filteredBins.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm">
-        Nenhum bin encontrado com os filtros selecionados.
+        Nenhum nicho encontrado com os filtros selecionados.
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Sort toggle */}
-      <div className="flex justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleShelfOrder}
-          className="text-xs text-muted-foreground"
-        >
-          <ArrowUpDown className="h-3.5 w-3.5 mr-1" />
-          Prateleiras: {shelfOrder === 'asc' ? 'Crescente' : 'Decrescente'}
-        </Button>
-      </div>
-
       {/* Aisles */}
-      {aisles.map(({ aisleNumber, shelves, positions, binMap, totalBins, occupiedCount }) => (
-        <div key={aisleNumber} className="space-y-2">
-          {/* Aisle header */}
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-foreground">
-              Corredor {String(aisleNumber).padStart(2, '0')}
-            </h4>
-            <span className="text-xs text-muted-foreground">
-              {occupiedCount}/{totalBins} bins ocupados
-            </span>
-          </div>
+      {aisles.map(({ aisleNumber, shelves, positions, binMap, totalBins, occupiedCount }) => {
+        const aisleCode = aisleNumber * 100;
 
-          {/* Grid table */}
-          <div className="overflow-x-auto rounded-md border border-border">
-            <table className="border-collapse">
-              <thead>
-                <tr>
-                  <th className="text-xs font-medium text-muted-foreground px-2 py-1 text-left sticky left-0 bg-background z-10">
-                    {/* Empty corner */}
-                  </th>
-                  {shelves.map((shelf) => (
-                    <th
-                      key={shelf}
-                      className="text-xs font-medium text-muted-foreground px-1 py-1 text-center"
-                    >
-                      Pr {String(shelf).padStart(2, '0')}
+        return (
+          <div key={aisleNumber} className="space-y-2">
+            {/* Aisle header */}
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold">
+                <span className="text-foreground">Corredor </span>
+                <span className="text-muted-foreground">{aisleCode}</span>
+              </h4>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {occupiedCount}/{totalBins} ocupados
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => toggleShelfOrder(aisleNumber)}
+                  aria-label={`Ordenar prateleiras ${getShelfOrder(aisleNumber) === 'asc' ? 'decrescente' : 'crescente'}`}
+                >
+                  <ArrowLeftRight className="h-3.5 w-3.5 text-muted-foreground" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Grid table */}
+            <div className="overflow-x-auto rounded-md border border-border">
+              <table className="border-collapse">
+                <thead>
+                  <tr>
+                    <th className="text-xs font-medium text-muted-foreground px-2 py-1 text-left sticky left-0 bg-background z-10">
+                      {/* Empty corner */}
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {positions.map((position) => (
-                  <tr key={position}>
-                    <td className="text-xs font-medium text-muted-foreground px-2 py-1 whitespace-nowrap sticky left-0 bg-background z-10">
-                      Nicho {position}
-                    </td>
-                    {shelves.map((shelf) => {
-                      const bin = binMap.get(`${shelf}-${position}`);
-                      if (!bin) {
+                    {shelves.map((shelf) => (
+                      <th
+                        key={shelf}
+                        className="text-xs font-medium text-muted-foreground px-1 py-1 text-center"
+                      >
+                        {aisleCode + shelf}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {positions.map((position) => (
+                    <tr key={position}>
+                      <td className="text-xs font-medium text-muted-foreground px-2 py-1 whitespace-nowrap sticky left-0 bg-background z-10">
+                        {position}
+                      </td>
+                      {shelves.map((shelf) => {
+                        const bin = binMap.get(`${shelf}-${position}`);
+                        if (!bin) {
+                          return (
+                            <td key={shelf} className="p-0.5">
+                              <div className="w-10 h-10 bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-200 dark:border-gray-700 rounded-sm" />
+                            </td>
+                          );
+                        }
+
+                        const isHighlighted =
+                          bin.id === highlightBinId || highlightedBySearch.has(bin.id);
+
                         return (
                           <td key={shelf} className="p-0.5">
-                            <div className="w-10 h-10 bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-200 dark:border-gray-700 rounded-sm" />
+                            <BinCellNew
+                              bin={bin}
+                              isHighlighted={isHighlighted}
+                              onClick={() => onBinClick(bin.id)}
+                            />
                           </td>
                         );
-                      }
-
-                      const isHighlighted =
-                        bin.id === highlightBinId || highlightedBySearch.has(bin.id);
-
-                      return (
-                        <td key={shelf} className="p-0.5">
-                          <BinCellNew
-                            bin={bin}
-                            isHighlighted={isHighlighted}
-                            onClick={() => onBinClick(bin.id)}
-                          />
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Legend */}
       <BinLegend />

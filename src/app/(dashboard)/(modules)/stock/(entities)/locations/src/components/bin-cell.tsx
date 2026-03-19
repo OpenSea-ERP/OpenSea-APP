@@ -11,21 +11,13 @@ import {
 import { cn } from '@/lib/utils';
 import type { BinOccupancy, OccupancyLevel } from '@/types/stock';
 import { getOccupancyLevel } from '@/types/stock';
+import { BIN_CELL_COLORS, BIN_CELL_EMPTY } from '../constants/occupancy-colors';
 
 interface BinCellProps {
   bin: BinOccupancy;
   isHighlighted?: boolean;
   onClick?: () => void;
 }
-
-const OCCUPANCY_BG: Record<OccupancyLevel, string> = {
-  empty: 'bg-gray-100 dark:bg-gray-800',
-  low: 'bg-emerald-200 dark:bg-emerald-900',
-  medium: 'bg-amber-200 dark:bg-amber-900',
-  high: 'bg-orange-200 dark:bg-orange-900',
-  full: 'bg-rose-200 dark:bg-rose-900',
-  blocked: 'bg-gray-200 dark:bg-gray-700',
-};
 
 const OCCUPANCY_LABEL: Record<OccupancyLevel, string> = {
   empty: 'Vazio',
@@ -56,6 +48,9 @@ export const BinCellNew = memo(function BinCellNew({
   }, [isHighlighted]);
 
   const level = getOccupancyLevel(bin);
+  const isEmpty = level === 'empty';
+  const isBlocked = level === 'blocked';
+  const hasItems = bin.itemCount > 0;
 
   const cell = (
     <div
@@ -76,14 +71,18 @@ export const BinCellNew = memo(function BinCellNew({
           : undefined
       }
       className={cn(
-        'w-10 h-10 flex items-center justify-center border border-border rounded-sm transition-colors',
+        'w-10 h-10 flex items-center justify-center border rounded-sm transition-colors text-xs font-medium',
         onClick && 'cursor-pointer',
-        OCCUPANCY_BG[level],
+        isEmpty ? BIN_CELL_EMPTY : BIN_CELL_COLORS[level],
         isHighlighted && 'ring-2 ring-blue-500',
         isHighlighted && pulseActive && 'animate-pulse',
       )}
     >
-      {level === 'blocked' && <Lock className="h-3 w-3 text-muted-foreground" />}
+      {isBlocked ? (
+        <Lock className="h-3 w-3 text-muted-foreground" />
+      ) : hasItems ? (
+        <span className="text-foreground/80">{bin.itemCount}</span>
+      ) : null}
     </div>
   );
 
@@ -96,11 +95,13 @@ export const BinCellNew = memo(function BinCellNew({
             <p className="font-mono font-bold text-sm">{bin.address}</p>
             <div className="text-xs space-y-0.5">
               <p>
-                <span className="text-muted-foreground">Itens:</span>{' '}
-                <span className="font-medium">{bin.itemCount}</span>
-                {bin.capacity != null && (
-                  <span className="text-muted-foreground">/{bin.capacity}</span>
-                )}
+                <span className="font-medium">
+                  {bin.itemCount}{bin.capacity != null ? `/${bin.capacity}` : ''}
+                </span>
+                {' '}
+                <span className="text-muted-foreground">
+                  {bin.itemCount === 1 ? 'item' : 'itens'}
+                </span>
               </p>
               <p>
                 <span className="text-muted-foreground">Status:</span>{' '}

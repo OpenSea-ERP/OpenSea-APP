@@ -63,7 +63,7 @@ export function WarehouseCardNew({ warehouse, isSelected }: WarehouseCardProps) 
           {stats && (
             <p className="text-xs text-muted-foreground">
               {stats.totalZones} {stats.totalZones === 1 ? 'zona' : 'zonas'} &middot;{' '}
-              {stats.totalBins.toLocaleString()} bins &middot;{' '}
+              {stats.totalBins.toLocaleString()} nichos &middot;{' '}
               {occupancyPercentage.toFixed(0)}% ocupação
             </p>
           )}

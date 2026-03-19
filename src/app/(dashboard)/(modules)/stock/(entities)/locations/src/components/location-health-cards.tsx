@@ -31,12 +31,12 @@ const HEALTH_CARDS: HealthCardConfig[] = [
     getExtra: (data) => ({ percentage: data.overallOccupancy.percentage }),
   },
   {
-    title: 'Bins Bloqueados',
+    title: 'Nichos Bloqueados',
     icon: Lock,
     gradient: 'from-amber-500 to-amber-600',
     iconContainerClass: 'bg-amber-100 dark:bg-amber-500/10',
     getValue: (data) =>
-      `${data.blockedBins.count} ${data.blockedBins.count === 1 ? 'bin bloqueado' : 'bins bloqueados'}`,
+      `${data.blockedBins.count} ${data.blockedBins.count === 1 ? 'nicho bloqueado' : 'nichos bloqueados'}`,
   },
   {
     title: 'Itens sem Local',

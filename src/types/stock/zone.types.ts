@@ -31,6 +31,7 @@ export interface ZoneStats {
   occupiedBins: number;
   emptyBins: number;
   blockedBins: number;
+  totalCapacity: number;
   occupancyPercentage: number;
 }
 
@@ -91,6 +92,7 @@ export interface UpdateZoneRequest {
 
 export interface ConfigureZoneStructureRequest {
   structure: ZoneStructure;
+  defaultCapacity?: number;
 }
 
 export interface ZoneResponse {
@@ -116,6 +118,7 @@ export interface ReconfigurationPreviewResponse {
   binsToPreserve: number;
   binsToCreate: number;
   binsToDeleteEmpty: number;
+  binsToDeleteEmptyIds: string[];
   binsWithItems: Array<{
     binId: string;
     address: string;

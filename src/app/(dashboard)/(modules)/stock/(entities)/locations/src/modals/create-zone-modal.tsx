@@ -1,15 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState, useCallback, useMemo } from 'react';
+import { Loader2, MapPin } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  StepWizardDialog,
+  type WizardStep,
+} from '@/components/ui/step-wizard-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +20,7 @@ export interface CreateZoneModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   warehouseId: string;
+  warehouseName?: string;
   onSuccess?: () => void;
 }
 
@@ -35,6 +32,7 @@ export function CreateZoneModal({
   open,
   onOpenChange,
   warehouseId,
+  warehouseName,
   onSuccess,
 }: CreateZoneModalProps) {
   const [code, setCode] = useState('');
@@ -72,50 +70,57 @@ export function CreateZoneModal({
 
   const isValid = code.length >= 2 && name.trim().length > 0;
 
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={val => {
-        if (!val) handleClose();
-        else onOpenChange(val);
-      }}
-    >
-      <DialogContent className="sm:max-w-[450px]">
-        <DialogHeader>
-          <DialogTitle>Nova Zona</DialogTitle>
-          <DialogDescription>
-            Adicione uma nova zona ao armazém
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
+  const steps = useMemo<WizardStep[]>(() => [
+    {
+      title: (
+        <span className="inline-flex items-center gap-2 flex-wrap">
+          Nova Zona
+          {warehouseName && (
+            <span className="inline-flex items-center rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[11px] font-medium uppercase text-muted-foreground">
+              {warehouseName}
+            </span>
+          )}
+        </span>
+      ),
+      description: 'Defina o código e nome da nova zona.',
+      icon: <MapPin className="h-16 w-16 text-emerald-500/60" />,
+      content: (
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="zone-code">Código</Label>
+            <Label htmlFor="zone-name">
+              Nome <span className="text-rose-500">*</span>
+            </Label>
+            <Input
+              id="zone-name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Ex: Estoque"
+              autoFocus
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="zone-code">
+              Código <span className="text-rose-500">*</span>
+            </Label>
             <Input
               id="zone-code"
               value={code}
               onChange={e => handleCodeChange(e.target.value)}
               placeholder="Ex: EST"
               maxLength={5}
-              className="uppercase"
+              className="uppercase font-mono"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               2 a 5 caracteres (letras e números)
             </p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="zone-name">Nome</Label>
-            <Input
-              id="zone-name"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Ex: Estoque"
-            />
-          </div>
         </div>
-
-        <DialogFooter>
+      ),
+      isValid,
+      footer: (
+        <div className="flex items-center justify-end w-full gap-2">
           <Button
+            type="button"
             variant="outline"
             onClick={handleClose}
             disabled={createZone.isPending}
@@ -123,6 +128,7 @@ export function CreateZoneModal({
             Cancelar
           </Button>
           <Button
+            type="button"
             onClick={handleCreate}
             disabled={!isValid || createZone.isPending}
             className="gap-1.5"
@@ -130,10 +136,21 @@ export function CreateZoneModal({
             {createZone.isPending && (
               <Loader2 className="h-4 w-4 animate-spin" />
             )}
-            {createZone.isPending ? 'Criando...' : 'Criar'}
+            {createZone.isPending ? 'Criando...' : 'Criar Zona'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      ),
+    },
+  ], [code, name, warehouseName, isValid, handleCodeChange, handleClose, handleCreate, createZone.isPending]);
+
+  return (
+    <StepWizardDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      steps={steps}
+      currentStep={1}
+      onStepChange={() => {}}
+      onClose={handleClose}
+    />
   );
 }

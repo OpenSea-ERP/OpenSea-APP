@@ -48,9 +48,10 @@ export function BinCard({
     itemCount: bin.currentOccupancy,
   });
 
+  const items = bin.currentOccupancy;
   const getOccupancyPercentage = () => {
     if (!bin.capacity || bin.capacity === 0) return 0;
-    return Math.round((bin.currentOccupancy / bin.capacity) * 100);
+    return Math.round((items / bin.capacity) * 100);
   };
 
   if (compact) {

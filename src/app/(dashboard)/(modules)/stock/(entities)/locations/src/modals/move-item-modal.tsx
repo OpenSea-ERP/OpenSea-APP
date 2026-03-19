@@ -1,28 +1,19 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   ArrowRight,
-  Package,
-  MapPin,
-  AlertTriangle,
   Loader2,
   MoveRight,
+  Package,
+  AlertTriangle,
 } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  StepWizardDialog,
+  type WizardStep,
+} from '@/components/ui/step-wizard-dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { BinSelector } from '../components/bin-selector';
 import type { BinItem, Bin } from '@/types/stock';
@@ -32,11 +23,8 @@ export interface MoveItemModalProps {
   onOpenChange: (open: boolean) => void;
   item: BinItem;
   currentBin: Bin;
-  onMove: (
-    itemId: string,
-    targetBinAddress: string,
-    quantity: number
-  ) => Promise<void>;
+  warehouseId?: string;
+  onMove: (itemId: string, destinationBinId: string) => Promise<void>;
 }
 
 export function MoveItemModal({
@@ -44,218 +32,176 @@ export function MoveItemModal({
   onOpenChange,
   item,
   currentBin,
+  warehouseId,
   onMove,
 }: MoveItemModalProps) {
   const [targetAddress, setTargetAddress] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(item.quantity);
+  const [targetBinId, setTargetBinId] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Validate quantity
-  const isValidQuantity = quantity > 0 && quantity <= item.quantity;
-  const isPartialMove = quantity < item.quantity;
-
-  // Handle move
   const handleMove = useCallback(async () => {
-    if (!targetAddress || !isValidQuantity) return;
-
-    // Can't move to same bin
-    if (targetAddress === currentBin.address) {
-      setError('Não é possível mover para a mesma localização');
-      return;
-    }
+    if (!targetBinId) return;
 
     setIsMoving(true);
     setError(null);
-
     try {
-      await onMove(item.id, targetAddress, quantity);
+      await onMove(item.id, targetBinId);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao mover item');
+      setError(err instanceof Error ? err.message : 'Erro ao mover item.');
     } finally {
       setIsMoving(false);
     }
-  }, [
-    targetAddress,
-    quantity,
-    isValidQuantity,
-    currentBin.address,
-    item.id,
-    onMove,
-    onOpenChange,
-  ]);
+  }, [targetBinId, item.id, onMove, onOpenChange]);
 
-  // Handle target change
-  const handleTargetChange = useCallback((address: string | null) => {
-    setTargetAddress(address);
+  const handleClose = useCallback(() => {
+    setTargetAddress(null);
+    setTargetBinId(null);
     setError(null);
-  }, []);
+    onOpenChange(false);
+  }, [onOpenChange]);
 
-  // Reset state when modal closes
-  const handleOpenChange = useCallback(
-    (newOpen: boolean) => {
-      if (!newOpen) {
-        setTargetAddress(null);
-        setQuantity(item.quantity);
-        setError(null);
-      }
-      onOpenChange(newOpen);
-    },
-    [item.quantity, onOpenChange]
-  );
+  const canMove = targetBinId && targetAddress !== currentBin.address;
 
-  const canMove =
-    targetAddress && isValidQuantity && targetAddress !== currentBin.address;
+  const productLabel = item.variantName
+    ? `${item.productName} — ${item.variantName}`
+    : item.productName;
 
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MoveRight className="h-5 w-5" />
-            Mover Item
-          </DialogTitle>
-          <DialogDescription>
-            Mova este item para outra localização
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          {/* Item info */}
-          <div className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg">
-            <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Package className="h-6 w-6 text-primary" />
+  const steps = useMemo<WizardStep[]>(() => [
+    {
+      title: 'Mover Item',
+      description: 'Selecione o nicho de destino para mover este item.',
+      icon: <MoveRight className="h-16 w-16 text-blue-500/60" />,
+      content: (
+        <div className="space-y-4">
+          {/* Item card */}
+          <div className="flex gap-3 p-3 rounded-lg bg-muted/40 border border-border">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/15 mt-0.5">
+              <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium truncate">{item.productName}</div>
-              {item.variantName && (
-                <div className="text-sm text-muted-foreground truncate">
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-mono font-medium text-foreground truncate">
+                  {item.itemCode}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                {item.productName}
+              </p>
+              {(item.variantName || item.variantReference) && (
+                <p className="text-[11px] text-muted-foreground/70 truncate">
                   {item.variantName}
-                </div>
-              )}
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="font-mono text-xs">
-                  {item.sku}
-                </Badge>
-                <span className="text-sm text-muted-foreground">
-                  Qtd: <strong>{item.quantity}</strong>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Movement visualization */}
-          <div className="flex items-center gap-4">
-            {/* From */}
-            <div className="flex-1 p-3 border rounded-lg text-center">
-              <div className="text-xs text-muted-foreground mb-1">De</div>
-              <div className="font-mono font-medium text-lg">
-                {currentBin.address}
-              </div>
-            </div>
-
-            {/* Arrow */}
-            <ArrowRight className="h-6 w-6 text-muted-foreground flex-shrink-0" />
-
-            {/* To */}
-            <div
-              className={cn(
-                'flex-1 p-3 border rounded-lg text-center',
-                targetAddress ? 'border-primary bg-primary/5' : 'border-dashed'
-              )}
-            >
-              <div className="text-xs text-muted-foreground mb-1">Para</div>
-              <div className="font-mono font-medium text-lg">
-                {targetAddress || '???'}
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Target bin selector */}
-          <BinSelector
-            label="Localização de destino"
-            value={targetAddress || undefined}
-            onChange={handleTargetChange}
-            placeholder="Selecione a localização de destino"
-            onlyAvailable
-            required
-            error={!!error && !targetAddress}
-          />
-
-          {/* Quantity (for partial moves) */}
-          {item.quantity > 1 && (
-            <div className="space-y-2">
-              <Label htmlFor="quantity">
-                Quantidade a mover
-                <span className="text-muted-foreground font-normal ml-1">
-                  (máx: {item.quantity})
-                </span>
-              </Label>
-              <Input
-                id="quantity"
-                type="number"
-                min={1}
-                max={item.quantity}
-                value={quantity}
-                onChange={e =>
-                  setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                }
-                className={cn(!isValidQuantity && 'border-destructive')}
-              />
-              {isPartialMove && (
-                <p className="text-xs text-muted-foreground">
-                  {item.quantity - quantity} unidade(s) permanecerá(ão) em{' '}
-                  <span className="font-mono">{currentBin.address}</span>
+                  {item.variantName && item.variantReference && ' · '}
+                  {item.variantReference}
                 </p>
               )}
             </div>
-          )}
+            <Badge variant="secondary" className="shrink-0 tabular-nums text-xs self-start">
+              {item.quantity}{item.unitLabel ? ` ${item.unitLabel}` : ''}
+            </Badge>
+          </div>
 
-          {/* Error message */}
+          {/* Movement: From → To */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 px-3 py-2.5 rounded-lg border border-border bg-muted/30 text-center">
+              <p className="text-[10px] text-muted-foreground mb-0.5">Origem</p>
+              <p className="font-mono font-semibold text-sm">{currentBin.address}</p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-muted-foreground shrink-0" />
+            <div className={cn(
+              'flex-1 px-3 py-2.5 rounded-lg border text-center',
+              targetAddress
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
+                : 'border-dashed border-border',
+            )}>
+              <p className="text-[10px] text-muted-foreground mb-0.5">Destino</p>
+              <p className="font-mono font-semibold text-sm">
+                {targetAddress || '—'}
+              </p>
+            </div>
+          </div>
+
+          {/* Destination selector */}
+          <BinSelector
+            label="Nicho de destino"
+            value={targetAddress || undefined}
+            onChange={(address, bin) => {
+              setTargetAddress(address);
+              setTargetBinId(bin?.id ?? null);
+              setError(null);
+            }}
+            placeholder="Selecione o nicho de destino"
+            warehouseId={warehouseId}
+            zoneId={!warehouseId ? currentBin.zoneId : undefined}
+            onlyAvailable
+            excludeBinIds={[currentBin.id]}
+            required
+          />
+
+          {/* Error */}
           {error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {/* Same bin warning */}
-          {targetAddress === currentBin.address && (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                O item já está nesta localização
-              </AlertDescription>
-            </Alert>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-rose-50 dark:bg-rose-500/8 border border-rose-200 dark:border-rose-500/20">
+              <AlertTriangle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+              <p className="text-xs text-rose-700 dark:text-rose-300">{error}</p>
+            </div>
           )}
         </div>
-
-        <DialogFooter>
+      ),
+      isValid: !!canMove,
+      footer: (
+        <div className="flex items-center justify-end w-full gap-2">
           <Button
+            type="button"
             variant="outline"
-            onClick={() => handleOpenChange(false)}
+            onClick={handleClose}
             disabled={isMoving}
           >
             Cancelar
           </Button>
-          <Button onClick={handleMove} disabled={!canMove || isMoving}>
+          <Button
+            type="button"
+            onClick={handleMove}
+            disabled={!canMove || isMoving}
+            className="gap-1.5"
+          >
             {isMoving ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Movendo...
-              </>
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <>
-                <MoveRight className="h-4 w-4 mr-2" />
-                Mover {quantity > 1 ? `${quantity} unidades` : 'item'}
-              </>
+              <MoveRight className="h-4 w-4" />
             )}
+            {isMoving ? 'Movendo...' : 'Mover'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      ),
+    },
+  ], [
+    item.itemCode,
+    item.productName,
+    item.variantName,
+    item.variantReference,
+    item.quantity,
+    item.unitLabel,
+    currentBin.address,
+    currentBin.id,
+    currentBin.zoneId,
+    warehouseId,
+    targetAddress,
+    canMove,
+    isMoving,
+    error,
+    handleClose,
+    handleMove,
+  ]);
+
+  return (
+    <StepWizardDialog
+      open={open}
+      onOpenChange={(val) => { if (!val) handleClose(); else onOpenChange(val); }}
+      steps={steps}
+      currentStep={1}
+      onStepChange={() => {}}
+      onClose={handleClose}
+    />
   );
 }

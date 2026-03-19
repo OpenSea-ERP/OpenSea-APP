@@ -50,10 +50,9 @@ export interface ItemResponse {
 
 export interface TransferItemRequest {
   itemId: string;
-  fromBinId: string;
-  toBinId: string;
-  quantity: number;
-  reason?: string;
+  destinationBinId: string;
+  reasonCode?: string;
+  notes?: string;
 }
 
 export interface TransferItemResponse {
@@ -265,26 +264,20 @@ export function useTransferItem() {
       );
       return response;
     },
-    onSuccess: (result, variables) => {
-      // Invalidar queries relacionadas aos bins afetados
+    onSuccess: (_result, variables) => {
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.bin(variables.fromBinId),
+        queryKey: QUERY_KEYS.bin(variables.destinationBinId),
       });
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.bin(variables.toBinId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.binDetail(variables.fromBinId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.binDetail(variables.toBinId),
+        queryKey: QUERY_KEYS.binDetail(variables.destinationBinId),
       });
       queryClient.invalidateQueries({ queryKey: ITEM_QUERY_KEYS.items });
       queryClient.invalidateQueries({ queryKey: ITEM_QUERY_KEYS.movements });
-
-      // Invalidar ocupação
       queryClient.invalidateQueries({
-        predicate: query => query.queryKey.includes('occupancy'),
+        predicate: query =>
+          query.queryKey.includes('occupancy') ||
+          query.queryKey.includes('detail') ||
+          query.queryKey.includes('bins'),
       });
     },
   });

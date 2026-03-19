@@ -163,8 +163,15 @@ export function formatUnitOfMeasure(
 
   const unitMap: Record<string, string> = {
     UNITS: 'Unidades (un)',
-    KILOGRAMS: 'Quilogramas (kg)',
     METERS: 'Metros (m)',
+    KILOGRAMS: 'Quilogramas (kg)',
+    GRAMS: 'Gramas (g)',
+    LITERS: 'Litros (L)',
+    MILLILITERS: 'Mililitros (mL)',
+    SQUARE_METERS: 'Metros quadrados (m²)',
+    PAIRS: 'Pares (par)',
+    BOXES: 'Caixas (cx)',
+    PACKS: 'Pacotes (pct)',
   };
 
   return unitMap[unitOfMeasure] || unitOfMeasure;
@@ -177,8 +184,15 @@ export function formatUnitAbbreviation(
 
   const abbrMap: Record<string, string> = {
     UNITS: 'un',
-    KILOGRAMS: 'kg',
     METERS: 'm',
+    KILOGRAMS: 'kg',
+    GRAMS: 'g',
+    LITERS: 'L',
+    MILLILITERS: 'mL',
+    SQUARE_METERS: 'm²',
+    PAIRS: 'par',
+    BOXES: 'cx',
+    PACKS: 'pct',
   };
 
   return abbrMap[unitOfMeasure] || unitOfMeasure;

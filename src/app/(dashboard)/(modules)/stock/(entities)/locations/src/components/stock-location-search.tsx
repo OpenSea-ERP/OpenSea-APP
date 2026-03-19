@@ -51,7 +51,7 @@ export function StockLocationSearch() {
       const detailRes = await apiClient.get<BinDetailResponse>(
         `${API_ENDPOINTS.bins.get(binId)}/detail`
       );
-      router.push(`/stock/locations/${detailRes.warehouse.id}?highlight=${binId}`);
+      router.push(`/stock/locations/${detailRes.warehouse.id}?zone=${detailRes.zone.id}&highlight=${binId}`);
     } catch {
       // Fallback: if we can't resolve, do nothing
     }

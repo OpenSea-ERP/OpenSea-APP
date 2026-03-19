@@ -145,6 +145,8 @@ export interface EntityCardProps {
   // Footer
   /** Configuração do footer (tipado) */
   footer?: EntityCardFooter;
+  /** Footer customizado (ReactNode). Renderiza flush no fundo do card, igual aos botões de footer. Tem prioridade sobre `footer` se ambos forem definidos. */
+  customFooter?: ReactNode;
 
   // Customização
   /** Classes customizadas para o container */
@@ -528,6 +530,7 @@ export const EntityCard = forwardRef<HTMLDivElement, EntityCardProps>(
       onDoubleClick,
       clickable = true,
       footer = { type: 'none' },
+      customFooter,
       className,
       children,
       'data-entity-card': dataEntityCard = true,
@@ -538,7 +541,7 @@ export const EntityCard = forwardRef<HTMLDivElement, EntityCardProps>(
       ? getStatusBadges(createdAt, updatedAt)
       : { isNew: false, isUpdated: false };
 
-    const hasFooterButtons = footer.type !== 'none';
+    const hasFooterButtons = footer.type !== 'none' || !!customFooter;
 
     // Base classes
     const baseClasses = cn(
@@ -634,7 +637,7 @@ export const EntityCard = forwardRef<HTMLDivElement, EntityCardProps>(
           </div>
 
           {/* Footer */}
-          <FooterRenderer footer={footer} variant={variant} />
+          {customFooter || <FooterRenderer footer={footer} variant={variant} />}
         </Card>
       );
     }

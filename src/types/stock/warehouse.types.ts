@@ -22,6 +22,7 @@ export interface WarehouseStats {
   totalZones: number;
   totalBins: number;
   occupiedBins: number;
+  totalCapacity: number;
   occupancyPercentage: number;
 }
 

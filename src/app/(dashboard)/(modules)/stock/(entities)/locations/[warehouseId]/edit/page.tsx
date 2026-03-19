@@ -23,13 +23,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { usePermissions } from '@/hooks/use-permissions';
 import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
+  AlertTriangle,
   Info,
   Loader2,
   MapPinHouse,
   NotebookText,
   Save,
   Trash2,
-  Warehouse,
+  Warehouse as WarehouseIcon,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useCallback, useEffect, useState } from 'react';
@@ -89,6 +90,8 @@ export default function WarehouseEditPage({ params }: PageProps) {
 
   // UI state
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteWarningOpen, setDeleteWarningOpen] = useState(false);
+
 
   // Populate form
   useEffect(() => {
@@ -200,7 +203,13 @@ export default function WarehouseEditPage({ params }: PageProps) {
             id: 'delete',
             title: 'Excluir',
             icon: Trash2,
-            onClick: () => setDeleteOpen(true),
+            onClick: () => {
+              if (warehouse.stats && warehouse.stats.occupiedBins > 0) {
+                setDeleteWarningOpen(true);
+              } else {
+                setDeleteOpen(true);
+              }
+            },
             variant: 'default' as const,
             className:
               'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
@@ -239,7 +248,7 @@ export default function WarehouseEditPage({ params }: PageProps) {
         <Card className="bg-white/5 p-5">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg">
-              <Warehouse className="h-6 w-6 text-white" />
+              <WarehouseIcon className="h-6 w-6 text-white" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm text-muted-foreground">
@@ -343,6 +352,39 @@ export default function WarehouseEditPage({ params }: PageProps) {
           </div>
         </Card>
       </PageBody>
+
+      {/* Delete Warning Dialog (when warehouse has items) */}
+      {deleteWarningOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background border border-border rounded-lg p-6 max-w-md w-full mx-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />
+              <h3 className="text-lg font-semibold">Armazém com Itens</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Este armazém possui <strong>{warehouse.stats?.occupiedBins ?? 0} nichos ocupados</strong> com
+              itens. Ao excluir, todos os itens serão desvinculados dos seus nichos.
+            </p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => setDeleteWarningOpen(false)}
+                className="px-4 py-2 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteWarningOpen(false);
+                  setDeleteOpen(true);
+                }}
+                className="px-4 py-2 text-sm rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors"
+              >
+                Prosseguir com Exclusão
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete PIN Confirmation Modal */}
       <VerifyActionPinModal

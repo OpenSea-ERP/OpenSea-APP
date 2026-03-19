@@ -912,7 +912,7 @@ export default function StockOverviewListPage() {
                               <TableCell>
                                 {hasBin ? (
                                   <Link
-                                    href={`/stock/locations/${item.bin!.zone!.warehouseId}/zones/${item.bin!.zone!.id}?highlight=${item.bin!.id}`}
+                                    href={`/stock/locations/${item.bin!.zone!.warehouseId}?zone=${item.bin!.zone!.id}&highlight=${item.bin!.id}`}
                                     className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                                     onClick={e => e.stopPropagation()}
                                   >

@@ -1,8 +1,3 @@
-/**
- * OpenSea OS - Locations Dashboard Page
- * Página de gerenciamento de localizações (armazéns) usando o sistema padronizado OpenSea OS
- */
-
 'use client';
 
 import { GridError } from '@/components/handlers/grid-error';
@@ -18,6 +13,11 @@ import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   CoreProvider,
   EntityCard,
   EntityContextMenu,
@@ -29,6 +29,7 @@ import {
 import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { warehousesConfig } from '@/config/entities/warehouses.config';
 import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import type {
   Warehouse,
@@ -36,16 +37,19 @@ import type {
   WarehouseResponse,
 } from '@/types/stock';
 import {
-  Pencil,
+  Clock,
+  Layers,
+  Lock,
   Plus,
+  ShieldAlert,
   Tag,
   Trash2,
   Warehouse as WarehouseIcon,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
-import { StockLocationSearch, LocationHealthCards, WarehouseCardNew } from './src/components';
 import { LocationSetupWizard } from './src/modals';
+import { getOccupancyBarColor } from './src/constants/occupancy-colors';
 
 export default function LocationsPage() {
   return (
@@ -144,7 +148,18 @@ function LocationsDashboardContent() {
   const canDelete = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.DELETE);
   const canCreate = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.CREATE);
 
+
   const renderGridCard = (item: Warehouse, isSelected: boolean) => {
+    const stats = item.stats;
+    const occupancy = stats?.occupancyPercentage ?? 0;
+
+    const cardStats = [
+      { icon: Lock, value: 0, tooltip: 'Nichos Bloqueados', bg: 'bg-amber-200 dark:bg-amber-600', text: 'text-amber-700 dark:text-amber-100', border: 'border-amber-300/80 dark:border-amber-500/30' },
+      { icon: Clock, value: 0, tooltip: 'Próximo Vencimento', bg: 'bg-orange-200 dark:bg-orange-600', text: 'text-orange-700 dark:text-orange-100', border: 'border-orange-300/80 dark:border-orange-500/30' },
+      { icon: ShieldAlert, value: 0, tooltip: 'Inconsistências', bg: 'bg-rose-200 dark:bg-rose-600', text: 'text-rose-700 dark:text-rose-100', border: 'border-rose-300/80 dark:border-rose-500/30' },
+      { icon: Layers, value: stats?.totalZones ?? 0, tooltip: 'Zonas', bg: 'bg-blue-200 dark:bg-blue-600', text: 'text-blue-700 dark:text-blue-100', border: 'border-blue-300/80 dark:border-blue-500/30' },
+    ];
+
     return (
       <EntityContextMenu
         itemId={item.id}
@@ -162,7 +177,75 @@ function LocationsDashboardContent() {
           },
         ]}
       >
-        <WarehouseCardNew warehouse={item} isSelected={isSelected} />
+        <EntityCard
+          id={item.id}
+          variant="grid"
+          title={item.name}
+          subtitle={item.code}
+          icon={WarehouseIcon}
+          iconBgColor="bg-linear-to-br from-blue-500 to-indigo-600"
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={true}
+          customFooter={
+            <div className="grid grid-cols-4 rounded-b-xl overflow-hidden">
+              {cardStats.map((stat, i) => {
+                const Icon = stat.icon;
+                return (
+                  <Tooltip key={stat.tooltip}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={cn(
+                          'flex items-center justify-center gap-1.5 py-2.5 cursor-default',
+                          stat.bg,
+                          i < cardStats.length - 1 && `border-r ${stat.border}`,
+                        )}
+                      >
+                        <Icon className={cn('h-3.5 w-3.5', stat.text)} />
+                        <span className={cn('text-xs font-bold', stat.text)}>
+                          {stat.value}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      {stat.tooltip}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          }
+        >
+          {/* Barra de ocupação */}
+          <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 min-h-[43px] flex flex-col justify-center"
+            style={!stats?.totalCapacity || stats.totalCapacity === 0 ? { borderStyle: 'dashed' } : undefined}
+          >
+            {stats?.totalCapacity && stats.totalCapacity > 0 ? (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Ocupação</span>
+                  <span className="font-medium">{occupancy.toFixed(0)}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      getOccupancyBarColor(occupancy),
+                    )}
+                    style={{ width: `${Math.min(occupancy, 100)}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <span className="text-[11px] text-muted-foreground italic text-center">
+                Capacidade total não definida
+              </span>
+            )}
+          </div>
+        </EntityCard>
       </EntityContextMenu>
     );
   };
@@ -172,7 +255,7 @@ function LocationsDashboardContent() {
     const zoneLabel = stats
       ? `${stats.totalZones} ${stats.totalZones === 1 ? 'zona' : 'zonas'}`
       : '';
-    const binLabel = stats ? `${stats.totalBins.toLocaleString()} bins` : '';
+    const binLabel = stats ? `${stats.totalBins.toLocaleString()} nichos` : '';
     const occupancy = stats ? `${stats.occupancyPercentage.toFixed(0)}% ocupação` : '';
 
     return (
@@ -316,13 +399,6 @@ function LocationsDashboardContent() {
         </PageHeader>
 
         <PageBody>
-          {/* Busca global por endereço, produto ou SKU */}
-          <StockLocationSearch />
-
-          {/* Cards de saúde */}
-          <LocationHealthCards />
-
-          {/* Barra de busca de armazéns */}
           <SearchBar
             placeholder="Buscar armazéns por código ou nome..."
             value={page.searchQuery}

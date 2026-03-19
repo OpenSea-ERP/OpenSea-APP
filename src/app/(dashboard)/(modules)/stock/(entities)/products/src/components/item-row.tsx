@@ -112,7 +112,7 @@ export function ItemRow({
     ) {
       const { warehouseId, id: zoneId } = item.bin.zone;
       const binId = item.bin.id;
-      return `/stock/locations/${warehouseId}/zones/${zoneId}?highlight=${binId}`;
+      return `/stock/locations/${warehouseId}?zone=${zoneId}&highlight=${binId}&item=${item.id}`;
     }
     return null;
   }, [item.bin]);

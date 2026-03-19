@@ -54,13 +54,17 @@ export type OccupancyLevel =
 
 export function getOccupancyLevel(bin: BinOccupancy): OccupancyLevel {
   if (bin.isBlocked) return 'blocked';
+
+  const items = bin.itemCount;
+
+  if (items === 0) return 'empty';
+
   if (!bin.capacity || bin.capacity === 0) {
-    return bin.currentOccupancy === 0 ? 'empty' : 'low';
+    return 'low';
   }
 
-  const percentage = (bin.currentOccupancy / bin.capacity) * 100;
+  const percentage = (items / bin.capacity) * 100;
 
-  if (percentage === 0) return 'empty';
   if (percentage < 34) return 'low';
   if (percentage < 67) return 'medium';
   if (percentage < 100) return 'high';
@@ -131,12 +135,15 @@ export interface AddressComponents {
 
 export interface BinItem {
   id: string;
-  itemCode: string; // Código único do item (ex: ITEM-MK1WUPO5-OGKG)
-  sku: string; // SKU da variante (ex: VERDE-CLARO)
+  itemCode: string;
+  sku: string;
+  templateName?: string | null;
   productName: string;
+  manufacturerName?: string | null;
   variantName?: string | null;
+  variantReference?: string | null;
   quantity: number;
-  unitLabel?: string;
+  unitLabel?: string | null;
   addedAt: string | Date;
 }
 

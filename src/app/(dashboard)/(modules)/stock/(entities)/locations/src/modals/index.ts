@@ -21,3 +21,16 @@ export {
   BinDetailSheet,
   type BinDetailSheetProps,
 } from './bin-detail-sheet';
+export {
+  ZoneDeleteWizard,
+  type ZoneDeleteWizardProps,
+} from './zone-delete-wizard';
+export {
+  BinRelocationWizard,
+  type BinRelocationWizardProps,
+} from './bin-relocation-wizard';
+export {
+  ItemsImpactModal,
+  type ItemsImpactModalProps,
+  type AffectedBin,
+} from './items-impact-modal';
