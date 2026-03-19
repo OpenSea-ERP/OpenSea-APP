@@ -270,9 +270,194 @@ export function ProductVariantsItemsModal({
   );
 
   const handlePrintListing = useCallback(() => {
-    // TODO: generate PDF with product, variant and items listing
-    toast.info('Funcionalidade de impressão de listagem em desenvolvimento');
-  }, []);
+    if (!selectedVariant || !product) return;
+
+    const tplName = product.template?.name || 'Template';
+    const unit = formatUnitAbbreviation(
+      product.template?.unitOfMeasure || 'UNITS'
+    );
+    const mfgName = product.manufacturer?.name;
+
+    const inStockItems = items.filter((i: Item) => i.currentQuantity > 0);
+    const totalQty = inStockItems.reduce(
+      (sum, i) => sum + i.currentQuantity,
+      0
+    );
+    const totalQtyRounded = Math.round(totalQty * 1000) / 1000;
+    const now = new Date().toLocaleString('pt-BR');
+    const patternLabel =
+      PATTERN_LABELS[selectedVariant.pattern as Pattern] || '';
+
+    const rows = inStockItems
+      .map((item, idx) => {
+        const code = item.fullCode || item.uniqueCode || '';
+        const loc =
+          item.bin?.address ||
+          item.resolvedAddress ||
+          item.lastKnownAddress ||
+          '—';
+        const qty = formatQuantity(item.currentQuantity);
+        const status =
+          item.status === 'AVAILABLE'
+            ? ''
+            : item.status === 'RESERVED'
+              ? 'Reservado'
+              : item.status === 'DAMAGED'
+                ? 'Danificado'
+                : item.status;
+        const batch = item.batchNumber || '';
+        const entryDate = item.entryDate
+          ? new Date(item.entryDate).toLocaleDateString('pt-BR')
+          : '';
+
+        return `<tr class="${idx % 2 === 0 ? 'even' : 'odd'}">
+          <td class="mono center">${idx + 1}</td>
+          <td class="mono">${code}</td>
+          <td>${loc}</td>
+          <td class="right">${qty}</td>
+          <td>${batch}</td>
+          <td class="center">${entryDate}</td>
+          <td class="center">${status}</td>
+        </tr>`;
+      })
+      .join('');
+
+    // Build variant meta chips
+    const metaParts: string[] = [];
+    if (selectedVariant.sku)
+      metaParts.push(`<span class="chip">SKU: ${selectedVariant.sku}</span>`);
+    if (selectedVariant.reference)
+      metaParts.push(
+        `<span class="chip">Ref: ${selectedVariant.reference}</span>`
+      );
+    if (selectedVariant.barcode)
+      metaParts.push(
+        `<span class="chip mono">EAN: ${selectedVariant.barcode}</span>`
+      );
+    if (patternLabel)
+      metaParts.push(`<span class="chip">${patternLabel}</span>`);
+    if (selectedVariant.colorHex)
+      metaParts.push(
+        `<span class="chip"><span class="color-dot" style="background:${selectedVariant.colorHex}"></span>${selectedVariant.colorHex}</span>`
+      );
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>Listagem — ${selectedVariant.name}</title>
+<style>
+  @page { margin: 20mm 15mm; size: A4 }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #1a1a1a; font-size: 12px; line-height: 1.5; }
+
+  /* Header */
+  .header { border-bottom: 2px solid #1a1a1a; padding-bottom: 16px; margin-bottom: 20px; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .brand { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #666; font-weight: 600; }
+  .timestamp { font-size: 10px; color: #888; text-align: right; }
+  .product-name { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 2px; }
+  .variant-name { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+
+  /* Meta chips */
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 10px; color: #475569; font-weight: 500; }
+  .chip.mono { font-family: 'Cascadia Code', 'Fira Code', monospace; }
+  .color-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); }
+
+  /* Summary cards */
+  .summary { display: flex; gap: 12px; margin-bottom: 20px; }
+  .summary-card { flex: 1; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+  .summary-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; }
+  .summary-value { font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 2px; }
+  .summary-value .unit { font-size: 12px; font-weight: 400; color: #64748b; margin-left: 2px; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #0f172a; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; padding: 8px 12px; text-align: left; }
+  thead th.right { text-align: right; }
+  thead th.center { text-align: center; }
+  tbody td { padding: 7px 12px; border-bottom: 1px solid #f1f5f9; font-size: 11px; }
+  tbody tr.odd { background: #fafbfc; }
+  tbody tr:hover { background: #f1f5f9; }
+  td.mono { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 10px; }
+  td.right { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  td.center { text-align: center; }
+
+  /* Footer total */
+  tfoot td { padding: 10px 12px; font-weight: 700; font-size: 12px; border-top: 2px solid #0f172a; background: #f8fafc; }
+
+  /* Print footer */
+  .print-footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8; }
+
+  @media print {
+    .no-print { display: none; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style></head><body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="brand">Listagem de Itens em Estoque</div>
+      <div class="product-name">${tplName} ${product.name}</div>
+      <div class="variant-name">${selectedVariant.name}</div>
+    </div>
+    <div class="timestamp">
+      Impresso em<br><strong>${now}</strong>
+    </div>
+  </div>
+  ${metaParts.length > 0 ? `<div class="meta">${metaParts.join('')}</div>` : ''}
+</div>
+
+<div class="summary">
+  <div class="summary-card">
+    <div class="summary-label">Itens em estoque</div>
+    <div class="summary-value">${inStockItems.length}</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">Quantidade total</div>
+    <div class="summary-value">${totalQtyRounded.toLocaleString('pt-BR', { maximumFractionDigits: 3 })}<span class="unit">${unit}</span></div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">Fabricante</div>
+    <div class="summary-value" style="font-size:14px">${mfgName || '—'}</div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th class="center" style="width:40px">#</th>
+      <th>Código</th>
+      <th>Localização</th>
+      <th class="right">Qtd</th>
+      <th>Lote</th>
+      <th class="center">Entrada</th>
+      <th class="center">Status</th>
+    </tr>
+  </thead>
+  <tbody>${rows}</tbody>
+  <tfoot>
+    <tr>
+      <td colspan="3">Total — ${inStockItems.length} ${inStockItems.length === 1 ? 'item' : 'itens'}</td>
+      <td class="right">${totalQtyRounded.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} ${unit}</td>
+      <td colspan="3"></td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="print-footer">
+  <span>OpenSea — Sistema de Gestão</span>
+  <span>${tplName} ${product.name} — ${selectedVariant.name}</span>
+</div>
+
+<script>window.onload=function(){window.print()}<\/script>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
+  }, [selectedVariant, product, items]);
 
   const handleItemExit = useCallback((item: Item) => {
     setExitItem(item);
