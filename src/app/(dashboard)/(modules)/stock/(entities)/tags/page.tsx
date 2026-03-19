@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Tags Page
- * Página de gerenciamento de tags usando o novo sistema OpenSea OS
+ * Página de gerenciamento de tags com infinite scroll e filtros server-side
  */
 
 'use client';
@@ -21,16 +21,20 @@ import {
   EntityCard,
   EntityContextMenu,
   EntityGrid,
-  SelectionToolbar,
-  useEntityCrud,
-  useEntityPage,
 } from '@/core';
+import { useDebounce } from '@/hooks/use-debounce';
 import { usePermissions } from '@/hooks/use-permissions';
-import { tagsService } from '@/services/stock';
+import {
+  useTagsInfinite,
+  useCreateTag,
+  useUpdateTag,
+  useDeleteTag,
+  type InfiniteListFilters,
+} from '@/hooks/stock/use-stock-other';
 import type { Tag } from '@/types/stock';
-import { Plus, Tag as TagIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { Loader2, Plus, Tag as TagIcon } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
   CreateModal,
   DeleteConfirmModal,
@@ -44,96 +48,132 @@ type ActionButtonWithPermission = HeaderButton & {
 };
 
 export default function TagsPage() {
-  const router = useRouter();
   const { hasPermission } = usePermissions();
 
   // ============================================================================
-  // CRUD SETUP
+  // SEARCH & SORT STATE
   // ============================================================================
 
-  const crud = useEntityCrud<Tag>({
-    entityName: 'Tag',
-    entityNamePlural: 'Tags',
-    queryKey: ['tags'],
-    baseUrl: '/v1/tags',
-    listFn: async () => {
-      const response = await tagsService.listTags();
-      return response.tags || [];
-    },
-    getFn: async (id: string) => {
-      const response = await tagsService.getTag(id);
-      return response.tag;
-    },
-    createFn: async (data: Partial<Tag>) => {
-      const response = await tagsService.createTag(
-        data as Parameters<typeof tagsService.createTag>[0]
-      );
-      return response.tag || response;
-    },
-    updateFn: async (id: string, data: Partial<Tag>) => {
-      const response = await tagsService.updateTag(
-        id,
-        data as Parameters<typeof tagsService.updateTag>[1]
-      );
-      return response.tag || response;
-    },
-    deleteFn: async (id: string) => {
-      await tagsService.deleteTag(id);
-    },
-  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // ============================================================================
-  // PAGE SETUP
+  // MODAL STATE
   // ============================================================================
 
-  const page = useEntityPage<Tag>({
-    entityName: 'Tag',
-    entityNamePlural: 'Tags',
-    queryKey: ['tags'],
-    crud,
-    viewRoute: id => `/stock/tags/${id}`,
-    filterFn: (item, query) => {
-      const q = query.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(q) ||
-        item.description?.toLowerCase().includes(q) ||
-        item.color?.toLowerCase().includes(q) ||
-        false
-      );
-    },
-  });
+  const [createOpen, setCreateOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [viewingItem, setViewingItem] = useState<Tag | null>(null);
+  const [editingItem, setEditingItem] = useState<Tag | null>(null);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+
+  // ============================================================================
+  // DATA: Infinite scroll tags
+  // ============================================================================
+
+  const filters: InfiniteListFilters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      sortBy,
+      sortOrder,
+    }),
+    [debouncedSearch, sortBy, sortOrder]
+  );
+
+  const {
+    items,
+    total,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useTagsInfinite(filters);
+
+  // Mutations
+  const createMutation = useCreateTag();
+  const updateMutation = useUpdateTag();
+  const deleteMutation = useDeleteTag();
+
+  // ============================================================================
+  // INFINITE SCROLL SENTINEL
+  // ============================================================================
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
 
   const handleContextView = (ids: string[]) => {
-    page.handlers.handleItemsView(ids);
+    if (ids.length === 1) {
+      const item = items.find(i => i.id === ids[0]);
+      if (item) {
+        setViewingItem(item);
+        setViewOpen(true);
+      }
+    }
   };
 
   const handleContextEdit = (ids: string[]) => {
     if (ids.length === 1) {
-      const item = page.filteredItems.find(i => i.id === ids[0]);
+      const item = items.find(i => i.id === ids[0]);
       if (item) {
-        page.modals.setEditingItem(item);
-        page.modals.open('edit');
+        setEditingItem(item);
+        setEditOpen(true);
       }
     }
   };
 
   const handleContextDelete = (ids: string[]) => {
-    page.modals.setItemsToDelete(ids);
-    page.modals.close('view');
-    page.modals.open('delete');
+    setItemsToDelete(ids);
+    setViewOpen(false);
+    setDeleteOpen(true);
   };
 
   const handleDoubleClick = (itemId: string) => {
-    const item = page.filteredItems.find(i => i.id === itemId);
+    const item = items.find(i => i.id === itemId);
     if (item) {
-      page.modals.setViewingItem(item);
-      page.modals.open('view');
+      setViewingItem(item);
+      setViewOpen(true);
     }
   };
+
+  const handleDeleteConfirm = useCallback(async () => {
+    for (const id of itemsToDelete) {
+      await deleteMutation.mutateAsync(id);
+    }
+    setDeleteOpen(false);
+    setItemsToDelete([]);
+    toast.success(
+      itemsToDelete.length === 1
+        ? 'Tag excluída com sucesso!'
+        : `${itemsToDelete.length} tags excluídas!`
+    );
+  }, [itemsToDelete, deleteMutation]);
 
   // ============================================================================
   // RENDER FUNCTIONS
@@ -209,21 +249,15 @@ export default function TagsPage() {
   // COMPUTED VALUES
   // ============================================================================
 
-  const selectedIds = Array.from(page.selection?.state.selectedIds || []);
-  const hasSelection = selectedIds.length > 0;
-
-  const initialIds = useMemo(
-    () => page.filteredItems.map(i => i.id),
-    [page.filteredItems]
-  );
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   // ============================================================================
   // HEADER BUTTONS CONFIGURATION
   // ============================================================================
 
   const handleCreate = useCallback(() => {
-    page.modals.open('create');
-  }, [page.modals]);
+    setCreateOpen(true);
+  }, []);
 
   const actionButtons = useMemo<ActionButtonWithPermission[]>(
     () => [
@@ -279,110 +313,119 @@ export default function TagsPage() {
         <PageBody>
           {/* Search Bar */}
           <SearchBar
-            value={page.searchQuery}
             placeholder={tagsConfig.display.labels.searchPlaceholder}
-            onSearch={value => page.handlers.handleSearch(value)}
-            onClear={() => page.handlers.handleSearch('')}
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
             showClear={true}
             size="md"
           />
 
           {/* Grid */}
-          {page.isLoading ? (
+          {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
-          ) : page.error ? (
+          ) : error ? (
             <GridError
               type="server"
               title="Erro ao carregar tags"
               message="Ocorreu um erro ao tentar carregar as tags. Por favor, tente novamente."
               action={{
                 label: 'Tentar Novamente',
-                onClick: () => crud.refetch(),
+                onClick: () => {
+                  refetch();
+                },
               }}
             />
           ) : (
-            <EntityGrid
-              config={tagsConfig}
-              items={page.filteredItems}
-              renderGridItem={renderGridCard}
-              renderListItem={renderListCard}
-              isLoading={page.isLoading}
-              isSearching={!!page.searchQuery}
-              onItemClick={(item, e) => page.handlers.handleItemClick(item, e)}
-              onItemDoubleClick={item =>
-                page.handlers.handleItemDoubleClick(item)
-              }
-              showSorting={true}
-              defaultSortField="name"
-              defaultSortDirection="asc"
-            />
-          )}
+            <>
+              <EntityGrid
+                config={tagsConfig}
+                items={items}
+                renderGridItem={renderGridCard}
+                renderListItem={renderListCard}
+                isLoading={isLoading}
+                isSearching={!!debouncedSearch}
+                showItemCount={false}
+                toolbarStart={
+                  <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    {total} {total === 1 ? 'tag' : 'tags'}
+                    {items.length < total &&
+                      ` (${items.length} carregados)`}
+                  </p>
+                }
+                onItemDoubleClick={item => handleDoubleClick(item.id)}
+                showSorting={true}
+                defaultSortField="name"
+                defaultSortDirection="asc"
+                onSortChange={(field, direction) => {
+                  if (field !== 'custom') {
+                    setSortBy(field as 'name' | 'createdAt' | 'updatedAt');
+                    setSortOrder(direction);
+                  }
+                }}
+              />
 
-          {/* Selection Toolbar */}
-          {hasSelection && (
-            <SelectionToolbar
-              selectedIds={selectedIds}
-              totalItems={page.filteredItems.length}
-              onClear={() => page.selection?.actions.clear()}
-              onSelectAll={() => page.selection?.actions.selectAll()}
-              defaultActions={{
-                view: true,
-                edit: true,
-                delete: true,
-              }}
-              handlers={{
-                onView: page.handlers.handleItemsView,
-                onEdit: page.handlers.handleItemsEdit,
-                onDelete: page.handlers.handleItemsDelete,
-              }}
-            />
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
           )}
 
           {/* Create Modal */}
           <CreateModal
-            isOpen={page.modals.isOpen('create')}
-            onClose={() => page.modals.close('create')}
+            isOpen={createOpen}
+            onClose={() => setCreateOpen(false)}
             onSubmit={async data => {
-              await page.handlers.handleQuickCreate(data);
+              await createMutation.mutateAsync(data as Parameters<typeof createMutation.mutateAsync>[0]);
+              setCreateOpen(false);
+              toast.success('Tag criada com sucesso!');
             }}
           />
 
           {/* View Modal */}
           <ViewModal
-            isOpen={page.modals.isOpen('view')}
-            onClose={() => page.modals.close('view')}
-            tag={page.modals.viewingItem}
+            isOpen={viewOpen}
+            onClose={() => setViewOpen(false)}
+            tag={viewingItem}
             onEdit={() => {
-              if (page.modals.viewingItem) {
-                page.modals.setEditingItem(page.modals.viewingItem);
-                page.modals.close('view');
-                page.modals.open('edit');
+              if (viewingItem) {
+                setEditingItem(viewingItem);
+                setViewOpen(false);
+                setEditOpen(true);
               }
             }}
             onDelete={() => {
-              if (page.modals.viewingItem) {
-                handleContextDelete([page.modals.viewingItem.id]);
+              if (viewingItem) {
+                handleContextDelete([viewingItem.id]);
               }
             }}
           />
 
           {/* Edit Modal */}
           <EditModal
-            isOpen={page.modals.isOpen('edit')}
-            onClose={() => page.modals.close('edit')}
-            tag={page.modals.editingItem}
+            isOpen={editOpen}
+            onClose={() => setEditOpen(false)}
+            tag={editingItem}
             onSubmit={async (id, data) => {
-              await crud.update(id, data);
-              page.modals.close('edit');
+              await updateMutation.mutateAsync({
+                id,
+                data: data as Parameters<typeof updateMutation.mutateAsync>[0]['data'],
+              });
+              setEditOpen(false);
+              toast.success('Tag atualizada com sucesso!');
             }}
           />
 
           {/* Delete Confirmation */}
           <DeleteConfirmModal
-            isOpen={page.modals.isOpen('delete')}
-            onClose={() => page.modals.close('delete')}
-            onConfirm={page.handlers.handleDeleteConfirm}
-            count={page.modals.itemsToDelete.length}
+            isOpen={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            onConfirm={handleDeleteConfirm}
+            count={itemsToDelete.length}
           />
         </PageBody>
       </PageLayout>

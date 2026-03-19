@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Templates Page
- * Página de gerenciamento de templates usando o novo sistema OpenSea OS
+ * Página de gerenciamento de templates com infinite scroll e filtros server-side
  */
 
 'use client';
@@ -21,19 +21,24 @@ import {
   EntityCard,
   EntityContextMenu,
   EntityGrid,
-  SelectionToolbar,
-  useEntityCrud,
-  useEntityPage,
-  type SortDirection,
 } from '@/core';
 import { usePermissions } from '@/hooks/use-permissions';
+import {
+  useTemplatesInfinite,
+  useCreateTemplate,
+  useUpdateTemplate,
+  useDeleteTemplate,
+  type InfiniteListFilters,
+} from '@/hooks/stock/use-stock-other';
+import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
-import { productsService, templatesService } from '@/services/stock';
-import type { Template } from '@/types/stock';
+import { productsService } from '@/services/stock';
+import type { CreateTemplateRequest, Template, UpdateTemplateRequest } from '@/types/stock';
 import {
   ChevronRight,
   Copy,
   Import,
+  Loader2,
   Package,
   Pencil,
   Plus,
@@ -43,19 +48,17 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GrObjectGroup } from 'react-icons/gr';
+import { toast } from 'sonner';
 import {
   CreateModal,
-  createTemplate,
   DeleteConfirmModal,
-  deleteTemplate,
   DuplicateConfirmModal,
   duplicateTemplate,
   getUnitLabel,
   RenameTemplateModal,
   templatesConfig,
-  updateTemplate,
 } from './src';
 
 type ActionButtonWithPermission = HeaderButton & {
@@ -68,70 +71,89 @@ export default function TemplatesPage() {
   const { hasPermission } = usePermissions();
 
   // ============================================================================
+  // FILTER & SORTING STATE
+  // ============================================================================
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // ============================================================================
   // STATE
   // ============================================================================
 
   const [createFormKey, setCreateFormKey] = useState(0);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [itemsToDuplicate, setItemsToDuplicate] = useState<string[]>([]);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
-  const [renameTemplate, setRenameTemplate] = useState<Template | null>(null);
+  const [renameTemplateItem, setRenameTemplateItem] = useState<Template | null>(null);
   const [productsCountByTemplateId, setProductsCountByTemplateId] = useState<
     Record<string, number>
   >({});
 
   // ============================================================================
-  // CRUD SETUP
+  // DATA: Infinite scroll templates
   // ============================================================================
 
-  const crud = useEntityCrud<Template>({
-    entityName: 'Modelo',
-    entityNamePlural: 'Modelos',
-    queryKey: ['templates'],
-    baseUrl: '/api/v1/templates',
-    listFn: async () => {
-      const response = await templatesService.listTemplates();
-      return response.templates;
-    },
-    getFn: (id: string) =>
-      templatesService.getTemplate(id).then(r => r.template),
-    createFn: createTemplate,
-    updateFn: updateTemplate,
-    deleteFn: deleteTemplate,
-    duplicateFn: duplicateTemplate,
-  });
+  const filters: InfiniteListFilters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      sortBy,
+      sortOrder,
+    }),
+    [debouncedSearch, sortBy, sortOrder]
+  );
+
+  const {
+    items,
+    total,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useTemplatesInfinite(filters);
+
+  // Mutations
+  const createMutation = useCreateTemplate();
+  const updateMutation = useUpdateTemplate();
+  const deleteMutation = useDeleteTemplate();
 
   // ============================================================================
-  // PAGE SETUP
+  // INFINITE SCROLL SENTINEL
   // ============================================================================
 
-  const page = useEntityPage<Template>({
-    entityName: 'Modelo',
-    entityNamePlural: 'Modelos',
-    queryKey: ['templates'],
-    crud,
-    viewRoute: id => `/stock/templates/${id}`,
-    filterFn: (item, query) => {
-      const q = query.toLowerCase();
-      return item.name.toLowerCase().includes(q);
-    },
-    duplicateConfig: {
-      getNewName: item => `${item.name} (cópia)`,
-      getData: item => ({
-        name: `${item.name} (cópia)`,
-        unitOfMeasure: item.unitOfMeasure,
-        productAttributes: item.productAttributes,
-        variantAttributes: item.variantAttributes,
-        itemAttributes: item.itemAttributes,
-        specialModules: item.specialModules,
-      }),
-    },
-  });
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // ==========================================================================
   // OPEN CREATE MODAL VIA URL PARAM
   // ==========================================================================
   useEffect(() => {
     if (searchParams.get('action') === 'create') {
-      page.modals.open('create');
+      setCreateModalOpen(true);
       window.history.replaceState(null, '', '/stock/templates');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,18 +164,18 @@ export default function TemplatesPage() {
   // ==========================================================================
   const templateIdsKey = useMemo(
     () =>
-      page.filteredItems
+      items
         .map(item => item.id)
         .sort()
         .join('|'),
-    [page.filteredItems]
+    [items]
   );
 
   useEffect(() => {
     let isMounted = true;
     async function loadCounts() {
       const entries = await Promise.all(
-        page.filteredItems.map(async t => {
+        items.map(async t => {
           try {
             const resp = await productsService.listProducts(t.id);
             return [t.id, resp.products?.length || 0] as const;
@@ -203,31 +225,69 @@ export default function TemplatesPage() {
 
   const handleContextRename = useCallback(
     (ids: string[]) => {
-      const template = crud.items?.find(t => t.id === ids[0]) || null;
-      setRenameTemplate(template);
+      const template = items.find(t => t.id === ids[0]) || null;
+      setRenameTemplateItem(template);
       setRenameModalOpen(true);
     },
-    [crud.items]
+    [items]
   );
 
   const handleRenameSubmit = useCallback(
     async (id: string, data: { name: string }) => {
-      await crud.update(id, data as Partial<Template>);
-      await crud.invalidate();
+      await updateMutation.mutateAsync({ id, data: data as UpdateTemplateRequest });
       setRenameModalOpen(false);
-      setRenameTemplate(null);
+      setRenameTemplateItem(null);
     },
-    [crud]
+    [updateMutation]
   );
 
-  const handleContextDuplicate = (ids: string[]) => {
-    page.handlers.handleItemsDuplicate(ids);
-  };
+  const handleContextDuplicate = useCallback(
+    (ids: string[]) => {
+      setItemsToDuplicate(ids);
+      setDuplicateModalOpen(true);
+    },
+    []
+  );
 
-  const handleContextDelete = (ids: string[]) => {
-    page.modals.setItemsToDelete(ids);
-    page.modals.open('delete');
-  };
+  const handleDuplicateConfirm = useCallback(async () => {
+    for (const id of itemsToDuplicate) {
+      const template = items.find(t => t.id === id);
+      if (template) {
+        await duplicateTemplate(id, {
+          name: `${template.name} (cópia)`,
+        });
+      }
+    }
+    setDuplicateModalOpen(false);
+    setItemsToDuplicate([]);
+    await refetch();
+    toast.success(
+      itemsToDuplicate.length === 1
+        ? 'Template duplicado com sucesso!'
+        : `${itemsToDuplicate.length} templates duplicados!`
+    );
+  }, [itemsToDuplicate, items, refetch]);
+
+  const handleContextDelete = useCallback(
+    (ids: string[]) => {
+      setItemsToDelete(ids);
+      setDeleteModalOpen(true);
+    },
+    []
+  );
+
+  const handleDeleteConfirm = useCallback(async () => {
+    for (const id of itemsToDelete) {
+      await deleteMutation.mutateAsync(id);
+    }
+    setDeleteModalOpen(false);
+    setItemsToDelete([]);
+    toast.success(
+      itemsToDelete.length === 1
+        ? 'Template excluído com sucesso!'
+        : `${itemsToDelete.length} templates excluídos!`
+    );
+  }, [itemsToDelete, deleteMutation]);
 
   // ============================================================================
   // CONTEXT MENU ACTIONS
@@ -258,7 +318,7 @@ export default function TemplatesPage() {
         separator: 'before' as const,
       },
     ],
-    [handleContextRename]
+    [handleContextRename, handleContextDuplicate, handleContextDelete]
   );
 
   // ============================================================================
@@ -413,32 +473,15 @@ export default function TemplatesPage() {
   // COMPUTED VALUES
   // ============================================================================
 
-  const selectedIds = Array.from(page.selection?.state.selectedIds || []);
-  const hasSelection = selectedIds.length > 0;
-
-  const initialIds = useMemo(
-    () => page.filteredItems.map(i => i.id),
-    [page.filteredItems]
-  );
-
-  const customSortByUnit = (
-    a: Template,
-    b: Template,
-    direction: SortDirection
-  ) => {
-    const unitA = a.unitOfMeasure?.toLowerCase() ?? '';
-    const unitB = b.unitOfMeasure?.toLowerCase() ?? '';
-    const result = unitA.localeCompare(unitB, 'pt-BR');
-    return direction === 'asc' ? result : -result;
-  };
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   // ============================================================================
   // HEADER BUTTONS CONFIGURATION
   // ============================================================================
 
   const handleCreate = useCallback(() => {
-    page.modals.open('create');
-  }, [page.modals]);
+    setCreateModalOpen(true);
+  }, []);
 
   const handleImport = useCallback(() => {
     router.push('/import/templates');
@@ -509,74 +552,68 @@ export default function TemplatesPage() {
         <PageBody>
           {/* Search Bar */}
           <SearchBar
-            value={page.searchQuery}
+            value={searchQuery}
             placeholder={templatesConfig.display.labels.searchPlaceholder}
-            onSearch={value => page.handlers.handleSearch(value)}
-            onClear={() => page.handlers.handleSearch('')}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
             showClear={true}
             size="md"
           />
 
           {/* Grid */}
-          {page.isLoading ? (
+          {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
-          ) : page.error ? (
+          ) : error ? (
             <GridError
               type="server"
               title="Erro ao carregar templates"
               message="Ocorreu um erro ao tentar carregar os templates. Por favor, tente novamente."
               action={{
                 label: 'Tentar Novamente',
-                onClick: () => crud.refetch(),
+                onClick: () => {
+                  refetch();
+                },
               }}
             />
           ) : (
-            <EntityGrid
-              config={templatesConfig}
-              items={page.filteredItems}
-              renderGridItem={renderGridCard}
-              renderListItem={renderListCard}
-              isLoading={page.isLoading}
-              isSearching={!!page.searchQuery}
-              onItemClick={(item, e) => page.handlers.handleItemClick(item, e)}
-              onItemDoubleClick={item =>
-                page.handlers.handleItemDoubleClick(item)
-              }
-              showSorting={true}
-              showItemCount={false}
-              toolbarStart={
-                <p className="text-sm text-muted-foreground whitespace-nowrap">
-                  Total de {page.filteredItems.length}{' '}
-                  {page.filteredItems.length === 1 ? 'template' : 'templates'}
-                </p>
-              }
-              defaultSortField="name"
-              defaultSortDirection="asc"
-              customSortFn={customSortByUnit}
-              customSortLabel="Unidade de Medida"
-            />
-          )}
+            <>
+              <EntityGrid
+                config={templatesConfig}
+                items={items}
+                renderGridItem={renderGridCard}
+                renderListItem={renderListCard}
+                isLoading={isLoading}
+                isSearching={!!debouncedSearch}
+                onItemDoubleClick={item =>
+                  router.push(`/stock/templates/${item.id}`)
+                }
+                showSorting={true}
+                showItemCount={false}
+                toolbarStart={
+                  <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    {total} {total === 1 ? 'template' : 'templates'}
+                    {items.length < total &&
+                      ` (${items.length} carregados)`}
+                  </p>
+                }
+                defaultSortField="name"
+                defaultSortDirection="asc"
+                onSortChange={(field, direction) => {
+                  if (field !== 'custom') {
+                    setSortBy(field as 'name' | 'createdAt' | 'updatedAt');
+                    setSortOrder(direction);
+                  }
+                }}
+              />
 
-          {/* Selection Toolbar */}
-          {hasSelection && (
-            <SelectionToolbar
-              selectedIds={selectedIds}
-              totalItems={page.filteredItems.length}
-              onClear={() => page.selection?.actions.clear()}
-              onSelectAll={() => page.selection?.actions.selectAll()}
-              defaultActions={{
-                view: true,
-                edit: true,
-                duplicate: true,
-                delete: true,
-              }}
-              handlers={{
-                onView: page.handlers.handleItemsView,
-                onEdit: page.handlers.handleItemsEdit,
-                onDuplicate: page.handlers.handleItemsDuplicate,
-                onDelete: page.handlers.handleItemsDelete,
-              }}
-            />
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
           )}
 
           {/* Rename Modal */}
@@ -584,42 +621,43 @@ export default function TemplatesPage() {
             isOpen={renameModalOpen}
             onClose={() => {
               setRenameModalOpen(false);
-              setRenameTemplate(null);
+              setRenameTemplateItem(null);
             }}
-            template={renameTemplate}
-            isSubmitting={crud.isUpdating}
+            template={renameTemplateItem}
+            isSubmitting={updateMutation.isPending}
             onSubmit={handleRenameSubmit}
           />
 
           {/* Create Modal */}
           <CreateModal
-            isOpen={page.modals.isOpen('create')}
-            onClose={() => page.modals.close('create')}
-            isSubmitting={crud.isCreating}
+            isOpen={createModalOpen}
+            onClose={() => setCreateModalOpen(false)}
+            isSubmitting={createMutation.isPending}
             formKey={createFormKey}
             focusTrigger={createFormKey}
             onSubmit={async data => {
-              await crud.create(data);
+              await createMutation.mutateAsync(data as CreateTemplateRequest);
               setCreateFormKey(prev => prev + 1);
+              setCreateModalOpen(false);
             }}
           />
 
           {/* Delete Confirmation */}
           <DeleteConfirmModal
-            isOpen={page.modals.isOpen('delete')}
-            onClose={() => page.modals.close('delete')}
-            itemCount={page.modals.itemsToDelete.length}
-            onConfirm={page.handlers.handleDeleteConfirm}
-            isLoading={crud.isDeleting}
+            isOpen={deleteModalOpen}
+            onClose={() => setDeleteModalOpen(false)}
+            itemCount={itemsToDelete.length}
+            onConfirm={handleDeleteConfirm}
+            isLoading={deleteMutation.isPending}
           />
 
           {/* Duplicate Confirmation */}
           <DuplicateConfirmModal
-            isOpen={page.modals.isOpen('duplicate')}
-            onClose={() => page.modals.close('duplicate')}
-            itemCount={page.modals.itemsToDuplicate.length}
-            onConfirm={page.handlers.handleDuplicateConfirm}
-            isLoading={crud.isDuplicating}
+            isOpen={duplicateModalOpen}
+            onClose={() => setDuplicateModalOpen(false)}
+            itemCount={itemsToDuplicate.length}
+            onConfirm={handleDuplicateConfirm}
+            isLoading={false}
           />
         </PageBody>
       </PageLayout>

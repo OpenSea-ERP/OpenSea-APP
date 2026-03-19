@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Manufacturers Page
- * Página de gerenciamento de fabricantes usando o novo sistema OpenSea OS
+ * Página de gerenciamento de fabricantes usando infinite scroll com filtros server-side
  */
 
 'use client';
@@ -22,14 +22,19 @@ import {
   EntityCard,
   EntityContextMenu,
   EntityGrid,
-  SelectionToolbar,
-  useEntityCrud,
-  useEntityPage,
 } from '@/core';
 import { usePermissions } from '@/hooks/use-permissions';
+import {
+  useManufacturersInfinite,
+  useCreateManufacturer,
+  useUpdateManufacturer,
+  useDeleteManufacturer,
+  type InfiniteListFilters,
+} from '@/hooks/stock/use-stock-other';
+import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
 import { productsService } from '@/services/stock';
-import type { Manufacturer, Product } from '@/types/stock';
+import type { Manufacturer, Product, UpdateManufacturerRequest } from '@/types/stock';
 import { useQuery } from '@tanstack/react-query';
 import { COUNTRIES } from '@/components/ui/country-select';
 import { formatCNPJ } from '@/lib/masks';
@@ -42,6 +47,7 @@ import {
   Factory,
   Globe,
   Hash,
+  Loader2,
   Package,
   Pencil,
   Plus,
@@ -51,17 +57,13 @@ import {
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CircleFlag } from 'react-circle-flags';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CreateManufacturerWizard,
-  createManufacturer,
-  deleteManufacturer,
   DuplicateConfirmModal,
   duplicateManufacturer,
-  manufacturersApi,
   manufacturersConfig,
   RenameModal,
-  updateManufacturer,
 } from './src';
 
 type ActionButtonWithPermission = HeaderButton & {
@@ -77,34 +79,47 @@ export default function ManufacturersPage() {
   // STATE
   // ============================================================================
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   const [renameModalOpen, setRenameModalOpen] = useState(false);
-  const [renameManufacturer, setRenameManufacturer] =
+  const [renameManufacturerItem, setRenameManufacturerItem] =
     useState<Manufacturer | null>(null);
 
+  // Modal state (previously managed by useEntityPage)
+  const [createOpen, setCreateOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [itemsToDuplicate, setItemsToDuplicate] = useState<string[]>([]);
+  const [isDuplicating, setIsDuplicating] = useState(false);
+
   // ============================================================================
-  // CRUD SETUP
+  // DATA: Infinite scroll + mutations
   // ============================================================================
 
-  const crud = useEntityCrud<Manufacturer>({
-    entityName: 'Fabricante',
-    entityNamePlural: 'Fabricantes',
-    queryKey: ['manufacturers'],
-    baseUrl: '/api/v1/manufacturers',
-    listFn: async () => {
-      const response = await manufacturersApi.list();
-      return response.manufacturers.filter(
-        (manufacturer: Manufacturer) => !manufacturer.deletedAt
-      );
-    },
-    getFn: (id: string) => manufacturersApi.get(id),
-    createFn: createManufacturer,
-    updateFn: updateManufacturer,
-    deleteFn: deleteManufacturer,
-    duplicateFn: duplicateManufacturer,
-    onDeleteSuccess: () => {
-      /* noop */
-    },
-  });
+  const filters: InfiniteListFilters = useMemo(() => ({
+    search: debouncedSearch || undefined,
+    sortBy,
+    sortOrder,
+  }), [debouncedSearch, sortBy, sortOrder]);
+
+  const {
+    items,
+    total,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useManufacturersInfinite(filters);
+
+  const createMutation = useCreateManufacturer();
+  const updateMutation = useUpdateManufacturer();
+  const deleteMutation = useDeleteManufacturer();
 
   // ============================================================================
   // PRODUCT COUNTS
@@ -133,38 +148,34 @@ export default function ManufacturersPage() {
   }, [products]);
 
   // ============================================================================
-  // PAGE SETUP
+  // INFINITE SCROLL SENTINEL
   // ============================================================================
 
-  const page = useEntityPage<Manufacturer>({
-    entityName: 'Fabricante',
-    entityNamePlural: 'Fabricantes',
-    queryKey: ['manufacturers'],
-    crud,
-    viewRoute: id => `/stock/manufacturers/${id}`,
-    filterFn: (item, query) => {
-      const q = query.toLowerCase();
-      const name = item.name?.toLowerCase() || '';
-      const country = item.country?.toLowerCase() || '';
-      const email = item.email?.toLowerCase() || '';
-      return [name, country, email].some(value => value.includes(q));
-    },
-    duplicateConfig: {
-      getNewName: item => `${item.name} (Cópia)`,
-      getData: item => ({
-        name: `${item.name} (Cópia)`,
-        country: item.country,
-        isActive: item.isActive,
-      }),
-    },
-  });
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // ============================================================================
   // OPEN CREATE MODAL VIA URL PARAM
   // ============================================================================
   useEffect(() => {
     if (searchParams.get('action') === 'create') {
-      page.modals.open('create');
+      setCreateOpen(true);
       window.history.replaceState(null, '', '/stock/manufacturers');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,35 +199,57 @@ export default function ManufacturersPage() {
 
   const handleContextRename = useCallback(
     (ids: string[]) => {
-      const manufacturer = crud.items?.find(m => m.id === ids[0]) || null;
-      setRenameManufacturer(manufacturer);
+      const manufacturer = items.find(m => m.id === ids[0]) || null;
+      setRenameManufacturerItem(manufacturer);
       setRenameModalOpen(true);
     },
-    [crud.items]
+    [items]
   );
 
   const handleRenameSubmit = useCallback(
     async (id: string, data: Partial<Manufacturer>) => {
-      await crud.update(id, data);
-      await crud.invalidate();
+      await updateMutation.mutateAsync({ id, data: data as UpdateManufacturerRequest });
       setRenameModalOpen(false);
-      setRenameManufacturer(null);
+      setRenameManufacturerItem(null);
     },
-    [crud]
+    [updateMutation]
   );
 
   const handleContextDuplicate = (ids: string[]) => {
-    page.handlers.handleItemsDuplicate(ids);
+    setItemsToDuplicate(ids);
+    setDuplicateOpen(true);
   };
+
+  const handleDuplicateConfirm = useCallback(async () => {
+    setIsDuplicating(true);
+    try {
+      for (const id of itemsToDuplicate) {
+        await duplicateManufacturer(id);
+      }
+      await refetch();
+      setDuplicateOpen(false);
+      setItemsToDuplicate([]);
+    } finally {
+      setIsDuplicating(false);
+    }
+  }, [itemsToDuplicate, refetch]);
 
   const handleContextDelete = (ids: string[]) => {
-    page.modals.setItemsToDelete(ids);
-    page.modals.open('delete');
+    setItemsToDelete(ids);
+    setDeleteOpen(true);
   };
 
+  const handleDeleteConfirm = useCallback(async () => {
+    for (const id of itemsToDelete) {
+      await deleteMutation.mutateAsync(id);
+    }
+    setDeleteOpen(false);
+    setItemsToDelete([]);
+  }, [itemsToDelete, deleteMutation]);
+
   const handleCreate = useCallback(() => {
-    page.modals.open('create');
-  }, [page.modals]);
+    setCreateOpen(true);
+  }, []);
 
   // ============================================================================
   // CONTEXT MENU ACTIONS
@@ -254,7 +287,7 @@ export default function ManufacturersPage() {
   // BADGES
   // ============================================================================
 
-  /** Resolve country name → ISO code for flag */
+  /** Resolve country name -> ISO code for flag */
   const getCountryCode = useCallback((name: string): string | null => {
     if (!name) return null;
     const lower = name.toLowerCase().trim();
@@ -280,10 +313,10 @@ export default function ManufacturersPage() {
       flag?: string;
     }[] = [];
 
-    // Country badge with flag (violet) — first
+    // Country badge with flag (violet) -- first
     const cc = getCountryCode(item.country);
     badges.push({
-      label: item.country || '—',
+      label: item.country || '\u2014',
       variant: 'outline',
       icon:
         cc && cc !== 'OTHER'
@@ -294,7 +327,7 @@ export default function ManufacturersPage() {
       flag: cc && cc !== 'OTHER' ? cc.toLowerCase() : undefined,
     });
 
-    // Code badge (slate) — second
+    // Code badge (slate) -- second
     if (item.code) {
       badges.push({
         label: item.code,
@@ -483,12 +516,9 @@ export default function ManufacturersPage() {
   // COMPUTED VALUES
   // ============================================================================
 
-  const selectedIds = Array.from(page.selection?.state.selectedIds || []);
-  const hasSelection = selectedIds.length > 0;
-
   const initialIds = useMemo(
-    () => (page.filteredItems ?? []).map(i => i.id),
-    [page.filteredItems]
+    () => items.map(i => i.id),
+    [items]
   );
 
   // ============================================================================
@@ -561,89 +591,78 @@ export default function ManufacturersPage() {
         <PageBody>
           {/* Search Bar */}
           <SearchBar
-            value={page.searchQuery}
+            value={searchQuery}
             placeholder={manufacturersConfig.display.labels.searchPlaceholder}
-            onSearch={value => page.handlers.handleSearch(value)}
-            onClear={() => page.handlers.handleSearch('')}
+            onSearch={value => setSearchQuery(value)}
+            onClear={() => setSearchQuery('')}
             showClear={true}
             size="md"
           />
 
           {/* Grid */}
-          {page.isLoading ? (
+          {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
-          ) : page.error ? (
+          ) : error ? (
             <GridError
               type="server"
               title="Erro ao carregar fabricantes"
               message="Ocorreu um erro ao tentar carregar os fabricantes. Por favor, tente novamente."
               action={{
                 label: 'Tentar Novamente',
-                onClick: () => crud.refetch(),
+                onClick: () => { refetch(); },
               }}
             />
           ) : (
-            <EntityGrid
-              config={manufacturersConfig}
-              items={page.filteredItems}
-              renderGridItem={renderGridCard}
-              renderListItem={renderListCard}
-              isLoading={page.isLoading}
-              isSearching={!!page.searchQuery}
-              onItemClick={(item, e) => page.handlers.handleItemClick(item, e)}
-              onItemDoubleClick={item =>
-                page.handlers.handleItemDoubleClick(item)
-              }
-              showSorting={true}
-              showItemCount={false}
-              toolbarStart={
-                <p className="text-sm text-muted-foreground whitespace-nowrap">
-                  Total de {page.filteredItems.length}{' '}
-                  {page.filteredItems.length === 1
-                    ? 'fabricante'
-                    : 'fabricantes'}
-                </p>
-              }
-              defaultSortField="custom"
-              defaultSortDirection="asc"
-              customSortOptions={sortOptions}
-              customSortFn={(a, b, direction) => {
-                const multiplier = direction === 'asc' ? 1 : -1;
-                const nameA = a.name?.toLowerCase() ?? '';
-                const nameB = b.name?.toLowerCase() ?? '';
-                return nameA.localeCompare(nameB, 'pt-BR') * multiplier;
-              }}
-            />
-          )}
+            <>
+              <EntityGrid
+                config={manufacturersConfig}
+                items={items}
+                renderGridItem={renderGridCard}
+                renderListItem={renderListCard}
+                isLoading={isLoading}
+                isSearching={!!debouncedSearch}
+                onItemDoubleClick={item =>
+                  router.push(`/stock/manufacturers/${item.id}`)
+                }
+                showSorting={true}
+                showItemCount={false}
+                toolbarStart={
+                  <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    {total} {total === 1 ? 'fabricante' : 'fabricantes'}
+                    {items.length < total &&
+                      ` (${items.length} carregados)`}
+                  </p>
+                }
+                defaultSortField="name"
+                defaultSortDirection="asc"
+                customSortOptions={sortOptions}
+                onSortChange={(field, direction) => {
+                  if (field === 'custom') {
+                    setSortBy('name');
+                  } else {
+                    setSortBy(field as 'name' | 'createdAt' | 'updatedAt');
+                  }
+                  setSortOrder(direction);
+                }}
+              />
 
-          {/* Selection Toolbar */}
-          {hasSelection && (
-            <SelectionToolbar
-              selectedIds={selectedIds}
-              totalItems={page.filteredItems.length}
-              onClear={() => page.selection?.actions.clear()}
-              onSelectAll={() => page.selection?.actions.selectAll()}
-              defaultActions={{
-                view: true,
-                edit: true,
-                duplicate: true,
-                delete: true,
-              }}
-              handlers={{
-                onView: page.handlers.handleItemsView,
-                onEdit: page.handlers.handleItemsEdit,
-                onDuplicate: page.handlers.handleItemsDuplicate,
-                onDelete: page.handlers.handleItemsDelete,
-              }}
-            />
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
           )}
 
           {/* Create Wizard */}
           <CreateManufacturerWizard
-            open={page.modals.isOpen('create')}
-            onOpenChange={open => !open && page.modals.close('create')}
+            open={createOpen}
+            onOpenChange={open => !open && setCreateOpen(false)}
             onSubmit={async data => {
-              await crud.create(data);
+              await createMutation.mutateAsync(data as Parameters<typeof createMutation.mutateAsync>[0]);
+              setCreateOpen(false);
             }}
           />
 
@@ -652,29 +671,29 @@ export default function ManufacturersPage() {
             isOpen={renameModalOpen}
             onClose={() => {
               setRenameModalOpen(false);
-              setRenameManufacturer(null);
+              setRenameManufacturerItem(null);
             }}
-            manufacturer={renameManufacturer}
-            isSubmitting={crud.isUpdating}
+            manufacturer={renameManufacturerItem}
+            isSubmitting={updateMutation.isPending}
             onSubmit={handleRenameSubmit}
           />
 
           {/* Delete Confirmation (PIN) */}
           <VerifyActionPinModal
-            isOpen={page.modals.isOpen('delete')}
-            onClose={() => page.modals.close('delete')}
-            onSuccess={() => page.handlers.handleDeleteConfirm()}
+            isOpen={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
+            onSuccess={() => handleDeleteConfirm()}
             title="Confirmar Exclusão"
-            description={`Digite seu PIN de ação para excluir ${page.modals.itemsToDelete.length} ${page.modals.itemsToDelete.length === 1 ? 'fabricante' : 'fabricantes'}.`}
+            description={`Digite seu PIN de ação para excluir ${itemsToDelete.length} ${itemsToDelete.length === 1 ? 'fabricante' : 'fabricantes'}.`}
           />
 
           {/* Duplicate Confirmation */}
           <DuplicateConfirmModal
-            isOpen={page.modals.isOpen('duplicate')}
-            onClose={() => page.modals.close('duplicate')}
-            itemCount={page.modals.itemsToDuplicate.length}
-            onConfirm={page.handlers.handleDuplicateConfirm}
-            isLoading={crud.isDuplicating}
+            isOpen={duplicateOpen}
+            onClose={() => setDuplicateOpen(false)}
+            itemCount={itemsToDuplicate.length}
+            onConfirm={handleDuplicateConfirm}
+            isLoading={isDuplicating}
           />
         </PageBody>
       </PageLayout>
