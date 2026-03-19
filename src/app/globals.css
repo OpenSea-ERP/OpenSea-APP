@@ -955,20 +955,29 @@ body {
   border-color: var(--spreadsheet-border) !important;
 }
 
-/* Header cells (column labels) — transparent, blends with parent */
+/* Header cells (column labels) — no background */
 .Spreadsheet__header {
   background-color: transparent !important;
+  background: none !important;
   color: var(--spreadsheet-cell-text) !important;
   border-color: var(--spreadsheet-border) !important;
   font-weight: 600 !important;
 }
 
-/* Row indicators — transparent, compact for 4 digits */
+/* Row indicators — no background, compact */
 .Spreadsheet__header--row {
   background-color: transparent !important;
+  background: none !important;
   color: var(--spreadsheet-cell-text) !important;
   border-color: var(--spreadsheet-border) !important;
   opacity: 0.5;
+}
+
+/* Corner indicator — no background */
+.Spreadsheet__corner-indicator {
+  background-color: transparent !important;
+  background: none !important;
+  border-color: var(--spreadsheet-border) !important;
 }
 
 /* Regular cells */
@@ -1008,12 +1017,6 @@ body {
 .Spreadsheet__cell--copied {
   background-color: var(--spreadsheet-selected-bg) !important;
   border: 2px dashed var(--spreadsheet-selected-border) !important;
-}
-
-/* Corner button (select all) */
-.Spreadsheet__corner-indicator {
-  background-color: transparent !important;
-  border-color: var(--spreadsheet-border) !important;
 }
 
 /* Table borders */
