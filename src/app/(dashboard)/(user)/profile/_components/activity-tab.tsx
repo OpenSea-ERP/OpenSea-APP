@@ -48,6 +48,13 @@ const moduleLabels: Record<string, string> = {
   PAYROLL: 'Folha',
   REQUESTS: 'Solicitações',
   NOTIFICATIONS: 'Notificações',
+  STORAGE: 'Armazenamento',
+  FINANCE: 'Financeiro',
+  CALENDAR: 'Calendário',
+  TASKS: 'Tarefas',
+  EMAIL: 'E-mail',
+  ADMIN: 'Administração',
+  OTHER: 'Outro',
 };
 
 const actionLabels: Record<string, string> = {
@@ -260,6 +267,34 @@ interface ActivityItemProps {
   log: AuditLog;
 }
 
+/**
+ * Substitui UUIDs na description pelo nome do usuário (resolve dados históricos)
+ */
+function resolveDescription(log: AuditLog): string {
+  if (!log.description) return `${getActionInfo(log.action).label} em ${log.entity}`;
+
+  // Se tiver userName disponível, substitui qualquer UUID na description pelo nome
+  if (log.userName) {
+    const uuidRegex =
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+    return log.description.replace(uuidRegex, (match) => {
+      // Só substitui se parece ser o userId (presente nos placeholders do log)
+      const placeholders = log.newData?._placeholders as
+        | Record<string, string>
+        | undefined;
+      if (placeholders) {
+        for (const value of Object.values(placeholders)) {
+          if (value === match) return log.userName!;
+        }
+      }
+      // Fallback: substitui o primeiro UUID encontrado pelo userName
+      return log.userName!;
+    });
+  }
+
+  return log.description;
+}
+
 function ActivityItem({ log }: ActivityItemProps) {
   const actionInfo = getActionInfo(log.action);
   const timeAgo = formatDistanceToNow(new Date(log.createdAt), {
@@ -275,7 +310,7 @@ function ActivityItem({ log }: ActivityItemProps) {
 
       <div className="flex-1 min-w-0">
         <p className="text-sm text-gray-900 dark:text-white">
-          {log.description || `${actionInfo.label} em ${log.entity}`}
+          {resolveDescription(log)}
         </p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
           <Badge variant="outline" className="text-xs">

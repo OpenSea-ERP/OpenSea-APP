@@ -225,6 +225,7 @@ export interface AuditLog {
   userAgent: string;
   endpoint: string;
   method: string;
+  userName?: string | null;
   description: string;
   createdAt: Date;
 }
