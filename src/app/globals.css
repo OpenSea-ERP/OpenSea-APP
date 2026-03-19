@@ -955,20 +955,20 @@ body {
   border-color: var(--spreadsheet-border) !important;
 }
 
-/* Header cells (column labels) */
+/* Header cells (column labels) — transparent, blends with parent */
 .Spreadsheet__header {
-  background-color: var(--spreadsheet-header-bg) !important;
+  background-color: transparent !important;
   color: var(--spreadsheet-cell-text) !important;
   border-color: var(--spreadsheet-border) !important;
   font-weight: 600 !important;
 }
 
-/* Row indicators */
+/* Row indicators — transparent, compact for 4 digits */
 .Spreadsheet__header--row {
-  background-color: var(--spreadsheet-header-bg) !important;
+  background-color: transparent !important;
   color: var(--spreadsheet-cell-text) !important;
   border-color: var(--spreadsheet-border) !important;
-  min-width: 40px !important;
+  opacity: 0.5;
 }
 
 /* Regular cells */
@@ -1012,7 +1012,7 @@ body {
 
 /* Corner button (select all) */
 .Spreadsheet__corner-indicator {
-  background-color: var(--spreadsheet-header-bg) !important;
+  background-color: transparent !important;
   border-color: var(--spreadsheet-border) !important;
 }
 
@@ -1068,11 +1068,13 @@ body {
   min-width: 120px !important;
 }
 
-/* Row header width */
+/* Row header width — compact, fits 4 digits */
 .Spreadsheet__header--row {
-  min-width: 50px !important;
-  max-width: 50px !important;
-  width: 50px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  width: 36px !important;
+  font-size: 11px !important;
+  text-align: center !important;
 }
 
 /* Import spreadsheet container */
