@@ -183,15 +183,12 @@ function SortableColumnItem({ field, onToggle }: SortableColumnItemProps) {
         disabled={field.required}
       />
       <span className="text-sm flex-1 truncate">{field.label}</span>
+      {field.isAttribute && (
+        <Sparkles className="w-3 h-3 text-muted-foreground shrink-0" />
+      )}
       {field.required && (
         <Badge variant="secondary" className="text-xs shrink-0">
           Obrigatório
-        </Badge>
-      )}
-      {field.isAttribute && (
-        <Badge variant="outline" className="text-xs shrink-0 gap-0.5">
-          <Sparkles className="w-3 h-3" />
-          Atributo
         </Badge>
       )}
     </div>
@@ -216,8 +213,6 @@ function ColumnsPopoverContent({ columns, onToggle, onReorder }: ColumnsPopoverC
     })
   );
 
-  const systemColumns = columns.filter(c => !c.isAttribute);
-  const attributeColumns = columns.filter(c => c.isAttribute);
   const enabledCount = columns.filter(c => c.enabled).length;
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -240,41 +235,17 @@ function ColumnsPopoverContent({ columns, onToggle, onReorder }: ColumnsPopoverC
         onDragEnd={handleDragEnd}
       >
         <div className="max-h-80 overflow-y-auto p-2">
-          {/* System fields */}
-          <div className="mb-1">
-            <span className="text-xs font-medium text-muted-foreground px-2">Campos do Sistema</span>
-          </div>
           <SortableContext
             items={columns.map(c => c.key)}
             strategy={verticalListSortingStrategy}
           >
-            {systemColumns.map(col => (
+            {columns.map(col => (
               <SortableColumnItem
                 key={col.key}
                 field={col}
                 onToggle={() => onToggle(col.key)}
               />
             ))}
-
-            {/* Template attributes */}
-            {attributeColumns.length > 0 && (
-              <>
-                <div className="my-2 border-t" />
-                <div className="mb-1">
-                  <span className="text-xs font-medium text-muted-foreground px-2 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    Atributos do Template
-                  </span>
-                </div>
-                {attributeColumns.map(col => (
-                  <SortableColumnItem
-                    key={col.key}
-                    field={col}
-                    onToggle={() => onToggle(col.key)}
-                  />
-                ))}
-              </>
-            )}
           </SortableContext>
         </div>
       </DndContext>
