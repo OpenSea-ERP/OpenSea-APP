@@ -6,6 +6,7 @@ import Spreadsheet, {
   type CellBase,
   type Matrix,
   type Selection,
+  type DataViewerProps,
   RangeSelection,
 } from 'react-spreadsheet';
 import { useTheme } from 'next-themes';
@@ -37,12 +38,19 @@ import {
   Plus,
   RotateCcw,
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   Check,
   Download,
   Upload,
   FileSpreadsheet,
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type {
   ImportFieldConfig,
   ImportSpreadsheetData,
@@ -78,6 +86,36 @@ interface ImportSpreadsheetProps {
 interface SpreadsheetCell extends CellBase<string> {
   value: string;
   className?: string;
+  errorMessage?: string;
+}
+
+// Custom cell viewer with error icon + tooltip
+function CellDataViewer({ cell }: DataViewerProps<SpreadsheetCell>) {
+  const value = cell?.value ?? '';
+  const errorMessage = cell?.errorMessage;
+
+  if (errorMessage) {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex items-center gap-1 w-full">
+              <AlertTriangle className="h-3.5 w-3.5 text-rose-500 flex-shrink-0" />
+              <span className="truncate">{value}</span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent
+            side="bottom"
+            className="max-w-xs bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-800"
+          >
+            <p className="text-xs">{errorMessage}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return <span>{value}</span>;
 }
 
 export function ImportSpreadsheet({
@@ -143,13 +181,14 @@ export function ImportSpreadsheet({
         }
 
         // Check for errors
-        const hasError = validationResult?.errors.some(
+        const cellError = validationResult?.errors.find(
           e => e.row === rowIndex + 1 && e.fieldKey === field?.key
         );
 
         return {
           value: displayValue,
-          className: hasError ? 'cell-error' : undefined,
+          className: cellError ? 'cell-error' : undefined,
+          errorMessage: cellError?.message,
         };
       })
     );
@@ -508,6 +547,7 @@ export function ImportSpreadsheet({
             columnLabels={columnLabels}
             darkMode={isDark}
             className="import-spreadsheet"
+            DataViewer={CellDataViewer}
           />
         </div>
 
