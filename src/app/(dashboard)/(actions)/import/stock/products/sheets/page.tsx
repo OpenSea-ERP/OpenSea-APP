@@ -532,12 +532,19 @@ export default function ProductsSheetsPage() {
     }
   }, []);
 
+  // Stable key for enabled fields — prevents infinite re-render loops
+  const enabledFieldsKey = useMemo(
+    () => enabledFields.map(f => f.key).join(','),
+    [enabledFields]
+  );
+
   // Update spreadsheet headers when enabled fields change
   useEffect(() => {
     if (enabledFields.length > 0) {
       spreadsheet.updateHeaders(enabledFields);
     }
-  }, [enabledFields]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabledFieldsKey]);
 
   // Clear validation when decimal separator changes
   useEffect(() => {
