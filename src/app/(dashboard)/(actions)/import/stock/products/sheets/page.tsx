@@ -474,8 +474,10 @@ export default function ProductsSheetsPage() {
     return map;
   }, [enabledFields, suppliers, manufacturers, categories]);
 
-  // Spreadsheet hook
-  const spreadsheet = useImportSpreadsheet(enabledFields, {
+  // Spreadsheet hook — initialized with empty headers to avoid re-creation loops.
+  // Headers are updated imperatively via updateHeaders() when enabledFields change.
+  const emptyHeaders = useRef<ImportFieldConfig[]>([]).current;
+  const spreadsheet = useImportSpreadsheet(emptyHeaders, {
     decimalSeparator,
     referenceData: referenceDataMap,
   });
@@ -544,9 +546,9 @@ export default function ProductsSheetsPage() {
   );
 
   // Track previous key to detect actual changes
-  const prevFieldsKeyRef = useRef(enabledFieldsKey);
+  const prevFieldsKeyRef = useRef('');
 
-  // Update spreadsheet headers only when fields actually change
+  // Update spreadsheet headers only when field keys actually change
   useEffect(() => {
     if (enabledFieldsKey && enabledFieldsKey !== prevFieldsKeyRef.current) {
       prevFieldsKeyRef.current = enabledFieldsKey;
