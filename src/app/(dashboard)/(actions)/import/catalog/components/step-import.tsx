@@ -575,6 +575,7 @@ export function StepImport({
           reference: data.reference as string | undefined,
           minStock: data.minStock as number | undefined,
           maxStock: data.maxStock as number | undefined,
+          outOfLine: data.outOfLine as boolean | undefined,
           isActive: data.isActive as boolean | undefined,
           attributes: data.attributes as Record<string, unknown> | undefined,
         };

@@ -107,6 +107,9 @@ export function useRowGrouper(): UseRowGrouperReturn {
             case 'supplierCnpj':
               data.supplierCnpj = rawValue.replace(/\D/g, '');
               break;
+            case 'outOfLine':
+              data.outOfLine = parseBoolean(rawValue) ?? false;
+              break;
             default:
               data[systemField] = rawValue;
           }
@@ -179,6 +182,9 @@ export function useRowGrouper(): UseRowGrouperReturn {
               break;
             case 'isActive':
               data.isActive = parseBoolean(rawValue) ?? true;
+              break;
+            case 'outOfLine':
+              data.outOfLine = parseBoolean(rawValue) ?? false;
               break;
             default:
               data[systemField] = rawValue;
