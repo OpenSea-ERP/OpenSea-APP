@@ -173,7 +173,8 @@ function validateCell(
   field: ImportFieldConfig,
   rowIndex: number,
   colIndex: number,
-  decimalSeparator: DecimalSeparator = 'comma'
+  decimalSeparator: DecimalSeparator = 'comma',
+  referenceOptions?: { value: string; label: string }[]
 ): ValidationError | null {
   // Normalize value - treat null/undefined as empty string
   const value = rawValue ?? '';
@@ -295,6 +296,30 @@ function validateCell(
       }
       break;
     }
+
+    case 'reference': {
+      if (referenceOptions && referenceOptions.length > 0) {
+        const validIds = new Set(referenceOptions.map(o => o.value));
+        const validLabels = new Set(
+          referenceOptions.map(o => o.label.toLowerCase())
+        );
+
+        // Accept both ID and label (name)
+        if (!validIds.has(value) && !validLabels.has(value.toLowerCase())) {
+          const entityLabel = field.referenceDisplayField === 'name'
+            ? (field.label || field.key)
+            : field.key;
+          return {
+            row: rowIndex,
+            column: colIndex,
+            fieldKey: field.key,
+            message: `${entityLabel} "${value}" não encontrado(a) no sistema`,
+            value,
+          };
+        }
+      }
+      break;
+    }
   }
 
   // Length validation
@@ -356,6 +381,7 @@ function validateCell(
 
 export interface UseImportSpreadsheetOptions {
   decimalSeparator?: DecimalSeparator;
+  referenceData?: Record<string, { value: string; label: string }[]>;
 }
 
 // ============================================
@@ -366,7 +392,7 @@ export function useImportSpreadsheet(
   headers: ImportFieldConfig[],
   options: UseImportSpreadsheetOptions = {}
 ) {
-  const { decimalSeparator = 'comma' } = options;
+  const { decimalSeparator = 'comma', referenceData } = options;
 
   const [data, setData] = useState<ImportSpreadsheetData>(() =>
     createInitialData(headers)
@@ -379,6 +405,7 @@ export function useImportSpreadsheet(
   const dataRef = useRef<ImportSpreadsheetData>(data);
   const headersRef = useRef<ImportFieldConfig[]>(headers);
   const decimalSeparatorRef = useRef<DecimalSeparator>(decimalSeparator);
+  const referenceDataRef = useRef(referenceData);
 
   // Keep refs synchronized
   useEffect(() => {
@@ -392,6 +419,10 @@ export function useImportSpreadsheet(
   useEffect(() => {
     decimalSeparatorRef.current = decimalSeparator;
   }, [decimalSeparator]);
+
+  useEffect(() => {
+    referenceDataRef.current = referenceData;
+  }, [referenceData]);
 
   // Atualizar quando headers mudam
   const updateHeaders = useCallback((newHeaders: ImportFieldConfig[]) => {
@@ -486,6 +517,7 @@ export function useImportSpreadsheet(
     const currentData = dataRef.current;
     const currentHeaders = headersRef.current;
     const currentDecimalSeparator = decimalSeparatorRef.current;
+    const currentReferenceData = referenceDataRef.current;
     const errors: ValidationError[] = [];
     const dataRows = currentData.slice(1); // Excluir header
 
@@ -505,12 +537,18 @@ export function useImportSpreadsheet(
         const field = currentHeaders[colIndex];
         if (!field) return;
 
+        // Get reference options for this field if it's a reference type
+        const refOptions = field.type === 'reference' && currentReferenceData
+          ? currentReferenceData[field.key]
+          : undefined;
+
         const error = validateCell(
           cell.value,
           field,
           rowIndex + 1,
           colIndex,
-          currentDecimalSeparator
+          currentDecimalSeparator,
+          refOptions
         );
         if (error) {
           errors.push(error);

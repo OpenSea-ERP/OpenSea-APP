@@ -157,7 +157,7 @@ export default function ProductsSheetsPage() {
     return map;
   }, [enabledFields, suppliers, manufacturers, categories]);
 
-  const spreadsheet = useImportSpreadsheet(enabledFields, { decimalSeparator });
+  const spreadsheet = useImportSpreadsheet(enabledFields, { decimalSeparator, referenceData: referenceDataMap });
 
   const importProcess = useImportProcess({
     entityType: 'products',
