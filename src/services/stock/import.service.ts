@@ -12,6 +12,10 @@ import type {
   ItemTransferResponse,
   CreateVariantRequest,
   VariantResponse,
+  BulkValidateRequest,
+  BulkValidateResponse,
+  BulkCreateProductsRequest,
+  BulkCreateProductsResponse,
 } from '@/types/stock';
 
 export const importService = {
@@ -115,6 +119,30 @@ export const importService = {
       transfers: ItemTransferResponse[];
       errors: Array<{ index: number; message: string }>;
     }>(API_ENDPOINTS.IMPORT.ITEMS_TRANSFER_BATCH, data);
+  },
+
+  // ============================================
+  // BULK OPERATIONS
+  // ============================================
+
+  // POST /v1/products/bulk/validate
+  async bulkValidateProducts(
+    data: BulkValidateRequest
+  ): Promise<BulkValidateResponse> {
+    return apiClient.post<BulkValidateResponse>(
+      API_ENDPOINTS.IMPORT.PRODUCTS_BULK_VALIDATE,
+      data
+    );
+  },
+
+  // POST /v1/products/bulk
+  async bulkCreateProducts(
+    data: BulkCreateProductsRequest
+  ): Promise<BulkCreateProductsResponse> {
+    return apiClient.post<BulkCreateProductsResponse>(
+      API_ENDPOINTS.IMPORT.PRODUCTS_BULK,
+      data
+    );
   },
 
   // ============================================
