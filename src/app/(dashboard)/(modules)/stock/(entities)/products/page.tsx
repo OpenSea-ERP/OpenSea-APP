@@ -807,7 +807,6 @@ function ProductsPageContent() {
                 renderListItem={renderListCard}
                 isLoading={isLoading}
                 isSearching={!!debouncedSearch}
-                onItemClick={(item) => router.push(`/stock/products/${item.id}`)}
                 onItemDoubleClick={item =>
                   router.push(`/stock/products/${item.id}`)
                 }
