@@ -358,6 +358,12 @@ export default function ProductsSheetsPage() {
     return [...systemFields, ...templateAttributeFields];
   }, [systemFields, templateAttributeFields]);
 
+  // Stable key representing the available fields (only changes when actual field keys change)
+  const availableFieldKeys = useMemo(
+    () => allAvailableFields.map(f => f.key).join(','),
+    [allAvailableFields]
+  );
+
   // Initialize/update columns config when template or fields change
   useEffect(() => {
     if (!selectedTemplateId) {
@@ -370,7 +376,7 @@ export default function ProductsSheetsPage() {
     if (stored) {
       // Merge stored config with available fields (add new fields, remove deleted ones)
       const storedKeys = new Set(stored.map(c => c.key));
-      const availableKeys = new Set(allAvailableFields.map(f => f.key));
+      const availableKeys = new Set(availableFieldKeys.split(','));
 
       // Keep stored items that still exist
       const merged = stored.filter(c => availableKeys.has(c.key));
@@ -386,7 +392,7 @@ export default function ProductsSheetsPage() {
 
       setColumnsConfig(merged);
     } else {
-      // Default: enable all required + common fields
+      // Default: enable all fields
       const defaultConfig: ColumnConfig[] = allAvailableFields.map((f, i) => ({
         key: f.key,
         enabled: true,
@@ -394,7 +400,8 @@ export default function ProductsSheetsPage() {
       }));
       setColumnsConfig(defaultConfig);
     }
-  }, [selectedTemplateId, allAvailableFields]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTemplateId, availableFieldKeys]);
 
   // Save to localStorage whenever columns config changes
   useEffect(() => {
