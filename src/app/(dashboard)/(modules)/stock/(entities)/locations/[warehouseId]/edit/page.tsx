@@ -1,10 +1,11 @@
 /**
  * OpenSea OS - Warehouse Edit Page
- * Página de edição de armazém seguindo o padrão de edit pages
+ * Follows the standard edit page pattern: PageLayout > PageHeader > PageBody
  */
 
 'use client';
 
+import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
@@ -12,11 +13,20 @@ import {
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
+import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { usePermissions } from '@/hooks/use-permissions';
+import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
+  Info,
+  Loader2,
+  MapPinHouse,
+  NotebookText,
   Save,
   Trash2,
   Warehouse,
@@ -25,14 +35,36 @@ import { useRouter } from 'next/navigation';
 import { use, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { usePermissions } from '@/hooks/use-permissions';
-import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
-
 import {
   useDeleteWarehouse,
   useUpdateWarehouse,
   useWarehouse,
 } from '../../src/api';
+
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ElementType;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Icon className="h-5 w-5 text-foreground" />
+          <div>
+            <h3 className="text-base font-semibold">{title}</h3>
+            <p className="text-sm text-muted-foreground">{subtitle}</p>
+          </div>
+        </div>
+      </div>
+      <div className="border-b border-border" />
+    </div>
+  );
+}
 
 interface PageProps {
   params: Promise<{ warehouseId: string }>;
@@ -44,54 +76,44 @@ export default function WarehouseEditPage({ params }: PageProps) {
   const { hasPermission } = usePermissions();
   const canDelete = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.DELETE);
 
-  // ============================================================================
-  // DATA FETCHING
-  // ============================================================================
-
-  const { data: warehouse, isLoading } = useWarehouse(warehouseId);
+  // Data fetching
+  const { data: warehouse, isLoading, error } = useWarehouse(warehouseId);
   const updateMutation = useUpdateWarehouse();
   const deleteMutation = useDeleteWarehouse();
 
-  // ============================================================================
-  // STATE
-  // ============================================================================
+  // Form state
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [address, setAddress] = useState('');
+  const [isActive, setIsActive] = useState(true);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    address: '',
-    isActive: true,
-  });
+  // UI state
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  // ============================================================================
-  // POPULATE FORM
-  // ============================================================================
-
+  // Populate form
   useEffect(() => {
     if (warehouse) {
-      setFormData({
-        name: warehouse.name,
-        description: warehouse.description ?? '',
-        address: warehouse.address ?? '',
-        isActive: warehouse.isActive,
-      });
+      setName(warehouse.name);
+      setDescription(warehouse.description ?? '');
+      setAddress(warehouse.address ?? '');
+      setIsActive(warehouse.isActive);
     }
   }, [warehouse]);
 
-  // ============================================================================
-  // HANDLERS
-  // ============================================================================
-
   const handleSave = useCallback(() => {
+    if (!name.trim()) {
+      toast.error('O nome do armazém é obrigatório');
+      return;
+    }
+
     updateMutation.mutate(
       {
         id: warehouseId,
         data: {
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          address: formData.address.trim() || undefined,
-          isActive: formData.isActive,
+          name: name.trim(),
+          description: description.trim() || undefined,
+          address: address.trim() || undefined,
+          isActive,
         },
       },
       {
@@ -104,7 +126,7 @@ export default function WarehouseEditPage({ params }: PageProps) {
         },
       }
     );
-  }, [updateMutation, warehouseId, formData, router]);
+  }, [updateMutation, warehouseId, name, description, address, isActive, router]);
 
   const handleDeleteConfirm = useCallback(async () => {
     try {
@@ -116,10 +138,7 @@ export default function WarehouseEditPage({ params }: PageProps) {
     }
   }, [deleteMutation, warehouseId, router]);
 
-  // ============================================================================
-  // LOADING STATE
-  // ============================================================================
-
+  // Loading state
   if (isLoading) {
     return (
       <PageLayout>
@@ -134,15 +153,69 @@ export default function WarehouseEditPage({ params }: PageProps) {
           />
         </PageHeader>
         <PageBody>
-          <GridLoading count={1} layout="grid" size="lg" />
+          <GridLoading count={3} layout="list" size="md" />
         </PageBody>
       </PageLayout>
     );
   }
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
+  // Error state
+  if (error || !warehouse) {
+    return (
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Estoque', href: '/stock' },
+              { label: 'Localizações', href: '/stock/locations' },
+              { label: 'Erro' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <GridError
+            type="not-found"
+            title="Armazém não encontrado"
+            message="O armazém que você está procurando não existe ou foi removido."
+            action={{
+              label: 'Voltar para Localizações',
+              onClick: () => router.push('/stock/locations'),
+            }}
+          />
+        </PageBody>
+      </PageLayout>
+    );
+  }
+
+  const actionButtons: HeaderButton[] = [
+    {
+      id: 'cancel',
+      title: 'Cancelar',
+      onClick: () => router.push(`/stock/locations/${warehouseId}`),
+      variant: 'ghost',
+    },
+    ...(canDelete
+      ? [
+          {
+            id: 'delete',
+            title: 'Excluir',
+            icon: Trash2,
+            onClick: () => setDeleteOpen(true),
+            variant: 'default' as const,
+            className:
+              'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+          },
+        ]
+      : []),
+    {
+      id: 'save',
+      title: updateMutation.isPending ? 'Salvando...' : 'Salvar alterações',
+      icon: updateMutation.isPending ? Loader2 : Save,
+      onClick: handleSave,
+      variant: 'default',
+      disabled: updateMutation.isPending,
+    },
+  ];
 
   return (
     <PageLayout>
@@ -152,139 +225,133 @@ export default function WarehouseEditPage({ params }: PageProps) {
             { label: 'Estoque', href: '/stock' },
             { label: 'Localizações', href: '/stock/locations' },
             {
-              label: warehouse?.name ?? '...',
+              label: warehouse.name,
               href: `/stock/locations/${warehouseId}`,
             },
             { label: 'Editar' },
           ]}
-          buttons={[
-            {
-              id: 'cancel',
-              title: 'Cancelar',
-              variant: 'ghost' as const,
-              onClick: () => router.back(),
-            },
-            ...(canDelete
-              ? [
-                  {
-                    id: 'delete',
-                    title: 'Excluir',
-                    variant: 'outline' as const,
-                    icon: Trash2,
-                    onClick: () => setDeleteOpen(true),
-                    className:
-                      'bg-slate-200 hover:bg-rose-600 hover:text-white dark:bg-slate-700 dark:hover:bg-rose-600',
-                  },
-                ]
-              : []),
-            {
-              id: 'save',
-              title: updateMutation.isPending ? 'Salvando...' : 'Salvar alterações',
-              icon: Save,
-              variant: 'default' as const,
-              onClick: handleSave,
-              disabled: updateMutation.isPending,
-            },
-          ]}
+          buttons={actionButtons}
         />
-
-        {/* Identity Card */}
-        <div className="bg-white/5 p-5 rounded-lg border border-border">
-          <p className="text-xs text-muted-foreground mb-1">Editando Armazém</p>
-          <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-              <Warehouse className="h-7 w-7 text-white" />
-            </div>
-            <div>
-              <p className="font-mono text-sm text-muted-foreground">
-                {warehouse?.code}
-              </p>
-              <h1 className="text-2xl font-bold tracking-tight">
-                {warehouse?.name}
-              </h1>
-            </div>
-          </div>
-        </div>
       </PageHeader>
 
       <PageBody>
-        <div className="bg-white/95 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-4 sm:p-6 space-y-4">
-          {/* Código (read-only) */}
-          <div>
-            <label className="text-sm font-medium">Código</label>
-            <Input
-              value={warehouse?.code ?? ''}
-              disabled
-              className="mt-1.5 font-mono"
-            />
-          </div>
-
-          {/* Nome */}
-          <div>
-            <label className="text-sm font-medium">Nome</label>
-            <Input
-              value={formData.name}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, name: e.target.value }))
-              }
-              className="mt-1.5"
-              placeholder="Nome do armazém"
-            />
-          </div>
-
-          {/* Descrição */}
-          <div>
-            <label className="text-sm font-medium">Descrição</label>
-            <Textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, description: e.target.value }))
-              }
-              className="mt-1.5"
-              placeholder="Descrição do armazém (opcional)"
-              rows={3}
-            />
-          </div>
-
-          {/* Endereço */}
-          <div>
-            <label className="text-sm font-medium">Endereço</label>
-            <Input
-              value={formData.address}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, address: e.target.value }))
-              }
-              className="mt-1.5"
-              placeholder="Endereço físico (opcional)"
-            />
-          </div>
-
-          {/* Ativo */}
-          <div className="flex items-center justify-between border rounded-lg p-3">
-            <div>
-              <p className="text-sm font-medium">Ativo</p>
-              <p className="text-xs text-muted-foreground">
-                Armazém disponível para uso
-              </p>
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg">
+              <Warehouse className="h-6 w-6 text-white" />
             </div>
-            <Switch
-              checked={formData.isActive}
-              onCheckedChange={(v) =>
-                setFormData((p) => ({ ...p, isActive: v }))
-              }
-            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-muted-foreground">
+                Editando armazém
+              </p>
+              <h1 className="truncate text-xl font-bold">
+                {warehouse.name}
+              </h1>
+            </div>
+            <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
+              <div className="text-right">
+                <p className="text-xs font-semibold">Status</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isActive ? 'Ativo' : 'Inativo'}
+                </p>
+              </div>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
+            </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Delete Confirmation */}
-        <VerifyActionPinModal
-          isOpen={deleteOpen}
-          onClose={() => setDeleteOpen(false)}
-          onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusão"
-          description="Digite seu PIN para excluir este armazém. Todas as zonas e bins serão removidos."
-        />
+        {/* Form Card */}
+        <Card className="bg-white/5 overflow-hidden py-2">
+          <div className="space-y-8 px-6 py-4">
+            {/* Identificação */}
+            <div className="space-y-5">
+              <SectionHeader
+                icon={Info}
+                title="Identificação"
+                subtitle="Dados principais do armazém"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="code">Código</Label>
+                    <Input
+                      id="code"
+                      value={warehouse.code}
+                      disabled
+                      className="font-mono"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">
+                      Nome <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Nome do armazém"
+                      maxLength={255}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Endereço */}
+            <div className="space-y-5">
+              <SectionHeader
+                icon={MapPinHouse}
+                title="Endereço"
+                subtitle="Localização física do armazém"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                <div className="grid gap-2">
+                  <Label htmlFor="address">Endereço</Label>
+                  <Input
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Endereço físico (opcional)"
+                    maxLength={255}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Observações */}
+            <div className="space-y-5">
+              <SectionHeader
+                icon={NotebookText}
+                title="Observações"
+                subtitle="Notas adicionais"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Descrição do armazém (opcional)"
+                    rows={4}
+                    maxLength={1000}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
       </PageBody>
+
+      {/* Delete PIN Confirmation Modal */}
+      <VerifyActionPinModal
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onSuccess={handleDeleteConfirm}
+        title="Excluir Armazém"
+        description={`Digite seu PIN de ação para excluir o armazém "${warehouse.name}". Todas as zonas e nichos serão removidos.`}
+      />
     </PageLayout>
   );
 }
