@@ -955,28 +955,33 @@ body {
   border-color: var(--spreadsheet-border) !important;
 }
 
-/* Header cells (column labels) — no background */
+/* Header cells (column labels) — same bg as regular cells */
 .Spreadsheet__header {
-  background-color: transparent !important;
-  background: none !important;
+  background-color: var(--spreadsheet-cell-bg) !important;
+  background: var(--spreadsheet-cell-bg) !important;
   color: var(--spreadsheet-cell-text) !important;
   border-color: var(--spreadsheet-border) !important;
   font-weight: 600 !important;
 }
 
-/* Row indicators — no background, compact */
+/* Row indicators — same bg as cells, subtle text, compact */
 .Spreadsheet__header--row {
-  background-color: transparent !important;
-  background: none !important;
+  background-color: var(--spreadsheet-cell-bg) !important;
+  background: var(--spreadsheet-cell-bg) !important;
   color: var(--spreadsheet-cell-text) !important;
   border-color: var(--spreadsheet-border) !important;
   opacity: 0.5;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  width: 36px !important;
+  font-size: 11px !important;
+  text-align: center !important;
 }
 
-/* Corner indicator — no background */
+/* Corner indicator — same bg as cells */
 .Spreadsheet__corner-indicator {
-  background-color: transparent !important;
-  background: none !important;
+  background-color: var(--spreadsheet-cell-bg) !important;
+  background: var(--spreadsheet-cell-bg) !important;
   border-color: var(--spreadsheet-border) !important;
 }
 
@@ -1071,14 +1076,6 @@ body {
   min-width: 120px !important;
 }
 
-/* Row header width — compact, fits 4 digits */
-.Spreadsheet__header--row {
-  min-width: 36px !important;
-  max-width: 36px !important;
-  width: 36px !important;
-  font-size: 11px !important;
-  text-align: center !important;
-}
 
 /* Import spreadsheet container */
 .import-spreadsheet-container .Spreadsheet {

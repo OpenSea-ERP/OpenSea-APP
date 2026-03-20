@@ -309,10 +309,11 @@ export default function ProductsSheetsPage() {
       }));
   }, [entityDef.fields]);
 
-  // Build template attribute fields
+  // Build template attribute fields — memoize by template ID to prevent recalc on refetch
   const templateAttributeFields = useMemo((): NormalizedField[] => {
     if (!templateDetails?.productAttributes) return [];
     const attrs = templateDetails.productAttributes;
+    if (typeof attrs !== 'object' || Object.keys(attrs).length === 0) return [];
     return Object.entries(attrs).map(([attrKey, attrConfig]) => {
       const fieldType: NormalizedField['type'] =
         attrConfig.type === 'number' ? 'number'
@@ -807,7 +808,7 @@ export default function ProductsSheetsPage() {
               </Badge>
               {validationResult &&
                 (validationResult.valid ? (
-                  <Badge variant="default" className="gap-1 bg-green-600">
+                  <Badge variant="default" className="gap-1 bg-emerald-600 text-white hover:bg-emerald-600">
                     <CheckCircle2 className="w-3 h-3" />
                     Dados válidos
                   </Badge>

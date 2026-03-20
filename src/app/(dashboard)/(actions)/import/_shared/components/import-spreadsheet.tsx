@@ -460,12 +460,12 @@ export function ImportSpreadsheet({
 
         {/* Error legend */}
         {validationResult && validationResult.errors.length > 0 && (
-          <div className="p-4 border-t bg-red-50 dark:bg-red-900/10">
-            <h4 className="text-sm font-medium text-red-800 dark:text-red-200 mb-2 flex items-center gap-1">
+          <div className="p-4 border-t bg-rose-50 dark:bg-rose-900/10">
+            <h4 className="text-sm font-medium text-rose-800 dark:text-rose-200 mb-2 flex items-center gap-1">
               <AlertCircle className="w-4 h-4" />
               Erros de Validacao
             </h4>
-            <ul className="text-sm text-red-700 dark:text-red-300 space-y-1 max-h-32 overflow-y-auto">
+            <ul className="text-sm text-rose-700 dark:text-rose-300 space-y-1 max-h-32 overflow-y-auto">
               {validationResult.errors.slice(0, 10).map((error, index) => (
                 <li key={index}>
                   Linha {error.row},{' '}
