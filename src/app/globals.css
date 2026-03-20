@@ -917,10 +917,17 @@ body {
    Dark mode using slate-800 tones
    =========================================== */
 
-/* Light mode base */
+/* Light mode — override react-spreadsheet's internal CSS variables */
 .Spreadsheet {
-  --spreadsheet-bg: rgb(var(--os-white));
-  --spreadsheet-header-bg: rgb(var(--os-slate-100));
+  --background-color: rgb(var(--os-white)) !important;
+  --header-background-color: rgb(var(--os-white)) !important;
+  --text-color: rgb(var(--os-slate-900)) !important;
+  --readonly-text-color: rgb(var(--os-slate-500)) !important;
+  --border-color: rgb(var(--os-slate-200)) !important;
+  --outline-color: rgb(var(--os-blue-500)) !important;
+  --outline-background-color: rgb(var(--os-blue-100)) !important;
+
+  /* Custom vars for our overrides */
   --spreadsheet-cell-bg: rgb(var(--os-white));
   --spreadsheet-cell-text: rgb(var(--os-slate-900));
   --spreadsheet-border: rgb(var(--os-slate-200));
@@ -929,11 +936,15 @@ body {
   --spreadsheet-active-bg: rgb(var(--os-blue-50));
 }
 
-/* Dark mode overrides using slate-800 tones */
+/* Dark mode — override react-spreadsheet's internal CSS variables */
 .dark .Spreadsheet,
 .Spreadsheet--dark-mode {
-  --spreadsheet-bg: rgb(var(--os-slate-900));
-  --spreadsheet-header-bg: rgb(var(--os-slate-800));
+  --background-color: rgb(var(--os-slate-900)) !important;
+  --header-background-color: rgb(var(--os-slate-900)) !important;
+  --text-color: rgb(var(--os-slate-100)) !important;
+  --readonly-text-color: rgb(var(--os-slate-400)) !important;
+  --border-color: rgb(var(--os-slate-700)) !important;
+
   --spreadsheet-cell-bg: rgb(var(--os-slate-900));
   --spreadsheet-cell-text: rgb(var(--os-slate-100));
   --spreadsheet-border: rgb(var(--os-slate-700));
@@ -955,34 +966,19 @@ body {
   border-color: var(--spreadsheet-border) !important;
 }
 
-/* Header cells (column labels) — same bg as regular cells */
+/* Header cells (column labels) — matches cell bg via --header-background-color */
 .Spreadsheet__header {
-  background-color: var(--spreadsheet-cell-bg) !important;
-  background: var(--spreadsheet-cell-bg) !important;
-  color: var(--spreadsheet-cell-text) !important;
-  border-color: var(--spreadsheet-border) !important;
   font-weight: 600 !important;
 }
 
-/* Row indicators — same bg as cells, subtle text, compact */
+/* Row indicators — compact, subtle */
 .Spreadsheet__header--row {
-  background-color: var(--spreadsheet-cell-bg) !important;
-  background: var(--spreadsheet-cell-bg) !important;
-  color: var(--spreadsheet-cell-text) !important;
-  border-color: var(--spreadsheet-border) !important;
   opacity: 0.5;
   min-width: 36px !important;
   max-width: 36px !important;
   width: 36px !important;
   font-size: 11px !important;
   text-align: center !important;
-}
-
-/* Corner indicator — same bg as cells */
-.Spreadsheet__corner-indicator {
-  background-color: var(--spreadsheet-cell-bg) !important;
-  background: var(--spreadsheet-cell-bg) !important;
-  border-color: var(--spreadsheet-border) !important;
 }
 
 /* Regular cells */
