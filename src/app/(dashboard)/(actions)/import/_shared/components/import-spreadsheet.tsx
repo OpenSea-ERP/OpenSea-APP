@@ -107,6 +107,9 @@ export function ImportSpreadsheet({
   // trigger react-spreadsheet's compose-refs setState explosion
   const currentSelectionRef = useRef<Selection | null>(null);
 
+  // Track active cell (the cell the user clicked on)
+  const activeCellRef = useRef<{ row: number; column: number } | null>(null);
+
 
   // Get data rows only (skip header row if it exists)
   const dataRows = useMemo(() => {
@@ -242,11 +245,22 @@ export function ImportSpreadsheet({
     currentSelectionRef.current = selection;
   }, []);
 
-  // Get selected cell from selection ref
+  // Handle cell activation — uses ref to avoid re-render
+  const handleActivate = useCallback((point: { row: number; column: number }) => {
+    activeCellRef.current = point;
+  }, []);
+
+  // Get selected cell — prefer activeCell (more reliable), fallback to selection
   const getSelectedCell = useCallback((): {
     row: number;
     col: number;
   } | null => {
+    if (activeCellRef.current) {
+      return {
+        row: activeCellRef.current.row,
+        col: activeCellRef.current.column,
+      };
+    }
     const sel = currentSelectionRef.current;
     if (!sel) return null;
     if (sel instanceof RangeSelection) {
@@ -433,6 +447,7 @@ export function ImportSpreadsheet({
             data={spreadsheetData}
             onChange={handleChange}
             onSelect={handleSelect}
+            onActivate={handleActivate}
             columnLabels={columnLabels}
             darkMode={isDark}
             className="import-spreadsheet"
