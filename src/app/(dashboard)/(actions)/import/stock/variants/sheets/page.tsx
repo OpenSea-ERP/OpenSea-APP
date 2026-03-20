@@ -93,7 +93,6 @@ interface ColumnConfig {
 
 interface StoredColumnsConfig {
   templateId: string;
-  productId: string;
   columns: ColumnConfig[];
 }
 
@@ -123,23 +122,23 @@ interface NormalizedField {
 // HELPER: Load/Save column config from localStorage
 // ============================================
 
-function loadColumnsConfig(templateId: string, productId: string): ColumnConfig[] | null {
+function loadColumnsConfig(templateId: string): ColumnConfig[] | null {
   if (typeof window === 'undefined') return null;
   try {
     const stored = localStorage.getItem(COLUMNS_STORAGE_KEY);
     if (!stored) return null;
     const parsed: StoredColumnsConfig = JSON.parse(stored);
-    if (parsed.templateId !== templateId || parsed.productId !== productId) return null;
+    if (parsed.templateId !== templateId) return null;
     return parsed.columns;
   } catch {
     return null;
   }
 }
 
-function saveColumnsConfig(templateId: string, productId: string, columns: ColumnConfig[]) {
+function saveColumnsConfig(templateId: string, columns: ColumnConfig[]) {
   if (typeof window === 'undefined') return;
   try {
-    const data: StoredColumnsConfig = { templateId, productId, columns };
+    const data: StoredColumnsConfig = { templateId, columns };
     localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(data));
   } catch {
     // Silently fail
@@ -287,7 +286,6 @@ export default function VariantsSheetsPage() {
 
   // State
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [decimalSeparator, setDecimalSeparator] = useState<DecimalSeparator>('comma');
@@ -298,20 +296,11 @@ export default function VariantsSheetsPage() {
   const { data: templateDetails } = useTemplateDetails(selectedTemplateId || undefined);
   const { data: products } = useProducts();
 
-  // Whether "all products" mode is active (user must fill productId per row)
-  const isAllProducts = selectedProductId === '__all__';
-
-  // Build system fields — exclude templateId (set automatically),
-  // and conditionally exclude productId when a specific product is selected
+  // Build system fields — exclude templateId (set automatically)
+  // productId always visible (user selects product per row)
   const systemFields = useMemo((): NormalizedField[] => {
     return entityDef.fields
-      .filter(f => {
-        // Always exclude templateId — it's derived from the selected template
-        if (f.key === 'templateId') return false;
-        // Hide productId when a specific product is selected (injected via transformRow)
-        if (f.key === 'productId' && selectedProductId && !isAllProducts) return false;
-        return true;
-      })
+      .filter(f => f.key !== 'templateId')
       .map(f => ({
         key: f.key,
         label: f.label,
@@ -325,7 +314,7 @@ export default function VariantsSheetsPage() {
         validation: f.validation,
         isAttribute: false,
       }));
-  }, [entityDef.fields, selectedProductId, isAllProducts]);
+  }, [entityDef.fields]);
 
   // Build template attribute fields — use variantAttributes
   const templateAttributeFields = useMemo((): NormalizedField[] => {
@@ -374,12 +363,12 @@ export default function VariantsSheetsPage() {
     }
 
     // Only initialize once per template+product+fields combo
-    const initKey = `${selectedTemplateId}:${selectedProductId}:${availableFieldKeys}`;
+    const initKey = `${selectedTemplateId}:${availableFieldKeys}`;
     if (initKey === lastInitRef.current) return;
     lastInitRef.current = initKey;
 
     // Try to load from localStorage
-    const stored = loadColumnsConfig(selectedTemplateId, selectedProductId);
+    const stored = loadColumnsConfig(selectedTemplateId);
     if (stored) {
       const storedKeys = new Set(stored.map(c => c.key));
       const availableKeys = new Set(availableFieldKeys.split(','));
@@ -404,14 +393,14 @@ export default function VariantsSheetsPage() {
       setColumnsConfig(defaultConfig);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTemplateId, selectedProductId, availableFieldKeys]);
+  }, [selectedTemplateId, availableFieldKeys]);
 
   // Save to localStorage whenever columns config changes
   useEffect(() => {
     if (selectedTemplateId && columnsConfig.length > 0) {
-      saveColumnsConfig(selectedTemplateId, selectedProductId, columnsConfig);
+      saveColumnsConfig(selectedTemplateId, columnsConfig);
     }
-  }, [selectedTemplateId, selectedProductId, columnsConfig]);
+  }, [selectedTemplateId, columnsConfig]);
 
   // Build enabled fields for the spreadsheet
   const enabledFields = useMemo((): ImportFieldConfig[] => {
@@ -474,25 +463,11 @@ export default function VariantsSheetsPage() {
     referenceData: referenceDataMap,
   });
 
-  // Import process — inject templateId and optionally productId
+  // Import process
   const importProcess = useImportProcess({
     entityType: 'variants',
     batchSize: 10,
     delayBetweenBatches: 1000,
-    transformRow: selectedTemplateId
-      ? row => {
-          const data: Record<string, unknown> = {
-            ...row.data,
-          };
-
-          // Inject productId if a specific product is selected
-          if (selectedProductId && !isAllProducts) {
-            data.productId = selectedProductId;
-          }
-
-          return { ...row, data };
-        }
-      : undefined,
     onComplete: result => {
       toast.success(
         `Importação concluída! ${result.importedRows} variantes importadas.`
@@ -644,11 +619,6 @@ export default function VariantsSheetsPage() {
     setValidationResult(null);
   }, []);
 
-  const handleProductChange = useCallback((value: string) => {
-    setSelectedProductId(value === '__none__' ? '' : value);
-    setValidationResult(null);
-  }, []);
-
   // File upload
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -728,12 +698,6 @@ export default function VariantsSheetsPage() {
     return templates.find(t => t.value === selectedTemplateId)?.label;
   }, [selectedTemplateId, templates]);
 
-  // Selected product name
-  const selectedProductName = useMemo(() => {
-    if (!selectedProductId || selectedProductId === '__all__' || !products) return null;
-    return products.find(p => p.value === selectedProductId)?.label;
-  }, [selectedProductId, products]);
-
   // Action bar buttons
   const actionBarButtons = [
     {
@@ -807,54 +771,27 @@ export default function VariantsSheetsPage() {
               </div>
             </div>
 
-            {/* Template + Product selectors */}
-            <div className="flex items-center gap-4">
-              {/* Template selector */}
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-muted-foreground whitespace-nowrap">
-                  Template:
-                </Label>
-                <Select
-                  value={selectedTemplateId || '__none__'}
-                  onValueChange={handleTemplateChange}
-                >
-                  <SelectTrigger className="w-48 h-9">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Selecione...</SelectItem>
-                    {templates?.map(t => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Product selector */}
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-muted-foreground whitespace-nowrap">
-                  Produto:
-                </Label>
-                <Select
-                  value={selectedProductId || '__none__'}
-                  onValueChange={handleProductChange}
-                >
-                  <SelectTrigger className="w-52 h-9">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Selecione...</SelectItem>
-                    <SelectItem value="__all__">Todos os produtos</SelectItem>
-                    {products?.map(p => (
-                      <SelectItem key={p.value} value={p.value}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Template selector */}
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-muted-foreground whitespace-nowrap">
+                Template:
+              </Label>
+              <Select
+                value={selectedTemplateId || '__none__'}
+                onValueChange={handleTemplateChange}
+              >
+                <SelectTrigger className="w-56 h-9">
+                  <SelectValue placeholder="Selecione um template..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Selecione...</SelectItem>
+                  {templates?.map(t => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -867,17 +804,6 @@ export default function VariantsSheetsPage() {
                 {spreadsheet.filledRowCount === 1 ? 'linha' : 'linhas'}{' '}
                 preenchidas
               </Badge>
-              {selectedProductName && (
-                <Badge variant="secondary" className="gap-1">
-                  <Layers className="w-3 h-3" />
-                  {selectedProductName}
-                </Badge>
-              )}
-              {isAllProducts && (
-                <Badge variant="secondary" className="gap-1">
-                  Especificar produto por linha
-                </Badge>
-              )}
               <span className="text-xs text-muted-foreground">
                 Pressione <Kbd>Enter</Kbd> em uma célula para ver os valores possíveis.
               </span>
