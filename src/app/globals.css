@@ -924,16 +924,13 @@ body {
   --text-color: rgb(var(--os-slate-900)) !important;
   --readonly-text-color: rgb(var(--os-slate-500)) !important;
   --border-color: rgb(var(--os-slate-200)) !important;
-  --outline-color: rgb(var(--os-blue-500)) !important;
-  --outline-background-color: rgb(var(--os-blue-100)) !important;
+  --outline-color: rgb(var(--os-blue-400)) !important;
+  --outline-background-color: rgba(59, 130, 246, 0.08) !important;
 
   /* Custom vars for our overrides */
   --spreadsheet-cell-bg: rgb(var(--os-white));
   --spreadsheet-cell-text: rgb(var(--os-slate-900));
   --spreadsheet-border: rgb(var(--os-slate-200));
-  --spreadsheet-selected-bg: rgb(var(--os-blue-100));
-  --spreadsheet-selected-border: rgb(var(--os-blue-500));
-  --spreadsheet-active-bg: rgb(var(--os-blue-50));
 }
 
 /* Dark mode — override react-spreadsheet's internal CSS variables */
@@ -945,12 +942,12 @@ body {
   --readonly-text-color: rgb(var(--os-slate-400)) !important;
   --border-color: rgb(var(--os-slate-700)) !important;
 
+  --outline-color: rgb(var(--os-blue-400)) !important;
+  --outline-background-color: rgba(59, 130, 246, 0.1) !important;
+
   --spreadsheet-cell-bg: rgb(var(--os-slate-900));
   --spreadsheet-cell-text: rgb(var(--os-slate-100));
   --spreadsheet-border: rgb(var(--os-slate-700));
-  --spreadsheet-selected-bg: rgb(var(--os-slate-700));
-  --spreadsheet-selected-border: rgb(var(--os-blue-500));
-  --spreadsheet-active-bg: rgb(var(--os-slate-800));
 }
 
 /* Apply variables to spreadsheet elements */
@@ -993,17 +990,7 @@ body {
   border-color: var(--spreadsheet-border) !important;
 }
 
-/* Selected cells */
-.Spreadsheet__cell--selected {
-  background-color: var(--spreadsheet-selected-bg) !important;
-  box-shadow: inset 0 0 0 1px var(--spreadsheet-selected-border) !important;
-}
-
-/* Active/editing cell */
-.Spreadsheet__cell--active {
-  background-color: var(--spreadsheet-active-bg) !important;
-  box-shadow: inset 0 0 0 2px var(--spreadsheet-selected-border) !important;
-}
+/* Selected/active cells — use lib's internal --outline-* variables */
 
 /* Cell input (editing) */
 .Spreadsheet__cell input,
@@ -1019,11 +1006,7 @@ body {
   color: var(--spreadsheet-cell-text) !important;
 }
 
-/* Copied cell indicator */
-.Spreadsheet__cell--copied {
-  background-color: var(--spreadsheet-selected-bg) !important;
-  border: 2px dashed var(--spreadsheet-selected-border) !important;
-}
+/* Copied cell indicator — uses lib's --outline-color */
 
 /* Table borders — use only right+bottom per cell to avoid doubles with border-separate */
 .Spreadsheet table,
@@ -1109,17 +1092,10 @@ body {
 }
 
 /* Column minimum width */
-/* Column headers — resizable by user drag */
-.Spreadsheet__header:not(.Spreadsheet__header--row) {
-  min-width: 100px !important;
-  resize: horizontal !important;
-  overflow: hidden !important;
-  cursor: col-resize;
-}
-
-/* Data cells follow column width from headers */
+/* Column minimum width */
+.Spreadsheet__header,
 .Spreadsheet__cell {
-  min-width: 100px !important;
+  min-width: 120px !important;
 }
 
 
