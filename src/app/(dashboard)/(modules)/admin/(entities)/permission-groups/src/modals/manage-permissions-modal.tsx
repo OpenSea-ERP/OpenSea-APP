@@ -26,6 +26,7 @@ import {
   MATRIX_TABS,
   STANDARD_ACTIONS,
   mapActionToStandard,
+  resolveDataPermission,
   type StandardAction,
 } from '../config/permission-matrix-config';
 import {
@@ -122,6 +123,21 @@ export function ManagePermissionsModal({
           }
           const actionMap = codesByBackendResource.get(backendKey)!;
           for (const perm of resourceGroup.permissions) {
+            // Handle data.import.* / data.export.* → redirect to target resource
+            const dataResolved = resolveDataPermission(perm.code);
+            if (dataResolved) {
+              const targetKey = dataResolved.targetBackendResource;
+              if (!codesByBackendResource.has(targetKey)) {
+                codesByBackendResource.set(targetKey, new Map());
+              }
+              const targetMap = codesByBackendResource.get(targetKey)!;
+              if (!targetMap.has(dataResolved.action)) {
+                targetMap.set(dataResolved.action, new Set());
+              }
+              targetMap.get(dataResolved.action)!.add(perm.code);
+              continue;
+            }
+
             const standardAction = mapActionToStandard(perm.action);
             if (!actionMap.has(standardAction)) {
               actionMap.set(standardAction, new Set());
@@ -469,7 +485,7 @@ export function ManagePermissionsModal({
         </div>
 
         {/* ── Right column ── */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Header */}
           {(() => {
             const Icon = activeTabConfig?.icon;

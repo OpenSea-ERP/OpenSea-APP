@@ -320,8 +320,6 @@ export function PermissionMatrixTable({
                           actionSet,
                           selectedCodes
                         );
-                        const isAdmin = action === 'admin';
-
                         const checked =
                           cellState === 'all'
                             ? true
@@ -342,8 +340,10 @@ export function PermissionMatrixTable({
                                   handleToggleCell(pm!, action)
                                 }
                                 className={cn(
-                                  isAdmin &&
+                                  action === 'admin' &&
                                     'data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500',
+                                  action === 'onlyself' &&
+                                    'data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500',
                                   readOnly &&
                                     cellState === 'none' &&
                                     'opacity-70'

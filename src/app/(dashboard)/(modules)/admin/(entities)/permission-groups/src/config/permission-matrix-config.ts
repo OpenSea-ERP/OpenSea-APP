@@ -21,6 +21,7 @@ export const STANDARD_ACTIONS = [
   'import',
   'export',
   'admin',
+  'onlyself',
 ] as const;
 
 export type StandardAction = (typeof STANDARD_ACTIONS)[number];
@@ -33,6 +34,7 @@ export const ACTION_LABELS: Record<StandardAction, string> = {
   import: 'Importar',
   export: 'Exportar',
   admin: 'Administrar',
+  onlyself: 'Apenas Próprio',
 };
 
 // ---------------------------------------------------------------------------
@@ -75,13 +77,13 @@ export const MATRIX_TABS: MatrixTab[] = [
           'stock.product-care-instructions',
           'stock.care',
         ],
-        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'admin', 'onlyself'],
       },
       {
         label: 'Variantes',
         group: 'Cadastros',
         backendResources: ['stock.variants', 'stock.variant-attachments'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'admin', 'onlyself'],
       },
       {
         label: 'Templates',
@@ -112,13 +114,13 @@ export const MATRIX_TABS: MatrixTab[] = [
         label: 'Ordens de Compra',
         group: 'Operações',
         backendResources: ['stock.purchase-orders'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin', 'onlyself'],
       },
       {
         label: 'Volumes',
         group: 'Operações',
         backendResources: ['stock.volumes'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin', 'onlyself'],
       },
       // Infraestrutura
       {
@@ -178,25 +180,25 @@ export const MATRIX_TABS: MatrixTab[] = [
         label: 'Lançamentos',
         group: 'Operações',
         backendResources: ['finance.entries', 'finance.attachments'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'admin', 'onlyself'],
       },
       {
         label: 'Consórcios',
         group: 'Operações',
         backendResources: ['finance.consortia'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin', 'onlyself'],
       },
       {
         label: 'Empréstimos',
         group: 'Operações',
         backendResources: ['finance.loans'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin', 'onlyself'],
       },
       {
         label: 'Recorrências',
         group: 'Operações',
         backendResources: ['finance.recurring'],
-        availableActions: ['access', 'register', 'modify', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'admin', 'onlyself'],
       },
     ],
   },
@@ -231,19 +233,19 @@ export const MATRIX_TABS: MatrixTab[] = [
         label: 'Colaboradores',
         group: 'Operações',
         backendResources: ['hr.employees'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'admin', 'onlyself'],
       },
       {
         label: 'Férias',
         group: 'Operações',
         backendResources: ['hr.vacations', 'hr.vacation-periods'],
-        availableActions: ['access', 'register', 'modify', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'admin', 'onlyself'],
       },
       {
         label: 'Ausências',
         group: 'Operações',
         backendResources: ['hr.absences'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'admin', 'onlyself'],
       },
       {
         label: 'Folha de Pagamento',
@@ -282,7 +284,7 @@ export const MATRIX_TABS: MatrixTab[] = [
         label: 'Clientes',
         group: 'Cadastros',
         backendResources: ['sales.customers'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'onlyself'],
       },
       {
         label: 'Promoções',
@@ -299,7 +301,7 @@ export const MATRIX_TABS: MatrixTab[] = [
           'sales.reservations',
           'sales.comments',
         ],
-        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin', 'onlyself'],
       },
     ],
   },
@@ -384,7 +386,7 @@ export const MATRIX_TABS: MatrixTab[] = [
         label: 'Email: Mensagens',
         group: 'Comunicação',
         backendResources: ['email.messages'],
-        availableActions: ['access', 'register', 'modify', 'remove'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'onlyself'],
       },
       // Produtividade
       {
@@ -404,7 +406,7 @@ export const MATRIX_TABS: MatrixTab[] = [
           'tasks.attachments',
           'tasks.watchers',
         ],
-        availableActions: ['access', 'register', 'modify', 'remove', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'admin', 'onlyself'],
       },
       {
         label: 'Agenda',
@@ -414,7 +416,7 @@ export const MATRIX_TABS: MatrixTab[] = [
           'calendar.participants',
           'calendar.reminders',
         ],
-        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin'],
+        availableActions: ['access', 'register', 'modify', 'remove', 'export', 'admin', 'onlyself'],
       },
       // Arquivos
       {
@@ -531,6 +533,43 @@ const BACKEND_ACTION_MAP: Record<string, StandardAction> = {
 
 export function mapActionToStandard(action: string): StandardAction {
   return BACKEND_ACTION_MAP[action] ?? 'admin';
+}
+
+/**
+ * Maps `data.import.*` and `data.export.*` permission codes to the correct
+ * visual resource. The backend stores import/export as `data.import.{entity}`
+ * (e.g., `data.import.products`), but visually they belong to each entity's
+ * import/export column.
+ *
+ * Returns: `{ targetBackendResource: string, action: StandardAction }` or null.
+ */
+const DATA_ENTITY_TO_RESOURCE: Record<string, string> = {
+  products: 'stock.products',
+  variants: 'stock.variants',
+  categories: 'stock.categories',
+  customers: 'sales.customers',
+  suppliers: 'stock.suppliers',
+  employees: 'hr.employees',
+  movements: 'stock.movements',
+  orders: 'sales.orders',
+  bulk: 'stock.products', // bulk import → products
+  reports: 'finance.entries', // report export → entries
+  audit: 'audit.logs',
+};
+
+export function resolveDataPermission(
+  code: string
+): { targetBackendResource: string; action: StandardAction } | null {
+  // Match data.import.* or data.export.*
+  const match = code.match(/^data\.(import|export)\.(.+)$/);
+  if (!match) return null;
+
+  const direction = match[1] as 'import' | 'export';
+  const entity = match[2];
+  const target = DATA_ENTITY_TO_RESOURCE[entity];
+  if (!target) return null;
+
+  return { targetBackendResource: target, action: direction };
 }
 
 /**
