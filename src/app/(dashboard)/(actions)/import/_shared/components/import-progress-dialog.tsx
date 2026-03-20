@@ -18,6 +18,39 @@ import {
 import type { ImportProgress } from '../types';
 import { cn } from '@/lib/utils';
 
+// Translate common backend error messages to Portuguese
+function translateError(message: string): string {
+  const translations: Record<string, string> = {
+    'Name is required': 'Nome é obrigatório',
+    'Name must be at most 200 characters long': 'Nome deve ter no máximo 200 caracteres',
+    'Product with this name already exists': 'Produto com este nome já existe',
+    'Template not found': 'Template não encontrado',
+    'Supplier not found': 'Fornecedor não encontrado',
+    'Manufacturer not found': 'Fabricante não encontrado',
+    'Invalid status': 'Status inválido',
+    'Variant with this name already exists': 'Variante com este nome já existe',
+    'Product not found': 'Produto não encontrado',
+    'Category not found': 'Categoria não encontrada',
+  };
+
+  // Exact match
+  if (translations[message]) return translations[message];
+
+  // Partial match
+  for (const [en, pt] of Object.entries(translations)) {
+    if (message.includes(en)) return message.replace(en, pt);
+  }
+
+  // Common patterns
+  if (message.includes('not found')) return message.replace('not found', 'não encontrado(a)');
+  if (message.includes('already exists')) return message.replace('already exists', 'já existe');
+  if (message.includes('is required')) return message.replace('is required', 'é obrigatório');
+  if (message.includes('must be')) return message.replace('must be', 'deve ser');
+  if (message.includes('Invalid')) return message.replace('Invalid', 'Inválido');
+
+  return message;
+}
+
 interface ImportProgressDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -106,8 +139,10 @@ export function ImportProgressDialog({
     <Dialog open={open} onOpenChange={canClose ? onOpenChange : undefined}>
       <DialogContent
         className="sm:max-w-md p-0 gap-0 overflow-hidden"
-        onPointerDownOutside={e => !canClose && e.preventDefault()}
-        onEscapeKeyDown={e => !canClose && e.preventDefault()}
+        onPointerDownOutside={e => e.preventDefault()}
+        onEscapeKeyDown={e => e.preventDefault()}
+        onInteractOutside={e => e.preventDefault()}
+        showCloseButton={false}
       >
         {/* Header — compact */}
         <div className="px-5 pt-4 pb-3">
@@ -158,7 +193,7 @@ export function ImportProgressDialog({
                   className="text-xs text-rose-700 dark:text-rose-300 py-0.5"
                 >
                   <span className="font-medium">Linha {error.row}:</span>{' '}
-                  {error.message}
+                  {translateError(error.message)}
                 </div>
               ))}
               {progress.errors.length > 5 && (
