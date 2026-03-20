@@ -920,7 +920,7 @@ body {
 /* Light mode — override react-spreadsheet's internal CSS variables */
 .Spreadsheet {
   --background-color: rgb(var(--os-white)) !important;
-  --header-background-color: rgb(var(--os-white)) !important;
+  --header-background-color: transparent !important;
   --text-color: rgb(var(--os-slate-900)) !important;
   --readonly-text-color: rgb(var(--os-slate-500)) !important;
   --border-color: rgb(var(--os-slate-200)) !important;
@@ -940,7 +940,7 @@ body {
 .dark .Spreadsheet,
 .Spreadsheet--dark-mode {
   --background-color: rgb(var(--os-slate-900)) !important;
-  --header-background-color: rgb(var(--os-slate-900)) !important;
+  --header-background-color: transparent !important;
   --text-color: rgb(var(--os-slate-100)) !important;
   --readonly-text-color: rgb(var(--os-slate-400)) !important;
   --border-color: rgb(var(--os-slate-700)) !important;
