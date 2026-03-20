@@ -952,14 +952,14 @@ body {
 
 /* Apply variables to spreadsheet elements */
 .Spreadsheet {
-  background-color: var(--spreadsheet-bg) !important;
+  background-color: var(--background-color) !important;
   color: var(--spreadsheet-cell-text) !important;
   border-color: var(--spreadsheet-border) !important;
   font-size: 0.875rem;
 }
 
 .Spreadsheet table {
-  background-color: var(--spreadsheet-bg) !important;
+  background-color: var(--background-color) !important;
   border-color: var(--spreadsheet-border) !important;
   border-collapse: separate !important;
   border-spacing: 0 !important;
@@ -973,10 +973,12 @@ body {
   color: var(--spreadsheet-cell-text) !important;
 }
 
-/* Selected headers — subtle highlight instead of lib's hardcoded #5f6268 */
+/* Selected headers — override lib's hardcoded #5f6268 */
 .Spreadsheet__header--selected {
-  background: var(--outline-background-color) !important;
+  background: transparent !important;
+  background-color: transparent !important;
   color: var(--spreadsheet-cell-text) !important;
+  font-weight: 700 !important;
 }
 
 /* Row indicators — compact, subtle */
