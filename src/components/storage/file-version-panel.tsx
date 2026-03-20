@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import type { StorageFile } from '@/types/storage';
 import { useListVersions, useRestoreVersion } from '@/hooks/storage';
 import { usePermissions } from '@/hooks/use-permissions';
+import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { storageFilesService } from '@/services/storage/files.service';
 import { formatFileSize } from './utils';
 import { formatDate } from '@/lib/utils';
@@ -36,8 +37,8 @@ export function FileVersionPanel({
   const restoreMutation = useRestoreVersion();
   const { hasPermission } = usePermissions();
 
-  const canDownload = hasPermission('storage.files.download');
-  const canRestore = hasPermission('storage.versions.restore');
+  const canDownload = hasPermission(TOOLS_PERMISSIONS.STORAGE_FILES.ACCESS);
+  const canRestore = hasPermission(TOOLS_PERMISSIONS.STORAGE_FILES.ADMIN);
 
   const handleDownloadVersion = useCallback(
     (version: number) => {

@@ -13,6 +13,7 @@ import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { AccessDenied } from '@/components/rbac/access-denied';
 import { usePermissions } from '@/hooks/use-permissions';
+import { ADMIN_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { auditLogService } from '@/services/audit/audit-log.service';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
@@ -28,8 +29,7 @@ import type { AuditLog, AuditLogFilters } from './src/types';
 export default function AuditLogsPage() {
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
-  const canViewAuditLogs =
-    hasPermission('audit.logs.view') || hasPermission('audit.logs.search');
+  const canViewAuditLogs = hasPermission(ADMIN_PERMISSIONS.AUDIT.ACCESS);
 
   // ============================================================================
   // STATE

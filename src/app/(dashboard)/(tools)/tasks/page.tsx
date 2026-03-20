@@ -9,6 +9,7 @@ import { BoardList } from '@/components/tasks/boards/board-list';
 import { BoardCreateDialog } from '@/components/tasks/boards/board-create-dialog';
 import { useBoardsInfinite } from '@/hooks/tasks/use-boards';
 import { usePermissions } from '@/hooks/use-permissions';
+import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useDebounce } from '@/core/hooks/use-debounce';
 import {
   Plus,
@@ -71,7 +72,7 @@ function BoardSection({
 
 export default function TasksPage() {
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission('tasks.boards.create');
+  const canCreate = hasPermission(TOOLS_PERMISSIONS.TASK_BOARDS.REGISTER);
 
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);

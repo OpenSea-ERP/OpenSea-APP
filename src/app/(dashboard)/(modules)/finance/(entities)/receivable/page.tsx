@@ -53,6 +53,7 @@ import { ReceivableWizardModal } from '@/components/finance/receivable-wizard-mo
 import { useDeleteFinanceEntry, useFinanceEntries } from '@/hooks/finance';
 import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
 import { usePermissions } from '@/hooks/use-permissions';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { normalizePagination } from '@/types/common/pagination';
 import type {
   FinanceEntry,
@@ -100,11 +101,11 @@ const RECEIVABLE_STATUSES: FinanceEntryStatus[] = [
 ];
 
 const PERMISSION_CODES = {
-  list: 'finance.entries.list',
-  create: 'finance.entries.create',
-  read: 'finance.entries.read',
-  update: 'finance.entries.update',
-  delete: 'finance.entries.delete',
+  list: FINANCE_PERMISSIONS.ENTRIES.ACCESS,
+  create: FINANCE_PERMISSIONS.ENTRIES.REGISTER,
+  read: FINANCE_PERMISSIONS.ENTRIES.ACCESS,
+  update: FINANCE_PERMISSIONS.ENTRIES.MODIFY,
+  delete: FINANCE_PERMISSIONS.ENTRIES.REMOVE,
 } as const;
 
 // ============================================================================

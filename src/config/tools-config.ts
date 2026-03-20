@@ -3,6 +3,8 @@
  * Configuração das ferramentas disponíveis no painel de ferramentas
  */
 
+import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
+
 export interface ToolConfig {
   id: string;
   name: string;
@@ -21,7 +23,7 @@ export const TOOLS: ToolConfig[] = [
     description: 'Gerencie documentos e arquivos da empresa',
     icon: 'FolderOpen',
     href: '/file-manager',
-    requiredPermission: 'storage.interface.view',
+    requiredPermission: TOOLS_PERMISSIONS.STORAGE_FOLDERS.ACCESS,
   },
   {
     id: 'calendar',
@@ -29,7 +31,7 @@ export const TOOLS: ToolConfig[] = [
     description: 'Eventos e compromissos',
     icon: 'Calendar',
     href: '/calendar',
-    requiredPermission: 'calendar.events.list',
+    requiredPermission: TOOLS_PERMISSIONS.CALENDAR.ACCESS,
   },
   {
     id: 'email',
@@ -37,7 +39,7 @@ export const TOOLS: ToolConfig[] = [
     description: 'Caixa de entrada e envio de e-mails',
     icon: 'Mail',
     href: '/email',
-    requiredPermission: 'ui.menu.email',
+    requiredPermission: TOOLS_PERMISSIONS.EMAIL_ACCOUNTS.ACCESS,
   },
   {
     id: 'tasks',
@@ -45,6 +47,6 @@ export const TOOLS: ToolConfig[] = [
     description: 'Quadros de tarefas e gerenciamento de projetos',
     icon: 'KanbanSquare',
     href: '/tasks',
-    requiredPermission: 'tasks.boards.list',
+    requiredPermission: TOOLS_PERMISSIONS.TASK_BOARDS.ACCESS,
   },
 ];

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
 import { usePermissions } from '@/hooks/use-permissions';
+import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
   Eye,
   EyeOff,
@@ -22,8 +23,8 @@ export default function FileManagerPage() {
   const fileManagerRef = useRef<FileManagerRef>(null);
   const { hasPermission } = usePermissions();
   const { isSuperAdmin } = useAuth();
-  const canCreate = hasPermission('storage.user-folders.create');
-  const canUpload = hasPermission('storage.files.create');
+  const canCreate = hasPermission(TOOLS_PERMISSIONS.STORAGE_FOLDERS.REGISTER);
+  const canUpload = hasPermission(TOOLS_PERMISSIONS.STORAGE_FILES.REGISTER);
   const [viewAll, setViewAll] = useState(false);
   const [showTrash, setShowTrash] = useState(false);
 
@@ -60,7 +61,7 @@ export default function FileManagerPage() {
   ];
 
   return (
-    <ProtectedRoute requiredPermission="storage.interface.view">
+    <ProtectedRoute requiredPermission={TOOLS_PERMISSIONS.STORAGE_FOLDERS.ACCESS}>
       <div className="flex flex-col gap-6 h-[calc(100vh-10rem)]">
         {/* Quota Warning */}
         <QuotaWarningBanner />

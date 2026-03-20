@@ -8,6 +8,14 @@ import {
   listMyPermissions,
   listUserGroups,
 } from '@/services/rbac/rbac.service';
+import {
+  STOCK_PERMISSIONS,
+  ADMIN_PERMISSIONS,
+  HR_PERMISSIONS,
+  TOOLS_PERMISSIONS,
+  SYSTEM_PERMISSIONS,
+  WILDCARD_PERMISSIONS,
+} from '@/config/rbac/permission-codes';
 import type { EffectivePermission } from '@/types/rbac';
 import { useEffect, useState } from 'react';
 
@@ -65,21 +73,21 @@ export default function DebugPermissionsPage() {
 
         // Test specific permission checks
         const testPermissions = [
-          '*.*.*',
-          'ui.menu.dashboard',
-          'ui.menu.stock',
-          'ui.menu.admin',
-          'ui.menu.hr',
-          'ui.menu.rbac',
-          'ui.stock-submenus.products',
-          'ui.stock-submenus.templates',
-          'ui.hr-submenus.employees',
-          'core.users.list',
-          'core.users.read',
-          'stock.products.list',
-          'stock.products.read',
-          'rbac.groups.list',
-          'rbac.groups.read',
+          WILDCARD_PERMISSIONS.FULL_ACCESS,
+          STOCK_PERMISSIONS.PRODUCTS.ACCESS,
+          STOCK_PERMISSIONS.PRODUCTS.REGISTER,
+          STOCK_PERMISSIONS.TEMPLATES.ACCESS,
+          STOCK_PERMISSIONS.CATEGORIES.ACCESS,
+          ADMIN_PERMISSIONS.USERS.ACCESS,
+          ADMIN_PERMISSIONS.PERMISSION_GROUPS.ACCESS,
+          ADMIN_PERMISSIONS.AUDIT.ACCESS,
+          HR_PERMISSIONS.EMPLOYEES.ACCESS,
+          HR_PERMISSIONS.DEPARTMENTS.ACCESS,
+          TOOLS_PERMISSIONS.STORAGE_FOLDERS.ACCESS,
+          TOOLS_PERMISSIONS.TASK_BOARDS.ACCESS,
+          TOOLS_PERMISSIONS.CALENDAR.ACCESS,
+          TOOLS_PERMISSIONS.EMAIL_ACCOUNTS.ACCESS,
+          SYSTEM_PERMISSIONS.SELF.ACCESS,
         ];
 
         const testChecks: Record<string, boolean> = {};

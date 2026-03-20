@@ -51,6 +51,7 @@ import {
   usePayConsortiumInstallment,
 } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import type { ConsortiumPayment, ConsortiumStatus } from '@/types/finance';
 import {
   CONSORTIUM_STATUS_LABELS,
@@ -399,7 +400,7 @@ export default function ConsortiumDetailPage({
   const { data, isLoading } = useConsortium(id);
   const deleteConsortium = useDeleteConsortium();
 
-  const canDelete = hasPermission('finance.consortia.delete');
+  const canDelete = hasPermission(FINANCE_PERMISSIONS.CONSORTIA.REMOVE);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [paymentTarget, setPaymentTarget] = useState<ConsortiumPayment | null>(

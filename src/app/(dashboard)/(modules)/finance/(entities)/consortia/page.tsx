@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/table';
 import { useConsortia, useDeleteConsortium } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import type { Consortium, ConsortiumStatus } from '@/types/finance';
 import { CONSORTIUM_STATUS_LABELS } from '@/types/finance';
 import {
@@ -67,11 +68,11 @@ import { toast } from 'sonner';
 // ============================================================================
 
 const PERMISSION_CODES = {
-  list: 'finance.consortia.list',
-  create: 'finance.consortia.create',
-  read: 'finance.consortia.read',
-  update: 'finance.consortia.update',
-  delete: 'finance.consortia.delete',
+  list: FINANCE_PERMISSIONS.CONSORTIA.ACCESS,
+  create: FINANCE_PERMISSIONS.CONSORTIA.REGISTER,
+  read: FINANCE_PERMISSIONS.CONSORTIA.ACCESS,
+  update: FINANCE_PERMISSIONS.CONSORTIA.MODIFY,
+  delete: FINANCE_PERMISSIONS.CONSORTIA.REMOVE,
 } as const;
 
 const STATUS_OPTIONS: { value: ConsortiumStatus; label: string }[] = [

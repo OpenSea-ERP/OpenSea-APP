@@ -19,6 +19,7 @@ import {
   useSetFolderAccess,
 } from '@/hooks/storage';
 import { usePermissions } from '@/hooks/use-permissions';
+import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
 import { usersService } from '@/services/auth/users.service';
 import { teamsService } from '@/services/core/teams.service';
@@ -80,21 +81,10 @@ const EMPTY_FORM: NewRuleForm = {
 function getFolderSharePermissions(folder: StorageFolder | null) {
   if (!folder) return { shareUserCode: '', shareTeamCode: '' };
 
-  if (folder.isSystem) {
-    return {
-      shareUserCode: 'storage.system-folders.share-user',
-      shareTeamCode: 'storage.system-folders.share-group',
-    };
-  }
-  if (folder.isFilter) {
-    return {
-      shareUserCode: 'storage.filter-folders.share-user',
-      shareTeamCode: 'storage.filter-folders.share-group',
-    };
-  }
+  // All folder types use the same centralized share permission
   return {
-    shareUserCode: 'storage.user-folders.share-user',
-    shareTeamCode: 'storage.user-folders.share-group',
+    shareUserCode: TOOLS_PERMISSIONS.STORAGE_FOLDERS.SHARE,
+    shareTeamCode: TOOLS_PERMISSIONS.STORAGE_FOLDERS.SHARE,
   };
 }
 
