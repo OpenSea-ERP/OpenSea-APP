@@ -734,7 +734,8 @@ export default function ProductsSheetsPage() {
       disabled:
         spreadsheet.filledRowCount === 0 ||
         importProcess.isProcessing ||
-        !selectedTemplateId,
+        !selectedTemplateId ||
+        !validationResult?.valid,
     },
   ];
 
