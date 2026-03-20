@@ -964,6 +964,10 @@ body {
 .Spreadsheet table {
   background-color: var(--spreadsheet-bg) !important;
   border-color: var(--spreadsheet-border) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
 }
 
 /* Header cells (column labels) — matches cell bg via --header-background-color */
@@ -1020,11 +1024,46 @@ body {
   border: 2px dashed var(--spreadsheet-selected-border) !important;
 }
 
-/* Table borders */
+/* Table borders — use only right+bottom per cell to avoid doubles with border-separate */
 .Spreadsheet table,
 .Spreadsheet th,
 .Spreadsheet td {
   border-color: var(--spreadsheet-border) !important;
+}
+
+.Spreadsheet th,
+.Spreadsheet td {
+  border-width: 0 1px 1px 0 !important;
+}
+
+/* Restore left border on first column and top border on first row */
+.Spreadsheet tr:first-child th,
+.Spreadsheet tr:first-child td {
+  border-top-width: 1px !important;
+}
+
+.Spreadsheet th:first-child,
+.Spreadsheet td:first-child {
+  border-left-width: 1px !important;
+}
+
+/* Round corners on corner cells */
+.Spreadsheet tr:first-child th:first-child,
+.Spreadsheet tr:first-child td:first-child {
+  border-top-left-radius: 8px !important;
+}
+
+.Spreadsheet tr:first-child th:last-child,
+.Spreadsheet tr:first-child td:last-child {
+  border-top-right-radius: 8px !important;
+}
+
+.Spreadsheet tr:last-child td:first-child {
+  border-bottom-left-radius: 8px !important;
+}
+
+.Spreadsheet tr:last-child td:last-child {
+  border-bottom-right-radius: 8px !important;
 }
 
 /* Consistent cell height */
