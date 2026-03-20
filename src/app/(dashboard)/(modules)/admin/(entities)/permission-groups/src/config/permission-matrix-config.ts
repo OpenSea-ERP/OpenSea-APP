@@ -34,7 +34,7 @@ export const ACTION_LABELS: Record<StandardAction, string> = {
   import: 'Importar',
   export: 'Exportar',
   admin: 'Administrar',
-  onlyself: 'Apenas Próprio',
+  onlyself: 'Próprio',
 };
 
 // ---------------------------------------------------------------------------

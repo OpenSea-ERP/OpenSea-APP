@@ -167,11 +167,11 @@ export function PermissionMatrixTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div>
       <table className="w-full border-collapse">
         {/* Header */}
         <thead>
-          <tr className="sticky top-0 z-10 bg-background">
+          <tr className="sticky top-0 z-10 border-b border-border/50 shadow-[0_1px_3px_-1px_rgba(0,0,0,0.1)]" style={{ backgroundColor: 'var(--modal-bg)' }}>
             <th className="w-[200px] min-w-[200px] text-left px-3 py-2">
               <span className="text-xs font-medium text-muted-foreground">
                 Recurso

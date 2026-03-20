@@ -8,7 +8,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { showErrorToast, showSuccessToast } from '@/lib/toast-utils';
 import { logger } from '@/lib/logger';
@@ -375,7 +374,7 @@ export function ManagePermissionsModal({
     <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="sm:max-w-[1100px] max-w-[1100px] h-[650px] p-0 gap-0 overflow-hidden flex flex-row"
+        className="sm:max-w-[1280px] max-w-[1280px] h-[650px] p-0 gap-0 overflow-hidden flex flex-row"
         onPointerDownOutside={e => {
           if (isSaving) e.preventDefault();
         }}
@@ -515,6 +514,7 @@ export function ManagePermissionsModal({
                       <Button
                         variant="outline"
                         size="sm"
+                        className="h-7 px-2.5 text-xs"
                         onClick={handleClearAllInTab}
                         disabled={isSaving}
                       >
@@ -522,6 +522,7 @@ export function ManagePermissionsModal({
                       </Button>
                       <Button
                         size="sm"
+                        className="h-7 px-2.5 text-xs"
                         onClick={handleSelectAllInTab}
                         disabled={isSaving}
                       >
@@ -544,8 +545,8 @@ export function ManagePermissionsModal({
           })()}
 
           {/* Content */}
-          <ScrollArea className="flex-1 min-w-0">
-            <div className="p-6">
+          <div className="flex-1 h-0 min-w-0 overflow-y-auto px-6">
+            <div>
               {isLoading ? (
                 <div className="space-y-3">
                   <div className="flex gap-1 pb-2">
@@ -625,7 +626,7 @@ export function ManagePermissionsModal({
                 </>
               )}
             </div>
-          </ScrollArea>
+          </div>
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border/50 shrink-0">
