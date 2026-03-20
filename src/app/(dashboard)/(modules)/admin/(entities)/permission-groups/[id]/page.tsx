@@ -47,7 +47,6 @@ import {
   MATRIX_TABS,
   STANDARD_ACTIONS,
   mapActionToStandard,
-  resolveDataPermission,
   type StandardAction,
 } from '../src/config/permission-matrix-config';
 import { ModuleTabList } from '../src/components/module-tab-list';
@@ -300,20 +299,6 @@ export default function PermissionGroupDetailPage() {
           }
           const actionMap = codesByBackendResource.get(backendKey)!;
           for (const perm of resourceGroup.permissions) {
-            const dataResolved = resolveDataPermission(perm.code);
-            if (dataResolved) {
-              const targetKey = dataResolved.targetBackendResource;
-              if (!codesByBackendResource.has(targetKey)) {
-                codesByBackendResource.set(targetKey, new Map());
-              }
-              const targetMap = codesByBackendResource.get(targetKey)!;
-              if (!targetMap.has(dataResolved.action)) {
-                targetMap.set(dataResolved.action, new Set());
-              }
-              targetMap.get(dataResolved.action)!.add(perm.code);
-              continue;
-            }
-
             const standardAction = mapActionToStandard(perm.action);
             if (!actionMap.has(standardAction)) {
               actionMap.set(standardAction, new Set());

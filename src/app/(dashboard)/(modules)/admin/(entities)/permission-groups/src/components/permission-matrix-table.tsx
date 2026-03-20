@@ -342,6 +342,8 @@ export function PermissionMatrixTable({
                                 className={cn(
                                   action === 'admin' &&
                                     'data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500',
+                                  action === 'share' &&
+                                    'data-[state=checked]:bg-sky-500 data-[state=checked]:border-sky-500',
                                   action === 'onlyself' &&
                                     'data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500',
                                   readOnly &&
