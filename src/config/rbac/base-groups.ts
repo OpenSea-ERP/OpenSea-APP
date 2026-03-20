@@ -3,26 +3,24 @@
  * Definição dos grupos de permissões base do sistema
  *
  * Filosofia de Grupos:
- * - Super Administrador: Acesso total (*)
- * - Administrador: Acesso administrativo sem algumas ações críticas
- * - Usuário: Acesso apenas às permissões self.*
- *
- * Os demais grupos são criados pelo administrador conforme necessidade.
+ * - Super Administrador: Acesso total (wildcard)
+ * - Administrador: Acesso administrativo amplo (admin de cada módulo)
+ * - Gerente de Estoque: Gerencia stock completo
+ * - Operador de Estoque: Leitura + operações de itens
+ * - Vendedor: Visualiza estoque + gerencia vendas
+ * - Visualizador: Somente leitura
+ * - Usuário Básico: Apenas self + leitura básica
  */
 
 import type { CreatePermissionGroupDTO } from '@/types/rbac';
 import {
   ADMIN_PERMISSIONS,
-  AUDIT_PERMISSIONS,
-  CORE_PERMISSIONS,
+  FINANCE_PERMISSIONS,
   HR_PERMISSIONS,
-  RBAC_PERMISSIONS,
-  REPORTS_PERMISSIONS,
   SALES_PERMISSIONS,
-  SELF_PERMISSIONS,
-  SETTINGS_PERMISSIONS,
   STOCK_PERMISSIONS,
-  UI_PERMISSIONS,
+  SYSTEM_PERMISSIONS,
+  TOOLS_PERMISSIONS,
   WILDCARD_PERMISSIONS,
 } from './permission-codes';
 
@@ -68,129 +66,175 @@ export const baseGroups: Array<
     color: '#F97316',
     priority: 900,
     permissions: [
-      // RBAC - necessário para ler próprias permissões
-      { code: RBAC_PERMISSIONS.ASSOCIATIONS.READ, effect: 'allow' },
+      // Admin — acesso total
+      { code: ADMIN_PERMISSIONS.USERS.ACCESS, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.USERS.REGISTER, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.USERS.MODIFY, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.USERS.REMOVE, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.USERS.ADMIN, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.PERMISSION_GROUPS.ACCESS, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.PERMISSION_GROUPS.REGISTER, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.PERMISSION_GROUPS.MODIFY, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.PERMISSION_GROUPS.REMOVE, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.PERMISSION_GROUPS.ADMIN, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.COMPANIES.ACCESS, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.COMPANIES.REGISTER, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.COMPANIES.MODIFY, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.COMPANIES.REMOVE, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.COMPANIES.ADMIN, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.SESSIONS.ACCESS, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.SESSIONS.ADMIN, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.AUDIT.ACCESS, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.AUDIT.EXPORT, effect: 'allow' },
+      { code: ADMIN_PERMISSIONS.AUDIT.ADMIN, effect: 'allow' },
 
-      // UI - Menus principais
-      { code: UI_PERMISSIONS.MENU.DASHBOARD, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.STOCK, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.SALES, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.HR, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.RBAC, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.AUDIT, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.SETTINGS, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.REPORTS, effect: 'allow' },
+      // Stock — admin access
+      { code: STOCK_PERMISSIONS.PRODUCTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.ADMIN, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.ADMIN, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.ADMIN, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.ADMIN, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.ADMIN, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.ADMIN, effect: 'allow' },
 
-      // UI - Stock Submenus
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.PRODUCTS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.VARIANTS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.ITEMS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.MOVEMENTS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.SUPPLIERS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.MANUFACTURERS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.LOCATIONS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.WAREHOUSES, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.ZONES, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.BINS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.CATEGORIES, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.TAGS, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.TEMPLATES, effect: 'allow' },
-      { code: UI_PERMISSIONS.STOCK_SUBMENUS.PURCHASE_ORDERS, effect: 'allow' },
+      // Sales — admin access
+      { code: SALES_PERMISSIONS.CUSTOMERS.ACCESS, effect: 'allow' },
+      { code: SALES_PERMISSIONS.CUSTOMERS.REGISTER, effect: 'allow' },
+      { code: SALES_PERMISSIONS.CUSTOMERS.MODIFY, effect: 'allow' },
+      { code: SALES_PERMISSIONS.CUSTOMERS.REMOVE, effect: 'allow' },
+      { code: SALES_PERMISSIONS.ORDERS.ACCESS, effect: 'allow' },
+      { code: SALES_PERMISSIONS.ORDERS.REGISTER, effect: 'allow' },
+      { code: SALES_PERMISSIONS.ORDERS.MODIFY, effect: 'allow' },
+      { code: SALES_PERMISSIONS.ORDERS.REMOVE, effect: 'allow' },
+      { code: SALES_PERMISSIONS.ORDERS.ADMIN, effect: 'allow' },
+      { code: SALES_PERMISSIONS.PROMOTIONS.ACCESS, effect: 'allow' },
+      { code: SALES_PERMISSIONS.PROMOTIONS.REGISTER, effect: 'allow' },
+      { code: SALES_PERMISSIONS.PROMOTIONS.MODIFY, effect: 'allow' },
+      { code: SALES_PERMISSIONS.PROMOTIONS.REMOVE, effect: 'allow' },
 
-      // UI - Sales Submenus
-      { code: UI_PERMISSIONS.SALES_SUBMENUS.CUSTOMERS, effect: 'allow' },
-      { code: UI_PERMISSIONS.SALES_SUBMENUS.ORDERS, effect: 'allow' },
-      { code: UI_PERMISSIONS.SALES_SUBMENUS.PROMOTIONS, effect: 'allow' },
-      { code: UI_PERMISSIONS.SALES_SUBMENUS.RESERVATIONS, effect: 'allow' },
+      // HR — admin access
+      { code: HR_PERMISSIONS.DEPARTMENTS.ACCESS, effect: 'allow' },
+      { code: HR_PERMISSIONS.DEPARTMENTS.REGISTER, effect: 'allow' },
+      { code: HR_PERMISSIONS.DEPARTMENTS.MODIFY, effect: 'allow' },
+      { code: HR_PERMISSIONS.DEPARTMENTS.REMOVE, effect: 'allow' },
+      { code: HR_PERMISSIONS.POSITIONS.ACCESS, effect: 'allow' },
+      { code: HR_PERMISSIONS.POSITIONS.REGISTER, effect: 'allow' },
+      { code: HR_PERMISSIONS.POSITIONS.MODIFY, effect: 'allow' },
+      { code: HR_PERMISSIONS.POSITIONS.REMOVE, effect: 'allow' },
+      { code: HR_PERMISSIONS.EMPLOYEES.ACCESS, effect: 'allow' },
+      { code: HR_PERMISSIONS.EMPLOYEES.REGISTER, effect: 'allow' },
+      { code: HR_PERMISSIONS.EMPLOYEES.MODIFY, effect: 'allow' },
+      { code: HR_PERMISSIONS.EMPLOYEES.REMOVE, effect: 'allow' },
+      { code: HR_PERMISSIONS.EMPLOYEES.ADMIN, effect: 'allow' },
+      { code: HR_PERMISSIONS.ABSENCES.ACCESS, effect: 'allow' },
+      { code: HR_PERMISSIONS.ABSENCES.REGISTER, effect: 'allow' },
+      { code: HR_PERMISSIONS.ABSENCES.MODIFY, effect: 'allow' },
+      { code: HR_PERMISSIONS.ABSENCES.REMOVE, effect: 'allow' },
+      { code: HR_PERMISSIONS.ABSENCES.ADMIN, effect: 'allow' },
+      { code: HR_PERMISSIONS.VACATIONS.ACCESS, effect: 'allow' },
+      { code: HR_PERMISSIONS.VACATIONS.REGISTER, effect: 'allow' },
+      { code: HR_PERMISSIONS.VACATIONS.MODIFY, effect: 'allow' },
+      { code: HR_PERMISSIONS.VACATIONS.ADMIN, effect: 'allow' },
+      { code: HR_PERMISSIONS.PAYROLL.ACCESS, effect: 'allow' },
+      { code: HR_PERMISSIONS.PAYROLL.REGISTER, effect: 'allow' },
+      { code: HR_PERMISSIONS.PAYROLL.ADMIN, effect: 'allow' },
+      { code: HR_PERMISSIONS.WORK_SCHEDULES.ACCESS, effect: 'allow' },
+      { code: HR_PERMISSIONS.WORK_SCHEDULES.REGISTER, effect: 'allow' },
+      { code: HR_PERMISSIONS.WORK_SCHEDULES.MODIFY, effect: 'allow' },
+      { code: HR_PERMISSIONS.WORK_SCHEDULES.REMOVE, effect: 'allow' },
 
-      // UI - HR Submenus
-      { code: UI_PERMISSIONS.HR_SUBMENUS.EMPLOYEES, effect: 'allow' },
-      { code: UI_PERMISSIONS.HR_SUBMENUS.DEPARTMENTS, effect: 'allow' },
-      { code: UI_PERMISSIONS.HR_SUBMENUS.POSITIONS, effect: 'allow' },
-      { code: UI_PERMISSIONS.HR_SUBMENUS.ABSENCES, effect: 'allow' },
-      { code: UI_PERMISSIONS.HR_SUBMENUS.VACATIONS, effect: 'allow' },
-      { code: UI_PERMISSIONS.HR_SUBMENUS.OVERTIME, effect: 'allow' },
-      { code: UI_PERMISSIONS.HR_SUBMENUS.PAYROLL, effect: 'allow' },
-      { code: UI_PERMISSIONS.HR_SUBMENUS.TIME_BANK, effect: 'allow' },
-      { code: UI_PERMISSIONS.HR_SUBMENUS.COMPANIES, effect: 'allow' },
+      // Finance — admin access
+      { code: FINANCE_PERMISSIONS.CATEGORIES.ACCESS, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CATEGORIES.REGISTER, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CATEGORIES.MODIFY, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CATEGORIES.REMOVE, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.COST_CENTERS.ACCESS, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.COST_CENTERS.REGISTER, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.COST_CENTERS.MODIFY, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.COST_CENTERS.REMOVE, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.BANK_ACCOUNTS.ACCESS, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.BANK_ACCOUNTS.REGISTER, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.BANK_ACCOUNTS.MODIFY, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.BANK_ACCOUNTS.REMOVE, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.ENTRIES.ACCESS, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.ENTRIES.REGISTER, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.ENTRIES.MODIFY, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.ENTRIES.REMOVE, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.ENTRIES.ADMIN, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.LOANS.ACCESS, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.LOANS.REGISTER, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.LOANS.MODIFY, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.LOANS.REMOVE, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.LOANS.ADMIN, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONSORTIA.ACCESS, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONSORTIA.REGISTER, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONSORTIA.MODIFY, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONSORTIA.REMOVE, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONSORTIA.ADMIN, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONTRACTS.ACCESS, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONTRACTS.REGISTER, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONTRACTS.MODIFY, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.CONTRACTS.REMOVE, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.SUPPLIERS.ACCESS, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.SUPPLIERS.REGISTER, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.SUPPLIERS.MODIFY, effect: 'allow' },
+      { code: FINANCE_PERMISSIONS.SUPPLIERS.REMOVE, effect: 'allow' },
 
-      // Core - Usuários
-      { code: CORE_PERMISSIONS.USERS.CREATE, effect: 'allow' },
-      { code: CORE_PERMISSIONS.USERS.READ, effect: 'allow' },
-      { code: CORE_PERMISSIONS.USERS.UPDATE, effect: 'allow' },
-      { code: CORE_PERMISSIONS.USERS.DELETE, effect: 'allow' },
-      { code: CORE_PERMISSIONS.USERS.LIST, effect: 'allow' },
-      { code: CORE_PERMISSIONS.USERS.MANAGE, effect: 'allow' },
+      // Tools — admin access
+      { code: TOOLS_PERMISSIONS.EMAIL_ACCOUNTS.ACCESS, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.EMAIL_ACCOUNTS.ADMIN, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.EMAIL_MESSAGES.ACCESS, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.TASK_BOARDS.ACCESS, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.TASK_CARDS.ACCESS, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.TASK_CARDS.ADMIN, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.CALENDAR.ACCESS, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.CALENDAR.ADMIN, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.STORAGE_FOLDERS.ACCESS, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.STORAGE_FOLDERS.ADMIN, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.STORAGE_FILES.ACCESS, effect: 'allow' },
+      { code: TOOLS_PERMISSIONS.STORAGE_FILES.ADMIN, effect: 'allow' },
 
-      // Core - Sessões
-      { code: CORE_PERMISSIONS.SESSIONS.READ, effect: 'allow' },
-      { code: CORE_PERMISSIONS.SESSIONS.LIST, effect: 'allow' },
-      { code: CORE_PERMISSIONS.SESSIONS.REVOKE, effect: 'allow' },
-
-      // RBAC - Grupos e Permissões
-      { code: RBAC_PERMISSIONS.GROUPS.CREATE, effect: 'allow' },
-      { code: RBAC_PERMISSIONS.GROUPS.READ, effect: 'allow' },
-      { code: RBAC_PERMISSIONS.GROUPS.UPDATE, effect: 'allow' },
-      { code: RBAC_PERMISSIONS.GROUPS.DELETE, effect: 'allow' },
-      { code: RBAC_PERMISSIONS.GROUPS.LIST, effect: 'allow' },
-      { code: RBAC_PERMISSIONS.GROUPS.ASSIGN, effect: 'allow' },
-      { code: RBAC_PERMISSIONS.GROUPS.MANAGE, effect: 'allow' },
-
-      { code: RBAC_PERMISSIONS.PERMISSIONS.READ, effect: 'allow' },
-      { code: RBAC_PERMISSIONS.PERMISSIONS.LIST, effect: 'allow' },
-
-      // Audit
-      { code: AUDIT_PERMISSIONS.LOGS.VIEW, effect: 'allow' },
-      { code: AUDIT_PERMISSIONS.LOGS.SEARCH, effect: 'allow' },
-      { code: AUDIT_PERMISSIONS.HISTORY.VIEW, effect: 'allow' },
-
-      // Settings
-      { code: SETTINGS_PERMISSIONS.SYSTEM.VIEW, effect: 'allow' },
-      { code: SETTINGS_PERMISSIONS.SYSTEM.UPDATE, effect: 'allow' },
-      { code: SETTINGS_PERMISSIONS.COMPANY.VIEW, effect: 'allow' },
-      { code: SETTINGS_PERMISSIONS.COMPANY.UPDATE, effect: 'allow' },
-
-      // Stock - acesso total
-      { code: STOCK_PERMISSIONS.PRODUCTS.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.WAREHOUSES.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ZONES.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.BINS.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.CATEGORIES.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.SUPPLIERS.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TAGS.MANAGE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.MANAGE, effect: 'allow' },
-
-      // Sales - acesso total
-      { code: SALES_PERMISSIONS.CUSTOMERS.MANAGE, effect: 'allow' },
-      { code: SALES_PERMISSIONS.ORDERS.MANAGE, effect: 'allow' },
-      { code: SALES_PERMISSIONS.PROMOTIONS.MANAGE, effect: 'allow' },
-      { code: SALES_PERMISSIONS.RESERVATIONS.MANAGE, effect: 'allow' },
-
-      // Admin - Companies
-      { code: ADMIN_PERMISSIONS.COMPANIES.MANAGE, effect: 'allow' },
-
-      // HR - acesso total
-      { code: HR_PERMISSIONS.DEPARTMENTS.MANAGE, effect: 'allow' },
-      { code: HR_PERMISSIONS.POSITIONS.MANAGE, effect: 'allow' },
-      { code: HR_PERMISSIONS.EMPLOYEES.MANAGE, effect: 'allow' },
-      { code: HR_PERMISSIONS.ABSENCES.MANAGE, effect: 'allow' },
-      { code: HR_PERMISSIONS.VACATIONS.MANAGE, effect: 'allow' },
-      { code: HR_PERMISSIONS.PAYROLL.MANAGE, effect: 'allow' },
-
-      // Reports
-      { code: REPORTS_PERMISSIONS.STOCK.VIEW, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.STOCK.GENERATE, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.SALES.VIEW, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.SALES.GENERATE, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.HR.VIEW, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.HR.GENERATE, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.AUDIT.VIEW, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.AUDIT.GENERATE, effect: 'allow' },
+      // System
+      { code: SYSTEM_PERMISSIONS.LABEL_TEMPLATES.ACCESS, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.LABEL_TEMPLATES.REGISTER, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.LABEL_TEMPLATES.MODIFY, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.LABEL_TEMPLATES.REMOVE, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.NOTIFICATIONS.ADMIN, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.SELF.ACCESS, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.SELF.MODIFY, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.SELF.ADMIN, effect: 'allow' },
     ],
   },
 
@@ -204,73 +248,59 @@ export const baseGroups: Array<
     color: '#3B82F6',
     priority: 500,
     permissions: [
-      // RBAC - necessário para ler próprias permissões
-      { code: RBAC_PERMISSIONS.ASSOCIATIONS.READ, effect: 'allow' },
+      // Stock — full CRUD + admin
+      { code: STOCK_PERMISSIONS.PRODUCTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.IMPORT, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.EXPORT, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.PRINT, effect: 'allow' },
 
-      // UI - Menu Stock
-      { code: UI_PERMISSIONS.MENU.STOCK, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.REPORTS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.IMPORT, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.EXPORT, effect: 'allow' },
 
-      // Stock - CRUD completo
-      { code: STOCK_PERMISSIONS.PRODUCTS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.DELETE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.LIST, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.EXPORT, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.PRINT, effect: 'allow' },
 
-      { code: STOCK_PERMISSIONS.VARIANTS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.DELETE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.LIST, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.REMOVE, effect: 'allow' },
 
-      { code: STOCK_PERMISSIONS.ITEMS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.DELETE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.ENTRY, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.EXIT, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.TRANSFER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.MODIFY, effect: 'allow' },
 
-      { code: STOCK_PERMISSIONS.TEMPLATES.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.DELETE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.LIST, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.MODIFY, effect: 'allow' },
 
-      { code: STOCK_PERMISSIONS.LOCATIONS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.DELETE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.LIST, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.REMOVE, effect: 'allow' },
 
-      { code: STOCK_PERMISSIONS.CATEGORIES.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.CATEGORIES.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.CATEGORIES.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.CATEGORIES.LIST, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PURCHASE_ORDERS.EXPORT, effect: 'allow' },
 
-      { code: STOCK_PERMISSIONS.SUPPLIERS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.SUPPLIERS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.SUPPLIERS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.SUPPLIERS.LIST, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.MODIFY, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.REMOVE, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.EXPORT, effect: 'allow' },
 
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.LIST, effect: 'allow' },
-
-      { code: STOCK_PERMISSIONS.TAGS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TAGS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TAGS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TAGS.LIST, effect: 'allow' },
-
-      // Reports
-      { code: REPORTS_PERMISSIONS.STOCK.VIEW, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.STOCK.GENERATE, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.STOCK.INVENTORY, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.STOCK.MOVEMENTS, effect: 'allow' },
-      { code: REPORTS_PERMISSIONS.STOCK.LOW_STOCK, effect: 'allow' },
+      // Self (basic)
+      { code: SYSTEM_PERMISSIONS.SELF.ACCESS, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.SELF.MODIFY, effect: 'allow' },
     ],
   },
 
@@ -280,50 +310,31 @@ export const baseGroups: Array<
   {
     name: 'Operador de Estoque',
     description:
-      'Visualiza estoque e pode criar/atualizar itens e localizações.',
+      'Visualiza estoque e pode operar itens e volumes.',
     color: '#10B981',
     priority: 300,
     permissions: [
-      // RBAC - necessário para ler próprias permissões
-      { code: RBAC_PERMISSIONS.ASSOCIATIONS.READ, effect: 'allow' },
+      // Stock — read access to most resources
+      { code: STOCK_PERMISSIONS.PRODUCTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.ACCESS, effect: 'allow' },
 
-      // UI - Menu Stock
-      { code: UI_PERMISSIONS.MENU.STOCK, effect: 'allow' },
+      // Items — operational
+      { code: STOCK_PERMISSIONS.ITEMS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.EXPORT, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.PRINT, effect: 'allow' },
 
-      // Visualização geral
-      { code: STOCK_PERMISSIONS.PRODUCTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.CATEGORIES.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.CATEGORIES.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.SUPPLIERS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.SUPPLIERS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TAGS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TAGS.LIST, effect: 'allow' },
+      // Volumes — operational
+      { code: STOCK_PERMISSIONS.VOLUMES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.REGISTER, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VOLUMES.MODIFY, effect: 'allow' },
 
-      // Itens - pode gerenciar
-      { code: STOCK_PERMISSIONS.ITEMS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.ENTRY, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.EXIT, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.TRANSFER, effect: 'allow' },
-
-      // Localizações - pode gerenciar
-      { code: STOCK_PERMISSIONS.LOCATIONS.CREATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.UPDATE, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.LIST, effect: 'allow' },
-
-      // NÃO pode deletar produtos/variantes
-      { code: STOCK_PERMISSIONS.PRODUCTS.DELETE, effect: 'deny' },
-      { code: STOCK_PERMISSIONS.VARIANTS.DELETE, effect: 'deny' },
+      // Self (basic)
+      { code: SYSTEM_PERMISSIONS.SELF.ACCESS, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.SELF.MODIFY, effect: 'allow' },
     ],
   },
 
@@ -336,35 +347,28 @@ export const baseGroups: Array<
     color: '#8B5CF6',
     priority: 200,
     permissions: [
-      // RBAC - necessário para ler próprias permissões
-      { code: RBAC_PERMISSIONS.ASSOCIATIONS.READ, effect: 'allow' },
+      // Stock — read only
+      { code: STOCK_PERMISSIONS.PRODUCTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.ACCESS, effect: 'allow' },
 
-      // UI - Menus
-      { code: UI_PERMISSIONS.MENU.SALES, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.STOCK, effect: 'allow' },
+      // Sales — CRUD
+      { code: SALES_PERMISSIONS.ORDERS.ACCESS, effect: 'allow' },
+      { code: SALES_PERMISSIONS.ORDERS.REGISTER, effect: 'allow' },
+      { code: SALES_PERMISSIONS.ORDERS.MODIFY, effect: 'allow' },
+      { code: SALES_PERMISSIONS.ORDERS.ONLYSELF, effect: 'allow' },
 
-      // Visualizar estoque
-      { code: STOCK_PERMISSIONS.PRODUCTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.LIST, effect: 'allow' },
-
-      // Pedidos
-      { code: SALES_PERMISSIONS.ORDERS.CREATE, effect: 'allow' },
-      { code: SALES_PERMISSIONS.ORDERS.READ, effect: 'allow' },
-      { code: SALES_PERMISSIONS.ORDERS.UPDATE, effect: 'allow' },
-      { code: SALES_PERMISSIONS.ORDERS.LIST, effect: 'allow' },
+      // Customers — CRUD
+      { code: SALES_PERMISSIONS.CUSTOMERS.ACCESS, effect: 'allow' },
+      { code: SALES_PERMISSIONS.CUSTOMERS.REGISTER, effect: 'allow' },
+      { code: SALES_PERMISSIONS.CUSTOMERS.MODIFY, effect: 'allow' },
 
       // NÃO pode deletar pedidos
-      { code: SALES_PERMISSIONS.ORDERS.DELETE, effect: 'deny' },
+      { code: SALES_PERMISSIONS.ORDERS.REMOVE, effect: 'deny' },
 
-      // Clientes
-      { code: SALES_PERMISSIONS.CUSTOMERS.CREATE, effect: 'allow' },
-      { code: SALES_PERMISSIONS.CUSTOMERS.READ, effect: 'allow' },
-      { code: SALES_PERMISSIONS.CUSTOMERS.UPDATE, effect: 'allow' },
-      { code: SALES_PERMISSIONS.CUSTOMERS.LIST, effect: 'allow' },
+      // Self (basic)
+      { code: SYSTEM_PERMISSIONS.SELF.ACCESS, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.SELF.MODIFY, effect: 'allow' },
     ],
   },
 
@@ -377,39 +381,22 @@ export const baseGroups: Array<
     color: '#6B7280',
     priority: 100,
     permissions: [
-      // RBAC - necessário para ler próprias permissões
-      { code: RBAC_PERMISSIONS.ASSOCIATIONS.READ, effect: 'allow' },
+      // Stock — read only
+      { code: STOCK_PERMISSIONS.PRODUCTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.ITEMS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.TEMPLATES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.CATEGORIES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.MANUFACTURERS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.WAREHOUSES.ACCESS, effect: 'allow' },
 
-      // UI - Menus (somente visualização)
-      { code: UI_PERMISSIONS.MENU.DASHBOARD, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.STOCK, effect: 'allow' },
-      { code: UI_PERMISSIONS.MENU.SALES, effect: 'allow' },
+      // Sales — read only
+      { code: SALES_PERMISSIONS.ORDERS.ACCESS, effect: 'allow' },
+      { code: SALES_PERMISSIONS.CUSTOMERS.ACCESS, effect: 'allow' },
 
-      // Apenas visualização - Stock
-      { code: STOCK_PERMISSIONS.PRODUCTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.ITEMS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.LOCATIONS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.CATEGORIES.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.CATEGORIES.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.SUPPLIERS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.SUPPLIERS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.MANUFACTURERS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TAGS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TAGS.LIST, effect: 'allow' },
-
-      // Apenas visualização - Sales
-      { code: SALES_PERMISSIONS.ORDERS.READ, effect: 'allow' },
-      { code: SALES_PERMISSIONS.ORDERS.LIST, effect: 'allow' },
-      { code: SALES_PERMISSIONS.CUSTOMERS.READ, effect: 'allow' },
-      { code: SALES_PERMISSIONS.CUSTOMERS.LIST, effect: 'allow' },
+      // Self (basic)
+      { code: SYSTEM_PERMISSIONS.SELF.ACCESS, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.SELF.MODIFY, effect: 'allow' },
     ],
   },
 
@@ -423,41 +410,14 @@ export const baseGroups: Array<
     color: '#64748B',
     priority: 50,
     permissions: [
-      // RBAC - necessário para ler próprias permissões
-      { code: RBAC_PERMISSIONS.ASSOCIATIONS.READ, effect: 'allow' },
+      // Self — full self management
+      { code: SYSTEM_PERMISSIONS.SELF.ACCESS, effect: 'allow' },
+      { code: SYSTEM_PERMISSIONS.SELF.MODIFY, effect: 'allow' },
 
-      // Self - Perfil
-      { code: SELF_PERMISSIONS.PROFILE.READ, effect: 'allow' },
-      { code: SELF_PERMISSIONS.PROFILE.UPDATE, effect: 'allow' },
-      { code: SELF_PERMISSIONS.PROFILE.UPDATE_EMAIL, effect: 'allow' },
-      { code: SELF_PERMISSIONS.PROFILE.UPDATE_PASSWORD, effect: 'allow' },
-      { code: SELF_PERMISSIONS.PROFILE.UPDATE_USERNAME, effect: 'allow' },
-
-      // Self - Sessões
-      { code: SELF_PERMISSIONS.SESSIONS.READ, effect: 'allow' },
-      { code: SELF_PERMISSIONS.SESSIONS.LIST, effect: 'allow' },
-      { code: SELF_PERMISSIONS.SESSIONS.REVOKE, effect: 'allow' },
-
-      // Self - Permissões e Grupos (visualização)
-      { code: SELF_PERMISSIONS.PERMISSIONS.READ, effect: 'allow' },
-      { code: SELF_PERMISSIONS.PERMISSIONS.LIST, effect: 'allow' },
-      { code: SELF_PERMISSIONS.GROUPS.READ, effect: 'allow' },
-      { code: SELF_PERMISSIONS.GROUPS.LIST, effect: 'allow' },
-
-      // Self - Auditoria pessoal
-      { code: SELF_PERMISSIONS.AUDIT.READ, effect: 'allow' },
-      { code: SELF_PERMISSIONS.AUDIT.LIST, effect: 'allow' },
-
-      // UI - Menu básico
-      { code: UI_PERMISSIONS.MENU.DASHBOARD, effect: 'allow' },
-
-      // Visualização básica de templates e produtos
-      { code: STOCK_PERMISSIONS.TEMPLATES.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.TEMPLATES.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.PRODUCTS.LIST, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.READ, effect: 'allow' },
-      { code: STOCK_PERMISSIONS.VARIANTS.LIST, effect: 'allow' },
+      // Basic read access
+      { code: STOCK_PERMISSIONS.TEMPLATES.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.PRODUCTS.ACCESS, effect: 'allow' },
+      { code: STOCK_PERMISSIONS.VARIANTS.ACCESS, effect: 'allow' },
     ],
   },
 ];
@@ -511,29 +471,10 @@ export const PermissionGroupPriorities = {
 } as const;
 
 /**
- * Permissões padrão do grupo USER (Usuário Básico)
- * Apenas acesso aos próprios dados
+ * Permissões padrão para qualquer usuário autenticado
+ * Apenas acesso aos próprios dados (self)
  */
 export const DEFAULT_USER_PERMISSIONS = [
-  // Profile
-  SELF_PERMISSIONS.PROFILE.READ,
-  SELF_PERMISSIONS.PROFILE.UPDATE,
-  SELF_PERMISSIONS.PROFILE.UPDATE_EMAIL,
-  SELF_PERMISSIONS.PROFILE.UPDATE_PASSWORD,
-  SELF_PERMISSIONS.PROFILE.UPDATE_USERNAME,
-
-  // Sessions
-  SELF_PERMISSIONS.SESSIONS.READ,
-  SELF_PERMISSIONS.SESSIONS.LIST,
-  SELF_PERMISSIONS.SESSIONS.REVOKE,
-
-  // Permissions & Groups (view only)
-  SELF_PERMISSIONS.PERMISSIONS.READ,
-  SELF_PERMISSIONS.PERMISSIONS.LIST,
-  SELF_PERMISSIONS.GROUPS.READ,
-  SELF_PERMISSIONS.GROUPS.LIST,
-
-  // Audit (own logs)
-  SELF_PERMISSIONS.AUDIT.READ,
-  SELF_PERMISSIONS.AUDIT.LIST,
+  SYSTEM_PERMISSIONS.SELF.ACCESS,
+  SYSTEM_PERMISSIONS.SELF.MODIFY,
 ] as const;
