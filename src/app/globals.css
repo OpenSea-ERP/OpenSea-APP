@@ -1060,14 +1060,16 @@ body {
   font-size: 13px !important;
 }
 
-/* Error cell */
+/* Error cell — rose tint + right border indicator */
 .Spreadsheet__cell.cell-error {
-  background-color: rgba(239, 68, 68, 0.15) !important;
+  background-color: rgba(244, 63, 94, 0.12) !important;
+  box-shadow: inset -3px 0 0 rgba(244, 63, 94, 0.6) !important;
 }
 
 .dark .Spreadsheet__cell.cell-error,
 .Spreadsheet--dark-mode .Spreadsheet__cell.cell-error {
-  background-color: rgba(185, 28, 28, 0.3) !important;
+  background-color: rgba(244, 63, 94, 0.2) !important;
+  box-shadow: inset -3px 0 0 rgba(244, 63, 94, 0.5) !important;
 }
 
 /* Column minimum width */

@@ -6,7 +6,6 @@ import Spreadsheet, {
   type CellBase,
   type Matrix,
   type Selection,
-  type DataViewerProps,
   RangeSelection,
 } from 'react-spreadsheet';
 import { useTheme } from 'next-themes';
@@ -35,15 +34,8 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import {
-  Plus,
-  RotateCcw,
   AlertCircle,
-  AlertTriangle,
-  CheckCircle2,
   Check,
-  Download,
-  Upload,
-  FileSpreadsheet,
 } from 'lucide-react';
 import type {
   ImportFieldConfig,
@@ -80,29 +72,6 @@ interface ImportSpreadsheetProps {
 interface SpreadsheetCell extends CellBase<string> {
   value: string;
   className?: string;
-  errorMessage?: string;
-}
-
-// Custom cell viewer with error icon + native title tooltip
-// Uses native HTML title instead of Radix Tooltip to avoid compose-refs
-// setState explosion when hundreds of cells are remounted simultaneously
-function CellDataViewer({ cell }: DataViewerProps<SpreadsheetCell>) {
-  const value = cell?.value ?? '';
-  const errorMessage = cell?.errorMessage;
-
-  if (errorMessage) {
-    return (
-      <span
-        className="flex items-center justify-between gap-1 w-full"
-        title={errorMessage}
-      >
-        <span className="truncate">{value}</span>
-        <AlertTriangle className="h-3.5 w-3.5 text-rose-500 flex-shrink-0" />
-      </span>
-    );
-  }
-
-  return <span>{value}</span>;
 }
 
 export function ImportSpreadsheet({
@@ -168,14 +137,13 @@ export function ImportSpreadsheet({
         }
 
         // Check for errors
-        const cellError = validationResult?.errors.find(
+        const hasError = validationResult?.errors.some(
           e => e.row === rowIndex + 1 && e.fieldKey === field?.key
         );
 
         return {
           value: displayValue,
-          className: cellError ? 'cell-error' : undefined,
-          errorMessage: cellError?.message,
+          className: hasError ? 'cell-error' : undefined,
         };
       })
     );
@@ -454,7 +422,6 @@ export function ImportSpreadsheet({
             columnLabels={columnLabels}
             darkMode={isDark}
             className="import-spreadsheet"
-            DataViewer={CellDataViewer}
           />
         </div>
 
