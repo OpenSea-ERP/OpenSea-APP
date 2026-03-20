@@ -26,6 +26,9 @@ export type {
   UpdatePermissionGroupData,
 } from './types';
 
+// Components
+export { ModuleTabList } from './components/module-tab-list';
+
 // Utils
 export {
   createPermissionGroup,
