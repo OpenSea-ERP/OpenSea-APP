@@ -210,10 +210,11 @@ function SortableColumnItem({ field, onToggle }: SortableColumnItemProps) {
 interface ColumnsPopoverContentProps {
   columns: Array<{ key: string; label: string; enabled: boolean; required: boolean; isAttribute?: boolean }>;
   onToggle: (key: string) => void;
+  onToggleAll: (enabled: boolean) => void;
   onReorder: (activeId: string, overId: string) => void;
 }
 
-function ColumnsPopoverContent({ columns, onToggle, onReorder }: ColumnsPopoverContentProps) {
+function ColumnsPopoverContent({ columns, onToggle, onToggleAll, onReorder }: ColumnsPopoverContentProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, {
@@ -222,6 +223,7 @@ function ColumnsPopoverContent({ columns, onToggle, onReorder }: ColumnsPopoverC
   );
 
   const enabledCount = columns.filter(c => c.enabled).length;
+  const allOptionalEnabled = columns.filter(c => !c.required).every(c => c.enabled);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -258,10 +260,17 @@ function ColumnsPopoverContent({ columns, onToggle, onReorder }: ColumnsPopoverC
         </div>
       </DndContext>
 
-      <div className="px-3 py-2 border-t">
+      <div className="px-3 py-2 border-t flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
           {enabledCount} {enabledCount === 1 ? 'coluna selecionada' : 'colunas selecionadas'}
         </span>
+        <button
+          type="button"
+          className="text-xs text-primary hover:underline"
+          onClick={() => onToggleAll(allOptionalEnabled ? false : true)}
+        >
+          {allOptionalEnabled ? 'Desmarcar opcionais' : 'Selecionar todas'}
+        </button>
       </div>
     </div>
   );
@@ -563,6 +572,16 @@ export default function VariantsSheetsPage() {
       );
     });
   }, []);
+
+  const handleToggleAllColumns = useCallback((enabled: boolean) => {
+    setColumnsConfig(prev =>
+      prev.map(c => {
+        const fieldDef = allAvailableFields.find(f => f.key === c.key);
+        if (fieldDef?.required) return c;
+        return { ...c, enabled };
+      })
+    );
+  }, [allAvailableFields]);
 
   const handleReorderColumns = useCallback((activeId: string, overId: string) => {
     setColumnsConfig(prev => {
@@ -900,6 +919,7 @@ export default function VariantsSheetsPage() {
                     <ColumnsPopoverContent
                       columns={columnsForPopover}
                       onToggle={handleToggleColumn}
+                      onToggleAll={handleToggleAllColumns}
                       onReorder={handleReorderColumns}
                     />
                   </PopoverContent>
