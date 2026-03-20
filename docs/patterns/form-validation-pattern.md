@@ -10,12 +10,12 @@ O projeto OpenSea-APP precisa lidar com formulários de complexidades variadas: 
 
 O projeto adota **três abordagens** de formulário, escolhidas conforme a complexidade e o contexto:
 
-| Abordagem | Biblioteca principal | Quando usar |
-|-----------|----------------------|-------------|
-| **TanStack Form** (`@tanstack/react-form`) | `useForm` + `form.Field` | Fluxos de autenticação (login, registro, recuperação de senha) e formulários de perfil — simples, sem schema Zod |
-| **react-hook-form + Zod** | `useForm` + `zodResolver` + `<Form>` components | Formulários de domínio com validação rigorosa por schema — ex.: entrada rápida de estoque, schemas de empresa |
-| **useState manual** | `useState` + `e.preventDefault()` | Formulários com lógica de negócio complexa impossível de expressar em schema estático (ex.: cálculo bidirecional de preço/margem em `VariantForm`, lookup CNPJ inline) |
-| **EntityForm genérico** | `react-hook-form` interno + configuração JSON | CRUD rápido (modal "Edição Rápida") de entidades como Fabricantes e Empresas HR |
+| Abordagem                                  | Biblioteca principal                            | Quando usar                                                                                                                                                            |
+| ------------------------------------------ | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TanStack Form** (`@tanstack/react-form`) | `useForm` + `form.Field`                        | Fluxos de autenticação (login, registro, recuperação de senha) e formulários de perfil — simples, sem schema Zod                                                       |
+| **react-hook-form + Zod**                  | `useForm` + `zodResolver` + `<Form>` components | Formulários de domínio com validação rigorosa por schema — ex.: entrada rápida de estoque, schemas de empresa                                                          |
+| **useState manual**                        | `useState` + `e.preventDefault()`               | Formulários com lógica de negócio complexa impossível de expressar em schema estático (ex.: cálculo bidirecional de preço/margem em `VariantForm`, lookup CNPJ inline) |
+| **EntityForm genérico**                    | `react-hook-form` interno + configuração JSON   | CRUD rápido (modal "Edição Rápida") de entidades como Fabricantes e Empresas HR                                                                                        |
 
 A validação de regras de negócio brasileiras (CNPJ, CPF, CEP) é feita com `z.refine()` em schemas Zod locais, nunca por bibliotecas de máscara externas.
 
@@ -28,6 +28,7 @@ A validação de regras de negócio brasileiras (CNPJ, CPF, CEP) é feita com `z
 Utilizada em todas as páginas do grupo de rotas `(auth)`: login, registro e recuperação de senha.
 
 **Características:**
+
 - Sem schema Zod — validações manuais no `onSubmit`
 - Erros de API traduzidos por `translateError()` de `src/lib/error-messages.ts`
 - Erros exibidos em um banner vermelho de nível de formulário (não por campo)
@@ -85,11 +86,15 @@ const form = useForm({
 **Exibição de erro de formulário (nível global):**
 
 ```tsx
-{error && (
-  <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
-    <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
-  </div>
-)}
+{
+  error && (
+    <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
+      <p className="text-sm text-red-600 dark:text-red-400 text-center">
+        {error}
+      </p>
+    </div>
+  );
+}
 ```
 
 ---
@@ -135,7 +140,7 @@ const form = useForm<QuickStockFormValues>({
       )}
     />
   </form>
-</Form>
+</Form>;
 ```
 
 **Quando o zodResolver apresenta incompatibilidade de tipos genéricos**, usa-se `as never`:
@@ -203,6 +208,7 @@ export type CreateCompanyFormData = z.infer<typeof createCompanySchema>;
 Utilizados quando a lógica de negócio não pode ser encapsulada em schema estático. O exemplo principal é o `VariantForm`.
 
 **Por que não usar EntityForm ou react-hook-form aqui:**
+
 - Cálculos bidirecionais em tempo real (margem ↔ preço de venda)
 - Múltiplos estados derivados que dependem uns dos outros
 - Geração dinâmica de campos baseada nos `variantAttributes` do template
@@ -273,19 +279,26 @@ export function InlineSupplierForm({ onCreated, onCancel }) {
     if (digits.length === 14) {
       setIsLookingUp(true);
       try {
-        const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
+        const res = await fetch(
+          `https://brasilapi.com.br/api/cnpj/v1/${digits}`
+        );
         if (res.ok) {
           const data = await res.json();
           if (data.razao_social) setName(data.razao_social); // Auto-preenchimento
         }
-      } finally { setIsLookingUp(false); }
+      } finally {
+        setIsLookingUp(false);
+      }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    const result = await createMutation.mutateAsync({ name: name.trim(), cnpj: cnpj || undefined });
+    const result = await createMutation.mutateAsync({
+      name: name.trim(),
+      cnpj: cnpj || undefined,
+    });
     onCreated({ id: result.supplier.id, name: result.supplier.name });
     toast.success('Fornecedor criado com sucesso!');
   };
@@ -366,6 +379,7 @@ const manufacturersConfig = defineEntityConfig<Manufacturer>()({
 **Nota sobre `as never`:** O EntityForm usa `as never` extensivamente porque `react-hook-form` exige tipos genéricos estritos que conflitam com o sistema de despacho dinâmico de campos. Este é um trade-off documentado e intencional — o arquivo tem `/* eslint-disable @typescript-eslint/no-explicit-any */` no topo.
 
 **Validação no EntityForm:** A validação é feita em dois níveis:
+
 1. `react-hook-form` gerencia o estado do formulário com `mode: 'onBlur'` (padrão)
 2. `validateRequiredFields()` valida campos obrigatórios no submit e exibe toast via `showValidationErrors()`
 
@@ -376,7 +390,9 @@ export function showValidationErrors(errors: Record<string, string>): void {
   if (errorMessages.length === 1) {
     toast.error(errorMessages[0]);
   } else {
-    toast.error(`Há ${errorMessages.length} campos obrigatórios que precisam ser preenchidos`);
+    toast.error(
+      `Há ${errorMessages.length} campos obrigatórios que precisam ser preenchidos`
+    );
   }
 }
 ```
@@ -433,9 +449,10 @@ const manufacturers = manufacturersData?.manufacturers ?? [];
 
 // 2. Transformar em opções { value, label }
 const manufacturerOptions = useMemo(
-  () => manufacturers
-    .filter(m => m.isActive)
-    .map(m => ({ value: m.id, label: m.name })),
+  () =>
+    manufacturers
+      .filter(m => m.isActive)
+      .map(m => ({ value: m.id, label: m.name })),
   [manufacturers]
 );
 
@@ -447,7 +464,7 @@ const manufacturerOptions = useMemo(
   placeholder="Selecione o fabricante..."
   searchPlaceholder="Buscar fabricante..."
   emptyText="Nenhum fabricante encontrado."
-/>
+/>;
 ```
 
 **Para combobox dentro de react-hook-form (FormField):**
@@ -484,7 +501,12 @@ const manufacturerOptions = useMemo(
                     setLocationOpen(false);
                   }}
                 >
-                  <Check className={cn('mr-2 h-4 w-4', field.value === loc.id ? 'opacity-100' : 'opacity-0')} />
+                  <Check
+                    className={cn(
+                      'mr-2 h-4 w-4',
+                      field.value === loc.id ? 'opacity-100' : 'opacity-0'
+                    )}
+                  />
                   {loc.code}
                 </CommandItem>
               ))}
@@ -543,14 +565,14 @@ O projeto **não utiliza bibliotecas de máscara** (react-input-mask, imask, etc
 
 ```ts
 // src/helpers/formatters.ts
-formatCNPJ(cnpj)     // "12.345.678/0001-90"
-formatCPF(cpf)       // "123.456.789-00"
-formatPhone(phone)   // "(11) 98765-4321" ou "(11) 4321-1234"
-formatCEP(cep)       // "01310-100"
-formatCNAE(cnae)     // "6201-5/01"
-formatCurrency(val)  // "R$ 1.234,56"  (Intl.NumberFormat pt-BR)
-formatDate(date)     // "31/12/2025"   (toLocaleDateString pt-BR)
-formatDateTime(date) // "31/12/2025 23:59"
+formatCNPJ(cnpj); // "12.345.678/0001-90"
+formatCPF(cpf); // "123.456.789-00"
+formatPhone(phone); // "(11) 98765-4321" ou "(11) 4321-1234"
+formatCEP(cep); // "01310-100"
+formatCNAE(cnae); // "6201-5/01"
+formatCurrency(val); // "R$ 1.234,56"  (Intl.NumberFormat pt-BR)
+formatDate(date); // "31/12/2025"   (toLocaleDateString pt-BR)
+formatDateTime(date); // "31/12/2025 23:59"
 ```
 
 **Padrão de máscara na digitação (CNPJ lookup modal):**
@@ -581,7 +603,9 @@ const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 const handleCnpjChange = async (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 14);
   setCnpj(digits);
-  if (digits.length === 14) { /* consulta BrasilAPI */ }
+  if (digits.length === 14) {
+    /* consulta BrasilAPI */
+  }
 };
 ```
 
@@ -606,7 +630,9 @@ const handleCnpjChange = async (value: string) => {
 
 ```tsx
 // src/components/shared/forms/dynamic-form-field.tsx
-{error && <p className="text-sm text-destructive">{error}</p>}
+{
+  error && <p className="text-sm text-destructive">{error}</p>;
+}
 ```
 
 **Indicação visual de campo obrigatório:**
@@ -621,13 +647,17 @@ const handleCnpjChange = async (value: string) => {
 **Erro de formulário (banner global):**
 
 ```tsx
-{/* Usado em formulários manuais, como VariantForm */}
-{error && (
-  <div className="flex gap-3 p-4 rounded-lg bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-900">
-    <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
-    <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-  </div>
-)}
+{
+  /* Usado em formulários manuais, como VariantForm */
+}
+{
+  error && (
+    <div className="flex gap-3 p-4 rounded-lg bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-900">
+      <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+      <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+    </div>
+  );
+}
 ```
 
 ---
@@ -635,7 +665,9 @@ const handleCnpjChange = async (value: string) => {
 ### 12. Botões de submissão com estado de carregamento
 
 ```tsx
-{/* Padrão com Loader2 animado */}
+{
+  /* Padrão com Loader2 animado */
+}
 <Button type="submit" disabled={isLoading}>
   {isLoading ? (
     <>
@@ -648,7 +680,7 @@ const handleCnpjChange = async (value: string) => {
       {variant ? 'Atualizar' : 'Criar'} Variante
     </>
   )}
-</Button>
+</Button>;
 ```
 
 Para botões de cancelar, usa-se `variant="outline"` e sempre `type="button"` (nunca omitir o type em formulários com múltiplos botões).
@@ -675,14 +707,16 @@ const [currentStep, setCurrentStep] = useState<LoginStep>('identifier');
       }`}
     />
   ))}
-</div>
+</div>;
 
 // Cada etapa é renderizada condicionalmente com animação
-{currentStep === 'email' && (
-  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-    ...
-  </div>
-)}
+{
+  currentStep === 'email' && (
+    <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+      ...
+    </div>
+  );
+}
 ```
 
 O formulário multistep compartilha um único `useForm` do TanStack Form entre todas as etapas. Cada etapa chama um `handleXxxSubmit` diferente que avança o step ou submete o formulário.
@@ -702,7 +736,11 @@ export const errorMessages: Record<string, string> = {
 
 export function translateError(error: string | Error | unknown): string {
   if (error instanceof Error) {
-    return errorMessages[error.message] || error.message || 'Ocorreu um erro desconhecido';
+    return (
+      errorMessages[error.message] ||
+      error.message ||
+      'Ocorreu um erro desconhecido'
+    );
   }
   if (typeof error === 'string') {
     return errorMessages[error] || error || 'Ocorreu um erro desconhecido';
@@ -725,32 +763,32 @@ try {
 
 ## Files
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/core/forms/components/entity-form.tsx` | EntityForm genérico (principal — react-hook-form interno) |
-| `src/core/forms/components/entity-form-field.tsx` | Despacho de tipo de campo → componente especializado |
-| `src/core/forms/components/entity-form-validation.ts` | validateRequiredFields, showValidationErrors, buildDefaultValues |
-| `src/core/forms/components/entity-form.types.ts` | EntityFormProps, ValidationResult, GridColumns |
-| `src/core/types/form.types.ts` | EntityFormConfig, FieldConfig, FieldType (canônico) |
-| `src/core/types/entity-config.types.ts` | EntityConfig, defineEntityConfig() |
-| `src/components/shared/forms/entity-form.tsx` | EntityForm legado (useState puro — não usar para novos) |
-| `src/components/shared/forms/dynamic-form-field.tsx` | Campo dinâmico do EntityForm legado |
-| `src/components/ui/form.tsx` | Componentes shadcn/ui para react-hook-form (Form, FormField, FormItem, FormLabel, FormControl, FormMessage) |
-| `src/components/ui/combobox.tsx` | Combobox com busca (Radix Command) |
-| `src/components/ui/input-group.tsx` | InputGroup, InputGroupAddon, InputGroupText, MoneyInput |
-| `src/helpers/formatters.ts` | Formatação de CNPJ, CPF, telefone, CEP, CNAE, moeda, data |
-| `src/lib/error-messages.ts` | Mapa de tradução de erros inglês → português |
-| `src/app/(auth)/login/page.tsx` | Exemplo de formulário multistep (TanStack Form) |
-| `src/app/(auth)/register/page.tsx` | Exemplo de formulário simples (TanStack Form) |
-| `src/app/(auth)/forgot-password/page.tsx` | Exemplo de formulário multistep com 3 etapas |
-| `src/components/profile-form.tsx` | Formulário de perfil (TanStack Form) |
-| `src/components/stock/variants/variant-form.tsx` | Formulário manual complexo com cálculos bidirecionais |
-| `src/components/finance/inline-supplier-form.tsx` | Formulário inline com lookup BrasilAPI |
-| `src/components/finance/inline-bank-account-form.tsx` | Formulário inline com grid 2 colunas |
-| `src/app/(dashboard)/(modules)/stock/(entities)/products/src/components/workspace/quick-stock-entry.tsx` | Formulário react-hook-form + Zod completo |
-| `src/app/(dashboard)/(modules)/admin/(entities)/companies/src/schemas/company.schema.ts` | Schema Zod canônico com validação de CNPJ/CPF/telefone/CEP |
-| `src/app/(dashboard)/(modules)/finance/companies/src/modals/cnpj-lookup-modal.tsx` | Modal com máscara CNPJ na digitação |
-| `src/app/(dashboard)/(modules)/finance/payable/new/page.tsx` | Página de formulário manual com useState para entidade financeira |
+| Arquivo                                                                                                  | Descrição                                                                                                   |
+| -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `src/core/forms/components/entity-form.tsx`                                                              | EntityForm genérico (principal — react-hook-form interno)                                                   |
+| `src/core/forms/components/entity-form-field.tsx`                                                        | Despacho de tipo de campo → componente especializado                                                        |
+| `src/core/forms/components/entity-form-validation.ts`                                                    | validateRequiredFields, showValidationErrors, buildDefaultValues                                            |
+| `src/core/forms/components/entity-form.types.ts`                                                         | EntityFormProps, ValidationResult, GridColumns                                                              |
+| `src/core/types/form.types.ts`                                                                           | EntityFormConfig, FieldConfig, FieldType (canônico)                                                         |
+| `src/core/types/entity-config.types.ts`                                                                  | EntityConfig, defineEntityConfig()                                                                          |
+| `src/components/shared/forms/entity-form.tsx`                                                            | EntityForm legado (useState puro — não usar para novos)                                                     |
+| `src/components/shared/forms/dynamic-form-field.tsx`                                                     | Campo dinâmico do EntityForm legado                                                                         |
+| `src/components/ui/form.tsx`                                                                             | Componentes shadcn/ui para react-hook-form (Form, FormField, FormItem, FormLabel, FormControl, FormMessage) |
+| `src/components/ui/combobox.tsx`                                                                         | Combobox com busca (Radix Command)                                                                          |
+| `src/components/ui/input-group.tsx`                                                                      | InputGroup, InputGroupAddon, InputGroupText, MoneyInput                                                     |
+| `src/helpers/formatters.ts`                                                                              | Formatação de CNPJ, CPF, telefone, CEP, CNAE, moeda, data                                                   |
+| `src/lib/error-messages.ts`                                                                              | Mapa de tradução de erros inglês → português                                                                |
+| `src/app/(auth)/login/page.tsx`                                                                          | Exemplo de formulário multistep (TanStack Form)                                                             |
+| `src/app/(auth)/register/page.tsx`                                                                       | Exemplo de formulário simples (TanStack Form)                                                               |
+| `src/app/(auth)/forgot-password/page.tsx`                                                                | Exemplo de formulário multistep com 3 etapas                                                                |
+| `src/components/profile-form.tsx`                                                                        | Formulário de perfil (TanStack Form)                                                                        |
+| `src/components/stock/variants/variant-form.tsx`                                                         | Formulário manual complexo com cálculos bidirecionais                                                       |
+| `src/components/finance/inline-supplier-form.tsx`                                                        | Formulário inline com lookup BrasilAPI                                                                      |
+| `src/components/finance/inline-bank-account-form.tsx`                                                    | Formulário inline com grid 2 colunas                                                                        |
+| `src/app/(dashboard)/(modules)/stock/(entities)/products/src/components/workspace/quick-stock-entry.tsx` | Formulário react-hook-form + Zod completo                                                                   |
+| `src/app/(dashboard)/(modules)/admin/(entities)/companies/src/schemas/company.schema.ts`                 | Schema Zod canônico com validação de CNPJ/CPF/telefone/CEP                                                  |
+| `src/app/(dashboard)/(modules)/finance/companies/src/modals/cnpj-lookup-modal.tsx`                       | Modal com máscara CNPJ na digitação                                                                         |
+| `src/app/(dashboard)/(modules)/finance/payable/new/page.tsx`                                             | Página de formulário manual com useState para entidade financeira                                           |
 
 ---
 
@@ -759,20 +797,24 @@ try {
 ### Quando usar cada abordagem
 
 **Use TanStack Form** quando:
+
 - O formulário é de autenticação (login, registro, recuperação de senha, perfil)
 - Não há schema Zod e a validação é simples (verificações no submit)
 
 **Use react-hook-form + Zod** quando:
+
 - O formulário precisa de validação rigorosa por campo com mensagens inline
 - O schema pode ser expresso staticamente em Zod
 - Quer usar os componentes shadcn/ui `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`
 
 **Use useState manual** quando:
+
 - Há lógica de negócio complexa que não cabe em schema (cálculos derivados, estados interdependentes)
 - O formulário tem campos condicionais com lógica imperativa
 - O formulário é pequeno e inline (cria entidade rápido dentro de Popover/Dialog)
 
 **Use EntityForm genérico** quando:
+
 - O módulo já tem uma `EntityConfig` com `form` configurado
 - O formulário é CRUD padrão sem lógica especial
 - O modal de "Edição Rápida" precisa ser implementado com mínimo de código
@@ -797,6 +839,6 @@ try {
 
 ## Audit History
 
-| Date | Dimension | Score | Report |
-|------|-----------|-------|--------|
-| — | — | — | Nenhum registro. |
+| Date | Dimension | Score | Report           |
+| ---- | --------- | ----- | ---------------- |
+| —    | —         | —     | Nenhum registro. |

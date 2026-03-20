@@ -107,7 +107,8 @@ export default function ProductCategoryDetailPage() {
   } = useCategory(categoryId);
   const category = categoryData?.category;
 
-  const { data: allCategoriesData, isLoading: isLoadingCategories } = useCategories();
+  const { data: allCategoriesData, isLoading: isLoadingCategories } =
+    useCategories();
   const allCategories = useMemo(
     () => allCategoriesData?.categories || [],
     [allCategoriesData]
@@ -155,8 +156,7 @@ export default function ProductCategoryDetailPage() {
         id: 'view-products',
         title: `Ver ${category.productCount} Produto${category.productCount !== 1 ? 's' : ''}`,
         icon: Package,
-        onClick: () =>
-          router.push(`/stock/products?category=${categoryId}`),
+        onClick: () => router.push(`/stock/products?category=${categoryId}`),
         variant: 'outline' as const,
       });
     }
@@ -394,7 +394,8 @@ export default function ProductCategoryDetailPage() {
     { day: '2-digit', month: 'long', year: 'numeric' }
   );
   const formattedUpdatedAt =
-    category.updatedAt && String(category.updatedAt) !== String(category.createdAt)
+    category.updatedAt &&
+    String(category.updatedAt) !== String(category.createdAt)
       ? new Date(category.updatedAt).toLocaleDateString('pt-BR', {
           day: '2-digit',
           month: 'long',
@@ -528,10 +529,7 @@ export default function ProductCategoryDetailPage() {
                           <X className="h-4 w-4" />
                           <span className="hidden sm:inline">Cancelar</span>
                         </Button>
-                        <Button
-                          size="sm"
-                          onClick={handleFinishReorder}
-                        >
+                        <Button size="sm" onClick={handleFinishReorder}>
                           <Check className="h-4 w-4" />
                           <span className="hidden sm:inline">Concluir</span>
                         </Button>
@@ -565,10 +563,7 @@ export default function ProductCategoryDetailPage() {
               {isLoadingCategories ? (
                 <GridLoading count={3} layout="grid" size="md" gap="gap-4" />
               ) : isReorderMode && subcategories.length > 0 ? (
-                <SortableCategoryList
-                  ref={sortableRef}
-                  items={subcategories}
-                />
+                <SortableCategoryList ref={sortableRef} items={subcategories} />
               ) : subcategories.length > 0 ? (
                 <EntityGrid
                   config={categoriesConfig}

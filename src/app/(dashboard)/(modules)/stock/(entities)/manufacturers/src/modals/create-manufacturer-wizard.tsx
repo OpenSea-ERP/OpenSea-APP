@@ -173,12 +173,8 @@ function StepCnpjPreview({
         <tbody>
           {rows.map(row => (
             <tr key={row.label} className="border-t">
-              <td className="px-3 py-2 text-muted-foreground">
-                {row.label}
-              </td>
-              <td className="px-3 py-2">
-                {row.value}
-              </td>
+              <td className="px-3 py-2 text-muted-foreground">{row.label}</td>
+              <td className="px-3 py-2">{row.value}</td>
             </tr>
           ))}
         </tbody>
@@ -589,11 +585,7 @@ export function CreateManufacturerWizard({
     content: companyData ? <StepCnpjPreview companyData={companyData} /> : null,
     onBack: handleBackToStep1,
     footer: (
-      <Button
-        type="button"
-        onClick={handleSubmitCnpj}
-        disabled={isSubmitting}
-      >
+      <Button type="button" onClick={handleSubmitCnpj} disabled={isSubmitting}>
         {isSubmitting ? (
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
         ) : (

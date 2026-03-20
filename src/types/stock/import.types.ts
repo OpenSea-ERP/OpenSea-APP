@@ -147,7 +147,12 @@ export interface BulkCreateVariantsRequest {
 }
 
 export interface BulkCreateVariantsResponse {
-  created: Array<{ id: string; name: string; fullCode: string; productId: string }>;
+  created: Array<{
+    id: string;
+    name: string;
+    fullCode: string;
+    productId: string;
+  }>;
   skipped: Array<{ name: string; reason: string }>;
   errors: Array<{ index: number; name: string; message: string }>;
 }

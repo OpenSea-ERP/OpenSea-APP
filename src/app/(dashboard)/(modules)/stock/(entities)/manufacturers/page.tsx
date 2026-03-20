@@ -34,7 +34,11 @@ import {
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
 import { productsService } from '@/services/stock';
-import type { Manufacturer, Product, UpdateManufacturerRequest } from '@/types/stock';
+import type {
+  Manufacturer,
+  Product,
+  UpdateManufacturerRequest,
+} from '@/types/stock';
 import { useQuery } from '@tanstack/react-query';
 import { COUNTRIES } from '@/components/ui/country-select';
 import { formatCNPJ } from '@/lib/masks';
@@ -81,7 +85,9 @@ export default function ManufacturersPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
-  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>(
+    'name'
+  );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const [renameModalOpen, setRenameModalOpen] = useState(false);
@@ -100,11 +106,14 @@ export default function ManufacturersPage() {
   // DATA: Infinite scroll + mutations
   // ============================================================================
 
-  const filters: InfiniteListFilters = useMemo(() => ({
-    search: debouncedSearch || undefined,
-    sortBy,
-    sortOrder,
-  }), [debouncedSearch, sortBy, sortOrder]);
+  const filters: InfiniteListFilters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      sortBy,
+      sortOrder,
+    }),
+    [debouncedSearch, sortBy, sortOrder]
+  );
 
   const {
     items,
@@ -208,7 +217,10 @@ export default function ManufacturersPage() {
 
   const handleRenameSubmit = useCallback(
     async (id: string, data: Partial<Manufacturer>) => {
-      await updateMutation.mutateAsync({ id, data: data as UpdateManufacturerRequest });
+      await updateMutation.mutateAsync({
+        id,
+        data: data as UpdateManufacturerRequest,
+      });
       setRenameModalOpen(false);
       setRenameManufacturerItem(null);
     },
@@ -516,10 +528,7 @@ export default function ManufacturersPage() {
   // COMPUTED VALUES
   // ============================================================================
 
-  const initialIds = useMemo(
-    () => items.map(i => i.id),
-    [items]
-  );
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   // ============================================================================
   // HEADER BUTTONS CONFIGURATION
@@ -609,7 +618,9 @@ export default function ManufacturersPage() {
               message="Ocorreu um erro ao tentar carregar os fabricantes. Por favor, tente novamente."
               action={{
                 label: 'Tentar Novamente',
-                onClick: () => { refetch(); },
+                onClick: () => {
+                  refetch();
+                },
               }}
             />
           ) : (
@@ -629,8 +640,7 @@ export default function ManufacturersPage() {
                 toolbarStart={
                   <p className="text-sm text-muted-foreground whitespace-nowrap">
                     {total} {total === 1 ? 'fabricante' : 'fabricantes'}
-                    {items.length < total &&
-                      ` (${items.length} carregados)`}
+                    {items.length < total && ` (${items.length} carregados)`}
                   </p>
                 }
                 defaultSortField="name"
@@ -661,7 +671,9 @@ export default function ManufacturersPage() {
             open={createOpen}
             onOpenChange={open => !open && setCreateOpen(false)}
             onSubmit={async data => {
-              await createMutation.mutateAsync(data as Parameters<typeof createMutation.mutateAsync>[0]);
+              await createMutation.mutateAsync(
+                data as Parameters<typeof createMutation.mutateAsync>[0]
+              );
               setCreateOpen(false);
             }}
           />

@@ -29,7 +29,9 @@ export function useCreateSubtask(boardId: string, cardId: string) {
         queryKey: SUBTASK_QUERY_KEYS.SUBTASKS(boardId, cardId),
       });
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -49,7 +51,9 @@ export function useUpdateSubtask(boardId: string, cardId: string) {
         queryKey: SUBTASK_QUERY_KEYS.SUBTASKS(boardId, cardId),
       });
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -64,7 +68,9 @@ export function useDeleteSubtask(boardId: string, cardId: string) {
         queryKey: SUBTASK_QUERY_KEYS.SUBTASKS(boardId, cardId),
       });
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -84,7 +90,9 @@ export function useCompleteSubtask(boardId: string, cardId: string) {
         queryKey: SUBTASK_QUERY_KEYS.SUBTASKS(boardId, cardId),
       });
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }

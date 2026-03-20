@@ -34,7 +34,9 @@ export function useCreateRecurringConfig() {
     mutationFn: (data: CreateRecurringConfigRequest) =>
       financeRecurringService.create(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.RECURRING_CONFIGS,
+      });
     },
   });
 }
@@ -50,7 +52,9 @@ export function useUpdateRecurringConfig() {
       data: UpdateRecurringConfigRequest;
     }) => financeRecurringService.update(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.RECURRING_CONFIGS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.RECURRING_CONFIG(variables.id),
       });
@@ -63,7 +67,9 @@ export function usePauseRecurring() {
   return useMutation({
     mutationFn: (id: string) => financeRecurringService.pause(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.RECURRING_CONFIGS,
+      });
     },
   });
 }
@@ -73,7 +79,9 @@ export function useResumeRecurring() {
   return useMutation({
     mutationFn: (id: string) => financeRecurringService.resume(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.RECURRING_CONFIGS,
+      });
     },
   });
 }
@@ -83,7 +91,9 @@ export function useCancelRecurring() {
   return useMutation({
     mutationFn: (id: string) => financeRecurringService.cancel(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RECURRING_CONFIGS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.RECURRING_CONFIGS,
+      });
     },
   });
 }

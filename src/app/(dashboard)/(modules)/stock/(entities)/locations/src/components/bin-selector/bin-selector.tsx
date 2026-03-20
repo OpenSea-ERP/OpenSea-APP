@@ -1,7 +1,21 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Search, ChevronDown, X, Check, MapPin, Lock, Loader2 } from 'lucide-react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
+import {
+  Search,
+  ChevronDown,
+  X,
+  Check,
+  MapPin,
+  Lock,
+  Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -60,9 +74,8 @@ export function BinSelector({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Single zone mode
-  const { data: singleZoneBins = [], isLoading: isLoadingSingle } = useAvailableBins(
-    !warehouseId ? zoneId : undefined
-  );
+  const { data: singleZoneBins = [], isLoading: isLoadingSingle } =
+    useAvailableBins(!warehouseId ? zoneId : undefined);
 
   // Multi zone mode: fetch zones for the warehouse
   const { data: zones = [], isLoading: isLoadingZones } = useZones(
@@ -88,10 +101,22 @@ export function BinSelector({
   const zone8 = useAvailableBins(zoneIds[8]);
   const zone9 = useAvailableBins(zoneIds[9]);
 
-  const multiZoneQueries = [zone0, zone1, zone2, zone3, zone4, zone5, zone6, zone7, zone8, zone9];
-  const isLoadingMulti = warehouseId ? (
-    isLoadingZones || multiZoneQueries.some((q, i) => i < zoneIds.length && q.isLoading)
-  ) : false;
+  const multiZoneQueries = [
+    zone0,
+    zone1,
+    zone2,
+    zone3,
+    zone4,
+    zone5,
+    zone6,
+    zone7,
+    zone8,
+    zone9,
+  ];
+  const isLoadingMulti = warehouseId
+    ? isLoadingZones ||
+      multiZoneQueries.some((q, i) => i < zoneIds.length && q.isLoading)
+    : false;
 
   const isLoading = warehouseId ? isLoadingMulti : isLoadingSingle;
 
@@ -105,9 +130,8 @@ export function BinSelector({
 
   // Build grouped bins
   const groups = useMemo<BinGroup[]>(() => {
-    const excludeSet = excludeBinIds && excludeBinIds.length > 0
-      ? new Set(excludeBinIds)
-      : null;
+    const excludeSet =
+      excludeBinIds && excludeBinIds.length > 0 ? new Set(excludeBinIds) : null;
 
     const filterBins = (bins: Bin[]) => {
       let filtered = onlyAvailable ? bins.filter(b => !b.isBlocked) : bins;
@@ -143,7 +167,16 @@ export function BinSelector({
     return filtered.length > 0 || !searchQuery
       ? [{ zoneName: '', zoneCode: '', bins: filtered }]
       : [];
-  }, [warehouseId, zones, zoneIds, multiZoneQueries, singleZoneBins, onlyAvailable, excludeBinIds, searchQuery]);
+  }, [
+    warehouseId,
+    zones,
+    zoneIds,
+    multiZoneQueries,
+    singleZoneBins,
+    onlyAvailable,
+    excludeBinIds,
+    searchQuery,
+  ]);
 
   const totalBins = groups.reduce((sum, g) => sum + g.bins.length, 0);
 
@@ -179,13 +212,17 @@ export function BinSelector({
           'w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-left transition-colors',
           'hover:bg-accent focus:bg-accent focus:outline-none',
           isSelected && 'bg-accent',
-          isBlocked && 'opacity-40 cursor-not-allowed',
+          isBlocked && 'opacity-40 cursor-not-allowed'
         )}
       >
         <div
           className={cn(
             'h-2 w-2 rounded-full shrink-0',
-            isBlocked ? 'bg-gray-400' : isEmpty ? 'bg-emerald-500' : 'bg-amber-500',
+            isBlocked
+              ? 'bg-gray-400'
+              : isEmpty
+                ? 'bg-emerald-500'
+                : 'bg-amber-500'
           )}
         />
         <span className="flex-1 text-xs font-mono font-medium text-foreground truncate">
@@ -198,9 +235,7 @@ export function BinSelector({
             `${bin.currentOccupancy}${bin.capacity ? `/${bin.capacity}` : ''}`
           )}
         </span>
-        {isSelected && (
-          <Check className="h-3.5 w-3.5 text-primary shrink-0" />
-        )}
+        {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
       </button>
     );
   };
@@ -225,7 +260,7 @@ export function BinSelector({
             className={cn(
               'w-full justify-between font-normal h-9',
               !value && 'text-muted-foreground',
-              error && 'border-destructive focus:ring-destructive',
+              error && 'border-destructive focus:ring-destructive'
             )}
           >
             <span className="flex items-center gap-2 truncate">
@@ -243,7 +278,8 @@ export function BinSelector({
                   tabIndex={0}
                   onClick={handleClear}
                   onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') handleClear(e as unknown as React.MouseEvent);
+                    if (e.key === 'Enter' || e.key === ' ')
+                      handleClear(e as unknown as React.MouseEvent);
                   }}
                   className="hover:bg-muted rounded p-0.5"
                 >
@@ -289,7 +325,7 @@ export function BinSelector({
                   Nenhum nicho encontrado
                 </div>
               ) : (
-                groups.map((group) => (
+                groups.map(group => (
                   <div key={group.zoneCode || '_single'}>
                     {/* Zone header (only in multi-zone mode) */}
                     {warehouseId && (
@@ -318,7 +354,12 @@ export function BinSelector({
       </Popover>
 
       {(helperText || errorMessage) && (
-        <p className={cn('text-xs', error ? 'text-destructive' : 'text-muted-foreground')}>
+        <p
+          className={cn(
+            'text-xs',
+            error ? 'text-destructive' : 'text-muted-foreground'
+          )}
+        >
           {errorMessage || helperText}
         </p>
       )}

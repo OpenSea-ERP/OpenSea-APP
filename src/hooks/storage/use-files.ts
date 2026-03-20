@@ -34,8 +34,12 @@ export function useUploadFile() {
       options?: { entityType?: string; entityId?: string };
     }) => storageFilesService.uploadFile(folderId, file, options),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FILES });
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.STATS });
     },
@@ -103,8 +107,12 @@ export function useRenameFile() {
       );
     },
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FILE(variables.id),
       });
@@ -120,8 +128,12 @@ export function useMoveFile() {
     mutationFn: ({ id, data }: { id: string; data: MoveFileRequest }) =>
       storageFilesService.moveFile(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FILE(variables.id),
       });
@@ -162,8 +174,12 @@ export function useDeleteFile() {
       );
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FILES });
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.STATS });
     },
@@ -228,8 +244,12 @@ export function useRestoreVersion() {
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.VERSIONS(variables.id),
       });
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
     },
   });
 }

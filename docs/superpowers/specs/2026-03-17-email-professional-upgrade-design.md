@@ -7,22 +7,25 @@ Transform the OpenSea email system from functional to professional-grade by addr
 ## 1. Optimistic UI — Instant Actions
 
 ### Problem
+
 Move, delete, archive, and send actions block the UI waiting for IMAP server response (~2-5s). Users perceive the system as slow.
 
 ### Solution
+
 Apply optimistic updates (already used for markRead/toggleFlag) to all remaining actions.
 
 ### Actions
 
-| Action | UI Behavior | Rollback on Error |
-|--------|------------|-------------------|
-| Move | Email vanishes from list, folder counters update | Email reappears in original list + error toast |
-| Delete | Email vanishes from list | Email reappears + error toast |
-| Archive | Email vanishes from list | Email reappears + error toast |
-| Send | Dialog closes, toast "Enviando..." | Error toast + "Retentar" button with body preserved |
-| Save Draft | Toast "Rascunho salvo", no loading | Error toast |
+| Action     | UI Behavior                                      | Rollback on Error                                   |
+| ---------- | ------------------------------------------------ | --------------------------------------------------- |
+| Move       | Email vanishes from list, folder counters update | Email reappears in original list + error toast      |
+| Delete     | Email vanishes from list                         | Email reappears + error toast                       |
+| Archive    | Email vanishes from list                         | Email reappears + error toast                       |
+| Send       | Dialog closes, toast "Enviando..."               | Error toast + "Retentar" button with body preserved |
+| Save Draft | Toast "Rascunho salvo", no loading               | Error toast                                         |
 
 ### Technical Pattern
+
 ```
 onMutate:
   1. Cancel outgoing queries
@@ -39,6 +42,7 @@ onSuccess:
 ```
 
 ### Send Email Specifics
+
 - Compose dialog closes immediately
 - Email body preserved in temporary zustand/ref state
 - If SMTP fails: toast with "Retentar" action that reopens compose with preserved content
@@ -47,9 +51,11 @@ onSuccess:
 ## 2. Notification Deduplication
 
 ### Problem
+
 User actions (send, move, delete, save draft) create or move messages on the IMAP server. The next sync cycle detects these as "new messages" and generates false notifications.
 
 ### Solution
+
 Two-layer approach:
 
 **Layer 1 — Folder-based rule (catches 90%):**
@@ -58,16 +64,17 @@ Only INBOX folder generates "new email" notifications. Sent, Drafts, Trash, Spam
 **Layer 2 — Redis suppressors (catches edge cases):**
 When user performs an action that creates/moves messages:
 
-| User Action | Suppressor Registered |
-|------------|----------------------|
-| Send email | `suppress:{accountId}:sent:{messageId}` TTL 10min |
-| Save draft | `suppress:{accountId}:drafts:{messageId}` TTL 10min |
-| Move email | `suppress:{accountId}:{targetFolder}:{uid}` TTL 10min |
-| Delete email | `suppress:{accountId}:trash:{uid}` TTL 10min |
+| User Action  | Suppressor Registered                                 |
+| ------------ | ----------------------------------------------------- |
+| Send email   | `suppress:{accountId}:sent:{messageId}` TTL 10min     |
+| Save draft   | `suppress:{accountId}:drafts:{messageId}` TTL 10min   |
+| Move email   | `suppress:{accountId}:{targetFolder}:{uid}` TTL 10min |
+| Delete email | `suppress:{accountId}:trash:{uid}` TTL 10min          |
 
 During sync, before generating notifications, check for matching suppressors. If found, skip notification and delete suppressor.
 
 ### Why Redis
+
 - Ephemeral by nature (TTL auto-expires)
 - Fast lookup during sync
 - Already running for BullMQ
@@ -75,6 +82,7 @@ During sync, before generating notifications, check for matching suppressors. If
 ## 3. Health Indicators
 
 ### Problem
+
 Users have no visibility into whether their email connections are working. They only discover problems when emails stop arriving.
 
 ### Solution
@@ -87,6 +95,7 @@ Three horizontal cards in the Connection tab of account settings:
 - **Worker Card**: icon + "Último sync há X min" / "Falha no sync" + job state
 
 Color scheme:
+
 - Connected: emerald (green)
 - Error: rose (red)
 - Checking: amber with pulse animation
@@ -94,13 +103,16 @@ Color scheme:
 A "Testar Todos" button runs all 3 checks in parallel.
 
 **Sidebar (conditional alert):**
+
 - All healthy → nothing shown (clean)
 - Any service failing → amber AlertTriangle icon next to account name
 - Tooltip on hover: descriptive message ("IMAP: Falha na conexão")
 - Click → opens account settings on Connection tab
 
 ### Backend
+
 New endpoint: `GET /v1/email/accounts/:id/health`
+
 - Tests IMAP connection (connect + authenticate + list)
 - Tests SMTP connection (nodemailer.verify())
 - Checks worker status (last sync job state + timestamp from BullMQ)
@@ -110,12 +122,15 @@ New endpoint: `GET /v1/email/accounts/:id/health`
 ## 4. IMAP IDLE — Real-Time Sync
 
 ### Problem
+
 5-minute polling means users wait up to 5 minutes to see new emails.
 
 ### Solution
+
 IMAP IDLE connections (RFC 2177) for push notifications from mail servers.
 
 ### Architecture
+
 ```
 Worker Process
 ├── IDLE Manager (NEW)
@@ -128,6 +143,7 @@ Worker Process
 ```
 
 ### IDLE Manager Details
+
 - One persistent IMAP connection per active account monitoring INBOX
 - On `exists` event → trigger incremental sync (only new UIDs)
 - Heartbeat every 29 minutes (RFC 2177 recommends refresh before 30min)
@@ -136,11 +152,13 @@ Worker Process
 - Map<accountId, { client: ImapFlow, retries: number, state: 'idle'|'syncing'|'degraded' }>
 
 ### Scheduler Change
+
 - Interval increases from 5min to 15min
 - Now serves as deep sync (all folders) + fallback for degraded accounts
 - IDLE handles INBOX in real-time
 
 ### Limitations
+
 - IDLE monitors INBOX only (IMAP spec: 1 folder per connection)
 - Other folders sync via 15min scheduler
 - 5-20 concurrent IDLE connections is sustainable for Node.js
@@ -153,6 +171,7 @@ Worker Process
 4. **IMAP IDLE** — most complex, biggest technical improvement
 
 ## What Does NOT Change
+
 - Email layout (already excellent)
 - Connection pool + circuit breaker (already robust)
 - Credential encryption with key rotation (already secure)

@@ -78,7 +78,9 @@ export function useCreateInventoryCycle() {
     mutationFn: (data: CreateInventoryCycleRequest) =>
       inventoryService.createCycle(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+      await queryClient.invalidateQueries({
+        queryKey: INVENTORY_QUERY_KEYS.CYCLES,
+      });
     },
   });
 }
@@ -91,7 +93,9 @@ export function useStartInventoryCycle() {
     mutationFn: ({ id, data }: { id: string; data?: StartCycleRequest }) =>
       inventoryService.startCycle(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+      await queryClient.invalidateQueries({
+        queryKey: INVENTORY_QUERY_KEYS.CYCLES,
+      });
       await queryClient.invalidateQueries({
         queryKey: INVENTORY_QUERY_KEYS.CYCLE(variables.id),
       });
@@ -110,7 +114,9 @@ export function useCompleteInventoryCycle() {
     mutationFn: ({ id, data }: { id: string; data?: CompleteCycleRequest }) =>
       inventoryService.completeCycle(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+      await queryClient.invalidateQueries({
+        queryKey: INVENTORY_QUERY_KEYS.CYCLES,
+      });
       await queryClient.invalidateQueries({
         queryKey: INVENTORY_QUERY_KEYS.CYCLE(variables.id),
       });
@@ -142,7 +148,9 @@ export function useSubmitInventoryCount() {
     }) => inventoryService.submitCount(countId, data),
     onSuccess: async () => {
       // Invalidate all cycle-related queries as we don't know which cycle this count belongs to
-      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+      await queryClient.invalidateQueries({
+        queryKey: INVENTORY_QUERY_KEYS.CYCLES,
+      });
     },
   });
 }
@@ -160,7 +168,9 @@ export function useAdjustInventoryCount() {
       data: AdjustCountRequest;
     }) => inventoryService.adjustCount(countId, data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.CYCLES });
+      await queryClient.invalidateQueries({
+        queryKey: INVENTORY_QUERY_KEYS.CYCLES,
+      });
       // Items may have been adjusted
       await queryClient.invalidateQueries({ queryKey: ['items'] });
       await queryClient.invalidateQueries({ queryKey: ['variants'] });

@@ -22,7 +22,9 @@ export function useCreateChecklist(boardId: string, cardId: string) {
       checklistsService.create(boardId, cardId, data),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -39,7 +41,9 @@ export function useUpdateChecklist(boardId: string, cardId: string) {
     }) => checklistsService.update(boardId, cardId, checklistId, data),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -51,7 +55,9 @@ export function useDeleteChecklist(boardId: string, cardId: string) {
       checklistsService.delete(boardId, cardId, checklistId),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -68,7 +74,9 @@ export function useAddChecklistItem(boardId: string, cardId: string) {
     }) => checklistsService.addItem(boardId, cardId, checklistId, data),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -85,7 +93,9 @@ export function useToggleChecklistItem(boardId: string, cardId: string) {
     }) => checklistsService.toggleItem(boardId, cardId, checklistId, itemId),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -102,7 +112,9 @@ export function useDeleteChecklistItem(boardId: string, cardId: string) {
     }) => checklistsService.deleteItem(boardId, cardId, checklistId, itemId),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }

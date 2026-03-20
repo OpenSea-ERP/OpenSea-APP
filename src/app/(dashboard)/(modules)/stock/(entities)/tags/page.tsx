@@ -57,7 +57,9 @@ export default function TagsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>(
+    'name'
+  );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // ============================================================================
@@ -349,8 +351,7 @@ export default function TagsPage() {
                 toolbarStart={
                   <p className="text-sm text-muted-foreground whitespace-nowrap">
                     {total} {total === 1 ? 'tag' : 'tags'}
-                    {items.length < total &&
-                      ` (${items.length} carregados)`}
+                    {items.length < total && ` (${items.length} carregados)`}
                   </p>
                 }
                 onItemDoubleClick={item => handleDoubleClick(item.id)}
@@ -380,7 +381,9 @@ export default function TagsPage() {
             isOpen={createOpen}
             onClose={() => setCreateOpen(false)}
             onSubmit={async data => {
-              await createMutation.mutateAsync(data as Parameters<typeof createMutation.mutateAsync>[0]);
+              await createMutation.mutateAsync(
+                data as Parameters<typeof createMutation.mutateAsync>[0]
+              );
               setCreateOpen(false);
               toast.success('Tag criada com sucesso!');
             }}
@@ -413,7 +416,9 @@ export default function TagsPage() {
             onSubmit={async (id, data) => {
               await updateMutation.mutateAsync({
                 id,
-                data: data as Parameters<typeof updateMutation.mutateAsync>[0]['data'],
+                data: data as Parameters<
+                  typeof updateMutation.mutateAsync
+                >[0]['data'],
               });
               setEditOpen(false);
               toast.success('Tag atualizada com sucesso!');

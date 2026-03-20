@@ -87,16 +87,18 @@ const product = await apiClient.post<ProductResponse>('/v1/products', {
 });
 
 // Download de arquivo
-const { blob, filename } = await apiClient.getBlob('/v1/calendar/events/export');
+const { blob, filename } = await apiClient.getBlob(
+  '/v1/calendar/events/export'
+);
 ```
 
 **Classe de erro tipada:** `ApiError` (em `src/lib/api-client.types.ts`)
 
 ```typescript
 export class ApiError extends Error {
-  status?: number;        // HTTP status code (ex: 404, 422)
+  status?: number; // HTTP status code (ex: 404, 422)
   data?: Record<string, unknown>; // corpo completo do erro
-  code?: string;          // código semântico do erro (ex: 'PASSWORD_RESET_REQUIRED')
+  code?: string; // código semântico do erro (ex: 'PASSWORD_RESET_REQUIRED')
 }
 ```
 
@@ -152,7 +154,9 @@ export const productsService = {
   },
 
   async getProduct(productId: string): Promise<ProductResponse> {
-    return apiClient.get<ProductResponse>(API_ENDPOINTS.PRODUCTS.GET(productId));
+    return apiClient.get<ProductResponse>(
+      API_ENDPOINTS.PRODUCTS.GET(productId)
+    );
   },
 
   async createProduct(data: CreateProductRequest): Promise<ProductResponse> {
@@ -272,7 +276,11 @@ O padrão para hooks de leitura segue esta estrutura:
 // Query Keys — declaradas como constante local, exportadas quando necessário
 const QUERY_KEYS = {
   PRODUCTS: ['products'],
-  PRODUCTS_PAGINATED: (query?: ProductsQuery) => ['products', 'paginated', query],
+  PRODUCTS_PAGINATED: (query?: ProductsQuery) => [
+    'products',
+    'paginated',
+    query,
+  ],
   PRODUCT: (id: string) => ['products', id],
 } as const;
 
@@ -289,8 +297,8 @@ export function useProductsPaginated(query?: ProductsQuery) {
   return useQuery({
     queryKey: QUERY_KEYS.PRODUCTS_PAGINATED(query),
     queryFn: () => productsService.list(query),
-    placeholderData: keepPreviousData,  // mantém dados anteriores durante carregamento
-    staleTime: 30000,                   // 30s — sobrescreve o padrão global de 5min
+    placeholderData: keepPreviousData, // mantém dados anteriores durante carregamento
+    staleTime: 30000, // 30s — sobrescreve o padrão global de 5min
   });
 }
 
@@ -299,21 +307,21 @@ export function useProduct(productId: string) {
   return useQuery({
     queryKey: QUERY_KEYS.PRODUCT(productId),
     queryFn: () => productsService.getProduct(productId),
-    enabled: !!productId,               // não executa se productId for vazio/undefined
+    enabled: !!productId, // não executa se productId for vazio/undefined
   });
 }
 ```
 
 **Valores de `staleTime` por contexto:**
 
-| Contexto | staleTime | Justificativa |
-|----------|-----------|---------------|
-| Padrão global | 5 minutos | Dados gerais de listagem |
-| Permissões do usuário | 15 minutos | Raramente mudam em tempo real |
-| Presigned URLs de arquivo | 45 minutos | URLs expiram em 1 hora |
-| Eventos de calendário | 60 segundos | Mudanças frequentes |
-| Perfil do usuário (`/v1/me`) | 2 minutos | Detectar mudanças rápidas |
-| Dados paginados com filtros | 30 segundos | Filtros mudam com frequência |
+| Contexto                     | staleTime   | Justificativa                 |
+| ---------------------------- | ----------- | ----------------------------- |
+| Padrão global                | 5 minutos   | Dados gerais de listagem      |
+| Permissões do usuário        | 15 minutos  | Raramente mudam em tempo real |
+| Presigned URLs de arquivo    | 45 minutos  | URLs expiram em 1 hora        |
+| Eventos de calendário        | 60 segundos | Mudanças frequentes           |
+| Perfil do usuário (`/v1/me`) | 2 minutos   | Detectar mudanças rápidas     |
+| Dados paginados com filtros  | 30 segundos | Filtros mudam com frequência  |
 
 ---
 
@@ -341,8 +349,13 @@ export function useUpdateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ productId, data }: { productId: string; data: UpdateProductRequest }) =>
-      productsService.updateProduct(productId, data),
+    mutationFn: ({
+      productId,
+      data,
+    }: {
+      productId: string;
+      data: UpdateProductRequest;
+    }) => productsService.updateProduct(productId, data),
     onSuccess: (_, variables) => {
       // Invalida a lista E o detalhe específico
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRODUCTS });
@@ -396,10 +409,10 @@ Utilizada em operações onde a latência degradaria a experiência do usuário 
 // CORRETO — verifica antes de modificar
 queryClient.setQueriesData<CalendarEventsResponse>(
   { queryKey: QUERY_KEYS.CALENDAR_EVENTS },
-  (old) => {
+  old => {
     if (!old?.events) return old; // guard obrigatório
-    return { ...old, events: old.events.filter((e) => e.id !== id) };
-  },
+    return { ...old, events: old.events.filter(e => e.id !== id) };
+  }
 );
 
 // ERRADO — pode quebrar se old for undefined ou de tipo diferente
@@ -407,8 +420,8 @@ queryClient.setQueriesData(
   { queryKey: QUERY_KEYS.CALENDAR_EVENTS },
   (old: CalendarEventsResponse) => ({
     ...old,
-    events: old.events.filter((e) => e.id !== id),
-  }),
+    events: old.events.filter(e => e.id !== id),
+  })
 );
 ```
 
@@ -423,25 +436,26 @@ export function useDeleteCalendarEvent() {
   return useMutation({
     mutationFn: (id: string) => calendarEventsService.delete(id),
 
-    onMutate: async (id) => {
+    onMutate: async id => {
       // 1. Cancelar queries em andamento para evitar conflito
       await queryClient.cancelQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
 
       // 2. Capturar snapshot do estado atual para rollback
-      const previousQueries = queryClient.getQueriesData<CalendarEventsResponse>({
-        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
-      });
+      const previousQueries =
+        queryClient.getQueriesData<CalendarEventsResponse>({
+          queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+        });
 
       // 3. Aplicar atualização otimista em TODAS as queries com esse prefixo
       queryClient.setQueriesData<CalendarEventsResponse>(
         { queryKey: QUERY_KEYS.CALENDAR_EVENTS },
-        (old) => {
+        old => {
           if (!old?.events) return old; // guard obrigatório
           return {
             ...old,
-            events: old.events.filter((e) => e.id !== id),
+            events: old.events.filter(e => e.id !== id),
           };
-        },
+        }
       );
 
       // 4. Retornar contexto para uso no rollback
@@ -475,11 +489,12 @@ export function useCreateCalendarEvent() {
     mutationFn: (data: CreateCalendarEventData) =>
       calendarEventsService.create(data),
 
-    onMutate: async (data) => {
+    onMutate: async data => {
       await queryClient.cancelQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
-      const previousQueries = queryClient.getQueriesData<CalendarEventsResponse>({
-        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
-      });
+      const previousQueries =
+        queryClient.getQueriesData<CalendarEventsResponse>({
+          queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+        });
 
       // Cria item temporário com ID fictício
       const tempEvent: CalendarEvent = {
@@ -495,10 +510,10 @@ export function useCreateCalendarEvent() {
 
       queryClient.setQueriesData<CalendarEventsResponse>(
         { queryKey: QUERY_KEYS.CALENDAR_EVENTS },
-        (old) => {
+        old => {
           if (!old?.events) return old;
           return { ...old, events: [...old.events, tempEvent] };
-        },
+        }
       );
 
       return { previousQueries };
@@ -555,18 +570,30 @@ export function useMoveCard(boardId: string) {
             .filter(c => c.columnId === srcColumnId && c.id !== cardId)
             .sort((a, b) => a.position - b.position);
 
-          const dstCards = srcColumnId === dstColumnId
-            ? srcCards
-            : cards
-                .filter(c => c.columnId === dstColumnId && c.id !== cardId)
-                .sort((a, b) => a.position - b.position);
+          const dstCards =
+            srcColumnId === dstColumnId
+              ? srcCards
+              : cards
+                  .filter(c => c.columnId === dstColumnId && c.id !== cardId)
+                  .sort((a, b) => a.position - b.position);
 
-          const updatedCard = { ...movedCard, columnId: dstColumnId, position: dstPosition };
+          const updatedCard = {
+            ...movedCard,
+            columnId: dstColumnId,
+            position: dstPosition,
+          };
           dstCards.splice(dstPosition, 0, updatedCard);
 
-          const positionMap = new Map<string, { columnId: string; position: number }>();
-          srcCards.forEach((c, i) => positionMap.set(c.id, { columnId: srcColumnId, position: i }));
-          dstCards.forEach((c, i) => positionMap.set(c.id, { columnId: dstColumnId, position: i }));
+          const positionMap = new Map<
+            string,
+            { columnId: string; position: number }
+          >();
+          srcCards.forEach((c, i) =>
+            positionMap.set(c.id, { columnId: srcColumnId, position: i })
+          );
+          dstCards.forEach((c, i) =>
+            positionMap.set(c.id, { columnId: dstColumnId, position: i })
+          );
 
           return {
             ...old,
@@ -608,13 +635,21 @@ const QUERY_KEYS = {
 
   // Lista com filtros — a query object completa como parte da chave
   // Garante cache separado para cada combinação de filtros
-  PRODUCTS_PAGINATED: (query?: ProductsQuery) => ['products', 'paginated', query],
+  PRODUCTS_PAGINATED: (query?: ProductsQuery) => [
+    'products',
+    'paginated',
+    query,
+  ],
 
   // Detalhe individual
   PRODUCT: (id: string) => ['products', id],
 
   // Relações
-  VARIANTS_BY_PRODUCT: (productId: string) => ['variants', 'product', productId],
+  VARIANTS_BY_PRODUCT: (productId: string) => [
+    'variants',
+    'product',
+    productId,
+  ],
 } as const;
 ```
 
@@ -626,7 +661,8 @@ export const meKeys = {
   all: ['me'] as const,
   detail: () => [...meKeys.all, 'detail'] as const,
   employee: () => [...meKeys.all, 'employee'] as const,
-  auditLogs: (query?: AuditLogsQuery) => [...meKeys.all, 'audit-logs', query] as const,
+  auditLogs: (query?: AuditLogsQuery) =>
+    [...meKeys.all, 'audit-logs', query] as const,
   permissions: () => [...meKeys.all, 'permissions'] as const,
 };
 ```
@@ -723,7 +759,11 @@ interface CrudService<TEntity, TCreateRequest, TUpdateRequest> {
 }
 
 // Uso
-const categoryHooks = createCrudHooks<Category, CreateCategoryRequest, UpdateCategoryRequest>({
+const categoryHooks = createCrudHooks<
+  Category,
+  CreateCategoryRequest,
+  UpdateCategoryRequest
+>({
   entityName: 'category',
   pluralEntityName: 'categories',
   service: categoriesService,
@@ -737,9 +777,9 @@ const mutation = categoryHooks.useUpdate();
 const mutation = categoryHooks.useDelete();
 
 // Query keys expostas para uso manual:
-categoryHooks.queryKeys.all       // ['categories']
-categoryHooks.queryKeys.list()    // ['categories', 'list']
-categoryHooks.queryKeys.detail(id) // ['categories', 'detail', id]
+categoryHooks.queryKeys.all; // ['categories']
+categoryHooks.queryKeys.list(); // ['categories', 'list']
+categoryHooks.queryKeys.detail(id); // ['categories', 'detail', id]
 ```
 
 ---
@@ -859,7 +899,7 @@ export function usePermissions() {
     queryKey: ['my-permissions', user?.id, currentTenant?.id],
     queryFn: () => listMyPermissions(),
     enabled: !!user?.id && !!currentTenant,
-    staleTime: 15 * 60 * 1000,  // 15 minutos — permissões raramente mudam
+    staleTime: 15 * 60 * 1000, // 15 minutos — permissões raramente mudam
     gcTime: 30 * 60 * 1000,
     retry: 2,
     throwOnError: false,
@@ -872,8 +912,10 @@ export function usePermissions() {
 
   return {
     hasPermission: (code: string) => isPermissionAllowed(permissions, code),
-    hasAnyPermission: (...codes: string[]) => codes.some(c => isPermissionAllowed(permissions, c)),
-    hasAllPermissions: (...codes: string[]) => codes.every(c => isPermissionAllowed(permissions, c)),
+    hasAnyPermission: (...codes: string[]) =>
+      codes.some(c => isPermissionAllowed(permissions, c)),
+    hasAllPermissions: (...codes: string[]) =>
+      codes.every(c => isPermissionAllowed(permissions, c)),
     // ...
   };
 }
@@ -885,22 +927,22 @@ export function usePermissions() {
 
 Arquivos relevantes para consultar ao trabalhar com este padrão:
 
-| Arquivo | Responsabilidade |
-|---------|-----------------|
-| `src/providers/query-provider.tsx` | Configuração global do QueryClient |
-| `src/lib/api-client.ts` | Cliente HTTP com refresh automático |
-| `src/lib/api-client-auth.ts` | Gerenciamento de tokens JWT |
-| `src/lib/api-client-error.ts` | Parsing e tipagem de erros HTTP |
-| `src/lib/api-client.types.ts` | Tipos: `ApiError`, `RequestOptions`, `RefreshResponse` |
-| `src/lib/toast-utils.ts` | Utilitários para exibir toasts padronizados |
-| `src/config/api.ts` | Endpoints centralizados e configuração de base URL |
-| `src/hooks/create-crud-hooks.ts` | Factory genérica para hooks CRUD simples |
-| `src/hooks/stock/use-products.ts` | Exemplo canônico de hook paginado |
-| `src/hooks/calendar/use-calendar-events.ts` | Exemplo completo de atualização otimista |
-| `src/hooks/tasks/use-cards.ts` | Otimista com reordenação de posições (DnD) |
-| `src/hooks/storage/use-files.ts` | Otimista em rename/delete de arquivos |
-| `src/hooks/use-permissions.ts` | Query com `useMemo` para mapa de permissões |
-| `src/hooks/use-batch-delete.ts` | Exclusão em lote com progresso e retry |
+| Arquivo                                     | Responsabilidade                                       |
+| ------------------------------------------- | ------------------------------------------------------ |
+| `src/providers/query-provider.tsx`          | Configuração global do QueryClient                     |
+| `src/lib/api-client.ts`                     | Cliente HTTP com refresh automático                    |
+| `src/lib/api-client-auth.ts`                | Gerenciamento de tokens JWT                            |
+| `src/lib/api-client-error.ts`               | Parsing e tipagem de erros HTTP                        |
+| `src/lib/api-client.types.ts`               | Tipos: `ApiError`, `RequestOptions`, `RefreshResponse` |
+| `src/lib/toast-utils.ts`                    | Utilitários para exibir toasts padronizados            |
+| `src/config/api.ts`                         | Endpoints centralizados e configuração de base URL     |
+| `src/hooks/create-crud-hooks.ts`            | Factory genérica para hooks CRUD simples               |
+| `src/hooks/stock/use-products.ts`           | Exemplo canônico de hook paginado                      |
+| `src/hooks/calendar/use-calendar-events.ts` | Exemplo completo de atualização otimista               |
+| `src/hooks/tasks/use-cards.ts`              | Otimista com reordenação de posições (DnD)             |
+| `src/hooks/storage/use-files.ts`            | Otimista em rename/delete de arquivos                  |
+| `src/hooks/use-permissions.ts`              | Query com `useMemo` para mapa de permissões            |
+| `src/hooks/use-batch-delete.ts`             | Exclusão em lote com progresso e retry                 |
 
 ---
 
@@ -909,6 +951,7 @@ Arquivos relevantes para consultar ao trabalhar com este padrão:
 ### Quando usar atualização otimista
 
 Usar `onMutate` + `setQueriesData`:
+
 - Drag-and-drop de cards em boards Kanban
 - Rename de arquivos ou pastas no file manager
 - Exclusão de itens em listas longas (feedback imediato)
@@ -916,6 +959,7 @@ Usar `onMutate` + `setQueriesData`:
 - Resposta a convite (status muda sem esperar resposta do servidor)
 
 Não usar (usar apenas `onSuccess` + `invalidateQueries`):
+
 - Criação de entidades complexas com muitos campos derivados
 - Operações com efeitos colaterais no servidor (ex: registrar pagamento que atualiza saldo)
 - Qualquer operação onde o estado final depende de cálculo feito pelo servidor
@@ -944,6 +988,6 @@ Não usar (usar apenas `onSuccess` + `invalidateQueries`):
 
 ## Audit History
 
-| Date | Dimension | Score | Report |
-|------|-----------|-------|--------|
-| 2026-03-10 | Documentação inicial | — | Criado com base na análise do codebase completo |
+| Date       | Dimension            | Score | Report                                          |
+| ---------- | -------------------- | ----- | ----------------------------------------------- |
+| 2026-03-10 | Documentação inicial | —     | Criado com base na análise do codebase completo |

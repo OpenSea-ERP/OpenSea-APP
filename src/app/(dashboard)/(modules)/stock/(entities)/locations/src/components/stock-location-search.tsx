@@ -18,8 +18,10 @@ export function StockLocationSearch() {
   const router = useRouter();
   const debouncedQuery = useDebounce(query, 300);
 
-  const { data: searchData, isLoading: isSearchLoading } = useLocationSearch(debouncedQuery);
-  const { data: suggestions, isLoading: isSuggestionsLoading } = useBinSuggestions(debouncedQuery);
+  const { data: searchData, isLoading: isSearchLoading } =
+    useLocationSearch(debouncedQuery);
+  const { data: suggestions, isLoading: isSuggestionsLoading } =
+    useBinSuggestions(debouncedQuery);
 
   const isLoading = isSearchLoading || isSuggestionsLoading;
   const showDropdown = isOpen && query.length >= 2;
@@ -31,7 +33,10 @@ export function StockLocationSearch() {
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -51,7 +56,9 @@ export function StockLocationSearch() {
       const detailRes = await apiClient.get<BinDetailResponse>(
         `${API_ENDPOINTS.bins.get(binId)}/detail`
       );
-      router.push(`/stock/locations/${detailRes.warehouse.id}?zone=${detailRes.zone.id}&highlight=${binId}`);
+      router.push(
+        `/stock/locations/${detailRes.warehouse.id}?zone=${detailRes.zone.id}&highlight=${binId}`
+      );
     } catch {
       // Fallback: if we can't resolve, do nothing
     }
@@ -64,7 +71,9 @@ export function StockLocationSearch() {
     setIsOpen(false);
     setQuery('');
     if (item.bin) {
-      router.push(`/stock/locations/${item.warehouse.id}?highlight=${item.bin.id}`);
+      router.push(
+        `/stock/locations/${item.warehouse.id}?highlight=${item.bin.id}`
+      );
     } else {
       router.push(`/stock/locations/${item.warehouse.id}`);
     }
@@ -77,7 +86,7 @@ export function StockLocationSearch() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
         <Input
           value={query}
-          onChange={(e) => {
+          onChange={e => {
             setQuery(e.target.value);
             setIsOpen(true);
           }}
@@ -109,7 +118,7 @@ export function StockLocationSearch() {
                   <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Endereços
                   </div>
-                  {suggestions.map((suggestion) => (
+                  {suggestions.map(suggestion => (
                     <button
                       key={suggestion.address}
                       className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/50 transition-colors text-left"
@@ -125,15 +134,22 @@ export function StockLocationSearch() {
                         variant="outline"
                         className={cn(
                           'text-xs shrink-0',
-                          suggestion.occupancyLevel === 'empty' && 'text-gray-500',
-                          suggestion.occupancyLevel === 'low' && 'text-emerald-600',
-                          suggestion.occupancyLevel === 'medium' && 'text-amber-600',
-                          suggestion.occupancyLevel === 'high' && 'text-orange-600',
-                          suggestion.occupancyLevel === 'full' && 'text-rose-600',
-                          suggestion.occupancyLevel === 'blocked' && 'text-gray-500',
+                          suggestion.occupancyLevel === 'empty' &&
+                            'text-gray-500',
+                          suggestion.occupancyLevel === 'low' &&
+                            'text-emerald-600',
+                          suggestion.occupancyLevel === 'medium' &&
+                            'text-amber-600',
+                          suggestion.occupancyLevel === 'high' &&
+                            'text-orange-600',
+                          suggestion.occupancyLevel === 'full' &&
+                            'text-rose-600',
+                          suggestion.occupancyLevel === 'blocked' &&
+                            'text-gray-500'
                         )}
                       >
-                        {suggestion.itemCount} {suggestion.itemCount === 1 ? 'item' : 'itens'}
+                        {suggestion.itemCount}{' '}
+                        {suggestion.itemCount === 1 ? 'item' : 'itens'}
                       </Badge>
                     </button>
                   ))}
@@ -143,11 +159,13 @@ export function StockLocationSearch() {
               {/* Item search results */}
               {hasItems && (
                 <div>
-                  {hasSuggestions && <div className="border-t border-border my-1" />}
+                  {hasSuggestions && (
+                    <div className="border-t border-border my-1" />
+                  )}
                   <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Itens
                   </div>
-                  {searchData.items.map((item) => (
+                  {searchData.items.map(item => (
                     <button
                       key={item.itemId}
                       className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted/50 transition-colors text-left"
@@ -158,13 +176,19 @@ export function StockLocationSearch() {
                         <span className="text-sm font-medium text-foreground truncate block">
                           {item.productName}
                           {item.variantName && (
-                            <span className="text-muted-foreground"> — {item.variantName}</span>
+                            <span className="text-muted-foreground">
+                              {' '}
+                              — {item.variantName}
+                            </span>
                           )}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {item.warehouse.code} &rsaquo; {item.zone.code}
                           {item.bin && (
-                            <span className="font-mono"> &rsaquo; {item.bin.address}</span>
+                            <span className="font-mono">
+                              {' '}
+                              &rsaquo; {item.bin.address}
+                            </span>
                           )}
                         </span>
                       </div>

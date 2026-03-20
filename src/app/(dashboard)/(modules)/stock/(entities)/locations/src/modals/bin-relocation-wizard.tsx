@@ -59,7 +59,9 @@ function ItemTransferCard({
   excludeBinIds?: string[];
   onTransferred: () => void;
 }) {
-  const [destinationAddress, setDestinationAddress] = useState<string | null>(null);
+  const [destinationAddress, setDestinationAddress] = useState<string | null>(
+    null
+  );
   const [destinationBinId, setDestinationBinId] = useState<string | null>(null);
   const [transferred, setTransferred] = useState(false);
   const transferItem = useTransferItem();
@@ -214,11 +216,10 @@ function BinItemsList({
       {/* Progress indicator */}
       <div className="flex items-center gap-2 px-1">
         <span className="text-xs text-muted-foreground">
-          {movedCount} de {totalItems} {totalItems === 1 ? 'item movido' : 'itens movidos'}
+          {movedCount} de {totalItems}{' '}
+          {totalItems === 1 ? 'item movido' : 'itens movidos'}
         </span>
-        {allMoved && (
-          <CheckCircle className="h-4 w-4 text-emerald-500" />
-        )}
+        {allMoved && <CheckCircle className="h-4 w-4 text-emerald-500" />}
       </div>
 
       {items.map(item => (
@@ -257,16 +258,15 @@ export function BinRelocationWizard({
 
   // Fetch occupied bins from zone when affectedBins is not provided
   const shouldFetchBins = open && !affectedBinsProp && !!zoneId;
-  const { data: occupancyData, isLoading: isLoadingOccupancy } = useBinOccupancy(
-    shouldFetchBins ? zoneId : ''
-  );
+  const { data: occupancyData, isLoading: isLoadingOccupancy } =
+    useBinOccupancy(shouldFetchBins ? zoneId : '');
 
   const affectedBins = useMemo(() => {
     if (affectedBinsProp) return affectedBinsProp;
     if (!occupancyData?.bins) return [];
     return occupancyData.bins
-      .filter((bin) => bin.itemCount > 0)
-      .map((bin) => ({
+      .filter(bin => bin.itemCount > 0)
+      .map(bin => ({
         binId: bin.id,
         address: bin.address,
         itemCount: bin.itemCount,
@@ -397,7 +397,10 @@ export function BinRelocationWizard({
           {/* Counter + undo */}
           <div className="flex items-center justify-between shrink-0">
             <span className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{resolvedCount}</span> de{' '}
+              <span className="font-semibold text-foreground">
+                {resolvedCount}
+              </span>{' '}
+              de{' '}
               <span className="font-semibold text-foreground">{totalBins}</span>{' '}
               {totalBins === 1 ? 'nicho resolvido' : 'nichos resolvidos'}
             </span>

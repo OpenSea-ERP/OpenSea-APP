@@ -10,7 +10,10 @@ interface WarehouseCardProps {
   isSelected?: boolean;
 }
 
-export function WarehouseCardNew({ warehouse, isSelected }: WarehouseCardProps) {
+export function WarehouseCardNew({
+  warehouse,
+  isSelected,
+}: WarehouseCardProps) {
   const stats = warehouse.stats;
   const occupancyPercentage = stats?.occupancyPercentage ?? 0;
 
@@ -27,7 +30,7 @@ export function WarehouseCardNew({ warehouse, isSelected }: WarehouseCardProps) 
       className={cn(
         'bg-white dark:bg-slate-800/60 border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer',
         isSelected && 'ring-2 ring-blue-500 border-blue-500',
-        !warehouse.isActive && 'opacity-60',
+        !warehouse.isActive && 'opacity-60'
       )}
     >
       <div className="flex items-start gap-3">
@@ -52,7 +55,7 @@ export function WarehouseCardNew({ warehouse, isSelected }: WarehouseCardProps) 
               className={cn(
                 'shrink-0 text-xs',
                 warehouse.isActive &&
-                  'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300',
+                  'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300'
               )}
             >
               {warehouse.isActive ? 'Ativo' : 'Inativo'}
@@ -62,8 +65,8 @@ export function WarehouseCardNew({ warehouse, isSelected }: WarehouseCardProps) 
           {/* Stats row */}
           {stats && (
             <p className="text-xs text-muted-foreground">
-              {stats.totalZones} {stats.totalZones === 1 ? 'zona' : 'zonas'} &middot;{' '}
-              {stats.totalBins.toLocaleString()} nichos &middot;{' '}
+              {stats.totalZones} {stats.totalZones === 1 ? 'zona' : 'zonas'}{' '}
+              &middot; {stats.totalBins.toLocaleString()} nichos &middot;{' '}
               {occupancyPercentage.toFixed(0)}% ocupação
             </p>
           )}
@@ -74,7 +77,7 @@ export function WarehouseCardNew({ warehouse, isSelected }: WarehouseCardProps) 
               <div
                 className={cn(
                   'h-full rounded-full transition-all',
-                  getProgressColor(occupancyPercentage),
+                  getProgressColor(occupancyPercentage)
                 )}
                 style={{ width: `${Math.min(occupancyPercentage, 100)}%` }}
               />

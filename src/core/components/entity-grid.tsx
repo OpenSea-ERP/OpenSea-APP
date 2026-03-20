@@ -265,12 +265,15 @@ export function EntityGrid<T extends BaseEntity>({
   }, [items, sortField, sortDirection, customSortFn]);
 
   // Handler para mudar ordenação
-  const handleSortChange = useCallback((value: string) => {
-    const [field, direction] = value.split('-') as [SortField, SortDirection];
-    setSortField(field);
-    setSortDirection(direction);
-    onSortChange?.(field, direction);
-  }, [onSortChange]);
+  const handleSortChange = useCallback(
+    (value: string) => {
+      const [field, direction] = value.split('-') as [SortField, SortDirection];
+      setSortField(field);
+      setSortDirection(direction);
+      onSortChange?.(field, direction);
+    },
+    [onSortChange]
+  );
 
   // Valor atual da ordenação
   const currentSortValue = `${sortField}-${sortDirection}`;

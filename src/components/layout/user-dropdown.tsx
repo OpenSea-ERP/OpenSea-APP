@@ -17,10 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/auth-context';
-import {
-  useFullscreen,
-  useUltrawide,
-} from '@/hooks/use-layout-preferences';
+import { useFullscreen, useUltrawide } from '@/hooks/use-layout-preferences';
 import {
   LogOut,
   Maximize,

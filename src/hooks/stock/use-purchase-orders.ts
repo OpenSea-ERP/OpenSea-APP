@@ -58,7 +58,9 @@ export function useCreatePurchaseOrder() {
     mutationFn: (data: CreatePurchaseOrderRequest) =>
       purchaseOrdersService.create(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PURCHASE_ORDERS,
+      });
     },
   });
 }
@@ -71,7 +73,9 @@ export function useUpdatePurchaseOrderStatus() {
     mutationFn: ({ id, status }: { id: string; status: PurchaseOrderStatus }) =>
       purchaseOrdersService.updateStatus(id, status),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PURCHASE_ORDERS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PURCHASE_ORDER(variables.id),
       });
@@ -86,7 +90,9 @@ export function useCancelPurchaseOrder() {
   return useMutation({
     mutationFn: (id: string) => purchaseOrdersService.cancel(id),
     onSuccess: async (_, id) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PURCHASE_ORDERS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PURCHASE_ORDER(id),
       });
@@ -107,7 +113,9 @@ export function useReceivePurchaseOrder() {
       items: Array<{ itemId: string; receivedQuantity: number }>;
     }) => purchaseOrdersService.receive(id, items),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PURCHASE_ORDERS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PURCHASE_ORDER(variables.id),
       });

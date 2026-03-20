@@ -6,7 +6,13 @@
 import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { defineEntityConfig } from '@/core/types';
 import type { Warehouse } from '@/types/stock';
-import { Edit, Eye, Plus, Trash2, Warehouse as WarehouseIcon } from 'lucide-react';
+import {
+  Edit,
+  Eye,
+  Plus,
+  Trash2,
+  Warehouse as WarehouseIcon,
+} from 'lucide-react';
 
 export const warehousesConfig = defineEntityConfig<Warehouse>()({
   // ======================== IDENTIFICAÇÃO ========================

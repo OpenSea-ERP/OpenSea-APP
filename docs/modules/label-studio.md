@@ -8,17 +8,17 @@ O **Label Studio** é um editor WYSIWYG especializado para criação de etiqueta
 
 ## Histórico de Revisões
 
-| Data | Versão | Alterações |
-|------|--------|------------|
-| 2026-02-05 | 1.1 | **Correções de consistência com o projeto:** |
-| | | - DataPaths atualizados para inglês (ex: `product.name`, `variant.sku`, `item.batchNumber`) |
-| | | - Removidos campos inexistentes (`item.serialNumber`, `item.trackingCode`, `item.authCode`) |
-| | | - Corrigidos paths de localização (`item.bin.zone.name` em vez de `item.zone.name`) |
-| | | - Adicionados campos existentes (`item.fullCode`, `item.barcode`, `item.eanCode`) |
-| | | - Estrutura de pastas alinhada com `src/core/print-queue/` existente |
-| | | - Dependências atualizadas: `react-to-print` (já instalado) em vez de `print-js` |
-| | | - Zustand marcado como única dependência a instalar |
-| 2026-02-05 | 1.0 | Versão inicial do documento |
+| Data       | Versão | Alterações                                                                                  |
+| ---------- | ------ | ------------------------------------------------------------------------------------------- |
+| 2026-02-05 | 1.1    | **Correções de consistência com o projeto:**                                                |
+|            |        | - DataPaths atualizados para inglês (ex: `product.name`, `variant.sku`, `item.batchNumber`) |
+|            |        | - Removidos campos inexistentes (`item.serialNumber`, `item.trackingCode`, `item.authCode`) |
+|            |        | - Corrigidos paths de localização (`item.bin.zone.name` em vez de `item.zone.name`)         |
+|            |        | - Adicionados campos existentes (`item.fullCode`, `item.barcode`, `item.eanCode`)           |
+|            |        | - Estrutura de pastas alinhada com `src/core/print-queue/` existente                        |
+|            |        | - Dependências atualizadas: `react-to-print` (já instalado) em vez de `print-js`            |
+|            |        | - Zustand marcado como única dependência a instalar                                         |
+| 2026-02-05 | 1.0    | Versão inicial do documento                                                                 |
 
 ---
 
@@ -59,15 +59,15 @@ O **Label Studio** é um editor WYSIWYG especializado para criação de etiqueta
 
 ### 1.2 Tipos de Etiquetas Suportadas
 
-| Tipo | Tamanho Típico | Uso Principal |
-|------|----------------|---------------|
-| Vestuário | 30×50mm, 40×60mm | Roupas, têxteis, composição |
-| Produto | 50×30mm, 60×40mm | SKU, preço, código de barras |
-| Inventário | 60×40mm, 100×60mm | Localização, QR code, lote |
-| Prateleira | 80×30mm, 100×50mm | Preço, descrição curta |
-| Joalheria | 22×10mm, 30×15mm | Código pequeno, preço |
-| Envio | 100×70mm, 150×100mm | Destinatário, código rastreio |
-| Personalizada | Qualquer | Definido pelo usuário |
+| Tipo          | Tamanho Típico      | Uso Principal                 |
+| ------------- | ------------------- | ----------------------------- |
+| Vestuário     | 30×50mm, 40×60mm    | Roupas, têxteis, composição   |
+| Produto       | 50×30mm, 60×40mm    | SKU, preço, código de barras  |
+| Inventário    | 60×40mm, 100×60mm   | Localização, QR code, lote    |
+| Prateleira    | 80×30mm, 100×50mm   | Preço, descrição curta        |
+| Joalheria     | 22×10mm, 30×15mm    | Código pequeno, preço         |
+| Envio         | 100×70mm, 150×100mm | Destinatário, código rastreio |
+| Personalizada | Qualquer            | Definido pelo usuário         |
 
 ### 1.3 Unidades de Medida
 
@@ -205,6 +205,7 @@ Opções do botão Salvar:
 O painel muda dinamicamente baseado no elemento selecionado.
 
 #### Para Campo de Dados:
+
 ```
 ┌─ PROPRIEDADES ──────────────┐
 │                             │
@@ -265,6 +266,7 @@ O painel muda dinamicamente baseado no elemento selecionado.
 ```
 
 #### Para Tabela:
+
 ```
 ┌─ PROPRIEDADES ──────────────┐
 │                             │
@@ -1662,7 +1664,13 @@ interface LabelTemplate {
 
   // Metadados
   isSystem: boolean;
-  category: 'vestuario' | 'produto' | 'inventario' | 'prateleira' | 'envio' | 'personalizado';
+  category:
+    | 'vestuario'
+    | 'produto'
+    | 'inventario'
+    | 'prateleira'
+    | 'envio'
+    | 'personalizado';
   thumbnailUrl?: string;
 
   // Audit
@@ -1693,16 +1701,16 @@ interface LabelElementBase {
 
 // Tipos de elementos
 type ElementType =
-  | 'field'           // Campo de dados
-  | 'text'            // Texto livre
-  | 'image'           // Imagem/logo
-  | 'icon'            // Ícone
-  | 'arrow'           // Seta
-  | 'shape'           // Forma (retângulo, círculo, etc)
-  | 'line'            // Linha
-  | 'barcode'         // Código de barras
-  | 'qrcode'          // QR Code
-  | 'table';          // Tabela
+  | 'field' // Campo de dados
+  | 'text' // Texto livre
+  | 'image' // Imagem/logo
+  | 'icon' // Ícone
+  | 'arrow' // Seta
+  | 'shape' // Forma (retângulo, círculo, etc)
+  | 'line' // Linha
+  | 'barcode' // Código de barras
+  | 'qrcode' // QR Code
+  | 'table'; // Tabela
 
 // Campo de dados
 interface FieldElement extends LabelElementBase {
@@ -2226,17 +2234,17 @@ src/
 
 ## Resumo do Cronograma
 
-| Fase | Descrição | Duração | Acumulado |
-|------|-----------|---------|-----------|
-| 1 | Fundação | 2-3 sem | 2-3 sem |
-| 2 | Sistema de Snap | 1-2 sem | 3-5 sem |
-| 3 | Elementos Básicos | 2-3 sem | 5-8 sem |
-| 4 | Campos Dinâmicos | 2-3 sem | 7-11 sem |
-| 5 | Códigos (Barcode/QR) | 1-2 sem | 8-13 sem |
-| 6 | Tabelas | 2-3 sem | 10-16 sem |
-| 7 | Persistência | 1-2 sem | 11-18 sem |
-| 8 | Exportação | 1-2 sem | 12-20 sem |
-| 9 | Polish | 1-2 sem | 13-22 sem |
+| Fase | Descrição            | Duração | Acumulado |
+| ---- | -------------------- | ------- | --------- |
+| 1    | Fundação             | 2-3 sem | 2-3 sem   |
+| 2    | Sistema de Snap      | 1-2 sem | 3-5 sem   |
+| 3    | Elementos Básicos    | 2-3 sem | 5-8 sem   |
+| 4    | Campos Dinâmicos     | 2-3 sem | 7-11 sem  |
+| 5    | Códigos (Barcode/QR) | 1-2 sem | 8-13 sem  |
+| 6    | Tabelas              | 2-3 sem | 10-16 sem |
+| 7    | Persistência         | 1-2 sem | 11-18 sem |
+| 8    | Exportação           | 1-2 sem | 12-20 sem |
+| 9    | Polish               | 1-2 sem | 13-22 sem |
 
 **Estimativa total: 13-22 semanas (3-5 meses)**
 
@@ -2244,29 +2252,29 @@ src/
 
 ## Apêndice A: Atalhos de Teclado
 
-| Atalho | Ação |
-|--------|------|
-| Ctrl+S | Salvar |
-| Ctrl+Z | Desfazer |
-| Ctrl+Y | Refazer |
-| Ctrl+C | Copiar |
-| Ctrl+V | Colar |
-| Ctrl+X | Recortar |
-| Ctrl+D | Duplicar |
-| Delete | Excluir selecionado |
-| Ctrl+A | Selecionar todos |
-| Escape | Desselecionar |
-| Setas | Mover elemento 1px |
-| Shift+Setas | Mover elemento 10px |
-| Ctrl+G | Agrupar |
-| Ctrl+Shift+G | Desagrupar |
-| Ctrl+] | Trazer para frente |
-| Ctrl+[ | Enviar para trás |
-| Ctrl+0 | Zoom ajustar |
-| Ctrl+1 | Zoom 100% |
-| Ctrl++ | Zoom in |
-| Ctrl+- | Zoom out |
-| Shift (durante drag) | Desativa snap |
+| Atalho               | Ação                   |
+| -------------------- | ---------------------- |
+| Ctrl+S               | Salvar                 |
+| Ctrl+Z               | Desfazer               |
+| Ctrl+Y               | Refazer                |
+| Ctrl+C               | Copiar                 |
+| Ctrl+V               | Colar                  |
+| Ctrl+X               | Recortar               |
+| Ctrl+D               | Duplicar               |
+| Delete               | Excluir selecionado    |
+| Ctrl+A               | Selecionar todos       |
+| Escape               | Desselecionar          |
+| Setas                | Mover elemento 1px     |
+| Shift+Setas          | Mover elemento 10px    |
+| Ctrl+G               | Agrupar                |
+| Ctrl+Shift+G         | Desagrupar             |
+| Ctrl+]               | Trazer para frente     |
+| Ctrl+[               | Enviar para trás       |
+| Ctrl+0               | Zoom ajustar           |
+| Ctrl+1               | Zoom 100%              |
+| Ctrl++               | Zoom in                |
+| Ctrl+-               | Zoom out               |
+| Shift (durante drag) | Desativa snap          |
 | Alt (durante resize) | Redimensiona do centro |
 
 ---
@@ -2283,5 +2291,5 @@ Para templates criados no sistema antigo (GrapesJS):
 
 ---
 
-*Documento criado em: Fevereiro 2026*
-*Versão: 1.0*
+_Documento criado em: Fevereiro 2026_
+_Versão: 1.0_

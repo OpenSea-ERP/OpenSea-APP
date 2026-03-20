@@ -81,19 +81,28 @@ function LocationsDashboardContent() {
     queryKey: ['warehouses'],
     baseUrl: '/api/v1/warehouses',
     listFn: async () => {
-      const response = await apiClient.get<WarehousesResponse>('/v1/warehouses');
+      const response =
+        await apiClient.get<WarehousesResponse>('/v1/warehouses');
       return response.warehouses;
     },
     getFn: async (id: string) => {
-      const response = await apiClient.get<WarehouseResponse>(`/v1/warehouses/${id}`);
+      const response = await apiClient.get<WarehouseResponse>(
+        `/v1/warehouses/${id}`
+      );
       return response.warehouse;
     },
-    createFn: async (data) => {
-      const response = await apiClient.post<WarehouseResponse>('/v1/warehouses', data);
+    createFn: async data => {
+      const response = await apiClient.post<WarehouseResponse>(
+        '/v1/warehouses',
+        data
+      );
       return response.warehouse;
     },
     updateFn: async (id, data) => {
-      const response = await apiClient.patch<WarehouseResponse>(`/v1/warehouses/${id}`, data);
+      const response = await apiClient.patch<WarehouseResponse>(
+        `/v1/warehouses/${id}`,
+        data
+      );
       return response.warehouse;
     },
     deleteFn: async (id: string) => {
@@ -110,7 +119,7 @@ function LocationsDashboardContent() {
     entityNamePlural: 'Armazéns',
     queryKey: ['warehouses'],
     crud,
-    viewRoute: (id) => `/stock/locations/${id}`,
+    viewRoute: id => `/stock/locations/${id}`,
     filterFn: (item, query) => {
       const q = query.toLowerCase();
       return (
@@ -148,16 +157,43 @@ function LocationsDashboardContent() {
   const canDelete = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.DELETE);
   const canCreate = hasPermission(STOCK_PERMISSIONS.WAREHOUSES.CREATE);
 
-
   const renderGridCard = (item: Warehouse, isSelected: boolean) => {
     const stats = item.stats;
     const occupancy = stats?.occupancyPercentage ?? 0;
 
     const cardStats = [
-      { icon: Lock, value: 0, tooltip: 'Nichos Bloqueados', bg: 'bg-amber-200 dark:bg-amber-600', text: 'text-amber-700 dark:text-amber-100', border: 'border-amber-300/80 dark:border-amber-500/30' },
-      { icon: Clock, value: 0, tooltip: 'Próximo Vencimento', bg: 'bg-orange-200 dark:bg-orange-600', text: 'text-orange-700 dark:text-orange-100', border: 'border-orange-300/80 dark:border-orange-500/30' },
-      { icon: ShieldAlert, value: 0, tooltip: 'Inconsistências', bg: 'bg-rose-200 dark:bg-rose-600', text: 'text-rose-700 dark:text-rose-100', border: 'border-rose-300/80 dark:border-rose-500/30' },
-      { icon: Layers, value: stats?.totalZones ?? 0, tooltip: 'Zonas', bg: 'bg-blue-200 dark:bg-blue-600', text: 'text-blue-700 dark:text-blue-100', border: 'border-blue-300/80 dark:border-blue-500/30' },
+      {
+        icon: Lock,
+        value: 0,
+        tooltip: 'Nichos Bloqueados',
+        bg: 'bg-amber-200 dark:bg-amber-600',
+        text: 'text-amber-700 dark:text-amber-100',
+        border: 'border-amber-300/80 dark:border-amber-500/30',
+      },
+      {
+        icon: Clock,
+        value: 0,
+        tooltip: 'Próximo Vencimento',
+        bg: 'bg-orange-200 dark:bg-orange-600',
+        text: 'text-orange-700 dark:text-orange-100',
+        border: 'border-orange-300/80 dark:border-orange-500/30',
+      },
+      {
+        icon: ShieldAlert,
+        value: 0,
+        tooltip: 'Inconsistências',
+        bg: 'bg-rose-200 dark:bg-rose-600',
+        text: 'text-rose-700 dark:text-rose-100',
+        border: 'border-rose-300/80 dark:border-rose-500/30',
+      },
+      {
+        icon: Layers,
+        value: stats?.totalZones ?? 0,
+        tooltip: 'Zonas',
+        bg: 'bg-blue-200 dark:bg-blue-600',
+        text: 'text-blue-700 dark:text-blue-100',
+        border: 'border-blue-300/80 dark:border-blue-500/30',
+      },
     ];
 
     return (
@@ -201,7 +237,7 @@ function LocationsDashboardContent() {
                         className={cn(
                           'flex items-center justify-center gap-1.5 py-2.5 cursor-default',
                           stat.bg,
-                          i < cardStats.length - 1 && `border-r ${stat.border}`,
+                          i < cardStats.length - 1 && `border-r ${stat.border}`
                         )}
                       >
                         <Icon className={cn('h-3.5 w-3.5', stat.text)} />
@@ -220,8 +256,13 @@ function LocationsDashboardContent() {
           }
         >
           {/* Barra de ocupação */}
-          <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 min-h-[43px] flex flex-col justify-center"
-            style={!stats?.totalCapacity || stats.totalCapacity === 0 ? { borderStyle: 'dashed' } : undefined}
+          <div
+            className="rounded-lg bg-muted/40 border border-border px-3 py-2 min-h-[43px] flex flex-col justify-center"
+            style={
+              !stats?.totalCapacity || stats.totalCapacity === 0
+                ? { borderStyle: 'dashed' }
+                : undefined
+            }
           >
             {stats?.totalCapacity && stats.totalCapacity > 0 ? (
               <div className="space-y-1">
@@ -233,7 +274,7 @@ function LocationsDashboardContent() {
                   <div
                     className={cn(
                       'h-full rounded-full transition-all',
-                      getOccupancyBarColor(occupancy),
+                      getOccupancyBarColor(occupancy)
                     )}
                     style={{ width: `${Math.min(occupancy, 100)}%` }}
                   />
@@ -256,7 +297,9 @@ function LocationsDashboardContent() {
       ? `${stats.totalZones} ${stats.totalZones === 1 ? 'zona' : 'zonas'}`
       : '';
     const binLabel = stats ? `${stats.totalBins.toLocaleString()} nichos` : '';
-    const occupancy = stats ? `${stats.occupancyPercentage.toFixed(0)}% ocupação` : '';
+    const occupancy = stats
+      ? `${stats.occupancyPercentage.toFixed(0)}% ocupação`
+      : '';
 
     return (
       <EntityContextMenu
@@ -338,7 +381,7 @@ function LocationsDashboardContent() {
   const initialIds = useMemo(
     () =>
       (Array.isArray(displayedWarehouses) ? displayedWarehouses : []).map(
-        (i) => i.id
+        i => i.id
       ),
     [displayedWarehouses]
   );
@@ -402,7 +445,7 @@ function LocationsDashboardContent() {
           <SearchBar
             placeholder="Buscar armazéns por código ou nome..."
             value={page.searchQuery}
-            onSearch={(value) => page.handlers.handleSearch(value)}
+            onSearch={value => page.handlers.handleSearch(value)}
             onClear={() => page.handlers.handleSearch('')}
             showClear={true}
             size="md"
@@ -439,7 +482,7 @@ function LocationsDashboardContent() {
               isLoading={page.isLoading}
               isSearching={!!page.searchQuery}
               onItemClick={(item, e) => page.handlers.handleItemClick(item, e)}
-              onItemDoubleClick={(item) =>
+              onItemDoubleClick={item =>
                 page.handlers.handleItemDoubleClick(item)
               }
               showSorting={true}
@@ -486,7 +529,7 @@ function LocationsDashboardContent() {
           <LocationSetupWizard
             open={wizardOpen}
             onOpenChange={setWizardOpen}
-            onSuccess={(id) => router.push(`/stock/locations/${id}`)}
+            onSuccess={id => router.push(`/stock/locations/${id}`)}
           />
         </PageBody>
       </PageLayout>

@@ -43,7 +43,9 @@ export function useCreateComment(boardId: string, cardId: string) {
         queryKey: COMMENT_QUERY_KEYS.COMMENTS(boardId, cardId),
       });
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -76,7 +78,9 @@ export function useDeleteComment(boardId: string, cardId: string) {
         queryKey: COMMENT_QUERY_KEYS.COMMENTS(boardId, cardId),
       });
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }

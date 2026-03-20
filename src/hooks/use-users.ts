@@ -126,7 +126,9 @@ export function useUpdateUserEmail() {
     mutationFn: ({ userId, data }) =>
       usersService.updateUserEmail(userId, data),
     onSuccess: async (_, { userId }) => {
-      await queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
+      await queryClient.invalidateQueries({
+        queryKey: usersKeys.detail(userId),
+      });
       await queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
     },
   });
@@ -148,7 +150,9 @@ export function useUpdateUserUsername() {
     mutationFn: ({ userId, data }) =>
       usersService.updateUserUsername(userId, data),
     onSuccess: async (_, { userId }) => {
-      await queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
+      await queryClient.invalidateQueries({
+        queryKey: usersKeys.detail(userId),
+      });
       await queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
     },
   });
@@ -186,7 +190,9 @@ export function useUpdateUserProfile() {
     mutationFn: ({ userId, data }) =>
       usersService.updateUserProfile(userId, data),
     onSuccess: async (_, { userId }) => {
-      await queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
+      await queryClient.invalidateQueries({
+        queryKey: usersKeys.detail(userId),
+      });
       await queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
     },
   });

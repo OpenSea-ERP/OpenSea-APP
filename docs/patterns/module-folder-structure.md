@@ -74,14 +74,14 @@ Cada módulo organiza suas páginas em **categorias padronizadas** usando uma co
 
 ### Categorias
 
-| Pasta | Tipo | Impacto na URL | Propósito |
-|-------|------|----------------|-----------|
-| `(entities)/` | Route group | **Nenhum** — parentheses são invisíveis | CRUDs completos de entidades do domínio |
-| `overview/` | Pasta regular | `/{module}/overview/{view}` | Visões operacionais, dashboards, listas consolidadas |
-| `actions/` | Pasta regular | `/{module}/actions/{action}` | Ações pontuais (scan, importação, ferramentas) |
-| `reports/` | Pasta regular | `/{module}/reports/{report}` | Relatórios, DRE, balanço, analytics, exportação |
-| `requests/` | Pasta regular | `/{module}/requests/{request}` | Workflows com aprovação (pedidos, inventários) |
-| `_shared/` | Pasta especial | **Nenhum** — prefixo `_` é ignorado pelo Next.js | Código compartilhado entre páginas do módulo |
+| Pasta         | Tipo           | Impacto na URL                                   | Propósito                                            |
+| ------------- | -------------- | ------------------------------------------------ | ---------------------------------------------------- |
+| `(entities)/` | Route group    | **Nenhum** — parentheses são invisíveis          | CRUDs completos de entidades do domínio              |
+| `overview/`   | Pasta regular  | `/{module}/overview/{view}`                      | Visões operacionais, dashboards, listas consolidadas |
+| `actions/`    | Pasta regular  | `/{module}/actions/{action}`                     | Ações pontuais (scan, importação, ferramentas)       |
+| `reports/`    | Pasta regular  | `/{module}/reports/{report}`                     | Relatórios, DRE, balanço, analytics, exportação      |
+| `requests/`   | Pasta regular  | `/{module}/requests/{request}`                   | Workflows com aprovação (pedidos, inventários)       |
+| `_shared/`    | Pasta especial | **Nenhum** — prefixo `_` é ignorado pelo Next.js | Código compartilhado entre páginas do módulo         |
 
 ---
 
@@ -188,14 +188,14 @@ finance/
 
 ### Quando usar cada categoria
 
-| A página é... | Use |
-|---------------|-----|
-| CRUD de uma entidade (lista, detalhe, edição, criação) | `(entities)/{entity}/` |
-| Visão operacional, lista consolidada, dashboard de dados | `overview/{view}/` |
-| Ação pontual, ferramenta, scanner, importação | `actions/{action}/` |
-| Relatório formal, analytics, exportação de dados | `reports/{report}/` |
-| Workflow com aprovação, pedido, solicitação | `requests/{request}/` |
-| Componente/constante/hook reutilizado entre páginas do módulo | `_shared/` |
+| A página é...                                                 | Use                    |
+| ------------------------------------------------------------- | ---------------------- |
+| CRUD de uma entidade (lista, detalhe, edição, criação)        | `(entities)/{entity}/` |
+| Visão operacional, lista consolidada, dashboard de dados      | `overview/{view}/`     |
+| Ação pontual, ferramenta, scanner, importação                 | `actions/{action}/`    |
+| Relatório formal, analytics, exportação de dados              | `reports/{report}/`    |
+| Workflow com aprovação, pedido, solicitação                   | `requests/{request}/`  |
+| Componente/constante/hook reutilizado entre páginas do módulo | `_shared/`             |
 
 ### Convenções
 
@@ -213,11 +213,11 @@ finance/
 
 ### Decisão: route group vs pasta regular
 
-| Critério | Route group `()` | Pasta regular |
-|----------|-------------------|---------------|
-| URL muda? | **Não** | **Sim** |
+| Critério     | Route group `()`                                             | Pasta regular                                                             |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| URL muda?    | **Não**                                                      | **Sim**                                                                   |
 | Quando usar? | Entidades cujas URLs devem ser curtas (`/{module}/{entity}`) | Categorias organizacionais (`overview`, `actions`, `reports`, `requests`) |
-| Exemplo | `(entities)/products/page.tsx` → `/stock/products` | `overview/movements/page.tsx` → `/stock/overview/movements` |
+| Exemplo      | `(entities)/products/page.tsx` → `/stock/products`           | `overview/movements/page.tsx` → `/stock/overview/movements`               |
 
 ### Adicionando um novo módulo
 
@@ -240,18 +240,18 @@ finance/
 
 ## Files
 
-| Arquivo | Propósito |
-|---------|-----------|
-| `stock/(entities)/products/page.tsx` | Exemplo referência de lista de entidade |
-| `stock/(entities)/products/src/` | Exemplo referência de código local de entidade |
-| `stock/_shared/components/` | Exemplo referência de componentes compartilhados |
-| `stock/overview/movements/src/` | Exemplo de `src/` em página de overview |
-| `stock/actions/volumes/src/` | Exemplo de `src/` em página de ação |
+| Arquivo                              | Propósito                                        |
+| ------------------------------------ | ------------------------------------------------ |
+| `stock/(entities)/products/page.tsx` | Exemplo referência de lista de entidade          |
+| `stock/(entities)/products/src/`     | Exemplo referência de código local de entidade   |
+| `stock/_shared/components/`          | Exemplo referência de componentes compartilhados |
+| `stock/overview/movements/src/`      | Exemplo de `src/` em página de overview          |
+| `stock/actions/volumes/src/`         | Exemplo de `src/` em página de ação              |
 
 ---
 
 ## Audit History
 
-| Date | Dimension | Score | Report |
-|------|-----------|-------|--------|
-| 2026-03-11 | Documentação inicial | — | Análise de stock, hr, admin e finance; padronização da estrutura |
+| Date       | Dimension            | Score | Report                                                           |
+| ---------- | -------------------- | ----- | ---------------------------------------------------------------- |
+| 2026-03-11 | Documentação inicial | —     | Análise de stock, hr, admin e finance; padronização da estrutura |

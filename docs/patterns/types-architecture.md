@@ -143,8 +143,8 @@ import type { PaginationMeta } from '@/types/common';
 import type { EffectivePermission } from '@/types/rbac';
 
 // INCORRETO — nunca importe do arquivo individual
-import type { Product } from '@/types/stock/product.types';   // ❌
-import type { Employee } from '@/types/hr/employee.types';    // ❌
+import type { Product } from '@/types/stock/product.types'; // ❌
+import type { Employee } from '@/types/hr/employee.types'; // ❌
 ```
 
 Exemplos reais do codebase:
@@ -201,17 +201,25 @@ export interface Product {
   name: string;
   status: ProductStatus;
   // ...
-  createdAt: Date;   // atenção: stock usa Date (herança histórica)
+  createdAt: Date; // atenção: stock usa Date (herança histórica)
   updatedAt?: Date;
 }
 
 // 5. Interfaces de request (Create, Update)
-export interface CreateProductRequest { /* ... */ }
-export interface UpdateProductRequest { /* ... */ }
+export interface CreateProductRequest {
+  /* ... */
+}
+export interface UpdateProductRequest {
+  /* ... */
+}
 
 // 6. Interfaces de response
-export interface ProductResponse { product: Product; }
-export interface ProductsResponse { products: Product[]; }
+export interface ProductResponse {
+  product: Product;
+}
+export interface ProductsResponse {
+  products: Product[];
+}
 
 // 7. Query params
 export interface ProductsQuery extends PaginatedQuery {
@@ -288,7 +296,7 @@ Todos os endpoints de listagem usam o sistema de paginação unificado definido 
 export interface PaginationMeta {
   total: number;
   page: number;
-  limit: number;      // normalizado de 'limit' ou 'perPage'
+  limit: number; // normalizado de 'limit' ou 'perPage'
   totalPages: number;
   hasNext?: boolean;
   hasPrev?: boolean;
@@ -305,7 +313,8 @@ export interface PaginatedQuery {
 // Função utilitária — normaliza inconsistências do backend
 export function normalizePagination(raw: RawPaginationMeta): PaginationMeta {
   const limit = raw.limit ?? raw.perPage ?? 20;
-  const totalPages = raw.totalPages ?? raw.pages ?? Math.ceil(raw.total / limit);
+  const totalPages =
+    raw.totalPages ?? raw.pages ?? Math.ceil(raw.total / limit);
   return {
     total: raw.total,
     page: raw.page,
@@ -388,14 +397,14 @@ export const ITEM_STATUS_LABELS: Record<ItemStatus, string> = {
 
 O backend serializa datas como strings ISO 8601 via JSON. A regra geral é usar `string` para datas, mas há inconsistência histórica no módulo `stock`:
 
-| Módulo | Tipo de data | Observação |
-|--------|-------------|------------|
-| `hr/` | `string` | Padrão correto (ex: `hireDate: string`) |
-| `auth/` | `Date` | Herança histórica |
-| `stock/` | `Date` | Herança histórica em `Product`, `Variant`, `Category` |
-| `stock/template.types.ts` | `string` | Já migrado para string |
-| `rbac/` | `string` | Padrão correto (ex: `createdAt: string`) |
-| `finance/` | `string` | Padrão correto |
+| Módulo                    | Tipo de data | Observação                                            |
+| ------------------------- | ------------ | ----------------------------------------------------- |
+| `hr/`                     | `string`     | Padrão correto (ex: `hireDate: string`)               |
+| `auth/`                   | `Date`       | Herança histórica                                     |
+| `stock/`                  | `Date`       | Herança histórica em `Product`, `Variant`, `Category` |
+| `stock/template.types.ts` | `string`     | Já migrado para string                                |
+| `rbac/`                   | `string`     | Padrão correto (ex: `createdAt: string`)              |
+| `finance/`                | `string`     | Padrão correto                                        |
 
 Para novas entidades, use sempre `string` para datas. Ao editar entidades antigas, mantenha o tipo existente para não quebrar componentes dependentes sem necessidade.
 
@@ -440,31 +449,31 @@ export * from './admin/tenant.types';
 
 Alguns tipos não possuem equivalente no backend — eles representam configurações de UI, estados de componentes ou contratos de componentes reutilizáveis:
 
-| Arquivo | Propósito |
-|---------|-----------|
-| `entity-config.ts` | Configuração de formulários, viewers e grids genéricos |
-| `brasilapi.ts` | Respostas da API BrasilAPI (CEP, CNPJ) |
-| `menu.ts` | Estrutura de menus de navegação |
-| `settings.ts` | Configurações de preferências do usuário |
+| Arquivo                    | Propósito                                                  |
+| -------------------------- | ---------------------------------------------------------- |
+| `entity-config.ts`         | Configuração de formulários, viewers e grids genéricos     |
+| `brasilapi.ts`             | Respostas da API BrasilAPI (CEP, CNPJ)                     |
+| `menu.ts`                  | Estrutura de menus de navegação                            |
+| `settings.ts`              | Configurações de preferências do usuário                   |
 | `admin/dashboard.types.ts` | `Module`, `SearchResult`, `Notification` (UI do dashboard) |
 
 ## Files
 
 ### Onde encontrar exemplos no codebase
 
-| Padrão | Arquivo de referência |
-|--------|-----------------------|
-| Entidade com status + labels PT-BR | `src/types/stock/item.types.ts` |
-| Entidade com relações expandidas | `src/types/stock/product.types.ts` |
-| Entidade com dates como string (padrão correto) | `src/types/hr/employee.types.ts` |
-| Tipos de paginação e normalização | `src/types/common/pagination.ts` |
-| Enums de sistema em PT-BR | `src/types/common/enums.ts` |
-| Barrel com conflitos resolvidos | `src/types/index.ts` |
-| Barrel simples de módulo | `src/types/stock/index.ts` |
-| Shim de retrocompatibilidade | `src/types/pagination.ts` |
-| Tipos exclusivamente frontend | `src/types/entity-config.ts` |
-| Importação correta em hook | `src/hooks/stock/use-movements.ts` |
-| Importação correta em serviço | `src/services/hr/employees.service.ts` |
+| Padrão                                          | Arquivo de referência                  |
+| ----------------------------------------------- | -------------------------------------- |
+| Entidade com status + labels PT-BR              | `src/types/stock/item.types.ts`        |
+| Entidade com relações expandidas                | `src/types/stock/product.types.ts`     |
+| Entidade com dates como string (padrão correto) | `src/types/hr/employee.types.ts`       |
+| Tipos de paginação e normalização               | `src/types/common/pagination.ts`       |
+| Enums de sistema em PT-BR                       | `src/types/common/enums.ts`            |
+| Barrel com conflitos resolvidos                 | `src/types/index.ts`                   |
+| Barrel simples de módulo                        | `src/types/stock/index.ts`             |
+| Shim de retrocompatibilidade                    | `src/types/pagination.ts`              |
+| Tipos exclusivamente frontend                   | `src/types/entity-config.ts`           |
+| Importação correta em hook                      | `src/hooks/stock/use-movements.ts`     |
+| Importação correta em serviço                   | `src/services/hr/employees.service.ts` |
 
 ## Rules
 
@@ -531,13 +540,13 @@ O frontend espelha esse padrão:
 ```typescript
 // Frontend: src/types/stock/product.types.ts
 export interface CreateProductRequest {
-  name: string;        // z.string().min(1).max(255)
-  templateId: string;  // z.string().uuid()
+  name: string; // z.string().min(1).max(255)
+  templateId: string; // z.string().uuid()
   supplierId?: string; // z.string().uuid().optional()
 }
 
 export interface UpdateProductRequest {
-  name?: string;        // createSchema.partial() torna todos opcionais
+  name?: string; // createSchema.partial() torna todos opcionais
   templateId?: string;
   supplierId?: string;
 }
@@ -546,27 +555,36 @@ export interface UpdateProductRequest {
 ### Armadilhas Comuns
 
 **Importar de arquivo individual em vez do barrel:**
+
 ```typescript
 // Causa: o arquivo individual pode ser movido ou renomeado
 import type { Product } from '@/types/stock/product.types'; // ERRADO
-import type { Product } from '@/types/stock';               // CORRETO
+import type { Product } from '@/types/stock'; // CORRETO
 ```
 
 **Usar `Date` em novos tipos:**
+
 ```typescript
 // O JSON.parse() retorna strings — Date(string) causa bugs silenciosos
-createdAt: Date;   // INCORRETO para novos tipos
+createdAt: Date; // INCORRETO para novos tipos
 createdAt: string; // CORRETO — ISO 8601 retornado pelo backend
 ```
 
 **Definir tipos de domínio em arquivos de componente:**
+
 ```typescript
 // Causa acoplamento e impede reuso
 // src/components/ProductCard.tsx — ERRADO
-interface Product { id: string; name: string; }
+interface Product {
+  id: string;
+  name: string;
+}
 
 // src/types/stock/product.types.ts — CORRETO
-export interface Product { id: string; name: string; }
+export interface Product {
+  id: string;
+  name: string;
+}
 ```
 
 **Ignorar conflitos de nomes no barrel raiz:**

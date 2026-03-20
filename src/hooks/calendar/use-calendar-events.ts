@@ -105,7 +105,9 @@ export function useCreateCalendarEvent() {
       }
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+      });
     },
   });
 }
@@ -236,7 +238,9 @@ export function useInviteParticipants() {
       }
     },
     onSettled: async (_, __, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CALENDAR_EVENT(variables.eventId),
       });
@@ -296,7 +300,9 @@ export function useRespondToEvent() {
       }
     },
     onSettled: async (_, __, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CALENDAR_EVENT(variables.eventId),
       });
@@ -344,7 +350,9 @@ export function useRemoveParticipant() {
       }
     },
     onSettled: async (_, __, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CALENDAR_EVENT(variables.eventId),
       });
@@ -363,7 +371,9 @@ export function useShareEventWithUsers() {
       userIds: string[];
     }) => calendarEventsService.shareWithUsers(eventId, userIds),
     onSettled: async (_, __, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CALENDAR_EVENT(variables.eventId),
       });
@@ -377,7 +387,9 @@ export function useShareEventWithTeam() {
     mutationFn: ({ eventId, teamId }: { eventId: string; teamId: string }) =>
       calendarEventsService.shareWithTeam(eventId, teamId),
     onSettled: async (_, __, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CALENDAR_EVENT(variables.eventId),
       });
@@ -396,7 +408,9 @@ export function useUnshareUser() {
       targetUserId: string;
     }) => calendarEventsService.unshareUser(eventId, targetUserId),
     onSettled: async (_, __, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CALENDAR_EVENT(variables.eventId),
       });
@@ -456,7 +470,9 @@ export function useManageReminders() {
       }
     },
     onSettled: async (_, __, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CALENDAR_EVENTS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.CALENDAR_EVENT(variables.eventId),
       });

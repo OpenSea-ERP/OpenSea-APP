@@ -41,7 +41,9 @@ export function useCreateSalesOrder() {
     mutationFn: (data: CreateSalesOrderRequest) =>
       salesOrdersService.createSalesOrder(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.SALES_ORDERS,
+      });
     },
   });
 }
@@ -59,7 +61,9 @@ export function useUpdateSalesOrderStatus() {
       data: UpdateSalesOrderStatusRequest;
     }) => salesOrdersService.updateSalesOrderStatus(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.SALES_ORDERS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.SALES_ORDER(variables.id),
       });
@@ -74,7 +78,9 @@ export function useDeleteSalesOrder() {
   return useMutation({
     mutationFn: (id: string) => salesOrdersService.deleteSalesOrder(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SALES_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.SALES_ORDERS,
+      });
     },
   });
 }

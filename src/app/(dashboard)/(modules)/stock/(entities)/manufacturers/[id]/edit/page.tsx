@@ -322,7 +322,9 @@ export default function EditManufacturerPage() {
             <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
               <div className="text-right">
                 <p className="text-xs font-semibold">Status</p>
-                <p className="text-[11px] text-muted-foreground">{isActive ? 'Ativo' : 'Inativo'}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isActive ? 'Ativo' : 'Inativo'}
+                </p>
               </div>
               <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>

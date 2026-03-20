@@ -37,16 +37,16 @@ O design system usa variáveis CSS organizadas em três camadas:
 ```css
 /* src/app/globals.css — exemplo de tokens semânticos */
 :root {
-  --color-primary: var(--os-blue-500);       /* azul #3b82f6 */
-  --color-destructive: var(--os-red-500);    /* vermelho #ef4444 */
-  --color-success: var(--os-green-500);      /* verde #22c55e */
+  --color-primary: var(--os-blue-500); /* azul #3b82f6 */
+  --color-destructive: var(--os-red-500); /* vermelho #ef4444 */
+  --color-success: var(--os-green-500); /* verde #22c55e */
   --glass-bg: var(--os-white);
   --glass-blur: 20px;
 }
 
 .dark {
-  --color-primary: var(--os-blue-500);       /* mesmo tom no dark */
-  --color-background: var(--os-slate-900);   /* fundo escuro */
+  --color-primary: var(--os-blue-500); /* mesmo tom no dark */
+  --color-background: var(--os-slate-900); /* fundo escuro */
   --glass-bg: var(--os-slate-800);
 }
 ```
@@ -63,14 +63,14 @@ Todos os componentes primitivos ficam em `src/components/ui/` e são instalados 
 
 **Componentes disponíveis:**
 
-| Categoria | Componentes |
-|-----------|-------------|
-| Formulário | `Input`, `Textarea`, `Select`, `Switch`, `Checkbox`, `Label`, `Form`, `InputGroup`, `Combobox` |
-| Feedback | `Alert`, `AlertDialog`, `Progress`, `Sonner` (toast) |
-| Navegação | `Breadcrumb`, `NavigationMenu`, `Tabs`, `Sidebar` |
-| Sobreposição | `Dialog`, `Drawer`, `Sheet`, `Popover`, `Tooltip`, `HoverCard` |
-| Dados | `Table`, `Badge`, `Avatar`, `Card` |
-| Especiais | `InputOTP`, `Calendar`, `Carousel`, `Resizable`, `StepWizardDialog`, `FilterDropdown` |
+| Categoria    | Componentes                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| Formulário   | `Input`, `Textarea`, `Select`, `Switch`, `Checkbox`, `Label`, `Form`, `InputGroup`, `Combobox` |
+| Feedback     | `Alert`, `AlertDialog`, `Progress`, `Sonner` (toast)                                           |
+| Navegação    | `Breadcrumb`, `NavigationMenu`, `Tabs`, `Sidebar`                                              |
+| Sobreposição | `Dialog`, `Drawer`, `Sheet`, `Popover`, `Tooltip`, `HoverCard`                                 |
+| Dados        | `Table`, `Badge`, `Avatar`, `Card`                                                             |
+| Especiais    | `InputOTP`, `Calendar`, `Carousel`, `Resizable`, `StepWizardDialog`, `FilterDropdown`          |
 
 **Customizações relevantes adicionadas ao shadcn padrão:**
 
@@ -119,7 +119,12 @@ O `MoneyInput` usa `type="number"` com `step="0.01"` e suprime os controles visu
   open={open}
   onOpenChange={setOpen}
   steps={[
-    { title: 'Informações', icon: <MailIcon />, content: <Step1 />, isValid: isStep1Valid },
+    {
+      title: 'Informações',
+      icon: <MailIcon />,
+      content: <Step1 />,
+      isValid: isStep1Valid,
+    },
     { title: 'Configuração', icon: <SettingsIcon />, content: <Step2 /> },
   ]}
   currentStep={step}
@@ -172,7 +177,16 @@ O `EntityForm` é um formulário declarativo e reutilizável que suporta seçõe
 interface FormFieldConfig {
   name: string;
   label: string;
-  type: 'text' | 'number' | 'textarea' | 'date' | 'select' | 'switch' | 'checkbox' | 'file' | 'color';
+  type:
+    | 'text'
+    | 'number'
+    | 'textarea'
+    | 'date'
+    | 'select'
+    | 'switch'
+    | 'checkbox'
+    | 'file'
+    | 'color';
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
@@ -186,13 +200,13 @@ interface FormFieldConfig {
 }
 
 interface EntityFormConfig<T> {
-  entity: string;             // "Produto", "Fornecedor", etc.
-  sections?: FormSection[];   // Sem tabs
-  tabs?: FormTab[];           // Com tabs
+  entity: string; // "Produto", "Fornecedor", etc.
+  sections?: FormSection[]; // Sem tabs
+  tabs?: FormTab[]; // Com tabs
   onSubmit: (data: T) => Promise<void>;
   defaultValues?: T;
-  submitLabel?: string;       // padrão: "Salvar"
-  cancelLabel?: string;       // padrão: "Cancelar"
+  submitLabel?: string; // padrão: "Salvar"
+  cancelLabel?: string; // padrão: "Cancelar"
   onCancel?: () => void;
   loading?: boolean;
 }
@@ -202,9 +216,9 @@ interface EntityFormConfig<T> {
 
 ```typescript
 interface EntityFormRef {
-  submit: () => Promise<void>;   // Dispara validação e submissão
-  getData: () => Record<string, unknown>;  // Lê dados atuais
-  reset: () => void;             // Reseta para defaultValues
+  submit: () => Promise<void>; // Dispara validação e submissão
+  getData: () => Record<string, unknown>; // Lê dados atuais
+  reset: () => void; // Reseta para defaultValues
   setFieldValue: (name: string, value: unknown) => void;
 }
 ```
@@ -221,13 +235,23 @@ const config: EntityFormConfig = {
       title: 'Dados Básicos',
       fields: [
         { name: 'name', label: 'Nome', type: 'text', required: true },
-        { name: 'email', label: 'E-mail', type: 'text', placeholder: 'contato@empresa.com' },
-        { name: 'active', label: 'Ativo', type: 'switch', description: 'Habilitar fornecedor' },
+        {
+          name: 'email',
+          label: 'E-mail',
+          type: 'text',
+          placeholder: 'contato@empresa.com',
+        },
+        {
+          name: 'active',
+          label: 'Ativo',
+          type: 'switch',
+          description: 'Habilitar fornecedor',
+        },
       ],
     },
   ],
   defaultValues: { name: supplier.name, email: supplier.email, active: true },
-  onSubmit: async (data) => {
+  onSubmit: async data => {
     await updateSupplier(supplier.id, data);
     toast.success('Fornecedor atualizado!');
   },
@@ -248,7 +272,11 @@ const config: EntityFormConfig = {
       label: 'Geral',
       icon: FiInfo,
       sections: [
-        { fields: [{ name: 'name', label: 'Nome', type: 'text', required: true }] }
+        {
+          fields: [
+            { name: 'name', label: 'Nome', type: 'text', required: true },
+          ],
+        },
       ],
       attributes: {
         singular: 'Atributo',
@@ -286,16 +314,16 @@ const config: EntityFormConfig = {
 
 Renderiza campos individuais com base no tipo. Usado internamente pelo `EntityForm`.
 
-| Tipo | Componente renderizado |
-|------|----------------------|
-| `text` / `number` | `<Input>` |
-| `textarea` | `<Textarea>` |
-| `date` | `<Input type="date">` |
-| `select` | `<Select>` shadcn/ui |
-| `switch` | `<Switch>` + label inline |
-| `checkbox` | `<Checkbox>` + label inline |
-| `color` | `<Input type="color">` + campo de texto hexadecimal |
-| `file` | `<Input type="file">` |
+| Tipo              | Componente renderizado                              |
+| ----------------- | --------------------------------------------------- |
+| `text` / `number` | `<Input>`                                           |
+| `textarea`        | `<Textarea>`                                        |
+| `date`            | `<Input type="date">`                               |
+| `select`          | `<Select>` shadcn/ui                                |
+| `switch`          | `<Switch>` + label inline                           |
+| `checkbox`        | `<Checkbox>` + label inline                         |
+| `color`           | `<Input type="color">` + campo de texto hexadecimal |
+| `file`            | `<Input type="file">`                               |
 
 **Validação:** O campo exibe `<span className="text-destructive">*</span>` para campos obrigatórios e mensagem de erro abaixo do campo quando inválido.
 
@@ -345,14 +373,14 @@ Componente genérico para exibir itens em modo grid ou lista com suporte a:
 
 Envolve qualquer elemento filho com um menu de contexto (botão direito) padronizado. Ações disponíveis:
 
-| Prop | Label | Ícone |
-|------|-------|-------|
-| `onView` | Visualizar | Eye |
-| `onEdit` | Editar | Pencil |
-| `onDuplicate` | Duplicar | Copy |
-| `onStockMovement` | Movimentar Estoque | Package |
-| `onCopyCode` | Copiar Código | Copy |
-| `onDelete` | Excluir (destructive) | Trash2 |
+| Prop              | Label                 | Ícone   |
+| ----------------- | --------------------- | ------- |
+| `onView`          | Visualizar            | Eye     |
+| `onEdit`          | Editar                | Pencil  |
+| `onDuplicate`     | Duplicar              | Copy    |
+| `onStockMovement` | Movimentar Estoque    | Package |
+| `onCopyCode`      | Copiar Código         | Copy    |
+| `onDelete`        | Excluir (destructive) | Trash2  |
 
 Quando múltiplos itens estão selecionados, os labels incluem o contador: `Excluir (3)`.
 
@@ -388,7 +416,7 @@ const [showPinModal, setShowPinModal] = useState(false);
   }}
   title="Confirmar Exclusão"
   description="Digite seu PIN de Ação para excluir este evento."
-/>
+/>;
 ```
 
 #### 8.2 ConfirmDialog — Confirmação Simples
@@ -415,6 +443,7 @@ Dialog de confirmação com 4 variantes visuais: `default` (azul), `destructive`
 **Localização:** `src/components/shared/modals/quick-create-modal.tsx`
 
 Modal de criação com apenas um campo de nome. Suporta:
+
 - Auto-foco no input ao abrir
 - Submit via Enter
 - Reseta o campo após criar (para cadastro contínuo)
@@ -424,7 +453,7 @@ Modal de criação com apenas um campo de nome. Suporta:
 <QuickCreateModal
   isOpen={showCreate}
   onClose={() => setShowCreate(false)}
-  onSubmit={async (name) => {
+  onSubmit={async name => {
     await createCategory({ name });
     toast.success(`Categoria "${name}" criada!`);
   }}
@@ -446,7 +475,7 @@ Modal para upload de arquivo CSV/Excel com suporte a drag-and-drop. Exibe nome e
 <ImportModal
   isOpen={showImport}
   onClose={() => setShowImport(false)}
-  onImport={async (file) => {
+  onImport={async file => {
     await importProducts(file);
     toast.success('Importação concluída!');
   }}
@@ -461,6 +490,7 @@ Modal para upload de arquivo CSV/Excel com suporte a drag-and-drop. Exibe nome e
 **Localização:** `src/components/shared/modals/multi-view-modal.tsx`
 
 Modal avançado para visualizar e comparar múltiplas entidades simultaneamente:
+
 - **Modo Único:** Uma entidade por vez com tabs no cabeçalho para navegar
 - **Modo Comparação:** Dois painéis lado a lado (ativado via botão `SquareSplitHorizontal`)
 - **Busca integrada:** Campo de pesquisa para adicionar entidades ao modal
@@ -519,7 +549,7 @@ const [step, setStep] = useState(1);
   currentStep={step}
   onStepChange={setStep}
   onClose={handleClose}
-/>
+/>;
 ```
 
 ---
@@ -574,15 +604,15 @@ Exibido quando uma listagem não retorna resultados. Inclui animação de entrad
 
 Componentes de esqueleto para estados de carregamento:
 
-| Componente | Uso |
-|-----------|-----|
-| `GridLoading` | Grid de cards com parâmetros `count` e `columns` |
-| `ListLoading` | Lista de itens |
-| `TableLoading` | Tabela com linhas e colunas configuráveis |
-| `PageSkeleton` | Página completa (título + filtros + grid) |
-| `CardSkeleton` | Card individual com imagem opcional |
-| `FormSkeleton` | Formulário com número de campos configurável |
-| `DetailSkeleton` | Página de detalhe (cabeçalho + abas + conteúdo) |
+| Componente       | Uso                                              |
+| ---------------- | ------------------------------------------------ |
+| `GridLoading`    | Grid de cards com parâmetros `count` e `columns` |
+| `ListLoading`    | Lista de itens                                   |
+| `TableLoading`   | Tabela com linhas e colunas configuráveis        |
+| `PageSkeleton`   | Página completa (título + filtros + grid)        |
+| `CardSkeleton`   | Card individual com imagem opcional              |
+| `FormSkeleton`   | Formulário com número de campos configurável     |
+| `DetailSkeleton` | Página de detalhe (cabeçalho + abas + conteúdo)  |
 
 ```tsx
 // Em loading.tsx (Next.js route segment)
@@ -608,7 +638,7 @@ Gera iniciais e cor de fundo determinística baseada no hash do nome. Resolve UR
   surname="Silva"
   email="joao@empresa.com"
   avatarUrl="/v1/storage/files/abc123/serve"
-  size="md"   // 'sm' | 'md' | 'lg' | 'xl'
+  size="md" // 'sm' | 'md' | 'lg' | 'xl'
 />
 ```
 
@@ -776,16 +806,16 @@ Exibe eventos em ordem cronológica com suporte a agrupamento por data, tipos de
 
 **Tipos de evento e cores:**
 
-| Tipo | Cor |
-|------|-----|
-| `create` | Verde |
-| `update` | Azul |
-| `delete` | Vermelho |
-| `restore` | Roxo |
-| `warning` | Amarelo |
-| `success` | Verde |
-| `error` | Vermelho |
-| `info` | Azul |
+| Tipo      | Cor      |
+| --------- | -------- |
+| `create`  | Verde    |
+| `update`  | Azul     |
+| `delete`  | Vermelho |
+| `restore` | Roxo     |
+| `warning` | Amarelo  |
+| `success` | Verde    |
+| `error`   | Vermelho |
+| `info`    | Azul     |
 
 ---
 
@@ -843,12 +873,14 @@ Exibe dados de uma entidade em modo leitura com suporte a modo de edição inlin
       {
         id: 'general',
         label: 'Geral',
-        sections: [{
-          fields: [
-            { label: 'Nome', value: template.name },
-            { label: 'Criado em', value: template.createdAt, type: 'date' },
-          ],
-        }],
+        sections: [
+          {
+            fields: [
+              { label: 'Nome', value: template.name },
+              { label: 'Criado em', value: template.createdAt, type: 'date' },
+            ],
+          },
+        ],
       },
     ],
   }}
@@ -865,12 +897,12 @@ Tipos de campo para visualização: `text` (padrão), `date` (formata com `pt-BR
 
 O projeto segue abordagem **mobile-first** com breakpoints padrão do Tailwind:
 
-| Breakpoint | Largura | Uso comum |
-|-----------|---------|----------|
-| `sm` | 640px | Mostrar labels em botões (`hidden sm:inline`) |
-| `md` | 768px | Grid de 2 colunas (`md:grid-cols-2`) |
-| `lg` | 1024px | Grid de 3 colunas, sidebar expandida |
-| `xl` | 1280px | Grid de 4 colunas (`xl:grid-cols-4`) |
+| Breakpoint | Largura | Uso comum                                     |
+| ---------- | ------- | --------------------------------------------- |
+| `sm`       | 640px   | Mostrar labels em botões (`hidden sm:inline`) |
+| `md`       | 768px   | Grid de 2 colunas (`md:grid-cols-2`)          |
+| `lg`       | 1024px  | Grid de 3 colunas, sidebar expandida          |
+| `xl`       | 1280px  | Grid de 4 colunas (`xl:grid-cols-4`)          |
 
 **Padrões responsivos aplicados:**
 
@@ -907,30 +939,32 @@ O tema é gerenciado por `next-themes` via `ThemeProvider` em `src/components/th
 
 ```tsx
 // Padrão de classes duais usado em todos os componentes
-className="bg-white/90 dark:bg-white/5"
-className="border-gray-200 dark:border-white/10"
-className="text-gray-900 dark:text-white"
-className="text-gray-600 dark:text-white/60"
+className = 'bg-white/90 dark:bg-white/5';
+className = 'border-gray-200 dark:border-white/10';
+className = 'text-gray-900 dark:text-white';
+className = 'text-gray-600 dark:text-white/60';
 ```
 
 **Efeito glassmorphism** — usado em cards e painéis flutuantes:
 
 ```tsx
 // Fundo translúcido com blur
-className="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-white/20"
+className =
+  'bg-white/60 dark:bg-white/5 backdrop-blur-md border border-white/20';
 
 // Sombra com gradiente linear
-className="bg-linear-to-r from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-900 dark:via-blue-950/20 dark:to-gray-900"
+className =
+  'bg-linear-to-r from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-900 dark:via-blue-950/20 dark:to-gray-900';
 ```
 
 **Gradientes de ícone** — padronizados como `from-{cor1} to-{cor2}`:
 
 ```tsx
 // Gradiente no container de ícone do PageHeader
-gradient="from-blue-500 to-indigo-600"
+gradient = 'from-blue-500 to-indigo-600';
 
 // Gradiente no StatsCard
-gradient="from-emerald-500 to-teal-600"
+gradient = 'from-emerald-500 to-teal-600';
 ```
 
 **Central area** — O painel `/central` (super admin) tem tema separado gerenciado por `CentralThemeContext` (`src/contexts/central-theme-context.tsx`), com paleta dark blue (`#0d1426`) independente do tema global.
@@ -978,42 +1012,42 @@ O projeto usa framer-motion para animações de:
 
 Arquivos de referência para cada padrão documentado:
 
-| Padrão | Arquivo |
-|--------|---------|
-| Design tokens | `src/app/globals.css` |
-| EntityForm | `src/components/shared/forms/entity-form.tsx` |
-| EntityFormConfig types | `src/types/entity-config.ts` |
-| DynamicFormField | `src/components/shared/forms/dynamic-form-field.tsx` |
-| AttributeManager | `src/components/shared/forms/attribute-manager.tsx` |
-| EntityGrid | `src/components/shared/grid/entity-grid.tsx` |
-| EntityContextMenu | `src/components/shared/context-menu/entity-context-menu.tsx` |
-| EntityViewer | `src/components/shared/viewers/entity-viewer.tsx` |
-| VerifyActionPinModal | `src/components/modals/verify-action-pin-modal.tsx` |
-| ConfirmDialog | `src/components/shared/confirm-dialog.tsx` |
-| QuickCreateModal | `src/components/shared/modals/quick-create-modal.tsx` |
-| ImportModal | `src/components/shared/modals/import-modal.tsx` |
-| MultiViewModal | `src/components/shared/modals/multi-view-modal.tsx` |
-| BatchProgressDialog | `src/components/shared/progress/batch-progress-dialog.tsx` |
-| StepWizardDialog | `src/components/ui/step-wizard-dialog.tsx` |
-| FilterDropdown | `src/components/ui/filter-dropdown.tsx` |
-| Combobox | `src/components/ui/combobox.tsx` |
-| InputGroup / MoneyInput | `src/components/ui/input-group.tsx` |
-| PageLayout | `src/components/layout/page-layout.tsx` |
-| PageActionBar | `src/components/layout/page-action-bar.tsx` |
-| PageBreadcrumb | `src/components/layout/page-breadcrumb.tsx` |
-| PageHeader (shared) | `src/components/shared/page-header.tsx` |
-| SearchSection | `src/components/shared/search/search-section.tsx` |
-| EmptyState | `src/components/shared/empty-state.tsx` |
-| LoadingSkeletons | `src/components/shared/loading-skeletons.tsx` |
-| UserAvatar | `src/components/shared/user-avatar.tsx` |
-| InfoField | `src/components/shared/info-field.tsx` |
-| MetadataSection | `src/components/shared/metadata-section.tsx` |
-| StatsCard | `src/components/shared/stats-card.tsx` |
-| StatsSection | `src/components/shared/stats/stats-section.tsx` |
-| Timeline | `src/components/shared/timeline/timeline.tsx` |
-| ThemeToggle | `src/components/ui/theme-toggle.tsx` |
-| Sonner/Toaster | `src/components/ui/sonner.tsx` |
-| Barrel de exports | `src/components/shared/index.ts` |
+| Padrão                  | Arquivo                                                      |
+| ----------------------- | ------------------------------------------------------------ |
+| Design tokens           | `src/app/globals.css`                                        |
+| EntityForm              | `src/components/shared/forms/entity-form.tsx`                |
+| EntityFormConfig types  | `src/types/entity-config.ts`                                 |
+| DynamicFormField        | `src/components/shared/forms/dynamic-form-field.tsx`         |
+| AttributeManager        | `src/components/shared/forms/attribute-manager.tsx`          |
+| EntityGrid              | `src/components/shared/grid/entity-grid.tsx`                 |
+| EntityContextMenu       | `src/components/shared/context-menu/entity-context-menu.tsx` |
+| EntityViewer            | `src/components/shared/viewers/entity-viewer.tsx`            |
+| VerifyActionPinModal    | `src/components/modals/verify-action-pin-modal.tsx`          |
+| ConfirmDialog           | `src/components/shared/confirm-dialog.tsx`                   |
+| QuickCreateModal        | `src/components/shared/modals/quick-create-modal.tsx`        |
+| ImportModal             | `src/components/shared/modals/import-modal.tsx`              |
+| MultiViewModal          | `src/components/shared/modals/multi-view-modal.tsx`          |
+| BatchProgressDialog     | `src/components/shared/progress/batch-progress-dialog.tsx`   |
+| StepWizardDialog        | `src/components/ui/step-wizard-dialog.tsx`                   |
+| FilterDropdown          | `src/components/ui/filter-dropdown.tsx`                      |
+| Combobox                | `src/components/ui/combobox.tsx`                             |
+| InputGroup / MoneyInput | `src/components/ui/input-group.tsx`                          |
+| PageLayout              | `src/components/layout/page-layout.tsx`                      |
+| PageActionBar           | `src/components/layout/page-action-bar.tsx`                  |
+| PageBreadcrumb          | `src/components/layout/page-breadcrumb.tsx`                  |
+| PageHeader (shared)     | `src/components/shared/page-header.tsx`                      |
+| SearchSection           | `src/components/shared/search/search-section.tsx`            |
+| EmptyState              | `src/components/shared/empty-state.tsx`                      |
+| LoadingSkeletons        | `src/components/shared/loading-skeletons.tsx`                |
+| UserAvatar              | `src/components/shared/user-avatar.tsx`                      |
+| InfoField               | `src/components/shared/info-field.tsx`                       |
+| MetadataSection         | `src/components/shared/metadata-section.tsx`                 |
+| StatsCard               | `src/components/shared/stats-card.tsx`                       |
+| StatsSection            | `src/components/shared/stats/stats-section.tsx`              |
+| Timeline                | `src/components/shared/timeline/timeline.tsx`                |
+| ThemeToggle             | `src/components/ui/theme-toggle.tsx`                         |
+| Sonner/Toaster          | `src/components/ui/sonner.tsx`                               |
+| Barrel de exports       | `src/components/shared/index.ts`                             |
 
 ---
 
@@ -1021,28 +1055,28 @@ Arquivos de referência para cada padrão documentado:
 
 ### Quando usar cada componente
 
-| Situação | Componente recomendado |
-|----------|----------------------|
-| Formulário simples com poucos campos | `EntityForm` com `sections` |
-| Formulário com abas e atributos dinâmicos | `EntityForm` com `tabs` |
-| Formulário com lógica complexa de coerção | Formulário manual com `useState` |
-| Ação destrutiva (delete, remoção) | `VerifyActionPinModal` + `ConfirmDialog` |
-| Criar entidade com só o nome | `QuickCreateModal` |
-| Upload em massa | `ImportModal` |
-| Listagem com seleção múltipla | `EntityGrid` |
-| Visualizar dados em leitura | `EntityViewer` |
-| Progresso de operação em lote | `BatchProgressDialog` |
-| Onboarding ou wizard | `StepWizardDialog` |
-| Filtros com múltipla seleção | `FilterDropdown` |
-| Select com busca | `Combobox` |
-| Campo monetário | `InputGroup` + `MoneyInput` |
-| Listagem vazia | `EmptyState` |
-| Carregamento | `GridLoading`, `TableLoading`, `PageSkeleton` |
-| Avatar do usuário | `UserAvatar` |
-| Timestamps de entidade | `MetadataSection` |
-| Métricas/KPIs | `StatsCard` / `StatsSection` |
-| Log de auditoria | `Timeline` |
-| Feedback de operação | `toast.success/error/promise` |
+| Situação                                  | Componente recomendado                        |
+| ----------------------------------------- | --------------------------------------------- |
+| Formulário simples com poucos campos      | `EntityForm` com `sections`                   |
+| Formulário com abas e atributos dinâmicos | `EntityForm` com `tabs`                       |
+| Formulário com lógica complexa de coerção | Formulário manual com `useState`              |
+| Ação destrutiva (delete, remoção)         | `VerifyActionPinModal` + `ConfirmDialog`      |
+| Criar entidade com só o nome              | `QuickCreateModal`                            |
+| Upload em massa                           | `ImportModal`                                 |
+| Listagem com seleção múltipla             | `EntityGrid`                                  |
+| Visualizar dados em leitura               | `EntityViewer`                                |
+| Progresso de operação em lote             | `BatchProgressDialog`                         |
+| Onboarding ou wizard                      | `StepWizardDialog`                            |
+| Filtros com múltipla seleção              | `FilterDropdown`                              |
+| Select com busca                          | `Combobox`                                    |
+| Campo monetário                           | `InputGroup` + `MoneyInput`                   |
+| Listagem vazia                            | `EmptyState`                                  |
+| Carregamento                              | `GridLoading`, `TableLoading`, `PageSkeleton` |
+| Avatar do usuário                         | `UserAvatar`                                  |
+| Timestamps de entidade                    | `MetadataSection`                             |
+| Métricas/KPIs                             | `StatsCard` / `StatsSection`                  |
+| Log de auditoria                          | `Timeline`                                    |
+| Feedback de operação                      | `toast.success/error/promise`                 |
 
 ### Armadilhas comuns
 
@@ -1062,6 +1096,6 @@ Arquivos de referência para cada padrão documentado:
 
 ## Audit History
 
-| Data | Dimensão | Score | Relatório |
-|------|----------|-------|-----------|
-| 2026-03-10 | Documentação inicial | — | Criação deste documento |
+| Data       | Dimensão             | Score | Relatório               |
+| ---------- | -------------------- | ----- | ----------------------- |
+| 2026-03-10 | Documentação inicial | —     | Criação deste documento |

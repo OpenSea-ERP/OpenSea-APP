@@ -23,8 +23,12 @@ export function useRestoreFile() {
     mutationFn: (fileId: string) => storageTrashService.restoreFile(fileId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['storage-trash'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
     },
   });
@@ -38,8 +42,12 @@ export function useRestoreFolder() {
       storageTrashService.restoreFolder(folderId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['storage-trash'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
     },
   });

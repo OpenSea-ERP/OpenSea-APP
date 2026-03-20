@@ -10,11 +10,7 @@ interface PasswordInputProps
   iconLeft?: React.ReactNode;
 }
 
-function PasswordInput({
-  className,
-  iconLeft,
-  ...props
-}: PasswordInputProps) {
+function PasswordInput({ className, iconLeft, ...props }: PasswordInputProps) {
   const [showPassword, setShowPassword] = React.useState(false);
 
   return (

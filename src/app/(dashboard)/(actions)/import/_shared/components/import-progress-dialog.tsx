@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -22,7 +18,8 @@ import { cn } from '@/lib/utils';
 function translateError(message: string): string {
   const translations: Record<string, string> = {
     'Name is required': 'Nome é obrigatório',
-    'Name must be at most 200 characters long': 'Nome deve ter no máximo 200 caracteres',
+    'Name must be at most 200 characters long':
+      'Nome deve ter no máximo 200 caracteres',
     'Product with this name already exists': 'Produto com este nome já existe',
     'Template not found': 'Template não encontrado',
     'Supplier not found': 'Fornecedor não encontrado',
@@ -42,11 +39,16 @@ function translateError(message: string): string {
   }
 
   // Common patterns
-  if (message.includes('not found')) return message.replace('not found', 'não encontrado(a)');
-  if (message.includes('already exists')) return message.replace('already exists', 'já existe');
-  if (message.includes('is required')) return message.replace('is required', 'é obrigatório');
-  if (message.includes('must be')) return message.replace('must be', 'deve ser');
-  if (message.includes('Invalid')) return message.replace('Invalid', 'Inválido');
+  if (message.includes('not found'))
+    return message.replace('not found', 'não encontrado(a)');
+  if (message.includes('already exists'))
+    return message.replace('already exists', 'já existe');
+  if (message.includes('is required'))
+    return message.replace('is required', 'é obrigatório');
+  if (message.includes('must be'))
+    return message.replace('must be', 'deve ser');
+  if (message.includes('Invalid'))
+    return message.replace('Invalid', 'Inválido');
 
   return message;
 }

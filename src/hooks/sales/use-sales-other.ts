@@ -106,7 +106,9 @@ export function useCreateItemReservation() {
     mutationFn: (data: CreateItemReservationRequest) =>
       itemReservationsService.createReservation(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RESERVATIONS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.RESERVATIONS,
+      });
     },
   });
 }
@@ -123,7 +125,9 @@ export function useReleaseItemReservation() {
       data: ReleaseItemReservationRequest;
     }) => itemReservationsService.releaseReservation(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.RESERVATIONS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.RESERVATIONS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.RESERVATION(variables.id),
       });
@@ -155,7 +159,9 @@ export function useCreateNotificationPreference() {
     mutationFn: (data: CreateNotificationPreferenceRequest) =>
       notificationPreferencesService.createPreference(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.NOTIFICATIONS,
+      });
     },
   });
 }
@@ -172,7 +178,9 @@ export function useUpdateNotificationPreference() {
       data: UpdateNotificationPreferenceRequest;
     }) => notificationPreferencesService.updatePreference(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.NOTIFICATIONS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.NOTIFICATION(variables.id),
       });
@@ -187,7 +195,9 @@ export function useDeleteNotificationPreference() {
     mutationFn: (id: string) =>
       notificationPreferencesService.deletePreference(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.NOTIFICATIONS,
+      });
     },
   });
 }

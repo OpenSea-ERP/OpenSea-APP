@@ -102,10 +102,7 @@ export function useFileParser(): UseFileParserReturn {
 
     try {
       const worker = new Worker(
-        new URL(
-          '../../_shared/utils/excel-parser.worker.ts',
-          import.meta.url
-        )
+        new URL('../../_shared/utils/excel-parser.worker.ts', import.meta.url)
       );
       workerRef.current = worker;
       workerSupportedRef.current = true;
@@ -195,10 +192,7 @@ export function useFileParser(): UseFileParserReturn {
    * Parseia um arquivo usando Web Worker (com fallback para main thread)
    */
   const parseFileViaWorker = useCallback(
-    (
-      file: File,
-      options?: ParseOptions
-    ): Promise<ParseResult> => {
+    (file: File, options?: ParseOptions): Promise<ParseResult> => {
       const worker = getWorker();
 
       if (!worker) {
@@ -229,20 +223,23 @@ export function useFileParser(): UseFileParserReturn {
         worker.addEventListener('message', handleMessage);
         worker.addEventListener('error', handleError);
 
-        file.arrayBuffer().then(buffer => {
-          worker.postMessage(
-            {
-              type: 'parse',
-              fileBuffer: buffer,
-              fileName: file.name,
-              options,
-            },
-            [buffer]
-          );
-        }).catch(err => {
-          cleanup();
-          reject(err);
-        });
+        file
+          .arrayBuffer()
+          .then(buffer => {
+            worker.postMessage(
+              {
+                type: 'parse',
+                fileBuffer: buffer,
+                fileName: file.name,
+                options,
+              },
+              [buffer]
+            );
+          })
+          .catch(err => {
+            cleanup();
+            reject(err);
+          });
       });
     },
     [getWorker]

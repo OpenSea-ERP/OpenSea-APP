@@ -49,7 +49,12 @@ export function EditZoneModal({
   }, [zone, open]);
 
   const handleCodeChange = useCallback((value: string) => {
-    setCode(value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
+    setCode(
+      value
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 5)
+    );
   }, []);
 
   const handleClose = useCallback(() => {
@@ -58,25 +63,28 @@ export function EditZoneModal({
     onOpenChange(false);
   }, [onOpenChange]);
 
-  const handleSave = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!zone || code.length < 2 || !name.trim()) return;
+  const handleSave = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!zone || code.length < 2 || !name.trim()) return;
 
-    try {
-      await updateZone.mutateAsync({
-        id: zone.id,
-        data: {
-          code,
-          name: name.trim(),
-        },
-      });
-      toast.success('Zona atualizada com sucesso!');
-      onSuccess?.();
-      handleClose();
-    } catch {
-      toast.error('Erro ao atualizar zona. Tente novamente.');
-    }
-  }, [zone, code, name, updateZone, onSuccess, handleClose]);
+      try {
+        await updateZone.mutateAsync({
+          id: zone.id,
+          data: {
+            code,
+            name: name.trim(),
+          },
+        });
+        toast.success('Zona atualizada com sucesso!');
+        onSuccess?.();
+        handleClose();
+      } catch {
+        toast.error('Erro ao atualizar zona. Tente novamente.');
+      }
+    },
+    [zone, code, name, updateZone, onSuccess, handleClose]
+  );
 
   if (!zone) return null;
 
@@ -144,10 +152,7 @@ export function EditZoneModal({
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              disabled={!isValid || updateZone.isPending}
-            >
+            <Button type="submit" disabled={!isValid || updateZone.isPending}>
               {updateZone.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

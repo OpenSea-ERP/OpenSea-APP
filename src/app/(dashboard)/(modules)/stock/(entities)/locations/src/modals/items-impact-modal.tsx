@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import {
-  AlertTriangle,
-  ArrowRightLeft,
-  Loader2,
-  Package,
-} from 'lucide-react';
+import { AlertTriangle, ArrowRightLeft, Loader2, Package } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -112,7 +107,7 @@ export function ItemsImpactModal({
             {/* Affected bins list */}
             <ScrollArea className="max-h-[200px]">
               <div className="space-y-1 pr-3">
-                {affectedBins.map((bin) => (
+                {affectedBins.map(bin => (
                   <div
                     key={bin.binId}
                     className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/40"
@@ -131,7 +126,11 @@ export function ItemsImpactModal({
           </div>
 
           <DialogFooter className="flex-row justify-between sm:justify-between">
-            <Button variant="outline" onClick={handleClose} disabled={isExecuting}>
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isExecuting}
+            >
               Cancelar
             </Button>
             <div className="flex items-center gap-2">

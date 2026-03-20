@@ -102,8 +102,7 @@ function getAccountHealthIssues(health: EmailAccountHealth): string[] {
   const issues: string[] = [];
   if (health.imap.status === 'error') issues.push('IMAP: Falha na conexão');
   if (health.smtp.status === 'error') issues.push('SMTP: Falha na conexão');
-  if (health.worker.status === 'stale')
-    issues.push('Worker: Sem sync recente');
+  if (health.worker.status === 'stale') issues.push('Worker: Sem sync recente');
   if (health.worker.status === 'error') issues.push('Worker: Falha no sync');
   return issues;
 }

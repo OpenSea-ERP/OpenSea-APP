@@ -43,7 +43,9 @@ export function useCreateFinanceCustomer() {
     mutationFn: (data: CreateCustomerRequest) =>
       customersService.createCustomer(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.FINANCE_CUSTOMERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.FINANCE_CUSTOMERS,
+      });
       // Also invalidate sales customers so sales pages stay in sync
       await queryClient.invalidateQueries({ queryKey: ['customers'] });
     },

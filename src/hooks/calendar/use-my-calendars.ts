@@ -29,7 +29,9 @@ export function useCreateTeamCalendar() {
     mutationFn: (data: CreateTeamCalendarData) =>
       calendarsService.createTeamCalendar(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.MY_CALENDARS,
+      });
     },
   });
 }
@@ -41,7 +43,9 @@ export function useUpdateCalendar() {
     mutationFn: ({ id, data }: { id: string; data: UpdateCalendarData }) =>
       calendarsService.updateCalendar(id, data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.MY_CALENDARS,
+      });
     },
   });
 }
@@ -52,7 +56,9 @@ export function useDeleteCalendar() {
   return useMutation({
     mutationFn: (id: string) => calendarsService.deleteCalendar(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.MY_CALENDARS,
+      });
     },
   });
 }
@@ -64,7 +70,9 @@ export function useUpdateTeamCalendarPermissions() {
     mutationFn: ({ id, data }: { id: string; data: TeamCalendarPermissions }) =>
       calendarsService.updateTeamCalendarPermissions(id, data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_CALENDARS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.MY_CALENDARS,
+      });
     },
   });
 }

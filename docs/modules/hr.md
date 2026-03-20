@@ -7,6 +7,7 @@ O módulo de Recursos Humanos é o núcleo de gestão de pessoas do OpenSea-APP.
 O módulo está organizado sob o route group `(dashboard)/(modules)/hr` e integra-se ao route group `(dashboard)/(actions)/import` para importação em lote via planilha.
 
 **Dependências com outros módulos:**
+
 - `admin/` — Vinculação de funcionários a usuários do sistema, grupos de permissão
 - `finance/` — Folha de pagamento gera lançamentos financeiros; payroll integration via CalendarSyncService
 - `storage/` — FileManager embutido nas páginas de detalhe de funcionários e empresas para gestão de documentos
@@ -166,134 +167,134 @@ Todos os tipos de HR estão em `src/types/hr/` com barrel re-export via `src/typ
 
 ### employee.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `ContractType` | `'CLT' \| 'PJ' \| 'INTERN' \| 'TEMPORARY' \| 'APPRENTICE'` |
-| `WorkRegime` | `'FULL_TIME' \| 'PART_TIME' \| 'HOURLY' \| 'SHIFT' \| 'FLEXIBLE'` |
-| `EmergencyContactInfo` | `{ name?, phone?, relationship? }` — contato de emergência estruturado |
-| `HealthCondition` | `{ description, requiresAttention }` — condição de saúde registrada |
-| `Employee` | Entidade completa: dados pessoais, profissionais, documentos (RG, PIS, CTPS, título de eleitor, documento militar), contato, endereço, dados bancários, foto, metadados |
-| `CreateEmployeeData` | Criação com campos obrigatórios: `registrationNumber`, `fullName`, `cpf`, `hireDate`, `baseSalary`, `contractType`, `workRegime`, `weeklyHours` |
-| `UpdateEmployeeData` | Atualização parcial (todos os campos opcionais) |
-| `EmployeeLabelData` | Dados completos para impressão de etiqueta (funcionário + departamento + cargo + empresa + tenant) |
-| `EmployeeLabelDataResponse` | `{ labelData: EmployeeLabelData[] }` |
+| Interface/Type              | Descrição                                                                                                                                                               |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ContractType`              | `'CLT' \| 'PJ' \| 'INTERN' \| 'TEMPORARY' \| 'APPRENTICE'`                                                                                                              |
+| `WorkRegime`                | `'FULL_TIME' \| 'PART_TIME' \| 'HOURLY' \| 'SHIFT' \| 'FLEXIBLE'`                                                                                                       |
+| `EmergencyContactInfo`      | `{ name?, phone?, relationship? }` — contato de emergência estruturado                                                                                                  |
+| `HealthCondition`           | `{ description, requiresAttention }` — condição de saúde registrada                                                                                                     |
+| `Employee`                  | Entidade completa: dados pessoais, profissionais, documentos (RG, PIS, CTPS, título de eleitor, documento militar), contato, endereço, dados bancários, foto, metadados |
+| `CreateEmployeeData`        | Criação com campos obrigatórios: `registrationNumber`, `fullName`, `cpf`, `hireDate`, `baseSalary`, `contractType`, `workRegime`, `weeklyHours`                         |
+| `UpdateEmployeeData`        | Atualização parcial (todos os campos opcionais)                                                                                                                         |
+| `EmployeeLabelData`         | Dados completos para impressão de etiqueta (funcionário + departamento + cargo + empresa + tenant)                                                                      |
+| `EmployeeLabelDataResponse` | `{ labelData: EmployeeLabelData[] }`                                                                                                                                    |
 
 ### department.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `Department` | Departamento com hierarquia: `parentId` (sub-departamento), `managerId`, `_count` (posições e funcionários), relações expandidas |
-| `CreateDepartmentData` | Campos obrigatórios: `name`, `code`, `companyId` |
-| `UpdateDepartmentData` | Atualização parcial |
-| `Position` | Cargo com faixa salarial (`minSalary`, `maxSalary`, `baseSalary`), `level`, vínculo com departamento, `_count` de funcionários |
-| `CreatePositionData` | Campos obrigatórios: `name`, `code` |
-| `UpdatePositionData` | Atualização parcial |
+| Interface/Type         | Descrição                                                                                                                        |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `Department`           | Departamento com hierarquia: `parentId` (sub-departamento), `managerId`, `_count` (posições e funcionários), relações expandidas |
+| `CreateDepartmentData` | Campos obrigatórios: `name`, `code`, `companyId`                                                                                 |
+| `UpdateDepartmentData` | Atualização parcial                                                                                                              |
+| `Position`             | Cargo com faixa salarial (`minSalary`, `maxSalary`, `baseSalary`), `level`, vínculo com departamento, `_count` de funcionários   |
+| `CreatePositionData`   | Campos obrigatórios: `name`, `code`                                                                                              |
+| `UpdatePositionData`   | Atualização parcial                                                                                                              |
 
 ### company.types.ts (migrado para `src/types/admin/company.types.ts`)
 
 > **Nota:** Os tipos de empresa foram migrados para o módulo Admin. Importar via `import type { Company } from '@/types/admin'`.
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `CompanyStatus` | `'ACTIVE' \| 'INACTIVE' \| 'SUSPENDED'` |
-| `TaxRegime` | `'SIMPLES' \| 'LUCRO_PRESUMIDO' \| 'LUCRO_REAL' \| 'IMUNE_ISENTA' \| 'OUTROS'` |
-| `Company` | Empresa com dados fiscais (CNPJ, IE, IM, regime tributário), contato, logo, pendências e relações |
-| `CreateCompanyData` / `UpdateCompanyData` | CRUD da empresa principal |
-| `CompanyAddressType` | `'FISCAL' \| 'DELIVERY' \| 'BILLING' \| 'OTHER'` |
-| `CompanyAddress` | Endereço com código IBGE, marcação de principal (`isPrimary`) |
-| `CompanyCnae` | CNAE com código, descrição e marcação de primário |
-| `CompanyFiscalSettings` | Configurações NF-e/NFC-e: ambiente, série, último número, certificado A1/A3, CSC para NFC-e |
-| `CompanyStakeholder` | Sócio/representante legal com datas de entrada/saída e fonte (API CNPJ ou manual) |
+| Interface/Type                            | Descrição                                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `CompanyStatus`                           | `'ACTIVE' \| 'INACTIVE' \| 'SUSPENDED'`                                                           |
+| `TaxRegime`                               | `'SIMPLES' \| 'LUCRO_PRESUMIDO' \| 'LUCRO_REAL' \| 'IMUNE_ISENTA' \| 'OUTROS'`                    |
+| `Company`                                 | Empresa com dados fiscais (CNPJ, IE, IM, regime tributário), contato, logo, pendências e relações |
+| `CreateCompanyData` / `UpdateCompanyData` | CRUD da empresa principal                                                                         |
+| `CompanyAddressType`                      | `'FISCAL' \| 'DELIVERY' \| 'BILLING' \| 'OTHER'`                                                  |
+| `CompanyAddress`                          | Endereço com código IBGE, marcação de principal (`isPrimary`)                                     |
+| `CompanyCnae`                             | CNAE com código, descrição e marcação de primário                                                 |
+| `CompanyFiscalSettings`                   | Configurações NF-e/NFC-e: ambiente, série, último número, certificado A1/A3, CSC para NFC-e       |
+| `CompanyStakeholder`                      | Sócio/representante legal com datas de entrada/saída e fonte (API CNPJ ou manual)                 |
 
 ### work-schedule.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `WorkSchedule` | Escala com horários por dia da semana (`{day}Start`, `{day}End` em formato HH:mm), `breakDuration` em minutos, `weeklyHours` calculado |
-| `CreateWorkScheduleData` | Horários de segunda a domingo (todos opcionais para turnos parciais) |
-| `UpdateWorkScheduleData` | `Partial<CreateWorkScheduleData>` |
+| Interface/Type           | Descrição                                                                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `WorkSchedule`           | Escala com horários por dia da semana (`{day}Start`, `{day}End` em formato HH:mm), `breakDuration` em minutos, `weeklyHours` calculado |
+| `CreateWorkScheduleData` | Horários de segunda a domingo (todos opcionais para turnos parciais)                                                                   |
+| `UpdateWorkScheduleData` | `Partial<CreateWorkScheduleData>`                                                                                                      |
 
 ### time-entry.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `TimeEntryType` | `'CLOCK_IN' \| 'CLOCK_OUT' \| 'BREAK_START' \| 'BREAK_END' \| 'OVERTIME_START' \| 'OVERTIME_END'` |
-| `TimeEntry` | Registro de ponto com geolocalização opcional (`latitude`, `longitude`) e endereço IP |
-| `ClockInOutData` | Dados para bater ponto: `employeeId`, `timestamp?`, `latitude?`, `longitude?`, `notes?` |
+| Interface/Type        | Descrição                                                                                                 |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| `TimeEntryType`       | `'CLOCK_IN' \| 'CLOCK_OUT' \| 'BREAK_START' \| 'BREAK_END' \| 'OVERTIME_START' \| 'OVERTIME_END'`         |
+| `TimeEntry`           | Registro de ponto com geolocalização opcional (`latitude`, `longitude`) e endereço IP                     |
+| `ClockInOutData`      | Dados para bater ponto: `employeeId`, `timestamp?`, `latitude?`, `longitude?`, `notes?`                   |
 | `WorkedHoursResponse` | Resposta do cálculo de horas: `dailyBreakdown[]` com `workedHours`, `breakHours`, `overtimeHours` por dia |
 
 ### time-bank.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `TimeBank` | Banco de horas: `balance` (total em horas), `year`, indicadores `hasPositiveBalance` e `hasNegativeBalance` |
-| `CreditDebitTimeBankData` | Crédito ou débito: `employeeId`, `hours`, `year?` |
-| `AdjustTimeBankData` | Ajuste de saldo: `employeeId`, `newBalance`, `year?` |
+| Interface/Type            | Descrição                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `TimeBank`                | Banco de horas: `balance` (total em horas), `year`, indicadores `hasPositiveBalance` e `hasNegativeBalance` |
+| `CreditDebitTimeBankData` | Crédito ou débito: `employeeId`, `hours`, `year?`                                                           |
+| `AdjustTimeBankData`      | Ajuste de saldo: `employeeId`, `newBalance`, `year?`                                                        |
 
 ### overtime.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `Overtime` | Hora extra com `date`, `hours`, `reason`, `approved` (null = pendente, true = aprovado, false = rejeitado), `approvedBy` |
-| `CreateOvertimeData` | `employeeId`, `date`, `hours`, `reason` |
-| `ApproveOvertimeData` | `{ addToTimeBank?: boolean }` — ao aprovar, pode creditar no banco de horas |
+| Interface/Type        | Descrição                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `Overtime`            | Hora extra com `date`, `hours`, `reason`, `approved` (null = pendente, true = aprovado, false = rejeitado), `approvedBy` |
+| `CreateOvertimeData`  | `employeeId`, `date`, `hours`, `reason`                                                                                  |
+| `ApproveOvertimeData` | `{ addToTimeBank?: boolean }` — ao aprovar, pode creditar no banco de horas                                              |
 
 ### vacation-period.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `VacationStatus` | `'PENDING' \| 'AVAILABLE' \| 'SCHEDULED' \| 'IN_PROGRESS' \| 'COMPLETED' \| 'EXPIRED' \| 'SOLD'` |
-| `VacationPeriod` | Período aquisitivo com datas de aquisição/concessão, totais (`totalDays`, `usedDays`, `soldDays`, `remainingDays`) |
-| `ScheduleVacationData` | Agendamento: `startDate`, `endDate`, `days` |
-| `SellVacationDaysData` | Venda de dias: `{ daysToSell: number }` |
-| `VacationBalance` | Saldo consolidado por funcionário com todos os períodos (`VacationBalancePeriod[]`) |
+| Interface/Type         | Descrição                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `VacationStatus`       | `'PENDING' \| 'AVAILABLE' \| 'SCHEDULED' \| 'IN_PROGRESS' \| 'COMPLETED' \| 'EXPIRED' \| 'SOLD'`                   |
+| `VacationPeriod`       | Período aquisitivo com datas de aquisição/concessão, totais (`totalDays`, `usedDays`, `soldDays`, `remainingDays`) |
+| `ScheduleVacationData` | Agendamento: `startDate`, `endDate`, `days`                                                                        |
+| `SellVacationDaysData` | Venda de dias: `{ daysToSell: number }`                                                                            |
+| `VacationBalance`      | Saldo consolidado por funcionário com todos os períodos (`VacationBalancePeriod[]`)                                |
 
 ### absence.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `AbsenceType` | 11 tipos: `VACATION`, `SICK_LEAVE`, `PERSONAL_LEAVE`, `MATERNITY_LEAVE`, `PATERNITY_LEAVE`, `BEREAVEMENT_LEAVE`, `WEDDING_LEAVE`, `MEDICAL_APPOINTMENT`, `JURY_DUTY`, `UNPAID_LEAVE`, `OTHER` |
-| `AbsenceStatus` | `'PENDING' \| 'APPROVED' \| 'REJECTED' \| 'CANCELLED' \| 'IN_PROGRESS' \| 'COMPLETED'` |
-| `Absence` | Ausência com `cid` (para atestados médicos), `documentUrl`, `isPaid`, campos de aprovação/rejeição |
-| `RequestVacationAbsenceData` | Requisição de férias vinculada a um `vacationPeriodId` |
-| `RequestSickLeaveData` | Atestado médico: exige `cid` e `reason` obrigatórios |
-| `RejectAbsenceData` | `{ reason: string }` — motivo de rejeição obrigatório |
+| Interface/Type               | Descrição                                                                                                                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AbsenceType`                | 11 tipos: `VACATION`, `SICK_LEAVE`, `PERSONAL_LEAVE`, `MATERNITY_LEAVE`, `PATERNITY_LEAVE`, `BEREAVEMENT_LEAVE`, `WEDDING_LEAVE`, `MEDICAL_APPOINTMENT`, `JURY_DUTY`, `UNPAID_LEAVE`, `OTHER` |
+| `AbsenceStatus`              | `'PENDING' \| 'APPROVED' \| 'REJECTED' \| 'CANCELLED' \| 'IN_PROGRESS' \| 'COMPLETED'`                                                                                                        |
+| `Absence`                    | Ausência com `cid` (para atestados médicos), `documentUrl`, `isPaid`, campos de aprovação/rejeição                                                                                            |
+| `RequestVacationAbsenceData` | Requisição de férias vinculada a um `vacationPeriodId`                                                                                                                                        |
+| `RequestSickLeaveData`       | Atestado médico: exige `cid` e `reason` obrigatórios                                                                                                                                          |
+| `RejectAbsenceData`          | `{ reason: string }` — motivo de rejeição obrigatório                                                                                                                                         |
 
 ### payroll.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `PayrollStatus` | `'DRAFT' \| 'PROCESSING' \| 'CALCULATED' \| 'APPROVED' \| 'PAID' \| 'CANCELLED'` |
-| `PayrollItemType` | 23 tipos de verbas: salário base, horas extras, adicional noturno, insalubridade, periculosidade, bônus, comissão, férias, 13º, PLR, VT, VR, plano de saúde/dental, INSS, IRRF, FGTS, contribuição sindical, deduções diversas |
-| `Payroll` | Folha de pagamento referenciada por mês/ano com totais (`totalGross`, `totalDeductions`, `totalNet`) e rastreabilidade (processedBy, approvedBy, paidBy) |
-| `PayrollItem` | Item da folha vinculado a funcionário, com flag `isDeduction` e referência opcional (`referenceId`, `referenceType`) |
-| `CreatePayrollData` | `{ referenceMonth: number, referenceYear: number }` |
+| Interface/Type      | Descrição                                                                                                                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PayrollStatus`     | `'DRAFT' \| 'PROCESSING' \| 'CALCULATED' \| 'APPROVED' \| 'PAID' \| 'CANCELLED'`                                                                                                                                               |
+| `PayrollItemType`   | 23 tipos de verbas: salário base, horas extras, adicional noturno, insalubridade, periculosidade, bônus, comissão, férias, 13º, PLR, VT, VR, plano de saúde/dental, INSS, IRRF, FGTS, contribuição sindical, deduções diversas |
+| `Payroll`           | Folha de pagamento referenciada por mês/ano com totais (`totalGross`, `totalDeductions`, `totalNet`) e rastreabilidade (processedBy, approvedBy, paidBy)                                                                       |
+| `PayrollItem`       | Item da folha vinculado a funcionário, com flag `isDeduction` e referência opcional (`referenceId`, `referenceType`)                                                                                                           |
+| `CreatePayrollData` | `{ referenceMonth: number, referenceYear: number }`                                                                                                                                                                            |
 
 ### bonus.types.ts e deduction.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `Bonus` | Bonificação avulsa: `name`, `amount`, `reason`, `date`, `isPaid` |
-| `CreateBonusData` | Campos obrigatórios: `employeeId`, `name`, `amount`, `reason`, `date` |
-| `Deduction` | Dedução com suporte a parcelamento (`installments`, `currentInstallment`), flag `isRecurring` e `isApplied` |
+| Interface/Type        | Descrição                                                                                                       |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `Bonus`               | Bonificação avulsa: `name`, `amount`, `reason`, `date`, `isPaid`                                                |
+| `CreateBonusData`     | Campos obrigatórios: `employeeId`, `name`, `amount`, `reason`, `date`                                           |
+| `Deduction`           | Dedução com suporte a parcelamento (`installments`, `currentInstallment`), flag `isRecurring` e `isApplied`     |
 | `CreateDeductionData` | Campos obrigatórios: `employeeId`, `name`, `amount`, `reason`, `date`; opcionais: `isRecurring`, `installments` |
 
 ### Sincronização com Backend
 
-| Arquivo | Backend Schema | Sincronizado? |
-|---------|---------------|---------------|
-| `employee.types.ts` | `employee.schema.ts` | Sim |
-| `department.types.ts` | `department.schema.ts` | Sim |
-| `company.types.ts` | `company.schema.ts` | Sim (migrado para `src/types/admin/`) |
-| `work-schedule.types.ts` | `work-schedule.schema.ts` | Sim |
-| `time-entry.types.ts` | `time-entry.schema.ts` | Sim |
-| `time-bank.types.ts` | `time-bank.schema.ts` | Sim |
-| `overtime.types.ts` | `overtime.schema.ts` | Sim |
-| `vacation-period.types.ts` | `vacation-period.schema.ts` | Sim |
-| `absence.types.ts` | `absence.schema.ts` | Sim |
-| `payroll.types.ts` | `payroll.schema.ts` | Sim |
-| `bonus.types.ts` | `bonus.schema.ts` | Sim |
-| `deduction.types.ts` | `deduction.schema.ts` | Sim |
+| Arquivo                    | Backend Schema              | Sincronizado?                         |
+| -------------------------- | --------------------------- | ------------------------------------- |
+| `employee.types.ts`        | `employee.schema.ts`        | Sim                                   |
+| `department.types.ts`      | `department.schema.ts`      | Sim                                   |
+| `company.types.ts`         | `company.schema.ts`         | Sim (migrado para `src/types/admin/`) |
+| `work-schedule.types.ts`   | `work-schedule.schema.ts`   | Sim                                   |
+| `time-entry.types.ts`      | `time-entry.schema.ts`      | Sim                                   |
+| `time-bank.types.ts`       | `time-bank.schema.ts`       | Sim                                   |
+| `overtime.types.ts`        | `overtime.schema.ts`        | Sim                                   |
+| `vacation-period.types.ts` | `vacation-period.schema.ts` | Sim                                   |
+| `absence.types.ts`         | `absence.schema.ts`         | Sim                                   |
+| `payroll.types.ts`         | `payroll.schema.ts`         | Sim                                   |
+| `bonus.types.ts`           | `bonus.schema.ts`           | Sim                                   |
+| `deduction.types.ts`       | `deduction.schema.ts`       | Sim                                   |
 
 ---
 
@@ -303,18 +304,20 @@ O módulo de HR não possui um diretório `src/hooks/hr/`. Os hooks são impleme
 
 ### Hooks Globais Relacionados ao HR
 
-| Hook | Arquivo | Propósito | Query Key |
-|------|---------|-----------|-----------|
-| `useEmployeeMap(ids)` | `src/hooks/use-employee-map.ts` | Resolve IDs de funcionários para nomes de exibição via endpoint batch | `['employees', 'label-data', ids]` |
-| `useHRAnalytics()` | `src/app/(dashboard)/(modules)/hr/_shared/hooks/use-hr-analytics.ts` | Agrega dados de 6 endpoints em paralelo para o dashboard analítico | `['hr', 'analytics']` |
+| Hook                  | Arquivo                                                              | Propósito                                                             | Query Key                          |
+| --------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------- |
+| `useEmployeeMap(ids)` | `src/hooks/use-employee-map.ts`                                      | Resolve IDs de funcionários para nomes de exibição via endpoint batch | `['employees', 'label-data', ids]` |
+| `useHRAnalytics()`    | `src/app/(dashboard)/(modules)/hr/_shared/hooks/use-hr-analytics.ts` | Agrega dados de 6 endpoints em paralelo para o dashboard analítico    | `['hr', 'analytics']`              |
 
 **`useEmployeeMap(employeeIds: string[])`**
+
 - Deduplica os IDs antes de buscar (usa `Set + sort`)
 - Chama `employeesService.getLabelData(uniqueIds)` — endpoint de batch para evitar N+1
 - `staleTime: 5 min` — nomes de funcionários raramente mudam durante uma sessão
 - Retorna `{ employeeMap: Map<id, fullName>, getName(id), isLoading }`
 
 **`useHRAnalytics()`**
+
 - Chama 6 services em `Promise.allSettled()`: employees, overtime, absences, payrolls, bonuses, deductions (todos com `perPage: 100`)
 - Toda a agregação é feita no cliente (sem endpoint analytics dedicado no back-end)
 - `staleTime: 5 min`, `refetchOnWindowFocus: false`
@@ -326,8 +329,8 @@ O módulo de HR não possui um diretório `src/hooks/hr/`. Os hooks são impleme
 
 ### Componentes Compartilhados (`_shared/components/`)
 
-| Componente | Responsabilidade | Usado em |
-|------------|-----------------|----------|
+| Componente           | Responsabilidade                                                                                  | Usado em                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `HRSelectionToolbar` | Barra de seleção em lote: exibe contagem, botões de exclusão e exportação para itens selecionados | Listas de funcionários, departamentos, cargos |
 
 O `HRSelectionToolbar` utiliza `useSelectionContext()` do core e delega para o `SelectionToolbar` genérico. Só é renderizado quando há itens selecionados (`selectedIds.length === 0` retorna `null`).
@@ -338,33 +341,34 @@ O `HRSelectionToolbar` utiliza `useSelectionContext()` do core e delega para o `
 
 ### Componentes de Funcionário
 
-| Modal | Responsabilidade |
-|-------|-----------------|
-| `CreateModal` | Criação de novo funcionário com dados obrigatórios (matrícula, CPF, admissão, salário, contrato) |
-| `EditModal` | Edição completa do funcionário |
-| `ViewModal` | Visualização rápida |
-| `DeleteConfirmModal` | Confirmação de exclusão com soft delete |
-| `DuplicateConfirmModal` | Confirmação de duplicação |
+| Modal                   | Responsabilidade                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `CreateModal`           | Criação de novo funcionário com dados obrigatórios (matrícula, CPF, admissão, salário, contrato) |
+| `EditModal`             | Edição completa do funcionário                                                                   |
+| `ViewModal`             | Visualização rápida                                                                              |
+| `DeleteConfirmModal`    | Confirmação de exclusão com soft delete                                                          |
+| `DuplicateConfirmModal` | Confirmação de duplicação                                                                        |
 
 A página de detalhe (`[id]/page.tsx`) gerencia inline:
+
 - Upload de foto com recorte (`PhotoUploadDialog` + crop coordinates enviados ao backend)
 - Criação de usuário do sistema vinculado ao funcionário (Dialog com email, senha, grupo de permissão)
 - FileManager para documentos do funcionário
 
 ### Componentes de Ausências, Férias, Horas Extras e Folha
 
-| Módulo | Modais disponíveis |
-|--------|--------------------|
-| `absences` | `ViewModal`, `RequestSickLeaveModal`, `RejectModal` |
-| `vacations` | `ViewModal`, `CreateModal`, `ScheduleModal`, `SellDaysModal` |
-| `overtime` | `ViewModal`, `CreateModal`, `ApproveModal` |
-| `time-control` | `ClockInModal`, `ClockOutModal`, `CalculateHoursModal`, `ViewEntryModal` |
-| `time-bank` | `ViewModal`, `CreditModal`, `DebitModal`, `AdjustModal` |
-| `payroll` | `ViewModal`, `CreateModal` |
-| `bonuses` | `ViewModal`, `CreateModal`, `DeleteConfirmModal` |
-| `deductions` | `ViewModal`, `CreateModal`, `DeleteConfirmModal` |
-| `departments` | `ViewModal`, `CreateModal`, `EditModal`, `DeleteConfirmModal`, `DuplicateConfirmModal` |
-| `positions` | `ViewModal`, `EditModal`, `CreateModal`, `DeleteConfirmModal`, `DuplicateConfirmModal` |
+| Módulo           | Modais disponíveis                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `absences`       | `ViewModal`, `RequestSickLeaveModal`, `RejectModal`                                    |
+| `vacations`      | `ViewModal`, `CreateModal`, `ScheduleModal`, `SellDaysModal`                           |
+| `overtime`       | `ViewModal`, `CreateModal`, `ApproveModal`                                             |
+| `time-control`   | `ClockInModal`, `ClockOutModal`, `CalculateHoursModal`, `ViewEntryModal`               |
+| `time-bank`      | `ViewModal`, `CreditModal`, `DebitModal`, `AdjustModal`                                |
+| `payroll`        | `ViewModal`, `CreateModal`                                                             |
+| `bonuses`        | `ViewModal`, `CreateModal`, `DeleteConfirmModal`                                       |
+| `deductions`     | `ViewModal`, `CreateModal`, `DeleteConfirmModal`                                       |
+| `departments`    | `ViewModal`, `CreateModal`, `EditModal`, `DeleteConfirmModal`, `DuplicateConfirmModal` |
+| `positions`      | `ViewModal`, `EditModal`, `CreateModal`, `DeleteConfirmModal`, `DuplicateConfirmModal` |
 | `work-schedules` | `ViewModal`, `CreateModal`, `EditModal`, `DeleteConfirmModal`, `DuplicateConfirmModal` |
 
 ---
@@ -375,25 +379,26 @@ O módulo se comunica com o backend exclusivamente via services em `src/services
 
 ### Services e Endpoints
 
-| Service | Arquivo | Base Path | Operações Principais |
-|---------|---------|-----------|---------------------|
-| `employeesService` | `employees.service.ts` | `/v1/hr/employees` | CRUD + upload de foto (multipart) + create-user + link-user + unlink-user + label-data |
-| `companiesService` | `services/admin/companies.service.ts` | `/v1/admin/companies` | CRUD migrado para Admin; HR consome via `hr.companies.read` (somente leitura) |
-| `departmentsService` | `departments.service.ts` | `/v1/hr/departments` | CRUD com populate=company |
-| `positionsService` | `positions.service.ts` | `/v1/hr/positions` | CRUD |
-| `workSchedulesService` | `work-schedules.service.ts` | `/v1/hr/work-schedules` | CRUD |
-| `timeControlService` | `time-control.service.ts` | `/v1/hr/time-control` | clock-in, clock-out, calculate-hours, list entries |
-| `timeBankService` | `time-bank.service.ts` | `/v1/hr/time-bank` | credit, debit, adjust, getByEmployee, list |
-| `overtimeService` | `overtime.service.ts` | `/v1/hr/overtime` | create, approve, get, list |
-| `vacationsService` | `vacations.service.ts` | `/v1/hr/vacation-periods` | create, schedule, start, complete, sellDays, cancelSchedule, get, list, getVacationBalance |
-| `absencesService` | `absences.service.ts` | `/v1/hr/absences` | requestVacation, requestSickLeave, approve, reject, cancel, get, list |
-| `payrollService` | `payroll.service.ts` | `/v1/hr/payrolls` | create, calculate, approve, pay, cancel, get, list |
-| `bonusesService` | `bonuses.service.ts` | `/v1/hr/bonuses` | create, get, list, delete |
-| `deductionsService` | `deductions.service.ts` | `/v1/hr/deductions` | create, get, list, delete |
+| Service                | Arquivo                               | Base Path                 | Operações Principais                                                                       |
+| ---------------------- | ------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
+| `employeesService`     | `employees.service.ts`                | `/v1/hr/employees`        | CRUD + upload de foto (multipart) + create-user + link-user + unlink-user + label-data     |
+| `companiesService`     | `services/admin/companies.service.ts` | `/v1/admin/companies`     | CRUD migrado para Admin; HR consome via `hr.companies.read` (somente leitura)              |
+| `departmentsService`   | `departments.service.ts`              | `/v1/hr/departments`      | CRUD com populate=company                                                                  |
+| `positionsService`     | `positions.service.ts`                | `/v1/hr/positions`        | CRUD                                                                                       |
+| `workSchedulesService` | `work-schedules.service.ts`           | `/v1/hr/work-schedules`   | CRUD                                                                                       |
+| `timeControlService`   | `time-control.service.ts`             | `/v1/hr/time-control`     | clock-in, clock-out, calculate-hours, list entries                                         |
+| `timeBankService`      | `time-bank.service.ts`                | `/v1/hr/time-bank`        | credit, debit, adjust, getByEmployee, list                                                 |
+| `overtimeService`      | `overtime.service.ts`                 | `/v1/hr/overtime`         | create, approve, get, list                                                                 |
+| `vacationsService`     | `vacations.service.ts`                | `/v1/hr/vacation-periods` | create, schedule, start, complete, sellDays, cancelSchedule, get, list, getVacationBalance |
+| `absencesService`      | `absences.service.ts`                 | `/v1/hr/absences`         | requestVacation, requestSickLeave, approve, reject, cancel, get, list                      |
+| `payrollService`       | `payroll.service.ts`                  | `/v1/hr/payrolls`         | create, calculate, approve, pay, cancel, get, list                                         |
+| `bonusesService`       | `bonuses.service.ts`                  | `/v1/hr/bonuses`          | create, get, list, delete                                                                  |
+| `deductionsService`    | `deductions.service.ts`               | `/v1/hr/deductions`       | create, get, list, delete                                                                  |
 
 #### Detalhes de Endpoints Relevantes
 
 **Funcionários — Endpoints especiais:**
+
 - `POST /v1/hr/employees-with-user` — Cria funcionário e usuário do sistema em uma única operação
 - `POST /v1/hr/employees/:id/create-user` — Cria usuário vinculado a funcionário já existente
 - `POST /v1/hr/employees/:id/link-user` — Vincula usuário existente ao funcionário
@@ -405,10 +410,12 @@ O módulo se comunica com o backend exclusivamente via services em `src/services
 - `GET /v1/hr/employees/:id?populate=department,position,company` — Detalhe com relações expandidas
 
 **Empresas — Migrado para Admin:**
+
 - CRUD completo e sub-recursos agora em `/v1/admin/companies` (ver módulo Admin)
 - HR mantém apenas `GET /v1/hr/companies` e `GET /v1/hr/companies/:id` (somente leitura)
 
 **Férias:**
+
 - `PATCH /v1/hr/vacation-periods/:id/schedule` — Agenda o início das férias
 - `PATCH /v1/hr/vacation-periods/:id/start` — Inicia as férias
 - `PATCH /v1/hr/vacation-periods/:id/complete` — Conclui as férias com `daysUsed`
@@ -417,12 +424,14 @@ O módulo se comunica com o backend exclusivamente via services em `src/services
 - `GET /v1/hr/employees/:id/vacation-balance` — Saldo consolidado de férias do funcionário
 
 **Banco de Horas:**
+
 - `POST /v1/hr/time-bank/credit` — Credita horas
 - `POST /v1/hr/time-bank/debit` — Debita horas
 - `POST /v1/hr/time-bank/adjust` — Ajuste manual de saldo para um valor específico
 - `GET /v1/hr/time-bank/:employeeId?year=YYYY` — Saldo por funcionário e ano
 
 **Folha de Pagamento — Ciclo de vida:**
+
 - `POST /v1/hr/payrolls` — Cria folha (`referenceMonth`, `referenceYear`)
 - `POST /v1/hr/payrolls/:id/calculate` — Calcula verbas e deduções (gera `PayrollItem[]`)
 - `POST /v1/hr/payrolls/:id/approve` — Aprova a folha calculada
@@ -445,12 +454,12 @@ O módulo se comunica com o backend exclusivamente via services em `src/services
 
 O módulo oferece importação em lote via planilha CSV ou XLSX para as 4 entidades principais de cadastro, acessível em `/import/hr/`:
 
-| Entidade | Rota | Componente Base |
-|----------|------|----------------|
-| Funcionários | `/import/hr/employees` | `EntityImportPage` (entityType="employees") |
-| Departamentos | `/import/hr/departments` | `EntityImportPage` (entityType="departments") + rotas `config/` e `sheets/` |
-| Cargos | `/import/hr/positions` | `EntityImportPage` (entityType="positions") + rotas `config/` e `sheets/` |
-| Empresas | `/import/admin/companies` | `EntityImportPage` (entityType="companies") — migrado para Admin |
+| Entidade      | Rota                      | Componente Base                                                             |
+| ------------- | ------------------------- | --------------------------------------------------------------------------- |
+| Funcionários  | `/import/hr/employees`    | `EntityImportPage` (entityType="employees")                                 |
+| Departamentos | `/import/hr/departments`  | `EntityImportPage` (entityType="departments") + rotas `config/` e `sheets/` |
+| Cargos        | `/import/hr/positions`    | `EntityImportPage` (entityType="positions") + rotas `config/` e `sheets/`   |
+| Empresas      | `/import/admin/companies` | `EntityImportPage` (entityType="companies") — migrado para Admin            |
 
 Todas as importações utilizam o componente genérico `EntityImportPage` do módulo de importações compartilhado em `(dashboard)/(actions)/import/_shared/`. O fluxo padrão é: Upload de arquivo → Configuração de campos (mapeamento de colunas) → Execução com barra de progresso.
 
@@ -522,6 +531,6 @@ Todas as importações utilizam o componente genérico `EntityImportPage` do mó
 
 ## Audit History
 
-| Data | Dimensão | Score | Relatório |
-|------|----------|-------|-----------|
-| 2026-03-10 | Documentação inicial | — | Criação da documentação completa do módulo HR (frontend) |
+| Data       | Dimensão             | Score | Relatório                                                |
+| ---------- | -------------------- | ----- | -------------------------------------------------------- |
+| 2026-03-10 | Documentação inicial | —     | Criação da documentação completa do módulo HR (frontend) |

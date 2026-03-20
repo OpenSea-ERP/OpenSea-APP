@@ -553,9 +553,10 @@ export function useImportSpreadsheet(
         if (!field) return;
 
         // Get reference options for this field if it's a reference type
-        const refOptions = field.type === 'reference' && currentReferenceData
-          ? currentReferenceData[field.key]
-          : undefined;
+        const refOptions =
+          field.type === 'reference' && currentReferenceData
+            ? currentReferenceData[field.key]
+            : undefined;
 
         const error = validateCell(
           cell.value,
@@ -680,7 +681,9 @@ export function useImportSpreadsheet(
             break;
           case 'boolean':
             const boolValue = (value as string).toLowerCase();
-            value = ['true', 'sim', 'yes', '1', 's', 'verdadeiro'].includes(boolValue);
+            value = ['true', 'sim', 'yes', '1', 's', 'verdadeiro'].includes(
+              boolValue
+            );
             break;
           case 'date':
             value = new Date(value as string).toISOString();

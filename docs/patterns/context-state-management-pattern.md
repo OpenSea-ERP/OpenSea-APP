@@ -41,16 +41,16 @@ Contextos de escopo mais restrito (como `CentralThemeProvider`, `PrintQueueProvi
 
 ## Architecture Decision: Context vs. React Query vs. Local State
 
-| Tipo de Estado | Mecanismo | Exemplos |
-|---------------|-----------|---------|
-| Identidade do usuário autenticado | `AuthContext` | `user`, `isSuperAdmin`, `isAuthenticated` |
-| Tenant selecionado e lista de tenants | `TenantContext` | `currentTenant`, `tenants` |
-| Tema visual | `ThemeProvider` / `CentralThemeContext` | `theme`, `toggleTheme` |
-| Dados do servidor com cache | React Query (`useQuery`) | produtos, funcionários, permissões |
-| Mutações no servidor | React Query (`useMutation`) | criar/atualizar/deletar |
-| UI local (formulários, modais, abas) | `useState` | `isOpen`, `activeTab`, `formValues` |
-| Seleção múltipla de itens em lista | `SelectionContext` | `selectedIds`, `selectItem` |
-| Fila de impressão de etiquetas | `PrintQueueContext` | `queue`, `addToQueue` |
+| Tipo de Estado                        | Mecanismo                               | Exemplos                                  |
+| ------------------------------------- | --------------------------------------- | ----------------------------------------- |
+| Identidade do usuário autenticado     | `AuthContext`                           | `user`, `isSuperAdmin`, `isAuthenticated` |
+| Tenant selecionado e lista de tenants | `TenantContext`                         | `currentTenant`, `tenants`                |
+| Tema visual                           | `ThemeProvider` / `CentralThemeContext` | `theme`, `toggleTheme`                    |
+| Dados do servidor com cache           | React Query (`useQuery`)                | produtos, funcionários, permissões        |
+| Mutações no servidor                  | React Query (`useMutation`)             | criar/atualizar/deletar                   |
+| UI local (formulários, modais, abas)  | `useState`                              | `isOpen`, `activeTab`, `formValues`       |
+| Seleção múltipla de itens em lista    | `SelectionContext`                      | `selectedIds`, `selectItem`               |
+| Fila de impressão de etiquetas        | `PrintQueueContext`                     | `queue`, `addToQueue`                     |
 
 **Regra geral:** use Context apenas para estado que precisa ser compartilhado entre múltiplos componentes não relacionados na árvore. Para tudo que vem do servidor, use React Query.
 
@@ -94,14 +94,14 @@ Responsável por toda a lógica de autenticação do usuário. Expõe um hook `u
 
 ```typescript
 interface AuthContextType {
-  user: User | null;           // dados do usuário (via GET /v1/me)
-  isLoading: boolean;          // carregando dados do usuário
-  isAuthenticated: boolean;    // tem token válido + dados carregados
-  isSuperAdmin: boolean;       // campo do JWT payload
+  user: User | null; // dados do usuário (via GET /v1/me)
+  isLoading: boolean; // carregando dados do usuário
+  isAuthenticated: boolean; // tem token válido + dados carregados
+  isSuperAdmin: boolean; // campo do JWT payload
   login: (credentials: LoginCredentials) => Promise<LoginResult>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  refetchUser: () => void;     // força recarregamento de /v1/me
+  refetchUser: () => void; // força recarregamento de /v1/me
 }
 ```
 
@@ -124,7 +124,9 @@ useEffect(() => {
 
   window.addEventListener('storage', handleStorageChange);
   window.addEventListener('auth-token-change', handleTokenChange);
-  return () => { /* cleanup */ };
+  return () => {
+    /* cleanup */
+  };
 }, []);
 ```
 
@@ -133,7 +135,9 @@ useEffect(() => {
 ```tsx
 if (response.tenant) {
   localStorage.setItem('selected_tenant_id', response.tenant.id);
-  window.dispatchEvent(new CustomEvent('tenant-refreshed', { detail: response.tenant }));
+  window.dispatchEvent(
+    new CustomEvent('tenant-refreshed', { detail: response.tenant })
+  );
 }
 ```
 
@@ -156,10 +160,10 @@ Gerencia a seleção de tenant em um sistema multi-tenant. Expõe `useTenant()`:
 
 ```typescript
 interface TenantContextType {
-  currentTenant: UserTenant | null;   // tenant ativo
-  tenants: UserTenant[];              // todos os tenants do usuário
+  currentTenant: UserTenant | null; // tenant ativo
+  tenants: UserTenant[]; // todos os tenants do usuário
   isLoading: boolean;
-  isInitialized: boolean;             // hidratação inicial concluída
+  isInitialized: boolean; // hidratação inicial concluída
   selectTenant: (tenantId: string) => Promise<void>;
   clearTenant: () => void;
   refreshTenants: () => Promise<UserTenant[]>;
@@ -169,21 +173,24 @@ interface TenantContextType {
 **Comportamento crítico ao trocar de tenant:** Ao selecionar um tenant, o `TenantProvider` chama `queryClient.clear()` para **apagar todo o cache do React Query**. Isso evita vazamento de dados entre tenants — por exemplo, ver produtos do Tenant A enquanto se está no Tenant B:
 
 ```tsx
-const selectTenant = useCallback(async (tenantId: string) => {
-  const data = await apiClient.post<SelectTenantResponse>(
-    API_ENDPOINTS.TENANTS.SELECT,
-    { tenantId }
-  );
+const selectTenant = useCallback(
+  async (tenantId: string) => {
+    const data = await apiClient.post<SelectTenantResponse>(
+      API_ENDPOINTS.TENANTS.SELECT,
+      { tenantId }
+    );
 
-  // CRÍTICO: Limpar todo o cache do React Query antes de trocar de tenant
-  queryClient.clear();
+    // CRÍTICO: Limpar todo o cache do React Query antes de trocar de tenant
+    queryClient.clear();
 
-  // Atualiza o token com o JWT escopado ao tenant
-  localStorage.setItem(authConfig.tokenKey, data.token);
-  localStorage.setItem('selected_tenant_id', data.tenant.id);
+    // Atualiza o token com o JWT escopado ao tenant
+    localStorage.setItem(authConfig.tokenKey, data.token);
+    localStorage.setItem('selected_tenant_id', data.tenant.id);
 
-  window.dispatchEvent(new CustomEvent('auth-token-change'));
-}, [tenants]);
+    window.dispatchEvent(new CustomEvent('auth-token-change'));
+  },
+  [tenants]
+);
 ```
 
 **Auto-hidratação:** Na montagem inicial, o provider verifica se há um `selected_tenant_id` no `localStorage` e um token válido. Se sim, carrega a lista de tenants e restaura o tenant salvo automaticamente. O flag `isInitialized` é definido como `true` ao término desse processo — o dashboard aguarda `isInitialized === true` antes de redirecionar:
@@ -211,10 +218,10 @@ if (storedTenantId && !payload.tenantId) {
 
 **Comunicação entre contextos via eventos customizados:**
 
-| Evento | Emissor | Receptor | Propósito |
-|--------|---------|---------|-----------|
-| `auth-token-change` | `TokenManager`, `TenantProvider`, `AuthProvider` | `AuthProvider`, `TenantProvider` | Sincronizar estado ao mudar token |
-| `tenant-refreshed` | `AuthProvider` (login), `TokenManager` (refresh) | `TenantProvider` | Restaurar tenant após refresh de token |
+| Evento              | Emissor                                          | Receptor                         | Propósito                              |
+| ------------------- | ------------------------------------------------ | -------------------------------- | -------------------------------------- |
+| `auth-token-change` | `TokenManager`, `TenantProvider`, `AuthProvider` | `AuthProvider`, `TenantProvider` | Sincronizar estado ao mudar token      |
+| `tenant-refreshed`  | `AuthProvider` (login), `TokenManager` (refresh) | `TenantProvider`                 | Restaurar tenant após refresh de token |
 
 ---
 
@@ -223,7 +230,12 @@ if (storedTenantId && !payload.tenantId) {
 Wrapper fino sobre `next-themes`. Aplicado no root layout com `attribute="class"` para controlar o tema via classe CSS no `<html>`:
 
 ```tsx
-<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+<ThemeProvider
+  attribute="class"
+  defaultTheme="system"
+  enableSystem
+  disableTransitionOnChange
+>
   {children}
 </ThemeProvider>
 ```
@@ -242,7 +254,7 @@ type Theme = 'light' | 'dark-blue';
 interface CentralThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;  // alterna entre 'dark-blue' e 'light'
+  toggleTheme: () => void; // alterna entre 'dark-blue' e 'light'
 }
 ```
 
@@ -280,13 +292,13 @@ Instância singleton do `QueryClient`, exportada para uso direto em contextos qu
 const defaultQueryClientOptions = {
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,       // dados ficam "frescos" por 5 minutos
-      gcTime: 1000 * 60 * 10,          // dados removidos do cache após 10 min sem uso
-      refetchOnWindowFocus: false,     // não refetch ao voltar para a aba
-      retry: 1,                        // retenta 1 vez em caso de erro
+      staleTime: 1000 * 60 * 5, // dados ficam "frescos" por 5 minutos
+      gcTime: 1000 * 60 * 10, // dados removidos do cache após 10 min sem uso
+      refetchOnWindowFocus: false, // não refetch ao voltar para a aba
+      retry: 1, // retenta 1 vez em caso de erro
     },
     mutations: {
-      retry: false,                    // mutações não são retentadas
+      retry: false, // mutações não são retentadas
     },
   },
 };
@@ -305,7 +317,7 @@ Contexto de UI para gerenciar seleção múltipla de itens em listas. Não é um
 interface SelectionContextData {
   selectedIds: Set<string>;
   lastSelectedId: string | null;
-  isSelecting: boolean;               // drag selection em andamento
+  isSelecting: boolean; // drag selection em andamento
   selectItem: (id: string, event?: React.MouseEvent) => void;
   toggleSelection: (id: string) => void;
   selectRange: (startId: string, endId: string, allIds: string[]) => void;
@@ -319,6 +331,7 @@ interface SelectionContextData {
 ```
 
 Suporta os padrões de seleção comuns em sistemas de arquivos e grids:
+
 - **Click simples:** seleciona apenas o item clicado
 - **Ctrl+Click / Cmd+Click:** adiciona/remove da seleção
 - **Shift+Click:** seleção em range (requer `allIds` da página)
@@ -336,7 +349,7 @@ Contexto de escopo restrito para gerenciar a fila de impressão de etiquetas. É
 // src/app/(dashboard)/layout.tsx
 const PrintQueueProvider = dynamic(
   () => import('@/core/print-queue').then(m => m.PrintQueueProvider),
-  { ssr: false }  // Não renderizado no servidor
+  { ssr: false } // Não renderizado no servidor
 );
 ```
 
@@ -348,13 +361,13 @@ O estado da fila é persistido no `localStorage` via `loadFromStorage()` / `save
 
 Cada contexto expõe um hook dedicado que lança erro se usado fora do provider correspondente:
 
-| Hook | Contexto | Proteção |
-|------|---------|---------|
-| `useAuth()` | `AuthProvider` | `throw new Error('useAuth must be used within an AuthProvider')` |
-| `useTenant()` | `TenantProvider` | `throw new Error('useTenant must be used within a TenantProvider')` |
-| `useCentralTheme()` | `CentralThemeProvider` | `throw new Error('useCentralTheme must be used within CentralThemeProvider')` |
-| `useSelection()` | `SelectionProvider` | `throw new Error('useSelection deve ser usado dentro de SelectionProvider')` |
-| `usePermissions()` | Composição de `useAuth` + `useTenant` + React Query | Herda proteções dos contextos dependentes |
+| Hook                | Contexto                                            | Proteção                                                                      |
+| ------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `useAuth()`         | `AuthProvider`                                      | `throw new Error('useAuth must be used within an AuthProvider')`              |
+| `useTenant()`       | `TenantProvider`                                    | `throw new Error('useTenant must be used within a TenantProvider')`           |
+| `useCentralTheme()` | `CentralThemeProvider`                              | `throw new Error('useCentralTheme must be used within CentralThemeProvider')` |
+| `useSelection()`    | `SelectionProvider`                                 | `throw new Error('useSelection deve ser usado dentro de SelectionProvider')`  |
+| `usePermissions()`  | Composição de `useAuth` + `useTenant` + React Query | Herda proteções dos contextos dependentes                                     |
 
 ---
 
@@ -369,9 +382,9 @@ export function usePermissions(): UsePermissionsReturn {
 
   const { data: effectivePermissions = [], isLoading } = useQuery({
     queryKey: ['my-permissions', user?.id, currentTenant?.id],
-    queryFn: () => listMyPermissions(),    // GET /v1/me/permissions
+    queryFn: () => listMyPermissions(), // GET /v1/me/permissions
     enabled: !!user?.id && !!currentTenant, // só busca com tenant selecionado
-    staleTime: 15 * 60 * 1000,             // permissões ficam frescas por 15 min
+    staleTime: 15 * 60 * 1000, // permissões ficam frescas por 15 min
     gcTime: 30 * 60 * 1000,
   });
 
@@ -381,10 +394,12 @@ export function usePermissions(): UsePermissionsReturn {
   );
 
   return {
-    hasPermission: (code) => isPermissionAllowed(permissions, code),
-    hasAnyPermission: (...codes) => codes.some(c => isPermissionAllowed(permissions, c)),
-    hasAllPermissions: (...codes) => codes.every(c => isPermissionAllowed(permissions, c)),
-    isDenied: (code) => isPermissionDenied(permissions, code),
+    hasPermission: code => isPermissionAllowed(permissions, code),
+    hasAnyPermission: (...codes) =>
+      codes.some(c => isPermissionAllowed(permissions, c)),
+    hasAllPermissions: (...codes) =>
+      codes.every(c => isPermissionAllowed(permissions, c)),
+    isDenied: code => isPermissionDenied(permissions, code),
     isLoading,
   };
 }
@@ -398,16 +413,16 @@ A query key inclui `user?.id` e `currentTenant?.id` — ao trocar de tenant, o R
 
 Mapa completo do que é armazenado no `localStorage`:
 
-| Chave | Responsável | Conteúdo | Limpeza |
-|-------|------------|---------|---------|
-| `auth_token` | `AuthProvider`, `TokenManager` | JWT de acesso (escopo de tenant) | `logout()`, refresh falho, token inválido |
-| `refresh_token` | `AuthProvider`, `TokenManager` | JWT de refresh (single-use) | `logout()`, refresh falho |
-| `session_id` | `AuthProvider` | ID da sessão no servidor | `logout()` |
-| `selected_tenant_id` | `TenantProvider` | UUID do tenant selecionado | `clearTenant()`, `clearAuthAndTenant()` |
-| `theme` | `next-themes` | `'light'` \| `'dark'` \| `'system'` | Nunca (preferência do usuário) |
-| `central-theme` | `CentralThemeContext` | `'light'` \| `'dark-blue'` | Nunca (preferência do usuário) |
-| `opensea_saved_accounts` | `saved-accounts.ts` | JSON com contas do Fast Login | Usuário remove manualmente |
-| `print-queue-*` | `PrintQueueContext` | Estado da fila de impressão | Após impressão concluída |
+| Chave                    | Responsável                    | Conteúdo                            | Limpeza                                   |
+| ------------------------ | ------------------------------ | ----------------------------------- | ----------------------------------------- |
+| `auth_token`             | `AuthProvider`, `TokenManager` | JWT de acesso (escopo de tenant)    | `logout()`, refresh falho, token inválido |
+| `refresh_token`          | `AuthProvider`, `TokenManager` | JWT de refresh (single-use)         | `logout()`, refresh falho                 |
+| `session_id`             | `AuthProvider`                 | ID da sessão no servidor            | `logout()`                                |
+| `selected_tenant_id`     | `TenantProvider`               | UUID do tenant selecionado          | `clearTenant()`, `clearAuthAndTenant()`   |
+| `theme`                  | `next-themes`                  | `'light'` \| `'dark'` \| `'system'` | Nunca (preferência do usuário)            |
+| `central-theme`          | `CentralThemeContext`          | `'light'` \| `'dark-blue'`          | Nunca (preferência do usuário)            |
+| `opensea_saved_accounts` | `saved-accounts.ts`            | JSON com contas do Fast Login       | Usuário remove manualmente                |
+| `print-queue-*`          | `PrintQueueContext`            | Estado da fila de impressão         | Após impressão concluída                  |
 
 ---
 
@@ -459,28 +474,28 @@ O sistema de refresh usa um **lock por promise** para evitar múltiplas chamadas
 
 ## Files
 
-| Arquivo | Propósito |
-|--------|---------|
-| `src/app/layout.tsx` | Composição de providers globais — ordem e hierarquia |
-| `src/contexts/auth-context.tsx` | `AuthProvider` + `useAuth()` |
-| `src/contexts/tenant-context.tsx` | `TenantProvider` + `useTenant()` |
-| `src/contexts/central-theme-context.tsx` | `CentralThemeProvider` + `useCentralTheme()` |
-| `src/contexts/selection-context.tsx` | `SelectionProvider` + `useSelection()` (legado) |
-| `src/providers/query-provider.tsx` | Singleton `queryClient` + `QueryProvider` |
-| `src/components/theme-provider.tsx` | Wrapper sobre `next-themes` |
-| `src/components/auth/protected-route.tsx` | Guard de rota com verificação de permissões |
-| `src/components/auth/super-admin-guard.tsx` | Guard exclusivo para super admins |
-| `src/hooks/use-permissions.ts` | Hook composto: `usePermissions()`, `usePermission()`, `useMultiplePermissions()` |
-| `src/lib/api-client.ts` | `ApiClient` — HTTP client com refresh automático |
-| `src/lib/api-client-auth.ts` | `TokenManager` — gerenciamento de JWT e refresh |
-| `src/lib/jwt-utils.ts` | `decodeJWT()` + `isJwt()` — decodificação sem validação |
-| `src/lib/saved-accounts.ts` | Fast Login — contas salvas no `localStorage` |
-| `src/app/(central)/layout.tsx` | Insere `CentralThemeProvider` + `SuperAdminGuard` |
-| `src/app/(dashboard)/layout.tsx` | Insere `PrintQueueProvider`, verifica tenant selecionado |
-| `src/core/print-queue/context/print-queue-context.tsx` | Fila de impressão de etiquetas |
-| `src/core/selection/selection-context.tsx` | `SelectionProvider` (versão core, mais robusta) |
-| `src/core/providers/core-provider.tsx` | `CoreProvider` — agrega providers do sistema core |
-| `src/config/api.ts` | `authConfig` (chaves localStorage), `API_ENDPOINTS` |
+| Arquivo                                                | Propósito                                                                        |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `src/app/layout.tsx`                                   | Composição de providers globais — ordem e hierarquia                             |
+| `src/contexts/auth-context.tsx`                        | `AuthProvider` + `useAuth()`                                                     |
+| `src/contexts/tenant-context.tsx`                      | `TenantProvider` + `useTenant()`                                                 |
+| `src/contexts/central-theme-context.tsx`               | `CentralThemeProvider` + `useCentralTheme()`                                     |
+| `src/contexts/selection-context.tsx`                   | `SelectionProvider` + `useSelection()` (legado)                                  |
+| `src/providers/query-provider.tsx`                     | Singleton `queryClient` + `QueryProvider`                                        |
+| `src/components/theme-provider.tsx`                    | Wrapper sobre `next-themes`                                                      |
+| `src/components/auth/protected-route.tsx`              | Guard de rota com verificação de permissões                                      |
+| `src/components/auth/super-admin-guard.tsx`            | Guard exclusivo para super admins                                                |
+| `src/hooks/use-permissions.ts`                         | Hook composto: `usePermissions()`, `usePermission()`, `useMultiplePermissions()` |
+| `src/lib/api-client.ts`                                | `ApiClient` — HTTP client com refresh automático                                 |
+| `src/lib/api-client-auth.ts`                           | `TokenManager` — gerenciamento de JWT e refresh                                  |
+| `src/lib/jwt-utils.ts`                                 | `decodeJWT()` + `isJwt()` — decodificação sem validação                          |
+| `src/lib/saved-accounts.ts`                            | Fast Login — contas salvas no `localStorage`                                     |
+| `src/app/(central)/layout.tsx`                         | Insere `CentralThemeProvider` + `SuperAdminGuard`                                |
+| `src/app/(dashboard)/layout.tsx`                       | Insere `PrintQueueProvider`, verifica tenant selecionado                         |
+| `src/core/print-queue/context/print-queue-context.tsx` | Fila de impressão de etiquetas                                                   |
+| `src/core/selection/selection-context.tsx`             | `SelectionProvider` (versão core, mais robusta)                                  |
+| `src/core/providers/core-provider.tsx`                 | `CoreProvider` — agrega providers do sistema core                                |
+| `src/config/api.ts`                                    | `authConfig` (chaves localStorage), `API_ENDPOINTS`                              |
 
 ---
 
@@ -519,6 +534,6 @@ O `(dashboard)/layout.tsx` verifica `!isTenantInitialized` antes de qualquer red
 
 ## Audit History
 
-| Data | Dimensão | Pontuação | Relatório |
-|------|---------|---------|---------|
-| — | — | — | Nenhum registro. |
+| Data | Dimensão | Pontuação | Relatório        |
+| ---- | -------- | --------- | ---------------- |
+| —    | —        | —         | Nenhum registro. |

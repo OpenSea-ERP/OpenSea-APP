@@ -21,7 +21,9 @@ export function useCreateLabel(boardId: string) {
     mutationFn: (data: CreateLabelRequest) =>
       labelsService.create(boardId, data),
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: LABEL_QUERY_KEYS.LABELS(boardId) });
+      await qc.invalidateQueries({
+        queryKey: LABEL_QUERY_KEYS.LABELS(boardId),
+      });
       await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
@@ -38,7 +40,9 @@ export function useUpdateLabel(boardId: string) {
       data: UpdateLabelRequest;
     }) => labelsService.update(boardId, labelId, data),
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: LABEL_QUERY_KEYS.LABELS(boardId) });
+      await qc.invalidateQueries({
+        queryKey: LABEL_QUERY_KEYS.LABELS(boardId),
+      });
       await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });
@@ -49,7 +53,9 @@ export function useDeleteLabel(boardId: string) {
   return useMutation({
     mutationFn: (labelId: string) => labelsService.delete(boardId, labelId),
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: LABEL_QUERY_KEYS.LABELS(boardId) });
+      await qc.invalidateQueries({
+        queryKey: LABEL_QUERY_KEYS.LABELS(boardId),
+      });
       await qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
     },
   });

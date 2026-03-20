@@ -228,7 +228,9 @@ export function useDeleteZone() {
       id: string;
       warehouseId: string;
     }) => {
-      await apiClient.delete(`${API_ENDPOINTS.zones.delete(id)}?forceDeleteBins=true`);
+      await apiClient.delete(
+        `${API_ENDPOINTS.zones.delete(id)}?forceDeleteBins=true`
+      );
       return { id, warehouseId };
     },
     onSuccess: (_, variables) => {

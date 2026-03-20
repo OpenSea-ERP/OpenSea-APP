@@ -104,19 +104,31 @@ export default function WarehouseDetailPage({ params }: PageProps) {
   // ============================================================================
 
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
-  const [activeBinHighlight, setActiveBinHighlight] = useState<string | null>(null);
-  const [activeItemHighlight, setActiveItemHighlight] = useState<string | null>(null);
+  const [activeBinHighlight, setActiveBinHighlight] = useState<string | null>(
+    null
+  );
+  const [activeItemHighlight, setActiveItemHighlight] = useState<string | null>(
+    null
+  );
   const [createZoneOpen, setCreateZoneOpen] = useState(false);
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [configuringZone, setConfiguringZone] = useState<Zone | null>(null);
   const [selectedBinId, setSelectedBinId] = useState<string | null>(null);
   const [deletingZone, setDeletingZone] = useState<Zone | null>(null);
-  const [relocatingBins, setRelocatingBins] = useState<AffectedBin[] | null>(null);
+  const [relocatingBins, setRelocatingBins] = useState<AffectedBin[] | null>(
+    null
+  );
   const [relocatingZoneId, setRelocatingZoneId] = useState<string | null>(null);
   const [impactBins, setImpactBins] = useState<AffectedBin[] | null>(null);
-  const [impactExecute, setImpactExecute] = useState<(() => Promise<void>) | null>(null);
-  const [excludeBinIdsForRelocation, setExcludeBinIdsForRelocation] = useState<string[]>([]);
-  const [binFilter, setBinFilter] = useState<'all' | 'empty' | 'occupied' | 'full' | 'blocked'>('all');
+  const [impactExecute, setImpactExecute] = useState<
+    (() => Promise<void>) | null
+  >(null);
+  const [excludeBinIdsForRelocation, setExcludeBinIdsForRelocation] = useState<
+    string[]
+  >([]);
+  const [binFilter, setBinFilter] = useState<
+    'all' | 'empty' | 'occupied' | 'full' | 'blocked'
+  >('all');
 
   // ============================================================================
   // MUTATIONS
@@ -128,7 +140,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
   );
 
   const selectedZone = useMemo(
-    () => zones?.find((z) => z.id === selectedZoneId) ?? null,
+    () => zones?.find(z => z.id === selectedZoneId) ?? null,
     [zones, selectedZoneId]
   );
 
@@ -157,14 +169,22 @@ export default function WarehouseDetailPage({ params }: PageProps) {
     if (!selectedZoneId) {
       setSelectedZoneId(zones[0].id);
     }
-  }, [zones, highlightBinId, highlightZoneId, highlightBinDetail, router, warehouseId, selectedZoneId]);
+  }, [
+    zones,
+    highlightBinId,
+    highlightZoneId,
+    highlightBinDetail,
+    router,
+    warehouseId,
+    selectedZoneId,
+  ]);
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
 
   const handleSelectZone = useCallback((zoneId: string) => {
-    setSelectedZoneId((prev) => (prev === zoneId ? null : zoneId));
+    setSelectedZoneId(prev => (prev === zoneId ? null : zoneId));
     setBinFilter('all');
   }, []);
 
@@ -180,7 +200,8 @@ export default function WarehouseDetailPage({ params }: PageProps) {
               id: 'edit-warehouse',
               title: 'Editar',
               icon: Pencil,
-              onClick: () => router.push(`/stock/locations/${warehouseId}/edit`),
+              onClick: () =>
+                router.push(`/stock/locations/${warehouseId}/edit`),
               variant: 'default' as const,
             },
           ]
@@ -257,8 +278,8 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                   <h1 className="truncate text-xl font-bold">
                     {warehouse?.name}
                   </h1>
-                  {warehouse && (
-                    warehouse.isActive ? (
+                  {warehouse &&
+                    (warehouse.isActive ? (
                       <span className="inline-flex shrink-0 items-center rounded-md border border-emerald-600/25 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/8 dark:text-emerald-300">
                         Ativo
                       </span>
@@ -266,8 +287,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                       <span className="inline-flex shrink-0 items-center rounded-md border border-gray-300 bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-gray-400">
                         Inativo
                       </span>
-                    )
-                  )}
+                    ))}
                 </div>
                 <p className="mt-0.5 text-sm font-mono text-muted-foreground">
                   {warehouse?.code}
@@ -289,17 +309,21 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                     })}
                   </p>
                 )}
-                {warehouse.updatedAt && warehouse.updatedAt !== warehouse.createdAt && (
-                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3 text-amber-400" />
-                    Atualizado em{' '}
-                    {new Date(warehouse.updatedAt).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </p>
-                )}
+                {warehouse.updatedAt &&
+                  warehouse.updatedAt !== warehouse.createdAt && (
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3 text-amber-400" />
+                      Atualizado em{' '}
+                      {new Date(warehouse.updatedAt).toLocaleDateString(
+                        'pt-BR',
+                        {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric',
+                        }
+                      )}
+                    </p>
+                  )}
               </div>
             )}
           </div>
@@ -346,13 +370,12 @@ export default function WarehouseDetailPage({ params }: PageProps) {
             <>
               {/* Horizontal zone cards */}
               <div className="flex gap-3 overflow-x-auto p-1 -m-1 mb-4">
-                {zones.map((zone) => {
+                {zones.map(zone => {
                   const isSelected = selectedZoneId === zone.id;
                   const stats = zone.stats;
                   const structure = zone.structure;
                   const hasStructure = structure && structure.aisles > 0;
                   const occupancy = stats?.occupancyPercentage ?? 0;
-
 
                   return (
                     <button
@@ -366,13 +389,15 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                           : isSelected
                             ? 'border-blue-500 ring-2 ring-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10 cursor-pointer'
                             : 'border-border bg-white dark:bg-slate-800/60 hover:border-blue-300 dark:hover:border-blue-500/40 hover:shadow-sm cursor-pointer',
-                        !zone.isActive && 'opacity-60',
+                        !zone.isActive && 'opacity-60'
                       )}
                     >
-                      <div className={cn(
-                        'flex items-center justify-between gap-1.5 min-w-0',
-                        !hasStructure && 'opacity-50',
-                      )}>
+                      <div
+                        className={cn(
+                          'flex items-center justify-between gap-1.5 min-w-0',
+                          !hasStructure && 'opacity-50'
+                        )}
+                      >
                         <p className="text-sm font-semibold text-foreground truncate">
                           {zone.name}
                         </p>
@@ -385,12 +410,19 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                         <div className="space-y-1">
                           {stats?.totalCapacity && stats.totalCapacity > 0 ? (
                             <>
-                              <span className="text-[10px] text-muted-foreground">Ocupação</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                Ocupação
+                              </span>
                               <div className="flex items-center gap-2">
                                 <div className="h-1.5 flex-1 rounded-full bg-gray-100 dark:bg-gray-800">
                                   <div
-                                    className={cn('h-full rounded-full', getOccupancyBarColor(occupancy))}
-                                    style={{ width: `${Math.min(occupancy, 100)}%` }}
+                                    className={cn(
+                                      'h-full rounded-full',
+                                      getOccupancyBarColor(occupancy)
+                                    )}
+                                    style={{
+                                      width: `${Math.min(occupancy, 100)}%`,
+                                    }}
                                   />
                                 </div>
                                 <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
@@ -407,7 +439,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                       ) : (
                         <div
                           className="flex items-center justify-center gap-1 rounded-md bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 py-1 text-[11px] font-medium text-white cursor-pointer transition-colors"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             setConfiguringZone(zone);
                           }}
@@ -431,8 +463,12 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                       <MapPin className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0">
-                      <span className="font-semibold text-foreground">{selectedZone.name}</span>
-                      <p className="text-xs font-mono text-muted-foreground">{selectedZone.code}</p>
+                      <span className="font-semibold text-foreground">
+                        {selectedZone.name}
+                      </span>
+                      <p className="text-xs font-mono text-muted-foreground">
+                        {selectedZone.code}
+                      </p>
                     </div>
 
                     {/* Spacer */}
@@ -442,7 +478,15 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                     <div className="flex items-center gap-2">
                       {/* Toggle group */}
                       <div className="inline-flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
-                        {(['all', 'empty', 'occupied', 'full', 'blocked'] as const).map((opt) => (
+                        {(
+                          [
+                            'all',
+                            'empty',
+                            'occupied',
+                            'full',
+                            'blocked',
+                          ] as const
+                        ).map(opt => (
                           <button
                             key={opt}
                             onClick={() => setBinFilter(opt)}
@@ -450,10 +494,18 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                               'px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
                               binFilter === opt
                                 ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground',
+                                : 'text-muted-foreground hover:text-foreground'
                             )}
                           >
-                            {{ all: 'Todos', empty: 'Vazios', occupied: 'Ocupados', full: 'Cheios', blocked: 'Bloqueados' }[opt]}
+                            {
+                              {
+                                all: 'Todos',
+                                empty: 'Vazios',
+                                occupied: 'Ocupados',
+                                full: 'Cheios',
+                                blocked: 'Bloqueados',
+                              }[opt]
+                            }
                           </button>
                         ))}
                       </div>
@@ -461,19 +513,28 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                       {/* Dropdown menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Ações da zona">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label="Ações da zona"
+                          >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {canConfigureZone && (
-                            <DropdownMenuItem onClick={() => setConfiguringZone(selectedZone)}>
+                            <DropdownMenuItem
+                              onClick={() => setConfiguringZone(selectedZone)}
+                            >
                               <Settings className="mr-2 h-4 w-4" />
                               Reconfigurar
                             </DropdownMenuItem>
                           )}
                           {canEditZone && (
-                            <DropdownMenuItem onClick={() => setEditingZone(selectedZone)}>
+                            <DropdownMenuItem
+                              onClick={() => setEditingZone(selectedZone)}
+                            >
                               <Edit className="mr-2 h-4 w-4" />
                               Renomear
                             </DropdownMenuItem>
@@ -507,12 +568,13 @@ export default function WarehouseDetailPage({ params }: PageProps) {
                         bins={occupancyData.bins}
                         zoneId={selectedZone.id}
                         highlightBinId={activeBinHighlight ?? undefined}
-                        onBinClick={(binId) => setSelectedBinId(binId)}
+                        onBinClick={binId => setSelectedBinId(binId)}
                         filter={binFilter}
                       />
                     ) : (
                       <div className="text-center py-8 text-sm text-muted-foreground">
-                        {selectedZone.structure && selectedZone.structure.aisles > 0
+                        {selectedZone.structure &&
+                        selectedZone.structure.aisles > 0
                           ? 'Nenhum nicho encontrado nesta zona.'
                           : 'Configure a estrutura da zona para visualizar os nichos.'}
                       </div>
@@ -548,7 +610,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
 
         <EditZoneModal
           open={!!editingZone}
-          onOpenChange={(open) => {
+          onOpenChange={open => {
             if (!open) setEditingZone(null);
           }}
           zone={editingZone}
@@ -557,7 +619,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
         {configuringZone && (
           <ZoneStructureConfig
             open={!!configuringZone}
-            onOpenChange={(open) => {
+            onOpenChange={open => {
               if (!open) setConfiguringZone(null);
             }}
             zone={configuringZone}
@@ -575,7 +637,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
 
         <BinDetailSheet
           open={!!selectedBinId}
-          onOpenChange={(open) => {
+          onOpenChange={open => {
             if (!open) {
               setSelectedBinId(null);
               setActiveBinHighlight(null);
@@ -590,7 +652,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
         {deletingZone && (
           <ZoneDeleteWizard
             open={!!deletingZone}
-            onOpenChange={(open) => {
+            onOpenChange={open => {
               if (!open) setDeletingZone(null);
             }}
             zone={deletingZone}
@@ -614,14 +676,14 @@ export default function WarehouseDetailPage({ params }: PageProps) {
         {impactBins && impactExecute && (
           <ItemsImpactModal
             open={!!impactBins}
-            onOpenChange={(open) => {
+            onOpenChange={open => {
               if (!open) {
                 setImpactBins(null);
                 setImpactExecute(null);
               }
             }}
             affectedBins={impactBins}
-            onRelocate={(bins) => {
+            onRelocate={bins => {
               setImpactBins(null);
               setImpactExecute(null);
               setRelocatingZoneId(configuringZone?.id ?? selectedZoneId);
@@ -638,7 +700,7 @@ export default function WarehouseDetailPage({ params }: PageProps) {
         {relocatingBins && (
           <BinRelocationWizard
             open={!!relocatingBins}
-            onOpenChange={(open) => {
+            onOpenChange={open => {
               if (!open) {
                 setRelocatingBins(null);
                 setRelocatingZoneId(null);
@@ -646,14 +708,20 @@ export default function WarehouseDetailPage({ params }: PageProps) {
             }}
             zoneId={relocatingZoneId ?? selectedZoneId ?? ''}
             warehouseId={warehouseId}
-            affectedBins={relocatingBins.length > 0 ? relocatingBins : undefined}
+            affectedBins={
+              relocatingBins.length > 0 ? relocatingBins : undefined
+            }
             additionalExcludeBinIds={excludeBinIdsForRelocation}
-            onSkipRelocate={impactExecute ? () => {
-              setRelocatingBins(null);
-              setRelocatingZoneId(null);
-              // Open impact modal to confirm with PIN
-              setImpactBins(relocatingBins);
-            } : undefined}
+            onSkipRelocate={
+              impactExecute
+                ? () => {
+                    setRelocatingBins(null);
+                    setRelocatingZoneId(null);
+                    // Open impact modal to confirm with PIN
+                    setImpactBins(relocatingBins);
+                  }
+                : undefined
+            }
             onComplete={() => {
               setRelocatingBins(null);
               setRelocatingZoneId(null);
@@ -662,7 +730,6 @@ export default function WarehouseDetailPage({ params }: PageProps) {
             }}
           />
         )}
-
       </PageBody>
     </PageLayout>
   );

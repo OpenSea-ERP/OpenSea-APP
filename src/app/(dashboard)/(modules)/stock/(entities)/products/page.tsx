@@ -59,7 +59,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
 import { CreateProductWizard } from './src/components/create-product-wizard';
@@ -113,7 +120,9 @@ function ProductsPageContent() {
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Sorting state (server-side)
-  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('createdAt');
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>(
+    'createdAt'
+  );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // ============================================================================
@@ -141,12 +150,20 @@ function ProductsPageContent() {
     () => ({
       search: debouncedSearch || undefined,
       templateId: templateIds.length > 0 ? templateIds.join(',') : undefined,
-      manufacturerId: manufacturerIds.length > 0 ? manufacturerIds.join(',') : undefined,
+      manufacturerId:
+        manufacturerIds.length > 0 ? manufacturerIds.join(',') : undefined,
       categoryId: categoryIds.length > 0 ? categoryIds.join(',') : undefined,
       sortBy,
       sortOrder,
     }),
-    [debouncedSearch, templateIds, manufacturerIds, categoryIds, sortBy, sortOrder]
+    [
+      debouncedSearch,
+      templateIds,
+      manufacturerIds,
+      categoryIds,
+      sortBy,
+      sortOrder,
+    ]
   );
 
   const {
@@ -445,7 +462,11 @@ function ProductsPageContent() {
           }
           subtitle={manufacturerName || 'Fabricante não informado'}
           icon={Package}
-          iconBgColor={item.outOfLine ? 'bg-linear-to-br from-amber-500 to-amber-600' : 'bg-linear-to-br from-blue-500 to-cyan-600'}
+          iconBgColor={
+            item.outOfLine
+              ? 'bg-linear-to-br from-amber-500 to-amber-600'
+              : 'bg-linear-to-br from-blue-500 to-cyan-600'
+          }
           badges={[
             { label: templateName, variant: 'default' },
             { label: unitOfMeasure, variant: 'default' },
@@ -617,7 +638,11 @@ function ProductsPageContent() {
             </div>
           }
           icon={Package}
-          iconBgColor={item.outOfLine ? 'bg-linear-to-br from-amber-500 to-amber-600' : 'bg-linear-to-br from-blue-500 to-cyan-600'}
+          iconBgColor={
+            item.outOfLine
+              ? 'bg-linear-to-br from-amber-500 to-amber-600'
+              : 'bg-linear-to-br from-blue-500 to-cyan-600'
+          }
           isSelected={isSelected}
           showSelection={false}
           clickable={false}
@@ -744,7 +769,9 @@ function ProductsPageContent() {
               message="Ocorreu um erro ao tentar carregar os produtos. Por favor, tente novamente."
               action={{
                 label: 'Tentar Novamente',
-                onClick: () => { refetch(); },
+                onClick: () => {
+                  refetch();
+                },
               }}
             />
           ) : (

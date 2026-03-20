@@ -56,6 +56,7 @@ setup-pins/
 ## Components
 
 ### AuthBackground
+
 - **Responsabilidade:** Renderiza o fundo visual animado (esferas gradiente com motion) presente nas páginas de autenticação.
 - **Usado em:** `login/page.tsx`, `register/page.tsx`, `forgot-password/page.tsx`
 
@@ -63,14 +64,14 @@ setup-pins/
 
 ## Hooks
 
-| Hook | Propósito | Query Key | Endpoint |
-|------|-----------|-----------|----------|
-| `useLogin()` | Autenticar com e-mail e senha | `['auth', 'login']` | `POST /v1/auth/login/password` |
-| `useRegister()` | Criar nova conta | `['auth', 'register']` | `POST /v1/auth/register/password` |
-| `useSendPasswordReset()` | Enviar e-mail de recuperação | `['auth', 'send-password-reset']` | `POST /v1/auth/send/password` |
-| `useResetPassword()` | Redefinir senha com token | `['auth', 'reset-password']` | `POST /v1/auth/reset/password` |
-| `useRefreshToken()` | Renovar JWT de acesso | `['auth', 'refresh']` | `POST /v1/sessions/refresh` |
-| `useMe(hasToken)` | Buscar usuário autenticado | `['me']` | `GET /v1/auth/me` |
+| Hook                     | Propósito                     | Query Key                         | Endpoint                          |
+| ------------------------ | ----------------------------- | --------------------------------- | --------------------------------- |
+| `useLogin()`             | Autenticar com e-mail e senha | `['auth', 'login']`               | `POST /v1/auth/login/password`    |
+| `useRegister()`          | Criar nova conta              | `['auth', 'register']`            | `POST /v1/auth/register/password` |
+| `useSendPasswordReset()` | Enviar e-mail de recuperação  | `['auth', 'send-password-reset']` | `POST /v1/auth/send/password`     |
+| `useResetPassword()`     | Redefinir senha com token     | `['auth', 'reset-password']`      | `POST /v1/auth/reset/password`    |
+| `useRefreshToken()`      | Renovar JWT de acesso         | `['auth', 'refresh']`             | `POST /v1/sessions/refresh`       |
+| `useMe(hasToken)`        | Buscar usuário autenticado    | `['me']`                          | `GET /v1/auth/me`                 |
 
 Todos os hooks de mutação residem em `src/hooks/use-auth.ts`. O hook `useMe` fica em `src/hooks/use-me.ts`.
 
@@ -78,14 +79,14 @@ Todos os hooks de mutação residem em `src/hooks/use-auth.ts`. O hook `useMe` f
 
 ## Types
 
-| Interface | Backend Schema | In Sync? |
-|-----------|---------------|----------|
-| `User` | `UserResponseSchema` | Sim |
-| `LoginCredentials` | `LoginSchema` | Sim |
-| `RegisterData` | `RegisterSchema` | Sim |
-| `AuthResponse` | `AuthResponseSchema` | Sim — inclui `tenant` (auto-select) e `tenants[]` |
-| `UserTenant` | `TenantSchema` | Sim |
-| `SelectTenantResponse` | `SelectTenantResponseSchema` | Sim |
+| Interface              | Backend Schema               | In Sync?                                          |
+| ---------------------- | ---------------------------- | ------------------------------------------------- |
+| `User`                 | `UserResponseSchema`         | Sim                                               |
+| `LoginCredentials`     | `LoginSchema`                | Sim                                               |
+| `RegisterData`         | `RegisterSchema`             | Sim                                               |
+| `AuthResponse`         | `AuthResponseSchema`         | Sim — inclui `tenant` (auto-select) e `tenants[]` |
+| `UserTenant`           | `TenantSchema`               | Sim                                               |
+| `SelectTenantResponse` | `SelectTenantResponseSchema` | Sim                                               |
 
 Localização: `src/types/auth/user.types.ts`, `src/types/auth/session.types.ts`, `src/types/admin/tenant.types.ts`.
 
@@ -101,9 +102,9 @@ interface User {
   isSuperAdmin: boolean;
   hasAccessPin?: boolean;
   hasActionPin?: boolean;
-  forceAccessPinSetup?: boolean;   // Redireciona para /setup-pins
-  forceActionPinSetup?: boolean;   // Redireciona para /setup-pins
-  forcePasswordReset?: boolean;    // Redireciona para /reset-password
+  forceAccessPinSetup?: boolean; // Redireciona para /setup-pins
+  forceActionPinSetup?: boolean; // Redireciona para /setup-pins
+  forcePasswordReset?: boolean; // Redireciona para /reset-password
   profile?: Profile | null;
 }
 ```
@@ -119,6 +120,7 @@ interface User {
 O contexto central de autenticação. Monitora o token no `localStorage`, expõe `user`, `isAuthenticated`, `isSuperAdmin` e as funções `login`, `register`, `logout`, `refetchUser`.
 
 Regras de comportamento:
+
 - Monitora `localStorage` via `StorageEvent` (outras abas) e evento customizado `auth-token-change` (mesma aba).
 - Ao receber erro 401/403 no endpoint `/me`, remove os tokens e redireciona para `/fast-login?session=expired`.
 - Após login bem-sucedido, se `forceAccessPinSetup` ou `forceActionPinSetup` for `true`, redireciona para `/setup-pins`.
@@ -155,12 +157,12 @@ interface TenantContextType {
 
 ### URL State
 
-| Parâmetro | Página | Uso |
-|-----------|--------|-----|
-| `?session=expired` | `/fast-login` | Exibir aviso de sessão encerrada |
-| `?token=` | `/reset-password` | Token de reset de senha |
-| `?forced=true` | `/reset-password` | Indica reset forçado pelo admin |
-| `?reason=` | `/reset-password` | Motivo do reset forçado |
+| Parâmetro          | Página            | Uso                              |
+| ------------------ | ----------------- | -------------------------------- |
+| `?session=expired` | `/fast-login`     | Exibir aviso de sessão encerrada |
+| `?token=`          | `/reset-password` | Token de reset de senha          |
+| `?forced=true`     | `/reset-password` | Indica reset forçado pelo admin  |
+| `?reason=`         | `/reset-password` | Motivo do reset forçado          |
 
 ---
 
@@ -204,21 +206,25 @@ interface TenantContextType {
 ## Business Rules
 
 ### Regra 1: Auto-seleção de tenant
+
 Se o usuário possui exatamente 1 tenant, o backend retorna o tenant já selecionado na resposta do login (campo `tenant` no `AuthResponse`). O frontend detecta `autoSelectedTenant: true` e redireciona diretamente para `/` sem passar por `/select-tenant`.
 
 ### Regra 2: Limpeza de cache ao trocar de tenant
+
 Toda troca de tenant executa `queryClient.clear()` antes de salvar o novo JWT. Isso garante que dados de um tenant nunca sejam exibidos no contexto de outro.
 
 ### Regra 3: Proteção de rotas públicas
+
 O `AuthContext` mantém uma lista de rotas públicas (`/login`, `/register`, `/reset-password`, etc.). Fora dessas rotas, qualquer ausência de token válido redireciona para `/fast-login?session=expired`.
 
 ### Regra 4: Validação do JWT contra o tenant salvo
+
 O `TenantContext` decodifica o JWT no localStorage e valida se o `tenantId` do payload corresponde ao `selected_tenant_id` salvo. Se houver divergência, efetua logout completo (`clearAuthAndTenant()`).
 
 ---
 
 ## Audit History
 
-| Date | Dimension | Score | Report |
-|------|-----------|-------|--------|
-| Nenhum registro. | — | — | — |
+| Date             | Dimension | Score | Report |
+| ---------------- | --------- | ----- | ------ |
+| Nenhum registro. | —         | —     | —      |

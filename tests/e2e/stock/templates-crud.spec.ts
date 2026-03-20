@@ -41,9 +41,9 @@ test.describe('Stock - Templates CRUD', () => {
     await injectAuthIntoBrowser(page, userToken, userTenantId);
     await navigateToStockPage(page, 'templates');
 
-    await expect(
-      page.getByRole('heading', { name: 'Templates' })
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible({
+      timeout: 10_000,
+    });
 
     await expect(page.getByText(tpl.name).first()).toBeVisible({
       timeout: 10_000,
@@ -168,48 +168,45 @@ test.describe('Stock - Templates CRUD', () => {
 
   // ─── CONTEXT MENU — RENOMEAR ──────────────────────────────────────
 
-  test.fixme(
-    '4.6 - Renomear template via context menu',
-    async ({ page }) => {
-      const tpl = await createTemplateViaApi(userToken, {
-        name: `e2e-tpl-rename-${Date.now()}`,
-        unitOfMeasure: 'UNITS',
-      });
-      const newName = `e2e-tpl-renamed-${Date.now()}`;
+  test.fixme('4.6 - Renomear template via context menu', async ({ page }) => {
+    const tpl = await createTemplateViaApi(userToken, {
+      name: `e2e-tpl-rename-${Date.now()}`,
+      unitOfMeasure: 'UNITS',
+    });
+    const newName = `e2e-tpl-renamed-${Date.now()}`;
 
-      await injectAuthIntoBrowser(page, userToken, userTenantId);
-      await navigateToStockPage(page, 'templates');
+    await injectAuthIntoBrowser(page, userToken, userTenantId);
+    await navigateToStockPage(page, 'templates');
 
-      await openContextMenu(page, tpl.name);
-      await clickContextAction(page, 'Renomear');
+    await openContextMenu(page, tpl.name);
+    await clickContextAction(page, 'Renomear');
 
-      await expect(page.locator('[role="dialog"]')).toBeVisible({
-        timeout: 5_000,
-      });
+    await expect(page.locator('[role="dialog"]')).toBeVisible({
+      timeout: 5_000,
+    });
 
-      const nameInput = page
-        .locator('[role="dialog"] input[type="text"]')
-        .first();
-      await nameInput.clear();
-      await nameInput.fill(newName);
+    const nameInput = page
+      .locator('[role="dialog"] input[type="text"]')
+      .first();
+    await nameInput.clear();
+    await nameInput.fill(newName);
 
-      await page
-        .locator('[role="dialog"]')
-        .getByRole('button', { name: 'Salvar' })
-        .click();
-      await page.waitForTimeout(1_000);
+    await page
+      .locator('[role="dialog"]')
+      .getByRole('button', { name: 'Salvar' })
+      .click();
+    await page.waitForTimeout(1_000);
 
-      const searchInput = page.getByPlaceholder(/Buscar/i);
-      await searchInput.fill(newName);
-      await page.waitForTimeout(500);
+    const searchInput = page.getByPlaceholder(/Buscar/i);
+    await searchInput.fill(newName);
+    await page.waitForTimeout(500);
 
-      await expect(page.getByText(newName).first()).toBeVisible({
-        timeout: 10_000,
-      });
+    await expect(page.getByText(newName).first()).toBeVisible({
+      timeout: 10_000,
+    });
 
-      await deleteTemplateViaApi(userToken, tpl.id);
-    }
-  );
+    await deleteTemplateViaApi(userToken, tpl.id);
+  });
 
   // ─── CONTEXT MENU — DUPLICAR ──────────────────────────────────────
 
@@ -244,54 +241,45 @@ test.describe('Stock - Templates CRUD', () => {
 
   // ─── CONTEXT MENU — EXCLUIR ───────────────────────────────────────
 
-  test.fixme(
-    '4.8 - Excluir template via context menu',
-    async ({ page }) => {
-      const tpl = await createTemplateViaApi(userToken, {
-        name: `e2e-tpl-delete-${Date.now()}`,
-        unitOfMeasure: 'UNITS',
-      });
+  test.fixme('4.8 - Excluir template via context menu', async ({ page }) => {
+    const tpl = await createTemplateViaApi(userToken, {
+      name: `e2e-tpl-delete-${Date.now()}`,
+      unitOfMeasure: 'UNITS',
+    });
 
-      await injectAuthIntoBrowser(page, userToken, userTenantId);
-      await navigateToStockPage(page, 'templates');
+    await injectAuthIntoBrowser(page, userToken, userTenantId);
+    await navigateToStockPage(page, 'templates');
 
-      await openContextMenu(page, tpl.name);
-      await clickContextAction(page, 'Excluir');
+    await openContextMenu(page, tpl.name);
+    await clickContextAction(page, 'Excluir');
 
-      const otpInput = page.locator('[data-input-otp="true"]').first();
-      const deleteBtn = page
-        .locator('[role="alertdialog"] button, [role="dialog"] button')
-        .filter({ hasText: /Excluir|Confirmar/i })
-        .first();
+    const otpInput = page.locator('[data-input-otp="true"]').first();
+    const deleteBtn = page
+      .locator('[role="alertdialog"] button, [role="dialog"] button')
+      .filter({ hasText: /Excluir|Confirmar/i })
+      .first();
 
-      await Promise.race([
-        otpInput
-          .waitFor({ state: 'visible', timeout: 5_000 })
-          .catch(() => {}),
-        deleteBtn
-          .waitFor({ state: 'visible', timeout: 5_000 })
-          .catch(() => {}),
-      ]);
+    await Promise.race([
+      otpInput.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {}),
+      deleteBtn.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {}),
+    ]);
 
-      if (await otpInput.isVisible().catch(() => false)) {
-        await otpInput.fill('1234');
-        await page.waitForTimeout(500);
-      } else if (await deleteBtn.isVisible().catch(() => false)) {
-        await deleteBtn.click();
-      }
-
-      await waitForToast(page, 'sucesso');
-      await expect(page.getByText(tpl.name)).not.toBeVisible({
-        timeout: 5_000,
-      });
+    if (await otpInput.isVisible().catch(() => false)) {
+      await otpInput.fill('1234');
+      await page.waitForTimeout(500);
+    } else if (await deleteBtn.isVisible().catch(() => false)) {
+      await deleteBtn.click();
     }
-  );
+
+    await waitForToast(page, 'sucesso');
+    await expect(page.getByText(tpl.name)).not.toBeVisible({
+      timeout: 5_000,
+    });
+  });
 
   // ─── DETAIL PAGE ──────────────────────────────────────────────────
 
-  test('4.9 - Página de detalhe exibe seções e metadados', async ({
-    page,
-  }) => {
+  test('4.9 - Página de detalhe exibe seções e metadados', async ({ page }) => {
     const tpl = await createTemplateViaApi(userToken, {
       name: `e2e-tpl-detail-${Date.now()}`,
       unitOfMeasure: 'KILOGRAMS',
@@ -456,9 +444,9 @@ test.describe('Stock - Templates CRUD', () => {
     await page.goto('/stock/templates/invalid-id-that-does-not-exist');
     await page.waitForLoadState('networkidle');
 
-    await expect(
-      page.getByText('Template não encontrado')
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Template não encontrado')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('4.15 - Página de edição com ID inválido mostra erro', async ({
@@ -468,8 +456,8 @@ test.describe('Stock - Templates CRUD', () => {
     await page.goto('/stock/templates/invalid-id-that-does-not-exist/edit');
     await page.waitForLoadState('networkidle');
 
-    await expect(
-      page.getByText('Template não encontrado')
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Template não encontrado')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });

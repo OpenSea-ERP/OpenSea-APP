@@ -63,15 +63,15 @@ usuários já autenticados que tentam acessar `/login`, `/register` ou `/fast-lo
 
 **Rotas:**
 
-| Rota | Descrição |
-|------|-----------|
-| `/login` | Login em duas etapas (identificador → senha) |
-| `/register` | Cadastro de novo usuário |
-| `/select-tenant` | Seleção de empresa após autenticação |
-| `/forgot-password` | Solicitação de redefinição de senha |
-| `/reset-password` | Redefinição via token |
-| `/setup-pins` | Configuração de PIN de ação |
-| `/fast-login` | Login rápido para retorno ao sistema |
+| Rota               | Descrição                                    |
+| ------------------ | -------------------------------------------- |
+| `/login`           | Login em duas etapas (identificador → senha) |
+| `/register`        | Cadastro de novo usuário                     |
+| `/select-tenant`   | Seleção de empresa após autenticação         |
+| `/forgot-password` | Solicitação de redefinição de senha          |
+| `/reset-password`  | Redefinição via token                        |
+| `/setup-pins`      | Configuração de PIN de ação                  |
+| `/fast-login`      | Login rápido para retorno ao sistema         |
 
 ---
 
@@ -86,12 +86,12 @@ Renderiza a `Navbar` flutuante e o `ToolsPanel` (menu de navegação lateral des
 
 **Sub-grupos de rota internos (sem layout próprio):**
 
-| Grupo | Propósito |
-|-------|-----------|
-| `(user)` | Páginas do usuário: perfil, configurações, debug de permissões |
+| Grupo       | Propósito                                                                              |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `(user)`    | Páginas do usuário: perfil, configurações, debug de permissões                         |
 | `(actions)` | Ações globais: importação de dados (`/import`), estúdio de etiquetas (`/print/studio`) |
-| `(modules)` | Módulos de negócio agrupados por domínio |
-| `(tools)` | Ferramentas transversais: agenda, e-mail, gerenciador de arquivos, tarefas |
+| `(modules)` | Módulos de negócio agrupados por domínio                                               |
+| `(tools)`   | Ferramentas transversais: agenda, e-mail, gerenciador de arquivos, tarefas             |
 
 ---
 
@@ -138,6 +138,7 @@ export default function RootLayout({ children }) {
 ```
 
 **Providers em ordem (de fora para dentro):**
+
 1. `ErrorBoundary` — captura erros não tratados globalmente
 2. `ThemeProvider` — next-themes com detecção do sistema
 3. `QueryProvider` — React Query com configurações padrão
@@ -176,6 +177,7 @@ export default function DashboardLayout({ children }) {
 ```
 
 **Características:**
+
 - `'use client'` — necessário para os hooks `useAuth`, `useTenant`, `useRouter` e o estado `isMenuOpen`
 - `pt-28` no `<main>` — compensa a altura da `Navbar` flutuante fixada no topo (`top-4`)
 - `max-w-[1600px] mx-auto` — limita a largura do conteúdo em telas muito largas
@@ -215,6 +217,7 @@ export default function CentralLayout({ children }) {
 ```
 
 **Diferenças em relação ao dashboard:**
+
 - Usa sidebar lateral fixa (`CentralSidebar`) em vez de painel deslizável
 - `AnimatedBackground` renderiza esferas animadas com gradientes azul-escuro
 - Importa `./central.css` para as classes utilitárias `central-text`, `central-glass`, etc.
@@ -311,6 +314,7 @@ ProductsPage (Suspense boundary)
 ```
 
 **Características importantes:**
+
 - A página exporta um componente raiz que envolve o conteúdo real em `<Suspense>` para suportar `useSearchParams()`
 - Filtros via URL (`?template=id1,id2&manufacturer=id3`) permitem bookmarking e compartilhamento
 - Botões de ação no header são filtrados via `hasPermission()` antes de serem renderizados
@@ -386,6 +390,7 @@ EditProductPage
 ```
 
 **Convenções da página de edição:**
+
 - Breadcrumb sempre tem o formato: `Módulo → Lista → Nome do item → Editar`
 - Botões "Salvar" e "Excluir" ficam no canto superior direito ao lado do breadcrumb
 - O estado de loading é inline (skeleton ou texto) — não usa `loading.tsx`
@@ -428,6 +433,7 @@ export default function CentralDashboardPage() {
 ```
 
 **Componentes exclusivos do Central:**
+
 - `GlassCard` — card com efeito glassmorphism adaptado ao tema `dark-blue`
 - `StatCard` — card de métrica com ícone, valor e cor customizável
 - `AnimatedBackground` — esferas animadas com gradientes
@@ -442,18 +448,18 @@ e o Suspense de Server Components. O OpenSea-APP possui 10 arquivos `loading.tsx
 
 ### Posicionamento dos arquivos `loading.tsx`
 
-| Arquivo | Quando é exibido |
-|---------|-----------------|
-| `app/(dashboard)/loading.tsx` | Carregamento da página de boas-vindas |
-| `app/(dashboard)/(modules)/stock/loading.tsx` | Navegação para `/stock` |
-| `app/(dashboard)/(modules)/hr/loading.tsx` | Navegação para `/hr` |
-| `app/(dashboard)/(modules)/hr/overview/loading.tsx` | Navegação para `/hr/overview` |
-| `app/(dashboard)/(modules)/finance/loading.tsx` | Navegação para `/finance` |
-| `app/(dashboard)/(tools)/calendar/loading.tsx` | Navegação para `/calendar` |
-| `app/(dashboard)/(tools)/email/loading.tsx` | Navegação para `/email` |
-| `app/(dashboard)/(tools)/file-manager/loading.tsx` | Navegação para `/file-manager` |
-| `app/(dashboard)/(tools)/tasks/loading.tsx` | Navegação para `/tasks` |
-| `app/(central)/loading.tsx` | Navegação para qualquer rota `/central/*` |
+| Arquivo                                             | Quando é exibido                          |
+| --------------------------------------------------- | ----------------------------------------- |
+| `app/(dashboard)/loading.tsx`                       | Carregamento da página de boas-vindas     |
+| `app/(dashboard)/(modules)/stock/loading.tsx`       | Navegação para `/stock`                   |
+| `app/(dashboard)/(modules)/hr/loading.tsx`          | Navegação para `/hr`                      |
+| `app/(dashboard)/(modules)/hr/overview/loading.tsx` | Navegação para `/hr/overview`             |
+| `app/(dashboard)/(modules)/finance/loading.tsx`     | Navegação para `/finance`                 |
+| `app/(dashboard)/(tools)/calendar/loading.tsx`      | Navegação para `/calendar`                |
+| `app/(dashboard)/(tools)/email/loading.tsx`         | Navegação para `/email`                   |
+| `app/(dashboard)/(tools)/file-manager/loading.tsx`  | Navegação para `/file-manager`            |
+| `app/(dashboard)/(tools)/tasks/loading.tsx`         | Navegação para `/tasks`                   |
+| `app/(central)/loading.tsx`                         | Navegação para qualquer rota `/central/*` |
 
 ### Anatomia do skeleton padrão
 
@@ -493,13 +499,17 @@ Ferramentas com layout diferenciado usam skeletons que refletem sua estrutura re
 export default function EmailLoading() {
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
-      <div className="w-64 space-y-3">       {/* Sidebar */}
+      <div className="w-64 space-y-3">
+        {' '}
+        {/* Sidebar */}
         <Skeleton className="h-9 w-full" />
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-8 w-full" />
         ))}
       </div>
-      <div className="flex-1 space-y-2">    {/* Lista de mensagens */}
+      <div className="flex-1 space-y-2">
+        {' '}
+        {/* Lista de mensagens */}
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-16 w-full rounded-lg" />
         ))}
@@ -569,7 +579,9 @@ export default function DashboardError({
       <div className="max-w-md w-full text-center space-y-6">
         <div className="space-y-2">
           <div className="text-5xl">⚠️</div>
-          <h2 className="text-xl font-semibold ...">Erro ao carregar a página</h2>
+          <h2 className="text-xl font-semibold ...">
+            Erro ao carregar a página
+          </h2>
           <p className="text-sm ...">Seus dados estão seguros.</p>
           {error.digest && (
             <p className="text-xs font-mono">Referência: {error.digest}</p>
@@ -589,12 +601,12 @@ export default function DashboardError({
 
 **Diferenças por área:**
 
-| Arquivo | Título | Botão "Voltar" | Destino |
-|---------|--------|----------------|---------|
-| `app/error.tsx` | "Algo deu errado" | "Voltar ao início" | `/` |
-| `(auth)/error.tsx` | "Erro na autenticação" | "Voltar ao login" | `/login` |
-| `(dashboard)/error.tsx` | "Erro ao carregar a página" | "Página inicial" | `/` |
-| `(central)/error.tsx` | "Erro no painel administrativo" | "Voltar ao Central" | `/central` |
+| Arquivo                 | Título                          | Botão "Voltar"      | Destino    |
+| ----------------------- | ------------------------------- | ------------------- | ---------- |
+| `app/error.tsx`         | "Algo deu errado"               | "Voltar ao início"  | `/`        |
+| `(auth)/error.tsx`      | "Erro na autenticação"          | "Voltar ao login"   | `/login`   |
+| `(dashboard)/error.tsx` | "Erro ao carregar a página"     | "Página inicial"    | `/`        |
+| `(central)/error.tsx`   | "Erro no painel administrativo" | "Voltar ao Central" | `/central` |
 
 ### `not-found.tsx` global
 
@@ -604,9 +616,13 @@ export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center ...">
       <div className="max-w-md w-full text-center space-y-6">
-        <div className="text-6xl font-bold text-slate-200 dark:text-slate-800">404</div>
+        <div className="text-6xl font-bold text-slate-200 dark:text-slate-800">
+          404
+        </div>
         <h2 className="text-xl font-semibold ...">Página não encontrada</h2>
-        <p className="text-sm ...">A página que você procura não existe ou foi movida.</p>
+        <p className="text-sm ...">
+          A página que você procura não existe ou foi movida.
+        </p>
         <Button asChild>
           <Link href="/">Voltar ao início</Link>
         </Button>
@@ -630,11 +646,23 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Rotas públicas (qualquer rota /central/* também é pública aqui)
-  const publicRoutes = ['/login', '/fast-login', '/register', '/', '/select-tenant'];
-  const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/central');
+  const publicRoutes = [
+    '/login',
+    '/fast-login',
+    '/register',
+    '/',
+    '/select-tenant',
+  ];
+  const isPublicRoute =
+    publicRoutes.includes(pathname) || pathname.startsWith('/central');
 
   // Redireciona usuários autenticados que tentam acessar login/register
-  if (token && (pathname === '/login' || pathname === '/register' || pathname === '/fast-login')) {
+  if (
+    token &&
+    (pathname === '/login' ||
+      pathname === '/register' ||
+      pathname === '/fast-login')
+  ) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
@@ -681,7 +709,7 @@ const { hasPermission } = usePermissions();
 
 // Filtra botões do header
 const visibleActionButtons = actionButtons
-  .filter(btn => btn.permission ? hasPermission(btn.permission) : true)
+  .filter(btn => (btn.permission ? hasPermission(btn.permission) : true))
   .map(({ permission, ...btn }) => btn);
 
 // Filtra cards do módulo landing
@@ -782,42 +810,42 @@ import/stock/variants/by-product/
 
 ### Layouts e páginas raiz
 
-| Arquivo | Propósito |
-|---------|-----------|
-| `src/app/layout.tsx` | Layout raiz com providers globais |
-| `src/app/error.tsx` | Error boundary global |
-| `src/app/not-found.tsx` | Página 404 global |
-| `src/app/(auth)/error.tsx` | Error boundary da área de auth |
-| `src/app/(dashboard)/layout.tsx` | Layout do dashboard com Navbar |
-| `src/app/(dashboard)/error.tsx` | Error boundary do dashboard |
-| `src/app/(dashboard)/loading.tsx` | Skeleton do dashboard |
-| `src/app/(dashboard)/page.tsx` | Página de boas-vindas |
-| `src/app/(central)/layout.tsx` | Layout do Central com sidebar |
-| `src/app/(central)/error.tsx` | Error boundary do Central |
-| `src/app/(central)/loading.tsx` | Skeleton do Central |
+| Arquivo                           | Propósito                         |
+| --------------------------------- | --------------------------------- |
+| `src/app/layout.tsx`              | Layout raiz com providers globais |
+| `src/app/error.tsx`               | Error boundary global             |
+| `src/app/not-found.tsx`           | Página 404 global                 |
+| `src/app/(auth)/error.tsx`        | Error boundary da área de auth    |
+| `src/app/(dashboard)/layout.tsx`  | Layout do dashboard com Navbar    |
+| `src/app/(dashboard)/error.tsx`   | Error boundary do dashboard       |
+| `src/app/(dashboard)/loading.tsx` | Skeleton do dashboard             |
+| `src/app/(dashboard)/page.tsx`    | Página de boas-vindas             |
+| `src/app/(central)/layout.tsx`    | Layout do Central com sidebar     |
+| `src/app/(central)/error.tsx`     | Error boundary do Central         |
+| `src/app/(central)/loading.tsx`   | Skeleton do Central               |
 
 ### Componentes de layout
 
-| Arquivo | Propósito |
-|---------|-----------|
-| `src/components/layout/navbar.tsx` | Navbar flutuante do dashboard |
-| `src/components/layout/tools-panel.tsx` | Painel deslizável de navegação por módulos |
-| `src/components/layout/page-layout.tsx` | `PageLayout`, `PageHeader`, `PageBody` |
-| `src/components/layout/page-action-bar.tsx` | Barra de ação com breadcrumb + botões |
-| `src/components/layout/page-breadcrumb.tsx` | Componente de breadcrumb |
-| `src/components/layout/page-hero-banner.tsx` | Banner hero de landing de módulo |
-| `src/components/layout/page-dashboard-sections.tsx` | Grid de cards com contadores |
-| `src/components/layout/header.tsx` | Título e descrição da página |
-| `src/components/layout/search-bar.tsx` | Barra de busca padronizada |
+| Arquivo                                             | Propósito                                  |
+| --------------------------------------------------- | ------------------------------------------ |
+| `src/components/layout/navbar.tsx`                  | Navbar flutuante do dashboard              |
+| `src/components/layout/tools-panel.tsx`             | Painel deslizável de navegação por módulos |
+| `src/components/layout/page-layout.tsx`             | `PageLayout`, `PageHeader`, `PageBody`     |
+| `src/components/layout/page-action-bar.tsx`         | Barra de ação com breadcrumb + botões      |
+| `src/components/layout/page-breadcrumb.tsx`         | Componente de breadcrumb                   |
+| `src/components/layout/page-hero-banner.tsx`        | Banner hero de landing de módulo           |
+| `src/components/layout/page-dashboard-sections.tsx` | Grid de cards com contadores               |
+| `src/components/layout/header.tsx`                  | Título e descrição da página               |
+| `src/components/layout/search-bar.tsx`              | Barra de busca padronizada                 |
 
 ### Guards de autenticação
 
-| Arquivo | Propósito |
-|---------|-----------|
-| `src/components/auth/protected-route.tsx` | Guard para usuários autenticados |
-| `src/components/auth/super-admin-guard.tsx` | Guard exclusivo para super admins |
-| `src/components/auth/permission-gate.tsx` | Gate de permissão granular por elemento |
-| `src/middleware.ts` | Verificação de cookie no Edge Runtime |
+| Arquivo                                     | Propósito                               |
+| ------------------------------------------- | --------------------------------------- |
+| `src/components/auth/protected-route.tsx`   | Guard para usuários autenticados        |
+| `src/components/auth/super-admin-guard.tsx` | Guard exclusivo para super admins       |
+| `src/components/auth/permission-gate.tsx`   | Gate de permissão granular por elemento |
+| `src/middleware.ts`                         | Verificação de cookie no Edge Runtime   |
 
 ---
 
@@ -825,14 +853,14 @@ import/stock/variants/by-product/
 
 ### Quando usar cada abordagem
 
-| Situação | Abordagem |
-|----------|-----------|
-| Proteger uma área inteira de rota | `layout.tsx` com `ProtectedRoute` ou `SuperAdminGuard` |
-| Ocultar botões/ações sem permissão | `PermissionGate` ou verificação imperativa com `hasPermission()` |
-| Feedback durante navegação entre páginas | `loading.tsx` no diretório da rota |
-| Feedback durante fetch dentro de uma página | `isLoading` do React Query + `Skeleton` inline |
-| Rota acessível sem autenticação | Adicionar em `publicRoutes` no `middleware.ts` |
-| Rota exclusiva de super admin | Usar `(central)/layout.tsx` ou `SuperAdminGuard` diretamente |
+| Situação                                    | Abordagem                                                        |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| Proteger uma área inteira de rota           | `layout.tsx` com `ProtectedRoute` ou `SuperAdminGuard`           |
+| Ocultar botões/ações sem permissão          | `PermissionGate` ou verificação imperativa com `hasPermission()` |
+| Feedback durante navegação entre páginas    | `loading.tsx` no diretório da rota                               |
+| Feedback durante fetch dentro de uma página | `isLoading` do React Query + `Skeleton` inline                   |
+| Rota acessível sem autenticação             | Adicionar em `publicRoutes` no `middleware.ts`                   |
+| Rota exclusiva de super admin               | Usar `(central)/layout.tsx` ou `SuperAdminGuard` diretamente     |
 
 ### Armadilhas comuns
 
@@ -843,7 +871,11 @@ import/stock/variants/by-product/
    ```tsx
    export default function ProductsPage() {
      return (
-       <Suspense fallback={<GridLoading count={9} layout="grid" size="md" gap="gap-4" />}>
+       <Suspense
+         fallback={
+           <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
+         }
+       >
          <ProductsPageContent />
        </Suspense>
      );
@@ -874,6 +906,6 @@ import/stock/variants/by-product/
 
 ## Audit History
 
-| Date | Dimension | Score | Report |
-|------|-----------|-------|--------|
-| 2026-03-10 | Documentação inicial | — | Análise completa de `src/app/`, layouts, guards, loading states e error boundaries |
+| Date       | Dimension            | Score | Report                                                                             |
+| ---------- | -------------------- | ----- | ---------------------------------------------------------------------------------- |
+| 2026-03-10 | Documentação inicial | —     | Análise completa de `src/app/`, layouts, guards, loading states e error boundaries |

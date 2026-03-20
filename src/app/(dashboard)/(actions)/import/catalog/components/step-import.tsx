@@ -174,9 +174,16 @@ export function StepImport({
         manufacturerNames,
         templateId: template.id,
       };
-      console.log('[IMPORT DEBUG] Validate payload:', JSON.stringify(validatePayload, null, 2));
-      const response = await importService.bulkValidateProducts(validatePayload);
-      console.log('[IMPORT DEBUG] Validate response:', JSON.stringify(response, null, 2));
+      console.log(
+        '[IMPORT DEBUG] Validate payload:',
+        JSON.stringify(validatePayload, null, 2)
+      );
+      const response =
+        await importService.bulkValidateProducts(validatePayload);
+      console.log(
+        '[IMPORT DEBUG] Validate response:',
+        JSON.stringify(response, null, 2)
+      );
 
       // Build name→ID maps
       const categoryNameToId = new Map<string, string>();
@@ -312,9 +319,7 @@ export function StepImport({
   > => {
     if (!serverValidation) return new Map();
 
-    const manufacturerNameToId = new Map(
-      serverValidation.manufacturerNameToId
-    );
+    const manufacturerNameToId = new Map(serverValidation.manufacturerNameToId);
 
     const manufacturersToCreate = validationResult.manufacturersToCreate.filter(
       m => !m.error && m.name
@@ -376,9 +381,7 @@ export function StepImport({
 
     const products: BulkCreateProductInput[] = groupedProducts.map(product => {
       const name = String(product.productData.name || 'Sem nome');
-      const description = product.productData.description as
-        | string
-        | undefined;
+      const description = product.productData.description as string | undefined;
 
       // Resolve manufacturer by CNPJ → name → ID
       const manufacturerCnpj = product.productData.manufacturerCnpj as
@@ -485,10 +488,16 @@ export function StepImport({
           products: batches[i],
           options: { skipDuplicates: true },
         };
-        console.log(`[IMPORT DEBUG] Batch ${i + 1} payload:`, JSON.stringify(batchPayload, null, 2));
+        console.log(
+          `[IMPORT DEBUG] Batch ${i + 1} payload:`,
+          JSON.stringify(batchPayload, null, 2)
+        );
         const result: BulkCreateProductsResponse =
           await importService.bulkCreateProducts(batchPayload);
-        console.log(`[IMPORT DEBUG] Batch ${i + 1} result:`, JSON.stringify(result, null, 2));
+        console.log(
+          `[IMPORT DEBUG] Batch ${i + 1} result:`,
+          JSON.stringify(result, null, 2)
+        );
 
         summary.totalCreated += result.created.length;
         summary.totalSkipped += result.skipped.length;
@@ -677,8 +686,7 @@ export function StepImport({
     const totalCreated = summary.totalCreated + vSummary.totalCreated;
 
     onImportProgressChange({
-      status:
-        totalErrors > 0 && totalCreated === 0 ? 'failed' : 'completed',
+      status: totalErrors > 0 && totalCreated === 0 ? 'failed' : 'completed',
       totalProducts: products.length,
       totalVariants: variantInputs.length,
       importedProducts: summary.totalCreated,
@@ -831,7 +839,9 @@ export function StepImport({
               <Loader2 className="h-12 w-12 text-primary animate-spin" />
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold">Validando dados no servidor...</h3>
+              <h3 className="text-lg font-semibold">
+                Validando dados no servidor...
+              </h3>
               <p className="text-sm text-muted-foreground mt-1">
                 Verificando duplicados, categorias, fabricantes e template.
               </p>
@@ -875,9 +885,7 @@ export function StepImport({
               <AlertCircle className="h-5 w-5" />
               Erros bloqueantes ({serverValidation.blockingErrors.length})
             </CardTitle>
-            <CardDescription>
-              Estes erros impedem a importação.
-            </CardDescription>
+            <CardDescription>Estes erros impedem a importação.</CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="max-h-[250px]">
@@ -997,9 +1005,7 @@ export function StepImport({
               <div className="flex items-center gap-3">
                 <Package className="h-8 w-8 text-blue-500" />
                 <div>
-                  <p className="text-2xl font-bold">
-                    {groupedProducts.length}
-                  </p>
+                  <p className="text-2xl font-bold">{groupedProducts.length}</p>
                   <p className="text-sm text-muted-foreground">
                     Produtos a importar
                   </p>
@@ -1040,8 +1046,9 @@ export function StepImport({
             </Card>
           )}
 
-          {validationResult.manufacturersToCreate.filter(m => !m.error && m.name)
-            .length > 0 && (
+          {validationResult.manufacturersToCreate.filter(
+            m => !m.error && m.name
+          ).length > 0 && (
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
@@ -1151,9 +1158,7 @@ export function StepImport({
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>{progressCount}</span>
                 {failedCount > 0 && (
-                  <span className="text-rose-500">
-                    {failedCount} com erro
-                  </span>
+                  <span className="text-rose-500">{failedCount} com erro</span>
                 )}
               </div>
 
@@ -1212,10 +1217,7 @@ export function StepImport({
               <ScrollArea className="h-[150px]">
                 <ul className="space-y-1 text-sm">
                   {importProgress.errors.map((error, idx) => (
-                    <li
-                      key={idx}
-                      className="text-rose-600 dark:text-rose-400"
-                    >
+                    <li key={idx} className="text-rose-600 dark:text-rose-400">
                       &bull; {error.productName}: {error.message}
                     </li>
                   ))}
@@ -1271,9 +1273,7 @@ export function StepImport({
                       : 'text-green-600 dark:text-green-400'
                   )}
                 >
-                  {allFailed
-                    ? 'Importação Falhou'
-                    : 'Importação Concluída!'}
+                  {allFailed ? 'Importação Falhou' : 'Importação Concluída!'}
                 </h3>
                 <p className="text-muted-foreground mt-2">
                   {allFailed
@@ -1332,9 +1332,7 @@ export function StepImport({
                     <p className="text-2xl font-bold">
                       {importSummary.totalErrors}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      Erros
-                    </p>
+                    <p className="text-sm text-muted-foreground">Erros</p>
                   </div>
                 </div>
               </CardContent>
@@ -1390,9 +1388,7 @@ export function StepImport({
                       <p className="text-2xl font-bold">
                         {variantSummary.totalErrors}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        Erros
-                      </p>
+                      <p className="text-sm text-muted-foreground">Erros</p>
                     </div>
                   </div>
                 </CardContent>
@@ -1470,7 +1466,10 @@ export function StepImport({
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2 text-rose-600 dark:text-rose-400">
                 <AlertCircle className="h-5 w-5" />
-                Erros ({importSummary.allErrors.length + (variantSummary?.allErrors.length ?? 0)})
+                Erros (
+                {importSummary.allErrors.length +
+                  (variantSummary?.allErrors.length ?? 0)}
+                )
               </CardTitle>
             </CardHeader>
             <CardContent>

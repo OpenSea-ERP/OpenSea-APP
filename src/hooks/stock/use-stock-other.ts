@@ -74,17 +74,24 @@ export function useManufacturersInfinite(filters?: InfiniteListFilters) {
       const meta = (raw.meta ?? {}) as Record<string, number>;
       return {
         items,
-        meta: { total: meta.total ?? 0, page: meta.page ?? pageParam, limit: meta.limit ?? INFINITE_PAGE_SIZE, pages: meta.pages ?? 1 },
+        meta: {
+          total: meta.total ?? 0,
+          page: meta.page ?? pageParam,
+          limit: meta.limit ?? INFINITE_PAGE_SIZE,
+          pages: meta.pages ?? 1,
+        },
       };
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.page < lastPage.meta.pages ? lastPage.meta.page + 1 : undefined,
+    getNextPageParam: lastPage =>
+      lastPage.meta.page < lastPage.meta.pages
+        ? lastPage.meta.page + 1
+        : undefined,
     staleTime: 30_000,
   });
   return {
     ...result,
-    items: result.data?.pages.flatMap((p) => p.items) ?? [],
+    items: result.data?.pages.flatMap(p => p.items) ?? [],
     total: result.data?.pages[0]?.meta.total ?? 0,
   };
 }
@@ -104,7 +111,9 @@ export function useCreateManufacturer() {
     mutationFn: (data: CreateManufacturerRequest) =>
       manufacturersService.createManufacturer(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.MANUFACTURERS,
+      });
     },
   });
 }
@@ -121,7 +130,9 @@ export function useUpdateManufacturer() {
       data: UpdateManufacturerRequest;
     }) => manufacturersService.updateManufacturer(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.MANUFACTURERS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.MANUFACTURER(variables.id),
       });
@@ -135,7 +146,9 @@ export function useDeleteManufacturer() {
   return useMutation({
     mutationFn: (id: string) => manufacturersService.deleteManufacturer(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MANUFACTURERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.MANUFACTURERS,
+      });
     },
   });
 }
@@ -218,17 +231,24 @@ export function useTagsInfinite(filters?: InfiniteListFilters) {
       const meta = (raw.meta ?? {}) as Record<string, number>;
       return {
         items,
-        meta: { total: meta.total ?? 0, page: meta.page ?? pageParam, limit: meta.limit ?? INFINITE_PAGE_SIZE, pages: meta.pages ?? 1 },
+        meta: {
+          total: meta.total ?? 0,
+          page: meta.page ?? pageParam,
+          limit: meta.limit ?? INFINITE_PAGE_SIZE,
+          pages: meta.pages ?? 1,
+        },
       };
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.page < lastPage.meta.pages ? lastPage.meta.page + 1 : undefined,
+    getNextPageParam: lastPage =>
+      lastPage.meta.page < lastPage.meta.pages
+        ? lastPage.meta.page + 1
+        : undefined,
     staleTime: 30_000,
   });
   return {
     ...result,
-    items: result.data?.pages.flatMap((p) => p.items) ?? [],
+    items: result.data?.pages.flatMap(p => p.items) ?? [],
     total: result.data?.pages[0]?.meta.total ?? 0,
   };
 }
@@ -294,17 +314,24 @@ export function useTemplatesInfinite(filters?: InfiniteListFilters) {
       const meta = (raw.meta ?? {}) as Record<string, number>;
       return {
         items,
-        meta: { total: meta.total ?? 0, page: meta.page ?? pageParam, limit: meta.limit ?? INFINITE_PAGE_SIZE, pages: meta.pages ?? 1 },
+        meta: {
+          total: meta.total ?? 0,
+          page: meta.page ?? pageParam,
+          limit: meta.limit ?? INFINITE_PAGE_SIZE,
+          pages: meta.pages ?? 1,
+        },
       };
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.page < lastPage.meta.pages ? lastPage.meta.page + 1 : undefined,
+    getNextPageParam: lastPage =>
+      lastPage.meta.page < lastPage.meta.pages
+        ? lastPage.meta.page + 1
+        : undefined,
     staleTime: 30_000,
   });
   return {
     ...result,
-    items: result.data?.pages.flatMap((p) => p.items) ?? [],
+    items: result.data?.pages.flatMap(p => p.items) ?? [],
     total: result.data?.pages[0]?.meta.total ?? 0,
   };
 }
@@ -402,7 +429,9 @@ export function useCreatePurchaseOrder() {
     mutationFn: (data: CreatePurchaseOrderRequest) =>
       purchaseOrdersService.create(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PURCHASE_ORDERS,
+      });
     },
   });
 }
@@ -419,7 +448,9 @@ export function useUpdatePurchaseOrderStatus() {
       status: import('@/types/stock').PurchaseOrderStatus;
     }) => purchaseOrdersService.updateStatus(id, status),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PURCHASE_ORDERS });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PURCHASE_ORDERS,
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PURCHASE_ORDER(variables.id),
       });

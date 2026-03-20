@@ -17,10 +17,7 @@ export {
   ZoneStructureConfig,
   type ZoneStructureConfigProps,
 } from './zone-structure-config';
-export {
-  BinDetailSheet,
-  type BinDetailSheetProps,
-} from './bin-detail-sheet';
+export { BinDetailSheet, type BinDetailSheetProps } from './bin-detail-sheet';
 export {
   ZoneDeleteWizard,
   type ZoneDeleteWizardProps,

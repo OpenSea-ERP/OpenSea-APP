@@ -25,10 +25,7 @@ import {
   type PresetCategory,
   type TemplatePreset,
 } from '@/data/template-presets';
-import {
-  UNIT_OF_MEASURE_LABELS,
-  type UnitOfMeasure,
-} from '@/types/stock';
+import { UNIT_OF_MEASURE_LABELS, type UnitOfMeasure } from '@/types/stock';
 import type {
   CreateTemplateRequest,
   Template,
@@ -448,8 +445,8 @@ function StepManualConfirm({
       </div>
       <p className="text-xs text-muted-foreground max-w-xs">
         O template será criado sem atributos pré-definidos. Você poderá
-        adicionar atributos de produto, variante e item posteriormente na
-        página de edição.
+        adicionar atributos de produto, variante e item posteriormente na página
+        de edição.
       </p>
     </div>
   );
@@ -629,10 +626,7 @@ export function CreateModal({
             description:
               'Os atributos definidos podem ser editados posteriormente.',
             icon: (
-              <Check
-                className="h-16 w-16 text-emerald-400"
-                strokeWidth={1.2}
-              />
+              <Check className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />
             ),
             content: selectedPreset ? (
               <StepPresetPreview preset={selectedPreset} />
@@ -687,8 +681,7 @@ export function CreateModal({
           // Manual Step 2: Name + UOM (back in header)
           {
             title: 'Novo Template Manual',
-            description:
-              'Configure o nome e a unidade de medida do template.',
+            description: 'Configure o nome e a unidade de medida do template.',
             icon: (
               <Settings2
                 className="h-16 w-16 text-amber-400"
@@ -711,16 +704,10 @@ export function CreateModal({
             title: 'Confirmar Template',
             description: 'Revise as informações antes de criar.',
             icon: (
-              <Check
-                className="h-16 w-16 text-emerald-400"
-                strokeWidth={1.2}
-              />
+              <Check className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />
             ),
             content: (
-              <StepManualConfirm
-                name={manualName}
-                unitOfMeasure={manualUom}
-              />
+              <StepManualConfirm name={manualName} unitOfMeasure={manualUom} />
             ),
             isValid: true,
             onBack: () => setCurrentStep(2),

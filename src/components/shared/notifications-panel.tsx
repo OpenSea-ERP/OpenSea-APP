@@ -251,7 +251,8 @@ export function NotificationsPanel() {
               </Badge>
             ) : (
               <span className="text-xs text-gray-500 dark:text-white/40">
-                {notifications.length} notificaç{notifications.length !== 1 ? 'ões' : 'ão'}
+                {notifications.length} notificaç
+                {notifications.length !== 1 ? 'ões' : 'ão'}
               </span>
             )}
           </div>

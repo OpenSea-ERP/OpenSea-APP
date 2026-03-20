@@ -48,9 +48,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       (self as unknown as Worker).postMessage({
         type: 'error',
         message:
-          error instanceof Error
-            ? error.message
-            : 'Erro ao processar arquivo',
+          error instanceof Error ? error.message : 'Erro ao processar arquivo',
       } satisfies WorkerErrorResponse);
     }
   }

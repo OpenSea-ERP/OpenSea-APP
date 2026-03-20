@@ -12,18 +12,20 @@
 
 ## File Map
 
-| File | Action | Responsibility |
-|------|--------|----------------|
-| `src/components/ui/navigation-wizard-dialog.tsx` | Create | Reusable modal with sidebar navigation, two visual variants, section error indicators, isPending state |
-| `src/app/(dashboard)/(modules)/stock/(entities)/products/src/modals/variant-form-modal.tsx` | Rewrite | Refactor to use NavigationWizardDialog, add Appearance section, SKU, secondary colors, pattern, validation UX |
-| `src/app/(dashboard)/(modules)/stock/(entities)/products/src/modals/item-entry-form-modal.tsx` | Rewrite | Refactor to use NavigationWizardDialog, add uniqueCode field, validation UX |
+| File                                                                                           | Action  | Responsibility                                                                                                |
+| ---------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| `src/components/ui/navigation-wizard-dialog.tsx`                                               | Create  | Reusable modal with sidebar navigation, two visual variants, section error indicators, isPending state        |
+| `src/app/(dashboard)/(modules)/stock/(entities)/products/src/modals/variant-form-modal.tsx`    | Rewrite | Refactor to use NavigationWizardDialog, add Appearance section, SKU, secondary colors, pattern, validation UX |
+| `src/app/(dashboard)/(modules)/stock/(entities)/products/src/modals/item-entry-form-modal.tsx` | Rewrite | Refactor to use NavigationWizardDialog, add uniqueCode field, validation UX                                   |
 
 **No changes needed to:**
+
 - `src/types/stock/variant.types.ts` — already has all fields (secondaryColorHex, secondaryColorPantone, pattern, sku). Minor: fix maxLength comments (sku 100->64, pantone 50->32) during Task 2.
 - `src/types/stock/item.types.ts` — already has uniqueCode in Item and RegisterItemEntryRequest
 - `src/services/stock/` — services already accept all fields
 
 **Important implementation notes:**
+
 - No `<form>` element wrapping — native form validation (`required` attr) is replaced by the custom `validate()` function. Remove all `required` attributes from inputs; validation is handled entirely by `validate()` + `fieldErrors` state.
 - The old chevron-right animation on sidebar items is intentionally dropped in favor of the new left-border indicator (detailed variant) or pill highlight (compact variant).
 - `autoFocus` on the name input should be conditional: `autoFocus={!isEditMode}` — only auto-focus on create mode.
@@ -35,6 +37,7 @@
 ## Task 1: Create NavigationWizardDialog Component
 
 **Files:**
+
 - Create: `src/components/ui/navigation-wizard-dialog.tsx`
 
 **Reference:** Current `StepWizardDialog` at `src/components/ui/step-wizard-dialog.tsx` for Dialog/styling patterns.
@@ -45,11 +48,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -293,9 +292,11 @@ section error indicators, and isPending state management."
 ## Task 2: Rewrite VariantFormModal
 
 **Files:**
+
 - Rewrite: `src/app/(dashboard)/(modules)/stock/(entities)/products/src/modals/variant-form-modal.tsx`
 
 **Changes from current implementation:**
+
 1. Replace ad-hoc Dialog+sidebar with `NavigationWizardDialog`
 2. Add new section: Aparencia (Palette) with secondary colors + pattern
 3. Move color fields from Basic to Aparencia
@@ -308,6 +309,7 @@ section error indicators, and isPending state management."
 - [ ] **Step 1: Update the SectionId type and SECTIONS constant**
 
 Change `SectionId` to include `'appearance'`:
+
 ```typescript
 type SectionId = 'basic' | 'appearance' | 'pricing' | 'stock' | 'attributes';
 ```
@@ -317,6 +319,7 @@ Update SECTIONS array to use `NavigationSection` format with 5 entries.
 - [ ] **Step 2: Update FormData interface with new fields**
 
 Add to FormData:
+
 ```typescript
 sku: string;
 secondaryColorHex: string;
@@ -329,6 +332,7 @@ Update INITIAL_FORM with empty defaults for new fields.
 - [ ] **Step 3: Update edit-mode useEffect to populate new fields**
 
 In the `useEffect` that populates form from `variant`:
+
 ```typescript
 sku: variant.sku || '',
 secondaryColorHex: variant.secondaryColorHex || '',
@@ -339,6 +343,7 @@ pattern: variant.pattern || '',
 - [ ] **Step 4: Update handleSubmit to include new fields in payload**
 
 Add to cleanData object:
+
 ```typescript
 sku: formData.sku.trim() || undefined,
 secondaryColorHex: formData.secondaryColorHex.trim() || undefined,
@@ -376,6 +381,7 @@ const validate = useCallback((): boolean => {
 ```
 
 Clear section errors when fields change:
+
 ```typescript
 // In updateField, clear errors for the section containing the changed field
 const updateField = useCallback(
@@ -389,7 +395,11 @@ const updateField = useCallback(
       return next;
     });
     // Clear section error based on which section the field belongs to
-    const sectionMap: Record<string, SectionId> = { name: 'basic', sku: 'basic', reference: 'basic' };
+    const sectionMap: Record<string, SectionId> = {
+      name: 'basic',
+      sku: 'basic',
+      reference: 'basic',
+    };
     const section = sectionMap[key as string];
     if (section) {
       setSectionErrors(prev => {
@@ -407,6 +417,7 @@ const updateField = useCallback(
 - [ ] **Step 6: Replace Dialog wrapper with NavigationWizardDialog**
 
 Replace the entire return JSX. The component should:
+
 - Use `NavigationWizardDialog` with `variant="detailed"` (default)
 - Pass `sectionErrors` and `isPending`
 - Render section content as `children` based on `activeSection`
@@ -415,6 +426,7 @@ Replace the entire return JSX. The component should:
 - Remove `required` attributes from all inputs (validation handled by `validate()`)
 
 Key structure:
+
 ```tsx
 <NavigationWizardDialog
   open={open}
@@ -450,6 +462,7 @@ Key structure:
 - [ ] **Step 7: Create AppearanceSection component**
 
 New section component with:
+
 - Primary color: color picker + hex input (max 7) + pantone input (max 32)
 - Secondary color: same layout as primary
 - Pattern: Select with PATTERN_LABELS from variant.types.ts
@@ -481,9 +494,13 @@ function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
               disabled={isPending}
             />
             {formData.colorHex && (
-              <Button type="button" variant="ghost" size="sm"
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 className="text-xs text-muted-foreground"
-                onClick={() => updateField('colorHex', '')}>
+                onClick={() => updateField('colorHex', '')}
+              >
                 Limpar
               </Button>
             )}
@@ -521,9 +538,13 @@ function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
               disabled={isPending}
             />
             {formData.secondaryColorHex && (
-              <Button type="button" variant="ghost" size="sm"
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 className="text-xs text-muted-foreground"
-                onClick={() => updateField('secondaryColorHex', '')}>
+                onClick={() => updateField('secondaryColorHex', '')}
+              >
                 Limpar
               </Button>
             )}
@@ -531,7 +552,9 @@ function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
           <div className="space-y-1.5">
             <Input
               value={formData.secondaryColorPantone}
-              onChange={e => updateField('secondaryColorPantone', e.target.value)}
+              onChange={e =>
+                updateField('secondaryColorPantone', e.target.value)
+              }
               placeholder="Ex: PANTONE 19-4052"
               maxLength={32}
               disabled={isPending}
@@ -554,7 +577,9 @@ function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
           <SelectContent>
             <SelectItem value="none">Nenhum</SelectItem>
             {Object.entries(PATTERN_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -589,6 +614,7 @@ const sections = useMemo(() => [
 - [ ] **Step 10: Verify VariantFormModal renders and works**
 
 Run `npm run dev`, navigate to a product, open "Adicionar Variante" modal. Verify:
+
 - All 5 sections visible (or 4 if no template attributes)
 - Navigation works via sidebar
 - New fields (SKU, secondary colors, pattern) are editable
@@ -614,9 +640,11 @@ git commit -m "feat(stock/products): redesign VariantFormModal with NavigationWi
 ## Task 3: Rewrite ItemEntryFormModal
 
 **Files:**
+
 - Rewrite: `src/app/(dashboard)/(modules)/stock/(entities)/products/src/modals/item-entry-form-modal.tsx`
 
 **Changes from current implementation:**
+
 1. Replace ad-hoc Dialog+sidebar with `NavigationWizardDialog`
 2. Add uniqueCode field to Rastreabilidade section
 3. Hide Atributos section when template has no item attributes
@@ -663,6 +691,7 @@ const validate = useCallback((): boolean => {
 Replace the manual validation at the start of handleSubmit with `if (!validate()) return;`
 
 Add to createData:
+
 ```typescript
 uniqueCode: formData.uniqueCode.trim() || undefined,
 ```
@@ -706,8 +735,11 @@ Remove `required` attributes from all inputs. No `<form>` element.
 - [ ] **Step 5: Add uniqueCode field to BatchSection**
 
 Add at the top of BatchSection, before the Lote/NF grid:
+
 ```tsx
-{/* Código Único */}
+{
+  /* Código Único */
+}
 <div className="space-y-1.5">
   <Label htmlFor="ief-uniqueCode">Código Único</Label>
   <Input
@@ -721,7 +753,7 @@ Add at the top of BatchSection, before the Lote/NF grid:
   <p className="text-xs text-muted-foreground">
     Número de série, código de patrimônio ou identificador interno
   </p>
-</div>
+</div>;
 ```
 
 - [ ] **Step 6: Build sections array with dynamic hiding**
@@ -738,6 +770,7 @@ const sections = useMemo(() => [
 - [ ] **Step 7: Verify ItemEntryFormModal renders and works**
 
 Run `npm run dev`, navigate to a product, open variant management, select a variant, click "Registrar Entrada". Verify:
+
 - All sections visible (3 or 4 depending on template)
 - uniqueCode field visible in Rastreabilidade
 - Validation highlights binId/quantity when missing on Save click
@@ -778,6 +811,7 @@ Fix any TypeScript/build errors.
 - [ ] **Step 3: Manual smoke test**
 
 Test these flows:
+
 1. Create a new variant (all 5 sections, save validation)
 2. Edit an existing variant (all fields populated, save)
 3. Register item entry (all 4 sections, validation, uniqueCode)

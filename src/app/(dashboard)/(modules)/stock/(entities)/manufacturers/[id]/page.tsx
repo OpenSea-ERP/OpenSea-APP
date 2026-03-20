@@ -147,8 +147,7 @@ export default function ManufacturerDetailPage() {
       })
     : null;
   const formattedUpdatedAt =
-    manufacturer?.updatedAt &&
-    manufacturer.updatedAt !== manufacturer.createdAt
+    manufacturer?.updatedAt && manufacturer.updatedAt !== manufacturer.createdAt
       ? new Date(manufacturer.updatedAt).toLocaleDateString('pt-BR', {
           day: '2-digit',
           month: 'long',
@@ -409,7 +408,9 @@ export default function ManufacturerDetailPage() {
             )}
 
             {/* Section: Endereço (só exibe se tiver dados) */}
-            {(manufacturer.addressLine1 || manufacturer.city || manufacturer.state) && (
+            {(manufacturer.addressLine1 ||
+              manufacturer.city ||
+              manufacturer.state) && (
               <div className="space-y-5">
                 <SectionHeader
                   icon={MapPinHouse}
@@ -468,7 +469,6 @@ export default function ManufacturerDetailPage() {
             )}
           </div>
         </Card>
-
       </PageBody>
     </PageLayout>
   );

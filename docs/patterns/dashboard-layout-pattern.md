@@ -39,9 +39,11 @@ Estado Global:
 ## 2. COMPONENTES REUTILIZÁVEIS
 
 ### 2.1 PageActionBar (`layout/page-action-bar.tsx`)
+
 **Responsabilidade:** Header superior com navegação e ações rápidas
 
 **Props:**
+
 ```typescript
 {
   breadcrumbItems?: BreadcrumbItemData[]     // Navegação
@@ -52,6 +54,7 @@ Estado Global:
 ```
 
 **Características:**
+
 - Renderiza breadcrumb dinâmico
 - Filtra botões por permissão automaticamente
 - Botões styled (default, outline)
@@ -61,9 +64,11 @@ Estado Global:
 ---
 
 ### 2.2 PageHeroBanner (`layout/page-hero-banner.tsx`)
+
 **Responsabilidade:** Seção de destaque principal com CTA
 
 **Props:**
+
 ```typescript
 {
   title: string                               // Título principal
@@ -76,6 +81,7 @@ Estado Global:
 ```
 
 **Características:**
+
 - Ícone customizável com gradient
 - Background decorativo (blob shapes)
 - Botões com gradientes
@@ -85,9 +91,11 @@ Estado Global:
 ---
 
 ### 2.3 PageDashboardSections (`layout/page-dashboard-sections.tsx`)
+
 **Responsabilidade:** Grid de cards organizados por seções
 
 **Props:**
+
 ```typescript
 {
   sections: DashboardSection[]                 // Seções com cards
@@ -98,6 +106,7 @@ Estado Global:
 ```
 
 **Características:**
+
 - Grid responsivo (1, 2, 3 colunas)
 - Cards com hover effects
 - Contadores com skeleton loading
@@ -111,21 +120,23 @@ Estado Global:
 ## 3. ESTRUTURAS DE DADOS
 
 ### 3.1 CardItem Interface
+
 ```typescript
 interface CardItem {
-  id: string                    // Identificador único
-  title: string                 // Título do card
-  description: string           // Descrição breve
-  icon: React.ElementType       // Ícone (lucide-react ou react-icons)
-  href: string                  // URL de navegação
-  gradient: string              // Classes Tailwind do gradiente
-  hoverBg: string               // Classes de hover
-  permission?: string           // Código de permissão RBAC
-  countKey?: string             // Chave para buscar contagem
+  id: string; // Identificador único
+  title: string; // Título do card
+  description: string; // Descrição breve
+  icon: React.ElementType; // Ícone (lucide-react ou react-icons)
+  href: string; // URL de navegação
+  gradient: string; // Classes Tailwind do gradiente
+  hoverBg: string; // Classes de hover
+  permission?: string; // Código de permissão RBAC
+  countKey?: string; // Chave para buscar contagem
 }
 ```
 
 ### 3.2 Seções de Dados
+
 ```typescript
 const sections = [
   {
@@ -139,11 +150,13 @@ const sections = [
 ### 3.3 Botões Especializados
 
 **ActionButtons** (Operações globais):
+
 - Importação
 - Ordens de Compra
 - Têm labels e variants (default/outline)
 
 **HeroBannerButtons** (Consultas principais):
+
 - Consultar Estoque
 - Consultar Movimentações
 
@@ -181,16 +194,21 @@ const sections = [
 
 ```typescript
 // Nível 1: Action Buttons (Operações globais)
-actionButtons.filter(btn => !btn.permission || hasPermission(btn.permission))
+actionButtons.filter(btn => !btn.permission || hasPermission(btn.permission));
 
 // Nível 2: Hero Banner Buttons (Consultas)
-heroBannerButtons.filter(btn => !btn.permission || hasPermission(btn.permission))
+heroBannerButtons.filter(
+  btn => !btn.permission || hasPermission(btn.permission)
+);
 
 // Nível 3: Dashboard Sections (Cards)
-section.cards.filter(card => !card.permission || hasPermission(card.permission))
+section.cards.filter(
+  card => !card.permission || hasPermission(card.permission)
+);
 ```
 
 **Codes de Permissão Utilizados:**
+
 - `STOCK_PERMISSIONS.TEMPLATES.LIST`
 - `STOCK_PERMISSIONS.PRODUCTS.LIST`
 - `STOCK_PERMISSIONS.MANUFACTURERS.LIST`
@@ -204,16 +222,19 @@ section.cards.filter(card => !card.permission || hasPermission(card.permission))
 ## 6. PADRÕES DE DESIGN IMPLEMENTADOS
 
 ### 6.1 Composição de Componentes
+
 - Componentes pequenos e reutilizáveis
 - Props claras e tipadas
 - Responsabilidade única por componente
 
 ### 6.2 Estados Assíncronos
+
 - `countsLoading` skeleton durante fetch
 - `Promise.allSettled` para requisições seguras
 - Fallback para null se falhar
 
 ### 6.3 Responsividade
+
 ```
 Mobile:   grid-cols-1
 Tablet:   md:grid-cols-2
@@ -221,6 +242,7 @@ Desktop:  lg:grid-cols-3
 ```
 
 ### 6.4 Acessibilidade
+
 - Links semânticos com Next.js Link
 - ARIA labels em icons
 - Contraste de cores adequado
@@ -231,12 +253,15 @@ Desktop:  lg:grid-cols-3
 ## 7. ELEMENTOS VISUAIS
 
 ### 7.1 Ícones
+
 - **Origem:** lucide-react (padrão) ou react-icons
 - **Tamanho:** h-4 w-4 (buttons), h-6 w-6 (cards), h-5 w-5 (icon principal)
 - **Cores:** sempre branco (text-white)
 
 ### 7.2 Gradientes Tailwind
+
 Paleta de cores para cada card:
+
 ```
 Cyan:     from-cyan-500 to-cyan-600
 Blue:     from-blue-500 to-blue-600
@@ -251,6 +276,7 @@ Purple:   from-purple-500 to-purple-600
 ```
 
 ### 7.3 Animações
+
 - **Hover de cards:** opacidade + sombra
 - **Setas:** fade-in + slide-right no hover
 - **Skeleton:** pulse durante carregamento
@@ -288,6 +314,7 @@ Purple:   from-purple-500 to-purple-600
 A estrutura permite fácil adição de:
 
 **Novos Cards:**
+
 ```typescript
 {
   id: 'novo-card',
@@ -303,6 +330,7 @@ A estrutura permite fácil adição de:
 ```
 
 **Novas Seções:**
+
 ```typescript
 {
   title: 'Nova Seção',

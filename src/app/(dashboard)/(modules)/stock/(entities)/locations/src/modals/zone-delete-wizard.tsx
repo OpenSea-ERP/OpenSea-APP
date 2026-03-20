@@ -177,7 +177,7 @@ export function ZoneDeleteWizard({
                     value: stats!.totalItems,
                     icon: Package,
                   },
-                ].map((card) => (
+                ].map(card => (
                   <div
                     key={card.label}
                     className="flex flex-col items-center gap-1 rounded-lg bg-muted/60 border border-border px-3 py-3"

@@ -22,7 +22,7 @@ interface NavigationSection {
   label: string;
   icon: ReactNode;
   description?: string; // used only in "detailed" variant
-  hidden?: boolean;      // dynamically hide sections (e.g., no template attributes)
+  hidden?: boolean; // dynamically hide sections (e.g., no template attributes)
 }
 
 interface NavigationWizardDialogProps {
@@ -34,10 +34,10 @@ interface NavigationWizardDialogProps {
   activeSection: string;
   onSectionChange: (sectionId: string) => void;
   variant?: 'compact' | 'detailed'; // default: 'detailed'
-  children: ReactNode;              // content for the active section
-  footer: ReactNode;                // Cancel + Save buttons slot
+  children: ReactNode; // content for the active section
+  footer: ReactNode; // Cancel + Save buttons slot
   sectionErrors?: Record<string, boolean>; // sections with validation errors
-  isPending?: boolean;              // disables sidebar nav + close during submission
+  isPending?: boolean; // disables sidebar nav + close during submission
 }
 ```
 
@@ -96,13 +96,13 @@ interface NavigationWizardDialogProps {
 
 #### Section 1: Informacoes (FileText icon)
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| Nome da Variante | text input | Yes | autoFocus only on create mode (not edit) |
-| SKU | text input | No | max 64 chars (matches DB VarChar(64); fix frontend type comment that says 100) |
-| Referencia | text input | No | max 128 chars |
-| Fora de Linha | switch | No | default false |
-| Ativo | switch | No | default true |
+| Field            | Type       | Required | Notes                                                                          |
+| ---------------- | ---------- | -------- | ------------------------------------------------------------------------------ |
+| Nome da Variante | text input | Yes      | autoFocus only on create mode (not edit)                                       |
+| SKU              | text input | No       | max 64 chars (matches DB VarChar(64); fix frontend type comment that says 100) |
+| Referencia       | text input | No       | max 128 chars                                                                  |
+| Fora de Linha    | switch     | No       | default false                                                                  |
+| Ativo            | switch     | No       | default true                                                                   |
 
 Layout: Name + SKU in 2-col grid. Reference full-width. Switches in 2-col grid with border containers.
 
@@ -110,37 +110,37 @@ Layout: Name + SKU in 2-col grid. Reference full-width. Switches in 2-col grid w
 
 #### Section 2: Aparencia (Palette icon) — NEW
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| Cor Primaria (hex) | color picker + text | No | #RRGGBB, max 7 |
-| Cor Primaria (pantone) | text input | No | max 32 (matches DB VarChar(32); fix existing modal maxLength=50) |
-| Cor Secundaria (hex) | color picker + text | No | #RRGGBB, max 7 |
-| Cor Secundaria (pantone) | text input | No | max 32 |
-| Padrao | select | No | SOLID, STRIPED, PLAID, PRINTED, GRADIENT, JACQUARD |
+| Field                    | Type                | Required | Notes                                                            |
+| ------------------------ | ------------------- | -------- | ---------------------------------------------------------------- |
+| Cor Primaria (hex)       | color picker + text | No       | #RRGGBB, max 7                                                   |
+| Cor Primaria (pantone)   | text input          | No       | max 32 (matches DB VarChar(32); fix existing modal maxLength=50) |
+| Cor Secundaria (hex)     | color picker + text | No       | #RRGGBB, max 7                                                   |
+| Cor Secundaria (pantone) | text input          | No       | max 32                                                           |
+| Padrao                   | select              | No       | SOLID, STRIPED, PLAID, PRINTED, GRADIENT, JACQUARD               |
 
 Layout: Primary color row (picker + hex + pantone in 3-col). Secondary color row same layout. Pattern select full-width below.
 
 #### Section 3: Precos (DollarSign icon)
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| Custo Calculado | money (disabled) | — | Avg from items |
-| Custo Informado | money input | No | |
-| Margem de Lucro % | number input | No | |
-| Venda Calculado | money (disabled) | — | From cost + margin |
-| Preco de Venda | money input | No | |
-| Margem Calculada % | number (disabled) | — | From defined price |
+| Field              | Type              | Required | Notes              |
+| ------------------ | ----------------- | -------- | ------------------ |
+| Custo Calculado    | money (disabled)  | —        | Avg from items     |
+| Custo Informado    | money input       | No       |                    |
+| Margem de Lucro %  | number input      | No       |                    |
+| Venda Calculado    | money (disabled)  | —        | From cost + margin |
+| Preco de Venda     | money input       | No       |                    |
+| Margem Calculada % | number (disabled) | —        | From defined price |
 
 Layout: 3-col grid, two rows. Same as current.
 
 #### Section 4: Estoque (Package icon)
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| Estoque Minimo | number input | No | |
-| Estoque Maximo | number input | No | |
-| Ponto de Reposicao | number input | No | |
-| Quantidade de Reposicao | number input | No | |
+| Field                   | Type         | Required | Notes |
+| ----------------------- | ------------ | -------- | ----- |
+| Estoque Minimo          | number input | No       |       |
+| Estoque Maximo          | number input | No       |       |
+| Ponto de Reposicao      | number input | No       |       |
+| Quantidade de Reposicao | number input | No       |       |
 
 Layout: 2x2 grid. Same as current.
 
@@ -153,6 +153,7 @@ Layout: 2x2 grid. Same as current.
 ### Form State
 
 Add to FormData:
+
 - `sku: string`
 - `secondaryColorHex: string`
 - `secondaryColorPantone: string`
@@ -161,6 +162,7 @@ Add to FormData:
 ### Edit Mode Population
 
 When `variant` prop is provided (edit mode), populate new fields from variant object:
+
 - `sku` from `variant.sku || ''`
 - `secondaryColorHex` from `variant.secondaryColorHex || ''`
 - `secondaryColorPantone` from `variant.secondaryColorPantone || ''`
@@ -169,6 +171,7 @@ When `variant` prop is provided (edit mode), populate new fields from variant ob
 ### Submit Payload
 
 Add to cleanData:
+
 - `sku` (if not empty)
 - `secondaryColorHex` (if not empty)
 - `secondaryColorPantone` (if not empty)
@@ -182,33 +185,33 @@ Add to cleanData:
 
 #### Section 1: Entrada (Package icon)
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| Tipo de Entrada | card selector | Yes | PURCHASE / CUSTOMER_RETURN |
-| Localizacao (Bin) | BinSelector | Yes | |
-| Quantidade | text (decimal) | Yes | max 3 decimal places |
+| Field             | Type           | Required | Notes                      |
+| ----------------- | -------------- | -------- | -------------------------- |
+| Tipo de Entrada   | card selector  | Yes      | PURCHASE / CUSTOMER_RETURN |
+| Localizacao (Bin) | BinSelector    | Yes      |                            |
+| Quantidade        | text (decimal) | Yes      | max 3 decimal places       |
 
 Layout: Entry type cards in 2-col. Bin + Quantity in 2-col grid.
 
 #### Section 2: Custos (DollarSign icon)
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| Custo Unitario | money input | No | |
-| Custo Total | money (disabled) | — | unitCost * quantity |
+| Field          | Type             | Required | Notes                |
+| -------------- | ---------------- | -------- | -------------------- |
+| Custo Unitario | money input      | No       |                      |
+| Custo Total    | money (disabled) | —        | unitCost \* quantity |
 
 Layout: 2-col grid.
 
 #### Section 3: Rastreabilidade (CalendarDays icon)
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| Codigo Unico | text input | No | max 128, discrete placement at top |
-| N do Lote | text input | No | max 64 |
-| N da Nota Fiscal | text input | No | |
-| Data de Fabricacao | date input | No | |
-| Data de Validade | date input | No | |
-| Observacoes | textarea | No | max 1000, 3 rows |
+| Field              | Type       | Required | Notes                              |
+| ------------------ | ---------- | -------- | ---------------------------------- |
+| Codigo Unico       | text input | No       | max 128, discrete placement at top |
+| N do Lote          | text input | No       | max 64                             |
+| N da Nota Fiscal   | text input | No       |                                    |
+| Data de Fabricacao | date input | No       |                                    |
+| Data de Validade   | date input | No       |                                    |
+| Observacoes        | textarea   | No       | max 1000, 3 rows                   |
 
 Layout: uniqueCode full-width at top. Lote + NF in 2-col. Dates in 2-col. Notes full-width.
 
@@ -220,11 +223,13 @@ Layout: uniqueCode full-width at top. Lote + NF in 2-col. Dates in 2-col. Notes 
 ### Form State
 
 Add to FormData:
+
 - `uniqueCode: string`
 
 ### Submit Payload
 
 Add to createData:
+
 - `uniqueCode` (if not empty)
 
 ## 5. Validation Flow
@@ -248,19 +253,19 @@ Both modals share the same validation behavior:
 
 ## 6. Files to Create
 
-| File | Description |
-|------|-------------|
+| File                                             | Description            |
+| ------------------------------------------------ | ---------------------- |
 | `src/components/ui/navigation-wizard-dialog.tsx` | New reusable component |
 
 ## 7. Files to Modify
 
-| File | Description |
-|------|-------------|
-| `src/app/.../products/src/modals/variant-form-modal.tsx` | Refactor to use NavigationWizardDialog, add new fields |
-| `src/app/.../products/src/modals/item-entry-form-modal.tsx` | Refactor to use NavigationWizardDialog, add uniqueCode |
-| `src/types/stock/variant.types.ts` | Add secondaryColorHex, secondaryColorPantone, pattern to Variant type; fix SKU maxLength comment (100 -> 64) |
-| `src/types/stock/item.types.ts` | Ensure uniqueCode is in Item type and RegisterItemEntryRequest |
-| `src/services/stock/variants.service.ts` (if needed) | Ensure new fields in create/update payloads |
+| File                                                        | Description                                                                                                  |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `src/app/.../products/src/modals/variant-form-modal.tsx`    | Refactor to use NavigationWizardDialog, add new fields                                                       |
+| `src/app/.../products/src/modals/item-entry-form-modal.tsx` | Refactor to use NavigationWizardDialog, add uniqueCode                                                       |
+| `src/types/stock/variant.types.ts`                          | Add secondaryColorHex, secondaryColorPantone, pattern to Variant type; fix SKU maxLength comment (100 -> 64) |
+| `src/types/stock/item.types.ts`                             | Ensure uniqueCode is in Item type and RegisterItemEntryRequest                                               |
+| `src/services/stock/variants.service.ts` (if needed)        | Ensure new fields in create/update payloads                                                                  |
 
 ## 8. Design Decisions
 

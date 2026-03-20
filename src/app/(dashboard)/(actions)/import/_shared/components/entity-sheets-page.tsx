@@ -185,7 +185,9 @@ export function EntitySheetsPage({
   ]);
 
   // Spreadsheet hook
-  const spreadsheet = useImportSpreadsheet(enabledFields, { referenceData: referenceDataMap });
+  const spreadsheet = useImportSpreadsheet(enabledFields, {
+    referenceData: referenceDataMap,
+  });
 
   // Import process hook
   const importProcess = useImportProcess({

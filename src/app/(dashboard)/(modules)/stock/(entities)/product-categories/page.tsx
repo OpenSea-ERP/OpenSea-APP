@@ -482,9 +482,7 @@ export default function ProductCategoriesPage() {
               toolbarStart={
                 <p className="text-sm text-muted-foreground whitespace-nowrap">
                   Total de {page.filteredItems.length}{' '}
-                  {page.filteredItems.length === 1
-                    ? 'categoria'
-                    : 'categorias'}
+                  {page.filteredItems.length === 1 ? 'categoria' : 'categorias'}
                 </p>
               }
             />

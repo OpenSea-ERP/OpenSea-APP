@@ -1,6 +1,13 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, useRef, startTransition } from 'react';
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  startTransition,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DndContext,
@@ -62,7 +69,10 @@ import {
   ENTITY_DEFINITIONS,
   getBasePath,
 } from '../../../_shared/config/entity-definitions';
-import { downloadExcelTemplate, parseImportFile } from '../../../_shared/utils/excel-utils';
+import {
+  downloadExcelTemplate,
+  parseImportFile,
+} from '../../../_shared/utils/excel-utils';
 import { useImportProcess } from '../../../_shared/hooks/use-import-process';
 import {
   useImportSpreadsheet,
@@ -100,7 +110,14 @@ interface StoredColumnsConfig {
 interface NormalizedField {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'email' | 'date' | 'boolean' | 'select' | 'reference';
+  type:
+    | 'text'
+    | 'number'
+    | 'email'
+    | 'date'
+    | 'boolean'
+    | 'select'
+    | 'reference';
   required: boolean;
   description?: string;
   options?: FieldOption[];
@@ -150,7 +167,13 @@ function saveColumnsConfig(templateId: string, columns: ColumnConfig[]) {
 // ============================================
 
 interface SortableColumnItemProps {
-  field: { key: string; label: string; enabled: boolean; required: boolean; isAttribute?: boolean };
+  field: {
+    key: string;
+    label: string;
+    enabled: boolean;
+    required: boolean;
+    isAttribute?: boolean;
+  };
   onToggle: () => void;
 }
 
@@ -207,13 +230,24 @@ function SortableColumnItem({ field, onToggle }: SortableColumnItemProps) {
 // ============================================
 
 interface ColumnsPopoverContentProps {
-  columns: Array<{ key: string; label: string; enabled: boolean; required: boolean; isAttribute?: boolean }>;
+  columns: Array<{
+    key: string;
+    label: string;
+    enabled: boolean;
+    required: boolean;
+    isAttribute?: boolean;
+  }>;
   onToggle: (key: string) => void;
   onToggleAll: (enabled: boolean) => void;
   onReorder: (activeId: string, overId: string) => void;
 }
 
-function ColumnsPopoverContent({ columns, onToggle, onToggleAll, onReorder }: ColumnsPopoverContentProps) {
+function ColumnsPopoverContent({
+  columns,
+  onToggle,
+  onToggleAll,
+  onReorder,
+}: ColumnsPopoverContentProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, {
@@ -222,7 +256,9 @@ function ColumnsPopoverContent({ columns, onToggle, onToggleAll, onReorder }: Co
   );
 
   const enabledCount = columns.filter(c => c.enabled).length;
-  const allOptionalEnabled = columns.filter(c => !c.required).every(c => c.enabled);
+  const allOptionalEnabled = columns
+    .filter(c => !c.required)
+    .every(c => c.enabled);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -235,7 +271,9 @@ function ColumnsPopoverContent({ columns, onToggle, onToggleAll, onReorder }: Co
     <div className="w-80">
       <div className="px-3 py-2 border-b">
         <h4 className="font-semibold text-sm">Gerenciar Colunas</h4>
-        <p className="text-xs text-muted-foreground">Arraste para reordenar, marque para exibir</p>
+        <p className="text-xs text-muted-foreground">
+          Arraste para reordenar, marque para exibir
+        </p>
       </div>
 
       <DndContext
@@ -261,7 +299,8 @@ function ColumnsPopoverContent({ columns, onToggle, onToggleAll, onReorder }: Co
 
       <div className="px-3 py-2 border-t flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
-          {enabledCount} {enabledCount === 1 ? 'coluna selecionada' : 'colunas selecionadas'}
+          {enabledCount}{' '}
+          {enabledCount === 1 ? 'coluna selecionada' : 'colunas selecionadas'}
         </span>
         <button
           type="button"
@@ -286,14 +325,18 @@ export default function VariantsSheetsPage() {
 
   // State
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
-  const [decimalSeparator, setDecimalSeparator] = useState<DecimalSeparator>('comma');
+  const [decimalSeparator, setDecimalSeparator] =
+    useState<DecimalSeparator>('comma');
   const [columnsConfig, setColumnsConfig] = useState<ColumnConfig[]>([]);
 
   // Reference data
   const { data: templates } = useTemplates();
-  const { data: templateDetails } = useTemplateDetails(selectedTemplateId || undefined);
+  const { data: templateDetails } = useTemplateDetails(
+    selectedTemplateId || undefined
+  );
   const { data: products } = useProducts();
 
   // Build system fields — exclude templateId (set automatically)
@@ -323,10 +366,13 @@ export default function VariantsSheetsPage() {
     if (typeof attrs !== 'object' || Object.keys(attrs).length === 0) return [];
     return Object.entries(attrs).map(([attrKey, attrConfig]) => {
       const fieldType: NormalizedField['type'] =
-        attrConfig.type === 'number' ? 'number'
-        : attrConfig.type === 'boolean' ? 'boolean'
-        : attrConfig.type === 'select' ? 'select'
-        : 'text';
+        attrConfig.type === 'number'
+          ? 'number'
+          : attrConfig.type === 'boolean'
+            ? 'boolean'
+            : attrConfig.type === 'select'
+              ? 'select'
+              : 'text';
 
       return {
         key: `attributes.${attrKey}`,
@@ -392,7 +438,7 @@ export default function VariantsSheetsPage() {
       }));
       setColumnsConfig(defaultConfig);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTemplateId, availableFieldKeys]);
 
   // Save to localStorage whenever columns config changes
@@ -423,7 +469,8 @@ export default function VariantsSheetsPage() {
           required: fieldDef.required,
           defaultValue: fieldDef.defaultValue,
           options: fieldDef.options,
-          referenceEntity: fieldDef.referenceEntity as ImportFieldConfig['referenceEntity'],
+          referenceEntity:
+            fieldDef.referenceEntity as ImportFieldConfig['referenceEntity'],
           referenceDisplayField: fieldDef.referenceDisplayField,
           minLength: fieldDef.validation?.minLength,
           maxLength: fieldDef.validation?.maxLength,
@@ -513,7 +560,7 @@ export default function VariantsSheetsPage() {
         spreadsheet.updateHeaders(enabledFields);
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabledFieldsKey]);
 
   // Clear validation when decimal separator changes
@@ -542,33 +589,37 @@ export default function VariantsSheetsPage() {
     setColumnsConfig(prev => {
       const field = prev.find(c => c.key === key);
       if (!field) return prev;
-      return prev.map(c =>
-        c.key === key ? { ...c, enabled: !c.enabled } : c
+      return prev.map(c => (c.key === key ? { ...c, enabled: !c.enabled } : c));
+    });
+  }, []);
+
+  const handleToggleAllColumns = useCallback(
+    (enabled: boolean) => {
+      setColumnsConfig(prev =>
+        prev.map(c => {
+          const fieldDef = allAvailableFields.find(f => f.key === c.key);
+          if (fieldDef?.required) return c;
+          return { ...c, enabled };
+        })
       );
-    });
-  }, []);
+    },
+    [allAvailableFields]
+  );
 
-  const handleToggleAllColumns = useCallback((enabled: boolean) => {
-    setColumnsConfig(prev =>
-      prev.map(c => {
-        const fieldDef = allAvailableFields.find(f => f.key === c.key);
-        if (fieldDef?.required) return c;
-        return { ...c, enabled };
-      })
-    );
-  }, [allAvailableFields]);
+  const handleReorderColumns = useCallback(
+    (activeId: string, overId: string) => {
+      setColumnsConfig(prev => {
+        const sorted = [...prev].sort((a, b) => a.order - b.order);
+        const oldIndex = sorted.findIndex(c => c.key === activeId);
+        const newIndex = sorted.findIndex(c => c.key === overId);
+        if (oldIndex === -1 || newIndex === -1) return prev;
 
-  const handleReorderColumns = useCallback((activeId: string, overId: string) => {
-    setColumnsConfig(prev => {
-      const sorted = [...prev].sort((a, b) => a.order - b.order);
-      const oldIndex = sorted.findIndex(c => c.key === activeId);
-      const newIndex = sorted.findIndex(c => c.key === overId);
-      if (oldIndex === -1 || newIndex === -1) return prev;
-
-      const reordered = arrayMove(sorted, oldIndex, newIndex);
-      return reordered.map((c, i) => ({ ...c, order: i }));
-    });
-  }, []);
+        const reordered = arrayMove(sorted, oldIndex, newIndex);
+        return reordered.map((c, i) => ({ ...c, order: i }));
+      });
+    },
+    []
+  );
 
   const handleValidate = useCallback(() => {
     const result = spreadsheet.validate();
@@ -624,7 +675,9 @@ export default function VariantsSheetsPage() {
 
   const handleDownloadTemplate = useCallback(() => {
     if (enabledFields.length === 0) return;
-    downloadExcelTemplate(enabledFields, 'Variantes', { includeExamples: true });
+    downloadExcelTemplate(enabledFields, 'Variantes', {
+      includeExamples: true,
+    });
     toast.success('Template baixado com sucesso!');
   }, [enabledFields]);
 
@@ -660,7 +713,10 @@ export default function VariantsSheetsPage() {
         });
 
         const newRows = parsed.rows.map(row => {
-          const newRow = enabledFields.map(h => ({ value: '', fieldKey: h.key }));
+          const newRow = enabledFields.map(h => ({
+            value: '',
+            fieldKey: h.key,
+          }));
           row.forEach((cellValue, fileIndex) => {
             const mappedIndex = headerMapping[fileIndex];
             if (mappedIndex !== undefined && cellValue) {
@@ -754,7 +810,10 @@ export default function VariantsSheetsPage() {
                   </h1>
                   {validationResult &&
                     (validationResult.valid ? (
-                      <Badge variant="default" className="gap-1 bg-emerald-600 text-white hover:bg-emerald-600">
+                      <Badge
+                        variant="default"
+                        className="gap-1 bg-emerald-600 text-white hover:bg-emerald-600"
+                      >
                         <CheckCircle2 className="w-3 h-3" />
                         Dados válidos
                       </Badge>
@@ -766,7 +825,8 @@ export default function VariantsSheetsPage() {
                     ))}
                 </div>
                 <p className="text-sm text-slate-500 dark:text-white/60">
-                  Preencha a planilha, faça o upload de uma ou cole dados de outra planilha
+                  Preencha a planilha, faça o upload de uma ou cole dados de
+                  outra planilha
                 </p>
               </div>
             </div>
@@ -805,7 +865,8 @@ export default function VariantsSheetsPage() {
                 preenchidas
               </Badge>
               <span className="text-xs text-muted-foreground">
-                Pressione <Kbd>Enter</Kbd> em uma célula para ver os valores possíveis.
+                Pressione <Kbd>Enter</Kbd> em uma célula para ver os valores
+                possíveis.
               </span>
             </div>
 
@@ -817,8 +878,7 @@ export default function VariantsSheetsPage() {
                   htmlFor="decimal-separator"
                   className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap"
                 >
-                  Decimal:{' '}
-                  {decimalSeparator === 'comma' ? 'Vírgula' : 'Ponto'}
+                  Decimal: {decimalSeparator === 'comma' ? 'Vírgula' : 'Ponto'}
                 </Label>
                 <Switch
                   id="decimal-separator"
@@ -833,10 +893,17 @@ export default function VariantsSheetsPage() {
               {selectedTemplateId && columnsConfig.length > 0 && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 px-2.5 gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-2.5 gap-1.5"
+                    >
                       <Columns3 className="h-4 w-4" />
                       <span className="hidden sm:inline">Colunas</span>
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 min-w-5 justify-center">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs px-1.5 py-0 h-5 min-w-5 justify-center"
+                      >
                         {enabledFields.length}
                       </Badge>
                     </Button>
@@ -856,7 +923,11 @@ export default function VariantsSheetsPage() {
               {selectedTemplateId && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 px-2.5 gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-2.5 gap-1.5"
+                    >
                       <FileSpreadsheet className="h-4 w-4" />
                       <span className="hidden sm:inline">Arquivo</span>
                     </Button>
@@ -864,8 +935,12 @@ export default function VariantsSheetsPage() {
                   <PopoverContent align="end" className="w-64 p-3">
                     <div className="space-y-3">
                       <div>
-                        <h4 className="font-semibold text-sm mb-1">Importar de Arquivo</h4>
-                        <p className="text-xs text-muted-foreground">Baixe o template ou envie um arquivo preenchido.</p>
+                        <h4 className="font-semibold text-sm mb-1">
+                          Importar de Arquivo
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          Baixe o template ou envie um arquivo preenchido.
+                        </p>
                       </div>
                       <Button
                         variant="outline"
@@ -902,11 +977,21 @@ export default function VariantsSheetsPage() {
               {/* Add row + Clear */}
               {selectedTemplateId && (
                 <>
-                  <Button variant="outline" size="sm" className="h-9 px-2.5" onClick={spreadsheet.addRow}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-2.5"
+                    onClick={spreadsheet.addRow}
+                  >
                     <Plus className="h-4 w-4 mr-1" />
                     Linha
                   </Button>
-                  <Button variant="outline" size="sm" className="h-9 px-2.5" onClick={spreadsheet.clearAll}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-2.5"
+                    onClick={spreadsheet.clearAll}
+                  >
                     <RotateCcw className="h-4 w-4 mr-1" />
                     Limpar
                   </Button>
@@ -924,10 +1009,13 @@ export default function VariantsSheetsPage() {
             <div className="p-4 rounded-full bg-purple-500/10 inline-flex mb-4">
               <Layers className="h-8 w-8 text-purple-500" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Selecione um Template</h3>
+            <h3 className="font-semibold text-lg mb-2">
+              Selecione um Template
+            </h3>
             <p className="text-muted-foreground text-sm max-w-sm">
-              Para iniciar a importação, selecione um template de variante no campo acima.
-              O template define os atributos disponíveis para preenchimento.
+              Para iniciar a importação, selecione um template de variante no
+              campo acima. O template define os atributos disponíveis para
+              preenchimento.
             </p>
           </div>
         </Card>

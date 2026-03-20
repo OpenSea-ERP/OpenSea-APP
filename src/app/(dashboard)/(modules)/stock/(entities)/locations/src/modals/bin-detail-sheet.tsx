@@ -119,7 +119,9 @@ export function BinDetailSheet({
   );
 
   // Item highlight with 10s auto-fade
-  const [activeHighlightItemId, setActiveHighlightItemId] = useState<string | null>(null);
+  const [activeHighlightItemId, setActiveHighlightItemId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!highlightItemId || !open || items.length === 0) return;
@@ -148,7 +150,11 @@ export function BinDetailSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col p-0 gap-0" showCloseButton={false}>
+        <SheetContent
+          side="right"
+          className="sm:max-w-md w-full flex flex-col p-0 gap-0"
+          showCloseButton={false}
+        >
           {/* Header */}
           <SheetHeader className="p-5 pb-4 border-b border-border space-y-0">
             <div className="flex items-start gap-3">
@@ -168,7 +174,10 @@ export function BinDetailSheet({
                           Bloqueado
                         </Badge>
                       ) : !bin.isActive ? (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] px-1.5 py-0"
+                        >
                           Inativo
                         </Badge>
                       ) : itemCount === 0 ? (
@@ -195,8 +204,8 @@ export function BinDetailSheet({
               </div>
               {/* Header actions */}
               <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2">
-                {bin && (
-                  bin.isBlocked ? (
+                {bin &&
+                  (bin.isBlocked ? (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -205,7 +214,11 @@ export function BinDetailSheet({
                       disabled={unblockBin.isPending}
                       title="Desbloquear nicho"
                     >
-                      {unblockBin.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlock className="h-4 w-4" />}
+                      {unblockBin.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Unlock className="h-4 w-4" />
+                      )}
                     </Button>
                   ) : (
                     <Button
@@ -217,8 +230,7 @@ export function BinDetailSheet({
                     >
                       <Lock className="h-4 w-4" />
                     </Button>
-                  )
-                )}
+                  ))}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -240,7 +252,9 @@ export function BinDetailSheet({
               {/* Occupancy bar */}
               <div className="px-5 py-4 border-b border-border">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-muted-foreground">Ocupação</span>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Ocupação
+                  </span>
                   <span className="text-xs font-medium text-foreground tabular-nums">
                     {occupancyPercent !== null
                       ? `${itemCount}/${bin.capacity} (${occupancyPercent}%)`
@@ -252,7 +266,7 @@ export function BinDetailSheet({
                     <div
                       className={cn(
                         'h-full rounded-full transition-all',
-                        getOccupancyBarColor(occupancyPercent),
+                        getOccupancyBarColor(occupancyPercent)
                       )}
                       style={{ width: `${Math.min(occupancyPercent, 100)}%` }}
                     />
@@ -268,7 +282,6 @@ export function BinDetailSheet({
                     </p>
                   </div>
                 )}
-
               </div>
 
               {/* Items section */}
@@ -294,82 +307,94 @@ export function BinDetailSheet({
                     {items.map(item => {
                       const isHighlighted = activeHighlightItemId === item.id;
                       return (
-                      <div
-                        key={item.id}
-                        data-item-id={item.id}
-                        className={cn(
-                          'flex gap-3 p-3 rounded-lg border transition-all',
-                          isHighlighted
-                            ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-500 ring-2 ring-blue-500/30 animate-pulse'
-                            : 'bg-muted/40 border-border hover:border-blue-300 dark:hover:border-blue-500/40',
-                        )}
-                      >
-                        {/* Icon */}
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/15 mt-0.5">
-                          <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-
-                        {/* Info — 4 lines */}
-                        <div className="flex-1 min-w-0 space-y-0.5">
-                          {/* Line 1: Full code + copy */}
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-mono font-medium text-foreground truncate">
-                              {item.itemCode}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(item.itemCode);
-                                toast.success('Código copiado!');
-                              }}
-                              className="shrink-0 p-0.5 rounded hover:bg-muted text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                              title="Copiar código"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
+                        <div
+                          key={item.id}
+                          data-item-id={item.id}
+                          className={cn(
+                            'flex gap-3 p-3 rounded-lg border transition-all',
+                            isHighlighted
+                              ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-500 ring-2 ring-blue-500/30 animate-pulse'
+                              : 'bg-muted/40 border-border hover:border-blue-300 dark:hover:border-blue-500/40'
+                          )}
+                        >
+                          {/* Icon */}
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/15 mt-0.5">
+                            <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           </div>
-                          {/* Line 2: Template Product - Manufacturer */}
-                          <p className="text-xs text-muted-foreground truncate">
-                            {item.templateName && <span>{item.templateName} </span>}
-                            {item.productName}
-                            {item.manufacturerName && <span> — {item.manufacturerName}</span>}
-                          </p>
-                          {/* Line 3: Variant + Reference */}
-                          {(item.variantName || item.variantReference) && (
-                            <p className="text-[11px] text-muted-foreground/70 truncate">
-                              {item.variantName}
-                              {item.variantName && item.variantReference && ' · '}
-                              {item.variantReference && (
-                                <span className="font-mono">{item.variantReference}</span>
+
+                          {/* Info — 4 lines */}
+                          <div className="flex-1 min-w-0 space-y-0.5">
+                            {/* Line 1: Full code + copy */}
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm font-mono font-medium text-foreground truncate">
+                                {item.itemCode}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(item.itemCode);
+                                  toast.success('Código copiado!');
+                                }}
+                                className="shrink-0 p-0.5 rounded hover:bg-muted text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                                title="Copiar código"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            </div>
+                            {/* Line 2: Template Product - Manufacturer */}
+                            <p className="text-xs text-muted-foreground truncate">
+                              {item.templateName && (
+                                <span>{item.templateName} </span>
+                              )}
+                              {item.productName}
+                              {item.manufacturerName && (
+                                <span> — {item.manufacturerName}</span>
                               )}
                             </p>
-                          )}
-                          {/* Line 4: Entry date */}
-                          {item.addedAt && (
-                            <p className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
-                              <Calendar className="h-2.5 w-2.5" />
-                              {formatDate(item.addedAt)}
-                            </p>
-                          )}
-                        </div>
+                            {/* Line 3: Variant + Reference */}
+                            {(item.variantName || item.variantReference) && (
+                              <p className="text-[11px] text-muted-foreground/70 truncate">
+                                {item.variantName}
+                                {item.variantName &&
+                                  item.variantReference &&
+                                  ' · '}
+                                {item.variantReference && (
+                                  <span className="font-mono">
+                                    {item.variantReference}
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                            {/* Line 4: Entry date */}
+                            {item.addedAt && (
+                              <p className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
+                                <Calendar className="h-2.5 w-2.5" />
+                                {formatDate(item.addedAt)}
+                              </p>
+                            )}
+                          </div>
 
-                        {/* Quantity + Move */}
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          <Badge variant="secondary" className="tabular-nums text-xs">
-                            {item.quantity} {formatUnitAbbreviation(item.unitLabel)}
-                          </Badge>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-blue-600"
-                            onClick={() => setMoveItem(item)}
-                            title="Mover item"
-                          >
-                            <ArrowRightLeft className="h-3.5 w-3.5" />
-                          </Button>
+                          {/* Quantity + Move */}
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <Badge
+                              variant="secondary"
+                              className="tabular-nums text-xs"
+                            >
+                              {item.quantity}{' '}
+                              {formatUnitAbbreviation(item.unitLabel)}
+                            </Badge>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-blue-600"
+                              onClick={() => setMoveItem(item)}
+                              title="Mover item"
+                            >
+                              <ArrowRightLeft className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
                       );
                     })}
                   </div>

@@ -78,13 +78,20 @@ export function ZoneExpandableCard({
     isExpanded ? zone.id : ''
   );
 
-  const handleBinClick = useCallback((binId: string) => {
-    onBinClickProp?.(binId);
-  }, [onBinClickProp]);
+  const handleBinClick = useCallback(
+    (binId: string) => {
+      onBinClickProp?.(binId);
+    },
+    [onBinClickProp]
+  );
 
   const getStatusBadge = () => {
     if (!zone.isActive) {
-      return <Badge variant="secondary" className="text-xs">Inativa</Badge>;
+      return (
+        <Badge variant="secondary" className="text-xs">
+          Inativa
+        </Badge>
+      );
     }
     if (!hasStructure) {
       return (
@@ -122,7 +129,7 @@ export function ZoneExpandableCard({
     <div
       className={cn(
         'bg-white dark:bg-slate-800/60 border border-border rounded-lg overflow-hidden transition-all duration-300 ease-in-out',
-        isExpanded && 'ring-1 ring-blue-500/30',
+        isExpanded && 'ring-1 ring-blue-500/30'
       )}
     >
       {/* Collapsed header - clickable */}
@@ -131,7 +138,7 @@ export function ZoneExpandableCard({
         onClick={onToggle}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => {
+        onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             onToggle();
@@ -146,19 +153,27 @@ export function ZoneExpandableCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-mono font-bold text-sm text-foreground">{zone.code}</span>
-            <span className="text-sm text-muted-foreground truncate">{zone.name}</span>
+            <span className="font-mono font-bold text-sm text-foreground">
+              {zone.code}
+            </span>
+            <span className="text-sm text-muted-foreground truncate">
+              {zone.name}
+            </span>
             {getStatusBadge()}
           </div>
           {hasStructure && (
             <div className="flex items-center gap-3 mt-0.5">
               <span className="text-xs text-muted-foreground">
-                {structure.aisles}c &middot; {structure.shelvesPerAisle}p &middot; {totalBins}b
+                {structure.aisles}c &middot; {structure.shelvesPerAisle}p
+                &middot; {totalBins}b
               </span>
               {/* Mini occupancy bar */}
               <div className="h-1 w-16 rounded-full bg-gray-100 dark:bg-gray-800">
                 <div
-                  className={cn('h-full rounded-full', getProgressColor(occupancyPercentage))}
+                  className={cn(
+                    'h-full rounded-full',
+                    getProgressColor(occupancyPercentage)
+                  )}
                   style={{ width: `${Math.min(occupancyPercentage, 100)}%` }}
                 />
               </div>
@@ -170,10 +185,18 @@ export function ZoneExpandableCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-1"
+          onClick={e => e.stopPropagation()}
+        >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Ações da zona">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label="Ações da zona"
+              >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -208,7 +231,7 @@ export function ZoneExpandableCard({
           <ChevronDown
             className={cn(
               'h-5 w-5 text-muted-foreground transition-transform duration-300',
-              isExpanded && 'rotate-180',
+              isExpanded && 'rotate-180'
             )}
           />
         </div>
@@ -225,14 +248,14 @@ export function ZoneExpandableCard({
               <Input
                 placeholder="Buscar endereço..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="h-8 pl-8 text-sm"
               />
             </div>
 
             {/* Filter buttons */}
             <div className="flex items-center gap-1">
-              {FILTER_OPTIONS.map((option) => (
+              {FILTER_OPTIONS.map(option => (
                 <Button
                   key={option.value}
                   variant={filter === option.value ? 'default' : 'outline'}

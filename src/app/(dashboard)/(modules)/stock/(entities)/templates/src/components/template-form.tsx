@@ -816,7 +816,6 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
           title="Módulos Especiais"
           subtitle="Funcionalidades adicionais habilitadas para produtos deste template"
         >
-
           <div className="space-y-3">
             <ModuleCard
               id="care-instructions-module"
@@ -843,7 +842,6 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
           title="Atributos"
           subtitle="Configure os campos personalizados para produtos, variantes e itens"
         >
-
           <Tabs defaultValue="product" className="w-full">
             <TabsList className="grid w-full grid-cols-3 h-12 mb-4">
               <TabsTrigger value="product" className="gap-2">
@@ -883,8 +881,8 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
 
                 {productAttributes.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Nenhum atributo adicionado. Clique em
-                    &quot;Adicionar&quot; para começar.
+                    Nenhum atributo adicionado. Clique em &quot;Adicionar&quot;
+                    para começar.
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -922,8 +920,8 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
 
                 {variantAttributes.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Nenhum atributo adicionado. Clique em
-                    &quot;Adicionar&quot; para começar.
+                    Nenhum atributo adicionado. Clique em &quot;Adicionar&quot;
+                    para começar.
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -961,8 +959,8 @@ export const TemplateForm = forwardRef<TemplateFormRef, TemplateFormProps>(
 
                 {itemAttributes.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Nenhum atributo adicionado. Clique em
-                    &quot;Adicionar&quot; para começar.
+                    Nenhum atributo adicionado. Clique em &quot;Adicionar&quot;
+                    para começar.
                   </div>
                 ) : (
                   <div className="space-y-4">

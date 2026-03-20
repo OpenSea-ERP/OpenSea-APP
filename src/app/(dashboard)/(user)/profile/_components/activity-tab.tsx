@@ -271,13 +271,14 @@ interface ActivityItemProps {
  * Substitui UUIDs na description pelo nome do usuário (resolve dados históricos)
  */
 function resolveDescription(log: AuditLog): string {
-  if (!log.description) return `${getActionInfo(log.action).label} em ${log.entity}`;
+  if (!log.description)
+    return `${getActionInfo(log.action).label} em ${log.entity}`;
 
   // Se tiver userName disponível, substitui qualquer UUID na description pelo nome
   if (log.userName) {
     const uuidRegex =
       /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
-    return log.description.replace(uuidRegex, (match) => {
+    return log.description.replace(uuidRegex, match => {
       // Só substitui se parece ser o userId (presente nos placeholders do log)
       const placeholders = log.newData?._placeholders as
         | Record<string, string>

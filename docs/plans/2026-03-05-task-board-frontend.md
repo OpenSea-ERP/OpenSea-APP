@@ -31,112 +31,124 @@ npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 All endpoints under `/v1/tasks/`. Base pattern: JWT + tenant middleware + RBAC permissions.
 
 ### Boards
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards` | List boards |
-| POST | `/v1/tasks/boards` | Create board |
-| GET | `/v1/tasks/boards/:boardId` | Get board |
-| PATCH | `/v1/tasks/boards/:boardId` | Update board |
-| DELETE | `/v1/tasks/boards/:boardId` | Delete board |
-| PATCH | `/v1/tasks/boards/:boardId/archive` | Archive/unarchive |
-| POST | `/v1/tasks/boards/:boardId/members` | Invite member |
-| PATCH | `/v1/tasks/boards/:boardId/members/:memberId` | Update member role |
-| DELETE | `/v1/tasks/boards/:boardId/members/:memberId` | Remove member |
+
+| Method | URL                                           | Description        |
+| ------ | --------------------------------------------- | ------------------ |
+| GET    | `/v1/tasks/boards`                            | List boards        |
+| POST   | `/v1/tasks/boards`                            | Create board       |
+| GET    | `/v1/tasks/boards/:boardId`                   | Get board          |
+| PATCH  | `/v1/tasks/boards/:boardId`                   | Update board       |
+| DELETE | `/v1/tasks/boards/:boardId`                   | Delete board       |
+| PATCH  | `/v1/tasks/boards/:boardId/archive`           | Archive/unarchive  |
+| POST   | `/v1/tasks/boards/:boardId/members`           | Invite member      |
+| PATCH  | `/v1/tasks/boards/:boardId/members/:memberId` | Update member role |
+| DELETE | `/v1/tasks/boards/:boardId/members/:memberId` | Remove member      |
 
 ### Columns
-| Method | URL | Description |
-|--------|-----|-------------|
-| POST | `/v1/tasks/boards/:boardId/columns` | Create column |
-| PATCH | `/v1/tasks/boards/:boardId/columns/:columnId` | Update column |
-| DELETE | `/v1/tasks/boards/:boardId/columns/:columnId` | Delete column |
-| PATCH | `/v1/tasks/boards/:boardId/columns/reorder` | Reorder columns |
+
+| Method | URL                                           | Description     |
+| ------ | --------------------------------------------- | --------------- |
+| POST   | `/v1/tasks/boards/:boardId/columns`           | Create column   |
+| PATCH  | `/v1/tasks/boards/:boardId/columns/:columnId` | Update column   |
+| DELETE | `/v1/tasks/boards/:boardId/columns/:columnId` | Delete column   |
+| PATCH  | `/v1/tasks/boards/:boardId/columns/reorder`   | Reorder columns |
 
 ### Cards
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards/:boardId/cards` | List cards |
-| POST | `/v1/tasks/boards/:boardId/cards` | Create card |
-| GET | `/v1/tasks/boards/:boardId/cards/:cardId` | Get card |
-| PATCH | `/v1/tasks/boards/:boardId/cards/:cardId` | Update card |
-| DELETE | `/v1/tasks/boards/:boardId/cards/:cardId` | Delete card |
-| PATCH | `/v1/tasks/boards/:boardId/cards/:cardId/move` | Move card |
-| PATCH | `/v1/tasks/boards/:boardId/cards/:cardId/assign` | Assign card |
-| PATCH | `/v1/tasks/boards/:boardId/cards/:cardId/archive` | Archive card |
-| PUT | `/v1/tasks/boards/:boardId/cards/:cardId/labels` | Manage card labels |
+
+| Method | URL                                               | Description        |
+| ------ | ------------------------------------------------- | ------------------ |
+| GET    | `/v1/tasks/boards/:boardId/cards`                 | List cards         |
+| POST   | `/v1/tasks/boards/:boardId/cards`                 | Create card        |
+| GET    | `/v1/tasks/boards/:boardId/cards/:cardId`         | Get card           |
+| PATCH  | `/v1/tasks/boards/:boardId/cards/:cardId`         | Update card        |
+| DELETE | `/v1/tasks/boards/:boardId/cards/:cardId`         | Delete card        |
+| PATCH  | `/v1/tasks/boards/:boardId/cards/:cardId/move`    | Move card          |
+| PATCH  | `/v1/tasks/boards/:boardId/cards/:cardId/assign`  | Assign card        |
+| PATCH  | `/v1/tasks/boards/:boardId/cards/:cardId/archive` | Archive card       |
+| PUT    | `/v1/tasks/boards/:boardId/cards/:cardId/labels`  | Manage card labels |
 
 ### Labels
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards/:boardId/labels` | List labels |
-| POST | `/v1/tasks/boards/:boardId/labels` | Create label |
-| PATCH | `/v1/tasks/boards/:boardId/labels/:labelId` | Update label |
+
+| Method | URL                                         | Description  |
+| ------ | ------------------------------------------- | ------------ |
+| GET    | `/v1/tasks/boards/:boardId/labels`          | List labels  |
+| POST   | `/v1/tasks/boards/:boardId/labels`          | Create label |
+| PATCH  | `/v1/tasks/boards/:boardId/labels/:labelId` | Update label |
 | DELETE | `/v1/tasks/boards/:boardId/labels/:labelId` | Delete label |
 
 ### Comments
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards/:boardId/cards/:cardId/comments` | List comments |
-| POST | `/v1/tasks/boards/:boardId/cards/:cardId/comments` | Create comment |
-| PATCH | `/v1/tasks/boards/:boardId/cards/:cardId/comments/:commentId` | Update comment |
-| DELETE | `/v1/tasks/boards/:boardId/cards/:cardId/comments/:commentId` | Delete comment |
-| POST | `.../comments/:commentId/reactions` | Add reaction |
-| DELETE | `.../comments/:commentId/reactions/:emoji` | Remove reaction |
+
+| Method | URL                                                           | Description     |
+| ------ | ------------------------------------------------------------- | --------------- |
+| GET    | `/v1/tasks/boards/:boardId/cards/:cardId/comments`            | List comments   |
+| POST   | `/v1/tasks/boards/:boardId/cards/:cardId/comments`            | Create comment  |
+| PATCH  | `/v1/tasks/boards/:boardId/cards/:cardId/comments/:commentId` | Update comment  |
+| DELETE | `/v1/tasks/boards/:boardId/cards/:cardId/comments/:commentId` | Delete comment  |
+| POST   | `.../comments/:commentId/reactions`                           | Add reaction    |
+| DELETE | `.../comments/:commentId/reactions/:emoji`                    | Remove reaction |
 
 ### Subtasks
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards/:boardId/cards/:cardId/subtasks` | List subtasks |
-| POST | `/v1/tasks/boards/:boardId/cards/:cardId/subtasks` | Create subtask |
-| PATCH | `.../subtasks/:subtaskId` | Update subtask |
-| DELETE | `.../subtasks/:subtaskId` | Delete subtask |
-| PATCH | `.../subtasks/:subtaskId/complete` | Toggle complete |
+
+| Method | URL                                                | Description     |
+| ------ | -------------------------------------------------- | --------------- |
+| GET    | `/v1/tasks/boards/:boardId/cards/:cardId/subtasks` | List subtasks   |
+| POST   | `/v1/tasks/boards/:boardId/cards/:cardId/subtasks` | Create subtask  |
+| PATCH  | `.../subtasks/:subtaskId`                          | Update subtask  |
+| DELETE | `.../subtasks/:subtaskId`                          | Delete subtask  |
+| PATCH  | `.../subtasks/:subtaskId/complete`                 | Toggle complete |
 
 ### Checklists
-| Method | URL | Description |
-|--------|-----|-------------|
-| POST | `/v1/tasks/boards/:boardId/cards/:cardId/checklists` | Create checklist |
-| PATCH | `.../checklists/:checklistId` | Update checklist |
-| DELETE | `.../checklists/:checklistId` | Delete checklist |
-| POST | `.../checklists/:checklistId/items` | Add item |
-| PATCH | `.../checklists/:checklistId/items/:itemId/toggle` | Toggle item |
-| DELETE | `.../checklists/:checklistId/items/:itemId` | Delete item |
+
+| Method | URL                                                  | Description      |
+| ------ | ---------------------------------------------------- | ---------------- |
+| POST   | `/v1/tasks/boards/:boardId/cards/:cardId/checklists` | Create checklist |
+| PATCH  | `.../checklists/:checklistId`                        | Update checklist |
+| DELETE | `.../checklists/:checklistId`                        | Delete checklist |
+| POST   | `.../checklists/:checklistId/items`                  | Add item         |
+| PATCH  | `.../checklists/:checklistId/items/:itemId/toggle`   | Toggle item      |
+| DELETE | `.../checklists/:checklistId/items/:itemId`          | Delete item      |
 
 ### Custom Fields
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards/:boardId/custom-fields` | List fields |
-| POST | `/v1/tasks/boards/:boardId/custom-fields` | Create field |
-| PATCH | `.../custom-fields/:fieldId` | Update field |
-| DELETE | `.../custom-fields/:fieldId` | Delete field |
-| PUT | `.../cards/:cardId/custom-fields` | Set card field values |
+
+| Method | URL                                       | Description           |
+| ------ | ----------------------------------------- | --------------------- |
+| GET    | `/v1/tasks/boards/:boardId/custom-fields` | List fields           |
+| POST   | `/v1/tasks/boards/:boardId/custom-fields` | Create field          |
+| PATCH  | `.../custom-fields/:fieldId`              | Update field          |
+| DELETE | `.../custom-fields/:fieldId`              | Delete field          |
+| PUT    | `.../cards/:cardId/custom-fields`         | Set card field values |
 
 ### Attachments
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards/:boardId/cards/:cardId/attachments` | List attachments |
-| POST | `/v1/tasks/boards/:boardId/cards/:cardId/attachments` | Upload attachment |
-| DELETE | `.../attachments/:attachmentId` | Delete attachment |
+
+| Method | URL                                                   | Description       |
+| ------ | ----------------------------------------------------- | ----------------- |
+| GET    | `/v1/tasks/boards/:boardId/cards/:cardId/attachments` | List attachments  |
+| POST   | `/v1/tasks/boards/:boardId/cards/:cardId/attachments` | Upload attachment |
+| DELETE | `.../attachments/:attachmentId`                       | Delete attachment |
 
 ### Automations
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards/:boardId/automations` | List automations |
-| POST | `/v1/tasks/boards/:boardId/automations` | Create automation |
-| PATCH | `.../automations/:automationId` | Update automation |
-| DELETE | `.../automations/:automationId` | Delete automation |
-| PATCH | `.../automations/:automationId/toggle` | Toggle active |
+
+| Method | URL                                     | Description       |
+| ------ | --------------------------------------- | ----------------- |
+| GET    | `/v1/tasks/boards/:boardId/automations` | List automations  |
+| POST   | `/v1/tasks/boards/:boardId/automations` | Create automation |
+| PATCH  | `.../automations/:automationId`         | Update automation |
+| DELETE | `.../automations/:automationId`         | Delete automation |
+| PATCH  | `.../automations/:automationId/toggle`  | Toggle active     |
 
 ### Activity
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/v1/tasks/boards/:boardId/activity` | Board activity |
-| GET | `/v1/tasks/boards/:boardId/cards/:cardId/activity` | Card activity |
+
+| Method | URL                                                | Description    |
+| ------ | -------------------------------------------------- | -------------- |
+| GET    | `/v1/tasks/boards/:boardId/activity`               | Board activity |
+| GET    | `/v1/tasks/boards/:boardId/cards/:cardId/activity` | Card activity  |
 
 ---
 
 ## Task 1: Types — Create all TypeScript interfaces
 
 **Files:**
+
 - Create: `src/types/tasks/board.types.ts`
 - Create: `src/types/tasks/card.types.ts`
 - Create: `src/types/tasks/column.types.ts`
@@ -155,6 +167,7 @@ All endpoints under `/v1/tasks/`. Base pattern: JWT + tenant middleware + RBAC p
 All files go in `D:/Code/Projetos/OpenSea/OpenSea-APP/src/types/tasks/`.
 
 **Important enums (from backend Zod schemas):**
+
 - Board types: `'PERSONAL' | 'TEAM'`
 - Board visibility: `'PRIVATE' | 'SHARED'`
 - Board member role: `'VIEWER' | 'EDITOR'`
@@ -350,15 +363,29 @@ import type { Checklist } from './checklist.types';
 import type { CardCustomFieldValue } from './custom-field.types';
 
 // Priority colors and labels (PT-BR)
-export const PRIORITY_CONFIG: Record<CardPriority, { label: string; color: string; dotColor: string }> = {
+export const PRIORITY_CONFIG: Record<
+  CardPriority,
+  { label: string; color: string; dotColor: string }
+> = {
   URGENT: { label: 'Urgente', color: 'text-red-600', dotColor: 'bg-red-500' },
   HIGH: { label: 'Alta', color: 'text-orange-600', dotColor: 'bg-orange-500' },
-  MEDIUM: { label: 'Media', color: 'text-yellow-600', dotColor: 'bg-yellow-500' },
+  MEDIUM: {
+    label: 'Media',
+    color: 'text-yellow-600',
+    dotColor: 'bg-yellow-500',
+  },
   LOW: { label: 'Baixa', color: 'text-blue-600', dotColor: 'bg-blue-500' },
-  NONE: { label: 'Nenhuma', color: 'text-muted-foreground', dotColor: 'bg-gray-400' },
+  NONE: {
+    label: 'Nenhuma',
+    color: 'text-muted-foreground',
+    dotColor: 'bg-gray-400',
+  },
 };
 
-export const STATUS_CONFIG: Record<CardStatus, { label: string; color: string }> = {
+export const STATUS_CONFIG: Record<
+  CardStatus,
+  { label: string; color: string }
+> = {
   OPEN: { label: 'Aberto', color: 'text-gray-600' },
   IN_PROGRESS: { label: 'Em Progresso', color: 'text-blue-600' },
   DONE: { label: 'Concluido', color: 'text-green-600' },
@@ -483,7 +510,10 @@ export interface AddChecklistItemRequest {
 
 ```typescript
 // subtask.types.ts — subtasks reuse Card type, just re-export
-export type { Card as Subtask, CreateCardRequest as CreateSubtaskRequest } from './card.types';
+export type {
+  Card as Subtask,
+  CreateCardRequest as CreateSubtaskRequest,
+} from './card.types';
 
 export interface CompleteSubtaskRequest {
   completed: boolean;
@@ -519,12 +549,22 @@ export interface UploadAttachmentRequest {
 ```typescript
 // activity.types.ts
 export type CardActivityType =
-  | 'CARD_CREATED' | 'CARD_UPDATED' | 'CARD_MOVED' | 'CARD_ARCHIVED'
-  | 'MEMBER_ASSIGNED' | 'MEMBER_UNASSIGNED'
-  | 'LABEL_ADDED' | 'LABEL_REMOVED'
-  | 'COMMENT_ADDED' | 'FIELD_CHANGED'
-  | 'SUBTASK_ADDED' | 'SUBTASK_UPDATED' | 'SUBTASK_REMOVED' | 'SUBTASK_REOPENED'
-  | 'CHECKLIST_ITEM_COMPLETED' | 'CHECKLIST_ITEM_UNCOMPLETED';
+  | 'CARD_CREATED'
+  | 'CARD_UPDATED'
+  | 'CARD_MOVED'
+  | 'CARD_ARCHIVED'
+  | 'MEMBER_ASSIGNED'
+  | 'MEMBER_UNASSIGNED'
+  | 'LABEL_ADDED'
+  | 'LABEL_REMOVED'
+  | 'COMMENT_ADDED'
+  | 'FIELD_CHANGED'
+  | 'SUBTASK_ADDED'
+  | 'SUBTASK_UPDATED'
+  | 'SUBTASK_REMOVED'
+  | 'SUBTASK_REOPENED'
+  | 'CHECKLIST_ITEM_COMPLETED'
+  | 'CHECKLIST_ITEM_UNCOMPLETED';
 
 export interface CardActivity {
   id: string;
@@ -546,8 +586,17 @@ export interface ActivityQuery {
 
 ```typescript
 // automation.types.ts
-export type AutomationTrigger = 'CARD_MOVED' | 'CARD_CREATED' | 'DUE_DATE_REACHED' | 'LABEL_ADDED';
-export type AutomationAction = 'MOVE_CARD' | 'ASSIGN_MEMBER' | 'ADD_LABEL' | 'SET_PRIORITY' | 'SEND_NOTIFICATION';
+export type AutomationTrigger =
+  | 'CARD_MOVED'
+  | 'CARD_CREATED'
+  | 'DUE_DATE_REACHED'
+  | 'LABEL_ADDED';
+export type AutomationAction =
+  | 'MOVE_CARD'
+  | 'ASSIGN_MEMBER'
+  | 'ADD_LABEL'
+  | 'SET_PRIORITY'
+  | 'SEND_NOTIFICATION';
 
 export interface BoardAutomation {
   id: string;
@@ -582,7 +631,15 @@ export interface UpdateAutomationRequest {
 
 ```typescript
 // custom-field.types.ts
-export type CustomFieldType = 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'MULTI_SELECT' | 'CHECKBOX' | 'URL' | 'EMAIL';
+export type CustomFieldType =
+  | 'TEXT'
+  | 'NUMBER'
+  | 'DATE'
+  | 'SELECT'
+  | 'MULTI_SELECT'
+  | 'CHECKBOX'
+  | 'URL'
+  | 'EMAIL';
 
 export interface CustomField {
   id: string;
@@ -653,6 +710,7 @@ git commit -m "feat(tasks): add TypeScript types for task board module"
 ## Task 2: API Config — Add TASKS endpoints
 
 **Files:**
+
 - Modify: `src/config/api.ts` — add TASKS section
 
 **Step 1:** Add to `API_ENDPOINTS` in `src/config/api.ts` (after CALENDAR section, around line 587):
@@ -757,6 +815,7 @@ git commit -m "feat(tasks): add API endpoints config for task board"
 ## Task 3: Services — API call layer
 
 **Files:**
+
 - Create: `src/services/tasks/boards-service.ts`
 - Create: `src/services/tasks/cards-service.ts`
 - Create: `src/services/tasks/columns-service.ts`
@@ -772,6 +831,7 @@ git commit -m "feat(tasks): add API endpoints config for task board"
 - Create: `src/services/tasks/index.ts`
 
 Follow the pattern from `src/services/calendar/calendar-events.service.ts`:
+
 - Import `apiClient` from `@/lib/api-client`
 - Import `API_ENDPOINTS` from `@/config/api`
 - Import types from `@/types/tasks`
@@ -783,7 +843,12 @@ Follow the pattern from `src/services/calendar/calendar-events.service.ts`:
 ```typescript
 import { API_ENDPOINTS } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
-import type { Board, BoardsQuery, CreateBoardRequest, UpdateBoardRequest } from '@/types/tasks';
+import type {
+  Board,
+  BoardsQuery,
+  CreateBoardRequest,
+  UpdateBoardRequest,
+} from '@/types/tasks';
 
 export interface BoardsResponse {
   boards: Board[];
@@ -802,19 +867,32 @@ export const boardsService = {
     if (params.search) query.append('search', params.search);
     if (params.includeArchived) query.append('includeArchived', 'true');
     const qs = query.toString();
-    return apiClient.get<BoardsResponse>(`${API_ENDPOINTS.TASKS.BOARDS.LIST}${qs ? `?${qs}` : ''}`);
+    return apiClient.get<BoardsResponse>(
+      `${API_ENDPOINTS.TASKS.BOARDS.LIST}${qs ? `?${qs}` : ''}`
+    );
   },
 
   async get(boardId: string): Promise<BoardResponse> {
-    return apiClient.get<BoardResponse>(API_ENDPOINTS.TASKS.BOARDS.GET(boardId));
+    return apiClient.get<BoardResponse>(
+      API_ENDPOINTS.TASKS.BOARDS.GET(boardId)
+    );
   },
 
   async create(data: CreateBoardRequest): Promise<BoardResponse> {
-    return apiClient.post<BoardResponse>(API_ENDPOINTS.TASKS.BOARDS.CREATE, data);
+    return apiClient.post<BoardResponse>(
+      API_ENDPOINTS.TASKS.BOARDS.CREATE,
+      data
+    );
   },
 
-  async update(boardId: string, data: UpdateBoardRequest): Promise<BoardResponse> {
-    return apiClient.patch<BoardResponse>(API_ENDPOINTS.TASKS.BOARDS.UPDATE(boardId), data);
+  async update(
+    boardId: string,
+    data: UpdateBoardRequest
+  ): Promise<BoardResponse> {
+    return apiClient.patch<BoardResponse>(
+      API_ENDPOINTS.TASKS.BOARDS.UPDATE(boardId),
+      data
+    );
   },
 
   async delete(boardId: string): Promise<void> {
@@ -822,7 +900,10 @@ export const boardsService = {
   },
 
   async archive(boardId: string, archive: boolean): Promise<BoardResponse> {
-    return apiClient.patch<BoardResponse>(API_ENDPOINTS.TASKS.BOARDS.ARCHIVE(boardId), { archive });
+    return apiClient.patch<BoardResponse>(
+      API_ENDPOINTS.TASKS.BOARDS.ARCHIVE(boardId),
+      { archive }
+    );
   },
 };
 ```
@@ -830,6 +911,7 @@ export const boardsService = {
 Repeat the same pattern for all other services. Each service wraps the corresponding API_ENDPOINTS section.
 
 **Key service patterns:**
+
 - `cardsService` — `list(boardId, params)`, `get(boardId, cardId)`, `create(boardId, data)`, `update(boardId, cardId, data)`, `delete(boardId, cardId)`, `move(boardId, cardId, data)`, `assign(boardId, cardId, data)`, `archive(boardId, cardId, archive)`, `manageLabels(boardId, cardId, data)`
 - `columnsService` — `create(boardId, data)`, `update(boardId, columnId, data)`, `delete(boardId, columnId)`, `reorder(boardId, data)`
 - `commentsService` — `list(boardId, cardId)`, `create(boardId, cardId, data)`, `update(boardId, cardId, commentId, data)`, `delete(boardId, cardId, commentId)`, `addReaction(boardId, cardId, commentId, emoji)`, `removeReaction(boardId, cardId, commentId, emoji)`
@@ -864,6 +946,7 @@ git commit -m "feat(tasks): add service layer for all task board API calls"
 ## Task 4: React Query Hooks — Core data hooks
 
 **Files:**
+
 - Create: `src/hooks/tasks/use-boards.ts`
 - Create: `src/hooks/tasks/use-cards.ts`
 - Create: `src/hooks/tasks/use-columns.ts`
@@ -879,6 +962,7 @@ git commit -m "feat(tasks): add service layer for all task board API calls"
 - Create: `src/hooks/tasks/index.ts`
 
 Follow the pattern from `src/hooks/calendar/use-calendar-events.ts`:
+
 - Define `QUERY_KEYS` constant at top
 - `useQuery` for reads with `enabled` guards
 - `useMutation` for writes with `onSuccess` that invalidates relevant queries
@@ -888,9 +972,21 @@ Follow the pattern from `src/hooks/calendar/use-calendar-events.ts`:
 
 ```typescript
 import { boardsService } from '@/services/tasks';
-import type { BoardsResponse, BoardResponse } from '@/services/tasks/boards-service';
-import type { BoardsQuery, CreateBoardRequest, UpdateBoardRequest } from '@/types/tasks';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type {
+  BoardsResponse,
+  BoardResponse,
+} from '@/services/tasks/boards-service';
+import type {
+  BoardsQuery,
+  CreateBoardRequest,
+  UpdateBoardRequest,
+} from '@/types/tasks';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 export const BOARD_QUERY_KEYS = {
   BOARDS: ['task-boards'],
@@ -926,8 +1022,13 @@ export function useCreateBoard() {
 export function useUpdateBoard() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ boardId, data }: { boardId: string; data: UpdateBoardRequest }) =>
-      boardsService.update(boardId, data),
+    mutationFn: ({
+      boardId,
+      data,
+    }: {
+      boardId: string;
+      data: UpdateBoardRequest;
+    }) => boardsService.update(boardId, data),
     onSuccess: (_, { boardId }) => {
       qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARDS });
       qc.invalidateQueries({ queryKey: BOARD_QUERY_KEYS.BOARD(boardId) });
@@ -963,8 +1064,19 @@ export function useArchiveBoard() {
 ```typescript
 import { cardsService } from '@/services/tasks';
 import type { CardsResponse } from '@/services/tasks/cards-service';
-import type { CardsQuery, CreateCardRequest, UpdateCardRequest, MoveCardRequest, Card } from '@/types/tasks';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type {
+  CardsQuery,
+  CreateCardRequest,
+  UpdateCardRequest,
+  MoveCardRequest,
+  Card,
+} from '@/types/tasks';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 export const CARD_QUERY_KEYS = {
   CARDS: (boardId: string) => ['task-cards', boardId],
@@ -1001,8 +1113,13 @@ export function useCreateCard(boardId: string) {
 export function useUpdateCard(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ cardId, data }: { cardId: string; data: UpdateCardRequest }) =>
-      cardsService.update(boardId, cardId, data),
+    mutationFn: ({
+      cardId,
+      data,
+    }: {
+      cardId: string;
+      data: UpdateCardRequest;
+    }) => cardsService.update(boardId, cardId, data),
     onSuccess: (_, { cardId }) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
@@ -1024,12 +1141,14 @@ export function useMoveCard(boardId: string) {
 
       qc.setQueriesData<CardsResponse>(
         { queryKey: CARD_QUERY_KEYS.CARDS(boardId) },
-        (old) => {
+        old => {
           if (!old) return old;
           return {
             ...old,
-            cards: old.cards.map((c) =>
-              c.id === cardId ? { ...c, columnId: data.columnId, position: data.position } : c
+            cards: old.cards.map(c =>
+              c.id === cardId
+                ? { ...c, columnId: data.columnId, position: data.position }
+                : c
             ),
           };
         }
@@ -1063,8 +1182,13 @@ export function useDeleteCard(boardId: string) {
 export function useAssignCard(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ cardId, assigneeId }: { cardId: string; assigneeId: string | null }) =>
-      cardsService.assign(boardId, cardId, { assigneeId }),
+    mutationFn: ({
+      cardId,
+      assigneeId,
+    }: {
+      cardId: string;
+      assigneeId: string | null;
+    }) => cardsService.assign(boardId, cardId, { assigneeId }),
     onSuccess: (_, { cardId }) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
@@ -1086,8 +1210,13 @@ export function useArchiveCard(boardId: string) {
 export function useManageCardLabels(boardId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ cardId, labelIds }: { cardId: string; labelIds: string[] }) =>
-      cardsService.manageLabels(boardId, cardId, { labelIds }),
+    mutationFn: ({
+      cardId,
+      labelIds,
+    }: {
+      cardId: string;
+      labelIds: string[];
+    }) => cardsService.manageLabels(boardId, cardId, { labelIds }),
     onSuccess: (_, { cardId }) => {
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
       qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
@@ -1127,6 +1256,7 @@ git commit -m "feat(tasks): add React Query hooks for all task entities"
 ## Task 5: Menu Integration
 
 **Files:**
+
 - Modify: The component that renders the sidebar/navigation menu to include "Tarefas" item
 
 **Step 1:** Find where menu items are configured. The `MenuItem` interface is in `src/types/menu.ts`. Menu items are likely configured in the navigation component or a constants file. Search for `KanbanSquare` or `Calendar` icon imports to find the exact location.
@@ -1157,6 +1287,7 @@ git commit -m "feat(tasks): add Tarefas menu item to navigation"
 ## Task 6: Landing Page — Board List
 
 **Files:**
+
 - Create: `src/app/(dashboard)/(tools)/tasks/page.tsx`
 - Create: `src/components/tasks/boards/board-list.tsx`
 - Create: `src/components/tasks/boards/board-create-dialog.tsx`
@@ -1261,6 +1392,7 @@ git commit -m "feat(tasks): add board listing page with create dialog"
 ## Task 7: Board Page Layout + Header
 
 **Files:**
+
 - Create: `src/app/(dashboard)/(tools)/tasks/[boardId]/layout.tsx`
 - Create: `src/app/(dashboard)/(tools)/tasks/[boardId]/page.tsx`
 - Create: `src/components/tasks/shared/view-toggle.tsx`
@@ -1338,6 +1470,7 @@ git commit -m "feat(tasks): add board page with view toggle and filters"
 ## Task 8: Kanban View
 
 **Files:**
+
 - Create: `src/components/tasks/views/kanban-view.tsx`
 - Create: `src/components/tasks/cards/card-item.tsx`
 - Create: `src/components/tasks/cards/card-inline-create.tsx`
@@ -1348,9 +1481,13 @@ git commit -m "feat(tasks): add board page with view toggle and filters"
 **Step 1:** Create `kanban-view.tsx` — Uses `@dnd-kit/core` DndContext + `@dnd-kit/sortable` for columns and cards.
 
 Key structure:
+
 ```typescript
 import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 // DndContext wraps all columns
 // Each column is a droppable area with SortableContext for its cards
@@ -1359,6 +1496,7 @@ import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortabl
 ```
 
 Each column renders:
+
 - Column header (name, card count, color bar)
 - List of `CardItem` components (sortable)
 - `CardInlineCreate` at the bottom
@@ -1389,6 +1527,7 @@ git commit -m "feat(tasks): add Kanban view with drag-and-drop"
 ## Task 9: Card Detail Modal
 
 **Files:**
+
 - Create: `src/components/tasks/cards/card-detail-modal.tsx`
 - Create: `src/components/tasks/tabs/card-details-tab.tsx`
 - Create: `src/components/tasks/tabs/card-subtasks-tab.tsx`
@@ -1407,6 +1546,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 ```
 
 **Step 2:** Create each tab component:
+
 - **card-details-tab.tsx** — Description (textarea, click-to-edit), attachments grid, recent activity summary (last 5 items)
 - **card-subtasks-tab.tsx** — List of subtasks with checkboxes, inline create, uses `useSubtasks`, `useCreateSubtask`, `useCompleteSubtask`
 - **card-checklist-tab.tsx** — Multiple checklists with items, progress bar, toggle items, uses `useChecklists` hooks
@@ -1428,6 +1568,7 @@ git commit -m "feat(tasks): add card detail modal with 6 tabs"
 ## Task 10: Card Create Dialog
 
 **Files:**
+
 - Create: `src/components/tasks/cards/card-create-dialog.tsx`
 
 Full creation dialog with form: title (required), description, column (select), priority (select), assignee (select from members), labels (multi-select), due date (date picker), estimated hours.
@@ -1446,6 +1587,7 @@ git commit -m "feat(tasks): add full card creation dialog"
 ## Task 11: List View
 
 **Files:**
+
 - Create: `src/components/tasks/views/list-view.tsx`
 
 Groups cards by column (status). Each group is collapsible. Each row shows priority dot, title, labels, assignee, due date. Click opens card detail modal. Reuses `CardItem` or a simplified row component.
@@ -1462,6 +1604,7 @@ git commit -m "feat(tasks): add List view (Linear style)"
 ## Task 12: Table View
 
 **Files:**
+
 - Create: `src/components/tasks/views/table-view.tsx`
 
 Uses a table with sortable headers. Columns: #, Title, Status, Priority, Assignee, Due Date, Labels. Click header to sort. Inline editing for status/priority/assignee via dropdown in cell. Click title opens modal.
@@ -1480,6 +1623,7 @@ git commit -m "feat(tasks): add Table view with sortable columns"
 ## Task 13: Calendar View
 
 **Files:**
+
 - Create: `src/components/tasks/views/calendar-view.tsx`
 
 Reuses `@fullcalendar/react` (already installed from Calendar module). Maps cards with `dueDate` to calendar events. Priority determines event color. Click opens card detail modal. Drag on calendar updates dueDate.
@@ -1506,6 +1650,7 @@ git commit -m "feat(tasks): add Calendar view with @fullcalendar"
 ## Task 14: Keyboard Shortcuts
 
 **Files:**
+
 - Create: `src/hooks/tasks/use-keyboard-shortcuts.ts`
 - Create: `src/components/tasks/shared/keyboard-shortcuts-modal.tsx`
 
@@ -1533,30 +1678,69 @@ interface ShortcutActions {
 }
 
 export function useKeyboardShortcuts(actions: ShortcutActions) {
-  const handler = useCallback((e: KeyboardEvent) => {
-    // Skip if typing in input/textarea
-    const tag = (e.target as HTMLElement).tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+  const handler = useCallback(
+    (e: KeyboardEvent) => {
+      // Skip if typing in input/textarea
+      const tag = (e.target as HTMLElement).tagName;
+      if (
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        (e.target as HTMLElement).isContentEditable
+      )
+        return;
 
-    switch (e.key.toLowerCase()) {
-      case 'n': actions.onNewCard?.(); break;
-      case 'e': actions.onEditCard?.(); break;
-      case '/': e.preventDefault(); actions.onSearch?.(); break;
-      case '1': case '2': case '3': case '4':
-        actions.onSetPriority?.(parseInt(e.key)); break;
-      case 'l': actions.onAssignLabel?.(); break;
-      case 'm': actions.onAssignMember?.(); break;
-      case 'p': actions.onSetDueDate?.(); break;
-      case 'd': actions.onDuplicateCard?.(); break;
-      case '?': actions.onShowHelp?.(); break;
-      case 'arrowup': actions.onNavigateUp?.(); break;
-      case 'arrowdown': actions.onNavigateDown?.(); break;
-      case 'arrowleft': actions.onNavigateLeft?.(); break;
-      case 'arrowright': actions.onNavigateRight?.(); break;
-      case 'enter': actions.onOpenCard?.(); break;
-    }
-    if (e.key === 'Delete') actions.onArchiveCard?.();
-  }, [actions]);
+      switch (e.key.toLowerCase()) {
+        case 'n':
+          actions.onNewCard?.();
+          break;
+        case 'e':
+          actions.onEditCard?.();
+          break;
+        case '/':
+          e.preventDefault();
+          actions.onSearch?.();
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+          actions.onSetPriority?.(parseInt(e.key));
+          break;
+        case 'l':
+          actions.onAssignLabel?.();
+          break;
+        case 'm':
+          actions.onAssignMember?.();
+          break;
+        case 'p':
+          actions.onSetDueDate?.();
+          break;
+        case 'd':
+          actions.onDuplicateCard?.();
+          break;
+        case '?':
+          actions.onShowHelp?.();
+          break;
+        case 'arrowup':
+          actions.onNavigateUp?.();
+          break;
+        case 'arrowdown':
+          actions.onNavigateDown?.();
+          break;
+        case 'arrowleft':
+          actions.onNavigateLeft?.();
+          break;
+        case 'arrowright':
+          actions.onNavigateRight?.();
+          break;
+        case 'enter':
+          actions.onOpenCard?.();
+          break;
+      }
+      if (e.key === 'Delete') actions.onArchiveCard?.();
+    },
+    [actions]
+  );
 
   useEffect(() => {
     window.addEventListener('keydown', handler);
@@ -1581,6 +1765,7 @@ git commit -m "feat(tasks): add keyboard shortcuts (Linear style)"
 ## Task 15: Board Settings Dialogs
 
 **Files:**
+
 - Create: `src/components/tasks/boards/board-settings-dialog.tsx`
 - Create: `src/components/tasks/boards/board-members-dialog.tsx`
 - Create: `src/components/tasks/boards/board-labels-dialog.tsx`
@@ -1588,6 +1773,7 @@ git commit -m "feat(tasks): add keyboard shortcuts (Linear style)"
 - Create: `src/components/tasks/boards/board-custom-fields-dialog.tsx`
 
 Each dialog manages its respective entity:
+
 - **Settings** — Edit name, description, color, visibility, columns (create/rename/reorder/delete)
 - **Members** — List members, invite by user search, change role, remove
 - **Labels** — Create/edit/delete labels with color picker
@@ -1608,28 +1794,33 @@ git commit -m "feat(tasks): add board settings dialogs (members, labels, automat
 ## Task 16: Polish and Error Handling
 
 **Files:**
+
 - Modify: Various components created in Tasks 6-15
 
 **Step 1:** Add loading skeletons to all views (board list, kanban, list, table, calendar)
 
 **Step 2:** Add error toasts to all mutations:
+
 ```typescript
-onError: (error) => {
+onError: error => {
   toast.error(error instanceof Error ? error.message : 'Erro ao executar acao');
-}
+};
 ```
 
 **Step 3:** Add empty states:
+
 - No boards → "Crie seu primeiro quadro de tarefas"
 - No cards in board → "Nenhum card neste quadro. Crie o primeiro!"
 - No comments → "Nenhum comentario ainda"
 - No subtasks → "Nenhuma subtarefa"
 
 **Step 4:** Add permission gating:
+
 - Hide create/edit/delete buttons for users without the respective permission
 - Show read-only view when user has only `*.list`/`*.read` permissions
 
 **Step 5:** Add archived board banner:
+
 - When `board.archivedAt` is set, show a yellow banner "Este quadro esta arquivado" and disable all actions
 
 **Commit:**
@@ -1643,25 +1834,25 @@ git commit -m "feat(tasks): add loading states, error handling, empty states, pe
 
 ## Summary
 
-| Task | Description | Est. Files |
-|------|-------------|-----------|
-| 1 | Types (all interfaces) | 13 files |
-| 2 | API Config (endpoints) | 1 file |
-| 3 | Services (API layer) | 13 files |
-| 4 | React Query Hooks | 13 files |
-| 5 | Menu integration | 1-2 files |
-| 6 | Landing page (board list) | 4 files |
-| 7 | Board page + header | 4 files |
-| 8 | Kanban view | 6 files |
-| 9 | Card detail modal + tabs | 7 files |
-| 10 | Card create dialog | 1 file |
-| 11 | List view | 1 file |
-| 12 | Table view | 1 file |
-| 13 | Calendar view | 1 file |
-| 14 | Keyboard shortcuts | 2 files |
-| 15 | Board settings dialogs | 5 files |
-| 16 | Polish & error handling | Modify existing |
-| **Total** | | **~72 files** |
+| Task      | Description               | Est. Files      |
+| --------- | ------------------------- | --------------- |
+| 1         | Types (all interfaces)    | 13 files        |
+| 2         | API Config (endpoints)    | 1 file          |
+| 3         | Services (API layer)      | 13 files        |
+| 4         | React Query Hooks         | 13 files        |
+| 5         | Menu integration          | 1-2 files       |
+| 6         | Landing page (board list) | 4 files         |
+| 7         | Board page + header       | 4 files         |
+| 8         | Kanban view               | 6 files         |
+| 9         | Card detail modal + tabs  | 7 files         |
+| 10        | Card create dialog        | 1 file          |
+| 11        | List view                 | 1 file          |
+| 12        | Table view                | 1 file          |
+| 13        | Calendar view             | 1 file          |
+| 14        | Keyboard shortcuts        | 2 files         |
+| 15        | Board settings dialogs    | 5 files         |
+| 16        | Polish & error handling   | Modify existing |
+| **Total** |                           | **~72 files**   |
 
 ## Execution Order
 

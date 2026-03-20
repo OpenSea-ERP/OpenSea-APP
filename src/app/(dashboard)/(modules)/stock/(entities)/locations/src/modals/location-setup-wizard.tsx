@@ -93,7 +93,12 @@ export function LocationSetupWizard({
   }, [onOpenChange]);
 
   const handleCodeChange = useCallback((value: string) => {
-    setWarehouseCode(value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5));
+    setWarehouseCode(
+      value
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 5)
+    );
   }, []);
 
   const handleZoneCodeChange = useCallback(
@@ -101,7 +106,10 @@ export function LocationSetupWizard({
       const updated = [...zones];
       updated[index] = {
         ...updated[index],
-        code: value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5),
+        code: value
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, '')
+          .slice(0, 5),
       };
       setZones(updated);
     },
@@ -211,7 +219,9 @@ export function LocationSetupWizard({
   const step1Valid = warehouseCode.length >= 2 && warehouseName.length > 0;
 
   const step2Valid = useMemo(() => {
-    const filledZones = zones.filter(z => z.code.length >= 2 && z.name.length > 0);
+    const filledZones = zones.filter(
+      z => z.code.length >= 2 && z.name.length > 0
+    );
     if (filledZones.length === 0) return false;
     // Check for unique codes
     const codes = filledZones.map(z => z.code);
@@ -227,10 +237,17 @@ export function LocationSetupWizard({
       const zone = zones[zoneIndex];
       const structure = getOrCreateStructure(zoneIndex);
 
-      const updateAisle = (aisleIndex: number, field: 'shelves' | 'bins', value: number) => {
+      const updateAisle = (
+        aisleIndex: number,
+        field: 'shelves' | 'bins',
+        value: number
+      ) => {
         const updated = { ...structure };
         updated.aisles = [...updated.aisles];
-        updated.aisles[aisleIndex] = { ...updated.aisles[aisleIndex], [field]: value };
+        updated.aisles[aisleIndex] = {
+          ...updated.aisles[aisleIndex],
+          [field]: value,
+        };
         updateStructure(zoneIndex, updated);
       };
 
@@ -249,7 +266,10 @@ export function LocationSetupWizard({
 
       // Calculate totals
       const totalAisles = structure.aisles.length;
-      const totalShelves = structure.aisles.reduce((sum, a) => sum + a.shelves, 0);
+      const totalShelves = structure.aisles.reduce(
+        (sum, a) => sum + a.shelves,
+        0
+      );
       const totalBins = structure.aisles.reduce(
         (sum, a) => sum + a.shelves * a.bins,
         0
@@ -295,7 +315,10 @@ export function LocationSetupWizard({
                       updateAisle(
                         aisleIndex,
                         'shelves',
-                        Math.max(1, Math.min(999, parseInt(e.target.value) || 1))
+                        Math.max(
+                          1,
+                          Math.min(999, parseInt(e.target.value) || 1)
+                        )
                       )
                     }
                     className="w-24"
@@ -556,26 +579,27 @@ export function LocationSetupWizard({
       icon: <CheckCircle2 className="h-16 w-16 text-muted-foreground/50" />,
       content: step3Content,
       isValid: true,
-      footer: configuringZoneIndex !== null ? (
-        <></>
-      ) : (
-        <>
-          <Button type="button" variant="outline" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            onClick={handleFinalize}
-            disabled={locationSetup.isPending}
-            className="gap-1.5"
-          >
-            {locationSetup.isPending && (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            )}
-            {locationSetup.isPending ? 'Criando...' : 'Finalizar'}
-          </Button>
-        </>
-      ),
+      footer:
+        configuringZoneIndex !== null ? (
+          <></>
+        ) : (
+          <>
+            <Button type="button" variant="outline" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleFinalize}
+              disabled={locationSetup.isPending}
+              className="gap-1.5"
+            >
+              {locationSetup.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+              {locationSetup.isPending ? 'Criando...' : 'Finalizar'}
+            </Button>
+          </>
+        ),
     },
   ];
 

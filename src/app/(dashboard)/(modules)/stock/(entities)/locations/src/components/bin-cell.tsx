@@ -39,7 +39,11 @@ export const BinCellNew = memo(function BinCellNew({
   useEffect(() => {
     if (isHighlighted) {
       setPulseActive(true);
-      ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      ref.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center',
+      });
       const timer = setTimeout(() => setPulseActive(false), 3000);
       return () => clearTimeout(timer);
     } else {
@@ -75,7 +79,7 @@ export const BinCellNew = memo(function BinCellNew({
         onClick && 'cursor-pointer',
         isEmpty ? BIN_CELL_EMPTY : BIN_CELL_COLORS[level],
         isHighlighted && 'ring-2 ring-blue-500',
-        isHighlighted && pulseActive && 'animate-pulse',
+        isHighlighted && pulseActive && 'animate-pulse'
       )}
     >
       {isBlocked ? (
@@ -96,9 +100,9 @@ export const BinCellNew = memo(function BinCellNew({
             <div className="text-xs space-y-0.5">
               <p>
                 <span className="font-medium">
-                  {bin.itemCount}{bin.capacity != null ? `/${bin.capacity}` : ''}
-                </span>
-                {' '}
+                  {bin.itemCount}
+                  {bin.capacity != null ? `/${bin.capacity}` : ''}
+                </span>{' '}
                 <span className="text-muted-foreground">
                   {bin.itemCount === 1 ? 'item' : 'itens'}
                 </span>

@@ -33,7 +33,11 @@ import {
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
 import { productsService } from '@/services/stock';
-import type { CreateTemplateRequest, Template, UpdateTemplateRequest } from '@/types/stock';
+import type {
+  CreateTemplateRequest,
+  Template,
+  UpdateTemplateRequest,
+} from '@/types/stock';
 import {
   ChevronRight,
   Copy,
@@ -77,7 +81,9 @@ export default function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>(
+    'name'
+  );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // ============================================================================
@@ -91,7 +97,9 @@ export default function TemplatesPage() {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [itemsToDuplicate, setItemsToDuplicate] = useState<string[]>([]);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
-  const [renameTemplateItem, setRenameTemplateItem] = useState<Template | null>(null);
+  const [renameTemplateItem, setRenameTemplateItem] = useState<Template | null>(
+    null
+  );
   const [productsCountByTemplateId, setProductsCountByTemplateId] = useState<
     Record<string, number>
   >({});
@@ -234,20 +242,20 @@ export default function TemplatesPage() {
 
   const handleRenameSubmit = useCallback(
     async (id: string, data: { name: string }) => {
-      await updateMutation.mutateAsync({ id, data: data as UpdateTemplateRequest });
+      await updateMutation.mutateAsync({
+        id,
+        data: data as UpdateTemplateRequest,
+      });
       setRenameModalOpen(false);
       setRenameTemplateItem(null);
     },
     [updateMutation]
   );
 
-  const handleContextDuplicate = useCallback(
-    (ids: string[]) => {
-      setItemsToDuplicate(ids);
-      setDuplicateModalOpen(true);
-    },
-    []
-  );
+  const handleContextDuplicate = useCallback((ids: string[]) => {
+    setItemsToDuplicate(ids);
+    setDuplicateModalOpen(true);
+  }, []);
 
   const handleDuplicateConfirm = useCallback(async () => {
     for (const id of itemsToDuplicate) {
@@ -268,13 +276,10 @@ export default function TemplatesPage() {
     );
   }, [itemsToDuplicate, items, refetch]);
 
-  const handleContextDelete = useCallback(
-    (ids: string[]) => {
-      setItemsToDelete(ids);
-      setDeleteModalOpen(true);
-    },
-    []
-  );
+  const handleContextDelete = useCallback((ids: string[]) => {
+    setItemsToDelete(ids);
+    setDeleteModalOpen(true);
+  }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
     for (const id of itemsToDelete) {
@@ -592,8 +597,7 @@ export default function TemplatesPage() {
                 toolbarStart={
                   <p className="text-sm text-muted-foreground whitespace-nowrap">
                     {total} {total === 1 ? 'template' : 'templates'}
-                    {items.length < total &&
-                      ` (${items.length} carregados)`}
+                    {items.length < total && ` (${items.length} carregados)`}
                   </p>
                 }
                 defaultSortField="name"

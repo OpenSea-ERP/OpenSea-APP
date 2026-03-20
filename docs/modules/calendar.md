@@ -28,11 +28,11 @@ O módulo possui apenas uma rota. Toda a navegação ocorre na mesma página por
 
 ### URL State (Query Params)
 
-| Param | Tipo | Descrição |
-|-------|------|-----------|
-| `view` | `string` | Vista ativa: `timeGridWeek`, `timeGridDay` ou `listWeek` (omitido se `dayGridMonth`) |
-| `type` | `EventType` | Filtro de tipo de evento ativo |
-| `date` | ISO string | Data inicial ao navegar diretamente para um período |
+| Param  | Tipo        | Descrição                                                                            |
+| ------ | ----------- | ------------------------------------------------------------------------------------ |
+| `view` | `string`    | Vista ativa: `timeGridWeek`, `timeGridDay` ou `listWeek` (omitido se `dayGridMonth`) |
+| `type` | `EventType` | Filtro de tipo de evento ativo                                                       |
+| `date` | ISO string  | Data inicial ao navegar diretamente para um período                                  |
 
 ### Layout Hierarchy
 
@@ -93,12 +93,12 @@ A página é um componente `'use client'`. O estado de `CalendarPage` controla:
 
 **Visualizações disponíveis:**
 
-| Valor | Label (PT-BR) | Descrição |
-|-------|--------------|-----------|
-| `dayGridMonth` | Mês | Grade mensal com no máximo 3 eventos por dia ("+N mais") |
-| `timeGridWeek` | Semana | Grade de horas, 7 colunas |
-| `timeGridDay` | Dia | Grade de horas, 1 coluna |
-| `listWeek` | Agenda | Lista cronológica da semana |
+| Valor          | Label (PT-BR) | Descrição                                                |
+| -------------- | ------------- | -------------------------------------------------------- |
+| `dayGridMonth` | Mês           | Grade mensal com no máximo 3 eventos por dia ("+N mais") |
+| `timeGridWeek` | Semana        | Grade de horas, 7 colunas                                |
+| `timeGridDay`  | Dia           | Grade de horas, 1 coluna                                 |
+| `listWeek`     | Agenda        | Lista cronológica da semana                              |
 
 ### CalendarEventForm
 
@@ -181,30 +181,30 @@ Todos os hooks de calendar estão em `src/hooks/calendar/` com barrel re-export 
 
 ### Hooks de Eventos
 
-| Hook | Query Key | Endpoint | Notas |
-|------|-----------|----------|-------|
-| `useCalendarEvents(params)` | `['calendar-events', params]` | `GET /v1/calendar/events` | `enabled` requer `startDate` e `endDate`; `keepPreviousData`; `staleTime` 60s |
-| `useCalendarEvent(id)` | `['calendar-events', id]` | `GET /v1/calendar/events/:id` | `enabled` quando `id` presente; `staleTime` 30s — usado para dados ao vivo do evento selecionado |
-| `useCreateCalendarEvent()` | — | `POST /v1/calendar/events` | Atualização otimista: insere evento temporário na lista; rollback em erro; `invalidateQueries` em `onSettled` |
-| `useUpdateCalendarEvent()` | — | `PATCH /v1/calendar/events/:id` | Atualização otimista: atualiza evento na lista sem `onSettled`/`invalidateQueries` (ver padrão otimista) |
-| `useDeleteCalendarEvent()` | — | `DELETE /v1/calendar/events/:id` | Atualização otimista: remove evento da lista; rollback em erro |
-| `useInviteParticipants()` | — | `POST /v1/calendar/events/:id/participants` | Atualização otimista do evento individual; invalida lista e evento em `onSettled` |
-| `useRespondToEvent()` | — | `PATCH /v1/calendar/events/:id/respond` | Atualização otimista do status do participante; invalida lista e evento |
-| `useRemoveParticipant()` | — | `DELETE /v1/calendar/events/:id/participants/:userId` | Atualização otimista; invalida lista e evento |
-| `useManageReminders()` | — | `PUT /v1/calendar/events/:id/reminders` | Atualização otimista dos lembretes; invalida lista e evento |
-| `useShareEventWithUsers()` | — | `POST /v1/calendar/events/:id/share-users` | Sem otimismo; invalida lista e evento em `onSettled` |
-| `useShareEventWithTeam()` | — | `POST /v1/calendar/events/:id/share-team` | Sem otimismo; invalida lista e evento em `onSettled` |
-| `useUnshareUser()` | — | `DELETE /v1/calendar/events/:id/share-users/:userId` | Invalida lista e evento |
+| Hook                        | Query Key                     | Endpoint                                              | Notas                                                                                                         |
+| --------------------------- | ----------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `useCalendarEvents(params)` | `['calendar-events', params]` | `GET /v1/calendar/events`                             | `enabled` requer `startDate` e `endDate`; `keepPreviousData`; `staleTime` 60s                                 |
+| `useCalendarEvent(id)`      | `['calendar-events', id]`     | `GET /v1/calendar/events/:id`                         | `enabled` quando `id` presente; `staleTime` 30s — usado para dados ao vivo do evento selecionado              |
+| `useCreateCalendarEvent()`  | —                             | `POST /v1/calendar/events`                            | Atualização otimista: insere evento temporário na lista; rollback em erro; `invalidateQueries` em `onSettled` |
+| `useUpdateCalendarEvent()`  | —                             | `PATCH /v1/calendar/events/:id`                       | Atualização otimista: atualiza evento na lista sem `onSettled`/`invalidateQueries` (ver padrão otimista)      |
+| `useDeleteCalendarEvent()`  | —                             | `DELETE /v1/calendar/events/:id`                      | Atualização otimista: remove evento da lista; rollback em erro                                                |
+| `useInviteParticipants()`   | —                             | `POST /v1/calendar/events/:id/participants`           | Atualização otimista do evento individual; invalida lista e evento em `onSettled`                             |
+| `useRespondToEvent()`       | —                             | `PATCH /v1/calendar/events/:id/respond`               | Atualização otimista do status do participante; invalida lista e evento                                       |
+| `useRemoveParticipant()`    | —                             | `DELETE /v1/calendar/events/:id/participants/:userId` | Atualização otimista; invalida lista e evento                                                                 |
+| `useManageReminders()`      | —                             | `PUT /v1/calendar/events/:id/reminders`               | Atualização otimista dos lembretes; invalida lista e evento                                                   |
+| `useShareEventWithUsers()`  | —                             | `POST /v1/calendar/events/:id/share-users`            | Sem otimismo; invalida lista e evento em `onSettled`                                                          |
+| `useShareEventWithTeam()`   | —                             | `POST /v1/calendar/events/:id/share-team`             | Sem otimismo; invalida lista e evento em `onSettled`                                                          |
+| `useUnshareUser()`          | —                             | `DELETE /v1/calendar/events/:id/share-users/:userId`  | Invalida lista e evento                                                                                       |
 
 ### Hooks de Calendários
 
-| Hook | Query Key | Endpoint | Notas |
-|------|-----------|----------|-------|
-| `useMyCalendars()` | `['my-calendars']` | `GET /v1/calendar/calendars` | `staleTime` 300s (5 min); retorna calendários pessoais, de equipes e de sistema do usuário |
-| `useCreateTeamCalendar()` | — | `POST /v1/calendar/calendars/team` | Invalida `['my-calendars']` |
-| `useUpdateCalendar()` | — | `PATCH /v1/calendar/calendars/:id` | Invalida `['my-calendars']` |
-| `useDeleteCalendar()` | — | `DELETE /v1/calendar/calendars/:id` | Invalida `['my-calendars']` |
-| `useUpdateTeamCalendarPermissions()` | — | `PATCH /v1/calendar/calendars/:id/team-permissions` | Invalida `['my-calendars']` |
+| Hook                                 | Query Key          | Endpoint                                            | Notas                                                                                      |
+| ------------------------------------ | ------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `useMyCalendars()`                   | `['my-calendars']` | `GET /v1/calendar/calendars`                        | `staleTime` 300s (5 min); retorna calendários pessoais, de equipes e de sistema do usuário |
+| `useCreateTeamCalendar()`            | —                  | `POST /v1/calendar/calendars/team`                  | Invalida `['my-calendars']`                                                                |
+| `useUpdateCalendar()`                | —                  | `PATCH /v1/calendar/calendars/:id`                  | Invalida `['my-calendars']`                                                                |
+| `useDeleteCalendar()`                | —                  | `DELETE /v1/calendar/calendars/:id`                 | Invalida `['my-calendars']`                                                                |
+| `useUpdateTeamCalendarPermissions()` | —                  | `PATCH /v1/calendar/calendars/:id/team-permissions` | Invalida `['my-calendars']`                                                                |
 
 ---
 
@@ -214,44 +214,44 @@ Todos os tipos de calendar estão em `src/types/calendar/` com barrel re-export 
 
 ### event.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `EventType` | Union: `MEETING`, `TASK`, `REMINDER`, `DEADLINE`, `HOLIDAY`, `BIRTHDAY`, `VACATION`, `ABSENCE`, `FINANCE_DUE`, `PURCHASE_ORDER`, `CUSTOM` |
-| `EventVisibility` | `PUBLIC` \| `PRIVATE` |
-| `ParticipantRole` | `OWNER` \| `ASSIGNEE` \| `GUEST` |
-| `ParticipantStatus` | `PENDING` \| `ACCEPTED` \| `DECLINED` \| `TENTATIVE` |
-| `EventParticipant` | Participante de evento com `userName`, `userEmail`, `userAvatarUrl`, `role` e `status` |
-| `EventReminder` | Lembrete por usuário: `minutesBefore`, `isSent`, `sentAt` |
-| `CalendarEvent` | Evento completo com `rrule`, `timezone`, `systemSourceType`, `systemSourceId`, `occurrenceDate` (para recorrências expandidas), `isRecurring`, `participants?`, `reminders?` |
-| `CreateCalendarEventData` | Dados de criação; todos opcionais exceto `title`, `startDate`, `endDate` |
-| `UpdateCalendarEventData` | Atualização parcial de todos os campos editáveis |
-| `CalendarEventsQuery` | Filtros de listagem: `startDate`, `endDate`, `type?`, `search?`, `includeSystemEvents?`, `calendarIds?` (CSV), paginação |
-| `InviteParticipantsData` | `{ participants: { userId, role? }[] }` |
-| `RespondToEventData` | `{ status: 'ACCEPTED' \| 'DECLINED' \| 'TENTATIVE' }` |
-| `ManageRemindersData` | `{ reminders: { minutesBefore }[] }` — lista completa que substitui lembretes existentes |
-| `SystemSourceType` | `HR_ABSENCE` \| `HR_BIRTHDAY` \| `FINANCE_ENTRY` \| `STOCK_PO` |
-| `EVENT_TYPE_COLORS` | Mapa de cor hexadecimal por `EventType` (ex.: `MEETING: '#3b82f6'`, `DEADLINE: '#ef4444'`) |
-| `REMINDER_PRESETS` | Constante com 6 presets: 5, 10, 15, 30 min; 1h; 1 dia |
-| `SYSTEM_SOURCE_ROUTES` | Mapa de função `(id) => path` por `SystemSourceType` para navegação ao recurso de origem |
-| `SYSTEM_SOURCE_LABELS` | Labels PT-BR por `SystemSourceType` |
+| Interface/Type            | Descrição                                                                                                                                                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EventType`               | Union: `MEETING`, `TASK`, `REMINDER`, `DEADLINE`, `HOLIDAY`, `BIRTHDAY`, `VACATION`, `ABSENCE`, `FINANCE_DUE`, `PURCHASE_ORDER`, `CUSTOM`                                    |
+| `EventVisibility`         | `PUBLIC` \| `PRIVATE`                                                                                                                                                        |
+| `ParticipantRole`         | `OWNER` \| `ASSIGNEE` \| `GUEST`                                                                                                                                             |
+| `ParticipantStatus`       | `PENDING` \| `ACCEPTED` \| `DECLINED` \| `TENTATIVE`                                                                                                                         |
+| `EventParticipant`        | Participante de evento com `userName`, `userEmail`, `userAvatarUrl`, `role` e `status`                                                                                       |
+| `EventReminder`           | Lembrete por usuário: `minutesBefore`, `isSent`, `sentAt`                                                                                                                    |
+| `CalendarEvent`           | Evento completo com `rrule`, `timezone`, `systemSourceType`, `systemSourceId`, `occurrenceDate` (para recorrências expandidas), `isRecurring`, `participants?`, `reminders?` |
+| `CreateCalendarEventData` | Dados de criação; todos opcionais exceto `title`, `startDate`, `endDate`                                                                                                     |
+| `UpdateCalendarEventData` | Atualização parcial de todos os campos editáveis                                                                                                                             |
+| `CalendarEventsQuery`     | Filtros de listagem: `startDate`, `endDate`, `type?`, `search?`, `includeSystemEvents?`, `calendarIds?` (CSV), paginação                                                     |
+| `InviteParticipantsData`  | `{ participants: { userId, role? }[] }`                                                                                                                                      |
+| `RespondToEventData`      | `{ status: 'ACCEPTED' \| 'DECLINED' \| 'TENTATIVE' }`                                                                                                                        |
+| `ManageRemindersData`     | `{ reminders: { minutesBefore }[] }` — lista completa que substitui lembretes existentes                                                                                     |
+| `SystemSourceType`        | `HR_ABSENCE` \| `HR_BIRTHDAY` \| `FINANCE_ENTRY` \| `STOCK_PO`                                                                                                               |
+| `EVENT_TYPE_COLORS`       | Mapa de cor hexadecimal por `EventType` (ex.: `MEETING: '#3b82f6'`, `DEADLINE: '#ef4444'`)                                                                                   |
+| `REMINDER_PRESETS`        | Constante com 6 presets: 5, 10, 15, 30 min; 1h; 1 dia                                                                                                                        |
+| `SYSTEM_SOURCE_ROUTES`    | Mapa de função `(id) => path` por `SystemSourceType` para navegação ao recurso de origem                                                                                     |
+| `SYSTEM_SOURCE_LABELS`    | Labels PT-BR por `SystemSourceType`                                                                                                                                          |
 
 ### calendar.types.ts
 
-| Interface/Type | Descrição |
-|----------------|-----------|
-| `CalendarType` | `PERSONAL` \| `TEAM` \| `SYSTEM` |
-| `CalendarAccess` | Objeto de permissões de acesso para o usuário atual: `canRead`, `canCreate`, `canEdit`, `canDelete`, `canShare`, `canManage` |
-| `Calendar` | Calendário com tipo, cor, dono (`ownerId`, `ownerName`, `ownerColor`), módulo de sistema (`systemModule`) e objeto `access` calculado pelo backend |
-| `CreateTeamCalendarData` | `{ teamId, name, description?, color? }` |
-| `UpdateCalendarData` | `{ name?, description?, color? }` |
-| `TeamCalendarPermissions` | 18 campos booleanos: `ownerCan*`, `adminCan*`, `memberCan*` — cada papel × 6 permissões |
+| Interface/Type            | Descrição                                                                                                                                          |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CalendarType`            | `PERSONAL` \| `TEAM` \| `SYSTEM`                                                                                                                   |
+| `CalendarAccess`          | Objeto de permissões de acesso para o usuário atual: `canRead`, `canCreate`, `canEdit`, `canDelete`, `canShare`, `canManage`                       |
+| `Calendar`                | Calendário com tipo, cor, dono (`ownerId`, `ownerName`, `ownerColor`), módulo de sistema (`systemModule`) e objeto `access` calculado pelo backend |
+| `CreateTeamCalendarData`  | `{ teamId, name, description?, color? }`                                                                                                           |
+| `UpdateCalendarData`      | `{ name?, description?, color? }`                                                                                                                  |
+| `TeamCalendarPermissions` | 18 campos booleanos: `ownerCan*`, `adminCan*`, `memberCan*` — cada papel × 6 permissões                                                            |
 
 ### Sincronização com Backend
 
-| Arquivo | Backend Schema | Sincronizado? |
-|---------|---------------|---------------|
-| `event.types.ts` | `calendar-event.schema.ts` | Sim |
-| `calendar.types.ts` | `calendar.schema.ts` | Sim |
+| Arquivo             | Backend Schema             | Sincronizado? |
+| ------------------- | -------------------------- | ------------- |
+| `event.types.ts`    | `calendar-event.schema.ts` | Sim           |
+| `calendar.types.ts` | `calendar.schema.ts`       | Sim           |
 
 Observação: datas são sempre `string` (ISO 8601). O campo `occurrenceDate` é preenchido pelo backend para ocorrências expandidas de eventos recorrentes.
 
@@ -261,10 +261,10 @@ Observação: datas são sempre `string` (ISO 8601). O campo `occurrenceDate` é
 
 O módulo se comunica com o backend exclusivamente via services em `src/services/calendar/`.
 
-| Service | Arquivo | Base Path |
-|---------|---------|-----------|
-| `calendarEventsService` | `calendar-events.service.ts` | `/v1/calendar/events` |
-| `calendarsService` | `calendars.service.ts` | `/v1/calendar/calendars` |
+| Service                 | Arquivo                      | Base Path                |
+| ----------------------- | ---------------------------- | ------------------------ |
+| `calendarEventsService` | `calendar-events.service.ts` | `/v1/calendar/events`    |
+| `calendarsService`      | `calendars.service.ts`       | `/v1/calendar/calendars` |
 
 Ambos utilizam `apiClient` de `src/lib/api-client.ts`, que injeta automaticamente o JWT de tenant em cada requisição.
 
@@ -274,22 +274,22 @@ A função `calendarEventsService.getExportUrl()` não faz requisição — apen
 
 ## Permissions
 
-| Código | Descrição | Usado em |
-|--------|-----------|----------|
-| `calendar.events.list` | Listar eventos | `ProtectedRoute` da página |
-| `calendar.events.create` | Criar evento | Botão "Novo Evento" e clique em data |
-| `calendar.events.update` | Editar evento | Botão de edição no `EventDetailSheet` |
-| `calendar.events.delete` | Excluir evento | Botão de exclusão no `EventDetailSheet` |
-| `calendar.events.manage` | Gerenciar todos os eventos | Ações administrativas |
-| `calendar.events.share-users` | Compartilhar evento com usuários | `InviteShareDialog` (aba Usuários) |
-| `calendar.events.share-teams` | Compartilhar evento com equipes | `InviteShareDialog` (aba Equipes) |
-| `calendar.events.export` | Exportar agenda como iCal | Botão "Exportar iCal" |
-| `calendar.participants.invite` | Convidar participantes | Botão "Convidar" no `EventDetailSheet` |
-| `calendar.participants.respond` | Responder a convite (RSVP) | Seção RSVP no `EventDetailSheet` |
-| `calendar.participants.manage` | Remover participantes | Botão de remoção no `EventDetailSheet` |
-| `calendar.reminders.create` | Configurar lembretes | Seletor de lembrete no `EventDetailSheet` |
-| `calendar.reminders.delete` | Remover lembretes | Seletor de lembrete (ao selecionar "Sem lembrete") |
-| `ui.menu.calendar` | Exibir item "Agenda" no menu | Menu de navegação |
+| Código                          | Descrição                        | Usado em                                           |
+| ------------------------------- | -------------------------------- | -------------------------------------------------- |
+| `calendar.events.list`          | Listar eventos                   | `ProtectedRoute` da página                         |
+| `calendar.events.create`        | Criar evento                     | Botão "Novo Evento" e clique em data               |
+| `calendar.events.update`        | Editar evento                    | Botão de edição no `EventDetailSheet`              |
+| `calendar.events.delete`        | Excluir evento                   | Botão de exclusão no `EventDetailSheet`            |
+| `calendar.events.manage`        | Gerenciar todos os eventos       | Ações administrativas                              |
+| `calendar.events.share-users`   | Compartilhar evento com usuários | `InviteShareDialog` (aba Usuários)                 |
+| `calendar.events.share-teams`   | Compartilhar evento com equipes  | `InviteShareDialog` (aba Equipes)                  |
+| `calendar.events.export`        | Exportar agenda como iCal        | Botão "Exportar iCal"                              |
+| `calendar.participants.invite`  | Convidar participantes           | Botão "Convidar" no `EventDetailSheet`             |
+| `calendar.participants.respond` | Responder a convite (RSVP)       | Seção RSVP no `EventDetailSheet`                   |
+| `calendar.participants.manage`  | Remover participantes            | Botão de remoção no `EventDetailSheet`             |
+| `calendar.reminders.create`     | Configurar lembretes             | Seletor de lembrete no `EventDetailSheet`          |
+| `calendar.reminders.delete`     | Remover lembretes                | Seletor de lembrete (ao selecionar "Sem lembrete") |
+| `ui.menu.calendar`              | Exibir item "Agenda" no menu     | Menu de navegação                                  |
 
 ---
 
@@ -311,11 +311,11 @@ A função `calendarEventsService.getExportUrl()` não faz requisição — apen
 
 O módulo utiliza `@fullcalendar/react` com os seguintes pacotes:
 
-| Pacote | Plugins | Finalidade |
-|--------|---------|-----------|
-| `@fullcalendar/daygrid` | `dayGridPlugin` | Vista mensal |
-| `@fullcalendar/timegrid` | `timeGridPlugin` | Vistas de semana e dia |
-| `@fullcalendar/list` | `listPlugin` | Vista de agenda |
+| Pacote                      | Plugins             | Finalidade                    |
+| --------------------------- | ------------------- | ----------------------------- |
+| `@fullcalendar/daygrid`     | `dayGridPlugin`     | Vista mensal                  |
+| `@fullcalendar/timegrid`    | `timeGridPlugin`    | Vistas de semana e dia        |
+| `@fullcalendar/list`        | `listPlugin`        | Vista de agenda               |
 | `@fullcalendar/interaction` | `interactionPlugin` | Clique em datas, `selectable` |
 
 **Configuração relevante:**
@@ -404,6 +404,6 @@ O módulo utiliza `@fullcalendar/react` com os seguintes pacotes:
 
 ## Audit History
 
-| Data | Dimensão | Score | Relatório |
-|------|----------|-------|-----------|
-| 2026-03-10 | Documentação inicial | — | Criação da documentação completa do módulo calendar (frontend) |
+| Data       | Dimensão             | Score | Relatório                                                      |
+| ---------- | -------------------- | ----- | -------------------------------------------------------------- |
+| 2026-03-10 | Documentação inicial | —     | Criação da documentação completa do módulo calendar (frontend) |

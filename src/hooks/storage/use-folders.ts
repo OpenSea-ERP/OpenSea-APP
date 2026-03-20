@@ -67,8 +67,12 @@ export function useCreateFolder() {
     mutationFn: (data: CreateFolderRequest) =>
       storageFoldersService.createFolder(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
     },
   });
 }
@@ -81,8 +85,12 @@ export function useUpdateFolder() {
     mutationFn: ({ id, data }: { id: string; data: UpdateFolderRequest }) =>
       storageFoldersService.updateFolder(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FOLDER(variables.id),
       });
@@ -123,8 +131,12 @@ export function useRenameFolder() {
       );
     },
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FOLDER(variables.id),
       });
@@ -141,8 +153,12 @@ export function useMoveFolder() {
     mutationFn: ({ id, data }: { id: string; data: MoveFolderRequest }) =>
       storageFoldersService.moveFolder(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FOLDER(variables.id),
       });
@@ -184,8 +200,12 @@ export function useDeleteFolder() {
       );
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
       await queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
     },
   });
@@ -214,8 +234,12 @@ export function useInitializeFolders() {
   return useMutation({
     mutationFn: () => storageFoldersService.initializeFolders(),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
     },
   });
 }
@@ -228,8 +252,12 @@ export function useEnsureEntityFolder() {
     mutationFn: (request: EnsureEntityFolderRequest) =>
       storageFoldersService.ensureEntityFolder(request),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['storage-folder-contents'] });
-      await queryClient.invalidateQueries({ queryKey: ['storage-root-contents'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-folder-contents'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['storage-root-contents'],
+      });
     },
   });
 }

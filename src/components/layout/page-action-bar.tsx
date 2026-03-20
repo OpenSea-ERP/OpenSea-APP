@@ -118,7 +118,9 @@ export function PageActionBar({
                     />
                   )}
                   {!isIconOnly && (
-                    <span className={button.icon ? 'hidden lg:inline' : undefined}>
+                    <span
+                      className={button.icon ? 'hidden lg:inline' : undefined}
+                    >
                       {button.title}
                     </span>
                   )}

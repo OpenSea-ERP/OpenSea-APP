@@ -113,11 +113,17 @@ export function StepWizardDialog({
                 {backLabel}
               </Button>
             )}
-            <div className={step.onBack ? 'flex items-center gap-2' : 'flex items-center gap-2 w-full justify-end'}>
+            <div
+              className={
+                step.onBack
+                  ? 'flex items-center gap-2'
+                  : 'flex items-center gap-2 w-full justify-end'
+              }
+            >
               {step.footer ?? (
                 <>
-                  {!step.onBack && (
-                    isFirst ? (
+                  {!step.onBack &&
+                    (isFirst ? (
                       <Button type="button" variant="outline" onClick={onClose}>
                         {cancelLabel}
                       </Button>
@@ -129,8 +135,7 @@ export function StepWizardDialog({
                       >
                         ← {backLabel}
                       </Button>
-                    )
-                  )}
+                    ))}
                   {!isLast && (
                     <Button
                       type="button"

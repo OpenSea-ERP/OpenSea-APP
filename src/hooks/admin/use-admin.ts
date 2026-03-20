@@ -97,7 +97,9 @@ export function useManageFeatureFlags() {
     }) => adminApi.manageFeatureFlags(id, flag, enabled),
     onSuccess: async (_, { id }) => {
       await queryClient.invalidateQueries({ queryKey: adminKeys.tenant(id) });
-      await queryClient.invalidateQueries({ queryKey: adminKeys.tenantFlags(id) });
+      await queryClient.invalidateQueries({
+        queryKey: adminKeys.tenantFlags(id),
+      });
     },
   });
 }
@@ -156,7 +158,9 @@ export function useCreateTenantUser() {
       };
     }) => adminApi.createTenantUser(id, data),
     onSuccess: async (_, { id }) => {
-      await queryClient.invalidateQueries({ queryKey: adminKeys.tenantUsers(id) });
+      await queryClient.invalidateQueries({
+        queryKey: adminKeys.tenantUsers(id),
+      });
     },
   });
 }

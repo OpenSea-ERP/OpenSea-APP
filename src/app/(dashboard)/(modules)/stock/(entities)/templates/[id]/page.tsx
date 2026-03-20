@@ -174,22 +174,20 @@ function AttributeCard({
       </div>
 
       {/* Select options */}
-      {attr.type === 'select' &&
-        attr.options &&
-        attr.options.length > 0 && (
-          <div className="pt-3 border-t border-border">
-            <p className="text-xs text-muted-foreground mb-2">
-              Opções de escolha
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {attr.options.map((option, idx) => (
-                <Badge key={idx} variant="outline" className="text-xs">
-                  {option}
-                </Badge>
-              ))}
-            </div>
+      {attr.type === 'select' && attr.options && attr.options.length > 0 && (
+        <div className="pt-3 border-t border-border">
+          <p className="text-xs text-muted-foreground mb-2">
+            Opções de escolha
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {attr.options.map((option, idx) => (
+              <Badge key={idx} variant="outline" className="text-xs">
+                {option}
+              </Badge>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
       {/* Advanced details */}
       {(hasAdvanced || hasDefaultValue) && (
@@ -318,8 +316,7 @@ export default function TemplateDetailPage() {
       id: 'view-products',
       title: `Ver ${productsCount} Produto${productsCount !== 1 ? 's' : ''}`,
       icon: Layers,
-      onClick: () =>
-        router.push(`/stock/products?template=${templateId}`),
+      onClick: () => router.push(`/stock/products?template=${templateId}`),
       variant: 'outline',
     });
   }
@@ -522,7 +519,8 @@ export default function TemplateDetailPage() {
                   totalAttributes > 0 ? (
                     <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2 py-1 text-xs text-muted-foreground">
                       <SlidersHorizontal className="h-3 w-3" />
-                      {totalAttributes} {totalAttributes === 1 ? 'Atributo' : 'Atributos'}
+                      {totalAttributes}{' '}
+                      {totalAttributes === 1 ? 'Atributo' : 'Atributos'}
                     </div>
                   ) : undefined
                 }

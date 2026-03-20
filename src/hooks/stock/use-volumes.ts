@@ -48,7 +48,9 @@ export function useCreateVolume() {
     mutationFn: (data: CreateVolumeRequest) =>
       volumesService.createVolume(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
     },
   });
 }
@@ -61,7 +63,9 @@ export function useUpdateVolume() {
     mutationFn: ({ id, data }: { id: string; data: UpdateVolumeRequest }) =>
       volumesService.updateVolume(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
       await queryClient.invalidateQueries({
         queryKey: VOLUME_QUERY_KEYS.VOLUME(variables.id),
       });
@@ -76,7 +80,9 @@ export function useDeleteVolume() {
   return useMutation({
     mutationFn: (id: string) => volumesService.deleteVolume(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
     },
   });
 }
@@ -94,7 +100,9 @@ export function useAddItemToVolume() {
       data: AddItemToVolumeRequest;
     }) => volumesService.addItemToVolume(volumeId, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
       await queryClient.invalidateQueries({
         queryKey: VOLUME_QUERY_KEYS.VOLUME(variables.volumeId),
       });
@@ -112,7 +120,9 @@ export function useRemoveItemFromVolume() {
     mutationFn: ({ volumeId, itemId }: { volumeId: string; itemId: string }) =>
       volumesService.removeItemFromVolume(volumeId, itemId),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
       await queryClient.invalidateQueries({
         queryKey: VOLUME_QUERY_KEYS.VOLUME(variables.volumeId),
       });
@@ -129,7 +139,9 @@ export function useCloseVolume() {
     mutationFn: ({ id, data }: { id: string; data?: VolumeActionRequest }) =>
       volumesService.closeVolume(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
       await queryClient.invalidateQueries({
         queryKey: VOLUME_QUERY_KEYS.VOLUME(variables.id),
       });
@@ -147,7 +159,9 @@ export function useReopenVolume() {
     mutationFn: ({ id, data }: { id: string; data?: VolumeActionRequest }) =>
       volumesService.reopenVolume(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
       await queryClient.invalidateQueries({
         queryKey: VOLUME_QUERY_KEYS.VOLUME(variables.id),
       });
@@ -163,7 +177,9 @@ export function useDeliverVolume() {
     mutationFn: ({ id, data }: { id: string; data?: VolumeActionRequest }) =>
       volumesService.deliverVolume(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
       await queryClient.invalidateQueries({
         queryKey: VOLUME_QUERY_KEYS.VOLUME(variables.id),
       });
@@ -179,7 +195,9 @@ export function useReturnVolume() {
     mutationFn: ({ id, data }: { id: string; data?: VolumeActionRequest }) =>
       volumesService.returnVolume(id, data),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: VOLUME_QUERY_KEYS.VOLUMES });
+      await queryClient.invalidateQueries({
+        queryKey: VOLUME_QUERY_KEYS.VOLUMES,
+      });
       await queryClient.invalidateQueries({
         queryKey: VOLUME_QUERY_KEYS.VOLUME(variables.id),
       });

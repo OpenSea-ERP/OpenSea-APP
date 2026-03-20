@@ -92,7 +92,6 @@ export default function WarehouseEditPage({ params }: PageProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteWarningOpen, setDeleteWarningOpen] = useState(false);
 
-
   // Populate form
   useEffect(() => {
     if (warehouse) {
@@ -129,7 +128,15 @@ export default function WarehouseEditPage({ params }: PageProps) {
         },
       }
     );
-  }, [updateMutation, warehouseId, name, description, address, isActive, router]);
+  }, [
+    updateMutation,
+    warehouseId,
+    name,
+    description,
+    address,
+    isActive,
+    router,
+  ]);
 
   const handleDeleteConfirm = useCallback(async () => {
     try {
@@ -251,12 +258,8 @@ export default function WarehouseEditPage({ params }: PageProps) {
               <WarehouseIcon className="h-6 w-6 text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-muted-foreground">
-                Editando armazém
-              </p>
-              <h1 className="truncate text-xl font-bold">
-                {warehouse.name}
-              </h1>
+              <p className="text-sm text-muted-foreground">Editando armazém</p>
+              <h1 className="truncate text-xl font-bold">{warehouse.name}</h1>
             </div>
             <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
               <div className="text-right">
@@ -298,7 +301,7 @@ export default function WarehouseEditPage({ params }: PageProps) {
                     <Input
                       id="name"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={e => setName(e.target.value)}
                       placeholder="Nome do armazém"
                       maxLength={255}
                     />
@@ -320,7 +323,7 @@ export default function WarehouseEditPage({ params }: PageProps) {
                   <Input
                     id="address"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={e => setAddress(e.target.value)}
                     placeholder="Endereço físico (opcional)"
                     maxLength={255}
                   />
@@ -341,7 +344,7 @@ export default function WarehouseEditPage({ params }: PageProps) {
                   <Textarea
                     id="description"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={e => setDescription(e.target.value)}
                     placeholder="Descrição do armazém (opcional)"
                     rows={4}
                     maxLength={1000}
@@ -362,8 +365,12 @@ export default function WarehouseEditPage({ params }: PageProps) {
               <h3 className="text-lg font-semibold">Armazém com Itens</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Este armazém possui <strong>{warehouse.stats?.occupiedBins ?? 0} nichos ocupados</strong> com
-              itens. Ao excluir, todos os itens serão desvinculados dos seus nichos.
+              Este armazém possui{' '}
+              <strong>
+                {warehouse.stats?.occupiedBins ?? 0} nichos ocupados
+              </strong>{' '}
+              com itens. Ao excluir, todos os itens serão desvinculados dos seus
+              nichos.
             </p>
             <div className="flex items-center justify-end gap-2">
               <button

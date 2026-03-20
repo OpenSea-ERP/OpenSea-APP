@@ -29,7 +29,9 @@ export function useUploadAttachment(boardId: string, cardId: string) {
         queryKey: ATTACHMENT_QUERY_KEYS.ATTACHMENTS(boardId, cardId),
       });
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }
@@ -44,7 +46,9 @@ export function useDeleteAttachment(boardId: string, cardId: string) {
         queryKey: ATTACHMENT_QUERY_KEYS.ATTACHMENTS(boardId, cardId),
       });
       await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARDS(boardId) });
-      await qc.invalidateQueries({ queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId) });
+      await qc.invalidateQueries({
+        queryKey: CARD_QUERY_KEYS.CARD(boardId, cardId),
+      });
     },
   });
 }

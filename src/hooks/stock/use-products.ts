@@ -76,7 +76,7 @@ export function useProductsInfinite(filters?: ProductsFilters) {
       return response;
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.meta.page < lastPage.meta.pages) {
         return lastPage.meta.page + 1;
       }
@@ -86,7 +86,7 @@ export function useProductsInfinite(filters?: ProductsFilters) {
   });
 
   // Flatten pages into single array
-  const products = result.data?.pages.flatMap((p) => p.products) ?? [];
+  const products = result.data?.pages.flatMap(p => p.products) ?? [];
   const total = result.data?.pages[0]?.meta.total ?? 0;
 
   return {

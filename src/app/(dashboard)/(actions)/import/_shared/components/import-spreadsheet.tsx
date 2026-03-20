@@ -33,10 +33,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import {
-  AlertCircle,
-  Check,
-} from 'lucide-react';
+import { AlertCircle, Check } from 'lucide-react';
 import type {
   ImportFieldConfig,
   ImportSpreadsheetData,
@@ -110,7 +107,6 @@ export function ImportSpreadsheet({
   // Track active cell (the cell the user clicked on)
   const activeCellRef = useRef<{ row: number; column: number } | null>(null);
 
-
   // Get data rows only (skip header row if it exists)
   const dataRows = useMemo(() => {
     if (data.length === 0) return [];
@@ -168,9 +164,13 @@ export function ImportSpreadsheet({
       // Quick check: if row/col count matches and all values are the same, skip.
       if (
         newData.length === dataRows.length &&
-        newData.every((row, ri) =>
-          row.length === dataRows[ri]?.length &&
-          row.every((cell, ci) => (cell?.value ?? '') === (dataRows[ri]?.[ci]?.value ?? ''))
+        newData.every(
+          (row, ri) =>
+            row.length === dataRows[ri]?.length &&
+            row.every(
+              (cell, ci) =>
+                (cell?.value ?? '') === (dataRows[ri]?.[ci]?.value ?? '')
+            )
         )
       ) {
         return; // No actual change — suppress the buggy onChange
@@ -246,9 +246,12 @@ export function ImportSpreadsheet({
   }, []);
 
   // Handle cell activation — uses ref to avoid re-render
-  const handleActivate = useCallback((point: { row: number; column: number }) => {
-    activeCellRef.current = point;
-  }, []);
+  const handleActivate = useCallback(
+    (point: { row: number; column: number }) => {
+      activeCellRef.current = point;
+    },
+    []
+  );
 
   // Get selected cell — prefer activeCell (more reliable), fallback to selection
   const getSelectedCell = useCallback((): {

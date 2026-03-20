@@ -82,7 +82,7 @@ function ImapCard({
           : imap
             ? imap.status === 'connected'
               ? `${imap.latencyMs}ms`
-              : imap.error ?? 'Erro desconhecido'
+              : (imap.error ?? 'Erro desconhecido')
             : '\u00A0'}
       </p>
     </div>
@@ -121,7 +121,7 @@ function SmtpCard({
           : smtp
             ? smtp.status === 'connected'
               ? `${smtp.latencyMs}ms`
-              : smtp.error ?? 'Erro desconhecido'
+              : (smtp.error ?? 'Erro desconhecido')
             : '\u00A0'}
       </p>
     </div>
@@ -240,9 +240,7 @@ function ServiceStatusText({
   errorLabel: string;
 }) {
   if (isLoading) {
-    return (
-      <p className="text-xs text-muted-foreground mt-2">Verificando...</p>
-    );
+    return <p className="text-xs text-muted-foreground mt-2">Verificando...</p>;
   }
   if (!status) return <div className="mt-2" />;
 

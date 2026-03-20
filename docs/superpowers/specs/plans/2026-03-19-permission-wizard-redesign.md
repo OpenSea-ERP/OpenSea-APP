@@ -17,6 +17,7 @@
 ### Task 1.1: Create new permission-codes structure
 
 **Files:**
+
 - Modify: `OpenSea-API/src/constants/rbac/permission-codes.ts`
 
 This is the central file. We rewrite the entire `PermissionCodes` object with the new 7-module structure while keeping the old one temporarily for backward compatibility.
@@ -861,6 +862,7 @@ git commit -m "feat(rbac): add new permission codes structure and migration map"
 ### Task 1.2: Update seed to support new permission codes
 
 **Files:**
+
 - Modify: `OpenSea-API/prisma/seed.ts`
 
 - [ ] **Step 1: Read seed.ts thoroughly**
@@ -874,6 +876,7 @@ Change the function to extract from `NewPermissionCodes` instead of `PermissionC
 - [ ] **Step 3: Add migration function**
 
 Add `migrateExistingPermissions()` that:
+
 1. Reads all existing `PermissionGroupPermission` records
 2. For each, looks up the old code in `PERMISSION_MIGRATION_MAP`
 3. If mapped to a new code: create new association (if not exists), delete old
@@ -905,6 +908,7 @@ Each task in this phase updates all controllers within one module to use `NewPer
 ### Task 2.1: Update Stock controllers
 
 **Files:**
+
 - Modify: All files in `OpenSea-API/src/http/controllers/stock/` (~113 controllers)
 
 - [ ] **Step 1: Search all current stock permission usages**
@@ -914,6 +918,7 @@ Run: `grep -r "PermissionCodes.STOCK" OpenSea-API/src/http/controllers/stock/ --
 - [ ] **Step 2: Replace all permission codes**
 
 For each controller, change the import from `PermissionCodes` to `NewPermissionCodes` and update the code reference. Key mappings:
+
 - `PermissionCodes.STOCK.PRODUCTS.CREATE` → `NewPermissionCodes.STOCK.PRODUCTS.CREATE`
 - `PermissionCodes.STOCK.ZONES.CREATE` → `NewPermissionCodes.STOCK.WAREHOUSES.MANAGE`
 - `PermissionCodes.STOCK.BINS.READ` → `NewPermissionCodes.STOCK.WAREHOUSES.MANAGE`
@@ -939,6 +944,7 @@ git commit -m "refactor(rbac): update stock controllers to new permission codes"
 ### Task 2.2: Update Finance controllers
 
 Same pattern as Task 2.1 but for `OpenSea-API/src/http/controllers/finance/`. Key mappings:
+
 - `PermissionCodes.FINANCE.ATTACHMENTS.*` → `NewPermissionCodes.FINANCE.ENTRIES.MANAGE`
 - `PermissionCodes.FINANCE.DASHBOARD.VIEW` → `NewPermissionCodes.FINANCE.ENTRIES.READ`
 - `PermissionCodes.FINANCE.EXPORT.GENERATE` → `NewPermissionCodes.FINANCE.ENTRIES.EXPORT`
@@ -947,6 +953,7 @@ Same pattern as Task 2.1 but for `OpenSea-API/src/http/controllers/finance/`. Ke
 ### Task 2.3: Update HR controllers
 
 Same pattern for `OpenSea-API/src/http/controllers/hr/`. Key mappings:
+
 - `PermissionCodes.HR.BONUSES.*` → `NewPermissionCodes.HR.PAYROLL.MANAGE`
 - `PermissionCodes.HR.DEDUCTIONS.*` → `NewPermissionCodes.HR.PAYROLL.MANAGE`
 - `PermissionCodes.HR.VACATION_PERIODS.*` → `NewPermissionCodes.HR.VACATIONS.*`
@@ -956,12 +963,14 @@ Same pattern for `OpenSea-API/src/http/controllers/hr/`. Key mappings:
 ### Task 2.4: Update Sales controllers
 
 Same pattern for `OpenSea-API/src/http/controllers/sales/`. Key mappings:
+
 - `PermissionCodes.SALES.RESERVATIONS.*` → `NewPermissionCodes.SALES.ORDERS.MANAGE`
 - `PermissionCodes.SALES.COMMENTS.*` → `NewPermissionCodes.SALES.ORDERS.UPDATE`
 
 ### Task 2.5: Update RBAC, Audit, Core controllers → Admin codes
 
 Update controllers in `rbac/`, `audit/`, `core/` (users, sessions, teams). Key mappings:
+
 - `PermissionCodes.RBAC.GROUPS.*` → `NewPermissionCodes.ADMIN.PERMISSION_GROUPS.*`
 - `PermissionCodes.RBAC.PERMISSIONS.*` → `NewPermissionCodes.ADMIN.PERMISSION_GROUPS.MANAGE`
 - `PermissionCodes.AUDIT.*` → `NewPermissionCodes.ADMIN.AUDIT_LOGS.*`
@@ -972,6 +981,7 @@ Update controllers in `rbac/`, `audit/`, `core/` (users, sessions, teams). Key m
 ### Task 2.6: Update Calendar, Email, Storage, Tasks controllers → Tools codes
 
 Update controllers in `calendar/`, `email/`, `storage/`, `tasks/`. Key mappings:
+
 - `PermissionCodes.CALENDAR.*` → `NewPermissionCodes.TOOLS.CALENDAR_EVENTS.*`
 - `PermissionCodes.EMAIL.*` → `NewPermissionCodes.TOOLS.EMAIL_ACCOUNTS/EMAIL_MESSAGES.*`
 - `PermissionCodes.STORAGE.*` → `NewPermissionCodes.TOOLS.STORAGE_FILES/STORAGE_FOLDERS.*`
@@ -1009,6 +1019,7 @@ git commit -m "refactor(rbac): finalize new permission codes, remove old structu
 ### Task 3.1: Rewrite frontend permission codes
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/config/rbac/permission-codes.ts` (1007 lines)
 
 - [ ] **Step 1: Read current file**
@@ -1018,6 +1029,7 @@ Understand the structure: separate exports per module (STOCK_PERMISSIONS, HR_PER
 - [ ] **Step 2: Rewrite with new structure**
 
 Mirror the backend `NewPermissionCodes` exactly. Export as:
+
 - `STOCK_PERMISSIONS`
 - `FINANCE_PERMISSIONS`
 - `HR_PERMISSIONS`
@@ -1038,6 +1050,7 @@ git commit -m "refactor(rbac): rewrite frontend permission codes to match new st
 ### Task 3.2: Update module-specific permission constants
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/app/(dashboard)/(modules)/admin/_shared/constants/admin-permissions.ts`
 - Modify: `OpenSea-APP/src/app/(dashboard)/(modules)/stock/_shared/constants/stock-permissions.ts`
 - Modify: `OpenSea-APP/src/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions.ts`
@@ -1061,6 +1074,7 @@ git commit -m "refactor(rbac): update module permission constant re-exports"
 ### Task 3.3: Update base-groups.ts
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/config/rbac/base-groups.ts` (539 lines)
 
 - [ ] **Step 1: Update all permission code references in base group definitions**
@@ -1081,6 +1095,7 @@ git commit -m "refactor(rbac): update base groups to use new permission codes"
 ### Task 3.4: Update all `hasPermission()` calls across frontend pages
 
 **Files:**
+
 - Modify: ~68 files that use `hasPermission()`
 
 - [ ] **Step 1: Find all files**
@@ -1090,6 +1105,7 @@ Run: `grep -r "hasPermission\|PERMISSIONS\." OpenSea-APP/src/app/ --include="*.t
 - [ ] **Step 2: Update each file**
 
 Replace old permission references with new ones. This is mechanical — search and replace per module. Example:
+
 - `PERMISSIONS.PRODUCTS.CREATE` → `PERMISSIONS.PRODUCTS.CREATE` (same for stock)
 - `PERMISSIONS.ZONES.CREATE` → `PERMISSIONS.WAREHOUSES.MANAGE`
 - `PERMISSIONS.AUDIT_LOGS.VIEW` → `PERMISSIONS.AUDIT_LOGS.READ`
@@ -1115,6 +1131,7 @@ git commit -m "refactor(rbac): update all hasPermission calls to new codes"
 ### Task 4.1: Create PermissionMatrix component
 
 **Files:**
+
 - Create: `OpenSea-APP/src/app/(dashboard)/(modules)/admin/(entities)/permission-groups/src/components/permission-matrix.tsx`
 
 - [ ] **Step 1: Define the module/resource/action configuration**
@@ -1123,98 +1140,477 @@ Create a configuration object that defines all 7 tabs, their resources, and avai
 
 ```typescript
 interface PermissionResource {
-  key: string;       // e.g., 'warehouses'
-  label: string;     // e.g., 'Armazéns'
+  key: string; // e.g., 'warehouses'
+  label: string; // e.g., 'Armazéns'
   subtitle?: string; // e.g., 'zonas, bins, endereços, etiquetas'
   codePrefix: string; // e.g., 'stock.warehouses'
   actions: string[]; // e.g., ['create','update','delete','manage','list','read']
 }
 
 interface PermissionModule {
-  key: string;       // e.g., 'stock'
-  label: string;     // e.g., 'Estoque'
-  icon: string;      // e.g., '📦'
+  key: string; // e.g., 'stock'
+  label: string; // e.g., 'Estoque'
+  icon: string; // e.g., '📦'
   resources: PermissionResource[];
 }
 
 export const PERMISSION_MODULES: PermissionModule[] = [
   {
-    key: 'stock', label: 'Estoque', icon: '📦',
+    key: 'stock',
+    label: 'Estoque',
+    icon: '📦',
     resources: [
-      { key: 'warehouses', label: 'Armazéns', subtitle: 'zonas, bins, endereços, etiquetas', codePrefix: 'stock.warehouses', actions: ['create','update','delete','manage','list','read'] },
-      { key: 'categories', label: 'Categorias', codePrefix: 'stock.categories', actions: ['create','update','delete','export','import','list','read'] },
-      { key: 'manufacturers', label: 'Fabricantes', codePrefix: 'stock.manufacturers', actions: ['create','update','delete','export','import','list','read'] },
-      { key: 'items', label: 'Itens', subtitle: 'movimentações, localização', codePrefix: 'stock.items', actions: ['export','manage','list','read'] },
-      { key: 'purchase-orders', label: 'Ordens de Compra', subtitle: 'gerenciar: aprovar, cancelar', codePrefix: 'stock.purchase-orders', actions: ['create','update','delete','export','manage','list','read'] },
-      { key: 'products', label: 'Produtos', subtitle: 'attachments, instruções de cuidado', codePrefix: 'stock.products', actions: ['create','update','delete','export','manage','import','list','read'] },
-      { key: 'templates', label: 'Templates', codePrefix: 'stock.templates', actions: ['create','update','delete','list','read'] },
-      { key: 'variants', label: 'Variantes', subtitle: 'attachments', codePrefix: 'stock.variants', actions: ['create','update','delete','export','manage','import','list','read'] },
-      { key: 'volumes', label: 'Volumes', subtitle: 'gerenciar: fechar, entregar, romaneio', codePrefix: 'stock.volumes', actions: ['create','update','delete','export','manage','list','read'] },
+      {
+        key: 'warehouses',
+        label: 'Armazéns',
+        subtitle: 'zonas, bins, endereços, etiquetas',
+        codePrefix: 'stock.warehouses',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'categories',
+        label: 'Categorias',
+        codePrefix: 'stock.categories',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'import',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'manufacturers',
+        label: 'Fabricantes',
+        codePrefix: 'stock.manufacturers',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'import',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'items',
+        label: 'Itens',
+        subtitle: 'movimentações, localização',
+        codePrefix: 'stock.items',
+        actions: ['export', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'purchase-orders',
+        label: 'Ordens de Compra',
+        subtitle: 'gerenciar: aprovar, cancelar',
+        codePrefix: 'stock.purchase-orders',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'products',
+        label: 'Produtos',
+        subtitle: 'attachments, instruções de cuidado',
+        codePrefix: 'stock.products',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'import',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'templates',
+        label: 'Templates',
+        codePrefix: 'stock.templates',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'variants',
+        label: 'Variantes',
+        subtitle: 'attachments',
+        codePrefix: 'stock.variants',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'import',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'volumes',
+        label: 'Volumes',
+        subtitle: 'gerenciar: fechar, entregar, romaneio',
+        codePrefix: 'stock.volumes',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'list',
+          'read',
+        ],
+      },
     ],
   },
   {
-    key: 'finance', label: 'Financeiro', icon: '💰',
+    key: 'finance',
+    label: 'Financeiro',
+    icon: '💰',
     resources: [
-      { key: 'categories', label: 'Categorias', codePrefix: 'finance.categories', actions: ['create','update','delete','list','read'] },
-      { key: 'cost-centers', label: 'Centros de Custo', codePrefix: 'finance.cost-centers', actions: ['create','update','delete','list','read'] },
-      { key: 'consortia', label: 'Consórcios', subtitle: 'gerenciar: pagar, contemplar', codePrefix: 'finance.consortia', actions: ['create','update','delete','export','manage','list','read'] },
-      { key: 'bank-accounts', label: 'Contas Bancárias', codePrefix: 'finance.bank-accounts', actions: ['create','update','delete','list','read'] },
-      { key: 'contracts', label: 'Contratos', codePrefix: 'finance.contracts', actions: ['create','update','delete','export','list','read'] },
-      { key: 'loans', label: 'Empréstimos', subtitle: 'gerenciar: pagar parcela', codePrefix: 'finance.loans', actions: ['create','update','delete','export','manage','list','read'] },
-      { key: 'suppliers', label: 'Fornecedores', subtitle: 'vindo do módulo de estoque', codePrefix: 'finance.suppliers', actions: ['create','update','delete','export','import','list','read'] },
-      { key: 'entries', label: 'Lançamentos', subtitle: 'gerenciar: pagar, cancelar, attachments', codePrefix: 'finance.entries', actions: ['create','update','delete','export','manage','import','list','read'] },
-      { key: 'recurring', label: 'Recorrências', subtitle: 'gerenciar: pausar, retomar, cancelar', codePrefix: 'finance.recurring', actions: ['create','update','manage','list','read'] },
+      {
+        key: 'categories',
+        label: 'Categorias',
+        codePrefix: 'finance.categories',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'cost-centers',
+        label: 'Centros de Custo',
+        codePrefix: 'finance.cost-centers',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'consortia',
+        label: 'Consórcios',
+        subtitle: 'gerenciar: pagar, contemplar',
+        codePrefix: 'finance.consortia',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'bank-accounts',
+        label: 'Contas Bancárias',
+        codePrefix: 'finance.bank-accounts',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'contracts',
+        label: 'Contratos',
+        codePrefix: 'finance.contracts',
+        actions: ['create', 'update', 'delete', 'export', 'list', 'read'],
+      },
+      {
+        key: 'loans',
+        label: 'Empréstimos',
+        subtitle: 'gerenciar: pagar parcela',
+        codePrefix: 'finance.loans',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'suppliers',
+        label: 'Fornecedores',
+        subtitle: 'vindo do módulo de estoque',
+        codePrefix: 'finance.suppliers',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'import',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'entries',
+        label: 'Lançamentos',
+        subtitle: 'gerenciar: pagar, cancelar, attachments',
+        codePrefix: 'finance.entries',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'import',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'recurring',
+        label: 'Recorrências',
+        subtitle: 'gerenciar: pausar, retomar, cancelar',
+        codePrefix: 'finance.recurring',
+        actions: ['create', 'update', 'manage', 'list', 'read'],
+      },
     ],
   },
   {
-    key: 'hr', label: 'Recursos Humanos', icon: '👥',
+    key: 'hr',
+    label: 'Recursos Humanos',
+    icon: '👥',
     resources: [
-      { key: 'absences', label: 'Ausências', subtitle: 'gerenciar: aprovar, cancelar', codePrefix: 'hr.absences', actions: ['create','update','delete','manage','list','read'] },
-      { key: 'positions', label: 'Cargos', codePrefix: 'hr.positions', actions: ['create','update','delete','list','read'] },
-      { key: 'employees', label: 'Colaboradores', subtitle: 'gerenciar: suspender, reativar, licença', codePrefix: 'hr.employees', actions: ['create','update','delete','export','manage','import','list','read'] },
-      { key: 'departments', label: 'Departamentos', codePrefix: 'hr.departments', actions: ['create','update','delete','list','read'] },
-      { key: 'work-schedules', label: 'Escalas de Trabalho', codePrefix: 'hr.work-schedules', actions: ['create','update','delete','list','read'] },
-      { key: 'vacations', label: 'Férias', subtitle: 'gerenciar: aprovar', codePrefix: 'hr.vacations', actions: ['create','update','manage','list','read'] },
-      { key: 'payroll', label: 'Folha de Pagamento', subtitle: 'gerenciar: bônus, descontos, processar', codePrefix: 'hr.payroll', actions: ['create','export','manage','list','read'] },
-      { key: 'time-control', label: 'Ponto', subtitle: 'controle de ponto, banco de horas', codePrefix: 'hr.time-control', actions: ['create','export','list','read'] },
+      {
+        key: 'absences',
+        label: 'Ausências',
+        subtitle: 'gerenciar: aprovar, cancelar',
+        codePrefix: 'hr.absences',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'positions',
+        label: 'Cargos',
+        codePrefix: 'hr.positions',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'employees',
+        label: 'Colaboradores',
+        subtitle: 'gerenciar: suspender, reativar, licença',
+        codePrefix: 'hr.employees',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'import',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'departments',
+        label: 'Departamentos',
+        codePrefix: 'hr.departments',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'work-schedules',
+        label: 'Escalas de Trabalho',
+        codePrefix: 'hr.work-schedules',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'vacations',
+        label: 'Férias',
+        subtitle: 'gerenciar: aprovar',
+        codePrefix: 'hr.vacations',
+        actions: ['create', 'update', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'payroll',
+        label: 'Folha de Pagamento',
+        subtitle: 'gerenciar: bônus, descontos, processar',
+        codePrefix: 'hr.payroll',
+        actions: ['create', 'export', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'time-control',
+        label: 'Ponto',
+        subtitle: 'controle de ponto, banco de horas',
+        codePrefix: 'hr.time-control',
+        actions: ['create', 'export', 'list', 'read'],
+      },
     ],
   },
   {
-    key: 'sales', label: 'Vendas', icon: '🛒',
+    key: 'sales',
+    label: 'Vendas',
+    icon: '🛒',
     resources: [
-      { key: 'customers', label: 'Clientes', codePrefix: 'sales.customers', actions: ['create','update','delete','export','import','list','read'] },
-      { key: 'orders', label: 'Pedidos', subtitle: 'gerenciar: alterar status, cancelar', codePrefix: 'sales.orders', actions: ['create','update','delete','export','manage','list','read'] },
-      { key: 'promotions', label: 'Promoções', codePrefix: 'sales.promotions', actions: ['create','update','delete','list','read'] },
+      {
+        key: 'customers',
+        label: 'Clientes',
+        codePrefix: 'sales.customers',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'import',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'orders',
+        label: 'Pedidos',
+        subtitle: 'gerenciar: alterar status, cancelar',
+        codePrefix: 'sales.orders',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'promotions',
+        label: 'Promoções',
+        codePrefix: 'sales.promotions',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
     ],
   },
   {
-    key: 'admin', label: 'Administração', icon: '🏢',
+    key: 'admin',
+    label: 'Administração',
+    icon: '🏢',
     resources: [
-      { key: 'audit-logs', label: 'Auditoria: Logs', subtitle: 'gerenciar: comparar, histórico, rollback', codePrefix: 'admin.audit-logs', actions: ['manage','list','read'] },
-      { key: 'companies', label: 'Empresas', subtitle: 'endereços, CNAEs, fiscal, sócios, docs', codePrefix: 'admin.companies', actions: ['create','update','delete','manage','list','read'] },
-      { key: 'permission-groups', label: 'Grupos de Permissão', subtitle: 'gerenciar: atribuir permissões', codePrefix: 'admin.permission-groups', actions: ['create','update','delete','manage','list','read'] },
-      { key: 'sessions', label: 'Sessões', subtitle: 'gerenciar: revogar sessões', codePrefix: 'admin.sessions', actions: ['manage','list','read'] },
-      { key: 'users', label: 'Usuários', subtitle: 'gerenciar: atribuir grupos, permissões diretas', codePrefix: 'admin.users', actions: ['create','update','delete','manage','list','read'] },
+      {
+        key: 'audit-logs',
+        label: 'Auditoria: Logs',
+        subtitle: 'gerenciar: comparar, histórico, rollback',
+        codePrefix: 'admin.audit-logs',
+        actions: ['manage', 'list', 'read'],
+      },
+      {
+        key: 'companies',
+        label: 'Empresas',
+        subtitle: 'endereços, CNAEs, fiscal, sócios, docs',
+        codePrefix: 'admin.companies',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'permission-groups',
+        label: 'Grupos de Permissão',
+        subtitle: 'gerenciar: atribuir permissões',
+        codePrefix: 'admin.permission-groups',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'sessions',
+        label: 'Sessões',
+        subtitle: 'gerenciar: revogar sessões',
+        codePrefix: 'admin.sessions',
+        actions: ['manage', 'list', 'read'],
+      },
+      {
+        key: 'users',
+        label: 'Usuários',
+        subtitle: 'gerenciar: atribuir grupos, permissões diretas',
+        codePrefix: 'admin.users',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
     ],
   },
   {
-    key: 'tools', label: 'Ferramentas', icon: '🔧',
+    key: 'tools',
+    label: 'Ferramentas',
+    icon: '🔧',
     resources: [
-      { key: 'calendar-events', label: 'Agenda: Eventos', subtitle: 'gerenciar: compartilhar, participantes, lembretes', codePrefix: 'tools.calendar-events', actions: ['create','update','delete','export','manage','list','read'] },
-      { key: 'storage-files', label: 'Armazenamento: Arquivos', subtitle: 'gerenciar: versões, compartilhar, download', codePrefix: 'tools.storage-files', actions: ['create','update','delete','manage','list','read'] },
-      { key: 'storage-folders', label: 'Armazenamento: Pastas', subtitle: 'gerenciar: compartilhar com usuário/grupo', codePrefix: 'tools.storage-folders', actions: ['create','update','delete','manage','list','read'] },
-      { key: 'email-accounts', label: 'Email: Contas', subtitle: 'gerenciar: compartilhar, sincronizar', codePrefix: 'tools.email-accounts', actions: ['create','update','delete','manage','list','read'] },
-      { key: 'email-messages', label: 'Email: Mensagens', codePrefix: 'tools.email-messages', actions: ['create','update','delete','list','read'] },
-      { key: 'task-cards', label: 'Tarefas: Cartões', subtitle: 'gerenciar: mover, atribuir, anexos, comentários', codePrefix: 'tools.task-cards', actions: ['create','update','delete','manage','list','read'] },
-      { key: 'task-boards', label: 'Tarefas: Quadros', codePrefix: 'tools.task-boards', actions: ['create','update','delete','list','read'] },
+      {
+        key: 'calendar-events',
+        label: 'Agenda: Eventos',
+        subtitle: 'gerenciar: compartilhar, participantes, lembretes',
+        codePrefix: 'tools.calendar-events',
+        actions: [
+          'create',
+          'update',
+          'delete',
+          'export',
+          'manage',
+          'list',
+          'read',
+        ],
+      },
+      {
+        key: 'storage-files',
+        label: 'Armazenamento: Arquivos',
+        subtitle: 'gerenciar: versões, compartilhar, download',
+        codePrefix: 'tools.storage-files',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'storage-folders',
+        label: 'Armazenamento: Pastas',
+        subtitle: 'gerenciar: compartilhar com usuário/grupo',
+        codePrefix: 'tools.storage-folders',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'email-accounts',
+        label: 'Email: Contas',
+        subtitle: 'gerenciar: compartilhar, sincronizar',
+        codePrefix: 'tools.email-accounts',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'email-messages',
+        label: 'Email: Mensagens',
+        codePrefix: 'tools.email-messages',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'task-cards',
+        label: 'Tarefas: Cartões',
+        subtitle: 'gerenciar: mover, atribuir, anexos, comentários',
+        codePrefix: 'tools.task-cards',
+        actions: ['create', 'update', 'delete', 'manage', 'list', 'read'],
+      },
+      {
+        key: 'task-boards',
+        label: 'Tarefas: Quadros',
+        codePrefix: 'tools.task-boards',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
     ],
   },
   {
-    key: 'system', label: 'Sistema', icon: '⚙️',
+    key: 'system',
+    label: 'Sistema',
+    icon: '⚙️',
     resources: [
-      { key: 'label-templates', label: 'Modelos de Etiqueta', codePrefix: 'system.label-templates', actions: ['create','update','delete','list','read'] },
-      { key: 'notifications', label: 'Notificações', subtitle: 'gerenciar: enviar, agendar', codePrefix: 'system.notifications', actions: ['manage'] },
-      { key: 'self', label: 'Permissões Pessoais', subtitle: 'perfil, sessões, férias, ponto', codePrefix: 'system.self', actions: ['read','update','manage'] },
+      {
+        key: 'label-templates',
+        label: 'Modelos de Etiqueta',
+        codePrefix: 'system.label-templates',
+        actions: ['create', 'update', 'delete', 'list', 'read'],
+      },
+      {
+        key: 'notifications',
+        label: 'Notificações',
+        subtitle: 'gerenciar: enviar, agendar',
+        codePrefix: 'system.notifications',
+        actions: ['manage'],
+      },
+      {
+        key: 'self',
+        label: 'Permissões Pessoais',
+        subtitle: 'perfil, sessões, férias, ponto',
+        codePrefix: 'system.self',
+        actions: ['read', 'update', 'manage'],
+      },
     ],
   },
 ];
@@ -1234,6 +1630,7 @@ export const ACTION_COLUMNS = [
 - [ ] **Step 2: Build the matrix table component**
 
 Create `PermissionMatrix` that receives `moduleKey`, `selectedPermissions: Set<string>`, and `onToggle(code: string)`. Renders:
+
 - Sticky header with column names + ⬇ select-all-column buttons
 - Rows for each resource with → select-all-row button + checkboxes
 - N/A state for actions not in the resource's `actions` array
@@ -1249,11 +1646,13 @@ git commit -m "feat(rbac): create PermissionMatrix component with config"
 ### Task 4.2: Create ModuleTabList component
 
 **Files:**
+
 - Create: `OpenSea-APP/src/app/(dashboard)/(modules)/admin/(entities)/permission-groups/src/components/module-tab-list.tsx`
 
 - [ ] **Step 1: Build the vertical tab sidebar**
 
 Create `ModuleTabList` that receives `modules`, `activeModule`, `onModuleChange`, and `permissionCounts: Record<string, { selected: number, total: number }>`. Renders:
+
 - Vertical list of module tabs with icon + label + count badge
 - Active state: `bg-blue-500/15 border border-blue-500/30`
 - Inactive: `opacity-50`
@@ -1268,18 +1667,21 @@ git commit -m "feat(rbac): create ModuleTabList component"
 ### Task 4.3: Create ManagePermissionsMatrix modal
 
 **Files:**
+
 - Create: `OpenSea-APP/src/app/(dashboard)/(modules)/admin/(entities)/permission-groups/src/modals/manage-permissions-matrix.tsx`
 - Modify: `OpenSea-APP/src/app/(dashboard)/(modules)/admin/(entities)/permission-groups/page.tsx`
 
 - [ ] **Step 1: Build the modal wrapper**
 
 Create `ManagePermissionsMatrix` that combines ModuleTabList + PermissionMatrix inside a Dialog (`max-w-6xl h-[85vh]`):
+
 - Header: "Gerenciar Permissões — {Group Name}" + count
 - Left sidebar: ModuleTabList (~160px)
 - Right area: PermissionMatrix for active module
 - Footer: hint text + Cancel/Save buttons
 
 State management:
+
 - `selectedPermissions: Set<string>` — initialized from `rbacService.listGroupPermissions()`
 - `activeModule: string` — which tab is active
 - On save: compute diff (added/removed), call bulk API
@@ -1287,6 +1689,7 @@ State management:
 - [ ] **Step 2: Wire up API calls**
 
 Load permissions on open:
+
 ```typescript
 const { data: groupPermissions } = useQuery({
   queryKey: ['group-permissions', groupId],
@@ -1303,6 +1706,7 @@ In the permission groups page, replace `ManagePermissionsModal` with `ManagePerm
 - [ ] **Step 4: Test manually**
 
 Open the app, navigate to Admin > Grupos de Permissão, click "Gerenciar Permissões" on a group. Verify:
+
 - 7 tabs render with correct icons/labels
 - Matrix shows checkboxes for each resource/action
 - Select-all row/column works
@@ -1318,6 +1722,7 @@ git commit -m "feat(rbac): replace ManagePermissionsModal with matrix UI"
 ### Task 4.4: Remove old ManagePermissionsModal
 
 **Files:**
+
 - Delete: `OpenSea-APP/src/app/(dashboard)/(modules)/admin/(entities)/permission-groups/src/modals/manage-permissions-modal.tsx`
 
 - [ ] **Step 1: Verify no other imports reference the old modal**
@@ -1392,15 +1797,18 @@ Check that the database has ~234 permissions (not ~721).
 ## Execution Notes
 
 ### Parallelization
+
 - Tasks 2.1–2.7 (controller updates) are independent and can be parallelized with subagents
 - Tasks 3.1–3.4 (frontend updates) must be sequential (each depends on the previous)
 - Phase 4 (UI) depends on Phase 3 being complete
 
 ### Risk Areas
+
 - **958 controller permission references** — most mechanical but error-prone. Use grep + replace carefully.
 - **68 frontend files with hasPermission** — same mechanical risk.
 - **Seed migration** — must handle existing group assignments correctly. Test on a copy of production data if possible.
 
 ### Rollback
+
 - Old `PermissionCodes` is kept alongside `NewPermissionCodes` until Phase 2.8
 - If issues arise, revert to old codes by removing the rename step

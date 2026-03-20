@@ -17,6 +17,7 @@
 ### Task 1.1: Optimistic Move Message
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/hooks/email/use-email.ts` (useMoveMessage hook, ~line 499-515)
 
 **Context:** Currently `useMoveMessage` does blanket `['email']` invalidation with no optimistic update. We need to follow the exact pattern from `useMarkMessageRead` (lines 358-420): cancel queries → snapshot → update cache → selective invalidation on success → restore on error.
@@ -24,6 +25,7 @@
 - [ ] **Step 1: Add optimistic onMutate to useMoveMessage**
 
 In `use-email.ts`, replace the current `useMoveMessage` hook. The new version must:
+
 1. `onMutate`: Cancel outgoing queries, snapshot the current infinite query pages, remove the message from the list cache, update the detail cache's `folderId`, and adjust folder unread counts
 2. `onError`: Restore the snapshot by invalidating `['email']`
 3. `onSuccess`: Invalidate only `['email', 'folders']` and `['email', 'accounts']` (NOT messages)
@@ -34,6 +36,7 @@ The cache structure for infinite queries is `{ pages: [{ data: EmailMessageListI
 - [ ] **Step 2: Verify move works — test manually**
 
 Run the frontend dev server. Navigate to email, select a message, move it to another folder. Verify:
+
 - Message disappears instantly from list (no loading spinner)
 - Folder unread counts update
 - If you switch to the target folder, the message appears after next refetch
@@ -48,6 +51,7 @@ cd OpenSea-APP && git add src/hooks/email/use-email.ts && git commit -m "feat(em
 ### Task 1.2: Optimistic Delete Message
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/hooks/email/use-email.ts` (useDeleteMessage hook)
 
 **Context:** Same pattern as Task 1.1. `useDeleteMessage` currently does blanket invalidation. The optimistic behavior is identical: remove message from list cache immediately.
@@ -55,6 +59,7 @@ cd OpenSea-APP && git add src/hooks/email/use-email.ts && git commit -m "feat(em
 - [ ] **Step 1: Add optimistic onMutate to useDeleteMessage**
 
 Replace the current `useDeleteMessage` hook with optimistic cache updates:
+
 1. `onMutate`: Cancel queries, snapshot, remove message from all infinite query pages, decrement unread count if message was unread
 2. `onError`: Restore snapshot via `['email']` invalidation + error toast
 3. `onSuccess`: Invalidate only `['email', 'folders']` and `['email', 'accounts']`
@@ -62,6 +67,7 @@ Replace the current `useDeleteMessage` hook with optimistic cache updates:
 - [ ] **Step 2: Verify delete works — test manually**
 
 Test both paths:
+
 - Delete from non-trash folder → message should vanish instantly (moved to trash on server)
 - Delete from trash folder → message should vanish instantly (permanently deleted on server)
 - Network failure → message reappears with error toast
@@ -75,6 +81,7 @@ cd OpenSea-APP && git add src/hooks/email/use-email.ts && git commit -m "feat(em
 ### Task 1.3: Optimistic Bulk Move and Bulk Delete
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/hooks/email/use-email.ts` (useBulkMove, useBulkDelete hooks)
 
 **Context:** Currently `useBulkMove` and `useBulkDelete` (lines 604-644) have NO optimistic updates. They use `runBulkQueue` for concurrency but don't update the cache. Add optimistic removal of all selected messages from the list before the bulk queue starts.
@@ -102,10 +109,12 @@ cd OpenSea-APP && git add src/hooks/email/use-email.ts && git commit -m "feat(em
 ### Task 1.4: Optimistic Send Email (Gmail-style)
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/hooks/email/use-email.ts` (useSendMessage hook)
 - Modify: `OpenSea-APP/src/components/email/email-compose-dialog.tsx` (close dialog immediately)
 
 **Context:** Currently `useSendMessage` (lines 517-531) does blanket invalidation with no optimism. The compose dialog stays open until the mutation completes. We need to:
+
 1. Close the dialog immediately when user clicks Send
 2. Show a "Enviando..." toast
 3. Preserve the email body in a ref so we can retry if SMTP fails
@@ -114,6 +123,7 @@ cd OpenSea-APP && git add src/hooks/email/use-email.ts && git commit -m "feat(em
 - [ ] **Step 1: Create send retry state in useEmailPage**
 
 In `use-email-page.ts`, add a `useRef` to store the last sent email data for retry purposes:
+
 ```typescript
 const pendingSendRef = useRef<SendEmailMessageRequest | null>(null);
 ```
@@ -123,6 +133,7 @@ Add a callback `onRetrySend` that reopens the compose dialog with the preserved 
 - [ ] **Step 2: Update useSendMessage for fire-and-forget pattern**
 
 In `use-email.ts`, update `useSendMessage`:
+
 - Remove: waiting for mutation to complete before closing dialog
 - `onMutate`: Store request data in pendingSendRef, show `toast.loading('Enviando email...')` with an ID
 - `onSuccess`: Dismiss loading toast, show `toast.success('Email enviado')`, clear pendingSendRef, invalidate `['email', 'folders']`
@@ -131,6 +142,7 @@ In `use-email.ts`, update `useSendMessage`:
 - [ ] **Step 3: Update EmailComposeDialog to close immediately on send**
 
 In `email-compose-dialog.tsx`, change the send handler:
+
 - Call `mutation.mutate(data)` (fire-and-forget, NOT `mutateAsync`)
 - Call `onClose()` immediately after mutate (don't wait for result)
 - The dialog closes, the toast appears, user continues working
@@ -150,6 +162,7 @@ cd OpenSea-APP && git add src/hooks/email/use-email.ts src/hooks/email/use-email
 ### Task 1.5: Optimistic Save Draft
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/hooks/email/use-email.ts` (useSaveDraft hook)
 
 **Context:** Currently `useSaveDraft` does blanket invalidation. Change to show immediate success toast and only invalidate folders.
@@ -173,6 +186,7 @@ cd OpenSea-APP && git add src/hooks/email/use-email.ts && git commit -m "feat(em
 ### Task 2.1: Add Redis Suppressor Utility
 
 **Files:**
+
 - Create: `OpenSea-API/src/services/email/notification-suppressor.service.ts`
 
 **Context:** We need a simple Redis-based suppressor service. Keys have TTL of 10 minutes and follow the pattern `email:suppress:{accountId}:{folder}:{identifier}`.
@@ -188,12 +202,20 @@ const PREFIX = 'email:suppress';
 export class NotificationSuppressorService {
   constructor(private redis: Redis) {}
 
-  async suppress(accountId: string, folder: string, identifier: string): Promise<void> {
+  async suppress(
+    accountId: string,
+    folder: string,
+    identifier: string
+  ): Promise<void> {
     const key = `${PREFIX}:${accountId}:${folder}:${identifier}`;
     await this.redis.set(key, '1', 'EX', SUPPRESSOR_TTL_SECONDS);
   }
 
-  async isSuppressed(accountId: string, folder: string, identifier: string): Promise<boolean> {
+  async isSuppressed(
+    accountId: string,
+    folder: string,
+    identifier: string
+  ): Promise<boolean> {
     const key = `${PREFIX}:${accountId}:${folder}:${identifier}`;
     const result = await this.redis.get(key);
     if (result) {
@@ -218,6 +240,7 @@ cd OpenSea-API && git add src/services/email/notification-suppressor.service.ts 
 ### Task 2.2: Register Suppressors on User Actions
 
 **Files:**
+
 - Modify: `OpenSea-API/src/use-cases/email/messages/send-email-message.ts`
 - Modify: `OpenSea-API/src/use-cases/email/messages/move-email-message.ts`
 - Modify: `OpenSea-API/src/use-cases/email/messages/delete-email-message.ts`
@@ -227,26 +250,43 @@ cd OpenSea-API && git add src/services/email/notification-suppressor.service.ts 
 - [ ] **Step 1: Add suppressor to SendEmailMessageUseCase**
 
 After the SMTP send succeeds, register a suppressor for the Sent folder:
+
 ```typescript
 // After smtpClientService.send() succeeds:
 const suppressor = getNotificationSuppressor();
-await suppressor.suppress(account.id.toString(), 'SENT', messageIdHeader).catch(() => {}); // fire-and-forget
+await suppressor
+  .suppress(account.id.toString(), 'SENT', messageIdHeader)
+  .catch(() => {}); // fire-and-forget
 ```
 
 - [ ] **Step 2: Add suppressor to MoveEmailMessageUseCase**
 
 After `client.messageMove()` succeeds, register a suppressor for the target folder:
+
 ```typescript
 const suppressor = getNotificationSuppressor();
-await suppressor.suppress(account.id.toString(), targetFolder.id.toString(), message.remoteUid.toString()).catch(() => {});
+await suppressor
+  .suppress(
+    account.id.toString(),
+    targetFolder.id.toString(),
+    message.remoteUid.toString()
+  )
+  .catch(() => {});
 ```
 
 - [ ] **Step 3: Add suppressor to DeleteEmailMessageUseCase**
 
 In `moveMessageToTrash()`, after moving to trash:
+
 ```typescript
 const suppressor = getNotificationSuppressor();
-await suppressor.suppress(account.id.toString(), trashFolder.id.toString(), message.remoteUid.toString()).catch(() => {});
+await suppressor
+  .suppress(
+    account.id.toString(),
+    trashFolder.id.toString(),
+    message.remoteUid.toString()
+  )
+  .catch(() => {});
 ```
 
 - [ ] **Step 4: Commit**
@@ -258,10 +298,12 @@ cd OpenSea-API && git add src/use-cases/email/messages/send-email-message.ts src
 ### Task 2.3: Check Suppressors During Sync & Restrict to INBOX
 
 **Files:**
+
 - Modify: `OpenSea-API/src/use-cases/email/sync/sync-email-account.ts`
 - Modify: `OpenSea-API/src/use-cases/email/sync/email-sync-notification.service.ts`
 
 **Context:** The sync account use case calls `notifyNewMessages()` after syncing. We need two changes:
+
 1. Only trigger notifications for messages synced into INBOX folders (not Sent, Drafts, Trash, Spam)
 2. Before creating notifications, check Redis suppressors for each new message
 
@@ -297,7 +339,11 @@ const suppressor = getNotificationSuppressor();
 // Filter out suppressed messages
 const genuineMessages = [];
 for (const msg of messages) {
-  const isSuppressed = await suppressor.isSuppressed(accountId, 'INBOX', msg.remoteUid.toString());
+  const isSuppressed = await suppressor.isSuppressed(
+    accountId,
+    'INBOX',
+    msg.remoteUid.toString()
+  );
   if (!isSuppressed) {
     genuineMessages.push(msg);
   }
@@ -325,6 +371,7 @@ cd OpenSea-API && git add src/use-cases/email/sync/sync-email-account.ts src/use
 ### Task 3.1: Backend Health Check Endpoint
 
 **Files:**
+
 - Create: `OpenSea-API/src/use-cases/email/accounts/check-email-account-health.ts`
 - Create: `OpenSea-API/src/http/controllers/email/accounts/v1-check-email-account-health.controller.ts`
 - Create: `OpenSea-API/src/http/schemas/email/accounts/check-email-account-health.schema.ts`
@@ -335,6 +382,7 @@ cd OpenSea-API && git add src/use-cases/email/sync/sync-email-account.ts src/use
 - [ ] **Step 1: Create the response schema**
 
 In `check-email-account-health.schema.ts`:
+
 ```typescript
 export const checkEmailAccountHealthResponseSchema = {
   type: 'object',
@@ -371,6 +419,7 @@ export const checkEmailAccountHealthResponseSchema = {
 - [ ] **Step 2: Create the use case**
 
 In `check-email-account-health.ts`:
+
 - Accept `{ tenantId, userId, accountId }`
 - Verify ownership/access (same pattern as test-email-connection.ts)
 - Decrypt credentials
@@ -387,11 +436,24 @@ Standard Fastify controller pattern. GET endpoint, params `{ id }`, returns 200 
 - [ ] **Step 4: Register the route**
 
 In `routes.ts`, add:
+
 ```typescript
-app.get('/v1/email/accounts/:id/health', {
-  onRequest: [verifyJwt, verifyTenant, createModuleMiddleware('EMAIL'), verifyPermission('email.accounts.read')],
-  schema: { params: idParamsSchema, response: { 200: checkEmailAccountHealthResponseSchema } },
-}, checkEmailAccountHealthController);
+app.get(
+  '/v1/email/accounts/:id/health',
+  {
+    onRequest: [
+      verifyJwt,
+      verifyTenant,
+      createModuleMiddleware('EMAIL'),
+      verifyPermission('email.accounts.read'),
+    ],
+    schema: {
+      params: idParamsSchema,
+      response: { 200: checkEmailAccountHealthResponseSchema },
+    },
+  },
+  checkEmailAccountHealthController
+);
 ```
 
 - [ ] **Step 5: Verify — test via curl/Swagger**
@@ -411,6 +473,7 @@ cd OpenSea-API && git add src/use-cases/email/accounts/check-email-account-healt
 ### Task 3.2: Frontend Health Hook and Types
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/types/email/email-account.types.ts`
 - Modify: `OpenSea-APP/src/services/email/email.service.ts`
 - Modify: `OpenSea-APP/src/hooks/email/use-email.ts`
@@ -421,6 +484,7 @@ cd OpenSea-API && git add src/use-cases/email/accounts/check-email-account-healt
 - [ ] **Step 1: Add health types**
 
 In `email-account.types.ts`, add:
+
 ```typescript
 export interface EmailServiceHealth {
   status: 'connected' | 'error';
@@ -447,6 +511,7 @@ export interface EmailAccountHealth {
 In `api.ts`, add `HEALTH: '/v1/email/accounts/:id/health'` to the EMAIL.ACCOUNTS section.
 
 In `email.service.ts`, add:
+
 ```typescript
 checkHealth(accountId: string): Promise<EmailAccountHealth> {
   return apiClient.get(API.EMAIL.ACCOUNTS.HEALTH.replace(':id', accountId));
@@ -456,6 +521,7 @@ checkHealth(accountId: string): Promise<EmailAccountHealth> {
 - [ ] **Step 3: Add React Query hook**
 
 In `use-email.ts`, add:
+
 ```typescript
 export function useEmailAccountHealth(accountId: string | null) {
   return useQuery({
@@ -478,6 +544,7 @@ cd OpenSea-APP && git add src/types/email/email-account.types.ts src/services/em
 ### Task 3.3: Connection Tab — Health Cards UI
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/components/email/email-account-edit-dialog.tsx` (Connection tab section)
 
 **Context:** The Connection tab in the account edit dialog currently shows IMAP/SMTP host/port fields and a single "Testar Conexão" button. We need to add three health status cards above the connection fields.
@@ -485,11 +552,13 @@ cd OpenSea-APP && git add src/types/email/email-account.types.ts src/services/em
 - [ ] **Step 1: Create health card subcomponent**
 
 Inside the email-account-edit-dialog file (or as a new file `email-health-cards.tsx` in the same directory), create a `HealthCards` component that:
+
 - Accepts `accountId: string` prop
 - Uses `useEmailAccountHealth(accountId)` hook
 - Renders 3 horizontal cards in a grid (responsive: 1 col mobile, 3 col desktop)
 
 Each card shows:
+
 - **Icon**: Server icon for IMAP, Send icon for SMTP, RefreshCw icon for Worker (from lucide-react)
 - **Title**: "IMAP", "SMTP", "Worker Sync"
 - **Status badge**:
@@ -504,6 +573,7 @@ Each card shows:
 Add a "Testar Todos" button above the cards that calls `refetch()` on the health query.
 
 **Visual styling** (following project patterns):
+
 - Cards use `border rounded-lg p-4` with subtle bg (`bg-muted/30`)
 - Status dot: `h-2 w-2 rounded-full` with the appropriate color
 - Pulse animation for checking state: `animate-pulse`
@@ -516,6 +586,7 @@ In the account edit dialog, add `<HealthCards accountId={account.id} />` at the 
 - [ ] **Step 3: Verify — test visually**
 
 Open an email account's settings → Connection tab. Verify:
+
 - Three cards appear with current status
 - "Testar Todos" triggers loading state on all 3
 - Connected accounts show green status with latency
@@ -530,6 +601,7 @@ cd OpenSea-APP && git add src/components/email/ && git commit -m "feat(email): a
 ### Task 3.4: Sidebar — Conditional Health Alert
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/components/email/email-sidebar.tsx`
 
 **Context:** The sidebar shows email accounts with unread counts. When any service is unhealthy, we need to show an amber warning icon next to the account name. The challenge: we need health data for ALL accounts, not just one.
@@ -556,6 +628,7 @@ Return a `Map<accountId, EmailAccountHealth>` for easy lookup.
 - [ ] **Step 2: Add alert icon to sidebar account items**
 
 In the sidebar, next to each account name:
+
 - Check if health data exists for this account
 - If ANY service has error status → show `AlertTriangle` icon (amber-500, size 14)
 - Wrap the icon in a `Tooltip` with descriptive text:
@@ -584,6 +657,7 @@ cd OpenSea-APP && git add src/components/email/email-sidebar.tsx src/hooks/email
 ### Task 4.1: Create IDLE Manager Service
 
 **Files:**
+
 - Create: `OpenSea-API/src/services/email/imap-idle-manager.ts`
 
 **Context:** A new service that maintains persistent IMAP IDLE connections (one per active account) to receive push notifications when new emails arrive. Uses ImapFlow's built-in IDLE support.
@@ -610,14 +684,21 @@ export class ImapIdleManager {
   private entries = new Map<string, IdleEntry>();
   private stopped = false;
 
-  async startMonitoring(account: { id: string; tenantId: string; imapConfig: ImapPoolConfig }): Promise<void>;
+  async startMonitoring(account: {
+    id: string;
+    tenantId: string;
+    imapConfig: ImapPoolConfig;
+  }): Promise<void>;
   async stopMonitoring(accountId: string): Promise<void>;
   async stopAll(): Promise<void>;
-  getStatus(accountId: string): 'idle' | 'syncing' | 'degraded' | 'disconnected';
+  getStatus(
+    accountId: string
+  ): 'idle' | 'syncing' | 'degraded' | 'disconnected';
 }
 ```
 
 Key implementation details:
+
 - `startMonitoring()`: Creates ImapFlow client, connects, opens INBOX, enters IDLE
 - Listen to `exists` event → triggers incremental sync via `queueEmailSync()`
 - `heartbeat()`: Every 29 min, exits and re-enters IDLE (ImapFlow natively handles IDLE refresh, but we add explicit heartbeat as safety net)
@@ -647,6 +728,7 @@ cd OpenSea-API && git add src/services/email/imap-idle-manager.ts && git commit 
 ### Task 4.2: Integrate IDLE Manager into Worker Lifecycle
 
 **Files:**
+
 - Modify: `OpenSea-API/src/workers/index.ts`
 - Modify: `OpenSea-API/src/workers/email-sync-scheduler.ts`
 
@@ -655,6 +737,7 @@ cd OpenSea-API && git add src/services/email/imap-idle-manager.ts && git commit 
 - [ ] **Step 1: Start IDLE manager in worker index**
 
 In `startAllWorkers()`, after starting workers and scheduler:
+
 ```typescript
 // Start IDLE monitoring for all active accounts
 const idleManager = getImapIdleManager();
@@ -663,16 +746,27 @@ for (const tenantId of tenantIds) {
   const accounts = await emailAccountsRepository.listActive(tenantId);
   for (const account of accounts) {
     const secret = await credentialCipher.decrypt(account.encryptedSecret);
-    await idleManager.startMonitoring({
-      id: account.id.toString(),
-      tenantId,
-      imapConfig: { host: account.imapHost, port: account.imapPort, secure: account.imapSecure, auth: { user: account.username, pass: secret }, tls: { rejectUnauthorized: account.tlsVerify } },
-    }).catch(err => logger.error(`Failed to start IDLE for account ${account.id}:`, err));
+    await idleManager
+      .startMonitoring({
+        id: account.id.toString(),
+        tenantId,
+        imapConfig: {
+          host: account.imapHost,
+          port: account.imapPort,
+          secure: account.imapSecure,
+          auth: { user: account.username, pass: secret },
+          tls: { rejectUnauthorized: account.tlsVerify },
+        },
+      })
+      .catch(err =>
+        logger.error(`Failed to start IDLE for account ${account.id}:`, err)
+      );
   }
 }
 ```
 
 In `gracefulShutdown()`, add:
+
 ```typescript
 const idleManager = getImapIdleManager();
 await idleManager.stopAll();
@@ -681,6 +775,7 @@ await idleManager.stopAll();
 - [ ] **Step 2: Change scheduler interval from 5min to 15min**
 
 In `email-sync-scheduler.ts`, change:
+
 ```typescript
 const INTERVAL_MS = 15 * 60 * 1000; // 15 minutes (deep sync, IDLE handles INBOX in real-time)
 ```
@@ -688,6 +783,7 @@ const INTERVAL_MS = 15 * 60 * 1000; // 15 minutes (deep sync, IDLE handles INBOX
 - [ ] **Step 3: Verify — check worker logs**
 
 Start the worker process. Check logs for:
+
 - "IDLE started for account [id]" messages on boot
 - When sending a test email to a monitored account → sync triggers within 1-3 seconds (vs 5 min before)
 - Scheduler still runs every 15 min for deep sync of all folders
@@ -701,6 +797,7 @@ cd OpenSea-API && git add src/workers/index.ts src/workers/email-sync-scheduler.
 ### Task 4.3: IDLE Manager — Account Lifecycle Events
 
 **Files:**
+
 - Modify: `OpenSea-API/src/use-cases/email/accounts/create-email-account.ts`
 - Modify: `OpenSea-API/src/use-cases/email/accounts/update-email-account.ts`
 - Modify: `OpenSea-API/src/use-cases/email/accounts/delete-email-account.ts`
@@ -710,30 +807,43 @@ cd OpenSea-API && git add src/workers/index.ts src/workers/email-sync-scheduler.
 - [ ] **Step 1: Start IDLE on account creation**
 
 In `create-email-account.ts`, after successful creation:
+
 ```typescript
 // Fire-and-forget: start IDLE monitoring for new account
-getImapIdleManager().startMonitoring({
-  id: account.id.toString(),
-  tenantId: request.tenantId,
-  imapConfig: { /* ... */ },
-}).catch(() => {}); // non-critical, scheduler will pick it up
+getImapIdleManager()
+  .startMonitoring({
+    id: account.id.toString(),
+    tenantId: request.tenantId,
+    imapConfig: {
+      /* ... */
+    },
+  })
+  .catch(() => {}); // non-critical, scheduler will pick it up
 ```
 
 - [ ] **Step 2: Restart IDLE on credential update**
 
 In `update-email-account.ts`, when connection fields change (host, port, credentials):
+
 ```typescript
 // Restart IDLE with new credentials
 const idleManager = getImapIdleManager();
 await idleManager.stopMonitoring(accountId).catch(() => {});
-await idleManager.startMonitoring({ /* new config */ }).catch(() => {});
+await idleManager
+  .startMonitoring({
+    /* new config */
+  })
+  .catch(() => {});
 ```
 
 - [ ] **Step 3: Stop IDLE on account deletion**
 
 In `delete-email-account.ts`, before deletion:
+
 ```typescript
-await getImapIdleManager().stopMonitoring(accountId).catch(() => {});
+await getImapIdleManager()
+  .stopMonitoring(accountId)
+  .catch(() => {});
 ```
 
 - [ ] **Step 4: Commit**
@@ -745,6 +855,7 @@ cd OpenSea-API && git add src/use-cases/email/accounts/create-email-account.ts s
 ### Task 4.4: Expose IDLE Status in Health Check
 
 **Files:**
+
 - Modify: `OpenSea-API/src/use-cases/email/accounts/check-email-account-health.ts`
 
 **Context:** The health endpoint (Task 3.1) should include IDLE status in the worker health section. This gives the user visibility into whether real-time sync is active.
@@ -752,6 +863,7 @@ cd OpenSea-API && git add src/use-cases/email/accounts/create-email-account.ts s
 - [ ] **Step 1: Add IDLE status to worker health**
 
 In the health check use case, enhance the worker section:
+
 ```typescript
 const idleManager = getImapIdleManager();
 const idleStatus = idleManager.getStatus(accountId);
@@ -770,6 +882,7 @@ worker: {
 
 In `email-account.types.ts`, add `idleStatus` to `EmailWorkerHealth`.
 In the Worker health card (Task 3.3), show IDLE status:
+
 - `idle` → "Tempo real ativo" (green badge)
 - `syncing` → "Sincronizando..." (amber)
 - `degraded` → "Modo degradado (polling)" (amber warning)
@@ -786,6 +899,7 @@ git commit -m "feat(email): expose IDLE status in health check endpoint and UI"
 ### Task 4.5: Reduce Frontend Polling (IDLE makes it less critical)
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/hooks/email/use-email.ts`
 
 **Context:** With IMAP IDLE delivering near-instant sync, the frontend `refetchInterval` on messages can be relaxed slightly. The 60s auto-refetch becomes a fallback rather than the primary sync mechanism.
@@ -793,6 +907,7 @@ git commit -m "feat(email): expose IDLE status in health check endpoint and UI"
 - [ ] **Step 1: Adjust refetchInterval**
 
 In `useEmailMessages()`:
+
 ```typescript
 refetchInterval: 30_000, // 30s (was 60s) — acts as fallback, IDLE provides real-time
 ```
