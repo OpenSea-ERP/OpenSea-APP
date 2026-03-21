@@ -46,3 +46,15 @@ export type {
   CustomFieldResponse,
   CustomFieldValuesResponse,
 } from './custom-fields-service';
+
+export { integrationsService } from './integrations-service';
+export type {
+  IntegrationsResponse,
+  IntegrationResponse,
+} from './integrations-service';
+
+export { cardMembersService } from './card-members-service';
+export type {
+  CardMembersResponse,
+  CardMemberResponse,
+} from './card-members-service';

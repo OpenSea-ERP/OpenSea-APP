@@ -10,4 +10,6 @@ export * from './use-attachments';
 export * from './use-activity';
 export * from './use-automations';
 export * from './use-custom-fields';
+export * from './use-integrations';
+export * from './use-card-members';
 export * from './use-keyboard-shortcuts';
