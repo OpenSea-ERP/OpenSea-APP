@@ -2,19 +2,20 @@
 
 import { useRef, useState } from 'react';
 import { Plus, X, FileText, Image, FileSpreadsheet, File } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { StorageFilePicker } from './storage-file-picker';
 import type { CardAttachment } from '@/types/tasks';
 
 interface AttachmentSectionProps {
   attachments: CardAttachment[];
   onUpload: (file: File) => void;
   onRemove: (attachmentId: string) => void;
+  onLinkStorageFile?: (file: { id: string; name: string; size: number; mimeType: string }) => void;
 }
 
 function formatFileSize(bytes: number): string {
@@ -36,8 +37,10 @@ export function AttachmentSection({
   attachments,
   onUpload,
   onRemove,
+  onLinkStorageFile,
 }: AttachmentSectionProps) {
   const [addOpen, setAddOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -57,7 +60,7 @@ export function AttachmentSection({
   }
 
   function handleStorageClick() {
-    toast.info('Em breve — busca no Storage será implementada');
+    setPickerOpen(true);
     setAddOpen(false);
   }
 
@@ -147,6 +150,15 @@ export function AttachmentSection({
         </div>
       ) : (
         <p className="text-[10px] text-muted-foreground">Nenhum anexo</p>
+      )}
+
+      {/* Storage file picker modal */}
+      {onLinkStorageFile && (
+        <StorageFilePicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          onSelect={onLinkStorageFile}
+        />
       )}
     </div>
   );

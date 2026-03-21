@@ -482,6 +482,26 @@ export function CardModal({
     [isEditMode, cardId, uploadAttachment]
   );
 
+  const handleLinkStorageFile = useCallback(
+    async (file: { id: string; name: string; size: number; mimeType: string }) => {
+      if (!isEditMode || !cardId) {
+        toast.info('Salve o cartão antes de vincular arquivos do Storage');
+        return;
+      }
+
+      try {
+        await uploadAttachment.mutateAsync({
+          fileId: file.id,
+          fileName: file.name,
+        });
+        toast.success('Arquivo do Storage vinculado');
+      } catch {
+        toast.error('Não foi possível vincular o arquivo. Tente novamente.');
+      }
+    },
+    [isEditMode, cardId, uploadAttachment]
+  );
+
   const handleAddComment = useCallback(
     (content: string) => {
       if (!isEditMode || !cardId || !content.trim()) return;
@@ -882,6 +902,7 @@ export function CardModal({
                         attachments={isEditMode ? attachments : []}
                         onUploadAttachment={handleUploadAttachment}
                         onRemoveAttachment={handleRemoveAttachment}
+                        onLinkStorageFile={isEditMode ? handleLinkStorageFile : undefined}
                         boardId={boardId}
                         customFields={customFields}
                         customFieldValues={customFieldValues}

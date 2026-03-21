@@ -28,6 +28,7 @@ interface CardModalGeneralTabProps {
   attachments: CardAttachment[];
   onUploadAttachment: (file: File) => void;
   onRemoveAttachment: (attachmentId: string) => void;
+  onLinkStorageFile?: (file: { id: string; name: string; size: number; mimeType: string }) => void;
   // Custom fields
   boardId: string;
   customFields: CustomField[];
@@ -48,6 +49,7 @@ export function CardModalGeneralTab({
   attachments,
   onUploadAttachment,
   onRemoveAttachment,
+  onLinkStorageFile,
   boardId,
   customFields,
   customFieldValues,
@@ -92,6 +94,7 @@ export function CardModalGeneralTab({
             attachments={attachments}
             onUpload={onUploadAttachment}
             onRemove={onRemoveAttachment}
+            onLinkStorageFile={onLinkStorageFile}
           />
         )}
 
