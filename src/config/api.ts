@@ -929,8 +929,10 @@ export const API_ENDPOINTS = {
     GET: (id: string) => `/v1/marketplace-connections/${id}`,
     UPDATE: (id: string) => `/v1/marketplace-connections/${id}`,
     DELETE: (id: string) => `/v1/marketplace-connections/${id}`,
-    RECONCILIATION: (id: string) => `/v1/marketplace-connections/${id}/reconciliation`,
-    LISTINGS: (connectionId: string) => `/v1/marketplace-connections/${connectionId}/listings`,
+    RECONCILIATION: (id: string) =>
+      `/v1/marketplace-connections/${id}/reconciliation`,
+    LISTINGS: (connectionId: string) =>
+      `/v1/marketplace-connections/${connectionId}/listings`,
   },
   MARKETPLACE_ORDERS: {
     LIST: '/v1/marketplace-orders',
@@ -941,6 +943,30 @@ export const API_ENDPOINTS = {
   },
   MARKETPLACE_PAYMENTS: {
     LIST: '/v1/marketplace-payments',
+  },
+  // POS (Point of Sale)
+  POS: {
+    TERMINALS: {
+      LIST: '/v1/pos/terminals',
+      CREATE: '/v1/pos/terminals',
+      UPDATE: (id: string) => `/v1/pos/terminals/${id}`,
+      DELETE: (id: string) => `/v1/pos/terminals/${id}`,
+    },
+    SESSIONS: {
+      LIST: '/v1/pos/sessions',
+      OPEN: '/v1/pos/sessions/open',
+      CLOSE: (id: string) => `/v1/pos/sessions/${id}/close`,
+      GET_ACTIVE: (terminalId: string) =>
+        `/v1/pos/terminals/${terminalId}/session`,
+    },
+    TRANSACTIONS: {
+      LIST: '/v1/pos/transactions',
+      CREATE: '/v1/pos/transactions',
+      CANCEL: (id: string) => `/v1/pos/transactions/${id}/cancel`,
+    },
+    CASH: {
+      MOVEMENT: '/v1/pos/cash/movement',
+    },
   },
   // Health
   HEALTH: '/health',

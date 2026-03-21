@@ -10,3 +10,4 @@ export * from './price-tables.service';
 export * from './campaigns.service';
 export * from './coupons.service';
 export * from './combos.service';
+export * from './pos.service';
