@@ -12,11 +12,14 @@ import type {
   ParseBoletoRequest,
   ParseBoletoResult,
 } from '@/types/finance';
-import type { PaginationMeta } from '@/types/pagination';
-
 export interface FinanceEntriesResponse {
   entries: FinanceEntry[];
-  meta: PaginationMeta;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }
 
 export interface FinanceEntryResponse {
@@ -59,6 +62,8 @@ export const financeEntriesService = {
     if (params?.overdueRange) query.append('overdueRange', params.overdueRange);
     if (params?.includeDeleted)
       query.append('includeDeleted', String(params.includeDeleted));
+    if (params?.sortBy) query.append('sortBy', params.sortBy);
+    if (params?.sortOrder) query.append('sortOrder', params.sortOrder);
 
     return apiClient.get<FinanceEntriesResponse>(
       `${API_ENDPOINTS.FINANCE_ENTRIES.LIST}?${query.toString()}`
