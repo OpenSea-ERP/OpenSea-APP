@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -16,6 +17,7 @@ import {
   Package,
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
+import { TransferFlow } from '@/components/mobile/transfer-flow';
 import type { LookupResult } from '@/services/stock/lookup.service';
 
 interface ScanResultSheetProps {
@@ -88,6 +90,16 @@ export function ScanResultSheet({
   result,
 }: ScanResultSheetProps) {
   const { hasPermission } = usePermissions();
+  const [showTransfer, setShowTransfer] = useState(false);
+
+  const handleTransferClose = useCallback(() => {
+    setShowTransfer(false);
+  }, []);
+
+  const handleTransferSuccess = useCallback(() => {
+    setShowTransfer(false);
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   if (!result) return null;
 
@@ -131,70 +143,95 @@ export function ScanResultSheet({
     },
   ].filter((f) => f.value != null);
 
+  const isTransferable =
+    canTransfer && (result.entityType === 'ITEM' || result.entityType === 'VARIANT');
+
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction="bottom">
-      <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader className="text-left">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
-              <Package className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <DrawerTitle className="truncate text-base">{name}</DrawerTitle>
-              <DrawerDescription className="truncate text-xs">
-                {code && `${code} · `}
-                {typeLabel}
-              </DrawerDescription>
-            </div>
-          </div>
-        </DrawerHeader>
+    <Drawer
+      open={open}
+      onOpenChange={(value) => {
+        if (!value) setShowTransfer(false);
+        onOpenChange(value);
+      }}
+      direction="bottom"
+    >
+      <DrawerContent className={showTransfer ? 'h-[95vh]' : 'max-h-[85vh]'}>
+        {showTransfer && isTransferable ? (
+          <TransferFlow
+            item={result}
+            onClose={handleTransferClose}
+            onSuccess={handleTransferSuccess}
+          />
+        ) : (
+          <>
+            <DrawerHeader className="text-left">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+                  <Package className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <DrawerTitle className="truncate text-base">
+                    {name}
+                  </DrawerTitle>
+                  <DrawerDescription className="truncate text-xs">
+                    {code && `${code} · `}
+                    {typeLabel}
+                  </DrawerDescription>
+                </div>
+              </div>
+            </DrawerHeader>
 
-        {/* Detail grid */}
-        <div className="space-y-1 px-4 pb-3">
-          {detailFields.map((field) => (
-            <div
-              key={field.label}
-              className="flex items-center justify-between py-1.5 text-sm"
-            >
-              <span className="text-slate-500">{field.label}</span>
-              <span className="font-medium text-slate-200">{field.value}</span>
+            {/* Detail grid */}
+            <div className="space-y-1 px-4 pb-3">
+              {detailFields.map((field) => (
+                <div
+                  key={field.label}
+                  className="flex items-center justify-between py-1.5 text-sm"
+                >
+                  <span className="text-slate-500">{field.label}</span>
+                  <span className="font-medium text-slate-200">
+                    {field.value}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Action buttons */}
-        <DrawerFooter className="pb-6">
-          <div className="grid grid-cols-2 gap-2">
-            {canTransfer && (
-              <ActionButton
-                icon={<ArrowRightLeft className="h-5 w-5" />}
-                label="Transferir"
-                colorClass="text-sky-400"
-              />
-            )}
-            {canLabel && (
-              <ActionButton
-                icon={<Tag className="h-5 w-5" />}
-                label="Etiqueta"
-                colorClass="text-indigo-400"
-              />
-            )}
-            {canExit && (
-              <ActionButton
-                icon={<PackageMinus className="h-5 w-5" />}
-                label="Dar Saída"
-                colorClass="text-rose-400"
-              />
-            )}
-            {canAddVolume && (
-              <ActionButton
-                icon={<PackagePlus className="h-5 w-5" />}
-                label="Add Volume"
-                colorClass="text-green-400"
-              />
-            )}
-          </div>
-        </DrawerFooter>
+            {/* Action buttons */}
+            <DrawerFooter className="pb-6">
+              <div className="grid grid-cols-2 gap-2">
+                {isTransferable && (
+                  <ActionButton
+                    icon={<ArrowRightLeft className="h-5 w-5" />}
+                    label="Transferir"
+                    colorClass="text-sky-400"
+                    onClick={() => setShowTransfer(true)}
+                  />
+                )}
+                {canLabel && (
+                  <ActionButton
+                    icon={<Tag className="h-5 w-5" />}
+                    label="Etiqueta"
+                    colorClass="text-indigo-400"
+                  />
+                )}
+                {canExit && (
+                  <ActionButton
+                    icon={<PackageMinus className="h-5 w-5" />}
+                    label="Dar Saída"
+                    colorClass="text-rose-400"
+                  />
+                )}
+                {canAddVolume && (
+                  <ActionButton
+                    icon={<PackagePlus className="h-5 w-5" />}
+                    label="Add Volume"
+                    colorClass="text-green-400"
+                  />
+                )}
+              </div>
+            </DrawerFooter>
+          </>
+        )}
       </DrawerContent>
     </Drawer>
   );
