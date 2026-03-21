@@ -131,6 +131,7 @@ export const STOCK_PERMISSIONS = {
     'remove',
     'admin'
   ),
+  INVENTORY: perm('stock', 'inventory', 'access', 'register', 'modify', 'admin', 'export', 'print'),
 } as const;
 
 // =============================================================================
