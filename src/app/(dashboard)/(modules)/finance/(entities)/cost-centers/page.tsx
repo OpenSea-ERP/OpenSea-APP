@@ -46,7 +46,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { CreateCostCenterModal } from './src';
+import { CreateCostCenterWizard } from './src';
 
 // =============================================================================
 // ENTITY CONFIG (minimal, for EntityGrid)
@@ -554,13 +554,14 @@ export default function CostCentersPage() {
             />
           )}
 
-          {/* Create Modal */}
-          <CreateCostCenterModal
-            isOpen={isCreateOpen}
-            onClose={() => setIsCreateOpen(false)}
+          {/* Create Wizard */}
+          <CreateCostCenterWizard
+            open={isCreateOpen}
+            onOpenChange={setIsCreateOpen}
             onSubmit={handleCreate}
             isSubmitting={createMutation.isPending}
             nextCode={nextCode}
+            costCenters={costCenters}
           />
 
           {/* Link Company Modal */}

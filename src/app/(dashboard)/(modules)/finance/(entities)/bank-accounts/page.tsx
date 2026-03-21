@@ -33,7 +33,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { CreateBankAccountModal } from './src';
+import { CreateBankAccountWizard } from './src';
 
 // =============================================================================
 // ENTITY CONFIG
@@ -91,7 +91,7 @@ function getStatusBadgeConfig(status: string) {
     case 'CLOSED':
       return {
         variant: 'destructive' as const,
-        color: 'bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20',
+        color: 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/20',
       };
     default:
       return { variant: 'secondary' as const, color: '' };
@@ -572,10 +572,10 @@ export default function BankAccountsPage() {
           />
         )}
 
-        {/* Create Modal */}
-        <CreateBankAccountModal
-          isOpen={createModalOpen}
-          onClose={() => setCreateModalOpen(false)}
+        {/* Create Wizard */}
+        <CreateBankAccountWizard
+          open={createModalOpen}
+          onOpenChange={setCreateModalOpen}
           onSubmit={handleCreate}
           isSubmitting={createMutation.isPending}
         />
