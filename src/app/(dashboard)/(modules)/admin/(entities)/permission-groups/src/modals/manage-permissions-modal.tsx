@@ -358,7 +358,7 @@ export function ManagePermissionsModal({
     <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="sm:max-w-[1280px] max-w-[1280px] h-[650px] p-0 gap-0 overflow-hidden flex flex-row"
+        className="sm:max-w-[1380px] max-w-[1380px] h-[650px] p-0 gap-0 overflow-hidden flex flex-row"
         onPointerDownOutside={e => {
           if (isSaving) e.preventDefault();
         }}

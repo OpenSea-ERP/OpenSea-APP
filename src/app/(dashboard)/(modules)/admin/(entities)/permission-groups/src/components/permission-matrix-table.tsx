@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import {
   STANDARD_ACTIONS,
   ACTION_LABELS,
+  ACTION_GROUPS,
   getResourceGroups,
   type MatrixResource,
   type MatrixTab,
@@ -171,13 +172,27 @@ export function PermissionMatrixTable({
       <table className="w-full border-collapse">
         {/* Header */}
         <thead>
-          <tr className="sticky top-0 z-10 border-b border-border/50 shadow-[0_1px_3px_-1px_rgba(0,0,0,0.1)]" style={{ backgroundColor: 'var(--modal-bg)' }}>
-            <th className="w-[200px] min-w-[200px] text-left px-3 py-2">
+          {/* Super-header: column groups */}
+          <tr className="sticky top-0 z-20" style={{ backgroundColor: 'var(--modal-bg)' }}>
+            <th rowSpan={2} className="w-[200px] min-w-[200px] text-left px-3 py-2 border-b border-border/50">
               <span className="text-xs font-medium text-muted-foreground">
                 Recurso
               </span>
             </th>
-
+            {ACTION_GROUPS.map(group => (
+              <th
+                key={group.label}
+                colSpan={group.actions.length}
+                className="text-center px-1 pt-2 pb-1 border-b border-border/30"
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  {group.label}
+                </span>
+              </th>
+            ))}
+          </tr>
+          {/* Action headers with select-all buttons */}
+          <tr className="sticky top-[29px] z-20 border-b border-border/50 shadow-[0_1px_3px_-1px_rgba(0,0,0,0.1)]" style={{ backgroundColor: 'var(--modal-bg)' }}>
             {STANDARD_ACTIONS.map(action => {
               const state = getSelectionState(
                 columnCodes[action],
@@ -187,10 +202,10 @@ export function PermissionMatrixTable({
               return (
                 <th
                   key={action}
-                  className="w-[80px] min-w-[80px] text-center px-1 py-2"
+                  className="w-[72px] min-w-[72px] text-center px-1 py-1.5"
                 >
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <span className="text-[11px] font-medium text-muted-foreground">
                       {ACTION_LABELS[action]}
                     </span>
                     {!readOnly && (

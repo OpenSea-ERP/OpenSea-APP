@@ -14,15 +14,18 @@ import {
 // ---------------------------------------------------------------------------
 
 export const STANDARD_ACTIONS = [
+  // Ações
   'access',
   'register',
   'modify',
   'remove',
   'import',
-  'export',
   'print',
-  'admin',
+  // Compartilhamento
+  'export',
   'share',
+  // Gerenciamento
+  'admin',
   'onlyself',
 ] as const;
 
@@ -34,12 +37,24 @@ export const ACTION_LABELS: Record<StandardAction, string> = {
   modify: 'Alterar',
   remove: 'Remover',
   import: 'Importar',
-  export: 'Exportar',
+  export: 'Externo',
   print: 'Imprimir',
-  admin: 'Administrar',
-  share: 'Compartilhar',
-  onlyself: 'Próprio',
+  admin: 'Global',
+  share: 'Interno',
+  onlyself: 'Pessoal',
 };
+
+/** Column groups for the matrix table super-header */
+export interface ActionGroup {
+  label: string;
+  actions: StandardAction[];
+}
+
+export const ACTION_GROUPS: ActionGroup[] = [
+  { label: 'Ações', actions: ['access', 'register', 'modify', 'remove', 'import', 'print'] },
+  { label: 'Compartilhamento', actions: ['export', 'share'] },
+  { label: 'Gerenciamento', actions: ['admin', 'onlyself'] },
+];
 
 // ---------------------------------------------------------------------------
 // Interfaces
