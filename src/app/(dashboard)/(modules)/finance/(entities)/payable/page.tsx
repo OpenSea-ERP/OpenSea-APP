@@ -49,11 +49,10 @@ import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { FilterPresets } from '@/components/finance/filter-presets';
 import { BaixaModal } from '@/components/finance/baixa-modal';
-import { useDeleteFinanceEntry, useFinanceEntries } from '@/hooks/finance';
+import { useDeleteFinanceEntry, useInfiniteFinanceEntries } from '@/hooks/finance';
 import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
 import { usePermissions } from '@/hooks/use-permissions';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
-import { normalizePagination } from '@/types/common/pagination';
 import type {
   FinanceEntry,
   FinanceEntryStatus,
@@ -68,6 +67,7 @@ import {
   DollarSign,
   Eye,
   Filter,
+  Loader2,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -77,7 +77,7 @@ import {
 } from 'lucide-react';
 import { PayableWizardModal } from '@/components/finance/payable-wizard-modal';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -186,13 +186,6 @@ export default function PayablePage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // --------------------------------------------------------------------------
-  // Pagination state
-  // --------------------------------------------------------------------------
-
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-
-  // --------------------------------------------------------------------------
   // Wizard modal state
   // --------------------------------------------------------------------------
 
@@ -226,8 +219,7 @@ export default function PayablePage() {
   const queryParams = useMemo<FinanceEntriesQuery>(() => {
     const params: FinanceEntriesQuery = {
       type: 'PAYABLE',
-      page,
-      perPage,
+      perPage: 20,
     };
 
     if (searchQuery.trim()) {
@@ -262,27 +254,42 @@ export default function PayablePage() {
     supplierFilter,
     dueDateFrom,
     dueDateTo,
-    page,
-    perPage,
   ]);
 
   // --------------------------------------------------------------------------
   // Data fetching
   // --------------------------------------------------------------------------
 
-  const { data, isLoading, error, refetch } = useFinanceEntries(queryParams);
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteFinanceEntries(queryParams);
 
-  const entries = data?.entries ?? [];
-  const meta = data?.meta
-    ? normalizePagination(data.meta)
-    : {
-        total: 0,
-        page: 1,
-        limit: perPage,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false,
-      };
+  const entries = data?.pages.flatMap(p => p.entries) ?? [];
+
+  // --------------------------------------------------------------------------
+  // Infinite scroll sentinel
+  // --------------------------------------------------------------------------
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!sentinelRef.current || !hasNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // --------------------------------------------------------------------------
   // Filters active badge count
@@ -304,16 +311,6 @@ export default function PayablePage() {
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
-    setPage(1);
-  }, []);
-
-  const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const handlePerPageChange = useCallback((newPerPage: number) => {
-    setPerPage(newPerPage);
-    setPage(1);
   }, []);
 
   const handleClearFilters = useCallback(() => {
@@ -322,7 +319,6 @@ export default function PayablePage() {
     setSupplierFilter('');
     setDueDateFrom(undefined);
     setDueDateTo(undefined);
-    setPage(1);
   }, []);
 
   const handleView = useCallback(
@@ -415,47 +411,6 @@ export default function PayablePage() {
   );
 
   // --------------------------------------------------------------------------
-  // Pagination helpers
-  // --------------------------------------------------------------------------
-
-  const startItem = (meta.page - 1) * meta.limit + 1;
-  const endItem = Math.min(meta.page * meta.limit, meta.total);
-
-  const getPageNumbers = useCallback(() => {
-    const pages: (number | 'ellipsis')[] = [];
-    const maxVisible = 5;
-
-    if (meta.totalPages <= maxVisible + 2) {
-      for (let i = 1; i <= meta.totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
-
-      if (meta.page > 3) {
-        pages.push('ellipsis');
-      }
-
-      const start = Math.max(2, meta.page - 1);
-      const end = Math.min(meta.totalPages - 1, meta.page + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (meta.page < meta.totalPages - 2) {
-        pages.push('ellipsis');
-      }
-
-      if (meta.totalPages > 1) {
-        pages.push(meta.totalPages);
-      }
-    }
-
-    return pages;
-  }, [meta.page, meta.totalPages]);
-
-  // --------------------------------------------------------------------------
   // Render
   // --------------------------------------------------------------------------
 
@@ -541,7 +496,6 @@ export default function PayablePage() {
             setDueDateTo(
               filters.dueDateTo ? new Date(filters.dueDateTo) : undefined
             );
-            setPage(1);
           }}
           quickPresets={[
             { label: 'Vencidas', filters: { status: 'OVERDUE' } },
@@ -574,7 +528,7 @@ export default function PayablePage() {
                   value={statusFilter}
                   onValueChange={value => {
                     setStatusFilter(value as FinanceEntryStatus | 'ALL');
-                    setPage(1);
+
                   }}
                 >
                   <SelectTrigger>
@@ -603,7 +557,7 @@ export default function PayablePage() {
                   value={categoryFilter}
                   onValueChange={value => {
                     setCategoryFilter(value === 'ALL' ? '' : value);
-                    setPage(1);
+
                   }}
                 >
                   <SelectTrigger>
@@ -638,7 +592,7 @@ export default function PayablePage() {
                     value={supplierFilter}
                     onChange={e => {
                       setSupplierFilter(e.target.value);
-                      setPage(1);
+  
                     }}
                     className="pl-9"
                   />
@@ -674,7 +628,7 @@ export default function PayablePage() {
                       selected={dueDateFrom}
                       onSelect={date => {
                         setDueDateFrom(date ?? undefined);
-                        setPage(1);
+    
                       }}
                       locale={ptBR}
                     />
@@ -711,7 +665,7 @@ export default function PayablePage() {
                       selected={dueDateTo}
                       onSelect={date => {
                         setDueDateTo(date ?? undefined);
-                        setPage(1);
+    
                       }}
                       locale={ptBR}
                     />
@@ -914,130 +868,14 @@ export default function PayablePage() {
                 </TableBody>
               </Table>
 
-              {/* Pagination */}
-              {meta.totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t">
-                  {/* Results info */}
-                  <div className="text-sm text-muted-foreground">
-                    Mostrando <span className="font-medium">{startItem}</span> a{' '}
-                    <span className="font-medium">{endItem}</span> de{' '}
-                    <span className="font-medium">{meta.total}</span> resultados
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {/* Per page selector */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        Por página:
-                      </span>
-                      <Select
-                        value={String(perPage)}
-                        onValueChange={value =>
-                          handlePerPageChange(Number(value))
-                        }
-                      >
-                        <SelectTrigger className="w-[80px] h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[10, 20, 50, 100].map(size => (
-                            <SelectItem key={size} value={String(size)}>
-                              {size}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Page navigation */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(1)}
-                        disabled={!meta.hasPrev}
-                        title="Primeira página"
-                      >
-                        <span className="text-xs font-bold">1</span>
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.page - 1)}
-                        disabled={!meta.hasPrev}
-                        title="Página anterior"
-                      >
-                        <span className="sr-only">Anterior</span>
-                        &#8249;
-                      </Button>
-
-                      {/* Page numbers (desktop) */}
-                      <div className="hidden sm:flex items-center gap-1">
-                        {getPageNumbers().map((pageNum, index) =>
-                          pageNum === 'ellipsis' ? (
-                            <span
-                              key={`ellipsis-${index}`}
-                              className="px-2 text-muted-foreground"
-                            >
-                              ...
-                            </span>
-                          ) : (
-                            <Button
-                              key={pageNum}
-                              variant={
-                                pageNum === meta.page ? 'default' : 'outline'
-                              }
-                              size="icon"
-                              className="h-9 w-9"
-                              onClick={() => handlePageChange(pageNum)}
-                            >
-                              {pageNum}
-                            </Button>
-                          )
-                        )}
-                      </div>
-
-                      {/* Mobile: Current page indicator */}
-                      <span className="sm:hidden px-3 text-sm">
-                        {meta.page} / {meta.totalPages}
-                      </span>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.page + 1)}
-                        disabled={!meta.hasNext}
-                        title="Próxima página"
-                      >
-                        <span className="sr-only">Próximo</span>
-                        &#8250;
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.totalPages)}
-                        disabled={!meta.hasNext}
-                        title="Última página"
-                      >
-                        <span className="text-xs font-bold">
-                          {meta.totalPages}
-                        </span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Single page info */}
-              {meta.totalPages <= 1 && meta.total > 0 && (
-                <div className="p-4 border-t text-sm text-muted-foreground text-center">
-                  {meta.total} {meta.total === 1 ? 'resultado' : 'resultados'}
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex items-center justify-center p-4 border-t">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    Carregando mais...
+                  </span>
                 </div>
               )}
             </>

@@ -5,9 +5,16 @@
 
 'use client';
 
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -203,20 +210,66 @@ export default function ReceivableDetailPage({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="space-y-4 w-full max-w-2xl">
-          <div className="h-8 bg-muted animate-pulse rounded" />
-          <div className="h-64 bg-muted animate-pulse rounded" />
-        </div>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Contas a Receber', href: '/finance/receivable' },
+              { label: 'Carregando...' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <Card className="p-6">
+            <div className="flex gap-6 items-center">
+              <Skeleton className="h-16 w-16 rounded-lg" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="p-6">
+                <Skeleton className="h-5 w-32 mb-4" />
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </Card>
+            ))}
+          </div>
+          <Card className="p-6">
+            <Skeleton className="h-5 w-48 mb-4" />
+            <Skeleton className="h-32 w-full" />
+          </Card>
+        </PageBody>
+      </PageLayout>
     );
   }
 
   if (!entry) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-destructive">Lançamento não encontrado.</p>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Contas a Receber', href: '/finance/receivable' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <Card className="p-12 text-center">
+            <p className="text-destructive text-lg">
+              Lançamento não encontrado.
+            </p>
+          </Card>
+        </PageBody>
+      </PageLayout>
     );
   }
 

@@ -50,11 +50,11 @@ import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-moda
 import { FilterPresets } from '@/components/finance/filter-presets';
 import { BaixaModal } from '@/components/finance/baixa-modal';
 import { ReceivableWizardModal } from '@/components/finance/receivable-wizard-modal';
-import { useDeleteFinanceEntry, useFinanceEntries } from '@/hooks/finance';
+import { useDeleteFinanceEntry } from '@/hooks/finance';
 import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
 import { usePermissions } from '@/hooks/use-permissions';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
-import { normalizePagination } from '@/types/common/pagination';
+import { financeEntriesService } from '@/services/finance/finance-entries.service';
 import type {
   FinanceEntry,
   FinanceEntryStatus,
@@ -69,6 +69,7 @@ import {
   DollarSign,
   Eye,
   Filter,
+  Loader2,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -77,7 +78,8 @@ import {
   X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -187,11 +189,11 @@ export default function ReceivablePage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // --------------------------------------------------------------------------
-  // Pagination state
+  // Infinite scroll ref
   // --------------------------------------------------------------------------
 
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   // --------------------------------------------------------------------------
   // Wizard modal state
@@ -224,11 +226,9 @@ export default function ReceivablePage() {
   // Build query params for the hook
   // --------------------------------------------------------------------------
 
-  const queryParams = useMemo<FinanceEntriesQuery>(() => {
-    const params: FinanceEntriesQuery = {
+  const filters = useMemo<Omit<FinanceEntriesQuery, 'page' | 'perPage'>>(() => {
+    const params: Omit<FinanceEntriesQuery, 'page' | 'perPage'> = {
       type: 'RECEIVABLE',
-      page,
-      perPage,
     };
 
     if (searchQuery.trim()) {
@@ -263,27 +263,53 @@ export default function ReceivablePage() {
     customerFilter,
     dueDateFrom,
     dueDateTo,
-    page,
-    perPage,
   ]);
 
   // --------------------------------------------------------------------------
   // Data fetching
   // --------------------------------------------------------------------------
 
-  const { data, isLoading, error, refetch } = useFinanceEntries(queryParams);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+  } = useInfiniteQuery({
+    queryKey: ['finance-entries', 'receivable', 'infinite', filters],
+    queryFn: async ({ pageParam = 1 }) => {
+      return await financeEntriesService.list({
+        page: pageParam,
+        perPage: 20,
+        ...filters,
+      });
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.meta;
+      if (page < totalPages) return page + 1;
+      return undefined;
+    },
+  });
 
-  const entries = data?.entries ?? [];
-  const meta = data?.meta
-    ? normalizePagination(data.meta)
-    : {
-        total: 0,
-        page: 1,
-        limit: perPage,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false,
-      };
+  const entries = data?.pages.flatMap(p => p.entries) ?? [];
+  const total = data?.pages[0]?.meta.total ?? 0;
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    if (!sentinelRef.current || !hasNextPage) return;
+    const observer = new IntersectionObserver(
+      (observerEntries) => {
+        if (observerEntries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // --------------------------------------------------------------------------
   // Filters active badge count
@@ -305,16 +331,6 @@ export default function ReceivablePage() {
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
-    setPage(1);
-  }, []);
-
-  const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const handlePerPageChange = useCallback((newPerPage: number) => {
-    setPerPage(newPerPage);
-    setPage(1);
   }, []);
 
   const handleClearFilters = useCallback(() => {
@@ -323,7 +339,6 @@ export default function ReceivablePage() {
     setCustomerFilter('');
     setDueDateFrom(undefined);
     setDueDateTo(undefined);
-    setPage(1);
   }, []);
 
   const handleView = useCallback(
@@ -415,46 +430,6 @@ export default function ReceivablePage() {
     [actionButtons, hasPermission]
   );
 
-  // --------------------------------------------------------------------------
-  // Pagination helpers
-  // --------------------------------------------------------------------------
-
-  const startItem = (meta.page - 1) * meta.limit + 1;
-  const endItem = Math.min(meta.page * meta.limit, meta.total);
-
-  const getPageNumbers = useCallback(() => {
-    const pages: (number | 'ellipsis')[] = [];
-    const maxVisible = 5;
-
-    if (meta.totalPages <= maxVisible + 2) {
-      for (let i = 1; i <= meta.totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
-
-      if (meta.page > 3) {
-        pages.push('ellipsis');
-      }
-
-      const start = Math.max(2, meta.page - 1);
-      const end = Math.min(meta.totalPages - 1, meta.page + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (meta.page < meta.totalPages - 2) {
-        pages.push('ellipsis');
-      }
-
-      if (meta.totalPages > 1) {
-        pages.push(meta.totalPages);
-      }
-    }
-
-    return pages;
-  }, [meta.page, meta.totalPages]);
 
   // --------------------------------------------------------------------------
   // Render
@@ -542,7 +517,6 @@ export default function ReceivablePage() {
             setDueDateTo(
               filters.dueDateTo ? new Date(filters.dueDateTo) : undefined
             );
-            setPage(1);
           }}
           quickPresets={[
             { label: 'Vencidas', filters: { status: 'OVERDUE' } },
@@ -573,10 +547,9 @@ export default function ReceivablePage() {
                 </label>
                 <Select
                   value={statusFilter}
-                  onValueChange={value => {
-                    setStatusFilter(value as FinanceEntryStatus | 'ALL');
-                    setPage(1);
-                  }}
+                  onValueChange={value =>
+                    setStatusFilter(value as FinanceEntryStatus | 'ALL')
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todos os status" />
@@ -602,10 +575,9 @@ export default function ReceivablePage() {
                 </label>
                 <Select
                   value={categoryFilter}
-                  onValueChange={value => {
-                    setCategoryFilter(value === 'ALL' ? '' : value);
-                    setPage(1);
-                  }}
+                  onValueChange={value =>
+                    setCategoryFilter(value === 'ALL' ? '' : value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todas as categorias" />
@@ -637,10 +609,7 @@ export default function ReceivablePage() {
                     id="filter-customer"
                     placeholder="Nome do cliente..."
                     value={customerFilter}
-                    onChange={e => {
-                      setCustomerFilter(e.target.value);
-                      setPage(1);
-                    }}
+                    onChange={e => setCustomerFilter(e.target.value)}
                     className="pl-9"
                   />
                 </div>
@@ -673,10 +642,7 @@ export default function ReceivablePage() {
                     <Calendar
                       mode="single"
                       selected={dueDateFrom}
-                      onSelect={date => {
-                        setDueDateFrom(date ?? undefined);
-                        setPage(1);
-                      }}
+                      onSelect={date => setDueDateFrom(date ?? undefined)}
                       locale={ptBR}
                     />
                   </PopoverContent>
@@ -710,10 +676,7 @@ export default function ReceivablePage() {
                     <Calendar
                       mode="single"
                       selected={dueDateTo}
-                      onSelect={date => {
-                        setDueDateTo(date ?? undefined);
-                        setPage(1);
-                      }}
+                      onSelect={date => setDueDateTo(date ?? undefined)}
                       locale={ptBR}
                     />
                   </PopoverContent>
@@ -738,7 +701,7 @@ export default function ReceivablePage() {
               <p className="text-muted-foreground mb-4">
                 Erro ao carregar contas a receber
               </p>
-              <Button variant="outline" onClick={() => refetch()}>
+              <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['finance-entries', 'receivable', 'infinite'] })}>
                 Tentar novamente
               </Button>
             </div>
@@ -916,130 +879,18 @@ export default function ReceivablePage() {
                 </TableBody>
               </Table>
 
-              {/* Pagination */}
-              {meta.totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t">
-                  {/* Results info */}
-                  <div className="text-sm text-muted-foreground">
-                    Mostrando <span className="font-medium">{startItem}</span> a{' '}
-                    <span className="font-medium">{endItem}</span> de{' '}
-                    <span className="font-medium">{meta.total}</span> resultados
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {/* Per page selector */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        Por página:
-                      </span>
-                      <Select
-                        value={String(perPage)}
-                        onValueChange={value =>
-                          handlePerPageChange(Number(value))
-                        }
-                      >
-                        <SelectTrigger className="w-[80px] h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[10, 20, 50, 100].map(size => (
-                            <SelectItem key={size} value={String(size)}>
-                              {size}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Page navigation */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(1)}
-                        disabled={!meta.hasPrev}
-                        title="Primeira página"
-                      >
-                        <span className="text-xs font-bold">1</span>
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.page - 1)}
-                        disabled={!meta.hasPrev}
-                        title="Página anterior"
-                      >
-                        <span className="sr-only">Anterior</span>
-                        &#8249;
-                      </Button>
-
-                      {/* Page numbers (desktop) */}
-                      <div className="hidden sm:flex items-center gap-1">
-                        {getPageNumbers().map((pageNum, index) =>
-                          pageNum === 'ellipsis' ? (
-                            <span
-                              key={`ellipsis-${index}`}
-                              className="px-2 text-muted-foreground"
-                            >
-                              ...
-                            </span>
-                          ) : (
-                            <Button
-                              key={pageNum}
-                              variant={
-                                pageNum === meta.page ? 'default' : 'outline'
-                              }
-                              size="icon"
-                              className="h-9 w-9"
-                              onClick={() => handlePageChange(pageNum)}
-                            >
-                              {pageNum}
-                            </Button>
-                          )
-                        )}
-                      </div>
-
-                      {/* Mobile: Current page indicator */}
-                      <span className="sm:hidden px-3 text-sm">
-                        {meta.page} / {meta.totalPages}
-                      </span>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.page + 1)}
-                        disabled={!meta.hasNext}
-                        title="Próxima página"
-                      >
-                        <span className="sr-only">Próximo</span>
-                        &#8250;
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.totalPages)}
-                        disabled={!meta.hasNext}
-                        title="Última página"
-                      >
-                        <span className="text-xs font-bold">
-                          {meta.totalPages}
-                        </span>
-                      </Button>
-                    </div>
-                  </div>
+              {/* Results count */}
+              {total > 0 && (
+                <div className="p-4 border-t text-sm text-muted-foreground text-center">
+                  {entries.length} de {total} {total === 1 ? 'resultado' : 'resultados'}
                 </div>
               )}
 
-              {/* Single page info */}
-              {meta.totalPages <= 1 && meta.total > 0 && (
-                <div className="p-4 border-t text-sm text-muted-foreground text-center">
-                  {meta.total} {meta.total === 1 ? 'resultado' : 'resultados'}
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               )}
             </>
@@ -1051,7 +902,7 @@ export default function ReceivablePage() {
           open={wizardOpen}
           onOpenChange={setWizardOpen}
           onCreated={() => {
-            refetch();
+            queryClient.invalidateQueries({ queryKey: ['finance-entries'] });
           }}
         />
 

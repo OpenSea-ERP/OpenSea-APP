@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Loans Listing Page
- * Página de listagem de empréstimos com filtros, paginação e ações RBAC.
+ * Página de listagem de empréstimos com filtros, scroll infinito e ações RBAC.
  */
 
 'use client';
@@ -44,23 +44,22 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
-import { useDeleteLoan, useLoans } from '@/hooks/finance';
+import { useDeleteLoan, useInfiniteLoans } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { Loan, LoanStatus } from '@/types/finance';
 import { LOAN_STATUS_LABELS } from '@/types/finance';
 import {
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
   Edit,
   Eye,
+  Loader2,
   MoreHorizontal,
   Plus,
   Trash2,
   XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // =============================================================================
@@ -74,8 +73,6 @@ const STATUS_OPTIONS: { value: LoanStatus; label: string }[] = [
   { value: 'RENEGOTIATED', label: 'Renegociado' },
   { value: 'CANCELLED', label: 'Cancelado' },
 ];
-
-const PER_PAGE = 20;
 
 // =============================================================================
 // HELPERS
@@ -314,63 +311,6 @@ function LoanRowActions({
 }
 
 // =============================================================================
-// PAGINATION
-// =============================================================================
-
-function TablePágination({
-  page,
-  totalPages,
-  total,
-  perPage,
-  onPageChange,
-}: {
-  page: number;
-  totalPages: number;
-  total: number;
-  perPage: number;
-  onPageChange: (page: number) => void;
-}) {
-  const from = (page - 1) * perPage + 1;
-  const to = Math.min(page * perPage, total);
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Exibindo <span className="font-medium">{from}</span> a{' '}
-        <span className="font-medium">{to}</span> de{' '}
-        <span className="font-medium">{total}</span> resultado
-        {total !== 1 ? 's' : ''}
-      </p>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-          className="gap-1"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Anterior</span>
-        </Button>
-        <span className="text-sm text-muted-foreground px-2">
-          Página {page} de {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => onPageChange(page + 1)}
-          className="gap-1"
-        >
-          <span className="hidden sm:inline">Próxima</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
 // MAIN PAGE COMPONENT
 // =============================================================================
 
@@ -390,44 +330,63 @@ export default function LoansPage() {
   // --------------------------------------------------------------------------
   // State
   // --------------------------------------------------------------------------
-  const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<LoanStatus | 'ALL'>('ALL');
   const [deleteTarget, setDeleteTarget] = useState<Loan | null>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
 
   // --------------------------------------------------------------------------
-  // Data Fetching
+  // Data Fetching (infinite scroll)
   // --------------------------------------------------------------------------
   const queryParams = useMemo(
     () => ({
-      page,
-      perPage: PER_PAGE,
+      perPage: 20,
       search: searchQuery || undefined,
       status: statusFilter !== 'ALL' ? (statusFilter as LoanStatus) : undefined,
     }),
-    [page, searchQuery, statusFilter]
+    [searchQuery, statusFilter]
   );
 
-  const { data, isLoading, error, refetch } = useLoans(queryParams);
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteLoans(queryParams);
   const deleteLoan = useDeleteLoan();
 
-  const loans = data?.loans ?? [];
-  const meta = data?.meta;
-  const totalPages = meta?.totalPages ?? 1;
-  const total = meta?.total ?? 0;
+  const loans = data?.pages.flatMap(p => p.loans) ?? [];
+
+  // --------------------------------------------------------------------------
+  // IntersectionObserver sentinel for infinite scroll
+  // --------------------------------------------------------------------------
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!sentinelRef.current || !hasNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // --------------------------------------------------------------------------
   // Handlers
   // --------------------------------------------------------------------------
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
-    setPage(1);
   }, []);
 
   const handleStatusChange = useCallback((value: string) => {
     setStatusFilter(value as LoanStatus | 'ALL');
-    setPage(1);
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -510,7 +469,6 @@ export default function LoansPage() {
 
   const handleClearFilters = useCallback(() => {
     setStatusFilter('ALL');
-    setPage(1);
   }, []);
 
   // ==========================================================================
@@ -738,19 +696,15 @@ export default function LoansPage() {
               </Table>
             </div>
 
-            {/* Págination */}
-            {total > PER_PAGE && (
-              <div className="border-t">
-                <TablePágination
-                  page={page}
-                  totalPages={totalPages}
-                  total={total}
-                  perPage={PER_PAGE}
-                  onPageChange={setPage}
-                />
-              </div>
-            )}
           </Card>
+
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="h-1" />
+          {isFetchingNextPage && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
         )}
 
         {/* Delete PIN Confirmation Modal */}

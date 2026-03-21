@@ -5,7 +5,12 @@ import type {
   UpdateLoanData,
   PayLoanInstallmentData,
 } from '@/types/finance';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 const QUERY_KEYS = {
   LOANS: ['loans'],
@@ -16,6 +21,22 @@ export function useLoans(params?: LoansQuery) {
   return useQuery({
     queryKey: [...QUERY_KEYS.LOANS, params],
     queryFn: () => loansService.list(params),
+  });
+}
+
+export function useInfiniteLoans(
+  params?: Omit<LoansQuery, 'page'>
+) {
+  return useInfiniteQuery({
+    queryKey: [...QUERY_KEYS.LOANS, 'infinite', params],
+    queryFn: ({ pageParam = 1 }) =>
+      loansService.list({ ...params, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const meta = lastPage.meta;
+      if (meta.page < meta.totalPages) return meta.page + 1;
+      return undefined;
+    },
   });
 }
 

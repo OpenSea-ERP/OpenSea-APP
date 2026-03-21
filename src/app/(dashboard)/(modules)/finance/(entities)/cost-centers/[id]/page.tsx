@@ -4,13 +4,25 @@
 
 'use client';
 
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useCostCenter } from '@/hooks/finance';
+import { Skeleton } from '@/components/ui/skeleton';
+import PermissionCodes from '@/config/rbac/permission-codes';
+import { useCostCenter, useDeleteCostCenter } from '@/hooks/finance';
+import { usePermissions } from '@/hooks/use-permissions';
 import { ArrowLeft, Building2, Edit, Trash } from 'lucide-react';
 import Link from 'next/link';
-import { use } from 'react';
+import { useRouter } from 'next/navigation';
+import { use, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function CostCenterDetailPage({
   params,
@@ -18,32 +30,85 @@ export default function CostCenterDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const { data, isLoading } = useCostCenter(id);
   const costCenter = data?.costCenter;
+  const deleteMutation = useDeleteCostCenter();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const { hasPermission } = usePermissions();
+  const canDelete = hasPermission(PermissionCodes.FINANCE.COST_CENTERS.REMOVE);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="space-y-4 w-full max-w-2xl">
-          <div className="h-8 bg-muted animate-pulse rounded" />
-          <div className="h-64 bg-muted animate-pulse rounded" />
-        </div>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Centros de Custo', href: '/finance/cost-centers' },
+              { label: 'Carregando...' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <Card className="p-6">
+            <div className="flex gap-6 items-center">
+              <Skeleton className="h-16 w-16 rounded-lg" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+          </Card>
+          <Card className="p-6">
+            <Skeleton className="h-6 w-48 mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-5 w-40" />
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card className="p-6">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-10 w-48" />
+            </div>
+          </Card>
+        </PageBody>
+      </PageLayout>
     );
   }
 
   if (!costCenter) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-destructive">Centro de custo não encontrado.</p>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Centros de Custo', href: '/finance/cost-centers' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <Card className="p-12 text-center">
+            <p className="text-destructive text-lg">
+              Centro de custo não encontrado.
+            </p>
+          </Card>
+        </PageBody>
+      </PageLayout>
     );
   }
 
-  const handleDelete = () => {
-    if (confirm('Tem certeza que deseja excluir este centro de custo?')) {
-      alert('Funcionalidade de exclusão será implementada');
-    }
+  const handleDeleteConfirm = async () => {
+    await deleteMutation.mutateAsync(id);
+    toast.success('Centro de custo excluído com sucesso.');
+    router.push('/finance/cost-centers');
   };
 
   const formatCurrency = (value: number | null | undefined) => {
@@ -68,15 +133,17 @@ export default function CostCenterDetailPage({
         </div>
 
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDelete}
-            className="gap-2"
-          >
-            <Trash className="h-4 w-4 text-red-800" />
-            Excluir
-          </Button>
+          {canDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteModalOpen(true)}
+              className="gap-2"
+            >
+              <Trash className="h-4 w-4 text-rose-600" />
+              Excluir
+            </Button>
+          )}
 
           <Link href={`/finance/cost-centers/${id}/edit`}>
             <Button variant="outline" size="sm" className="gap-2">
@@ -167,6 +234,14 @@ export default function CostCenterDetailPage({
           </div>
         </div>
       </Card>
+
+      <VerifyActionPinModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onSuccess={handleDeleteConfirm}
+        title="Excluir Centro de Custo"
+        description={`Digite seu PIN de ação para excluir "${costCenter.name}".`}
+      />
     </div>
   );
 }

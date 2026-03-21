@@ -4,10 +4,20 @@
 
 'use client';
 
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useBankAccount } from '@/hooks/finance';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useBankAccount, useDeleteBankAccount } from '@/hooks/finance';
+import { usePermissions } from '@/hooks/use-permissions';
+import PermissionCodes from '@/config/rbac/permission-codes';
 import {
   BANK_ACCOUNT_STATUS_LABELS,
   BANK_ACCOUNT_TYPE_LABELS,
@@ -15,7 +25,9 @@ import {
 } from '@/types/finance';
 import { ArrowLeft, Building2, Edit, Trash } from 'lucide-react';
 import Link from 'next/link';
-import { use } from 'react';
+import { useRouter } from 'next/navigation';
+import { use, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function BankAccountDetailPage({
   params,
@@ -23,32 +35,82 @@ export default function BankAccountDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const { data, isLoading } = useBankAccount(id);
   const account = data?.bankAccount;
+  const deleteMutation = useDeleteBankAccount();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const { hasPermission } = usePermissions();
+  const canDelete = hasPermission(PermissionCodes.FINANCE.BANK_ACCOUNTS.REMOVE);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="space-y-4 w-full max-w-2xl">
-          <div className="h-8 bg-muted animate-pulse rounded" />
-          <div className="h-64 bg-muted animate-pulse rounded" />
-        </div>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Contas Bancárias', href: '/finance/bank-accounts' },
+              { label: 'Carregando...' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <Card className="p-6">
+            <div className="flex gap-6 items-center">
+              <Skeleton className="h-16 w-16 rounded-lg" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+          </Card>
+          <Card className="p-6">
+            <Skeleton className="h-6 w-40 mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-5 w-40" />
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card className="p-6">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <Skeleton className="h-10 w-48" />
+          </Card>
+        </PageBody>
+      </PageLayout>
     );
   }
 
   if (!account) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-destructive">Conta bancária não encontrada.</p>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Contas Bancárias', href: '/finance/bank-accounts' },
+            ]}
+          />
+        </PageHeader>
+        <PageBody>
+          <Card className="p-12 text-center">
+            <p className="text-destructive text-lg">
+              Conta bancária não encontrada.
+            </p>
+          </Card>
+        </PageBody>
+      </PageLayout>
     );
   }
 
-  const handleDelete = () => {
-    if (confirm('Tem certeza que deseja excluir esta conta bancária?')) {
-      alert('Funcionalidade de exclusão será implementada');
-    }
+  const handleDeleteConfirm = async () => {
+    await deleteMutation.mutateAsync(id);
+    toast.success('Conta bancária excluída com sucesso.');
+    router.push('/finance/bank-accounts');
   };
 
   const formatCurrency = (value: number | null | undefined) => {
@@ -86,15 +148,17 @@ export default function BankAccountDetailPage({
         </div>
 
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDelete}
-            className="gap-2"
-          >
-            <Trash className="h-4 w-4 text-red-800" />
-            Excluir
-          </Button>
+          {canDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteModalOpen(true)}
+              className="gap-2"
+            >
+              <Trash className="h-4 w-4 text-rose-600" />
+              Excluir
+            </Button>
+          )}
 
           <Link href={`/finance/bank-accounts/${id}/edit`}>
             <Button variant="outline" size="sm" className="gap-2">
@@ -201,6 +265,14 @@ export default function BankAccountDetailPage({
           </p>
         </div>
       </Card>
+
+      <VerifyActionPinModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onSuccess={handleDeleteConfirm}
+        title="Excluir Conta Bancária"
+        description={`Digite seu PIN de ação para excluir "${account.name}".`}
+      />
     </div>
   );
 }

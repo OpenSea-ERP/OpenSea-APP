@@ -6,7 +6,12 @@ import type {
   RegisterPaymentData,
   ParseBoletoRequest,
 } from '@/types/finance';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 const QUERY_KEYS = {
   FINANCE_ENTRIES: ['finance-entries'],
@@ -19,6 +24,23 @@ export function useFinanceEntries(params?: FinanceEntriesQuery) {
   return useQuery({
     queryKey: [...QUERY_KEYS.FINANCE_ENTRIES, params],
     queryFn: () => financeEntriesService.list(params),
+  });
+}
+
+export function useInfiniteFinanceEntries(
+  params?: Omit<FinanceEntriesQuery, 'page'>
+) {
+  return useInfiniteQuery({
+    queryKey: [...QUERY_KEYS.FINANCE_ENTRIES, 'infinite', params],
+    queryFn: ({ pageParam = 1 }) =>
+      financeEntriesService.list({ ...params, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const meta = lastPage.meta;
+      const limit = meta.limit ?? 20;
+      const totalPages = meta.totalPages ?? Math.ceil(meta.total / limit);
+      return meta.page < totalPages ? meta.page + 1 : undefined;
+    },
   });
 }
 
