@@ -127,12 +127,12 @@ export default function TeamPage() {
         userId: inviteUserId.trim(),
         role: inviteRole,
       });
-      toast.success('Membro convidado com sucesso');
+      toast.success('Membro cadastrado com sucesso');
       setInviteOpen(false);
       setInviteUserId('');
       setInviteRole('VIEWER');
     } catch {
-      toast.error('Erro ao convidar membro');
+      toast.error('Erro ao cadastrar membro');
     }
   };
 
@@ -182,7 +182,7 @@ export default function TeamPage() {
             onClick={() => setInviteOpen(true)}
           >
             <UserPlus className="h-4 w-4" />
-            Convidar membro
+            Cadastrar membro
           </Button>
         }
       />
@@ -277,9 +277,15 @@ export default function TeamPage() {
 
       {/* ─── Invite Dialog ──────────────────────────────────────────────── */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent>
+        <DialogContent
+          style={{
+            background: 'var(--central-card-bg)',
+            color: 'var(--central-text-primary)',
+            borderColor: 'var(--central-separator)',
+          }}
+        >
           <DialogHeader>
-            <DialogTitle>Convidar membro</DialogTitle>
+            <DialogTitle>Cadastrar membro</DialogTitle>
             <DialogDescription>
               Adicione um novo membro à equipe de administração central.
             </DialogDescription>
@@ -288,7 +294,7 @@ export default function TeamPage() {
             <div className="space-y-2">
               <label
                 className="text-sm font-medium"
-                style={{ color: 'var(--central-text-primary)' }}
+                style={{ color: 'var(--central-text-secondary)' }}
               >
                 ID do Usuário
               </label>
@@ -296,20 +302,26 @@ export default function TeamPage() {
                 placeholder="Insira o ID do usuário..."
                 value={inviteUserId}
                 onChange={e => setInviteUserId(e.target.value)}
+                style={{
+                  background: 'var(--central-card-bg)',
+                  color: 'var(--central-text-primary)',
+                  borderColor: 'var(--central-separator)',
+                }}
               />
             </div>
             <div className="space-y-2">
               <label
                 className="text-sm font-medium"
-                style={{ color: 'var(--central-text-primary)' }}
+                style={{ color: 'var(--central-text-secondary)' }}
               >
                 Papel
               </label>
               <select
                 value={inviteRole}
                 onChange={e => setInviteRole(e.target.value as CentralRole)}
-                className="w-full h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring bg-transparent"
+                className="w-full h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring"
                 style={{
+                  background: 'var(--central-card-bg)',
                   borderColor: 'var(--central-separator)',
                   color: 'var(--central-text-primary)',
                 }}
@@ -334,7 +346,7 @@ export default function TeamPage() {
               {inviteMutation.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              Convidar
+              Cadastrar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -342,7 +354,13 @@ export default function TeamPage() {
 
       {/* ─── Change Role Dialog ─────────────────────────────────────────── */}
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-        <DialogContent>
+        <DialogContent
+          style={{
+            background: 'var(--central-card-bg)',
+            color: 'var(--central-text-primary)',
+            borderColor: 'var(--central-separator)',
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Alterar papel</DialogTitle>
             <DialogDescription>
@@ -357,15 +375,16 @@ export default function TeamPage() {
           <div className="space-y-2 py-2">
             <label
               className="text-sm font-medium"
-              style={{ color: 'var(--central-text-primary)' }}
+              style={{ color: 'var(--central-text-secondary)' }}
             >
               Novo papel
             </label>
             <select
               value={newRole}
               onChange={e => setNewRole(e.target.value as CentralRole)}
-              className="w-full h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring bg-transparent"
+              className="w-full h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring"
               style={{
+                background: 'var(--central-card-bg)',
                 borderColor: 'var(--central-separator)',
                 color: 'var(--central-text-primary)',
               }}
@@ -400,7 +419,13 @@ export default function TeamPage() {
         open={!!removeTarget}
         onOpenChange={open => !open && setRemoveTarget(null)}
       >
-        <DialogContent>
+        <DialogContent
+          style={{
+            background: 'var(--central-card-bg)',
+            color: 'var(--central-text-primary)',
+            borderColor: 'var(--central-separator)',
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Remover membro</DialogTitle>
             <DialogDescription>

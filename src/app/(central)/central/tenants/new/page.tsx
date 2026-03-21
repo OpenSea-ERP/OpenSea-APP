@@ -237,7 +237,8 @@ export default function NewTenantPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="name"
-                  className="text-sm font-medium central-text"
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--central-text-secondary)' }}
                 >
                   Nome *
                 </label>
@@ -248,12 +249,18 @@ export default function NewTenantPage() {
                     setTenantForm(f => ({ ...f, name: e.target.value }))
                   }
                   placeholder="Nome da empresa"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div className="space-y-1.5">
                 <label
                   htmlFor="slug"
-                  className="text-sm font-medium central-text"
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--central-text-secondary)' }}
                 >
                   Slug (opcional)
                 </label>
@@ -264,6 +271,11 @@ export default function NewTenantPage() {
                     setTenantForm(f => ({ ...f, slug: e.target.value }))
                   }
                   placeholder="Gerado automaticamente se vazio"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
                 <p className="text-xs central-text-muted">
                   Identificador único na URL. Gerado a partir do nome se vazio.
@@ -272,7 +284,8 @@ export default function NewTenantPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="logoUrl"
-                  className="text-sm font-medium central-text"
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--central-text-secondary)' }}
                 >
                   URL do Logo (opcional)
                 </label>
@@ -283,12 +296,18 @@ export default function NewTenantPage() {
                     setTenantForm(f => ({ ...f, logoUrl: e.target.value }))
                   }
                   placeholder="https://exemplo.com/logo.png"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div className="space-y-1.5">
                 <label
                   htmlFor="tenant-status"
-                  className="text-sm font-medium central-text"
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--central-text-secondary)' }}
                 >
                   Status
                 </label>
@@ -296,7 +315,14 @@ export default function NewTenantPage() {
                   value={tenantForm.status}
                   onValueChange={v => setTenantForm(f => ({ ...f, status: v }))}
                 >
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger
+                    className="w-[200px]"
+                    style={{
+                      background: 'var(--central-card-bg)',
+                      color: 'var(--central-text-primary)',
+                      borderColor: 'var(--central-separator)',
+                    }}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -419,7 +445,8 @@ export default function NewTenantPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="user-email"
-                  className="text-sm font-medium central-text"
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--central-text-secondary)' }}
                 >
                   Email
                 </label>
@@ -431,12 +458,18 @@ export default function NewTenantPage() {
                     setUserForm(f => ({ ...f, email: e.target.value }))
                   }
                   placeholder="proprietario@empresa.com"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div className="space-y-1.5">
                 <label
                   htmlFor="user-username"
-                  className="text-sm font-medium central-text"
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--central-text-secondary)' }}
                 >
                   Username (opcional)
                 </label>
@@ -447,12 +480,18 @@ export default function NewTenantPage() {
                     setUserForm(f => ({ ...f, username: e.target.value }))
                   }
                   placeholder="Gerado automaticamente se vazio"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div className="space-y-1.5">
                 <label
                   htmlFor="user-password"
-                  className="text-sm font-medium central-text"
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--central-text-secondary)' }}
                 >
                   Senha
                 </label>
@@ -464,6 +503,11 @@ export default function NewTenantPage() {
                     setUserForm(f => ({ ...f, password: e.target.value }))
                   }
                   placeholder="Mínimo 6 caracteres"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
             </div>

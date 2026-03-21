@@ -444,7 +444,14 @@ function PricingEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent
+        className="sm:max-w-[480px]"
+        style={{
+          background: 'var(--central-card-bg)',
+          color: 'var(--central-text-primary)',
+          borderColor: 'var(--central-separator)',
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Editar Preço</DialogTitle>
         </DialogHeader>
@@ -452,12 +459,18 @@ function PricingEditDialog({
         <div className="space-y-4 py-2">
           {/* Skill name (read-only) */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">
+            <Label
+              className="text-xs font-medium"
+              style={{ color: 'var(--central-text-secondary)' }}
+            >
               Skill
             </Label>
             <div className="text-sm font-medium">
               {node?.skill.name}{' '}
-              <code className="text-xs text-muted-foreground ml-1">
+              <code
+                className="text-xs ml-1"
+                style={{ color: 'var(--central-text-secondary)' }}
+              >
                 ({node?.skill.code})
               </code>
             </div>
@@ -465,14 +478,25 @@ function PricingEditDialog({
 
           {/* Pricing type */}
           <div className="space-y-1.5">
-            <Label htmlFor="pricingType">Tipo de Preço</Label>
+            <Label
+              htmlFor="pricingType"
+              style={{ color: 'var(--central-text-secondary)' }}
+            >
+              Tipo de Preço
+            </Label>
             <Select
               value={form.pricingType}
               onValueChange={v =>
                 updateField('pricingType', v as PricingFormData['pricingType'])
               }
             >
-              <SelectTrigger>
+              <SelectTrigger
+                style={{
+                  background: 'var(--central-card-bg)',
+                  color: 'var(--central-text-primary)',
+                  borderColor: 'var(--central-separator)',
+                }}
+              >
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -486,7 +510,12 @@ function PricingEditDialog({
           {/* Conditional fields */}
           {form.pricingType === 'FLAT' && (
             <div className="space-y-1.5">
-              <Label htmlFor="flatPrice">Preço Mensal (R$)</Label>
+              <Label
+                htmlFor="flatPrice"
+                style={{ color: 'var(--central-text-secondary)' }}
+              >
+                Preço Mensal (R$)
+              </Label>
               <Input
                 id="flatPrice"
                 type="number"
@@ -495,6 +524,11 @@ function PricingEditDialog({
                 placeholder="0.00"
                 value={form.flatPrice}
                 onChange={e => updateField('flatPrice', e.target.value)}
+                style={{
+                  background: 'var(--central-card-bg)',
+                  color: 'var(--central-text-primary)',
+                  borderColor: 'var(--central-separator)',
+                }}
               />
             </div>
           )}
@@ -502,7 +536,12 @@ function PricingEditDialog({
           {form.pricingType === 'PER_UNIT' && (
             <>
               <div className="space-y-1.5">
-                <Label htmlFor="unitPrice">Preço por Unidade (R$)</Label>
+                <Label
+                  htmlFor="unitPrice"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                >
+                  Preço por Unidade (R$)
+                </Label>
                 <Input
                   id="unitPrice"
                   type="number"
@@ -511,20 +550,40 @@ function PricingEditDialog({
                   placeholder="0.00"
                   value={form.unitPrice}
                   onChange={e => updateField('unitPrice', e.target.value)}
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="unitMetric">Métrica</Label>
+                  <Label
+                    htmlFor="unitMetric"
+                    style={{ color: 'var(--central-text-secondary)' }}
+                  >
+                    Métrica
+                  </Label>
                   <Input
                     id="unitMetric"
                     placeholder="ex: user"
                     value={form.unitMetric}
                     onChange={e => updateField('unitMetric', e.target.value)}
+                    style={{
+                      background: 'var(--central-card-bg)',
+                      color: 'var(--central-text-primary)',
+                      borderColor: 'var(--central-separator)',
+                    }}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="unitMetricLabel">Rótulo da Métrica</Label>
+                  <Label
+                    htmlFor="unitMetricLabel"
+                    style={{ color: 'var(--central-text-secondary)' }}
+                  >
+                    Rótulo da Métrica
+                  </Label>
                   <Input
                     id="unitMetricLabel"
                     placeholder="ex: usuário"
@@ -532,6 +591,11 @@ function PricingEditDialog({
                     onChange={e =>
                       updateField('unitMetricLabel', e.target.value)
                     }
+                    style={{
+                      background: 'var(--central-card-bg)',
+                      color: 'var(--central-text-primary)',
+                      borderColor: 'var(--central-separator)',
+                    }}
                   />
                 </div>
               </div>
@@ -541,7 +605,12 @@ function PricingEditDialog({
           {form.pricingType === 'USAGE' && (
             <>
               <div className="space-y-1.5">
-                <Label htmlFor="usageIncluded">Uso Incluso (grátis)</Label>
+                <Label
+                  htmlFor="usageIncluded"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                >
+                  Uso Incluso (grátis)
+                </Label>
                 <Input
                   id="usageIncluded"
                   type="number"
@@ -549,10 +618,20 @@ function PricingEditDialog({
                   placeholder="0"
                   value={form.usageIncluded}
                   onChange={e => updateField('usageIncluded', e.target.value)}
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="usagePrice">Preço por Uso Excedente (R$)</Label>
+                <Label
+                  htmlFor="usagePrice"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                >
+                  Preço por Uso Excedente (R$)
+                </Label>
                 <Input
                   id="usagePrice"
                   type="number"
@@ -561,20 +640,40 @@ function PricingEditDialog({
                   placeholder="0.00"
                   value={form.usagePrice}
                   onChange={e => updateField('usagePrice', e.target.value)}
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="usageMetric">Métrica</Label>
+                  <Label
+                    htmlFor="usageMetric"
+                    style={{ color: 'var(--central-text-secondary)' }}
+                  >
+                    Métrica
+                  </Label>
                   <Input
                     id="usageMetric"
                     placeholder="ex: email"
                     value={form.usageMetric}
                     onChange={e => updateField('usageMetric', e.target.value)}
+                    style={{
+                      background: 'var(--central-card-bg)',
+                      color: 'var(--central-text-primary)',
+                      borderColor: 'var(--central-separator)',
+                    }}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="usageMetricLabel">Rótulo da Métrica</Label>
+                  <Label
+                    htmlFor="usageMetricLabel"
+                    style={{ color: 'var(--central-text-secondary)' }}
+                  >
+                    Rótulo da Métrica
+                  </Label>
                   <Input
                     id="usageMetricLabel"
                     placeholder="ex: e-mail"
@@ -582,6 +681,11 @@ function PricingEditDialog({
                     onChange={e =>
                       updateField('usageMetricLabel', e.target.value)
                     }
+                    style={{
+                      background: 'var(--central-card-bg)',
+                      color: 'var(--central-text-primary)',
+                      borderColor: 'var(--central-separator)',
+                    }}
                   />
                 </div>
               </div>
@@ -590,7 +694,12 @@ function PricingEditDialog({
 
           {/* Annual discount */}
           <div className="space-y-1.5">
-            <Label htmlFor="annualDiscount">Desconto Anual (%)</Label>
+            <Label
+              htmlFor="annualDiscount"
+              style={{ color: 'var(--central-text-secondary)' }}
+            >
+              Desconto Anual (%)
+            </Label>
             <Input
               id="annualDiscount"
               type="number"
@@ -600,6 +709,11 @@ function PricingEditDialog({
               placeholder="0"
               value={form.annualDiscount}
               onChange={e => updateField('annualDiscount', e.target.value)}
+              style={{
+                background: 'var(--central-card-bg)',
+                color: 'var(--central-text-primary)',
+                borderColor: 'var(--central-separator)',
+              }}
             />
           </div>
         </div>

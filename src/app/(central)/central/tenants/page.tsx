@@ -112,12 +112,20 @@ export default function TenantsListPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 max-w-md">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+              style={{ color: 'var(--central-text-muted)' }}
+            />
             <Input
               placeholder="Buscar por nome ou slug..."
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
               className="pl-10"
+              style={{
+                background: 'var(--central-card-bg)',
+                color: 'var(--central-text-primary)',
+                borderColor: 'var(--central-separator)',
+              }}
             />
           </div>
         </div>
@@ -129,8 +137,9 @@ export default function TenantsListPage() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer bg-transparent"
+            className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer"
             style={{
+              background: 'var(--central-card-bg)',
               borderColor: 'var(--central-separator)',
               color: 'var(--central-text-primary)',
             }}

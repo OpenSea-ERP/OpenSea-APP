@@ -266,7 +266,10 @@ export default function TenantDetailPage() {
   if (!data?.tenant) {
     return (
       <CentralCard className="p-12 text-center">
-        <AlertCircle className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--central-text-muted)' }} />
+        <AlertCircle
+          className="h-16 w-16 mx-auto mb-4"
+          style={{ color: 'var(--central-text-muted)' }}
+        />
         <p className="text-lg" style={{ color: 'var(--central-text-muted)' }}>
           Empresa não encontrada
         </p>
@@ -288,7 +291,11 @@ export default function TenantDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <Link href="/central/tenants">
-                <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 mr-1 cursor-pointer">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 -ml-2 mr-1 cursor-pointer"
+                >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
@@ -298,7 +305,9 @@ export default function TenantDetailPage() {
               >
                 {tenant.name}
               </h1>
-              <CentralBadge variant={statusVariant}>{tenant.status}</CentralBadge>
+              <CentralBadge variant={statusVariant}>
+                {tenant.status}
+              </CentralBadge>
             </div>
             <p
               style={{ color: 'var(--central-text-muted)' }}
@@ -308,10 +317,16 @@ export default function TenantDetailPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => {
-              const settingsTab = document.querySelector('[data-value="settings"]') as HTMLButtonElement | null;
-              settingsTab?.click();
-            }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const settingsTab = document.querySelector(
+                  '[data-value="settings"]'
+                ) as HTMLButtonElement | null;
+                settingsTab?.click();
+              }}
+            >
               <Pencil className="h-3.5 w-3.5 mr-1.5" />
               Editar
             </Button>
@@ -325,19 +340,34 @@ export default function TenantDetailPage() {
 
       {/* ====== Tabs ====== */}
       <Tabs defaultValue="overview" className="px-6">
-        <TabsList className="gap-1 h-11 w-full border mb-6" style={{
-          background: 'var(--central-card-bg)',
-          borderColor: 'var(--central-separator)',
-        }}>
-          <TabsTrigger value="overview" data-value="overview" className="gap-1.5 text-sm">
+        <TabsList
+          className="gap-1 h-11 w-full border mb-6"
+          style={{
+            background: 'var(--central-card-bg)',
+            borderColor: 'var(--central-separator)',
+          }}
+        >
+          <TabsTrigger
+            value="overview"
+            data-value="overview"
+            className="gap-1.5 text-sm"
+          >
             <Activity className="h-3.5 w-3.5" />
             Visão Geral
           </TabsTrigger>
-          <TabsTrigger value="subscription" data-value="subscription" className="gap-1.5 text-sm">
+          <TabsTrigger
+            value="subscription"
+            data-value="subscription"
+            className="gap-1.5 text-sm"
+          >
             <Package className="h-3.5 w-3.5" />
             Assinatura
           </TabsTrigger>
-          <TabsTrigger value="users" data-value="users" className="gap-1.5 text-sm">
+          <TabsTrigger
+            value="users"
+            data-value="users"
+            className="gap-1.5 text-sm"
+          >
             <Users className="h-3.5 w-3.5" />
             Usuários
             <span
@@ -350,15 +380,27 @@ export default function TenantDetailPage() {
               {users.length}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="settings" data-value="settings" className="gap-1.5 text-sm">
+          <TabsTrigger
+            value="settings"
+            data-value="settings"
+            className="gap-1.5 text-sm"
+          >
             <Settings className="h-3.5 w-3.5" />
             Configurações
           </TabsTrigger>
-          <TabsTrigger value="integrations" data-value="integrations" className="gap-1.5 text-sm">
+          <TabsTrigger
+            value="integrations"
+            data-value="integrations"
+            className="gap-1.5 text-sm"
+          >
             <Cable className="h-3.5 w-3.5" />
             Integrações
           </TabsTrigger>
-          <TabsTrigger value="logs" data-value="logs" className="gap-1.5 text-sm">
+          <TabsTrigger
+            value="logs"
+            data-value="logs"
+            className="gap-1.5 text-sm"
+          >
             <ScrollText className="h-3.5 w-3.5" />
             Logs
           </TabsTrigger>
@@ -411,12 +453,18 @@ export default function TenantDetailPage() {
                   Saúde das Integrações
                 </h3>
                 <div className="flex items-center gap-4 flex-wrap">
-                  {overview?.integrations && overview.integrations.length > 0 ? (
-                    overview.integrations.map((integ: TenantIntegrationStatus) => (
-                      <IntegrationDot key={integ.id} integration={integ} />
-                    ))
+                  {overview?.integrations &&
+                  overview.integrations.length > 0 ? (
+                    overview.integrations.map(
+                      (integ: TenantIntegrationStatus) => (
+                        <IntegrationDot key={integ.id} integration={integ} />
+                      )
+                    )
                   ) : (
-                    <p className="text-sm" style={{ color: 'var(--central-text-muted)' }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: 'var(--central-text-muted)' }}
+                    >
                       Nenhuma integração configurada
                     </p>
                   )}
@@ -436,7 +484,9 @@ export default function TenantDetailPage() {
                   style={{ color: 'var(--central-text-muted)' }}
                 >
                   <Activity className="h-5 w-5 mr-2 opacity-50" />
-                  <span className="text-sm">Atividades recentes estarão disponíveis em breve</span>
+                  <span className="text-sm">
+                    Atividades recentes estarão disponíveis em breve
+                  </span>
                 </div>
               </CentralCard>
             </>
@@ -469,7 +519,10 @@ export default function TenantDetailPage() {
                         style={{ background: 'var(--central-card-bg)' }}
                       >
                         <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4" style={{ color: 'var(--central-text-muted)' }} />
+                          <Package
+                            className="h-4 w-4"
+                            style={{ color: 'var(--central-text-muted)' }}
+                          />
                           <span
                             className="text-sm font-medium font-mono"
                             style={{ color: 'var(--central-text-primary)' }}
@@ -477,7 +530,9 @@ export default function TenantDetailPage() {
                             {sub.skillCode}
                           </span>
                           <CentralBadge
-                            variant={sub.status === 'ACTIVE' ? 'emerald' : 'orange'}
+                            variant={
+                              sub.status === 'ACTIVE' ? 'emerald' : 'orange'
+                            }
                           >
                             {sub.status}
                           </CentralBadge>
@@ -497,7 +552,10 @@ export default function TenantDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm py-4 text-center" style={{ color: 'var(--central-text-muted)' }}>
+                  <p
+                    className="text-sm py-4 text-center"
+                    style={{ color: 'var(--central-text-muted)' }}
+                  >
                     Nenhuma skill assinada
                   </p>
                 )}
@@ -520,7 +578,10 @@ export default function TenantDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm py-4 text-center" style={{ color: 'var(--central-text-muted)' }}>
+                  <p
+                    className="text-sm py-4 text-center"
+                    style={{ color: 'var(--central-text-muted)' }}
+                  >
                     Sem dados de consumo disponíveis
                   </p>
                 )}
@@ -551,10 +612,13 @@ export default function TenantDetailPage() {
                   Adicionar usuário
                 </Button>
               </DialogTrigger>
-              <DialogContent className="border shadow-2xl" style={{
-                background: 'var(--central-card-bg)',
-                borderColor: 'var(--central-separator)',
-              }}>
+              <DialogContent
+                className="border shadow-2xl"
+                style={{
+                  background: 'var(--central-card-bg)',
+                  borderColor: 'var(--central-separator)',
+                }}
+              >
                 <DialogHeader>
                   <DialogTitle
                     className="text-xl font-bold"
@@ -562,13 +626,18 @@ export default function TenantDetailPage() {
                   >
                     Adicionar Novo Usuário
                   </DialogTitle>
-                  <DialogDescription style={{ color: 'var(--central-text-muted)' }}>
+                  <DialogDescription
+                    style={{ color: 'var(--central-text-muted)' }}
+                  >
                     Crie um novo usuário e associe a esta empresa.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div>
-                    <Label htmlFor="user-email" style={{ color: 'var(--central-text-primary)' }}>
+                    <Label
+                      htmlFor="user-email"
+                      style={{ color: 'var(--central-text-secondary)' }}
+                    >
                       Email
                     </Label>
                     <Input
@@ -580,10 +649,18 @@ export default function TenantDetailPage() {
                       }
                       placeholder="usuario@exemplo.com"
                       className="mt-2"
+                      style={{
+                        background: 'var(--central-card-bg)',
+                        color: 'var(--central-text-primary)',
+                        borderColor: 'var(--central-separator)',
+                      }}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="user-username" style={{ color: 'var(--central-text-primary)' }}>
+                    <Label
+                      htmlFor="user-username"
+                      style={{ color: 'var(--central-text-secondary)' }}
+                    >
                       Username (opcional)
                     </Label>
                     <Input
@@ -594,10 +671,18 @@ export default function TenantDetailPage() {
                       }
                       placeholder="Gerado automaticamente se vazio"
                       className="mt-2"
+                      style={{
+                        background: 'var(--central-card-bg)',
+                        color: 'var(--central-text-primary)',
+                        borderColor: 'var(--central-separator)',
+                      }}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="user-password" style={{ color: 'var(--central-text-primary)' }}>
+                    <Label
+                      htmlFor="user-password"
+                      style={{ color: 'var(--central-text-secondary)' }}
+                    >
                       Senha
                     </Label>
                     <Input
@@ -609,17 +694,32 @@ export default function TenantDetailPage() {
                       }
                       placeholder="Mínimo 6 caracteres"
                       className="mt-2"
+                      style={{
+                        background: 'var(--central-card-bg)',
+                        color: 'var(--central-text-primary)',
+                        borderColor: 'var(--central-separator)',
+                      }}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="user-role" style={{ color: 'var(--central-text-primary)' }}>
+                    <Label
+                      htmlFor="user-role"
+                      style={{ color: 'var(--central-text-secondary)' }}
+                    >
                       Papel
                     </Label>
                     <Select
                       value={userForm.role}
                       onValueChange={v => setUserForm(f => ({ ...f, role: v }))}
                     >
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger
+                        className="mt-2"
+                        style={{
+                          background: 'var(--central-card-bg)',
+                          color: 'var(--central-text-primary)',
+                          borderColor: 'var(--central-separator)',
+                        }}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -671,7 +771,10 @@ export default function TenantDetailPage() {
                       {u.role === 'owner' ? (
                         <Shield className="h-4 w-4 text-amber-500" />
                       ) : (
-                        <Users className="h-4 w-4" style={{ color: 'var(--central-text-muted)' }} />
+                        <Users
+                          className="h-4 w-4"
+                          style={{ color: 'var(--central-text-muted)' }}
+                        />
                       )}
                     </div>
                     <div className="flex-1">
@@ -682,12 +785,21 @@ export default function TenantDetailPage() {
                         {u.user?.username ?? u.userId}
                       </p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <Mail className="h-3 w-3" style={{ color: 'var(--central-text-muted)' }} />
-                        <p className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                        <Mail
+                          className="h-3 w-3"
+                          style={{ color: 'var(--central-text-muted)' }}
+                        />
+                        <p
+                          className="text-xs"
+                          style={{ color: 'var(--central-text-muted)' }}
+                        >
                           {u.user?.email}
                         </p>
                       </div>
-                      <p className="text-[11px] mt-1" style={{ color: 'var(--central-text-muted)' }}>
+                      <p
+                        className="text-[11px] mt-1"
+                        style={{ color: 'var(--central-text-muted)' }}
+                      >
                         Membro desde{' '}
                         {new Date(u.joinedAt).toLocaleDateString('pt-BR')}
                       </p>
@@ -730,8 +842,14 @@ export default function TenantDetailPage() {
             </div>
           ) : (
             <CentralCard className="p-12 text-center">
-              <Users className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--central-text-muted)' }} />
-              <p className="text-sm" style={{ color: 'var(--central-text-muted)' }}>
+              <Users
+                className="h-12 w-12 mx-auto mb-3"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
+              <p
+                className="text-sm"
+                style={{ color: 'var(--central-text-muted)' }}
+              >
                 Nenhum usuário nesta empresa
               </p>
             </CentralCard>
@@ -743,7 +861,10 @@ export default function TenantDetailPage() {
           {/* IA Config */}
           <CentralCard className="p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Bot className="h-4 w-4" style={{ color: 'var(--central-text-muted)' }} />
+              <Bot
+                className="h-4 w-4"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
               <h3
                 className="text-sm font-semibold"
                 style={{ color: 'var(--central-text-primary)' }}
@@ -753,37 +874,64 @@ export default function TenantDetailPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Nome do Assistente
                 </Label>
                 <Input
                   value="Assistente OpenSea"
                   readOnly
                   className="mt-1.5 opacity-60"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div>
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Personalidade
                 </Label>
                 <Input
                   value="Profissional"
                   readOnly
                   className="mt-1.5 opacity-60"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div className="md:col-span-2">
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Modos Habilitados
                 </Label>
                 <Input
                   value="Texto, Voz"
                   readOnly
                   className="mt-1.5 opacity-60"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
             </div>
-            <p className="text-xs mt-3" style={{ color: 'var(--central-text-muted)' }}>
+            <p
+              className="text-xs mt-3"
+              style={{ color: 'var(--central-text-muted)' }}
+            >
               Edição disponível na Fase 3
             </p>
           </CentralCard>
@@ -791,7 +939,10 @@ export default function TenantDetailPage() {
           {/* Branding */}
           <CentralCard className="p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Palette className="h-4 w-4" style={{ color: 'var(--central-text-muted)' }} />
+              <Palette
+                className="h-4 w-4"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
               <h3
                 className="text-sm font-semibold"
                 style={{ color: 'var(--central-text-primary)' }}
@@ -801,7 +952,10 @@ export default function TenantDetailPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   URL do Logo
                 </Label>
                 <Input
@@ -811,10 +965,18 @@ export default function TenantDetailPage() {
                   }
                   placeholder="https://exemplo.com/logo.png"
                   className="mt-1.5"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div>
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Cor Primária
                 </Label>
                 <Input
@@ -824,6 +986,11 @@ export default function TenantDetailPage() {
                   }
                   placeholder="#3B82F6"
                   className="mt-1.5"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
             </div>
@@ -832,7 +999,10 @@ export default function TenantDetailPage() {
           {/* Geral */}
           <CentralCard className="p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Settings className="h-4 w-4" style={{ color: 'var(--central-text-muted)' }} />
+              <Settings
+                className="h-4 w-4"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
               <h3
                 className="text-sm font-semibold"
                 style={{ color: 'var(--central-text-primary)' }}
@@ -842,38 +1012,60 @@ export default function TenantDetailPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Nome
                 </Label>
                 <Input
                   value={form.name}
-                  onChange={e =>
-                    setForm(f => ({ ...f, name: e.target.value }))
-                  }
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   className="mt-1.5"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div>
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Slug
                 </Label>
                 <Input
                   value={form.slug}
-                  onChange={e =>
-                    setForm(f => ({ ...f, slug: e.target.value }))
-                  }
+                  onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
                   className="mt-1.5"
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
                 />
               </div>
               <div>
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Status
                 </Label>
                 <Select
                   value={tenant.status}
                   onValueChange={handleStatusChange}
                 >
-                  <SelectTrigger className="mt-1.5">
+                  <SelectTrigger
+                    className="mt-1.5"
+                    style={{
+                      background: 'var(--central-card-bg)',
+                      color: 'var(--central-text-primary)',
+                      borderColor: 'var(--central-separator)',
+                    }}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -922,7 +1114,9 @@ export default function TenantDetailPage() {
                     </CentralTableCell>
                     <CentralTableCell>
                       <CentralBadge
-                        variant={integrationStatusMap[integ.status] || 'default'}
+                        variant={
+                          integrationStatusMap[integ.status] || 'default'
+                        }
                       >
                         {integrationStatusLabel[integ.status] || integ.status}
                       </CentralBadge>
@@ -938,7 +1132,9 @@ export default function TenantDetailPage() {
                           {integ.errorMessage}
                         </span>
                       ) : (
-                        <span style={{ color: 'var(--central-text-muted)' }}>--</span>
+                        <span style={{ color: 'var(--central-text-muted)' }}>
+                          --
+                        </span>
                       )}
                     </CentralTableCell>
                   </CentralTableRow>
@@ -947,8 +1143,14 @@ export default function TenantDetailPage() {
             </CentralTable>
           ) : (
             <CentralCard className="p-12 text-center">
-              <Cable className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--central-text-muted)' }} />
-              <p className="text-sm" style={{ color: 'var(--central-text-muted)' }}>
+              <Cable
+                className="h-12 w-12 mx-auto mb-3"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
+              <p
+                className="text-sm"
+                style={{ color: 'var(--central-text-muted)' }}
+              >
                 Nenhuma integração configurada
               </p>
             </CentralCard>
@@ -966,23 +1168,57 @@ export default function TenantDetailPage() {
             </h3>
             <div className="flex gap-3">
               <div className="flex-1">
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Data Início
                 </Label>
-                <Input type="date" className="mt-1.5" disabled />
+                <Input
+                  type="date"
+                  className="mt-1.5"
+                  disabled
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
+                />
               </div>
               <div className="flex-1">
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Data Fim
                 </Label>
-                <Input type="date" className="mt-1.5" disabled />
+                <Input
+                  type="date"
+                  className="mt-1.5"
+                  disabled
+                  style={{
+                    background: 'var(--central-card-bg)',
+                    color: 'var(--central-text-primary)',
+                    borderColor: 'var(--central-separator)',
+                  }}
+                />
               </div>
               <div className="flex-1">
-                <Label className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+                <Label
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
                   Tipo
                 </Label>
                 <Select disabled>
-                  <SelectTrigger className="mt-1.5">
+                  <SelectTrigger
+                    className="mt-1.5"
+                    style={{
+                      background: 'var(--central-card-bg)',
+                      color: 'var(--central-text-primary)',
+                      borderColor: 'var(--central-separator)',
+                    }}
+                  >
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
@@ -994,8 +1230,14 @@ export default function TenantDetailPage() {
           </CentralCard>
 
           <CentralCard className="p-12 text-center">
-            <ScrollText className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--central-text-muted)' }} />
-            <p className="text-sm" style={{ color: 'var(--central-text-muted)' }}>
+            <ScrollText
+              className="h-12 w-12 mx-auto mb-3"
+              style={{ color: 'var(--central-text-muted)' }}
+            />
+            <p
+              className="text-sm"
+              style={{ color: 'var(--central-text-muted)' }}
+            >
               Logs de auditoria estarão disponíveis em breve
             </p>
           </CentralCard>
@@ -1012,10 +1254,13 @@ export default function TenantDetailPage() {
           }
         }}
       >
-        <DialogContent className="border shadow-2xl" style={{
-          background: 'var(--central-card-bg)',
-          borderColor: 'var(--central-separator)',
-        }}>
+        <DialogContent
+          className="border shadow-2xl"
+          style={{
+            background: 'var(--central-card-bg)',
+            borderColor: 'var(--central-separator)',
+          }}
+        >
           <DialogHeader>
             <DialogTitle
               className="text-xl font-bold"
@@ -1031,7 +1276,10 @@ export default function TenantDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="security-key" style={{ color: 'var(--central-text-primary)' }}>
+            <Label
+              htmlFor="security-key"
+              style={{ color: 'var(--central-text-secondary)' }}
+            >
               Chave de segurança
             </Label>
             <Input
@@ -1041,6 +1289,11 @@ export default function TenantDetailPage() {
               onChange={e => setSecurityKeyInput(e.target.value)}
               placeholder="Deixe em branco para remover"
               className="mt-2"
+              style={{
+                background: 'var(--central-card-bg)',
+                color: 'var(--central-text-primary)',
+                borderColor: 'var(--central-separator)',
+              }}
             />
           </div>
           <DialogFooter>
@@ -1098,10 +1351,16 @@ function StatCard({
     <CentralCard className="p-4">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium" style={{ color: 'var(--central-text-muted)' }}>
+          <p
+            className="text-xs font-medium"
+            style={{ color: 'var(--central-text-muted)' }}
+          >
             {label}
           </p>
-          <p className="text-2xl font-bold mt-1" style={{ color: 'var(--central-text-primary)' }}>
+          <p
+            className="text-2xl font-bold mt-1"
+            style={{ color: 'var(--central-text-primary)' }}
+          >
             {value}
           </p>
         </div>
@@ -1115,7 +1374,8 @@ function StatCard({
 
 function ConsumptionBar({ item }: { item: TenantConsumption }) {
   const limit = item.limit ?? item.included;
-  const percent = limit > 0 ? Math.min(100, Math.round((item.used / limit) * 100)) : 0;
+  const percent =
+    limit > 0 ? Math.min(100, Math.round((item.used / limit) * 100)) : 0;
 
   const barColor =
     percent >= 90
@@ -1127,10 +1387,16 @@ function ConsumptionBar({ item }: { item: TenantConsumption }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm font-medium" style={{ color: 'var(--central-text-primary)' }}>
+        <span
+          className="text-sm font-medium"
+          style={{ color: 'var(--central-text-primary)' }}
+        >
           {item.metric}
         </span>
-        <span className="text-xs" style={{ color: 'var(--central-text-muted)' }}>
+        <span
+          className="text-xs"
+          style={{ color: 'var(--central-text-muted)' }}
+        >
           {item.used}/{limit} ({percent}%)
         </span>
       </div>
@@ -1147,7 +1413,11 @@ function ConsumptionBar({ item }: { item: TenantConsumption }) {
   );
 }
 
-function IntegrationDot({ integration }: { integration: TenantIntegrationStatus }) {
+function IntegrationDot({
+  integration,
+}: {
+  integration: TenantIntegrationStatus;
+}) {
   const statusIcon =
     integration.status === 'CONNECTED' ? (
       <CheckCircle2 className="h-4 w-4 text-emerald-500" />

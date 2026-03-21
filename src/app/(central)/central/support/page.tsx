@@ -448,8 +448,9 @@ export default function SupportDashboardPage() {
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer bg-transparent"
+          className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer"
           style={{
+            background: 'var(--central-card-bg)',
             borderColor: 'var(--central-separator)',
             color: 'var(--central-text-primary)',
           }}
@@ -463,8 +464,9 @@ export default function SupportDashboardPage() {
         <select
           value={priorityFilter}
           onChange={e => setPriorityFilter(e.target.value)}
-          className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer bg-transparent"
+          className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer"
           style={{
+            background: 'var(--central-card-bg)',
             borderColor: 'var(--central-separator)',
             color: 'var(--central-text-primary)',
           }}
@@ -478,8 +480,9 @@ export default function SupportDashboardPage() {
         <select
           value={categoryFilter}
           onChange={e => setCategoryFilter(e.target.value)}
-          className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer bg-transparent"
+          className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer"
           style={{
+            background: 'var(--central-card-bg)',
             borderColor: 'var(--central-separator)',
             color: 'var(--central-text-primary)',
           }}
