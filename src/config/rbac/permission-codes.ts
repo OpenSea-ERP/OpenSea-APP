@@ -299,38 +299,101 @@ export const HR_PERMISSIONS = {
 // SALES - Gerenciamento de vendas e clientes
 // =============================================================================
 
+// Extra actions used by Sales beyond the 10 standard ones
+type SalesActions = Actions | 'confirm' | 'approve' | 'cancel' | 'reassign'
+  | 'reply' | 'execute' | 'activate' | 'send' | 'convert' | 'sell'
+  | 'open' | 'close' | 'withdraw' | 'supply' | 'receive' | 'verify'
+  | 'override' | 'publish' | 'generate' | 'query' | 'sync';
+
+type SalesPermBlock<A extends SalesActions> = { [K in Uppercase<A>]: string };
+
+function salesPerm<A extends SalesActions>(
+  resource: string,
+  ...actions: A[]
+): SalesPermBlock<A> {
+  const result = {} as Record<string, string>;
+  for (const action of actions) {
+    result[action.toUpperCase()] = `sales.${resource}.${action}`;
+  }
+  return result as SalesPermBlock<A>;
+}
+
 export const SALES_PERMISSIONS = {
-  CUSTOMERS: perm(
-    'sales',
+  // --- CRM ---
+  CUSTOMERS: salesPerm(
     'customers',
-    'access',
-    'register',
-    'modify',
-    'remove',
-    'import',
-    'export',
-    'onlyself'
+    'access', 'register', 'modify', 'remove', 'import', 'export', 'onlyself', 'admin'
   ),
-  PROMOTIONS: perm(
-    'sales',
-    'promotions',
-    'access',
-    'register',
-    'modify',
-    'remove'
+  CONTACTS: salesPerm(
+    'contacts',
+    'access', 'register', 'modify', 'remove', 'admin', 'onlyself'
   ),
-  ORDERS: perm(
-    'sales',
+  DEALS: salesPerm(
+    'deals',
+    'access', 'register', 'modify', 'remove', 'reassign', 'admin', 'onlyself'
+  ),
+  PIPELINES: salesPerm('pipelines', 'access', 'admin'),
+  ACTIVITIES: salesPerm('activities', 'access', 'register'),
+  CONVERSATIONS: salesPerm('conversations', 'access', 'reply', 'reassign', 'admin'),
+  WORKFLOWS: salesPerm('workflows', 'access', 'admin', 'execute'),
+  FORMS: salesPerm('forms', 'access', 'admin'),
+  PROPOSALS: salesPerm('proposals', 'access', 'register', 'send', 'admin'),
+  MSG_TEMPLATES: salesPerm('msg-templates', 'access', 'admin'),
+
+  // --- Preços ---
+  PRICE_TABLES: salesPerm('price-tables', 'access', 'register', 'modify', 'remove', 'admin'),
+  DISCOUNTS: salesPerm('discounts', 'access', 'admin'),
+  COUPONS: salesPerm('coupons', 'access', 'admin'),
+  CAMPAIGNS: salesPerm('campaigns', 'access', 'admin', 'activate'),
+  COMBOS: salesPerm('combos', 'access', 'admin'),
+
+  // --- Promoções (existente) ---
+  PROMOTIONS: perm('sales', 'promotions', 'access', 'register', 'modify', 'remove'),
+
+  // --- Pedidos (existente, expandido) ---
+  ORDERS: salesPerm(
     'orders',
-    'access',
-    'register',
-    'modify',
-    'remove',
-    'export',
-    'print',
-    'admin',
-    'onlyself'
+    'access', 'register', 'modify', 'remove', 'export', 'print', 'admin', 'onlyself',
+    'confirm', 'approve', 'cancel'
   ),
+
+  // --- Orçamentos ---
+  QUOTES: salesPerm(
+    'quotes',
+    'access', 'register', 'modify', 'remove', 'convert', 'send', 'print', 'onlyself'
+  ),
+
+  // --- Devoluções ---
+  RETURNS: salesPerm('returns', 'access', 'register', 'approve', 'admin'),
+
+  // --- Comissões ---
+  COMMISSIONS: salesPerm('commissions', 'access', 'admin', 'onlyself'),
+
+  // --- PDV ---
+  POS: salesPerm('pos', 'access', 'sell', 'cancel', 'override', 'admin', 'onlyself'),
+
+  // --- Caixa ---
+  CASHIER: salesPerm(
+    'cashier',
+    'access', 'open', 'close', 'withdraw', 'supply', 'receive', 'verify', 'override', 'admin'
+  ),
+
+  // --- Licitações ---
+  BIDS: salesPerm('bids', 'access', 'register', 'modify', 'remove', 'admin'),
+  BID_PROPOSALS: salesPerm('bid-proposals', 'access', 'admin', 'send'),
+  BID_BOT: salesPerm('bid-bot', 'access', 'admin', 'activate'),
+  BID_CONTRACTS: salesPerm('bid-contracts', 'access', 'admin', 'register'),
+  BID_DOCUMENTS: salesPerm('bid-documents', 'access', 'admin'),
+
+  // --- Catálogos e Conteúdo ---
+  CATALOGS: salesPerm('catalogs', 'access', 'admin', 'publish'),
+  CONTENT: salesPerm('content', 'access', 'generate', 'publish', 'approve'),
+
+  // --- Marketplaces ---
+  MARKETPLACES: salesPerm('marketplaces', 'access', 'admin', 'sync'),
+
+  // --- Analytics ---
+  ANALYTICS: salesPerm('analytics', 'access', 'admin', 'export', 'onlyself'),
 } as const;
 
 // =============================================================================
@@ -453,6 +516,12 @@ export const TOOLS_PERMISSIONS = {
       'share',
       'onlyself'
     ),
+  },
+  AI: {
+    ACCESS: 'tools.ai.access' as const,
+    QUERY: 'tools.ai.query' as const,
+    EXECUTE: 'tools.ai.execute' as const,
+    ADMIN: 'tools.ai.admin' as const,
   },
 } as const;
 
