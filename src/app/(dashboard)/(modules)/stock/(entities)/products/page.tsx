@@ -682,7 +682,7 @@ function ProductsPageContent() {
   // ============================================================================
 
   const handleImport = useCallback(() => {
-    router.push('/import/stock/products/home');
+    router.push('/import/stock/products');
   }, [router]);
 
   const handleCreate = useCallback(() => {

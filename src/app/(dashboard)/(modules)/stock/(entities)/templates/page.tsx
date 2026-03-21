@@ -489,7 +489,7 @@ export default function TemplatesPage() {
   }, []);
 
   const handleImport = useCallback(() => {
-    router.push('/import/templates');
+    router.push('/import/stock/templates');
   }, [router]);
 
   const actionButtons = useMemo<ActionButtonWithPermission[]>(
