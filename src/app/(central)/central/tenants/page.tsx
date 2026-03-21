@@ -1,6 +1,7 @@
 'use client';
 
 import { CentralBadge } from '@/components/central/central-badge';
+import { CentralPageHeader } from '@/components/central/central-page-header';
 import {
   CentralTable,
   CentralTableBody,
@@ -25,6 +26,8 @@ import {
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// ─── Config ────────────────────────────────────────────────────────────────────
+
 const statusVariants: Record<
   string,
   'emerald' | 'orange' | 'rose' | 'default'
@@ -34,12 +37,29 @@ const statusVariants: Record<
   SUSPENDED: 'rose',
 };
 
+const statusLabels: Record<string, string> = {
+  ACTIVE: 'Ativa',
+  INACTIVE: 'Inativa',
+  SUSPENDED: 'Suspensa',
+};
+
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos os status' },
   { value: 'ACTIVE', label: 'Ativas' },
   { value: 'INACTIVE', label: 'Inativas' },
   { value: 'SUSPENDED', label: 'Suspensas' },
 ];
+
+// Mock MRR per tenant (deterministic based on index)
+const MOCK_MRR = [89, 199, 349, 499, 149, 299, 79, 599, 249, 189];
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TenantsListPage() {
   const [page, setPage] = useState(1);
@@ -54,7 +74,7 @@ export default function TenantsListPage() {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       setDebouncedSearch(value);
-      setPage(1); // Reset to first page on search
+      setPage(1);
     }, 300);
   }, []);
 
@@ -73,24 +93,20 @@ export default function TenantsListPage() {
   const tenants = data?.tenants ?? [];
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="px-6 py-5 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight central-text">
-            Empresas
-          </h1>
-          <p className="central-text-muted text-lg mt-1">
-            Gerencie todas as empresas do sistema
-          </p>
-        </div>
-        <Link href="/central/tenants/new">
-          <Button variant="default" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Empresa
-          </Button>
-        </Link>
-      </div>
+      <CentralPageHeader
+        title="Empresas"
+        description="Gerencie todas as empresas do sistema"
+        action={
+          <Link href="/central/tenants/new">
+            <Button size="sm" className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              Nova Empresa
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Search + Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -106,11 +122,18 @@ export default function TenantsListPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 central-text-muted" />
+          <Filter
+            className="h-4 w-4"
+            style={{ color: 'var(--central-text-muted)' }}
+          />
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="h-10 px-3 rounded-lg central-glass-strong border border-[rgb(var(--central-border)/0.15)] central-text text-sm outline-none focus:ring-2 focus:ring-[rgb(var(--os-blue-500)/0.3)] transition-all appearance-none cursor-pointer bg-transparent"
+            className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer bg-transparent"
+            style={{
+              borderColor: 'var(--central-separator)',
+              color: 'var(--central-text-primary)',
+            }}
           >
             {STATUS_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>
@@ -143,7 +166,8 @@ export default function TenantsListPage() {
           {[1, 2, 3, 4, 5].map(i => (
             <div
               key={i}
-              className="h-16 rounded-xl central-glass-subtle animate-pulse"
+              className="h-16 rounded-xl animate-pulse"
+              style={{ background: 'var(--central-card-bg)' }}
             />
           ))}
         </div>
@@ -153,44 +177,57 @@ export default function TenantsListPage() {
             <CentralTableRow>
               <CentralTableHead>Empresa</CentralTableHead>
               <CentralTableHead>Slug</CentralTableHead>
+              <CentralTableHead>MRR</CentralTableHead>
               <CentralTableHead>Status</CentralTableHead>
               <CentralTableHead>Criado em</CentralTableHead>
               <CentralTableHead className="w-[80px]">Ações</CentralTableHead>
             </CentralTableRow>
           </CentralTableHeader>
           <CentralTableBody>
-            {tenants.map(tenant => (
+            {tenants.map((tenant, index) => (
               <CentralTableRow key={tenant.id}>
                 <CentralTableCell>
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl central-accent-blue central-accent-gradient border border-[rgb(var(--os-blue-500)/0.3)]">
-                      <Building2 className="h-5 w-5 central-accent-text" />
+                    <div
+                      className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0"
+                      style={{
+                        background: 'var(--central-avatar-bg)',
+                        color: 'var(--central-avatar-text)',
+                      }}
+                    >
+                      <Building2 className="h-4 w-4" />
                     </div>
-                    <span className="font-medium central-text">
-                      {tenant.name}
-                    </span>
+                    <span className="font-medium">{tenant.name}</span>
                   </div>
                 </CentralTableCell>
                 <CentralTableCell>
-                  <span className="central-text-muted font-mono text-sm">
+                  <span
+                    className="font-mono text-sm"
+                    style={{ color: 'var(--central-text-secondary)' }}
+                  >
                     {tenant.slug}
+                  </span>
+                </CentralTableCell>
+                <CentralTableCell>
+                  <span className="font-semibold tabular-nums">
+                    {formatCurrency(MOCK_MRR[index % MOCK_MRR.length])}
                   </span>
                 </CentralTableCell>
                 <CentralTableCell>
                   <CentralBadge
                     variant={statusVariants[tenant.status] ?? 'default'}
                   >
-                    {tenant.status}
+                    {statusLabels[tenant.status] ?? tenant.status}
                   </CentralBadge>
                 </CentralTableCell>
                 <CentralTableCell>
-                  <span className="central-text-muted">
+                  <span style={{ color: 'var(--central-text-secondary)' }}>
                     {new Date(tenant.createdAt).toLocaleDateString('pt-BR')}
                   </span>
                 </CentralTableCell>
                 <CentralTableCell>
                   <Link href={`/central/tenants/${tenant.id}`}>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                       <Eye className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -199,10 +236,13 @@ export default function TenantsListPage() {
             ))}
             {tenants.length === 0 && (
               <CentralTableRow>
-                <CentralTableCell colSpan={5} className="text-center py-12">
+                <CentralTableCell colSpan={6} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
-                    <Building2 className="h-12 w-12 central-text-subtle" />
-                    <p className="central-text-subtle">
+                    <Building2
+                      className="h-12 w-12"
+                      style={{ color: 'var(--central-text-muted)' }}
+                    />
+                    <p style={{ color: 'var(--central-text-muted)' }}>
                       {debouncedSearch || statusFilter
                         ? 'Nenhuma empresa encontrada com os filtros aplicados'
                         : 'Nenhuma empresa encontrada'}
@@ -218,8 +258,11 @@ export default function TenantsListPage() {
       {/* Pagination */}
       {data?.meta && data.meta.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm central-text-muted">
-            {data.meta.total} empresas no total • Página {page} de{' '}
+          <p
+            className="text-sm"
+            style={{ color: 'var(--central-text-secondary)' }}
+          >
+            {data.meta.total} empresas no total — Página {page} de{' '}
             {data.meta.totalPages}
           </p>
           <div className="flex gap-2">
