@@ -833,6 +833,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/products/batch',
     basePath: '/import/stock/products',
     module: 'stock',
+    permission: 'stock.products.import',
   },
   variants: {
     entityType: 'variants',
@@ -846,6 +847,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/variants/batch',
     basePath: '/import/stock/variants',
     module: 'stock',
+    permission: 'stock.variants.import',
   },
   items: {
     entityType: 'items',
@@ -859,6 +861,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/items/entry/batch',
     basePath: '/import/stock/items',
     module: 'stock',
+    permission: 'stock.items.import',
   },
   suppliers: {
     entityType: 'suppliers',
@@ -872,6 +875,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/suppliers/batch',
     basePath: '/import/stock/suppliers',
     module: 'stock',
+    permission: 'finance.suppliers.import',
   },
   'product-categories': {
     entityType: 'product-categories',
@@ -885,20 +889,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/categories/batch',
     basePath: '/import/stock/product-categories',
     module: 'stock',
-  },
-  // Keep old categories for backward compatibility
-  categories: {
-    entityType: 'categories',
-    label: 'Categoria',
-    labelPlural: 'Categorias',
-    description: 'Importar categorias de produtos',
-    icon: 'FolderTree',
-    color: 'yellow',
-    fields: categoryFields,
-    apiEndpoint: '/v1/categories',
-    batchEndpoint: '/v1/categories/batch',
-    basePath: '/import/stock/product-categories',
-    module: 'stock',
+    permission: 'stock.categories.import',
   },
   manufacturers: {
     entityType: 'manufacturers',
@@ -912,6 +903,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/manufacturers/batch',
     basePath: '/import/stock/manufacturers',
     module: 'stock',
+    permission: 'stock.manufacturers.import',
   },
   templates: {
     entityType: 'templates',
@@ -925,6 +917,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/templates/batch',
     basePath: '/import/stock/templates',
     module: 'stock',
+    permission: 'stock.templates.import',
   },
 
   // ============================================
@@ -942,6 +935,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/users/batch',
     basePath: '/import/admin/users',
     module: 'admin',
+    permission: 'admin.users.import',
   },
 
   // ============================================
@@ -959,6 +953,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/admin/companies/batch',
     basePath: '/import/admin/companies',
     module: 'admin',
+    permission: 'admin.companies.import',
   },
   departments: {
     entityType: 'departments',
@@ -972,6 +967,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/hr/departments/batch',
     basePath: '/import/hr/departments',
     module: 'hr',
+    permission: 'hr.departments.import',
   },
   positions: {
     entityType: 'positions',
@@ -985,6 +981,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/hr/positions/batch',
     basePath: '/import/hr/positions',
     module: 'hr',
+    permission: 'hr.positions.import',
   },
   employees: {
     entityType: 'employees',
@@ -998,6 +995,7 @@ export const ENTITY_DEFINITIONS: Record<string, EntityImportDefinition> = {
     batchEndpoint: '/v1/hr/employees/batch',
     basePath: '/import/hr/employees',
     module: 'hr',
+    permission: 'hr.employees.import',
   },
 };
 

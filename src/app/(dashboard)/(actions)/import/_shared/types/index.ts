@@ -256,7 +256,8 @@ export interface EntityImportDefinition {
   batchEndpoint?: string;
   // Import path info
   basePath?: string; // Base path for import routes (e.g., '/import/stock/products')
-  module?: 'stock' | 'admin' | 'hr'; // Module grouping
+  module: 'stock' | 'admin' | 'hr'; // Module grouping
+  permission: string; // Required RBAC permission (e.g., 'stock.products.import')
 }
 
 // ============================================
@@ -292,4 +293,31 @@ export interface UseImportProcessReturn {
   resumeImport: () => void;
   cancelImport: () => void;
   reset: () => void;
+}
+
+// ============================================
+// AI INTEGRATION TYPES
+// ============================================
+
+export interface ImportRow {
+  [fieldKey: string]: string | number | boolean | null;
+}
+
+export interface ColumnMapping {
+  sourceColumn: string;
+  targetField: string;
+  confidence: number;
+  transform?: 'none' | 'date' | 'number' | 'boolean' | 'reference-lookup';
+}
+
+export interface ImportAIBridge {
+  fillFromAI(rows: ImportRow[]): void;
+  exportForAI(): {
+    entityType: string;
+    columns: ImportFieldConfig[];
+    rows: ImportRow[];
+    referenceData: Record<string, { id: string; label: string }[]>;
+  };
+  applySuggestedMapping(mapping: ColumnMapping[]): void;
+  getEntityDefinition(): EntityImportDefinition;
 }
