@@ -122,7 +122,7 @@ export function CardModalSidebar({
   const selectedLabels = allLabels.filter(l => selectedLabelIds.includes(l.id));
 
   return (
-    <div className="w-full md:w-[210px] shrink-0 border-t md:border-t-0 md:border-l border-border bg-muted/20 dark:bg-white/[0.02] overflow-y-auto">
+    <div className="w-full md:w-[210px] shrink-0 border-t md:border-t-0 md:border-l border-border/50 bg-slate-50 dark:bg-white/5 overflow-y-auto">
       <div className="p-3 space-y-3">
         {/* ── Coluna ── */}
         <div className="space-y-1">

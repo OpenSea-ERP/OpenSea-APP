@@ -41,7 +41,7 @@ import { useCustomFields, useSetCustomFieldValues } from '@/hooks/tasks/use-cust
 import { useAttachments, useDeleteAttachment } from '@/hooks/tasks/use-attachments';
 import { useIntegrations, useDeleteIntegration } from '@/hooks/tasks/use-integrations';
 import { useCardMembers, useAddCardMember, useRemoveCardMember } from '@/hooks/tasks/use-card-members';
-import { useComments } from '@/hooks/tasks/use-comments';
+import { useComments, useCreateComment } from '@/hooks/tasks/use-comments';
 
 import { CardModalMembers } from './card-modal-members';
 import { CardModalSidebar } from './card-modal-sidebar';
@@ -159,6 +159,7 @@ export function CardModal({
   const deleteIntegration = useDeleteIntegration(boardId, cardId ?? '');
   const addCardMember = useAddCardMember(boardId, cardId ?? '');
   const removeCardMember = useRemoveCardMember(boardId, cardId ?? '');
+  const createComment = useCreateComment(boardId, cardId ?? '');
 
   // ── Local state ──
   const [activeTab, setActiveTab] = useState<ModalTab>('geral');
@@ -449,6 +450,20 @@ export function CardModal({
     []
   );
 
+  const handleAddComment = useCallback(
+    (content: string) => {
+      if (!isEditMode || !cardId || !content.trim()) return;
+      createComment.mutate(
+        { content: content.trim() },
+        {
+          onSuccess: () => toast.success('Comentário adicionado'),
+          onError: () => toast.error('Não foi possível adicionar o comentário.'),
+        }
+      );
+    },
+    [isEditMode, cardId, createComment]
+  );
+
   const handleAddIntegration = useCallback(
     (_type: IntegrationType, _entityId: string, _entityLabel: string) => {
       toast.info('Em breve — busca de integrações será implementada');
@@ -735,15 +750,6 @@ export function CardModal({
                   </Button>
                 </div>
 
-                {/* Description */}
-                <Textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  onBlur={handleDescriptionBlur}
-                  placeholder="Adicionar descrição..."
-                  rows={2}
-                  className="mt-2 text-sm border-none shadow-none px-0 focus-visible:ring-0 resize-none bg-transparent"
-                />
               </div>
 
               {/* ── Two-panel area ── */}
@@ -751,7 +757,7 @@ export function CardModal({
                 {/* Left panel */}
                 <div className="flex-1 flex flex-col min-w-0">
                   {/* Tab bar */}
-                  <div className="shrink-0 flex items-center gap-0.5 px-4 border-b border-border bg-muted/20 dark:bg-white/[0.02] overflow-x-auto scrollbar-none">
+                  <div className="shrink-0 flex items-center gap-0.5 px-4 border-b border-border/50 bg-slate-50 dark:bg-white/5 overflow-x-auto scrollbar-none">
                     {TABS.map(tab => {
                       const Icon = tab.icon;
                       const isActive = activeTab === tab.key;
@@ -780,9 +786,15 @@ export function CardModal({
                   </div>
 
                   {/* Tab content */}
-                  <div className="flex-1 overflow-y-auto px-5 py-4">
+                  <div className={cn(
+                    'flex-1 min-h-0 px-5 py-4',
+                    activeTab === 'geral' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'
+                  )}>
                     {activeTab === 'geral' && (
                       <CardModalGeneralTab
+                        description={description}
+                        onDescriptionChange={setDescription}
+                        onDescriptionBlur={handleDescriptionBlur}
                         attachments={isEditMode ? attachments : []}
                         onUploadAttachment={handleUploadAttachment}
                         onRemoveAttachment={handleRemoveAttachment}
@@ -791,6 +803,7 @@ export function CardModal({
                         customFieldValues={customFieldValues}
                         onCustomFieldChange={handleCustomFieldChange}
                         recentComments={isEditMode ? recentComments : []}
+                        onAddComment={isEditMode && cardId ? handleAddComment : undefined}
                         onViewAllComments={
                           isEditMode
                             ? () => setActiveTab('comentarios')
