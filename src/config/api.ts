@@ -313,6 +313,30 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/v1/notification-preferences/${id}`,
     DELETE: (id: string) => `/v1/notification-preferences/${id}`,
   },
+  // Sales - Catalogs
+  CATALOGS: {
+    LIST: '/v1/catalogs',
+    GET: (id: string) => `/v1/catalogs/${id}`,
+    CREATE: '/v1/catalogs',
+    UPDATE: (id: string) => `/v1/catalogs/${id}`,
+    DELETE: (id: string) => `/v1/catalogs/${id}`,
+    ADD_ITEM: (catalogId: string) => `/v1/catalogs/${catalogId}/items`,
+    REMOVE_ITEM: (catalogId: string, itemId: string) =>
+      `/v1/catalogs/${catalogId}/items/${itemId}`,
+  },
+  // Sales - Brand
+  BRAND: {
+    GET: '/v1/brand',
+    UPDATE: '/v1/brand',
+  },
+  // Sales - Content
+  CONTENT: {
+    LIST: '/v1/content',
+    GET: (id: string) => `/v1/content/${id}`,
+    GENERATE: '/v1/content/generate',
+    DELETE: (id: string) => `/v1/content/${id}`,
+    APPROVE: (id: string) => `/v1/content/${id}/approve`,
+  },
   // Email
   EMAIL: {
     ACCOUNTS: {

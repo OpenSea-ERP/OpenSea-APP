@@ -331,6 +331,28 @@ export const SALES_PERMISSIONS = {
     'admin',
     'onlyself'
   ),
+  CATALOGS: perm(
+    'sales',
+    'catalogs',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  BRAND: perm(
+    'sales',
+    'brand',
+    'access',
+    'modify'
+  ),
+  CONTENT: perm(
+    'sales',
+    'content',
+    'access',
+    'register',
+    'remove',
+    'admin'
+  ),
 } as const;
 
 // =============================================================================
