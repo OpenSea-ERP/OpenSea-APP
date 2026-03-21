@@ -92,7 +92,7 @@ export default function BankAccountDetailPage({
             onClick={handleDelete}
             className="gap-2"
           >
-            <Trash className="h-4 w-4 text-red-800" />
+            <Trash className="h-4 w-4 text-rose-800" />
             Excluir
           </Button>
 
