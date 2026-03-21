@@ -16,3 +16,4 @@ export * from './items.config';
 
 // Finance Entities
 export * from './finance-entry.config';
+export * from './loan.config';

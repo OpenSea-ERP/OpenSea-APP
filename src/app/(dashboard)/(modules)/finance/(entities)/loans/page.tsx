@@ -1,11 +1,12 @@
 /**
- * OpenSea OS - Loans Listing Page
- * Página de listagem de empréstimos com filtros, paginação e ações RBAC.
+ * OpenSea OS - Empréstimos (Loans)
+ * Listagem de empréstimos com infinite scroll, filtros server-side e EntityGrid
  */
 
 'use client';
 
 import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
@@ -16,74 +17,72 @@ import {
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import { loanConfig } from '@/config/entities/loan.config';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
-import { useDeleteLoan, useLoans } from '@/hooks/finance';
-import { usePermissions } from '@/hooks/use-permissions';
-import type { Loan, LoanStatus } from '@/types/finance';
-import { LOAN_STATUS_LABELS } from '@/types/finance';
 import {
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  Edit,
-  Eye,
-  MoreHorizontal,
+  CoreProvider,
+  EntityCard,
+  EntityContextMenu,
+  EntityGrid,
+} from '@/core';
+import { useDebounce } from '@/hooks/use-debounce';
+import { usePermissions } from '@/hooks/use-permissions';
+import {
+  useLoansInfinite,
+  useDeleteLoan,
+  type LoansFilters,
+} from '@/hooks/finance/use-loans';
+import { cn } from '@/lib/utils';
+import type { Loan, LoanStatus, LoanType } from '@/types/finance';
+import { LOAN_STATUS_LABELS, LOAN_TYPE_LABELS } from '@/types/finance';
+import {
+  DollarSign,
+  Landmark,
+  Loader2,
   Plus,
+  Tag,
   Trash2,
-  XCircle,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
+import { CreateLoanWizard } from './src/components/create-loan-wizard';
 
-// =============================================================================
+// ============================================================================
 // CONSTANTS
-// =============================================================================
+// ============================================================================
 
-const STATUS_OPTIONS: { value: LoanStatus; label: string }[] = [
-  { value: 'ACTIVE', label: 'Ativo' },
-  { value: 'PAID_OFF', label: 'Quitado' },
-  { value: 'DEFAULTED', label: 'Inadimplente' },
-  { value: 'RENEGOTIATED', label: 'Renegociado' },
-  { value: 'CANCELLED', label: 'Cancelado' },
+const STATUS_OPTIONS = [
+  { id: 'ACTIVE', label: 'Ativo' },
+  { id: 'PAID_OFF', label: 'Quitado' },
+  { id: 'DEFAULTED', label: 'Inadimplente' },
+  { id: 'RENEGOTIATED', label: 'Renegociado' },
+  { id: 'CANCELLED', label: 'Cancelado' },
 ];
 
-const PER_PAGE = 20;
+const TYPE_OPTIONS = [
+  { id: 'PERSONAL', label: 'Pessoal' },
+  { id: 'BUSINESS', label: 'Empresarial' },
+  { id: 'WORKING_CAPITAL', label: 'Capital de Giro' },
+  { id: 'EQUIPMENT', label: 'Financ. Equipamento' },
+  { id: 'REAL_ESTATE', label: 'Financ. Imobiliário' },
+  { id: 'CREDIT_LINE', label: 'Linha de Crédito' },
+  { id: 'OTHER', label: 'Outro' },
+];
 
-// =============================================================================
+const ACTIVE_LOAN_STATUSES: LoanStatus[] = ['ACTIVE', 'DEFAULTED', 'RENEGOTIATED'];
+
+// ============================================================================
 // HELPERS
-// =============================================================================
-
-type ActionButtonWithPermission = HeaderButton & {
-  permission?: string;
-};
+// ============================================================================
 
 function formatCurrency(value: number | null | undefined): string {
   if (value == null) return 'R$ 0,00';
@@ -93,404 +92,474 @@ function formatCurrency(value: number | null | undefined): string {
   }).format(value);
 }
 
-function formatPercent(value: number | null | undefined): string {
-  if (value == null) return '0,00%';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'percent',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value / 100);
+function getStatusColor(status: LoanStatus): string {
+  const colors: Record<LoanStatus, string> = {
+    ACTIVE:
+      'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    PAID_OFF:
+      'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+    DEFAULTED:
+      'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300',
+    RENEGOTIATED:
+      'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+    CANCELLED:
+      'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
+  };
+  return colors[status] ?? colors.ACTIVE;
 }
 
-function getStatusVariant(
-  status: LoanStatus
-): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' {
-  switch (status) {
-    case 'ACTIVE':
-      return 'success';
-    case 'PAID_OFF':
-      return 'default';
-    case 'DEFAULTED':
-      return 'destructive';
-    case 'RENEGOTIATED':
-      return 'warning';
-    case 'CANCELLED':
-      return 'secondary';
-    default:
-      return 'secondary';
-  }
+function getTypeColor(): string {
+  return 'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300';
 }
 
-function getProgressColor(percentage: number): string {
-  if (percentage >= 80) return 'text-emerald-600';
-  if (percentage >= 50) return 'text-blue-600';
-  if (percentage >= 25) return 'text-amber-600';
-  return 'text-muted-foreground';
+function getProgressPercentage(loan: Loan): number {
+  if (loan.totalInstallments <= 0) return 0;
+  return Math.round((loan.paidInstallments / loan.totalInstallments) * 100);
 }
 
-// =============================================================================
-// TABLE LOADING SKELETON
-// =============================================================================
+// ============================================================================
+// TYPES
+// ============================================================================
 
-function TableSkeleton() {
-  return (
-    <Card className="overflow-hidden">
-      <div className="p-0">
-        <Table aria-label="Tabela de simulação de amortização">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead className="hidden md:table-cell">Contrato</TableHead>
-              <TableHead className="text-right hidden md:table-cell">
-                Valor Principal
-              </TableHead>
-              <TableHead className="text-right">Saldo Devedor</TableHead>
-              <TableHead className="text-center hidden lg:table-cell">
-                Taxa
-              </TableHead>
-              <TableHead className="text-center hidden md:table-cell">
-                Parcelas
-              </TableHead>
-              <TableHead className="hidden lg:table-cell">Progresso</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell>
-                  <Skeleton className="h-4 w-36" />
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <Skeleton className="h-4 w-28 ml-auto" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-28 ml-auto" />
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <Skeleton className="h-4 w-16 mx-auto" />
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <Skeleton className="h-4 w-16 mx-auto" />
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <Skeleton className="h-2 w-full rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-6 w-6 mx-auto" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </Card>
-  );
-}
+type ActionButtonWithPermission = HeaderButton & {
+  permission?: string;
+};
 
-// =============================================================================
-// EMPTY STATE
-// =============================================================================
-
-function EmptyState({
-  canCreate,
-  onCreate,
-}: {
-  canCreate: boolean;
-  onCreate: () => void;
-}) {
-  return (
-    <Card className="bg-white/50 dark:bg-white/5 border-gray-200/50 dark:border-white/10">
-      <div className="flex flex-col items-center justify-center py-16 px-6">
-        <div className="p-4 rounded-full bg-muted/50 mb-4">
-          <XCircle className="w-10 h-10 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Nenhum empréstimo encontrado
-        </h3>
-        <p className="text-muted-foreground text-sm text-center max-w-sm mb-6">
-          Não existem empréstimos cadastrados com os filtros selecionados.
-          {canCreate &&
-            ' Crie um novo empréstimo para começar a gerenciar suas operações de crédito.'}
-        </p>
-        {canCreate && (
-          <Button onClick={onCreate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Empréstimo
-          </Button>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-// =============================================================================
-// ROW ACTIONS MENU
-// =============================================================================
-
-function LoanRowActions({
-  loan,
-  canView,
-  canEdit,
-  canDelete,
-  onView,
-  onEdit,
-  onDelete,
-}: {
-  loan: Loan;
-  canView: boolean;
-  canEdit: boolean;
-  canDelete: boolean;
-  onView: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (loan: Loan) => void;
-}) {
-  if (!canView && !canEdit && !canDelete) return null;
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={e => e.stopPropagation()}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Abrir menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {/* Base actions */}
-        {canView && (
-          <DropdownMenuItem
-            onClick={e => {
-              e.stopPropagation();
-              onView(loan.id);
-            }}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Visualizar
-          </DropdownMenuItem>
-        )}
-        {canEdit && (
-          <DropdownMenuItem
-            onClick={e => {
-              e.stopPropagation();
-              onEdit(loan.id);
-            }}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Editar
-          </DropdownMenuItem>
-        )}
-
-        {/* Destructive actions */}
-        {canDelete && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={e => {
-                e.stopPropagation();
-                onDelete(loan);
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Excluir
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-// =============================================================================
-// PAGINATION
-// =============================================================================
-
-function TablePágination({
-  page,
-  totalPages,
-  total,
-  perPage,
-  onPageChange,
-}: {
-  page: number;
-  totalPages: number;
-  total: number;
-  perPage: number;
-  onPageChange: (page: number) => void;
-}) {
-  const from = (page - 1) * perPage + 1;
-  const to = Math.min(page * perPage, total);
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Exibindo <span className="font-medium">{from}</span> a{' '}
-        <span className="font-medium">{to}</span> de{' '}
-        <span className="font-medium">{total}</span> resultado
-        {total !== 1 ? 's' : ''}
-      </p>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-          className="gap-1"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Anterior</span>
-        </Button>
-        <span className="text-sm text-muted-foreground px-2">
-          Página {page} de {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => onPageChange(page + 1)}
-          className="gap-1"
-        >
-          <span className="hidden sm:inline">Próxima</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// MAIN PAGE COMPONENT
-// =============================================================================
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 export default function LoansPage() {
+  return (
+    <Suspense
+      fallback={<GridLoading count={9} layout="list" size="md" gap="gap-4" />}
+    >
+      <LoansPageContent />
+    </Suspense>
+  );
+}
+
+function LoansPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { hasPermission } = usePermissions();
 
-  // --------------------------------------------------------------------------
-  // Permissions
-  // --------------------------------------------------------------------------
-  const canList = hasPermission(FINANCE_PERMISSIONS.LOANS.ACCESS);
-  const canCreate = hasPermission(FINANCE_PERMISSIONS.LOANS.REGISTER);
+  // ============================================================================
+  // PERMISSION FLAGS
+  // ============================================================================
+
   const canView = hasPermission(FINANCE_PERMISSIONS.LOANS.ACCESS);
+  const canCreate = hasPermission(FINANCE_PERMISSIONS.LOANS.REGISTER);
   const canEdit = hasPermission(FINANCE_PERMISSIONS.LOANS.MODIFY);
   const canDelete = hasPermission(FINANCE_PERMISSIONS.LOANS.REMOVE);
 
-  // --------------------------------------------------------------------------
-  // State
-  // --------------------------------------------------------------------------
-  const [page, setPage] = useState(1);
+  // ============================================================================
+  // FILTER STATE (synced with URL params)
+  // ============================================================================
+
+  const statusIds = useMemo(() => {
+    const raw = searchParams.get('status');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+
+  const typeIds = useMemo(() => {
+    const raw = searchParams.get('type');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<LoanStatus | 'ALL'>('ALL');
-  const [deleteTarget, setDeleteTarget] = useState<Loan | null>(null);
-  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // --------------------------------------------------------------------------
-  // Data Fetching
-  // --------------------------------------------------------------------------
-  const queryParams = useMemo(
+  // Sorting state (server-side)
+  const [sortBy, setSortBy] = useState<
+    'createdAt' | 'totalAmount' | 'institution' | 'status' | 'name' | 'principalAmount' | 'outstandingBalance'
+  >('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // ============================================================================
+  // STATE
+  // ============================================================================
+
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+
+  // ============================================================================
+  // DATA: Infinite scroll entries + filter dropdown sources
+  // ============================================================================
+
+  const filters: LoansFilters = useMemo(
     () => ({
-      page,
-      perPage: PER_PAGE,
-      search: searchQuery || undefined,
-      status: statusFilter !== 'ALL' ? (statusFilter as LoanStatus) : undefined,
+      search: debouncedSearch || undefined,
+      status: statusIds.length === 1 ? (statusIds[0] as LoanStatus) : undefined,
+      type: typeIds.length === 1 ? (typeIds[0] as LoanType) : undefined,
+      sortBy,
+      sortOrder,
     }),
-    [page, searchQuery, statusFilter]
+    [debouncedSearch, statusIds, typeIds, sortBy, sortOrder]
   );
 
-  const { data, isLoading, error, refetch } = useLoans(queryParams);
-  const deleteLoan = useDeleteLoan();
+  const {
+    loans,
+    total,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useLoansInfinite(filters);
 
-  const loans = data?.loans ?? [];
-  const meta = data?.meta;
-  const totalPages = meta?.totalPages ?? 1;
-  const total = meta?.total ?? 0;
+  // Mutations
+  const deleteMutation = useDeleteLoan();
 
-  // --------------------------------------------------------------------------
-  // Handlers
-  // --------------------------------------------------------------------------
-  const handleSearch = useCallback((value: string) => {
-    setSearchQuery(value);
-    setPage(1);
-  }, []);
+  // ============================================================================
+  // INFINITE SCROLL SENTINEL
+  // ============================================================================
 
-  const handleStatusChange = useCallback((value: string) => {
-    setStatusFilter(value as LoanStatus | 'ALL');
-    setPage(1);
-  }, []);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const handleCreate = useCallback(() => {
-    router.push('/finance/loans/new');
-  }, [router]);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
 
-  const handleView = useCallback(
-    (id: string) => {
-      router.push(`/finance/loans/${id}`);
+    const observer = new IntersectionObserver(
+      observerEntries => {
+        if (
+          observerEntries[0].isIntersecting &&
+          hasNextPage &&
+          !isFetchingNextPage
+        ) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // ============================================================================
+  // URL FILTER HELPERS
+  // ============================================================================
+
+  const buildFilterUrl = useCallback(
+    (params: { status?: string[]; type?: string[] }) => {
+      const parts: string[] = [];
+      const sts = params.status !== undefined ? params.status : statusIds;
+      const tp = params.type !== undefined ? params.type : typeIds;
+      if (sts.length > 0) parts.push(`status=${sts.join(',')}`);
+      if (tp.length > 0) parts.push(`type=${tp.join(',')}`);
+      return parts.length > 0
+        ? `/finance/loans?${parts.join('&')}`
+        : '/finance/loans';
     },
-    [router]
+    [statusIds, typeIds]
   );
 
-  const handleEdit = useCallback(
-    (id: string) => {
-      router.push(`/finance/loans/${id}`);
-    },
-    [router]
+  const setStatusFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ status: ids })),
+    [router, buildFilterUrl]
   );
 
-  const handleRowClick = useCallback(
-    (loan: Loan) => {
-      if (canView) {
-        router.push(`/finance/loans/${loan.id}`);
+  const setTypeFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ type: ids })),
+    [router, buildFilterUrl]
+  );
+
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
+  const handleContextView = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/loans/${ids[0]}`);
+    }
+  };
+
+  const handleContextEdit = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/loans/${ids[0]}/edit`);
+    }
+  };
+
+  const handleContextDelete = (ids: string[]) => {
+    setItemsToDelete(ids);
+    setDeleteModalOpen(true);
+  };
+
+  const handleRegisterPayment = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 1) {
+        // Navigate to loan detail page (payment tab)
+        router.push(`/finance/loans/${ids[0]}`);
       }
     },
-    [router, canView]
+    [router]
   );
 
-  const handleDeleteRequest = useCallback((loan: Loan) => {
-    setDeleteTarget(loan);
-    setPinModalOpen(true);
+  const handleDeleteConfirm = useCallback(async () => {
+    for (const id of itemsToDelete) {
+      await deleteMutation.mutateAsync(id);
+    }
+    setDeleteModalOpen(false);
+    setItemsToDelete([]);
+    toast.success(
+      itemsToDelete.length === 1
+        ? 'Empréstimo excluído com sucesso!'
+        : `${itemsToDelete.length} empréstimos excluídos!`
+    );
+  }, [itemsToDelete, deleteMutation]);
+
+  // ============================================================================
+  // RENDER FUNCTIONS
+  // ============================================================================
+
+  const renderGridCard = (item: Loan, isSelected: boolean) => {
+    const progress = getProgressPercentage(item);
+    const isDefaulted = item.status === 'DEFAULTED';
+
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
+        actions={[
+          ...(canEdit && ACTIVE_LOAN_STATUSES.includes(item.status)
+            ? [
+                {
+                  id: 'register-payment',
+                  label: 'Registrar Pagamento',
+                  icon: DollarSign,
+                  onClick: handleRegisterPayment,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+          ...(canDelete
+            ? [
+                {
+                  id: 'delete',
+                  label: 'Excluir',
+                  icon: Trash2,
+                  onClick: handleContextDelete,
+                  variant: 'destructive' as const,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+        ]}
+      >
+        <EntityCard
+          id={item.id}
+          variant="grid"
+          title={item.name}
+          subtitle={LOAN_TYPE_LABELS[item.type]}
+          icon={Landmark}
+          iconBgColor={
+            isDefaulted
+              ? 'bg-linear-to-br from-rose-500 to-rose-600'
+              : 'bg-linear-to-br from-orange-500 to-orange-600'
+          }
+          badges={[
+            {
+              label: LOAN_STATUS_LABELS[item.status],
+              variant: 'outline' as const,
+              color: getStatusColor(item.status),
+            },
+            {
+              label: LOAN_TYPE_LABELS[item.type],
+              variant: 'outline' as const,
+              icon: Tag,
+              color: getTypeColor(),
+            },
+          ]}
+          footer={{
+            type: 'split',
+            left: {
+              icon: DollarSign,
+              label: formatCurrency(item.principalAmount),
+              onClick: () => {},
+              color: 'secondary',
+            },
+            right: {
+              label: `${progress}%`,
+              onClick: () => {},
+              color: 'secondary',
+            },
+          }}
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={false}
+        />
+      </EntityContextMenu>
+    );
+  };
+
+  const renderListCard = (item: Loan, isSelected: boolean) => {
+    const progress = getProgressPercentage(item);
+
+    const listBadges: {
+      label: string;
+      variant: 'outline';
+      icon?: typeof Tag;
+      color: string;
+    }[] = [
+      {
+        label: LOAN_STATUS_LABELS[item.status],
+        variant: 'outline',
+        color: getStatusColor(item.status),
+      },
+      {
+        label: LOAN_TYPE_LABELS[item.type],
+        variant: 'outline' as const,
+        icon: Tag,
+        color: getTypeColor(),
+      },
+      ...(item.contractNumber
+        ? [
+            {
+              label: item.contractNumber,
+              variant: 'outline' as const,
+              color:
+                'border-teal-600/25 dark:border-teal-500/20 bg-teal-50 dark:bg-teal-500/8 text-teal-700 dark:text-teal-300',
+            },
+          ]
+        : []),
+    ];
+
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
+        actions={[
+          ...(canEdit && ACTIVE_LOAN_STATUSES.includes(item.status)
+            ? [
+                {
+                  id: 'register-payment',
+                  label: 'Registrar Pagamento',
+                  icon: DollarSign,
+                  onClick: handleRegisterPayment,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+          ...(canDelete
+            ? [
+                {
+                  id: 'delete',
+                  label: 'Excluir',
+                  icon: Trash2,
+                  onClick: handleContextDelete,
+                  variant: 'destructive' as const,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+        ]}
+      >
+        <EntityCard
+          id={item.id}
+          variant="list"
+          title={
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-gray-900 dark:text-white truncate">
+                {item.name}
+              </span>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {LOAN_TYPE_LABELS[item.type]}
+              </span>
+            </span>
+          }
+          metadata={
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {listBadges.map((badge, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0',
+                    badge.color
+                  )}
+                >
+                  {badge.icon && <badge.icon className="w-3 h-3" />}
+                  {badge.label}
+                </span>
+              ))}
+            </div>
+          }
+          icon={Landmark}
+          iconBgColor="bg-linear-to-br from-orange-500 to-orange-600"
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={false}
+        >
+          {/* Right zone: amount + progress */}
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-sm font-semibold font-mono text-gray-900 dark:text-white">
+              {formatCurrency(item.principalAmount)}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-mono">
+                {item.paidInstallments}/{item.totalInstallments}
+              </span>
+              {/* Mini progress bar */}
+              <div className="w-16 h-1.5 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all',
+                    progress >= 80
+                      ? 'bg-emerald-500'
+                      : progress >= 50
+                        ? 'bg-sky-500'
+                        : progress >= 25
+                          ? 'bg-amber-500'
+                          : 'bg-gray-400'
+                  )}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground">{progress}%</span>
+            </div>
+          </div>
+        </EntityCard>
+      </EntityContextMenu>
+    );
+  };
+
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
+
+  const initialIds = useMemo(() => loans.map(l => l.id), [loans]);
+
+  // ============================================================================
+  // HEADER BUTTONS CONFIGURATION (permission-aware)
+  // ============================================================================
+
+  const handleCreateClick = useCallback(() => {
+    setWizardOpen(true);
   }, []);
 
-  const handleDeleteConfirmed = useCallback(async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteLoan.mutateAsync(deleteTarget.id);
-      toast.success(`Empréstimo "${deleteTarget.name}" excluído com sucesso.`);
-      setDeleteTarget(null);
-      refetch();
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Erro ao excluir empréstimo';
-      toast.error(message);
-    }
-  }, [deleteTarget, deleteLoan, refetch]);
-
-  // --------------------------------------------------------------------------
-  // Header Action Buttons (permission-aware)
-  // --------------------------------------------------------------------------
   const actionButtons = useMemo<ActionButtonWithPermission[]>(
     () => [
       {
         id: 'create-loan',
         title: 'Novo Empréstimo',
         icon: Plus,
-        onClick: handleCreate,
+        onClick: handleCreateClick,
         variant: 'default',
         permission: FINANCE_PERMISSIONS.LOANS.REGISTER,
       },
     ],
-    [handleCreate]
+    [handleCreateClick]
   );
 
   const visibleActionButtons = useMemo<HeaderButton[]>(
@@ -503,272 +572,151 @@ export default function LoansPage() {
     [actionButtons, hasPermission]
   );
 
-  // --------------------------------------------------------------------------
-  // Active filters indicator
-  // --------------------------------------------------------------------------
-  const hasActiveFilters = statusFilter !== 'ALL';
-
-  const handleClearFilters = useCallback(() => {
-    setStatusFilter('ALL');
-    setPage(1);
-  }, []);
-
-  // ==========================================================================
+  // ============================================================================
   // RENDER
-  // ==========================================================================
+  // ============================================================================
 
   return (
-    <PageLayout>
-      <PageHeader>
-        <PageActionBar
-          breadcrumbItems={[
-            { label: 'Financeiro', href: '/finance' },
-            { label: 'Empréstimos', href: '/finance/loans' },
-          ]}
-          buttons={visibleActionButtons}
-        />
+    <CoreProvider
+      selection={{
+        namespace: 'loans',
+        initialIds,
+      }}
+    >
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Empréstimos', href: '/finance/loans' },
+            ]}
+            buttons={visibleActionButtons}
+          />
 
-        <Header
-          title="Empréstimos"
-          description="Gerencie empréstimos, financiamentos e linhas de crédito"
-        />
-      </PageHeader>
+          <Header
+            title="Empréstimos"
+            description="Gerencie empréstimos, financiamentos e linhas de crédito"
+          />
+        </PageHeader>
 
-      <PageBody>
-        {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          placeholder="Buscar por nome, contrato ou tipo..."
-          onSearch={handleSearch}
-          onClear={() => handleSearch('')}
-          showClear={true}
-          size="md"
-        />
+        <PageBody>
+          {/* Search Bar */}
+          <SearchBar
+            placeholder={loanConfig.display.labels.searchPlaceholder}
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            showClear={true}
+            size="md"
+          />
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos os status</SelectItem>
-              {STATUS_OPTIONS.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Grid */}
+          {isLoading ? (
+            <GridLoading count={9} layout="list" size="md" gap="gap-4" />
+          ) : error ? (
+            <GridError
+              type="server"
+              title="Erro ao carregar empréstimos"
+              message="Ocorreu um erro ao tentar carregar os empréstimos. Por favor, tente novamente."
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
+            />
+          ) : (
+            <>
+              <EntityGrid
+                config={loanConfig}
+                items={loans}
+                showItemCount={false}
+                toolbarStart={
+                  <>
+                    <FilterDropdown
+                      label="Status"
+                      icon={Landmark}
+                      options={STATUS_OPTIONS}
+                      selected={statusIds}
+                      onSelectionChange={setStatusFilter}
+                      activeColor="emerald"
+                      searchPlaceholder="Buscar status..."
+                      emptyText="Nenhum status encontrado."
+                    />
+                    <FilterDropdown
+                      label="Tipo"
+                      icon={Tag}
+                      options={TYPE_OPTIONS}
+                      selected={typeIds}
+                      onSelectionChange={setTypeFilter}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar tipo..."
+                      emptyText="Nenhum tipo encontrado."
+                    />
+                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                      {total}{' '}
+                      {total === 1 ? 'empréstimo' : 'empréstimos'}
+                      {loans.length < total &&
+                        ` (${loans.length} carregados)`}
+                    </p>
+                  </>
+                }
+                renderGridItem={renderGridCard}
+                renderListItem={renderListCard}
+                isLoading={isLoading}
+                isSearching={!!debouncedSearch}
+                onItemDoubleClick={item =>
+                  router.push(`/finance/loans/${item.id}`)
+                }
+                showSorting={true}
+                defaultSortField="createdAt"
+                defaultSortDirection="desc"
+                onSortChange={(field, direction) => {
+                  if (field !== 'custom') {
+                    setSortBy(
+                      field as typeof sortBy
+                    );
+                    setSortOrder(direction);
+                  }
+                }}
+              />
 
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearFilters}
-              className="text-muted-foreground"
-            >
-              <XCircle className="h-4 w-4 mr-1" />
-              Limpar filtros
-            </Button>
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
           )}
-        </div>
 
-        {/* Content */}
-        {isLoading ? (
-          <TableSkeleton />
-        ) : error ? (
-          <GridError
-            type="server"
-            title="Erro ao carregar empréstimos"
-            message="Ocorreu um erro ao tentar carregar os empréstimos. Por favor, tente novamente."
-            action={{
-              label: 'Tentar Novamente',
-              onClick: () => {
-                refetch();
-              },
+          {/* Create Wizard */}
+          <CreateLoanWizard
+            open={wizardOpen}
+            onOpenChange={setWizardOpen}
+            onCreated={() => {
+              refetch();
             }}
           />
-        ) : !canList ? (
-          <GridError
-            type="forbidden"
-            title="Acesso restrito"
-            message="Você não possui permissão para visualizar empréstimos."
+
+          {/* Delete PIN Confirmation Modal */}
+          <VerifyActionPinModal
+            isOpen={deleteModalOpen}
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setItemsToDelete([]);
+            }}
+            onSuccess={handleDeleteConfirm}
+            title="Confirmar Exclusão"
+            description={
+              itemsToDelete.length === 1
+                ? 'Digite seu PIN de Ação para confirmar a exclusão deste empréstimo. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de Ação para excluir ${itemsToDelete.length} empréstimos. Esta ação não pode ser desfeita.`
+            }
           />
-        ) : loans.length === 0 ? (
-          <EmptyState canCreate={canCreate} onCreate={handleCreate} />
-        ) : (
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table aria-label="Tabela de empréstimos">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[180px]">Nome</TableHead>
-                    <TableHead className="min-w-[120px] hidden md:table-cell">
-                      Contrato
-                    </TableHead>
-                    <TableHead className="text-right min-w-[140px] hidden md:table-cell">
-                      Valor Principal
-                    </TableHead>
-                    <TableHead className="text-right min-w-[140px]">
-                      Saldo Devedor
-                    </TableHead>
-                    <TableHead className="text-center min-w-[90px] hidden lg:table-cell">
-                      Taxa
-                    </TableHead>
-                    <TableHead className="text-center min-w-[100px] hidden md:table-cell">
-                      Parcelas
-                    </TableHead>
-                    <TableHead className="min-w-[140px] hidden lg:table-cell">
-                      Progresso
-                    </TableHead>
-                    <TableHead className="min-w-[120px]">Status</TableHead>
-                    <TableHead className="w-10" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loans.map(loan => {
-                    const progressPercentage =
-                      loan.totalInstallments > 0
-                        ? Math.round(
-                            (loan.paidInstallments / loan.totalInstallments) *
-                              100
-                          )
-                        : 0;
-
-                    const isDefaulted = loan.status === 'DEFAULTED';
-
-                    return (
-                      <TableRow
-                        key={loan.id}
-                        className={canView ? 'cursor-pointer' : ''}
-                        onClick={() => handleRowClick(loan)}
-                      >
-                        {/* Nome */}
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {loan.name}
-                            {isDefaulted && (
-                              <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-                            )}
-                          </div>
-                        </TableCell>
-
-                        {/* Contrato */}
-                        <TableCell className="hidden md:table-cell">
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {loan.contractNumber || '\u2014'}
-                          </span>
-                        </TableCell>
-
-                        {/* Valor Principal */}
-                        <TableCell className="text-right font-mono text-sm hidden md:table-cell">
-                          {formatCurrency(loan.principalAmount)}
-                        </TableCell>
-
-                        {/* Saldo Devedor */}
-                        <TableCell className="text-right font-mono text-sm font-semibold">
-                          <span
-                            className={
-                              loan.outstandingBalance > 0
-                                ? 'text-orange-600 dark:text-orange-400'
-                                : 'text-emerald-600 dark:text-emerald-400'
-                            }
-                          >
-                            {formatCurrency(loan.outstandingBalance)}
-                          </span>
-                        </TableCell>
-
-                        {/* Taxa de Juros */}
-                        <TableCell className="text-center font-mono text-sm hidden lg:table-cell">
-                          {formatPercent(loan.interestRate)}
-                        </TableCell>
-
-                        {/* Parcelas (pagas/total) */}
-                        <TableCell className="text-center hidden md:table-cell">
-                          <span className="font-mono text-sm">
-                            {loan.paidInstallments}
-                            <span className="text-muted-foreground">
-                              /{loan.totalInstallments}
-                            </span>
-                          </span>
-                        </TableCell>
-
-                        {/* Progresso */}
-                        <TableCell className="hidden lg:table-cell">
-                          <div className="flex items-center gap-2">
-                            <Progress
-                              value={progressPercentage}
-                              className="h-2 flex-1"
-                            />
-                            <span
-                              className={`text-xs font-medium min-w-[36px] text-right ${getProgressColor(progressPercentage)}`}
-                            >
-                              {progressPercentage}%
-                            </span>
-                          </div>
-                        </TableCell>
-
-                        {/* Status */}
-                        <TableCell>
-                          <Badge variant={getStatusVariant(loan.status)}>
-                            {LOAN_STATUS_LABELS[loan.status]}
-                          </Badge>
-                        </TableCell>
-
-                        {/* Actions */}
-                        <TableCell
-                          onClick={e => e.stopPropagation()}
-                          className="text-center"
-                        >
-                          <LoanRowActions
-                            loan={loan}
-                            canView={canView}
-                            canEdit={canEdit}
-                            canDelete={canDelete}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={handleDeleteRequest}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Págination */}
-            {total > PER_PAGE && (
-              <div className="border-t">
-                <TablePágination
-                  page={page}
-                  totalPages={totalPages}
-                  total={total}
-                  perPage={PER_PAGE}
-                  onPageChange={setPage}
-                />
-              </div>
-            )}
-          </Card>
-        )}
-
-        {/* Delete PIN Confirmation Modal */}
-        <VerifyActionPinModal
-          isOpen={pinModalOpen}
-          onClose={() => {
-            setPinModalOpen(false);
-            setDeleteTarget(null);
-          }}
-          onSuccess={handleDeleteConfirmed}
-          title="Confirmar Exclusão"
-          description={
-            deleteTarget
-              ? `Digite seu PIN de Ação para excluir o empréstimo "${deleteTarget.name}". Esta ação não pode ser desfeita.`
-              : 'Digite seu PIN de Ação para autorizar esta operação.'
-          }
-        />
-      </PageBody>
-    </PageLayout>
+        </PageBody>
+      </PageLayout>
+    </CoreProvider>
   );
 }
