@@ -753,6 +753,22 @@ export const API_ENDPOINTS = {
       DELETE: (boardId: string, cardId: string, attachmentId: string) =>
         `/v1/tasks/boards/${boardId}/cards/${cardId}/attachments/${attachmentId}`,
     },
+    INTEGRATIONS: {
+      LIST: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/integrations`,
+      CREATE: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/integrations`,
+      DELETE: (boardId: string, cardId: string, integrationId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/integrations/${integrationId}`,
+    },
+    MEMBERS: {
+      LIST: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/members`,
+      ADD: (boardId: string, cardId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/members`,
+      REMOVE: (boardId: string, cardId: string, userId: string) =>
+        `/v1/tasks/boards/${boardId}/cards/${cardId}/members/${userId}`,
+    },
     AUTOMATIONS: {
       LIST: (boardId: string) => `/v1/tasks/boards/${boardId}/automations`,
       CREATE: (boardId: string) => `/v1/tasks/boards/${boardId}/automations`,
