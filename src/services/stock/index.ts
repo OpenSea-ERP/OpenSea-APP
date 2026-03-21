@@ -11,6 +11,7 @@ export * from './variants.service';
 export * from './analytics.service';
 export * from './import.service';
 export * from './inventory.service';
+export * from './inventory-session.service';
 export * from './labels.service';
 export * from './movements.service';
 export * from './scan.service';

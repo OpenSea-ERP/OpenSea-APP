@@ -12,6 +12,7 @@ export * from './care.types';
 export * from './purchase-order.types';
 export * from './scan.types';
 export * from './inventory.types';
+export * from './inventory-session.types';
 export * from './import.types';
 export * from './analytics.types';
 export * from './label.types';

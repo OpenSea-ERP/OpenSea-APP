@@ -235,6 +235,19 @@ export const API_ENDPOINTS = {
     COUNT_SUBMIT: (countId: string) => `/v1/inventory-counts/${countId}/count`,
     COUNT_ADJUST: (countId: string) => `/v1/inventory-counts/${countId}/adjust`,
   },
+  // Stock - Inventory Sessions (mobile)
+  INVENTORY_SESSIONS: {
+    LIST: '/v1/stock/inventory-sessions',
+    CREATE: '/v1/stock/inventory-sessions',
+    GET: (id: string) => `/v1/stock/inventory-sessions/${id}`,
+    PAUSE: (id: string) => `/v1/stock/inventory-sessions/${id}/pause`,
+    RESUME: (id: string) => `/v1/stock/inventory-sessions/${id}/resume`,
+    COMPLETE: (id: string) => `/v1/stock/inventory-sessions/${id}/complete`,
+    CANCEL: (id: string) => `/v1/stock/inventory-sessions/${id}/cancel`,
+    SCAN: (id: string) => `/v1/stock/inventory-sessions/${id}/scan`,
+    RESOLVE_ITEM: (id: string, itemId: string) =>
+      `/v1/stock/inventory-sessions/${id}/items/${itemId}/resolve`,
+  },
   // Stock - Import
   IMPORT: {
     VALIDATE: '/v1/import/validate',
