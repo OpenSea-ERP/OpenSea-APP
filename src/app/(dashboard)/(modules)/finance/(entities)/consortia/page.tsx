@@ -1,11 +1,12 @@
 /**
- * OpenSea OS - Consortia Listing Page
- * Página de listagem de consórcios com filtros, paginação e ações RBAC.
+ * OpenSea OS - Consórcios
+ * Listagem de consórcios com infinite scroll, filtros server-side e EntityGrid
  */
 
 'use client';
 
 import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
@@ -16,82 +17,66 @@ import {
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { useConsortia, useDeleteConsortium } from '@/hooks/finance';
-import { usePermissions } from '@/hooks/use-permissions';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import { consortiumConfig } from '@/config/entities/consortium.config';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
+import {
+  CoreProvider,
+  EntityCard,
+  EntityContextMenu,
+  EntityGrid,
+} from '@/core';
+import { useDebounce } from '@/hooks/use-debounce';
+import { usePermissions } from '@/hooks/use-permissions';
+import {
+  useConsortiaInfinite,
+  useDeleteConsortium,
+  type ConsortiaFilters,
+} from '@/hooks/finance/use-consortia';
+import { cn } from '@/lib/utils';
 import type { Consortium, ConsortiumStatus } from '@/types/finance';
 import { CONSORTIUM_STATUS_LABELS } from '@/types/finance';
 import {
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Edit,
-  Eye,
-  MoreHorizontal,
+  DollarSign,
+  Loader2,
   Plus,
+  Star,
   Trash2,
-  XCircle,
+  Users,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
+import { CreateConsortiumWizard } from './src/components/create-consortium-wizard';
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-const PERMISSION_CODES = {
-  list: FINANCE_PERMISSIONS.CONSORTIA.ACCESS,
-  create: FINANCE_PERMISSIONS.CONSORTIA.REGISTER,
-  read: FINANCE_PERMISSIONS.CONSORTIA.ACCESS,
-  update: FINANCE_PERMISSIONS.CONSORTIA.MODIFY,
-  delete: FINANCE_PERMISSIONS.CONSORTIA.REMOVE,
-} as const;
-
-const STATUS_OPTIONS: { value: ConsortiumStatus; label: string }[] = [
-  { value: 'ACTIVE', label: 'Ativo' },
-  { value: 'CONTEMPLATED', label: 'Contemplado' },
-  { value: 'WITHDRAWN', label: 'Desistente' },
-  { value: 'COMPLETED', label: 'Concluído' },
-  { value: 'CANCELLED', label: 'Cancelado' },
+const STATUS_OPTIONS = [
+  { id: 'ACTIVE', label: 'Ativo' },
+  { id: 'CONTEMPLATED', label: 'Contemplado' },
+  { id: 'WITHDRAWN', label: 'Desistente' },
+  { id: 'COMPLETED', label: 'Concluído' },
+  { id: 'CANCELLED', label: 'Cancelado' },
 ];
 
-const PER_PAGE = 20;
+const CONTEMPLATED_OPTIONS = [
+  { id: 'YES', label: 'Contemplados' },
+  { id: 'NO', label: 'Não contemplados' },
+];
 
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-type ActionButtonWithPermission = HeaderButton & {
-  permission?: string;
-};
 
 function formatCurrency(value: number | null | undefined): string {
   if (value == null) return 'R$ 0,00';
@@ -101,396 +86,459 @@ function formatCurrency(value: number | null | undefined): string {
   }).format(value);
 }
 
-function getStatusVariant(
-  status: ConsortiumStatus
-): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' {
-  switch (status) {
-    case 'ACTIVE':
-      return 'success';
-    case 'CONTEMPLATED':
-      return 'default';
-    case 'WITHDRAWN':
-      return 'warning';
-    case 'COMPLETED':
-      return 'secondary';
-    case 'CANCELLED':
-      return 'destructive';
-    default:
-      return 'secondary';
-  }
-}
-
-function getProgressColor(percentage: number): string {
-  if (percentage >= 80) return 'text-emerald-600';
-  if (percentage >= 50) return 'text-blue-600';
-  if (percentage >= 25) return 'text-amber-600';
-  return 'text-muted-foreground';
+function getStatusColor(status: ConsortiumStatus): string {
+  const colors: Record<ConsortiumStatus, string> = {
+    ACTIVE:
+      'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    CONTEMPLATED:
+      'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
+    WITHDRAWN:
+      'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+    COMPLETED:
+      'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+    CANCELLED:
+      'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
+  };
+  return colors[status] ?? colors.ACTIVE;
 }
 
 // ============================================================================
-// TABLE LOADING SKELETON
+// TYPES
 // ============================================================================
 
-function TableSkeleton() {
-  return (
-    <Card className="overflow-hidden">
-      <div className="p-0">
-        <Table aria-label="Tabela de comparação de custos">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Administradora</TableHead>
-              <TableHead>Grupo/Cota</TableHead>
-              <TableHead className="text-right">Crédito</TableHead>
-              <TableHead className="text-right">Parcela Mensal</TableHead>
-              <TableHead className="text-center">Parcelas</TableHead>
-              <TableHead>Progresso</TableHead>
-              <TableHead className="text-center">Contemplado</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell>
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-28" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-20" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24 ml-auto" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24 ml-auto" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-16 mx-auto" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-2 w-full rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-6 w-12 mx-auto rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-6 w-6 mx-auto" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </Card>
-  );
-}
+type ActionButtonWithPermission = HeaderButton & {
+  permission?: string;
+};
 
 // ============================================================================
-// EMPTY STATE
-// ============================================================================
-
-function EmptyState({
-  canCreate,
-  onCreate,
-}: {
-  canCreate: boolean;
-  onCreate: () => void;
-}) {
-  return (
-    <Card className="bg-white/50 dark:bg-white/5 border-gray-200/50 dark:border-white/10">
-      <div className="flex flex-col items-center justify-center py-16 px-6">
-        <div className="p-4 rounded-full bg-muted/50 mb-4">
-          <XCircle className="w-10 h-10 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Nenhum consórcio encontrado
-        </h3>
-        <p className="text-muted-foreground text-sm text-center max-w-sm mb-6">
-          Não existem consórcios cadastrados com os filtros selecionados.
-          {canCreate &&
-            ' Crie um novo consórcio para começar a gerenciar suas cotas.'}
-        </p>
-        {canCreate && (
-          <Button onClick={onCreate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Consórcio
-          </Button>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-// ============================================================================
-// ROW CONTEXT MENU
-// ============================================================================
-
-function ConsortiumRowActions({
-  consortium,
-  canView,
-  canEdit,
-  canDelete,
-  onView,
-  onEdit,
-  onDelete,
-}: {
-  consortium: Consortium;
-  canView: boolean;
-  canEdit: boolean;
-  canDelete: boolean;
-  onView: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (consortium: Consortium) => void;
-}) {
-  if (!canView && !canEdit && !canDelete) return null;
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={e => e.stopPropagation()}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Abrir menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {/* Base actions */}
-        {canView && (
-          <DropdownMenuItem
-            onClick={e => {
-              e.stopPropagation();
-              onView(consortium.id);
-            }}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Visualizar
-          </DropdownMenuItem>
-        )}
-        {canEdit && (
-          <DropdownMenuItem
-            onClick={e => {
-              e.stopPropagation();
-              onEdit(consortium.id);
-            }}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Editar
-          </DropdownMenuItem>
-        )}
-
-        {/* Destructive actions */}
-        {canDelete && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={e => {
-                e.stopPropagation();
-                onDelete(consortium);
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Excluir
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-// ============================================================================
-// PAGINATION
-// ============================================================================
-
-function TablePágination({
-  page,
-  totalPages,
-  total,
-  perPage,
-  onPageChange,
-}: {
-  page: number;
-  totalPages: number;
-  total: number;
-  perPage: number;
-  onPageChange: (page: number) => void;
-}) {
-  const from = (page - 1) * perPage + 1;
-  const to = Math.min(page * perPage, total);
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Exibindo <span className="font-medium">{from}</span> a{' '}
-        <span className="font-medium">{to}</span> de{' '}
-        <span className="font-medium">{total}</span> resultado
-        {total !== 1 ? 's' : ''}
-      </p>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-          className="gap-1"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Anterior</span>
-        </Button>
-        <span className="text-sm text-muted-foreground px-2">
-          Página {page} de {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => onPageChange(page + 1)}
-          className="gap-1"
-        >
-          <span className="hidden sm:inline">Próxima</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// MAIN PAGE COMPONENT
+// COMPONENT
 // ============================================================================
 
 export default function ConsortiaPage() {
+  return (
+    <Suspense
+      fallback={<GridLoading count={9} layout="list" size="md" gap="gap-4" />}
+    >
+      <ConsortiaPageContent />
+    </Suspense>
+  );
+}
+
+function ConsortiaPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { hasPermission } = usePermissions();
 
-  // ---- Permissions ----
-  const canList = hasPermission(PERMISSION_CODES.list);
-  const canCreate = hasPermission(PERMISSION_CODES.create);
-  const canView = hasPermission(PERMISSION_CODES.read);
-  const canEdit = hasPermission(PERMISSION_CODES.update);
-  const canDelete = hasPermission(PERMISSION_CODES.delete);
+  // ============================================================================
+  // PERMISSION FLAGS
+  // ============================================================================
 
-  // ---- State ----
-  const [page, setPage] = useState(1);
+  const canView = hasPermission(FINANCE_PERMISSIONS.CONSORTIA.ACCESS);
+  const canCreate = hasPermission(FINANCE_PERMISSIONS.CONSORTIA.REGISTER);
+  const canEdit = hasPermission(FINANCE_PERMISSIONS.CONSORTIA.MODIFY);
+  const canDelete = hasPermission(FINANCE_PERMISSIONS.CONSORTIA.REMOVE);
+
+  // ============================================================================
+  // FILTER STATE (synced with URL params)
+  // ============================================================================
+
+  const statusIds = useMemo(() => {
+    const raw = searchParams.get('status');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+
+  const contemplatedIds = useMemo(() => {
+    const raw = searchParams.get('contemplated');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ConsortiumStatus | 'ALL'>(
-    'ALL'
-  );
-  const [contemplatedFilter, setContemplatedFilter] = useState<
-    'ALL' | 'YES' | 'NO'
-  >('ALL');
-  const [deleteTarget, setDeleteTarget] = useState<Consortium | null>(null);
-  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // ---- Data Fetching ----
-  const queryParams = useMemo(
+  // Sorting state (server-side)
+  const [sortBy, setSortBy] = useState<
+    'createdAt' | 'monthlyPayment' | 'administrator' | 'status'
+  >('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // ============================================================================
+  // STATE
+  // ============================================================================
+
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+
+  // ============================================================================
+  // DATA: Infinite scroll + filter dropdown sources
+  // ============================================================================
+
+  const filters: ConsortiaFilters = useMemo(
     () => ({
-      page,
-      perPage: PER_PAGE,
-      search: searchQuery || undefined,
-      status:
-        statusFilter !== 'ALL' ? (statusFilter as ConsortiumStatus) : undefined,
-      isContemplated:
-        contemplatedFilter === 'ALL' ? undefined : contemplatedFilter === 'YES',
+      search: debouncedSearch || undefined,
+      status: statusIds.length === 1 ? statusIds[0] : undefined,
+      isContemplated: contemplatedIds.length === 1 ? contemplatedIds[0] : undefined,
+      sortBy,
+      sortOrder,
     }),
-    [page, searchQuery, statusFilter, contemplatedFilter]
+    [debouncedSearch, statusIds, contemplatedIds, sortBy, sortOrder]
   );
 
-  const { data, isLoading, error, refetch } = useConsortia(queryParams);
-  const deleteConsortium = useDeleteConsortium();
+  const {
+    consortia,
+    total,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useConsortiaInfinite(filters);
 
-  const consortia = data?.consortia ?? [];
-  const meta = data?.meta;
-  const totalPages = meta?.totalPages ?? 1;
-  const total = meta?.total ?? 0;
+  // Mutations
+  const deleteMutation = useDeleteConsortium();
 
-  // ---- Handlers ----
-  const handleSearch = useCallback((value: string) => {
-    setSearchQuery(value);
-    setPage(1);
-  }, []);
+  // ============================================================================
+  // INFINITE SCROLL SENTINEL
+  // ============================================================================
 
-  const handleStatusChange = useCallback((value: string) => {
-    setStatusFilter(value as ConsortiumStatus | 'ALL');
-    setPage(1);
-  }, []);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const handleContemplatedChange = useCallback((value: string) => {
-    setContemplatedFilter(value as 'ALL' | 'YES' | 'NO');
-    setPage(1);
-  }, []);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
 
-  const handleView = useCallback(
-    (id: string) => {
-      router.push(`/finance/consortia/${id}`);
+    const observer = new IntersectionObserver(
+      observerEntries => {
+        if (
+          observerEntries[0].isIntersecting &&
+          hasNextPage &&
+          !isFetchingNextPage
+        ) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // ============================================================================
+  // URL FILTER HELPERS
+  // ============================================================================
+
+  const buildFilterUrl = useCallback(
+    (params: { status?: string[]; contemplated?: string[] }) => {
+      const parts: string[] = [];
+      const sts = params.status !== undefined ? params.status : statusIds;
+      const cont = params.contemplated !== undefined ? params.contemplated : contemplatedIds;
+      if (sts.length > 0) parts.push(`status=${sts.join(',')}`);
+      if (cont.length > 0) parts.push(`contemplated=${cont.join(',')}`);
+      return parts.length > 0
+        ? `/finance/consortia?${parts.join('&')}`
+        : '/finance/consortia';
     },
-    [router]
+    [statusIds, contemplatedIds]
   );
 
-  const handleEdit = useCallback(
-    (id: string) => {
-      router.push(`/finance/consortia/${id}`);
-    },
-    [router]
+  const setStatusFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ status: ids })),
+    [router, buildFilterUrl]
   );
 
-  const handleCreate = useCallback(() => {
-    router.push('/finance/consortia/new');
-  }, [router]);
-
-  const handleRowClick = useCallback(
-    (consortium: Consortium) => {
-      if (canView) {
-        router.push(`/finance/consortia/${consortium.id}`);
-      }
-    },
-    [router, canView]
+  const setContemplatedFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ contemplated: ids })),
+    [router, buildFilterUrl]
   );
 
-  const handleDeleteRequest = useCallback((consortium: Consortium) => {
-    setDeleteTarget(consortium);
-    setPinModalOpen(true);
-  }, []);
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
 
-  const handleDeleteConfirmed = useCallback(async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteConsortium.mutateAsync(deleteTarget.id);
-      toast.success(`Consórcio "${deleteTarget.name}" excluído com sucesso.`);
-      setDeleteTarget(null);
-      refetch();
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Erro ao excluir consórcio';
-      toast.error(message);
+  const handleContextView = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/consortia/${ids[0]}`);
     }
-  }, [deleteTarget, deleteConsortium, refetch]);
+  };
 
-  // ---- Header Action Buttons (permission-aware) ----
+  const handleContextEdit = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/consortia/${ids[0]}/edit`);
+    }
+  };
+
+  const handleContextDelete = (ids: string[]) => {
+    setItemsToDelete(ids);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = useCallback(async () => {
+    for (const id of itemsToDelete) {
+      await deleteMutation.mutateAsync(id);
+    }
+    setDeleteModalOpen(false);
+    setItemsToDelete([]);
+    toast.success(
+      itemsToDelete.length === 1
+        ? 'Consórcio excluído com sucesso!'
+        : `${itemsToDelete.length} consórcios excluídos!`
+    );
+  }, [itemsToDelete, deleteMutation]);
+
+  // ============================================================================
+  // RENDER FUNCTIONS
+  // ============================================================================
+
+  const renderGridCard = (item: Consortium, isSelected: boolean) => {
+    const progressPercentage =
+      item.totalInstallments > 0
+        ? Math.round((item.paidInstallments / item.totalInstallments) * 100)
+        : 0;
+
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
+        actions={[
+          ...(canEdit && !item.isContemplated && item.status === 'ACTIVE'
+            ? [
+                {
+                  id: 'mark-contemplated',
+                  label: 'Marcar Contemplado',
+                  icon: Star,
+                  onClick: (ids: string[]) => {
+                    if (ids.length === 1) {
+                      router.push(`/finance/consortia/${ids[0]}`);
+                    }
+                  },
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+          ...(canDelete
+            ? [
+                {
+                  id: 'delete',
+                  label: 'Excluir',
+                  icon: Trash2,
+                  onClick: handleContextDelete,
+                  variant: 'destructive' as const,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+        ]}
+      >
+        <EntityCard
+          id={item.id}
+          variant="grid"
+          title={item.administrator}
+          subtitle={
+            item.groupNumber || item.quotaNumber
+              ? `Grupo ${item.groupNumber || '—'} - Cota ${item.quotaNumber || '—'}`
+              : item.name
+          }
+          icon={Users}
+          iconBgColor="bg-linear-to-br from-pink-500 to-pink-600"
+          badges={[
+            {
+              label: CONSORTIUM_STATUS_LABELS[item.status],
+              variant: 'outline' as const,
+              color: getStatusColor(item.status),
+            },
+            ...(item.isContemplated
+              ? [
+                  {
+                    label: 'Contemplado',
+                    variant: 'outline' as const,
+                    icon: CheckCircle,
+                    color:
+                      'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+                  },
+                ]
+              : []),
+          ]}
+          footer={{
+            type: 'split',
+            left: {
+              icon: DollarSign,
+              label: formatCurrency(item.monthlyPayment),
+              onClick: () => {},
+              color: 'secondary',
+            },
+            right: {
+              label: `${progressPercentage}%`,
+              onClick: () => {},
+              color: 'secondary',
+            },
+          }}
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={false}
+        />
+      </EntityContextMenu>
+    );
+  };
+
+  const renderListCard = (item: Consortium, isSelected: boolean) => {
+    const progressPercentage =
+      item.totalInstallments > 0
+        ? Math.round((item.paidInstallments / item.totalInstallments) * 100)
+        : 0;
+
+    const listBadges: {
+      label: string;
+      variant: 'outline';
+      icon?: typeof CheckCircle;
+      color: string;
+    }[] = [
+      {
+        label: CONSORTIUM_STATUS_LABELS[item.status],
+        variant: 'outline',
+        color: getStatusColor(item.status),
+      },
+      ...(item.isContemplated
+        ? [
+            {
+              label: 'Contemplado',
+              variant: 'outline' as const,
+              icon: CheckCircle,
+              color:
+                'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+            },
+          ]
+        : []),
+      ...(item.groupNumber || item.quotaNumber
+        ? [
+            {
+              label: `G${item.groupNumber || '—'} / C${item.quotaNumber || '—'}`,
+              variant: 'outline' as const,
+              color:
+                'border-pink-600/25 dark:border-pink-500/20 bg-pink-50 dark:bg-pink-500/8 text-pink-700 dark:text-pink-300',
+            },
+          ]
+        : []),
+    ];
+
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
+        actions={[
+          ...(canEdit && !item.isContemplated && item.status === 'ACTIVE'
+            ? [
+                {
+                  id: 'mark-contemplated',
+                  label: 'Marcar Contemplado',
+                  icon: Star,
+                  onClick: (ids: string[]) => {
+                    if (ids.length === 1) {
+                      router.push(`/finance/consortia/${ids[0]}`);
+                    }
+                  },
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+          ...(canDelete
+            ? [
+                {
+                  id: 'delete',
+                  label: 'Excluir',
+                  icon: Trash2,
+                  onClick: handleContextDelete,
+                  variant: 'destructive' as const,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+        ]}
+      >
+        <EntityCard
+          id={item.id}
+          variant="list"
+          title={
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-gray-900 dark:text-white truncate">
+                {item.administrator}
+              </span>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {item.name}
+              </span>
+            </span>
+          }
+          metadata={
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {listBadges.map((badge, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0',
+                    badge.color
+                  )}
+                >
+                  {badge.icon && <badge.icon className="w-3 h-3" />}
+                  {badge.label}
+                </span>
+              ))}
+            </div>
+          }
+          icon={Users}
+          iconBgColor="bg-linear-to-br from-pink-500 to-pink-600"
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={false}
+        >
+          {/* Right zone: monthly payment + progress */}
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-sm font-semibold font-mono text-gray-900 dark:text-white">
+              {formatCurrency(item.monthlyPayment)}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {item.paidInstallments}/{item.totalInstallments} parcelas ({progressPercentage}%)
+            </span>
+          </div>
+        </EntityCard>
+      </EntityContextMenu>
+    );
+  };
+
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
+
+  const initialIds = useMemo(() => consortia.map(c => c.id), [consortia]);
+
+  // ============================================================================
+  // HEADER BUTTONS CONFIGURATION (permission-aware)
+  // ============================================================================
+
+  const handleCreateClick = useCallback(() => {
+    setWizardOpen(true);
+  }, []);
+
   const actionButtons = useMemo<ActionButtonWithPermission[]>(
     () => [
       {
         id: 'create-consortium',
         title: 'Novo Consórcio',
         icon: Plus,
-        onClick: handleCreate,
+        onClick: handleCreateClick,
         variant: 'default',
-        permission: PERMISSION_CODES.create,
+        permission: FINANCE_PERMISSIONS.CONSORTIA.REGISTER,
       },
     ],
-    [handleCreate]
+    [handleCreateClick]
   );
 
   const visibleActionButtons = useMemo<HeaderButton[]>(
@@ -503,289 +551,155 @@ export default function ConsortiaPage() {
     [actionButtons, hasPermission]
   );
 
-  // ---- Active Filters Indicator ----
-  const hasActiveFilters =
-    statusFilter !== 'ALL' || contemplatedFilter !== 'ALL';
-
-  const handleClearFilters = useCallback(() => {
-    setStatusFilter('ALL');
-    setContemplatedFilter('ALL');
-    setPage(1);
-  }, []);
-
   // ============================================================================
   // RENDER
   // ============================================================================
 
   return (
-    <PageLayout>
-      <PageHeader>
-        <PageActionBar
-          breadcrumbItems={[
-            { label: 'Financeiro', href: '/finance' },
-            { label: 'Consórcios', href: '/finance/consortia' },
-          ]}
-          buttons={visibleActionButtons}
-        />
+    <CoreProvider
+      selection={{
+        namespace: 'consortia',
+        initialIds,
+      }}
+    >
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Consórcios', href: '/finance/consortia' },
+            ]}
+            buttons={visibleActionButtons}
+          />
 
-        <Header
-          title="Consórcios"
-          description="Gerencie suas cotas de consórcio, acompanhe parcelas e contemplações"
-        />
-      </PageHeader>
+          <Header
+            title="Consórcios"
+            description="Gerencie suas cotas de consórcio, acompanhe parcelas e contemplações"
+          />
+        </PageHeader>
 
-      <PageBody>
-        {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          placeholder="Buscar por nome, administradora ou contrato..."
-          onSearch={handleSearch}
-          onClear={() => handleSearch('')}
-          showClear={true}
-          size="md"
-        />
+        <PageBody>
+          {/* Search Bar */}
+          <SearchBar
+            placeholder={consortiumConfig.display.labels.searchPlaceholder}
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            showClear={true}
+            size="md"
+          />
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos os status</SelectItem>
-              {STATUS_OPTIONS.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Grid */}
+          {isLoading ? (
+            <GridLoading count={9} layout="list" size="md" gap="gap-4" />
+          ) : error ? (
+            <GridError
+              type="server"
+              title="Erro ao carregar consórcios"
+              message="Ocorreu um erro ao tentar carregar os consórcios. Por favor, tente novamente."
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
+            />
+          ) : (
+            <>
+              <EntityGrid
+                config={consortiumConfig}
+                items={consortia}
+                showItemCount={false}
+                toolbarStart={
+                  <>
+                    <FilterDropdown
+                      label="Status"
+                      icon={Users}
+                      options={STATUS_OPTIONS}
+                      selected={statusIds}
+                      onSelectionChange={setStatusFilter}
+                      activeColor="pink"
+                      searchPlaceholder="Buscar status..."
+                      emptyText="Nenhum status encontrado."
+                    />
+                    <FilterDropdown
+                      label="Contemplado"
+                      icon={CheckCircle}
+                      options={CONTEMPLATED_OPTIONS}
+                      selected={contemplatedIds}
+                      onSelectionChange={setContemplatedFilter}
+                      activeColor="emerald"
+                      searchPlaceholder="Buscar..."
+                      emptyText="Nenhuma opção encontrada."
+                    />
+                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                      {total}{' '}
+                      {total === 1 ? 'consórcio' : 'consórcios'}
+                      {consortia.length < total &&
+                        ` (${consortia.length} carregados)`}
+                    </p>
+                  </>
+                }
+                renderGridItem={renderGridCard}
+                renderListItem={renderListCard}
+                isLoading={isLoading}
+                isSearching={!!debouncedSearch}
+                onItemDoubleClick={item =>
+                  router.push(`/finance/consortia/${item.id}`)
+                }
+                showSorting={true}
+                defaultSortField="createdAt"
+                defaultSortDirection="desc"
+                onSortChange={(field, direction) => {
+                  if (field !== 'custom') {
+                    setSortBy(
+                      field as
+                        | 'createdAt'
+                        | 'monthlyPayment'
+                        | 'administrator'
+                        | 'status'
+                    );
+                    setSortOrder(direction);
+                  }
+                }}
+              />
 
-          <Select
-            value={contemplatedFilter}
-            onValueChange={handleContemplatedChange}
-          >
-            <SelectTrigger className="w-[180px] h-9 text-sm">
-              <SelectValue placeholder="Contemplado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos</SelectItem>
-              <SelectItem value="YES">Contemplados</SelectItem>
-              <SelectItem value="NO">Não contemplados</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearFilters}
-              className="text-muted-foreground"
-            >
-              <XCircle className="h-4 w-4 mr-1" />
-              Limpar filtros
-            </Button>
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
           )}
-        </div>
 
-        {/* Content */}
-        {isLoading ? (
-          <TableSkeleton />
-        ) : error ? (
-          <GridError
-            type="server"
-            title="Erro ao carregar consórcios"
-            message="Ocorreu um erro ao tentar carregar os consórcios. Por favor, tente novamente."
-            action={{
-              label: 'Tentar Novamente',
-              onClick: () => {
-                refetch();
-              },
+          {/* Create Wizard */}
+          <CreateConsortiumWizard
+            open={wizardOpen}
+            onOpenChange={setWizardOpen}
+            onCreated={() => {
+              refetch();
             }}
           />
-        ) : !canList ? (
-          <GridError
-            type="forbidden"
-            title="Acesso restrito"
-            message="Você não possui permissão para visualizar consórcios."
+
+          {/* Delete PIN Confirmation Modal */}
+          <VerifyActionPinModal
+            isOpen={deleteModalOpen}
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setItemsToDelete([]);
+            }}
+            onSuccess={handleDeleteConfirm}
+            title="Confirmar Exclusão"
+            description={
+              itemsToDelete.length === 1
+                ? 'Digite seu PIN de Ação para confirmar a exclusão deste consórcio. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de Ação para excluir ${itemsToDelete.length} consórcios. Esta ação não pode ser desfeita.`
+            }
           />
-        ) : consortia.length === 0 ? (
-          <EmptyState canCreate={canCreate} onCreate={handleCreate} />
-        ) : (
-          <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table aria-label="Tabela de consórcios">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[160px]">Nome</TableHead>
-                    <TableHead className="min-w-[140px]">
-                      Administradora
-                    </TableHead>
-                    <TableHead className="min-w-[100px]">Grupo/Cota</TableHead>
-                    <TableHead className="text-right min-w-[130px]">
-                      Crédito
-                    </TableHead>
-                    <TableHead className="text-right min-w-[130px]">
-                      Parcela Mensal
-                    </TableHead>
-                    <TableHead className="text-center min-w-[100px]">
-                      Parcelas
-                    </TableHead>
-                    <TableHead className="min-w-[130px]">Progresso</TableHead>
-                    <TableHead className="text-center min-w-[110px]">
-                      Contemplado
-                    </TableHead>
-                    <TableHead className="min-w-[100px]">Status</TableHead>
-                    <TableHead className="w-10" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {consortia.map(consortium => {
-                    const progressPercentage =
-                      consortium.totalInstallments > 0
-                        ? Math.round(
-                            (consortium.paidInstallments /
-                              consortium.totalInstallments) *
-                              100
-                          )
-                        : 0;
-
-                    return (
-                      <TableRow
-                        key={consortium.id}
-                        className={canView ? 'cursor-pointer' : ''}
-                        onClick={() => handleRowClick(consortium)}
-                      >
-                        {/* Nome */}
-                        <TableCell className="font-medium">
-                          {consortium.name}
-                        </TableCell>
-
-                        {/* Administradora */}
-                        <TableCell className="text-muted-foreground">
-                          {consortium.administrator}
-                        </TableCell>
-
-                        {/* Grupo/Cota */}
-                        <TableCell>
-                          <span className="font-mono text-xs">
-                            {consortium.groupNumber || '—'}
-                            {consortium.groupNumber && consortium.quotaNumber
-                              ? '/'
-                              : ''}
-                            {consortium.quotaNumber || ''}
-                          </span>
-                        </TableCell>
-
-                        {/* Crédito */}
-                        <TableCell className="text-right font-mono text-sm">
-                          {formatCurrency(consortium.creditValue)}
-                        </TableCell>
-
-                        {/* Parcela Mensal */}
-                        <TableCell className="text-right font-mono text-sm text-blue-600 dark:text-blue-400 font-semibold">
-                          {formatCurrency(consortium.monthlyPayment)}
-                        </TableCell>
-
-                        {/* Parcelas (pagas/total) */}
-                        <TableCell className="text-center">
-                          <span className="font-mono text-sm">
-                            {consortium.paidInstallments}
-                            <span className="text-muted-foreground">
-                              /{consortium.totalInstallments}
-                            </span>
-                          </span>
-                        </TableCell>
-
-                        {/* Progresso */}
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress
-                              value={progressPercentage}
-                              className="h-2 flex-1"
-                            />
-                            <span
-                              className={`text-xs font-medium min-w-[36px] text-right ${getProgressColor(progressPercentage)}`}
-                            >
-                              {progressPercentage}%
-                            </span>
-                          </div>
-                        </TableCell>
-
-                        {/* Contemplado */}
-                        <TableCell className="text-center">
-                          {consortium.isContemplated ? (
-                            <Badge variant="success" className="gap-1 text-xs">
-                              <CheckCircle className="h-3 w-3" />
-                              Sim
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs">
-                              Não
-                            </Badge>
-                          )}
-                        </TableCell>
-
-                        {/* Status */}
-                        <TableCell>
-                          <Badge variant={getStatusVariant(consortium.status)}>
-                            {CONSORTIUM_STATUS_LABELS[consortium.status]}
-                          </Badge>
-                        </TableCell>
-
-                        {/* Actions */}
-                        <TableCell
-                          onClick={e => e.stopPropagation()}
-                          className="text-center"
-                        >
-                          <ConsortiumRowActions
-                            consortium={consortium}
-                            canView={canView}
-                            canEdit={canEdit}
-                            canDelete={canDelete}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={handleDeleteRequest}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Págination */}
-            {total > PER_PAGE && (
-              <div className="border-t">
-                <TablePágination
-                  page={page}
-                  totalPages={totalPages}
-                  total={total}
-                  perPage={PER_PAGE}
-                  onPageChange={setPage}
-                />
-              </div>
-            )}
-          </Card>
-        )}
-
-        {/* Delete PIN Confirmation Modal */}
-        <VerifyActionPinModal
-          isOpen={pinModalOpen}
-          onClose={() => {
-            setPinModalOpen(false);
-            setDeleteTarget(null);
-          }}
-          onSuccess={handleDeleteConfirmed}
-          title="Confirmar Exclusão"
-          description={
-            deleteTarget
-              ? `Digite seu PIN de Ação para excluir o consórcio "${deleteTarget.name}".`
-              : 'Digite seu PIN de Ação para autorizar esta operação.'
-          }
-        />
-      </PageBody>
-    </PageLayout>
+        </PageBody>
+      </PageLayout>
+    </CoreProvider>
   );
 }

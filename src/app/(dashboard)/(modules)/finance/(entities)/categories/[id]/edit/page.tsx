@@ -269,7 +269,7 @@ export default function EditFinanceCategoryPage({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">
-                  Nome <span className="text-red-500">*</span>
+                  Nome <span className="text-rose-500">*</span>
                 </Label>
                 <Input
                   id="name"
@@ -312,7 +312,7 @@ export default function EditFinanceCategoryPage({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="type">
-                  Tipo <span className="text-red-500">*</span>
+                  Tipo <span className="text-rose-500">*</span>
                 </Label>
                 {isChild ? (
                   <div className="flex items-center h-9 px-3 rounded-md border bg-muted text-sm text-muted-foreground">

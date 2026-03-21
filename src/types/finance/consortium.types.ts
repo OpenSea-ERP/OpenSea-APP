@@ -90,6 +90,8 @@ export interface ConsortiaQuery {
   costCenterId?: string;
   status?: ConsortiumStatus;
   isContemplated?: boolean;
+  sortBy?: 'createdAt' | 'monthlyPayment' | 'administrator' | 'status';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export const CONSORTIUM_STATUS_LABELS: Record<ConsortiumStatus, string> = {

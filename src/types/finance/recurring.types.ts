@@ -72,6 +72,8 @@ export interface RecurringConfigsQuery {
   type?: FinanceEntryType;
   status?: RecurringStatus;
   search?: string;
+  sortBy?: 'createdAt' | 'description' | 'expectedAmount' | 'status';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export const RECURRING_STATUS_LABELS: Record<RecurringStatus, string> = {

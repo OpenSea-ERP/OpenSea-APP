@@ -1,51 +1,39 @@
 /**
- * Exports centralizados dos componentes do Central com glassmorphism
+ * Exports centralizados dos componentes do Central — Dual Theme System
  */
 
-export { GlassCard } from './glass-card';
-export type { GlassCardProps } from './glass-card';
+export { CentralCard } from './central-card';
+export type { CentralCardProps } from './central-card';
 
-export { GlassContainer } from './glass-container';
-export type { GlassContainerProps } from './glass-container';
-
-export { GlassBadge } from './glass-badge';
-export type { GlassBadgeProps } from './glass-badge';
-
-export { GlassButton } from './glass-button';
-export type { GlassButtonProps } from './glass-button';
-
-export { GlassInput } from './glass-input';
-export type { GlassInputProps } from './glass-input';
+export { CentralBadge } from './central-badge';
+export type { CentralBadgeProps, CentralBadgeVariant } from './central-badge';
 
 export {
-  GlassTable,
-  GlassTableHeader,
-  GlassTableBody,
-  GlassTableRow,
-  GlassTableHead,
-  GlassTableCell,
-} from './glass-table';
+  CentralTable,
+  CentralTableHeader,
+  CentralTableHead,
+  CentralTableBody,
+  CentralTableRow,
+  CentralTableCell,
+} from './central-table';
 
-export { StatCard } from './stat-card';
-export type { StatCardProps } from './stat-card';
+export { CentralStatPill } from './central-stat-pill';
+export type {
+  CentralStatPillProps,
+  StatPillIconColor,
+} from './central-stat-pill';
 
-export { GlassConfirmDialog } from './glass-confirm-dialog';
-export type { GlassConfirmDialogProps } from './glass-confirm-dialog';
+export { CentralHero } from './central-hero';
+export type { CentralHeroProps } from './central-hero';
 
-export {
-  GlassSelect,
-  GlassSelectContent,
-  GlassSelectItem,
-  GlassSelectLabel,
-  GlassSelectSeparator,
-  GlassSelectTrigger,
-  GlassSelectValue,
-} from './glass-select';
+export { CentralAlertBar } from './central-alert-bar';
+export type {
+  CentralAlertBarProps,
+  CentralAlertItem,
+} from './central-alert-bar';
 
-export { GlassTextarea } from './glass-textarea';
-export type { GlassTextareaProps } from './glass-textarea';
-
-export { AnimatedBackground } from './animated-background';
+export { CentralPageHeader } from './central-page-header';
+export type { CentralPageHeaderProps } from './central-page-header';
 
 export { CentralNavbar } from './central-navbar';
 export { CentralSidebar } from './central-sidebar';

@@ -13,3 +13,8 @@ export * from './tags.config';
 export * from './templates.config';
 export * from './products.config';
 export * from './items.config';
+
+// Finance Entities
+export * from './finance-entry.config';
+export * from './loan.config';
+export * from './contract.config';

@@ -271,6 +271,71 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/v1/customers/${id}`,
     DELETE: (id: string) => `/v1/customers/${id}`,
   },
+  // Sales - Contacts
+  CONTACTS: {
+    LIST: '/v1/contacts',
+    GET: (id: string) => `/v1/contacts/${id}`,
+    CREATE: '/v1/contacts',
+    UPDATE: (id: string) => `/v1/contacts/${id}`,
+    DELETE: (id: string) => `/v1/contacts/${id}`,
+  },
+  // Sales - Pipelines
+  PIPELINES: {
+    LIST: '/v1/pipelines',
+    GET: (id: string) => `/v1/pipelines/${id}`,
+    CREATE: '/v1/pipelines',
+    UPDATE: (id: string) => `/v1/pipelines/${id}`,
+    DELETE: (id: string) => `/v1/pipelines/${id}`,
+    STAGES: {
+      LIST: (pipelineId: string) => `/v1/pipelines/${pipelineId}/stages`,
+      CREATE: (pipelineId: string) => `/v1/pipelines/${pipelineId}/stages`,
+      UPDATE: (stageId: string) => `/v1/pipeline-stages/${stageId}`,
+      DELETE: (stageId: string) => `/v1/pipeline-stages/${stageId}`,
+      REORDER: (pipelineId: string) =>
+        `/v1/pipelines/${pipelineId}/stages/reorder`,
+    },
+  },
+  // Sales - Price Tables
+  PRICE_TABLES: {
+    LIST: '/v1/price-tables',
+    GET: (id: string) => `/v1/price-tables/${id}`,
+    CREATE: '/v1/price-tables',
+    UPDATE: (id: string) => `/v1/price-tables/${id}`,
+    DELETE: (id: string) => `/v1/price-tables/${id}`,
+    ITEMS: (id: string) => `/v1/price-tables/${id}/items`,
+    UPSERT_ITEM: (id: string) => `/v1/price-tables/${id}/items`,
+    RESOLVE: '/v1/price-resolver',
+  },
+  // Sales - Customer Prices
+  CUSTOMER_PRICES: {
+    LIST: '/v1/customer-prices',
+    CREATE: '/v1/customer-prices',
+    UPDATE: (id: string) => `/v1/customer-prices/${id}`,
+    DELETE: (id: string) => `/v1/customer-prices/${id}`,
+  },
+  // Sales - Campaigns
+  CAMPAIGNS: {
+    LIST: '/v1/campaigns',
+    GET: (id: string) => `/v1/campaigns/${id}`,
+    CREATE: '/v1/campaigns',
+    UPDATE: (id: string) => `/v1/campaigns/${id}`,
+    DELETE: (id: string) => `/v1/campaigns/${id}`,
+    ACTIVATE: (id: string) => `/v1/campaigns/${id}/activate`,
+  },
+  // Sales - Coupons
+  COUPONS: {
+    LIST: '/v1/coupons',
+    CREATE: '/v1/coupons',
+    DELETE: (id: string) => `/v1/coupons/${id}`,
+    VALIDATE: '/v1/coupons/validate',
+  },
+  // Sales - Combos
+  COMBOS: {
+    LIST: '/v1/combos',
+    GET: (id: string) => `/v1/combos/${id}`,
+    CREATE: '/v1/combos',
+    DELETE: (id: string) => `/v1/combos/${id}`,
+  },
   // Sales - Sales Orders
   SALES_ORDERS: {
     LIST: '/v1/sales-orders',
@@ -279,6 +344,36 @@ export const API_ENDPOINTS = {
     UPDATE_STATUS: (id: string) => `/v1/sales-orders/${id}/status`,
     CANCEL: (id: string) => `/v1/sales-orders/${id}/cancel`,
     DELETE: (id: string) => `/v1/sales-orders/${id}`,
+  },
+  // Sales - Orders (new pipeline-based)
+  ORDERS: {
+    LIST: '/v1/orders',
+    GET: (id: string) => `/v1/orders/${id}`,
+    CREATE: '/v1/orders',
+    UPDATE: (id: string) => `/v1/orders/${id}`,
+    DELETE: (id: string) => `/v1/orders/${id}`,
+    CONFIRM: (id: string) => `/v1/orders/${id}/confirm`,
+    CANCEL: (id: string) => `/v1/orders/${id}/cancel`,
+    CHANGE_STAGE: (id: string) => `/v1/orders/${id}/stage`,
+    CONVERT_QUOTE: (id: string) => `/v1/orders/${id}/convert-quote`,
+  },
+  // Sales - Payment Conditions
+  PAYMENT_CONDITIONS: {
+    LIST: '/v1/payment-conditions',
+    CREATE: '/v1/payment-conditions',
+    UPDATE: (id: string) => `/v1/payment-conditions/${id}`,
+    DELETE: (id: string) => `/v1/payment-conditions/${id}`,
+  },
+  // Sales - Order Returns
+  RETURNS: {
+    LIST: '/v1/returns',
+    CREATE: '/v1/returns',
+    APPROVE: (id: string) => `/v1/returns/${id}/approve`,
+  },
+  // Sales - Store Credits
+  STORE_CREDITS: {
+    BALANCE: '/v1/store-credits/balance',
+    CREATE: '/v1/store-credits',
   },
   // Sales - Comments
   COMMENTS: {
@@ -312,6 +407,30 @@ export const API_ENDPOINTS = {
     CREATE: '/v1/notification-preferences',
     UPDATE: (id: string) => `/v1/notification-preferences/${id}`,
     DELETE: (id: string) => `/v1/notification-preferences/${id}`,
+  },
+  // Sales - Catalogs
+  CATALOGS: {
+    LIST: '/v1/catalogs',
+    GET: (id: string) => `/v1/catalogs/${id}`,
+    CREATE: '/v1/catalogs',
+    UPDATE: (id: string) => `/v1/catalogs/${id}`,
+    DELETE: (id: string) => `/v1/catalogs/${id}`,
+    ADD_ITEM: (catalogId: string) => `/v1/catalogs/${catalogId}/items`,
+    REMOVE_ITEM: (catalogId: string, itemId: string) =>
+      `/v1/catalogs/${catalogId}/items/${itemId}`,
+  },
+  // Sales - Brand
+  BRAND: {
+    GET: '/v1/brand',
+    UPDATE: '/v1/brand',
+  },
+  // Sales - Content
+  CONTENT: {
+    LIST: '/v1/content',
+    GET: (id: string) => `/v1/content/${id}`,
+    GENERATE: '/v1/content/generate',
+    DELETE: (id: string) => `/v1/content/${id}`,
+    APPROVE: (id: string) => `/v1/content/${id}/approve`,
   },
   // Email
   EMAIL: {
@@ -420,6 +539,65 @@ export const API_ENDPOINTS = {
       UPDATE: (id: string) => `/v1/admin/plans/${id}`,
       DELETE: (id: string) => `/v1/admin/plans/${id}`,
       SET_MODULES: (id: string) => `/v1/admin/plans/${id}/modules`,
+    },
+    // Catalog (Skills)
+    CATALOG: {
+      SKILLS: '/v1/admin/catalog/skills',
+      SKILL_TREE: '/v1/admin/catalog/skills/tree',
+      PRICING: '/v1/admin/catalog/pricing',
+      UPSERT_PRICING: (skillCode: string) =>
+        `/v1/admin/catalog/pricing/${skillCode}`,
+    },
+    // Tenant Subscriptions
+    SUBSCRIPTIONS: {
+      GET: (tenantId: string) => `/v1/admin/tenants/${tenantId}/subscription`,
+      ADD: (tenantId: string) => `/v1/admin/tenants/${tenantId}/subscription`,
+      REMOVE: (tenantId: string, skillCode: string) =>
+        `/v1/admin/tenants/${tenantId}/subscription/${skillCode}`,
+      DISCOUNT: (tenantId: string) => `/v1/admin/tenants/${tenantId}/discount`,
+      CONSUMPTION: (tenantId: string) =>
+        `/v1/admin/tenants/${tenantId}/consumption`,
+      OVERRIDE_LIMIT: (tenantId: string) =>
+        `/v1/admin/tenants/${tenantId}/limit-override`,
+      OVERVIEW: (tenantId: string) => `/v1/admin/tenants/${tenantId}/overview`,
+      INTEGRATIONS: (tenantId: string) =>
+        `/v1/admin/tenants/${tenantId}/integrations`,
+    },
+    // Support
+    SUPPORT: {
+      LIST: '/v1/admin/support/tickets',
+      GET: (ticketId: string) => `/v1/admin/support/tickets/${ticketId}`,
+      ASSIGN: (ticketId: string) =>
+        `/v1/admin/support/tickets/${ticketId}/assign`,
+      REPLY: (ticketId: string) =>
+        `/v1/admin/support/tickets/${ticketId}/reply`,
+      UPDATE_STATUS: (ticketId: string) =>
+        `/v1/admin/support/tickets/${ticketId}/status`,
+      METRICS: '/v1/admin/support/metrics',
+      SLA_CONFIG: '/v1/admin/support/sla',
+      SLA_CONFIG_UPDATE: (priority: string) =>
+        `/v1/admin/support/sla/${priority}`,
+    },
+    // Monitoring
+    MONITORING: {
+      SYSTEM_HEALTH: '/v1/admin/monitoring/health',
+      INTEGRATION_STATUS: '/v1/admin/monitoring/integrations',
+      AI_USAGE: '/v1/admin/monitoring/ai-usage',
+      REVENUE: '/v1/admin/monitoring/revenue',
+    },
+    // Central Team
+    TEAM: {
+      LIST: '/v1/admin/team',
+      INVITE: '/v1/admin/team/invite',
+      UPDATE_ROLE: (userId: string) => `/v1/admin/team/${userId}/role`,
+      REMOVE: (userId: string) => `/v1/admin/team/${userId}`,
+    },
+    // Billing
+    BILLING: {
+      LIST: '/v1/admin/billing',
+      GET: (tenantId: string) => `/v1/admin/billing/${tenantId}`,
+      GENERATE: '/v1/admin/billing/generate',
+      MARK_PAID: (id: string) => `/v1/admin/billing/${id}/paid`,
     },
   },
   // Finance - Cost Centers
@@ -797,12 +975,99 @@ export const API_ENDPOINTS = {
         `/v1/teams/${teamId}/emails/${accountId}`,
     },
   },
+  // Support (tenant-facing)
+  SUPPORT: {
+    CREATE: '/v1/support/tickets',
+    LIST_MY: '/v1/support/tickets',
+    GET_MY: (ticketId: string) => `/v1/support/tickets/${ticketId}`,
+    REPLY_MY: (ticketId: string) => `/v1/support/tickets/${ticketId}/reply`,
+    RATE: (ticketId: string) => `/v1/support/tickets/${ticketId}/rate`,
+  },
   // Notifications
   NOTIFICATIONS: {
     LIST: '/v1/notifications',
     MARK_AS_READ: (id: string) => `/v1/notifications/${id}/read`,
     MARK_ALL_AS_READ: '/v1/notifications/mark-all-read',
     DELETE: (id: string) => `/v1/notifications/${id}`,
+  },
+  // Digital Signature
+  SIGNATURE: {
+    CERTIFICATES: {
+      LIST: '/v1/signature/certificates',
+      CREATE: '/v1/signature/certificates',
+      DELETE: (id: string) => `/v1/signature/certificates/${id}`,
+    },
+    ENVELOPES: {
+      LIST: '/v1/signature/envelopes',
+      CREATE: '/v1/signature/envelopes',
+      GET: (id: string) => `/v1/signature/envelopes/${id}`,
+      CANCEL: (id: string) => `/v1/signature/envelopes/${id}`,
+      RESEND: (id: string) =>
+        `/v1/signature/envelopes/${id}/resend-notifications`,
+    },
+    SIGNING: {
+      GET: (token: string) => `/v1/signature/sign/${token}`,
+      SIGN: (token: string) => `/v1/signature/sign/${token}`,
+      REJECT: (token: string) => `/v1/signature/sign/${token}/reject`,
+    },
+    TEMPLATES: {
+      LIST: '/v1/signature/templates',
+      CREATE: '/v1/signature/templates',
+    },
+  },
+  // Sales - Analytics
+  ANALYTICS: {
+    GOALS: {
+      LIST: '/v1/sales/analytics/goals',
+      CREATE: '/v1/sales/analytics/goals',
+      UPDATE: (id: string) => `/v1/sales/analytics/goals/${id}`,
+      DELETE: (id: string) => `/v1/sales/analytics/goals/${id}`,
+      PROGRESS: (id: string) => `/v1/sales/analytics/goals/${id}/progress`,
+    },
+    DASHBOARDS: {
+      LIST: '/v1/sales/analytics/dashboards',
+      CREATE: '/v1/sales/analytics/dashboards',
+    },
+    REPORTS: {
+      LIST: '/v1/sales/analytics/reports',
+      CREATE: '/v1/sales/analytics/reports',
+    },
+    RANKINGS: {
+      SELLERS: '/v1/sales/analytics/rankings/sellers',
+      PRODUCTS: '/v1/sales/analytics/rankings/products',
+      CUSTOMERS: '/v1/sales/analytics/rankings/customers',
+    },
+    CUSTOMER_PORTAL: {
+      CREATE: '/v1/sales/analytics/customer-portal',
+      GET: (token: string) => `/v1/sales/analytics/customer-portal/${token}`,
+    },
+  },
+  // AI Assistant
+  AI: {
+    CHAT: {
+      SEND: '/v1/ai/chat',
+      LIST_CONVERSATIONS: '/v1/ai/chat/conversations',
+      GET_CONVERSATION: (id: string) => `/v1/ai/chat/conversations/${id}`,
+      ARCHIVE_CONVERSATION: (id: string) =>
+        `/v1/ai/chat/conversations/${id}/archive`,
+    },
+    INSIGHTS: {
+      LIST: '/v1/ai/insights',
+      VIEW: (id: string) => `/v1/ai/insights/${id}/view`,
+      DISMISS: (id: string) => `/v1/ai/insights/${id}/dismiss`,
+    },
+    CONFIG: {
+      GET: '/v1/ai/config',
+      UPDATE: '/v1/ai/config',
+    },
+    FAVORITES: {
+      LIST: '/v1/ai/favorites',
+      CREATE: '/v1/ai/favorites',
+      DELETE: (id: string) => `/v1/ai/favorites/${id}`,
+    },
+    ACTIONS: {
+      LIST: '/v1/ai/actions',
+    },
   },
   // Health
   HEALTH: '/health',

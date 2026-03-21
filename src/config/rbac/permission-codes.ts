@@ -311,6 +311,16 @@ export const SALES_PERMISSIONS = {
     'export',
     'onlyself'
   ),
+  CONTACTS: perm(
+    'sales',
+    'contacts',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin',
+    'onlyself'
+  ),
   PROMOTIONS: perm(
     'sales',
     'promotions',
@@ -330,6 +340,167 @@ export const SALES_PERMISSIONS = {
     'print',
     'admin',
     'onlyself'
+  ),
+  PIPELINES: perm(
+    'sales',
+    'pipelines',
+    'access',
+    'admin'
+  ),
+  PRICE_TABLES: perm(
+    'sales',
+    'price-tables',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  CUSTOMER_PRICES: perm(
+    'sales',
+    'customer-prices',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  CAMPAIGNS: perm(
+    'sales',
+    'campaigns',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  COUPONS: perm(
+    'sales',
+    'coupons',
+    'access',
+    'register',
+    'remove'
+  ),
+  COMBOS: perm(
+    'sales',
+    'combos',
+    'access',
+    'register',
+    'remove'
+  ),
+  CATALOGS: perm(
+    'sales',
+    'catalogs',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  BRAND: perm(
+    'sales',
+    'brand',
+    'access',
+    'modify'
+  ),
+  CONTENT: perm(
+    'sales',
+    'content',
+    'access',
+    'register',
+    'remove',
+    'admin'
+  ),
+  ANALYTICS_GOALS: perm(
+    'sales',
+    'analytics-goals',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  ANALYTICS_REPORTS: perm(
+    'sales',
+    'analytics-reports',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  ANALYTICS_DASHBOARDS: perm(
+    'sales',
+    'analytics-dashboards',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  ANALYTICS_RANKINGS: perm(
+    'sales',
+    'analytics-rankings',
+    'access'
+  ),
+  CUSTOMER_PORTAL: perm(
+    'sales',
+    'customer-portal',
+    'access',
+    'register',
+    'remove'
+  ),
+  BIDS: perm(
+    'sales',
+    'bids',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
+  BID_DOCUMENTS: perm(
+    'sales',
+    'bid-documents',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  BID_CONTRACTS: perm(
+    'sales',
+    'bid-contracts',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  BID_EMPENHOS: perm(
+    'sales',
+    'bid-empenhos',
+    'access',
+    'register',
+    'modify'
+  ),
+  MARKETPLACE_CONNECTIONS: perm(
+    'sales',
+    'marketplace-connections',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  MARKETPLACE_LISTINGS: perm(
+    'sales',
+    'marketplace-listings',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  MARKETPLACE_ORDERS: perm(
+    'sales',
+    'marketplace-orders',
+    'access',
+    'modify'
+  ),
+  MARKETPLACE_PAYMENTS: perm(
+    'sales',
+    'marketplace-payments',
+    'access'
   ),
 } as const;
 
@@ -453,6 +624,40 @@ export const TOOLS_PERMISSIONS = {
       'share',
       'onlyself'
     ),
+  },
+  SIGNATURE: {
+    ENVELOPES: perm(
+      'tools',
+      'signature.envelopes',
+      'access',
+      'register',
+      'modify',
+      'remove',
+      'admin'
+    ),
+    CERTIFICATES: perm(
+      'tools',
+      'signature.certificates',
+      'access',
+      'register',
+      'remove',
+      'admin'
+    ),
+    TEMPLATES: perm(
+      'tools',
+      'signature.templates',
+      'access',
+      'register',
+      'modify',
+      'remove'
+    ),
+  },
+  AI: {
+    CHAT: perm('tools', 'ai.chat', 'access'),
+    INSIGHTS: perm('tools', 'ai.insights', 'access'),
+    CONFIG: perm('tools', 'ai.config', 'access', 'modify'),
+    FAVORITES: perm('tools', 'ai.favorites', 'access', 'register', 'remove'),
+    ACTIONS: perm('tools', 'ai.actions', 'access'),
   },
 } as const;
 

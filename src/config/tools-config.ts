@@ -49,4 +49,20 @@ export const TOOLS: ToolConfig[] = [
     href: '/tasks',
     requiredPermission: TOOLS_PERMISSIONS.TASKS.BOARDS.ACCESS,
   },
+  {
+    id: 'signature',
+    name: 'Assinatura Digital',
+    description: 'Assinatura eletrônica e certificados digitais',
+    icon: 'FileSignature',
+    href: '/signature',
+    requiredPermission: TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.ACCESS,
+  },
+  {
+    id: 'ai',
+    name: 'Assistente IA',
+    description: 'Assistente inteligente com IA para análise e automação',
+    icon: 'Bot',
+    href: '/ai',
+    requiredPermission: TOOLS_PERMISSIONS.AI.CHAT.ACCESS,
+  },
 ];

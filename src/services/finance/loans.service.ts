@@ -36,6 +36,8 @@ export const loansService = {
     if (params?.costCenterId) query.append('costCenterId', params.costCenterId);
     if (params?.type) query.append('type', params.type);
     if (params?.status) query.append('status', params.status);
+    if (params?.sortBy) query.append('sortBy', params.sortBy);
+    if (params?.sortOrder) query.append('sortOrder', params.sortOrder);
 
     return apiClient.get<LoansResponse>(
       `${API_ENDPOINTS.LOANS.LIST}?${query.toString()}`

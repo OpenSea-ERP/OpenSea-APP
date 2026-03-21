@@ -1,25 +1,97 @@
 import { financeEntriesService } from '@/services/finance';
 import type {
   FinanceEntriesQuery,
+  FinanceEntryType,
   CreateFinanceEntryData,
   UpdateFinanceEntryData,
   RegisterPaymentData,
   ParseBoletoRequest,
 } from '@/types/finance';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+
+// ============================================================================
+// FILTERS TYPE (for infinite scroll hooks)
+// ============================================================================
+
+export interface FinanceEntriesFilters {
+  type?: FinanceEntryType;
+  search?: string;
+  status?: string;
+  categoryId?: string;
+  sortBy?: 'createdAt' | 'dueDate' | 'expectedAmount' | 'description' | 'status';
+  sortOrder?: 'asc' | 'desc';
+}
+
+// ============================================================================
+// QUERY KEYS
+// ============================================================================
 
 const QUERY_KEYS = {
   FINANCE_ENTRIES: ['finance-entries'],
+  FINANCE_ENTRIES_INFINITE: (filters?: FinanceEntriesFilters) => [
+    'finance-entries',
+    'infinite',
+    filters,
+  ],
   FINANCE_ENTRY: (id: string) => ['finance-entries', id],
 } as const;
 
 export { QUERY_KEYS as financeEntryKeys };
+
+// ============================================================================
+// QUERIES
+// ============================================================================
 
 export function useFinanceEntries(params?: FinanceEntriesQuery) {
   return useQuery({
     queryKey: [...QUERY_KEYS.FINANCE_ENTRIES, params],
     queryFn: () => financeEntriesService.list(params),
   });
+}
+
+// Infinite scroll with server-side filters and sorting
+const ENTRIES_PAGE_SIZE = 20;
+
+export function useFinanceEntriesInfinite(filters?: FinanceEntriesFilters) {
+  const result = useInfiniteQuery({
+    queryKey: QUERY_KEYS.FINANCE_ENTRIES_INFINITE(filters),
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await financeEntriesService.list({
+        page: pageParam,
+        perPage: ENTRIES_PAGE_SIZE,
+        type: filters?.type,
+        search: filters?.search || undefined,
+        status: (filters?.status as FinanceEntriesQuery['status']) || undefined,
+        categoryId: filters?.categoryId || undefined,
+        sortBy: filters?.sortBy || undefined,
+        sortOrder: filters?.sortOrder || undefined,
+      });
+      return response;
+    },
+    initialPageParam: 1,
+    getNextPageParam: lastPage => {
+      if (lastPage.meta.page < lastPage.meta.pages) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined;
+    },
+    staleTime: 30_000,
+  });
+
+  // Flatten pages into single array
+  const entries = result.data?.pages.flatMap(p => p.entries) ?? [];
+  const total = result.data?.pages[0]?.meta.total ?? 0;
+
+  return {
+    ...result,
+    entries,
+    total,
+  };
 }
 
 export function useFinanceEntry(id: string) {

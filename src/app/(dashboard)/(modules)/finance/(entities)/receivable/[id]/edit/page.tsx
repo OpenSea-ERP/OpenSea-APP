@@ -1,16 +1,21 @@
 /**
- * Edit Receivable Entry Page
+ * OpenSea OS - Edit Receivable Entry Page
+ * Follows the standard edit page pattern: PageLayout > PageHeader > PageBody
+ * with Identity Card + Form Card with CollapsibleSections.
  */
 
 'use client';
 
+import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
-import { Button } from '@/components/ui/button';
+import type { HeaderButton } from '@/components/layout/types/header.types';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,62 +26,84 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import {
   useBankAccounts,
   useCostCenters,
+  useDeleteFinanceEntry,
   useFinanceCategories,
   useFinanceEntry,
   useUpdateFinanceEntry,
 } from '@/hooks/finance';
-import { ArrowLeft, Save } from 'lucide-react';
-import Link from 'next/link';
+import { logger } from '@/lib/logger';
+import type {
+  CostCenterAllocation,
+  FinanceEntryStatus,
+} from '@/types/finance';
+import { FINANCE_ENTRY_STATUS_LABELS } from '@/types/finance';
+import {
+  ArrowUpCircle,
+  DollarSign,
+  FileText,
+  Landmark,
+  Loader2,
+  NotebookText,
+  Plus,
+  Save,
+  Target,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 // =============================================================================
-// LOADING SKELETON
+// SECTION HEADER
 // =============================================================================
 
-function EditSkeleton() {
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ElementType;
+  title: string;
+  subtitle: string;
+}) {
   return (
-    <PageLayout>
-      <PageHeader>
-        <div className="h-10" />
-      </PageHeader>
-      <PageBody>
-        <Card className="p-6">
-          <div className="space-y-6">
-            <Skeleton className="h-10 w-full" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <Skeleton className="h-20 w-full" />
-            <div className="flex justify-end gap-2">
-              <Skeleton className="h-10 w-24" />
-              <Skeleton className="h-10 w-24" />
-            </div>
-          </div>
-        </Card>
-      </PageBody>
-    </PageLayout>
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Icon className="h-5 w-5 text-foreground" />
+        <div>
+          <h3 className="text-base font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        </div>
+      </div>
+      <div className="border-b border-border" />
+    </div>
   );
 }
 
 // =============================================================================
-// MAIN COMPONENT
+// STATUS LABEL HELPER
+// =============================================================================
+
+function getStatusLabel(status: FinanceEntryStatus): string {
+  return FINANCE_ENTRY_STATUS_LABELS[status] ?? status;
+}
+
+// =============================================================================
+// PAGE
 // =============================================================================
 
 export default function EditReceivablePage({
@@ -86,405 +113,776 @@ export default function EditReceivablePage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data, isLoading } = useFinanceEntry(id);
-  const updateMutation = useUpdateFinanceEntry();
+
+  // ============================================================================
+  // DATA FETCHING
+  // ============================================================================
+
+  const {
+    data,
+    isLoading: isLoadingEntry,
+    error,
+  } = useFinanceEntry(id);
   const entry = data?.entry;
+
+  const updateMutation = useUpdateFinanceEntry();
+  const deleteMutation = useDeleteFinanceEntry();
 
   const { data: categoriesData } = useFinanceCategories({ type: 'REVENUE' });
   const { data: costCentersData } = useCostCenters();
   const { data: bankAccountsData } = useBankAccounts();
+
   const categories = categoriesData?.categories ?? [];
   const costCenters = costCentersData?.costCenters ?? [];
   const bankAccounts = bankAccountsData?.bankAccounts ?? [];
 
-  const [formData, setFormData] = useState({
-    description: '',
-    categoryId: '',
-    costCenterId: '',
-    bankAccountId: '',
-    expectedAmount: 0,
-    discount: 0,
-    interest: 0,
-    penalty: 0,
-    dueDate: '',
-    customerName: '',
-    notes: '',
-  });
+  // Filter categories: REVENUE or BOTH
+  const filteredCategories = categories.filter(
+    c => c.type === 'REVENUE' || c.type === 'BOTH'
+  );
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // ============================================================================
+  // STATE
+  // ============================================================================
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // Section 1: Identificacao
+  const [description, setDescription] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [tags, setTags] = useState('');
+
+  // Section 2: Valores
+  const [expectedAmount, setExpectedAmount] = useState(0);
+  const [dueDate, setDueDate] = useState('');
+  const [issueDate, setIssueDate] = useState('');
+  const [competenceDate, setCompetenceDate] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [interest, setInterest] = useState(0);
+  const [penalty, setPenalty] = useState(0);
+
+  // Section 3: Rateio
+  const [useAllocations, setUseAllocations] = useState(false);
+  const [costCenterId, setCostCenterId] = useState('');
+  const [allocations, setAllocations] = useState<CostCenterAllocation[]>([]);
+
+  // Section 4: Conta Bancaria
+  const [bankAccountId, setBankAccountId] = useState('');
+
+  // Section 5: Observacoes
+  const [notes, setNotes] = useState('');
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
 
   useEffect(() => {
     if (entry) {
-      setFormData({
-        description: entry.description,
-        categoryId: entry.categoryId,
-        costCenterId: entry.costCenterId ?? '',
-        bankAccountId: entry.bankAccountId || '',
-        expectedAmount: entry.expectedAmount,
-        discount: entry.discount || 0,
-        interest: entry.interest || 0,
-        penalty: entry.penalty || 0,
-        dueDate: entry.dueDate ? entry.dueDate.split('T')[0] : '',
-        customerName: entry.customerName || '',
-        notes: entry.notes || '',
-      });
+      setDescription(entry.description || '');
+      setCategoryId(entry.categoryId || '');
+      setCustomerName(entry.customerName || '');
+      setTags((entry.tags || []).join(', '));
+
+      setExpectedAmount(entry.expectedAmount || 0);
+      setDueDate(entry.dueDate ? entry.dueDate.split('T')[0] : '');
+      setIssueDate(entry.issueDate ? entry.issueDate.split('T')[0] : '');
+      setCompetenceDate(
+        entry.competenceDate ? entry.competenceDate.split('T')[0] : ''
+      );
+      setDiscount(entry.discount || 0);
+      setInterest(entry.interest || 0);
+      setPenalty(entry.penalty || 0);
+
+      // Rateio: check if allocations exist
+      const hasAllocations =
+        entry.costCenterAllocations && entry.costCenterAllocations.length > 0;
+      setUseAllocations(!!hasAllocations);
+
+      if (hasAllocations) {
+        setAllocations(
+          entry.costCenterAllocations!.map(a => ({
+            costCenterId: a.costCenterId,
+            percentage: a.percentage,
+          }))
+        );
+        setCostCenterId('');
+      } else {
+        setCostCenterId(entry.costCenterId || '');
+        setAllocations([]);
+      }
+
+      setBankAccountId(entry.bankAccountId || '');
+      setNotes(entry.notes || '');
     }
   }, [entry]);
 
-  if (isLoading) return <EditSkeleton />;
+  // ============================================================================
+  // ALLOCATION HANDLERS
+  // ============================================================================
 
-  if (!entry) {
+  const addAllocation = () => {
+    setAllocations(prev => [...prev, { costCenterId: '', percentage: 0 }]);
+  };
+
+  const removeAllocation = (index: number) => {
+    setAllocations(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateAllocation = (
+    index: number,
+    field: 'costCenterId' | 'percentage',
+    value: string | number
+  ) => {
+    setAllocations(prev =>
+      prev.map((a, i) => (i === index ? { ...a, [field]: value } : a))
+    );
+  };
+
+  const allocationTotal = allocations.reduce(
+    (sum, a) => sum + (a.percentage || 0),
+    0
+  );
+
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
+  const handleSubmit = async () => {
+    if (!description.trim()) {
+      toast.error('A descrição é obrigatória.');
+      return;
+    }
+    if (!categoryId) {
+      toast.error('A categoria é obrigatória.');
+      return;
+    }
+    if (!expectedAmount || expectedAmount <= 0) {
+      toast.error('O valor esperado deve ser maior que zero.');
+      return;
+    }
+    if (!dueDate) {
+      toast.error('A data de vencimento é obrigatória.');
+      return;
+    }
+
+    // Validate allocations if using them
+    if (useAllocations) {
+      if (allocations.length === 0) {
+        toast.error('Adicione ao menos um centro de custo ao rateio.');
+        return;
+      }
+      const total = allocations.reduce((sum, a) => sum + (a.percentage || 0), 0);
+      if (Math.abs(total - 100) > 0.01) {
+        toast.error('A soma dos percentuais do rateio deve ser 100%.');
+        return;
+      }
+      const hasEmpty = allocations.some(a => !a.costCenterId);
+      if (hasEmpty) {
+        toast.error('Selecione o centro de custo em todas as linhas do rateio.');
+        return;
+      }
+    } else {
+      if (!costCenterId) {
+        toast.error('O centro de custo é obrigatório.');
+        return;
+      }
+    }
+
+    try {
+      setIsSaving(true);
+
+      const parsedTags = tags
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean);
+
+      await updateMutation.mutateAsync({
+        id,
+        data: {
+          description: description.trim(),
+          categoryId,
+          costCenterId: useAllocations ? undefined : costCenterId || undefined,
+          costCenterAllocations: useAllocations ? allocations : undefined,
+          bankAccountId: bankAccountId || undefined,
+          expectedAmount,
+          discount,
+          interest,
+          penalty,
+          issueDate: issueDate || undefined,
+          dueDate,
+          competenceDate: competenceDate || undefined,
+          customerName: customerName.trim() || undefined,
+          notes: notes.trim() || undefined,
+          tags: parsedTags.length > 0 ? parsedTags : undefined,
+        },
+      });
+
+      toast.success('Recebimento atualizado com sucesso!');
+      router.push(`/finance/receivable/${id}`);
+    } catch (err) {
+      logger.error(
+        'Erro ao atualizar recebimento',
+        err instanceof Error ? err : undefined
+      );
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error('Erro ao atualizar recebimento', { description: message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Conta a receber excluída com sucesso!');
+      router.push('/finance/receivable');
+    } catch (err) {
+      logger.error(
+        'Erro ao excluir conta a receber',
+        err instanceof Error ? err : undefined
+      );
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error('Erro ao excluir conta a receber', { description: message });
+    }
+  };
+
+  // ============================================================================
+  // ACTION BUTTONS
+  // ============================================================================
+
+  const actionButtons: HeaderButton[] = [
+    {
+      id: 'cancel',
+      title: 'Cancelar',
+      onClick: () => router.push(`/finance/receivable/${id}`),
+      variant: 'ghost',
+    },
+    {
+      id: 'delete',
+      title: 'Excluir',
+      icon: Trash2,
+      onClick: () => setDeleteModalOpen(true),
+      variant: 'default',
+      className:
+        'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+    },
+    {
+      id: 'save',
+      title: isSaving ? 'Salvando...' : 'Salvar Alterações',
+      icon: isSaving ? Loader2 : Save,
+      onClick: handleSubmit,
+      variant: 'default',
+      disabled: isSaving,
+    },
+  ];
+
+  // ============================================================================
+  // BREADCRUMBS
+  // ============================================================================
+
+  const breadcrumbItems = [
+    { label: 'Financeiro', href: '/finance' },
+    { label: 'Contas a Receber', href: '/finance/receivable' },
+    {
+      label: entry?.description || '...',
+      href: `/finance/receivable/${id}`,
+    },
+    { label: 'Editar' },
+  ];
+
+  // ============================================================================
+  // LOADING / ERROR
+  // ============================================================================
+
+  if (isLoadingEntry) {
     return (
       <PageLayout>
         <PageHeader>
-          <PageActionBar
-            breadcrumbItems={[
-              { label: 'Financeiro', href: '/finance' },
-              { label: 'Contas a Receber', href: '/finance/receivable' },
-            ]}
-          />
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
         </PageHeader>
         <PageBody>
-          <Card className="p-12 text-center">
-            <p className="text-destructive text-lg">
-              Lançamento não encontrado.
-            </p>
-            <Link href="/finance/receivable">
-              <Button variant="outline" className="mt-4">
-                Voltar para contas a receber
-              </Button>
-            </Link>
-          </Card>
+          <GridLoading count={3} layout="list" size="md" />
         </PageBody>
       </PageLayout>
     );
   }
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  if (error || !entry) {
+    return (
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridError
+            type="not-found"
+            title="Recebimento não encontrado"
+            message="O recebimento solicitado não foi encontrado."
+            action={{
+              label: 'Voltar para Contas a Receber',
+              onClick: () => router.push('/finance/receivable'),
+            }}
+          />
+        </PageBody>
+      </PageLayout>
+    );
+  }
 
-    if (!formData.description.trim()) {
-      newErrors.description = 'A descrição é obrigatória.';
-    }
-
-    if (!formData.categoryId) {
-      newErrors.categoryId = 'A categoria é obrigatória.';
-    }
-
-    if (!formData.costCenterId) {
-      newErrors.costCenterId = 'O centro de custo é obrigatório.';
-    }
-
-    if (!formData.expectedAmount || formData.expectedAmount <= 0) {
-      newErrors.expectedAmount = 'O valor deve ser maior que zero.';
-    }
-
-    if (!formData.dueDate) {
-      newErrors.dueDate = 'A data de vencimento é obrigatória.';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) {
-      toast.error('Corrija os campos destacados antes de salvar.');
-      return;
-    }
-
-    try {
-      await updateMutation.mutateAsync({
-        id,
-        data: {
-          description: formData.description,
-          categoryId: formData.categoryId,
-          costCenterId: formData.costCenterId,
-          bankAccountId: formData.bankAccountId || undefined,
-          expectedAmount: formData.expectedAmount,
-          discount: formData.discount,
-          interest: formData.interest,
-          penalty: formData.penalty,
-          dueDate: formData.dueDate,
-          customerName: formData.customerName || undefined,
-          notes: formData.notes || undefined,
-        },
-      });
-      toast.success('Lançamento atualizado com sucesso.');
-      router.push(`/finance/receivable/${id}`);
-    } catch {
-      toast.error('Erro ao atualizar lançamento. Tente novamente.');
-    }
-  };
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   return (
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbItems={[
-            { label: 'Financeiro', href: '/finance' },
-            { label: 'Contas a Receber', href: '/finance/receivable' },
-            { label: 'Editar' },
-          ]}
+          breadcrumbItems={breadcrumbItems}
+          buttons={actionButtons}
         />
-        <div className="flex items-center gap-4">
-          <Link href={`/finance/receivable/${id}`}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Voltar
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">Editar Conta a Receber</h1>
-        </div>
       </PageHeader>
 
       <PageBody>
-        <Card className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <Label htmlFor="description">Descrição *</Label>
-                <Input
-                  id="description"
-                  required
-                  value={formData.description}
-                  onChange={e => {
-                    setFormData({ ...formData, description: e.target.value });
-                    if (errors.description)
-                      setErrors(prev => ({ ...prev, description: '' }));
-                  }}
-                  className={errors.description ? 'border-destructive' : ''}
-                />
-                {errors.description && (
-                  <p className="text-sm text-destructive mt-1">
-                    {errors.description}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="categoryId">Categoria *</Label>
-                <Select
-                  value={formData.categoryId}
-                  onValueChange={value => {
-                    setFormData({ ...formData, categoryId: value });
-                    if (errors.categoryId)
-                      setErrors(prev => ({ ...prev, categoryId: '' }));
-                  }}
-                  required
-                >
-                  <SelectTrigger
-                    id="categoryId"
-                    className={errors.categoryId ? 'border-destructive' : ''}
-                  >
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.categoryId && (
-                  <p className="text-sm text-destructive mt-1">
-                    {errors.categoryId}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="costCenterId">Centro de Custo *</Label>
-                <Select
-                  value={formData.costCenterId}
-                  onValueChange={value => {
-                    setFormData({ ...formData, costCenterId: value });
-                    if (errors.costCenterId)
-                      setErrors(prev => ({ ...prev, costCenterId: '' }));
-                  }}
-                  required
-                >
-                  <SelectTrigger
-                    id="costCenterId"
-                    className={errors.costCenterId ? 'border-destructive' : ''}
-                  >
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {costCenters.map(cc => (
-                      <SelectItem key={cc.id} value={cc.id}>
-                        {cc.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.costCenterId && (
-                  <p className="text-sm text-destructive mt-1">
-                    {errors.costCenterId}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="bankAccountId">Conta Bancária</Label>
-                <Select
-                  value={formData.bankAccountId}
-                  onValueChange={value =>
-                    setFormData({ ...formData, bankAccountId: value })
-                  }
-                >
-                  <SelectTrigger id="bankAccountId">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bankAccounts.map(ba => (
-                      <SelectItem key={ba.id} value={ba.id}>
-                        {ba.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="customerName">Cliente</Label>
-                <Input
-                  id="customerName"
-                  value={formData.customerName}
-                  onChange={e =>
-                    setFormData({ ...formData, customerName: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="expectedAmount">Valor Esperado (R$) *</Label>
-                <Input
-                  id="expectedAmount"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  required
-                  value={formData.expectedAmount}
-                  onChange={e => {
-                    setFormData({
-                      ...formData,
-                      expectedAmount: parseFloat(e.target.value) || 0,
-                    });
-                    if (errors.expectedAmount)
-                      setErrors(prev => ({ ...prev, expectedAmount: '' }));
-                  }}
-                  className={errors.expectedAmount ? 'border-destructive' : ''}
-                />
-                {errors.expectedAmount && (
-                  <p className="text-sm text-destructive mt-1">
-                    {errors.expectedAmount}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="dueDate">Data de Vencimento *</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  required
-                  value={formData.dueDate}
-                  onChange={e => {
-                    setFormData({ ...formData, dueDate: e.target.value });
-                    if (errors.dueDate)
-                      setErrors(prev => ({ ...prev, dueDate: '' }));
-                  }}
-                  className={errors.dueDate ? 'border-destructive' : ''}
-                />
-                {errors.dueDate && (
-                  <p className="text-sm text-destructive mt-1">
-                    {errors.dueDate}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="discount">Desconto (R$)</Label>
-                <Input
-                  id="discount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.discount}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      discount: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="interest">Juros (R$)</Label>
-                <Input
-                  id="interest"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.interest}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      interest: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="penalty">Multa (R$)</Label>
-                <Input
-                  id="penalty"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.penalty}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      penalty: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="notes">Observações</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={e =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
-                  rows={3}
-                />
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-green-500 to-green-600 shadow-lg">
+              <ArrowUpCircle className="h-7 w-7 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-muted-foreground">
+                Editando recebimento
+              </p>
+              <h1 className="text-xl font-bold truncate">
+                {entry.description || 'Sem descrição'}
+              </h1>
+            </div>
+            <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
+              <div className="text-right">
+                <p className="text-xs font-semibold">Status</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {getStatusLabel(entry.status)}
+                </p>
               </div>
             </div>
+          </div>
+        </Card>
 
-            <div className="flex gap-2 justify-end">
-              <Link href={`/finance/receivable/${id}`}>
-                <Button type="button" variant="outline">
-                  Cancelar
-                </Button>
-              </Link>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                <Save className="h-4 w-4 mr-2" />
-                {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
-              </Button>
+        {/* Form Card — Section 1: Identificação */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={FileText}
+                title="Identificação"
+                subtitle="Dados básicos do recebimento"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2 lg:col-span-3 grid gap-2">
+                    <Label htmlFor="description">
+                      Descrição <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="description"
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      placeholder="Descrição do recebimento"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="categoryId">
+                      Categoria <span className="text-rose-500">*</span>
+                    </Label>
+                    <Select value={categoryId} onValueChange={setCategoryId}>
+                      <SelectTrigger id="categoryId">
+                        <SelectValue placeholder="Selecione uma categoria..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredCategories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="customerName">Cliente</Label>
+                    <Input
+                      id="customerName"
+                      value={customerName}
+                      onChange={e => setCustomerName(e.target.value)}
+                      placeholder="Nome do cliente"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="tags">Tags</Label>
+                    <Input
+                      id="tags"
+                      value={tags}
+                      onChange={e => setTags(e.target.value)}
+                      placeholder="Ex: urgente, mensal, aluguel"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Separe por vírgulas
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </form>
+          </div>
+        </Card>
+
+        {/* Form Card — Section 2: Valores */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={DollarSign}
+                title="Valores"
+                subtitle="Montantes e datas do recebimento"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="expectedAmount">
+                      Valor Esperado (R$){' '}
+                      <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="expectedAmount"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={expectedAmount}
+                      onChange={e =>
+                        setExpectedAmount(parseFloat(e.target.value) || 0)
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="dueDate">
+                      Data de Vencimento{' '}
+                      <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="dueDate"
+                      type="date"
+                      value={dueDate}
+                      onChange={e => setDueDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="issueDate">Data de Emissão</Label>
+                    <Input
+                      id="issueDate"
+                      type="date"
+                      value={issueDate}
+                      onChange={e => setIssueDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="competenceDate">Data de Competência</Label>
+                    <Input
+                      id="competenceDate"
+                      type="date"
+                      value={competenceDate}
+                      onChange={e => setCompetenceDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="discount">Desconto (R$)</Label>
+                    <Input
+                      id="discount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={discount}
+                      onChange={e =>
+                        setDiscount(parseFloat(e.target.value) || 0)
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="interest">Juros (R$)</Label>
+                    <Input
+                      id="interest"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={interest}
+                      onChange={e =>
+                        setInterest(parseFloat(e.target.value) || 0)
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="penalty">Multa (R$)</Label>
+                    <Input
+                      id="penalty"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={penalty}
+                      onChange={e =>
+                        setPenalty(parseFloat(e.target.value) || 0)
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Form Card — Section 3: Rateio */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={Target}
+                title="Centro de Custo"
+                subtitle="Defina o centro de custo ou configure o rateio"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                {/* Toggle: simple vs allocation mode */}
+                <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-white dark:bg-slate-800/60">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium">
+                      Modo Rateio
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {useAllocations
+                        ? 'Distribuir entre múltiplos centros de custo'
+                        : 'Centro de custo único'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={useAllocations}
+                    onCheckedChange={checked => {
+                      setUseAllocations(checked);
+                      if (!checked) {
+                        setAllocations([]);
+                      } else {
+                        setCostCenterId('');
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Simple mode: single cost center */}
+                {!useAllocations && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="costCenterId">
+                      Centro de Custo{' '}
+                      <span className="text-rose-500">*</span>
+                    </Label>
+                    <Select
+                      value={costCenterId}
+                      onValueChange={setCostCenterId}
+                    >
+                      <SelectTrigger id="costCenterId">
+                        <SelectValue placeholder="Selecione um centro de custo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {costCenters.map(cc => (
+                          <SelectItem key={cc.id} value={cc.id}>
+                            {cc.code} - {cc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Allocation mode: multiple cost centers with percentages */}
+                {useAllocations && (
+                  <div className="space-y-3">
+                    {allocations.length > 0 && (
+                      <Table aria-label="Tabela de rateio de centros de custo">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Centro de Custo</TableHead>
+                            <TableHead className="w-[140px]">
+                              Percentual (%)
+                            </TableHead>
+                            <TableHead className="w-[50px]" />
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {allocations.map((alloc, index) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <Select
+                                  value={alloc.costCenterId}
+                                  onValueChange={value =>
+                                    updateAllocation(
+                                      index,
+                                      'costCenterId',
+                                      value
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {costCenters.map(cc => (
+                                      <SelectItem key={cc.id} value={cc.id}>
+                                        {cc.code} - {cc.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  max="100"
+                                  value={alloc.percentage}
+                                  onChange={e =>
+                                    updateAllocation(
+                                      index,
+                                      'percentage',
+                                      parseFloat(e.target.value) || 0
+                                    )
+                                  }
+                                  className="w-full"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <button
+                                  type="button"
+                                  onClick={() => removeAllocation(index)}
+                                  className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+
+                    {/* Total + Add button */}
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={addAllocation}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Adicionar centro de custo
+                      </button>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Total: </span>
+                        <span
+                          className={
+                            Math.abs(allocationTotal - 100) < 0.01
+                              ? 'font-semibold text-emerald-600'
+                              : 'font-semibold text-rose-600'
+                          }
+                        >
+                          {allocationTotal.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Form Card — Section 4: Conta Bancária */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={Landmark}
+                title="Conta Bancária"
+                subtitle="Conta vinculada ao recebimento"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                <div className="grid gap-2">
+                  <Label htmlFor="bankAccountId">Conta Bancária</Label>
+                  <Select
+                    value={bankAccountId}
+                    onValueChange={setBankAccountId}
+                  >
+                    <SelectTrigger id="bankAccountId">
+                      <SelectValue placeholder="Selecione uma conta bancária..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bankAccounts.map(ba => (
+                        <SelectItem key={ba.id} value={ba.id}>
+                          {ba.name}
+                          {ba.bankName ? ` (${ba.bankName})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Form Card — Section 5: Observações */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={NotebookText}
+                title="Observações"
+                subtitle="Notas e informações adicionais"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                <div className="grid gap-2">
+                  <Label htmlFor="notes">Observações</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="Observações sobre este recebimento..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </Card>
       </PageBody>
+
+      {/* Delete PIN Modal */}
+      <VerifyActionPinModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onSuccess={handleDeleteConfirm}
+        title="Excluir Conta a Receber"
+        description={`Digite seu PIN de ação para excluir o recebimento "${entry.description}". Esta ação não pode ser desfeita.`}
+      />
     </PageLayout>
   );
 }

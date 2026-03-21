@@ -92,7 +92,7 @@ export default function ExportPage() {
           className={`p-4 rounded-lg ${
             message.type === 'success'
               ? 'bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-              : 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+              : 'bg-rose-50 text-rose-800 dark:bg-rose-900/20 dark:text-rose-300'
           }`}
         >
           {message.text}

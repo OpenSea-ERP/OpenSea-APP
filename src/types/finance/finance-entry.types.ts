@@ -176,6 +176,8 @@ export interface FinanceEntriesQuery {
   supplierName?: string;
   overdueRange?: OverdueRange;
   includeDeleted?: boolean;
+  sortBy?: 'createdAt' | 'dueDate' | 'expectedAmount' | 'description' | 'status';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface ParseBoletoRequest {

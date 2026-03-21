@@ -1,37 +1,71 @@
 'use client';
 
-import { GlassBadge } from '@/components/central/glass-badge';
-import { GlassButton } from '@/components/central/glass-button';
-import { GlassInput } from '@/components/central/glass-input';
+import { CentralBadge } from '@/components/central/central-badge';
+import { CentralCard } from '@/components/central/central-card';
+import { CentralPageHeader } from '@/components/central/central-page-header';
 import {
-  GlassTable,
-  GlassTableBody,
-  GlassTableCell,
-  GlassTableHead,
-  GlassTableHeader,
-  GlassTableRow,
-} from '@/components/central/glass-table';
-import { useAdminTenants } from '@/hooks/admin/use-admin';
+  CentralTable,
+  CentralTableBody,
+  CentralTableCell,
+  CentralTableHead,
+  CentralTableHeader,
+  CentralTableRow,
+} from '@/components/central/central-table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  StepWizardDialog,
+  type WizardStep,
+} from '@/components/ui/step-wizard-dialog';
+import {
+  useAdminPlans,
+  useAdminTenants,
+  useChangeTenantPlan,
+  useCreateTenant,
+  useCreateTenantUser,
+} from '@/hooks/admin/use-admin';
+import { cn } from '@/lib/utils';
 import {
   Building2,
+  Check,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   Eye,
   Filter,
+  Loader2,
   Plus,
   Search,
+  UserPlus,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+
+// ─── Config ────────────────────────────────────────────────────────────────────
 
 const statusVariants: Record<
   string,
-  'success' | 'warning' | 'error' | 'default'
+  'emerald' | 'orange' | 'rose' | 'default'
 > = {
-  ACTIVE: 'success',
-  INACTIVE: 'warning',
-  SUSPENDED: 'error',
+  ACTIVE: 'emerald',
+  INACTIVE: 'orange',
+  SUSPENDED: 'rose',
+};
+
+const statusLabels: Record<string, string> = {
+  ACTIVE: 'Ativa',
+  INACTIVE: 'Inativa',
+  SUSPENDED: 'Suspensa',
 };
 
 const STATUS_OPTIONS = [
@@ -41,12 +75,47 @@ const STATUS_OPTIONS = [
   { value: 'SUSPENDED', label: 'Suspensas' },
 ];
 
+const TENANT_STATUS_OPTIONS = [
+  { value: 'ACTIVE', label: 'Ativa' },
+  { value: 'INACTIVE', label: 'Inativa' },
+  { value: 'SUSPENDED', label: 'Suspensa' },
+];
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
+
 export default function TenantsListPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const debounceTimer = useRef<ReturnType<typeof setTimeout>>(null);
+
+  // Wizard state
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form state for wizard
+  const [tenantForm, setTenantForm] = useState({
+    name: '',
+    slug: '',
+    logoUrl: '',
+    status: 'ACTIVE',
+  });
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [userForm, setUserForm] = useState({
+    email: '',
+    username: '',
+    password: '',
+  });
+
+  // Mutations
+  const createTenant = useCreateTenant();
+  const changePlan = useChangeTenantPlan();
+  const createUser = useCreateTenantUser();
+  const { data: plansData, isLoading: plansLoading } = useAdminPlans();
+  const plans = plansData?.plans ?? [];
 
   // Debounce search input
   const handleSearchChange = useCallback((value: string) => {
@@ -54,7 +123,7 @@ export default function TenantsListPage() {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       setDebouncedSearch(value);
-      setPage(1); // Reset to first page on search
+      setPage(1);
     }, 300);
   }, []);
 
@@ -72,42 +141,336 @@ export default function TenantsListPage() {
 
   const tenants = data?.tenants ?? [];
 
-  return (
-    <div className="space-y-6 pb-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight central-text">
-            Empresas
-          </h1>
-          <p className="central-text-muted text-lg mt-1">
-            Gerencie todas as empresas do sistema
-          </p>
+  const resetWizard = () => {
+    setWizardStep(1);
+    setTenantForm({ name: '', slug: '', logoUrl: '', status: 'ACTIVE' });
+    setSelectedPlanId(null);
+    setUserForm({ email: '', username: '', password: '' });
+    setIsSubmitting(false);
+  };
+
+  const handleWizardClose = () => {
+    setWizardOpen(false);
+    resetWizard();
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const tenant = await createTenant.mutateAsync({
+        name: tenantForm.name,
+        slug: tenantForm.slug || undefined,
+        logoUrl: tenantForm.logoUrl || undefined,
+        status: tenantForm.status,
+      });
+
+      const tenantId = tenant.id;
+
+      if (selectedPlanId) {
+        try {
+          await changePlan.mutateAsync({
+            id: tenantId,
+            planId: selectedPlanId,
+          });
+        } catch {
+          toast.error('Empresa criada, mas houve erro ao atribuir o plano');
+        }
+      }
+
+      if (userForm.email.trim() && userForm.password.trim()) {
+        try {
+          await createUser.mutateAsync({
+            id: tenantId,
+            data: {
+              email: userForm.email,
+              password: userForm.password,
+              username: userForm.username || undefined,
+              role: 'owner',
+            },
+          });
+        } catch {
+          toast.error(
+            'Empresa criada, mas houve erro ao criar o usuario proprietario'
+          );
+        }
+      }
+
+      toast.success('Empresa criada com sucesso!');
+      handleWizardClose();
+      router.push(`/central/tenants/${tenantId}`);
+    } catch {
+      toast.error('Erro ao criar empresa');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isStep1Valid = tenantForm.name.trim().length > 0;
+
+  const wizardSteps: WizardStep[] = [
+    {
+      title: 'Dados Basicos',
+      description: 'Informacoes principais da empresa',
+      icon: (
+        <Building2
+          className="h-16 w-16"
+          style={{ color: 'var(--central-text-muted)' }}
+        />
+      ),
+      isValid: isStep1Valid,
+      content: (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Nome *</label>
+            <Input
+              value={tenantForm.name}
+              onChange={e =>
+                setTenantForm(f => ({ ...f, name: e.target.value }))
+              }
+              placeholder="Nome da empresa"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Slug (opcional)</label>
+            <Input
+              value={tenantForm.slug}
+              onChange={e =>
+                setTenantForm(f => ({ ...f, slug: e.target.value }))
+              }
+              placeholder="Gerado automaticamente se vazio"
+            />
+            <p className="text-xs text-muted-foreground">
+              Identificador unico na URL. Gerado a partir do nome se vazio.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">
+              URL do Logo (opcional)
+            </label>
+            <Input
+              value={tenantForm.logoUrl}
+              onChange={e =>
+                setTenantForm(f => ({ ...f, logoUrl: e.target.value }))
+              }
+              placeholder="https://exemplo.com/logo.png"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Status</label>
+            <Select
+              value={tenantForm.status}
+              onValueChange={v => setTenantForm(f => ({ ...f, status: v }))}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TENANT_STATUS_OPTIONS.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Link href="/central/tenants/new">
-          <GlassButton variant="primary" className="gap-2">
+      ),
+    },
+    {
+      title: 'Selecionar Plano',
+      description: 'Escolha um plano para a empresa (opcional)',
+      icon: (
+        <CreditCard
+          className="h-16 w-16"
+          style={{ color: 'var(--central-text-muted)' }}
+        />
+      ),
+      isValid: true,
+      content: (
+        <div className="space-y-3">
+          {plansLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : plans.filter(p => p.isActive).length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Nenhum plano ativo disponivel
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {plans
+                .filter(p => p.isActive)
+                .map(plan => {
+                  const isSelected = selectedPlanId === plan.id;
+                  return (
+                    <CentralCard
+                      key={plan.id}
+                      hover
+                      className={cn(
+                        'p-4 cursor-pointer border-2 transition-all',
+                        isSelected
+                          ? 'border-primary shadow-lg'
+                          : 'border-transparent'
+                      )}
+                      onClick={() =>
+                        setSelectedPlanId(isSelected ? null : plan.id)
+                      }
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h4 className="font-semibold text-sm">{plan.name}</h4>
+                          <CentralBadge variant="default" className="mt-1">
+                            {plan.tier}
+                          </CentralBadge>
+                        </div>
+                        {isSelected && (
+                          <div className="p-1 rounded-full bg-primary text-primary-foreground">
+                            <Check className="h-3 w-3" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-lg font-bold">
+                        R$ {plan.price.toFixed(2)}
+                        <span className="text-xs font-normal text-muted-foreground">
+                          /mes
+                        </span>
+                      </p>
+                      <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                        <p>{plan.maxUsers} usuarios</p>
+                        <p>{plan.maxProducts} produtos</p>
+                      </div>
+                    </CentralCard>
+                  );
+                })}
+            </div>
+          )}
+          {selectedPlanId && (
+            <p className="text-xs text-muted-foreground text-center">
+              Clique novamente no plano selecionado para desmarcar
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'Usuario Proprietario',
+      description: 'Crie o primeiro usuario da empresa (opcional)',
+      icon: (
+        <UserPlus
+          className="h-16 w-16"
+          style={{ color: 'var(--central-text-muted)' }}
+        />
+      ),
+      isValid: true,
+      footer: (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setWizardStep(2)}
+          >
+            Voltar
+          </Button>
+          <Button
+            type="button"
+            disabled={isSubmitting || !isStep1Valid}
+            onClick={handleSubmit}
+          >
+            {isSubmitting && (
+              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+            )}
+            Criar Empresa
+          </Button>
+        </>
+      ),
+      content: (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Email</label>
+            <Input
+              type="email"
+              value={userForm.email}
+              onChange={e =>
+                setUserForm(f => ({ ...f, email: e.target.value }))
+              }
+              placeholder="proprietario@empresa.com"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Username (opcional)</label>
+            <Input
+              value={userForm.username}
+              onChange={e =>
+                setUserForm(f => ({ ...f, username: e.target.value }))
+              }
+              placeholder="Gerado automaticamente se vazio"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Senha</label>
+            <Input
+              type="password"
+              value={userForm.password}
+              onChange={e =>
+                setUserForm(f => ({ ...f, password: e.target.value }))
+              }
+              placeholder="Minimo 6 caracteres"
+            />
+          </div>
+          {userForm.email && !userForm.password && (
+            <p className="text-sm text-amber-500">
+              Preencha a senha para criar o usuario, ou limpe o email para
+              pular.
+            </p>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="px-6 py-5 space-y-4">
+      {/* Header */}
+      <CentralPageHeader
+        title="Empresas"
+        description="Gerencie todas as empresas do sistema"
+        action={
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setWizardOpen(true)}
+          >
             <Plus className="h-4 w-4" />
             Nova Empresa
-          </GlassButton>
-        </Link>
-      </div>
+          </Button>
+        }
+      />
 
       {/* Search + Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 max-w-md">
-          <GlassInput
-            placeholder="Buscar por nome ou slug..."
-            value={searchInput}
-            onChange={e => handleSearchChange(e.target.value)}
-            icon={<Search className="h-4 w-4" />}
-          />
+          <div className="relative">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+              style={{ color: 'var(--central-text-muted)' }}
+            />
+            <Input
+              placeholder="Buscar por nome ou slug..."
+              value={searchInput}
+              onChange={e => handleSearchChange(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 central-text-muted" />
+          <Filter
+            className="h-4 w-4"
+            style={{ color: 'var(--central-text-muted)' }}
+          />
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="h-10 px-3 rounded-lg central-glass-strong border border-[rgb(var(--central-border)/0.15)] central-text text-sm outline-none focus:ring-2 focus:ring-[rgb(var(--os-blue-500)/0.3)] transition-all appearance-none cursor-pointer bg-transparent"
+            className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer"
           >
             {STATUS_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>
@@ -116,7 +479,7 @@ export default function TenantsListPage() {
             ))}
           </select>
           {(debouncedSearch || statusFilter) && (
-            <GlassButton
+            <Button
               variant="ghost"
               size="sm"
               onClick={() => {
@@ -129,7 +492,7 @@ export default function TenantsListPage() {
             >
               <X className="h-3 w-3" />
               Limpar
-            </GlassButton>
+            </Button>
           )}
         </div>
       </div>
@@ -140,87 +503,101 @@ export default function TenantsListPage() {
           {[1, 2, 3, 4, 5].map(i => (
             <div
               key={i}
-              className="h-16 rounded-xl central-glass-subtle animate-pulse"
+              className="h-16 rounded-xl animate-pulse"
+              style={{ background: 'var(--central-card-bg)' }}
             />
           ))}
         </div>
       ) : (
-        <GlassTable>
-          <GlassTableHeader>
-            <GlassTableRow>
-              <GlassTableHead>Empresa</GlassTableHead>
-              <GlassTableHead>Slug</GlassTableHead>
-              <GlassTableHead>Status</GlassTableHead>
-              <GlassTableHead>Criado em</GlassTableHead>
-              <GlassTableHead className="w-[80px]">Ações</GlassTableHead>
-            </GlassTableRow>
-          </GlassTableHeader>
-          <GlassTableBody>
+        <CentralTable>
+          <CentralTableHeader>
+            <CentralTableRow>
+              <CentralTableHead>Empresa</CentralTableHead>
+              <CentralTableHead>Slug</CentralTableHead>
+              <CentralTableHead>Status</CentralTableHead>
+              <CentralTableHead>Criado em</CentralTableHead>
+              <CentralTableHead className="w-[80px]">Acoes</CentralTableHead>
+            </CentralTableRow>
+          </CentralTableHeader>
+          <CentralTableBody>
             {tenants.map(tenant => (
-              <GlassTableRow key={tenant.id}>
-                <GlassTableCell>
+              <CentralTableRow key={tenant.id}>
+                <CentralTableCell>
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl central-accent-blue central-accent-gradient border border-[rgb(var(--os-blue-500)/0.3)]">
-                      <Building2 className="h-5 w-5 central-accent-text" />
+                    <div
+                      className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0"
+                      style={{
+                        background: 'var(--central-avatar-bg)',
+                        color: 'var(--central-avatar-text)',
+                      }}
+                    >
+                      <Building2 className="h-4 w-4" />
                     </div>
-                    <span className="font-medium central-text">
-                      {tenant.name}
-                    </span>
+                    <span className="font-medium">{tenant.name}</span>
                   </div>
-                </GlassTableCell>
-                <GlassTableCell>
-                  <span className="central-text-muted font-mono text-sm">
+                </CentralTableCell>
+                <CentralTableCell>
+                  <span
+                    className="font-mono text-sm"
+                    style={{ color: 'var(--central-text-secondary)' }}
+                  >
                     {tenant.slug}
                   </span>
-                </GlassTableCell>
-                <GlassTableCell>
-                  <GlassBadge
+                </CentralTableCell>
+                <CentralTableCell>
+                  <CentralBadge
                     variant={statusVariants[tenant.status] ?? 'default'}
                   >
-                    {tenant.status}
-                  </GlassBadge>
-                </GlassTableCell>
-                <GlassTableCell>
-                  <span className="central-text-muted">
+                    {statusLabels[tenant.status] ?? tenant.status}
+                  </CentralBadge>
+                </CentralTableCell>
+                <CentralTableCell>
+                  <span style={{ color: 'var(--central-text-secondary)' }}>
                     {new Date(tenant.createdAt).toLocaleDateString('pt-BR')}
                   </span>
-                </GlassTableCell>
-                <GlassTableCell>
+                </CentralTableCell>
+                <CentralTableCell>
                   <Link href={`/central/tenants/${tenant.id}`}>
-                    <GlassButton variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                       <Eye className="h-4 w-4" />
-                    </GlassButton>
+                    </Button>
                   </Link>
-                </GlassTableCell>
-              </GlassTableRow>
+                </CentralTableCell>
+              </CentralTableRow>
             ))}
             {tenants.length === 0 && (
-              <GlassTableRow>
-                <GlassTableCell colSpan={5} className="text-center py-12">
+              <CentralTableRow>
+                <CentralTableCell colSpan={5} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
-                    <Building2 className="h-12 w-12 central-text-subtle" />
-                    <p className="central-text-subtle">
+                    <Building2
+                      className="h-12 w-12"
+                      style={{ color: 'var(--central-text-muted)' }}
+                    />
+                    <p style={{ color: 'var(--central-text-muted)' }}>
                       {debouncedSearch || statusFilter
                         ? 'Nenhuma empresa encontrada com os filtros aplicados'
                         : 'Nenhuma empresa encontrada'}
                     </p>
                   </div>
-                </GlassTableCell>
-              </GlassTableRow>
+                </CentralTableCell>
+              </CentralTableRow>
             )}
-          </GlassTableBody>
-        </GlassTable>
+          </CentralTableBody>
+        </CentralTable>
       )}
 
       {/* Pagination */}
       {data?.meta && data.meta.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm central-text-muted">
-            {data.meta.total} empresas no total • Página {page} de{' '}
+          <p
+            className="text-sm"
+            style={{ color: 'var(--central-text-secondary)' }}
+          >
+            {data.meta.total} empresas no total — Pagina {page} de{' '}
             {data.meta.totalPages}
           </p>
           <div className="flex gap-2">
-            <GlassButton
+            <Button
               variant="secondary"
               size="sm"
               disabled={page <= 1}
@@ -229,20 +606,30 @@ export default function TenantsListPage() {
             >
               <ChevronLeft className="h-4 w-4" />
               Anterior
-            </GlassButton>
-            <GlassButton
+            </Button>
+            <Button
               variant="secondary"
               size="sm"
               disabled={page >= data.meta.totalPages}
               onClick={() => setPage(p => p + 1)}
               className="gap-2"
             >
-              Próximo
+              Proximo
               <ChevronRight className="h-4 w-4" />
-            </GlassButton>
+            </Button>
           </div>
         </div>
       )}
+
+      {/* Create Tenant Wizard */}
+      <StepWizardDialog
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        steps={wizardSteps}
+        currentStep={wizardStep}
+        onStepChange={setWizardStep}
+        onClose={handleWizardClose}
+      />
     </div>
   );
 }

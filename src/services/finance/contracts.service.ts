@@ -36,6 +36,8 @@ export const contractsService = {
     if (params?.startDateTo) query.append('startDateTo', params.startDateTo);
     if (params?.endDateFrom) query.append('endDateFrom', params.endDateFrom);
     if (params?.endDateTo) query.append('endDateTo', params.endDateTo);
+    if (params?.sortBy) query.append('sortBy', params.sortBy);
+    if (params?.sortOrder) query.append('sortOrder', params.sortOrder);
 
     return apiClient.get<ContractsResponse>(
       `${API_ENDPOINTS.CONTRACTS.LIST}?${query.toString()}`

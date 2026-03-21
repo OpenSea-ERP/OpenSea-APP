@@ -38,6 +38,8 @@ export const consortiaService = {
     if (params?.status) query.append('status', params.status);
     if (params?.isContemplated !== undefined)
       query.append('isContemplated', String(params.isContemplated));
+    if (params?.sortBy) query.append('sortBy', params.sortBy);
+    if (params?.sortOrder) query.append('sortOrder', params.sortOrder);
 
     return apiClient.get<ConsortiaResponse>(
       `${API_ENDPOINTS.CONSORTIA.LIST}?${query.toString()}`

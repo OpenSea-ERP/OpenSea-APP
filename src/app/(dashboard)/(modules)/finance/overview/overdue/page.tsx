@@ -46,16 +46,16 @@ export default function OverduePage() {
     } else if (days <= 30) {
       return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
     } else if (days <= 60) {
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
     } else {
-      return 'bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-100';
+      return 'bg-rose-200 text-rose-900 dark:bg-rose-800 dark:text-rose-100';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'OVERDUE':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
       case 'PARTIALLY_PAID':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       default:

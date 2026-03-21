@@ -1,139 +1,127 @@
 /**
- * Central-only CSS
+ * Central-only CSS — Dual Theme System
  * These styles are only loaded in the /central route group (super admin area).
- * Extracted from globals.css to reduce CSS bundle on Dashboard/Auth routes.
+ * Uses CSS custom properties for light/dark theme switching.
  */
 
 /* ===========================================
-   CENTRAL DARK BLUE THEME
+   LIGHT THEME (default)
    =========================================== */
 
-.dark-blue {
-  /* === BACKGROUND === */
-  --color-background: 13 20 38; /* #0d1426 */
-  --color-background-subtle: 19 32 56; /* #132038 */
-  --color-background-muted: 26 40 71; /* #1a2847 */
-  --color-background-elevated: 22 42 72; /* #162a48 */
-
-  /* === FOREGROUND (Text) === */
-  --color-foreground: 241 245 249; /* #f1f5f9 */
-  --color-foreground-muted: 148 163 184; /* #94a3b8 */
-  --color-foreground-subtle: 100 116 139; /* #64748b */
-  --color-foreground-inverted: 13 20 38; /* #0d1426 */
-
-  /* === PRIMARY === */
-  --color-primary: 59 130 246; /* #3b82f6 */
-  --color-primary-hover: 37 99 235; /* #2563eb */
-  --color-primary-active: 29 78 216; /* #1d4ed8 */
-  --color-primary-subtle: 30 58 95; /* #1e3a5f */
-  --color-primary-foreground: 255 255 255;
-
-  /* === SECONDARY === */
-  --color-secondary: 30 58 95; /* #1e3a5f */
-  --color-secondary-hover: 15 40 71; /* #0f2847 */
-  --color-secondary-foreground: 241 245 249;
-
-  /* === DESTRUCTIVE === */
-  --color-destructive: 239 68 68; /* #ef4444 */
-  --color-destructive-hover: 220 38 38; /* #dc2626 */
-  --color-destructive-subtle: 63 28 28; /* #3f1c1c */
-  --color-destructive-foreground: 255 255 255;
-
-  /* === SUCCESS === */
-  --color-success: 16 185 129; /* #10b981 */
-  --color-success-hover: 5 150 105; /* #059669 */
-  --color-success-subtle: 28 58 46; /* #1c3a2e */
-  --color-success-foreground: 255 255 255;
-
-  /* === WARNING === */
-  --color-warning: 249 115 22; /* #f97316 */
-  --color-warning-hover: 234 88 12; /* #ea580c */
-  --color-warning-subtle: 58 39 20; /* #3a2714 */
-  --color-warning-foreground: 255 255 255;
-
-  /* === BORDERS === */
-  --color-border: 30 58 95; /* #1e3a5f */
-  --color-border-muted: 19 32 56; /* #132038 */
-  --color-border-focus: 59 130 246; /* #3b82f6 */
-  --color-border-error: 239 68 68; /* #ef4444 */
-
-  /* === RING (Focus) === */
-  --color-ring: 59 130 246; /* #3b82f6 */
-  --color-ring-offset: 13 20 38; /* #0d1426 */
-
-  /* === GLASSMORPHISM === */
-  --glass-bg: 19 32 56; /* #132038 */
-  --glass-bg-opacity: 0.6;
-  --glass-border: 255 255 255;
-  --glass-border-opacity: 0.08;
-  --glass-blur: 20px;
-
-  /* === SHADOWS === */
-  --shadow-color: 0 0 0;
-  --shadow-opacity-sm: 0.3;
-  --shadow-opacity-md: 0.4;
-  --shadow-opacity-lg: 0.5;
-
-  /* === ANIMATED BACKGROUND === */
-  --bg-from: 10 15 30; /* #0a0f1e */
-  --bg-via: 13 20 38; /* #0d1426 */
-  --bg-to: 19 32 56; /* #132038 */
-  --sphere-1: 59 130 246; /* #3b82f6 */
-  --sphere-1-opacity: 0.08;
-  --sphere-2: 96 165 250; /* #60a5fa */
-  --sphere-2-opacity: 0.06;
-  --sphere-3: 37 99 235; /* #2563eb */
-  --sphere-3-opacity: 0.04;
-}
-
-.dark-blue .glass-strong {
-  background: rgb(var(--glass-bg) / 0.7);
-  border: 1px solid rgb(var(--glass-border) / 0.12);
+:root[data-central-theme='light'],
+[data-central-theme='light'] {
+  --central-bg: #f4f4f5;
+  --central-card-bg: #ffffff;
+  --central-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --central-card-border: transparent;
+  --central-sidebar-bg: #ffffff;
+  --central-sidebar-border: #f4f4f5;
+  --central-hero-gradient: linear-gradient(135deg, #1e1b4b, #312e81);
+  --central-hero-radius: 0 0 16px 16px;
+  --central-text-primary: #18181b;
+  --central-text-secondary: #71717a;
+  --central-text-muted: #a1a1aa;
+  --central-nav-active-bg: #f4f4f5;
+  --central-nav-active-text: #18181b;
+  --central-nav-text: #a1a1aa;
+  --central-nav-hover-bg: #f4f4f5;
+  --central-nav-hover-text: #52525b;
+  --central-hero-pill-bg: rgba(255, 255, 255, 0.08);
+  --central-hero-pill-border: transparent;
+  --central-hero-text: #ffffff;
+  --central-hero-muted: rgba(255, 255, 255, 0.5);
+  --central-hero-search-bg: rgba(255, 255, 255, 0.1);
+  --central-hero-search-text: #e4e4e7;
+  --central-hero-btn-bg: rgba(255, 255, 255, 0.08);
+  --central-hero-btn-text: rgba(255, 255, 255, 0.7);
+  --central-hero-kbd-bg: rgba(255, 255, 255, 0.12);
+  --central-hero-kbd-text: rgba(255, 255, 255, 0.5);
+  --central-alert-bg: #fef2f2;
+  --central-alert-border: #fecdd3;
+  --central-alert-text: #9f1239;
+  --central-alert-dot: #f43f5e;
+  --central-separator: #e4e4e7;
+  --central-avatar-bg: #e4e4e7;
+  --central-avatar-text: #3f3f46;
+  --central-logo-bg: #18181b;
+  --central-logo-text: #fafafa;
+  --central-badge-dot: #f43f5e;
+  --central-ticket-bg: #fafafa;
+  --central-ticket-border: transparent;
+  --central-ticket-num: #27272a;
+  --central-ticket-tenant: #7c3aed;
+  --central-ticket-desc: #71717a;
+  --central-ticket-time: #a1a1aa;
 }
 
 /* ===========================================
-   CENTRAL THEME UTILITIES
-   Classes específicas para a área Central (/central)
+   DARK THEME
    =========================================== */
 
-/* Text utilities */
-.central-text {
-  color: rgb(var(--color-foreground));
-}
-.central-text-muted {
-  color: rgb(var(--color-foreground-muted));
-}
-.central-text-subtle {
-  color: rgb(var(--color-foreground-subtle));
+[data-central-theme='dark'] {
+  --central-bg: #0c0a1e;
+  --central-card-bg: rgba(139, 92, 246, 0.03);
+  --central-card-shadow: none;
+  --central-card-border: rgba(139, 92, 246, 0.06);
+  --central-sidebar-bg: #0e0b24;
+  --central-sidebar-border: rgba(139, 92, 246, 0.06);
+  --central-hero-gradient: linear-gradient(135deg, #1a0f3e, #251652, #1a1145);
+  --central-hero-radius: 0 0 16px 16px;
+  --central-text-primary: #f4f4f5;
+  --central-text-secondary: #6d5cae;
+  --central-text-muted: #5b4a8a;
+  --central-nav-active-bg: rgba(139, 92, 246, 0.1);
+  --central-nav-active-text: #c4b5fd;
+  --central-nav-text: #4c3d7a;
+  --central-nav-hover-bg: rgba(139, 92, 246, 0.06);
+  --central-nav-hover-text: #a78bfa;
+  --central-hero-pill-bg: rgba(139, 92, 246, 0.06);
+  --central-hero-pill-border: rgba(139, 92, 246, 0.08);
+  --central-hero-text: #f4f4f5;
+  --central-hero-muted: #6d5cae;
+  --central-hero-search-bg: rgba(139, 92, 246, 0.08);
+  --central-hero-search-text: #d4d4d8;
+  --central-hero-btn-bg: rgba(139, 92, 246, 0.08);
+  --central-hero-btn-text: #8b7cc8;
+  --central-hero-kbd-bg: rgba(139, 92, 246, 0.12);
+  --central-hero-kbd-text: #6d5cae;
+  --central-alert-bg: rgba(244, 63, 94, 0.05);
+  --central-alert-border: rgba(244, 63, 94, 0.1);
+  --central-alert-text: #fb7185;
+  --central-alert-dot: #f43f5e;
+  --central-separator: rgba(139, 92, 246, 0.08);
+  --central-avatar-bg: rgba(139, 92, 246, 0.08);
+  --central-avatar-text: #a78bfa;
+  --central-logo-bg: linear-gradient(135deg, #7c3aed, #6366f1);
+  --central-logo-text: #ffffff;
+  --central-badge-dot: #f43f5e;
+  --central-ticket-bg: rgba(139, 92, 246, 0.03);
+  --central-ticket-border: rgba(139, 92, 246, 0.04);
+  --central-ticket-num: #e4e4e7;
+  --central-ticket-tenant: #a78bfa;
+  --central-ticket-desc: #71717a;
+  --central-ticket-time: #5b4a8a;
 }
 
-/* Glass containers */
-.central-glass {
-  background: rgb(var(--glass-bg) / var(--glass-bg-opacity));
-  border: 1px solid rgb(var(--glass-border) / var(--glass-border-opacity));
+/* ===========================================
+   UTILITY CLASSES
+   =========================================== */
+
+.central-card {
+  background: var(--central-card-bg);
+  box-shadow: var(--central-card-shadow);
+  border: 1px solid var(--central-card-border);
+  border-radius: 12px;
+  padding: 14px;
 }
 
-.central-glass-subtle {
-  background: rgb(var(--glass-bg) / calc(var(--glass-bg-opacity) * 0.5));
-  border: 1px solid
-    rgb(var(--glass-border) / calc(var(--glass-border-opacity) * 0.5));
+.central-hero {
+  background: var(--central-hero-gradient);
+  border-radius: var(--central-hero-radius);
+  padding: 20px 24px 16px;
 }
 
-.central-glass-strong {
-  background: rgb(var(--glass-bg) / calc(var(--glass-bg-opacity) * 1.2));
-  border: 1px solid
-    rgb(var(--glass-border) / calc(var(--glass-border-opacity) * 1.5));
-}
-
-/* Hover states para glass containers */
-.central-glass-hover:hover {
-  background: rgb(var(--glass-bg) / calc(var(--glass-bg-opacity) * 1.5));
-  border-color: rgb(
-    var(--glass-border) / calc(var(--glass-border-opacity) * 2)
-  );
-}
-
-/* Transição suave de tema */
+/* Smooth theme transition */
 .central-transition {
   transition:
     background-color 300ms ease,
@@ -142,74 +130,50 @@
     box-shadow 300ms ease;
 }
 
-/* Accent colors */
-.central-accent-primary {
-  color: rgb(var(--color-primary));
-}
-.central-accent-success {
-  color: rgb(var(--color-success));
-}
-.central-accent-warning {
-  color: rgb(var(--color-warning));
-}
-.central-accent-destructive {
-  color: rgb(var(--color-destructive));
+/* ===========================================
+   SHADCN COMPONENT OVERRIDES
+   Override shadcn CSS variables inside Central
+   so components render correctly in both themes.
+   =========================================== */
+
+[data-central-theme='light'] input,
+[data-central-theme='light'] select,
+[data-central-theme='light'] textarea,
+[data-central-theme='light'] [role='dialog'],
+[data-central-theme='light'] [role='combobox'],
+[data-central-theme='light'] [data-radix-popper-content-wrapper] {
+  --background: 255 255 255;
+  --foreground: 24 24 27;
+  --border: 228 228 231;
+  --input: 228 228 231;
+  --ring: 99 102 241;
+  --popover: 255 255 255;
+  --popover-foreground: 24 24 27;
+  --muted: 244 244 245;
+  --muted-foreground: 113 113 122;
+  --accent: 244 244 245;
+  --accent-foreground: 24 24 27;
+  --card: 255 255 255;
+  --card-foreground: 24 24 27;
 }
 
-/* Background accents */
-.central-bg-primary {
-  background: rgb(var(--color-primary) / 0.15);
-  border: 1px solid rgb(var(--color-primary) / 0.3);
-}
-.central-bg-success {
-  background: rgb(var(--color-success) / 0.15);
-  border: 1px solid rgb(var(--color-success) / 0.3);
-}
-.central-bg-warning {
-  background: rgb(var(--color-warning) / 0.15);
-  border: 1px solid rgb(var(--color-warning) / 0.3);
-}
-.central-bg-destructive {
-  background: rgb(var(--color-destructive) / 0.15);
-  border: 1px solid rgb(var(--color-destructive) / 0.3);
-}
-
-/* Cores de accent adicionais */
-.central-accent-blue {
-  --accent-color: var(--os-blue-500);
-  --accent-bg: var(--os-blue-500);
-}
-.central-accent-purple {
-  --accent-color: var(--os-purple-500);
-  --accent-bg: var(--os-purple-500);
-}
-.central-accent-pink {
-  --accent-color: 236 72 153; /* pink-500 */
-  --accent-bg: 236 72 153;
-}
-.central-accent-amber {
-  --accent-color: 245 158 11; /* amber-500 */
-  --accent-bg: 245 158 11;
-}
-.central-accent-green {
-  --accent-color: var(--os-green-500);
-  --accent-bg: var(--os-green-500);
-}
-.central-accent-cyan {
-  --accent-color: 6 182 212; /* cyan-500 */
-  --accent-bg: 6 182 212;
-}
-
-/* Gradient backgrounds */
-.central-accent-gradient {
-  background: linear-gradient(
-    135deg,
-    rgb(var(--accent-bg) / 0.2),
-    rgb(var(--accent-bg) / 0.1)
-  );
-}
-
-/* Separadores e divisores */
-.central-divider {
-  background: rgb(var(--glass-border) / var(--glass-border-opacity));
+[data-central-theme='dark'] input,
+[data-central-theme='dark'] select,
+[data-central-theme='dark'] textarea,
+[data-central-theme='dark'] [role='dialog'],
+[data-central-theme='dark'] [role='combobox'],
+[data-central-theme='dark'] [data-radix-popper-content-wrapper] {
+  --background: 12 10 30;
+  --foreground: 244 244 245;
+  --border: 139 92 246 / 0.15;
+  --input: 139 92 246 / 0.15;
+  --ring: 139 92 246;
+  --popover: 14 11 36;
+  --popover-foreground: 244 244 245;
+  --muted: 139 92 246 / 0.06;
+  --muted-foreground: 109 92 174;
+  --accent: 139 92 246 / 0.1;
+  --accent-foreground: 196 181 253;
+  --card: 139 92 246 / 0.03;
+  --card-foreground: 244 244 245;
 }

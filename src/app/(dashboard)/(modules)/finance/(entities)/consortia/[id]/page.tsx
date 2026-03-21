@@ -1,22 +1,26 @@
 /**
- * Consortium Detail Page - Rebuilt with cost comparison, payment tracking, and contemplation management.
+ * OpenSea OS - Consortium Detail Page
+ * Follows the standard detail page pattern: PageLayout > PageHeader > PageBody
+ * with Identity Card, info sections, payment tracking, contemplation management.
  */
 
 'use client';
 
 import { ConsortiumDetailCards } from '@/components/finance/consortia/consortium-detail-cards';
 import { CostComparison } from '@/components/finance/consortia/cost-comparison';
-import { Header } from '@/components/layout/header';
+import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
+import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -35,7 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -44,6 +47,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
   useConsortium,
   useDeleteConsortium,
@@ -51,7 +55,6 @@ import {
   usePayConsortiumInstallment,
 } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
-import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import type { ConsortiumPayment, ConsortiumStatus } from '@/types/finance';
 import {
   CONSORTIUM_STATUS_LABELS,
@@ -59,13 +62,17 @@ import {
 } from '@/types/finance';
 import {
   AlertTriangle,
-  ArrowLeft,
   Building2,
   Calendar,
   CheckCircle,
+  DollarSign,
+  Edit,
   FileText,
+  Info,
+  Landmark,
   Star,
   Trash2,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -123,7 +130,7 @@ function getPaymentStatusVariant(
 
 function getPaymentRowClassName(payment: ConsortiumPayment): string {
   if (payment.status === 'PAID') return 'bg-emerald-50 dark:bg-emerald-950/20';
-  if (payment.status === 'OVERDUE') return 'bg-red-50 dark:bg-red-950/20';
+  if (payment.status === 'OVERDUE') return 'bg-rose-50 dark:bg-rose-950/20';
 
   const now = new Date();
   const dueDate = new Date(payment.dueDate);
@@ -135,42 +142,6 @@ function getPaymentRowClassName(payment: ConsortiumPayment): string {
   }
 
   return '';
-}
-
-// =============================================================================
-// LOADING SKELETON
-// =============================================================================
-
-function DetailSkeleton() {
-  return (
-    <PageLayout>
-      <PageHeader>
-        <div className="h-10" />
-      </PageHeader>
-      <PageBody>
-        <Card className="p-6">
-          <div className="flex gap-6 items-center">
-            <Skeleton className="h-16 w-16 rounded-lg" />
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-          </div>
-        </Card>
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="p-4">
-              <Skeleton className="h-4 w-24 mb-2" />
-              <Skeleton className="h-8 w-32" />
-            </Card>
-          ))}
-        </div>
-        <Card className="p-6">
-          <Skeleton className="h-48 w-full" />
-        </Card>
-      </PageBody>
-    </PageLayout>
-  );
 }
 
 // =============================================================================
@@ -344,7 +315,7 @@ function ContemplationModal({
 }
 
 // =============================================================================
-// DUE SOON ALERT (CONS-04)
+// DUE SOON ALERT
 // =============================================================================
 
 function DueSoonAlert({ payments }: { payments: ConsortiumPayment[] }) {
@@ -386,6 +357,27 @@ function DueSoonAlert({ payments }: { payments: ConsortiumPayment[] }) {
 }
 
 // =============================================================================
+// INFO ROW
+// =============================================================================
+
+function InfoRow({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div className="flex justify-between items-start gap-4">
+      <span className="text-sm text-muted-foreground shrink-0">{label}</span>
+      <span className={`text-sm text-right ${className ?? ''}`}>{value}</span>
+    </div>
+  );
+}
+
+// =============================================================================
 // MAIN PAGE COMPONENT
 // =============================================================================
 
@@ -397,9 +389,10 @@ export default function ConsortiumDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const { hasPermission } = usePermissions();
-  const { data, isLoading } = useConsortium(id);
+  const { data, isLoading, error } = useConsortium(id);
   const deleteConsortium = useDeleteConsortium();
 
+  const canEdit = hasPermission(FINANCE_PERMISSIONS.CONSORTIA.MODIFY);
   const canDelete = hasPermission(FINANCE_PERMISSIONS.CONSORTIA.REMOVE);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -435,79 +428,109 @@ export default function ConsortiumDetailPage({
     setPaymentModalOpen(true);
   }, []);
 
-  if (isLoading) return <DetailSkeleton />;
+  // ============================================================================
+  // ACTION BUTTONS
+  // ============================================================================
 
-  if (!consortium) {
+  const actionButtons = useMemo<HeaderButton[]>(() => {
+    const buttons: HeaderButton[] = [];
+
+    if (canEdit) {
+      buttons.push({
+        id: 'edit-consortium',
+        title: 'Editar',
+        icon: Edit,
+        onClick: () => router.push(`/finance/consortia/${id}/edit`),
+        variant: 'outline',
+      });
+    }
+
+    if (canDelete) {
+      buttons.push({
+        id: 'delete-consortium',
+        title: 'Excluir',
+        icon: Trash2,
+        onClick: () => setDeleteModalOpen(true),
+        variant: 'default',
+        className:
+          'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+      });
+    }
+
+    return buttons;
+  }, [canEdit, canDelete, router, id]);
+
+  // ============================================================================
+  // BREADCRUMBS
+  // ============================================================================
+
+  const breadcrumbItems = [
+    { label: 'Financeiro', href: '/finance' },
+    { label: 'Consórcios', href: '/finance/consortia' },
+    { label: consortium?.name || '...' },
+  ];
+
+  // ============================================================================
+  // LOADING / ERROR
+  // ============================================================================
+
+  if (isLoading) {
     return (
       <PageLayout>
         <PageHeader>
-          <PageActionBar
-            breadcrumbItems={[
-              { label: 'Financeiro', href: '/finance' },
-              { label: 'Consórcios', href: '/finance/consortia' },
-            ]}
-          />
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
         </PageHeader>
         <PageBody>
-          <Card className="p-12 text-center">
-            <p className="text-destructive text-lg">
-              Consórcio não encontrado.
-            </p>
-            <Link href="/finance/consortia">
-              <Button variant="outline" className="mt-4">
-                Voltar para consórcios
-              </Button>
-            </Link>
-          </Card>
+          <GridLoading count={3} layout="list" size="md" />
         </PageBody>
       </PageLayout>
     );
   }
 
+  if (error || !consortium) {
+    return (
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridError
+            type="not-found"
+            title="Consórcio não encontrado"
+            message="O consórcio solicitado não foi encontrado."
+            action={{
+              label: 'Voltar para Consórcios',
+              onClick: () => router.push('/finance/consortia'),
+            }}
+          />
+        </PageBody>
+      </PageLayout>
+    );
+  }
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
   return (
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbItems={[
-            { label: 'Financeiro', href: '/finance' },
-            { label: 'Consórcios', href: '/finance/consortia' },
-            { label: consortium.name },
-          ]}
-          buttons={[
-            ...(canDelete
-              ? [
-                  {
-                    id: 'delete-consortium',
-                    title: 'Excluir',
-                    icon: Trash2,
-                    onClick: () => setDeleteModalOpen(true),
-                    variant: 'destructive' as const,
-                  },
-                ]
-              : []),
-          ]}
+          breadcrumbItems={breadcrumbItems}
+          buttons={actionButtons}
         />
-
-        <div className="flex items-center gap-4">
-          <Link href="/finance/consortia">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Voltar
-            </Button>
-          </Link>
-        </div>
       </PageHeader>
 
       <PageBody>
-        {/* Consortium Header Card */}
-        <Card className="p-4 sm:p-6">
-          <div className="flex gap-4 sm:gap-6 items-center">
-            <div className="flex items-center justify-center h-12 w-12 md:h-16 md:w-16 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shrink-0">
-              <Building2 className="h-6 w-6 md:h-8 md:w-8 text-white" />
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-pink-500 to-pink-600 shadow-lg">
+              <Users className="h-7 w-7 text-white" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-xl sm:text-3xl font-bold tracking-tight">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold truncate">
                   {consortium.name}
                 </h1>
                 <Badge variant={getStatusVariant(consortium.status)}>
@@ -520,24 +543,25 @@ export default function ConsortiumDetailPage({
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 Administradora: {consortium.administrator}
                 {consortium.groupNumber &&
                   ` | Grupo: ${consortium.groupNumber}`}
                 {consortium.quotaNumber && ` | Cota: ${consortium.quotaNumber}`}
               </p>
             </div>
+            <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
+              <div className="text-right">
+                <p className="text-xs font-semibold">Progresso</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {consortium.paidInstallments}/{consortium.totalInstallments} ({progressPercentage}%)
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Progress bar */}
           <div className="mt-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-muted-foreground">
-                {consortium.paidInstallments} de {consortium.totalInstallments}{' '}
-                parcelas pagas
-              </span>
-              <span className="font-medium">{progressPercentage}%</span>
-            </div>
             <Progress value={progressPercentage} className="h-2" />
           </div>
         </Card>
@@ -545,181 +569,244 @@ export default function ConsortiumDetailPage({
         {/* Summary Cards */}
         <ConsortiumDetailCards consortium={consortium} />
 
-        {/* Due-Soon Alert (CONS-04) */}
+        {/* Due-Soon Alert */}
         {consortium.payments && consortium.payments.length > 0 && (
           <DueSoonAlert payments={consortium.payments} />
         )}
 
-        {/* Contemplation Details */}
-        {consortium.isContemplated && (
-          <Card className="p-4 sm:p-6 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800">
-            <div className="flex items-center gap-2 mb-4">
-              <Star className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-200">
-                Dados da Contemplação
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Data</p>
-                <p className="font-medium">
-                  {formatDate(consortium.contemplatedAt)}
-                </p>
+        {/* Info Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card 1: Dados do Consorcio */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                Dados do Consórcio
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow label="Administradora" value={consortium.administrator} />
+              {consortium.groupNumber && (
+                <InfoRow label="Grupo" value={consortium.groupNumber} />
+              )}
+              {consortium.quotaNumber && (
+                <InfoRow label="Cota" value={consortium.quotaNumber} />
+              )}
+              <InfoRow
+                label="Valor do Crédito"
+                value={formatCurrency(consortium.creditValue)}
+              />
+              <InfoRow
+                label="Status"
+                value={CONSORTIUM_STATUS_LABELS[consortium.status]}
+              />
+              {consortium.contractNumber && (
+                <InfoRow label="Contrato" value={consortium.contractNumber} />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Valores */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Valores
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow
+                label="Parcela Mensal"
+                value={formatCurrency(consortium.monthlyPayment)}
+              />
+              <InfoRow
+                label="Total de Parcelas"
+                value={String(consortium.totalInstallments)}
+              />
+              <InfoRow
+                label="Parcelas Pagas"
+                value={String(consortium.paidInstallments)}
+              />
+              <InfoRow
+                label="Parcelas Restantes"
+                value={String(
+                  consortium.totalInstallments - consortium.paidInstallments
+                )}
+              />
+              <div className="pt-2 border-t">
+                <InfoRow
+                  label="Total Estimado"
+                  value={formatCurrency(
+                    consortium.monthlyPayment * consortium.totalInstallments
+                  )}
+                  className="font-bold"
+                />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Tipo</p>
-                <p className="font-medium">
-                  {consortium.contemplationType === 'BID' ? 'Lance' : 'Sorteio'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Valor do Crédito
-                </p>
-                <p className="font-medium font-mono">
-                  {formatCurrency(consortium.creditValue)}
-                </p>
-              </div>
-            </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 3: Contemplacao */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Star className="h-4 w-4" />
+                Contemplação
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow
+                label="Contemplado"
+                value={consortium.isContemplated ? 'Sim' : 'Não'}
+              />
+              {consortium.isContemplated && consortium.contemplatedAt && (
+                <InfoRow
+                  label="Data"
+                  value={formatDate(consortium.contemplatedAt)}
+                />
+              )}
+              {consortium.isContemplated && consortium.contemplationType && (
+                <InfoRow
+                  label="Tipo"
+                  value={
+                    consortium.contemplationType === 'BID' ? 'Lance' : 'Sorteio'
+                  }
+                />
+              )}
+              {!consortium.isContemplated && consortium.status === 'ACTIVE' && canEdit && (
+                <div className="pt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setContemplationModalOpen(true)}
+                    className="gap-2"
+                  >
+                    <Star className="h-4 w-4" />
+                    Marcar como Contemplado
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Card 4: Vinculacao */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Landmark className="h-4 w-4" />
+                Vinculação
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {consortium.bankAccountName && (
+                <InfoRow label="Conta Bancária" value={consortium.bankAccountName} />
+              )}
+              {consortium.costCenterName && (
+                <InfoRow label="Centro de Custo" value={consortium.costCenterName} />
+              )}
+              <InfoRow
+                label="Data de Adesão"
+                value={formatDate(consortium.startDate)}
+              />
+              {consortium.paymentDay && (
+                <InfoRow
+                  label="Dia de Vencimento"
+                  value={`Dia ${consortium.paymentDay}`}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Notes */}
+        {consortium.notes && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Observações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">{consortium.notes}</p>
+            </CardContent>
           </Card>
         )}
 
-        {/* Mark as Contemplated */}
-        {!consortium.isContemplated && consortium.status === 'ACTIVE' && (
-          <Card className="p-4 sm:p-6 border-dashed">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold">Contemplação</h3>
-                <p className="text-sm text-muted-foreground">
-                  Este consórcio ainda não foi contemplado.
-                </p>
-              </div>
-              <Button onClick={() => setContemplationModalOpen(true)}>
-                <Star className="h-4 w-4 mr-2" />
-                Marcar como Contemplado
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* Cost Comparison (CONS-03) */}
+        {/* Cost Comparison */}
         <CostComparison consortium={consortium} />
 
         {/* Payment Tracking Table */}
         {consortium.payments && consortium.payments.length > 0 && (
           <Card className="overflow-hidden">
-            <div className="p-4 sm:p-6 border-b">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Parcelas
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Histórico de Pagamentos
                 <Badge variant="secondary">{consortium.payments.length}</Badge>
-              </h2>
-            </div>
-            <div className="overflow-x-auto">
-              <Table aria-label="Tabela de parcelas do consórcio">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[80px]">Parcela</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Vencimento</TableHead>
-                    <TableHead>Data Pagamento</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="w-[140px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {consortium.payments.map(payment => (
-                    <TableRow
-                      key={payment.id}
-                      className={getPaymentRowClassName(payment)}
-                    >
-                      <TableCell className="font-mono text-sm font-medium">
-                        {payment.installmentNumber}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {formatCurrency(payment.expectedAmount)}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {formatDate(payment.dueDate)}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {payment.paidAt ? formatDate(payment.paidAt) : '-'}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge
-                          variant={getPaymentStatusVariant(payment.status)}
-                        >
-                          {FINANCE_ENTRY_STATUS_LABELS[payment.status] ??
-                            payment.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {payment.status !== 'PAID' && (
-                          <Button
-                            size="sm"
-                            variant={
-                              payment.status === 'OVERDUE'
-                                ? 'destructive'
-                                : 'outline'
-                            }
-                            onClick={() => handlePayPayment(payment)}
-                          >
-                            Registrar Pagamento
-                          </Button>
-                        )}
-                      </TableCell>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table aria-label="Tabela de parcelas do consórcio">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[80px]">Parcela</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead>Vencimento</TableHead>
+                      <TableHead>Data Pagamento</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="w-[140px]" />
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {consortium.payments.map(payment => (
+                      <TableRow
+                        key={payment.id}
+                        className={getPaymentRowClassName(payment)}
+                      >
+                        <TableCell className="font-mono text-sm font-medium">
+                          {payment.installmentNumber}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm">
+                          {formatCurrency(payment.expectedAmount)}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {formatDate(payment.dueDate)}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {payment.paidAt ? formatDate(payment.paidAt) : '-'}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge
+                            variant={getPaymentStatusVariant(payment.status)}
+                          >
+                            {FINANCE_ENTRY_STATUS_LABELS[payment.status] ??
+                              payment.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {payment.status !== 'PAID' && canEdit && (
+                            <Button
+                              size="sm"
+                              variant={
+                                payment.status === 'OVERDUE'
+                                  ? 'destructive'
+                                  : 'outline'
+                              }
+                              onClick={() => handlePayPayment(payment)}
+                            >
+                              Registrar Pagamento
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
           </Card>
         )}
-
-        {/* Details */}
-        <Card className="p-4 sm:p-6">
-          <h2 className="text-lg font-semibold mb-4">Detalhes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {consortium.contractNumber && (
-              <div>
-                <p className="text-sm text-muted-foreground">Contrato</p>
-                <p className="font-medium font-mono">
-                  {consortium.contractNumber}
-                </p>
-              </div>
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground">Data de Adesão</p>
-              <p className="font-medium">{formatDate(consortium.startDate)}</p>
-            </div>
-            {consortium.paymentDay && (
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Dia de Vencimento
-                </p>
-                <p className="font-medium">Dia {consortium.paymentDay}</p>
-              </div>
-            )}
-            {consortium.bankAccountName && (
-              <div>
-                <p className="text-sm text-muted-foreground">Conta Bancária</p>
-                <p className="font-medium">{consortium.bankAccountName}</p>
-              </div>
-            )}
-            {consortium.costCenterName && (
-              <div>
-                <p className="text-sm text-muted-foreground">Centro de Custo</p>
-                <p className="font-medium">{consortium.costCenterName}</p>
-              </div>
-            )}
-          </div>
-          {consortium.notes && (
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-muted-foreground mb-1">Observações</p>
-              <p className="text-sm">{consortium.notes}</p>
-            </div>
-          )}
-        </Card>
       </PageBody>
 
       {/* Payment Modal */}
@@ -746,7 +833,7 @@ export default function ConsortiumDetailPage({
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDelete}
         title="Confirmar Exclusão"
-        description={`Digite seu PIN de Ação para excluir o consórcio "${consortium.name}".`}
+        description={`Digite seu PIN de Ação para excluir o consórcio "${consortium.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

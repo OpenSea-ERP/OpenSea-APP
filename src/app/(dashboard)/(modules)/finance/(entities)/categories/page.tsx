@@ -72,7 +72,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { CreateCategoryModal } from './src';
+import { CreateCategoryWizard } from './src';
 
 // =============================================================================
 // HELPERS
@@ -602,10 +602,10 @@ export default function FinanceCategoriesPage() {
           </div>
         )}
 
-        {/* Create Modal */}
-        <CreateCategoryModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+        {/* Create Wizard */}
+        <CreateCategoryWizard
+          open={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
           onSubmit={handleCreate}
           isSubmitting={createMutation.isPending}
           nextDisplayOrder={nextDisplayOrder}

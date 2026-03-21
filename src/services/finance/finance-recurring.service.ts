@@ -29,6 +29,8 @@ export const financeRecurringService = {
     if (params?.type) query.append('type', params.type);
     if (params?.status) query.append('status', params.status);
     if (params?.search) query.append('search', params.search);
+    if (params?.sortBy) query.append('sortBy', params.sortBy);
+    if (params?.sortOrder) query.append('sortOrder', params.sortOrder);
 
     return apiClient.get<RecurringConfigsResponse>(
       `${API_ENDPOINTS.FINANCE_RECURRING.LIST}?${query.toString()}`

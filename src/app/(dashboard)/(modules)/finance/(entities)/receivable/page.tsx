@@ -1,42 +1,14 @@
 /**
  * OpenSea OS - Contas a Receber (Accounts Receivable)
- * Listagem de lançamentos financeiros do tipo RECEIVABLE
+ * Listagem de lancamentos financeiros do tipo RECEIVABLE com infinite scroll e filtros server-side
  */
 
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Card } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
+import { BaixaModal } from '@/components/finance/baixa-modal';
+import { ReceivableWizardModal } from '@/components/finance/receivable-wizard-modal';
 import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
@@ -47,51 +19,58 @@ import {
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import { FilterPresets } from '@/components/finance/filter-presets';
-import { BaixaModal } from '@/components/finance/baixa-modal';
-import { ReceivableWizardModal } from '@/components/finance/receivable-wizard-modal';
-import { useDeleteFinanceEntry, useFinanceEntries } from '@/hooks/finance';
-import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
-import { usePermissions } from '@/hooks/use-permissions';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import { financeEntryConfig } from '@/config/entities/finance-entry.config';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
-import { normalizePagination } from '@/types/common/pagination';
-import type {
-  FinanceEntry,
-  FinanceEntryStatus,
-  FinanceEntriesQuery,
-} from '@/types/finance';
-import { FINANCE_ENTRY_STATUS_LABELS } from '@/types/finance';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
-  CalendarIcon,
+  CoreProvider,
+  EntityCard,
+  EntityContextMenu,
+  EntityGrid,
+} from '@/core';
+import { useDebounce } from '@/hooks/use-debounce';
+import { usePermissions } from '@/hooks/use-permissions';
+import {
+  useFinanceEntriesInfinite,
+  useDeleteFinanceEntry,
+  type FinanceEntriesFilters,
+} from '@/hooks/finance/use-finance-entries';
+import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
+import { cn } from '@/lib/utils';
+import type { FinanceEntry, FinanceEntryStatus } from '@/types/finance';
+import { FINANCE_ENTRY_STATUS_LABELS } from '@/types/finance';
+import {
+  ArrowUpCircle,
+  CalendarDays,
   DollarSign,
-  Eye,
-  Filter,
-  MoreHorizontal,
-  Pencil,
+  Loader2,
   Plus,
-  Search,
+  Tag,
   Trash2,
-  X,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-const STATUS_OPTIONS: { value: FinanceEntryStatus; label: string }[] = [
-  { value: 'PENDING', label: 'Pendente' },
-  { value: 'OVERDUE', label: 'Vencido' },
-  { value: 'RECEIVED', label: 'Recebido' },
-  { value: 'PAID', label: 'Pago' },
-  { value: 'PARTIALLY_PAID', label: 'Parcialmente Pago' },
-  { value: 'CANCELLED', label: 'Cancelado' },
-  { value: 'SCHEDULED', label: 'Agendado' },
+const STATUS_OPTIONS = [
+  { id: 'PENDING', label: 'Pendente' },
+  { id: 'OVERDUE', label: 'Vencido' },
+  { id: 'RECEIVED', label: 'Recebido' },
+  { id: 'PAID', label: 'Pago' },
+  { id: 'PARTIALLY_PAID', label: 'Parcialmente Pago' },
+  { id: 'CANCELLED', label: 'Cancelado' },
+  { id: 'SCHEDULED', label: 'Agendado' },
 ];
 
 const RECEIVABLE_STATUSES: FinanceEntryStatus[] = [
@@ -99,14 +78,6 @@ const RECEIVABLE_STATUSES: FinanceEntryStatus[] = [
   'OVERDUE',
   'PARTIALLY_PAID',
 ];
-
-const PERMISSION_CODES = {
-  list: FINANCE_PERMISSIONS.ENTRIES.ACCESS,
-  create: FINANCE_PERMISSIONS.ENTRIES.REGISTER,
-  read: FINANCE_PERMISSIONS.ENTRIES.ACCESS,
-  update: FINANCE_PERMISSIONS.ENTRIES.MODIFY,
-  delete: FINANCE_PERMISSIONS.ENTRIES.REMOVE,
-} as const;
 
 // ============================================================================
 // HELPERS
@@ -123,27 +94,23 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('pt-BR');
 }
 
-function getStatusBadgeVariant(
-  status: FinanceEntryStatus
-): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' {
-  switch (status) {
-    case 'PENDING':
-      return 'secondary';
-    case 'OVERDUE':
-      return 'destructive';
-    case 'RECEIVED':
-      return 'success';
-    case 'PAID':
-      return 'success';
-    case 'PARTIALLY_PAID':
-      return 'warning';
-    case 'CANCELLED':
-      return 'outline';
-    case 'SCHEDULED':
-      return 'default';
-    default:
-      return 'secondary';
-  }
+function getStatusColor(status: FinanceEntryStatus): string {
+  const colors: Record<FinanceEntryStatus, string> = {
+    PENDING:
+      'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300',
+    OVERDUE:
+      'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300',
+    PAID: 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    RECEIVED:
+      'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    PARTIALLY_PAID:
+      'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+    CANCELLED:
+      'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
+    SCHEDULED:
+      'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+  };
+  return colors[status] ?? colors.PENDING;
 }
 
 // ============================================================================
@@ -159,219 +126,204 @@ type ActionButtonWithPermission = HeaderButton & {
 // ============================================================================
 
 export default function ReceivablePage() {
+  return (
+    <Suspense
+      fallback={<GridLoading count={9} layout="list" size="md" gap="gap-4" />}
+    >
+      <ReceivablePageContent />
+    </Suspense>
+  );
+}
+
+function ReceivablePageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { hasPermission } = usePermissions();
-  const deleteMutation = useDeleteFinanceEntry();
 
-  // --------------------------------------------------------------------------
-  // Permission flags
-  // --------------------------------------------------------------------------
+  // ============================================================================
+  // PERMISSION FLAGS
+  // ============================================================================
 
-  const canCreate = hasPermission(PERMISSION_CODES.create);
-  const canView = hasPermission(PERMISSION_CODES.read);
-  const canEdit = hasPermission(PERMISSION_CODES.update);
-  const canDelete = hasPermission(PERMISSION_CODES.delete);
+  const canView = hasPermission(FINANCE_PERMISSIONS.ENTRIES.ACCESS);
+  const canCreate = hasPermission(FINANCE_PERMISSIONS.ENTRIES.REGISTER);
+  const canEdit = hasPermission(FINANCE_PERMISSIONS.ENTRIES.MODIFY);
+  const canDelete = hasPermission(FINANCE_PERMISSIONS.ENTRIES.REMOVE);
 
-  // --------------------------------------------------------------------------
-  // Filter state
-  // --------------------------------------------------------------------------
+  // ============================================================================
+  // FILTER STATE (synced with URL params)
+  // ============================================================================
+
+  const statusIds = useMemo(() => {
+    const raw = searchParams.get('status');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+
+  const categoryIds = useMemo(() => {
+    const raw = searchParams.get('category');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<FinanceEntryStatus | 'ALL'>(
-    'ALL'
-  );
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [customerFilter, setCustomerFilter] = useState('');
-  const [dueDateFrom, setDueDateFrom] = useState<Date | undefined>(undefined);
-  const [dueDateTo, setDueDateTo] = useState<Date | undefined>(undefined);
-  const [showFilters, setShowFilters] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // --------------------------------------------------------------------------
-  // Pagination state
-  // --------------------------------------------------------------------------
+  // Sorting state (server-side)
+  const [sortBy, setSortBy] = useState<
+    'createdAt' | 'dueDate' | 'expectedAmount' | 'description' | 'status'
+  >('dueDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-
-  // --------------------------------------------------------------------------
-  // Wizard modal state
-  // --------------------------------------------------------------------------
+  // ============================================================================
+  // STATE
+  // ============================================================================
 
   const [wizardOpen, setWizardOpen] = useState(false);
-
-  // --------------------------------------------------------------------------
-  // Delete state
-  // --------------------------------------------------------------------------
-
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [pinModalOpen, setPinModalOpen] = useState(false);
-
-  // --------------------------------------------------------------------------
-  // Baixa modal state
-  // --------------------------------------------------------------------------
-
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
   const [baixaEntry, setBaixaEntry] = useState<FinanceEntry | null>(null);
   const [baixaOpen, setBaixaOpen] = useState(false);
 
-  // --------------------------------------------------------------------------
-  // Categories for filter and rate lookup
-  // --------------------------------------------------------------------------
+  // ============================================================================
+  // DATA: Infinite scroll entries + filter dropdown sources
+  // ============================================================================
 
+  const filters: FinanceEntriesFilters = useMemo(
+    () => ({
+      type: 'RECEIVABLE' as const,
+      search: debouncedSearch || undefined,
+      status: statusIds.length === 1 ? statusIds[0] : undefined,
+      categoryId: categoryIds.length === 1 ? categoryIds[0] : undefined,
+      sortBy,
+      sortOrder,
+    }),
+    [debouncedSearch, statusIds, categoryIds, sortBy, sortOrder]
+  );
+
+  const {
+    entries,
+    total,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useFinanceEntriesInfinite(filters);
+
+  // Category dropdown source
   const { data: categoriesData } = useFinanceCategories();
   const categories = categoriesData?.categories ?? [];
 
-  // --------------------------------------------------------------------------
-  // Build query params for the hook
-  // --------------------------------------------------------------------------
-
-  const queryParams = useMemo<FinanceEntriesQuery>(() => {
-    const params: FinanceEntriesQuery = {
-      type: 'RECEIVABLE',
-      page,
-      perPage,
-    };
-
-    if (searchQuery.trim()) {
-      params.search = searchQuery.trim();
-    }
-
-    if (statusFilter !== 'ALL') {
-      params.status = statusFilter;
-    }
-
-    if (categoryFilter) {
-      params.categoryId = categoryFilter;
-    }
-
-    if (customerFilter.trim()) {
-      params.customerName = customerFilter.trim();
-    }
-
-    if (dueDateFrom) {
-      params.dueDateFrom = format(dueDateFrom, 'yyyy-MM-dd');
-    }
-
-    if (dueDateTo) {
-      params.dueDateTo = format(dueDateTo, 'yyyy-MM-dd');
-    }
-
-    return params;
-  }, [
-    searchQuery,
-    statusFilter,
-    categoryFilter,
-    customerFilter,
-    dueDateFrom,
-    dueDateTo,
-    page,
-    perPage,
-  ]);
-
-  // --------------------------------------------------------------------------
-  // Data fetching
-  // --------------------------------------------------------------------------
-
-  const { data, isLoading, error, refetch } = useFinanceEntries(queryParams);
-
-  const entries = data?.entries ?? [];
-  const meta = data?.meta
-    ? normalizePagination(data.meta)
-    : {
-        total: 0,
-        page: 1,
-        limit: perPage,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false,
-      };
-
-  // --------------------------------------------------------------------------
-  // Filters active badge count
-  // --------------------------------------------------------------------------
-
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (statusFilter !== 'ALL') count++;
-    if (categoryFilter) count++;
-    if (customerFilter.trim()) count++;
-    if (dueDateFrom) count++;
-    if (dueDateTo) count++;
-    return count;
-  }, [statusFilter, categoryFilter, customerFilter, dueDateFrom, dueDateTo]);
-
-  // --------------------------------------------------------------------------
-  // Handlers
-  // --------------------------------------------------------------------------
-
-  const handleSearch = useCallback((value: string) => {
-    setSearchQuery(value);
-    setPage(1);
-  }, []);
-
-  const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const handlePerPageChange = useCallback((newPerPage: number) => {
-    setPerPage(newPerPage);
-    setPage(1);
-  }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setStatusFilter('ALL');
-    setCategoryFilter('');
-    setCustomerFilter('');
-    setDueDateFrom(undefined);
-    setDueDateTo(undefined);
-    setPage(1);
-  }, []);
-
-  const handleView = useCallback(
-    (id: string) => {
-      router.push(`/finance/receivable/${id}`);
-    },
-    [router]
+  const categoryOptions = useMemo(
+    () =>
+      categories
+        .filter(c => c.type === 'REVENUE' || c.type === 'BOTH')
+        .map(c => ({ id: c.id, label: c.name })),
+    [categories]
   );
 
-  const handleEdit = useCallback(
-    (id: string) => {
-      router.push(`/finance/receivable/${id}`);
+  // Mutations
+  const deleteMutation = useDeleteFinanceEntry();
+
+  // ============================================================================
+  // INFINITE SCROLL SENTINEL
+  // ============================================================================
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      observerEntries => {
+        if (
+          observerEntries[0].isIntersecting &&
+          hasNextPage &&
+          !isFetchingNextPage
+        ) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // ============================================================================
+  // URL FILTER HELPERS
+  // ============================================================================
+
+  const buildFilterUrl = useCallback(
+    (params: { status?: string[]; category?: string[] }) => {
+      const parts: string[] = [];
+      const sts = params.status !== undefined ? params.status : statusIds;
+      const cat = params.category !== undefined ? params.category : categoryIds;
+      if (sts.length > 0) parts.push(`status=${sts.join(',')}`);
+      if (cat.length > 0) parts.push(`category=${cat.join(',')}`);
+      return parts.length > 0
+        ? `/finance/receivable?${parts.join('&')}`
+        : '/finance/receivable';
     },
-    [router]
+    [statusIds, categoryIds]
   );
 
-  const handleDeleteRequest = useCallback((id: string) => {
-    setDeleteTargetId(id);
-    setPinModalOpen(true);
-  }, []);
+  const setStatusFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ status: ids })),
+    [router, buildFilterUrl]
+  );
 
-  const handleDeleteConfirmed = useCallback(async () => {
-    if (!deleteTargetId) return;
+  const setCategoryFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ category: ids })),
+    [router, buildFilterUrl]
+  );
 
-    try {
-      await deleteMutation.mutateAsync(deleteTargetId);
-      toast.success('Conta a receber excluída com sucesso.');
-      setDeleteTargetId(null);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Erro ao excluir conta a receber.';
-      toast.error(message);
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
+  const handleContextView = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/receivable/${ids[0]}`);
     }
-  }, [deleteTargetId, deleteMutation]);
+  };
 
-  const handleRowClick = useCallback(
-    (entry: FinanceEntry) => {
-      if (canView) {
-        router.push(`/finance/receivable/${entry.id}`);
+  const handleContextEdit = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/receivable/${ids[0]}/edit`);
+    }
+  };
+
+  const handleContextDelete = (ids: string[]) => {
+    setItemsToDelete(ids);
+    setDeleteModalOpen(true);
+  };
+
+  const handleOpenBaixa = useCallback(
+    (ids: string[]) => {
+      if (ids.length !== 1) return;
+      const entry = entries.find(e => e.id === ids[0]);
+      if (entry) {
+        setBaixaEntry(entry);
+        setBaixaOpen(true);
       }
     },
-    [canView, router]
+    [entries]
   );
 
-  const handleOpenBaixa = useCallback((entry: FinanceEntry) => {
-    setBaixaEntry(entry);
-    setBaixaOpen(true);
-  }, []);
+  const handleDeleteConfirm = useCallback(async () => {
+    for (const id of itemsToDelete) {
+      await deleteMutation.mutateAsync(id);
+    }
+    setDeleteModalOpen(false);
+    setItemsToDelete([]);
+    toast.success(
+      itemsToDelete.length === 1
+        ? 'Conta a receber excluída com sucesso!'
+        : `${itemsToDelete.length} contas a receber excluídas!`
+    );
+  }, [itemsToDelete, deleteMutation]);
 
   // Get category rates for the selected baixa entry
   const baixaCategoryRates = useMemo(() => {
@@ -383,9 +335,258 @@ export default function ReceivablePage() {
     };
   }, [baixaEntry, categories]);
 
-  // --------------------------------------------------------------------------
-  // Header action buttons (permission-gated)
-  // --------------------------------------------------------------------------
+  // ============================================================================
+  // RENDER FUNCTIONS
+  // ============================================================================
+
+  const renderGridCard = (item: FinanceEntry, isSelected: boolean) => {
+    const isOverdue =
+      item.isOverdue &&
+      item.status !== 'RECEIVED' &&
+      item.status !== 'PAID' &&
+      item.status !== 'CANCELLED';
+
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
+        actions={[
+          ...(canEdit && RECEIVABLE_STATUSES.includes(item.status)
+            ? [
+                {
+                  id: 'register-receipt',
+                  label: 'Registrar Recebimento',
+                  icon: DollarSign,
+                  onClick: handleOpenBaixa,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+          ...(canDelete
+            ? [
+                {
+                  id: 'delete',
+                  label: 'Excluir',
+                  icon: Trash2,
+                  onClick: handleContextDelete,
+                  variant: 'destructive' as const,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+        ]}
+      >
+        <EntityCard
+          id={item.id}
+          variant="grid"
+          title={item.description || 'Sem descrição'}
+          subtitle={item.customerName || item.supplierName || 'Sem cliente'}
+          icon={ArrowUpCircle}
+          iconBgColor={
+            isOverdue
+              ? 'bg-linear-to-br from-rose-500 to-rose-600'
+              : 'bg-linear-to-br from-green-500 to-green-600'
+          }
+          badges={[
+            {
+              label: FINANCE_ENTRY_STATUS_LABELS[item.status],
+              variant: 'outline' as const,
+              color: getStatusColor(item.status),
+            },
+            ...(item.categoryName
+              ? [
+                  {
+                    label: item.categoryName,
+                    variant: 'outline' as const,
+                    icon: Tag,
+                    color:
+                      'border-teal-600/25 dark:border-teal-500/20 bg-teal-50 dark:bg-teal-500/8 text-teal-700 dark:text-teal-300',
+                  },
+                ]
+              : []),
+            ...(isOverdue
+              ? [
+                  {
+                    label: 'Vencido',
+                    variant: 'outline' as const,
+                    color:
+                      'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300',
+                  },
+                ]
+              : []),
+          ]}
+          footer={{
+            type: 'single',
+            button: {
+              icon: DollarSign,
+              label: formatCurrency(item.expectedAmount),
+              onClick: () => {},
+              color: 'secondary',
+            },
+          }}
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={false}
+        />
+      </EntityContextMenu>
+    );
+  };
+
+  const renderListCard = (item: FinanceEntry, isSelected: boolean) => {
+    const isOverdue =
+      item.isOverdue &&
+      item.status !== 'RECEIVED' &&
+      item.status !== 'PAID' &&
+      item.status !== 'CANCELLED';
+
+    const installmentLabel =
+      item.currentInstallment != null &&
+      item.totalInstallments != null &&
+      item.totalInstallments > 1
+        ? ` (${item.currentInstallment}/${item.totalInstallments})`
+        : '';
+
+    const listBadges: {
+      label: string;
+      variant: 'outline';
+      icon?: typeof Tag;
+      color: string;
+    }[] = [
+      {
+        label: FINANCE_ENTRY_STATUS_LABELS[item.status],
+        variant: 'outline',
+        color: getStatusColor(item.status),
+      },
+      ...(item.categoryName
+        ? [
+            {
+              label: item.categoryName,
+              variant: 'outline' as const,
+              icon: Tag,
+              color:
+                'border-teal-600/25 dark:border-teal-500/20 bg-teal-50 dark:bg-teal-500/8 text-teal-700 dark:text-teal-300',
+            },
+          ]
+        : []),
+      ...(item.customerName
+        ? [
+            {
+              label: item.customerName,
+              variant: 'outline' as const,
+              color:
+                'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
+            },
+          ]
+        : []),
+    ];
+
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
+        actions={[
+          ...(canEdit && RECEIVABLE_STATUSES.includes(item.status)
+            ? [
+                {
+                  id: 'register-receipt',
+                  label: 'Registrar Recebimento',
+                  icon: DollarSign,
+                  onClick: handleOpenBaixa,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+          ...(canDelete
+            ? [
+                {
+                  id: 'delete',
+                  label: 'Excluir',
+                  icon: Trash2,
+                  onClick: handleContextDelete,
+                  variant: 'destructive' as const,
+                  separator: 'before' as const,
+                },
+              ]
+            : []),
+        ]}
+      >
+        <EntityCard
+          id={item.id}
+          variant="list"
+          title={
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-gray-900 dark:text-white truncate">
+                {item.description || 'Sem descrição'}
+                {installmentLabel}
+              </span>
+              {item.code && (
+                <span className="text-xs text-muted-foreground shrink-0 font-mono">
+                  {item.code}
+                </span>
+              )}
+            </span>
+          }
+          metadata={
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {listBadges.map((badge, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0',
+                    badge.color
+                  )}
+                >
+                  {badge.icon && <badge.icon className="w-3 h-3" />}
+                  {badge.label}
+                </span>
+              ))}
+            </div>
+          }
+          icon={ArrowUpCircle}
+          iconBgColor="bg-linear-to-br from-green-500 to-green-600"
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={false}
+        >
+          {/* Right zone: amount + due date */}
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-sm font-semibold font-mono text-gray-900 dark:text-white">
+              {formatCurrency(item.expectedAmount)}
+            </span>
+            <span
+              className={cn(
+                'text-xs flex items-center gap-1',
+                isOverdue
+                  ? 'text-rose-600 dark:text-rose-400 font-medium'
+                  : 'text-muted-foreground'
+              )}
+            >
+              <CalendarDays className="w-3 h-3" />
+              {formatDate(item.dueDate)}
+            </span>
+          </div>
+        </EntityCard>
+      </EntityContextMenu>
+    );
+  };
+
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
+
+  const initialIds = useMemo(() => entries.map(e => e.id), [entries]);
+
+  // ============================================================================
+  // HEADER BUTTONS CONFIGURATION (permission-aware)
+  // ============================================================================
 
   const handleCreateClick = useCallback(() => {
     setWizardOpen(true);
@@ -399,7 +600,7 @@ export default function ReceivablePage() {
         icon: Plus,
         onClick: handleCreateClick,
         variant: 'default',
-        permission: PERMISSION_CODES.create,
+        permission: FINANCE_PERMISSIONS.ENTRIES.REGISTER,
       },
     ],
     [handleCreateClick]
@@ -415,672 +616,170 @@ export default function ReceivablePage() {
     [actionButtons, hasPermission]
   );
 
-  // --------------------------------------------------------------------------
-  // Pagination helpers
-  // --------------------------------------------------------------------------
-
-  const startItem = (meta.page - 1) * meta.limit + 1;
-  const endItem = Math.min(meta.page * meta.limit, meta.total);
-
-  const getPageNumbers = useCallback(() => {
-    const pages: (number | 'ellipsis')[] = [];
-    const maxVisible = 5;
-
-    if (meta.totalPages <= maxVisible + 2) {
-      for (let i = 1; i <= meta.totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
-
-      if (meta.page > 3) {
-        pages.push('ellipsis');
-      }
-
-      const start = Math.max(2, meta.page - 1);
-      const end = Math.min(meta.totalPages - 1, meta.page + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (meta.page < meta.totalPages - 2) {
-        pages.push('ellipsis');
-      }
-
-      if (meta.totalPages > 1) {
-        pages.push(meta.totalPages);
-      }
-    }
-
-    return pages;
-  }, [meta.page, meta.totalPages]);
-
-  // --------------------------------------------------------------------------
-  // Render
-  // --------------------------------------------------------------------------
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   return (
-    <PageLayout>
-      <PageHeader>
-        <PageActionBar
-          breadcrumbItems={[
-            { label: 'Financeiro', href: '/finance' },
-            { label: 'Contas a Receber', href: '/finance/receivable' },
-          ]}
-          buttons={visibleActionButtons}
-        />
+    <CoreProvider
+      selection={{
+        namespace: 'receivable',
+        initialIds,
+      }}
+    >
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Contas a Receber', href: '/finance/receivable' },
+            ]}
+            buttons={visibleActionButtons}
+          />
 
-        <Header
-          title="Contas a Receber"
-          description="Gerencie os recebimentos de clientes"
-        />
-      </PageHeader>
+          <Header
+            title="Contas a Receber"
+            description="Gerencie os recebimentos de clientes"
+          />
+        </PageHeader>
 
-      <PageBody>
-        {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          placeholder="Buscar por descrição ou código..."
-          onSearch={handleSearch}
-          onClear={() => handleSearch('')}
-          showClear={true}
-          size="md"
-        />
+        <PageBody>
+          {/* Search Bar */}
+          <SearchBar
+            placeholder={financeEntryConfig.display.labels.searchPlaceholder}
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            showClear={true}
+            size="md"
+          />
 
-        {/* Filter Toggle & Active Filters */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            variant={showFilters ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filtros
-            {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5">
-                {activeFilterCount}
-              </Badge>
-            )}
-          </Button>
-
-          {activeFilterCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearFilters}
-              className="gap-1 text-muted-foreground"
-            >
-              <X className="h-3 w-3" />
-              Limpar filtros
-            </Button>
-          )}
-        </div>
-
-        {/* Filter Presets */}
-        <FilterPresets
-          pageKey="receivable"
-          currentFilters={{
-            status: statusFilter !== 'ALL' ? statusFilter : undefined,
-            categoryId: categoryFilter || undefined,
-            customerName: customerFilter || undefined,
-            dueDateFrom: dueDateFrom
-              ? dueDateFrom.toISOString().split('T')[0]
-              : undefined,
-            dueDateTo: dueDateTo
-              ? dueDateTo.toISOString().split('T')[0]
-              : undefined,
-          }}
-          onApply={filters => {
-            setStatusFilter((filters.status as FinanceEntryStatus) ?? 'ALL');
-            setCategoryFilter(filters.categoryId ?? '');
-            setCustomerFilter(filters.customerName ?? '');
-            setDueDateFrom(
-              filters.dueDateFrom ? new Date(filters.dueDateFrom) : undefined
-            );
-            setDueDateTo(
-              filters.dueDateTo ? new Date(filters.dueDateTo) : undefined
-            );
-            setPage(1);
-          }}
-          quickPresets={[
-            { label: 'Vencidas', filters: { status: 'OVERDUE' } },
-            { label: 'Pendentes', filters: { status: 'PENDING' } },
-            {
-              label: 'Próximos 7 dias',
-              filters: {
-                dueDateFrom: new Date().toISOString().split('T')[0],
-                dueDateTo: new Date(Date.now() + 7 * 86400000)
-                  .toISOString()
-                  .split('T')[0],
-              },
-            },
-          ]}
-        />
-
-        {/* Filter Panel */}
-        {showFilters && (
-          <Card className="p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Status Filter */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="filter-status"
-                  className="text-sm font-medium text-muted-foreground"
-                >
-                  Status
-                </label>
-                <Select
-                  value={statusFilter}
-                  onValueChange={value => {
-                    setStatusFilter(value as FinanceEntryStatus | 'ALL');
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Todos</SelectItem>
-                    {STATUS_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Category Filter */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="filter-category"
-                  className="text-sm font-medium text-muted-foreground"
-                >
-                  Categoria
-                </label>
-                <Select
-                  value={categoryFilter}
-                  onValueChange={value => {
-                    setCategoryFilter(value === 'ALL' ? '' : value);
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas as categorias" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Todas</SelectItem>
-                    {categories
-                      .filter(c => c.type === 'REVENUE' || c.type === 'BOTH')
-                      .map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Customer Name Filter */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="filter-customer"
-                  className="text-sm font-medium text-muted-foreground"
-                >
-                  Cliente
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="filter-customer"
-                    placeholder="Nome do cliente..."
-                    value={customerFilter}
-                    onChange={e => {
-                      setCustomerFilter(e.target.value);
-                      setPage(1);
-                    }}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-
-              {/* Due Date From */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="filter-due-from"
-                  className="text-sm font-medium text-muted-foreground"
-                >
-                  Vencimento de
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !dueDateFrom && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dueDateFrom
-                        ? format(dueDateFrom, 'dd/MM/yyyy', { locale: ptBR })
-                        : 'Selecionar data'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dueDateFrom}
-                      onSelect={date => {
-                        setDueDateFrom(date ?? undefined);
-                        setPage(1);
-                      }}
-                      locale={ptBR}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Due Date To */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="filter-due-to"
-                  className="text-sm font-medium text-muted-foreground"
-                >
-                  Vencimento até
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !dueDateTo && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dueDateTo
-                        ? format(dueDateTo, 'dd/MM/yyyy', { locale: ptBR })
-                        : 'Selecionar data'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dueDateTo}
-                      onSelect={date => {
-                        setDueDateTo(date ?? undefined);
-                        setPage(1);
-                      }}
-                      locale={ptBR}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Table Content */}
-        <Card>
+          {/* Grid */}
           {isLoading ? (
-            <div className="p-8">
-              <div className="animate-pulse space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-12 bg-muted rounded" />
-                ))}
-              </div>
-            </div>
+            <GridLoading count={9} layout="list" size="md" gap="gap-4" />
           ) : error ? (
-            <div className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">
-                Erro ao carregar contas a receber
-              </p>
-              <Button variant="outline" onClick={() => refetch()}>
-                Tentar novamente
-              </Button>
-            </div>
-          ) : entries.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-6">
-              <div className="p-4 rounded-full bg-muted/50 mb-4">
-                <DollarSign className="w-10 h-10 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Nenhuma conta a receber encontrada
-              </h3>
-              <p className="text-muted-foreground text-sm text-center max-w-sm mb-6">
-                {activeFilterCount > 0 || searchQuery
-                  ? 'Tente ajustar os filtros ou a busca.'
-                  : 'Crie sua primeira conta a receber para começar a gerenciar seus recebimentos.'}
-              </p>
-              {canCreate && !searchQuery && activeFilterCount === 0 && (
-                <Button onClick={handleCreateClick}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Conta a Receber
-                </Button>
-              )}
-            </div>
+            <GridError
+              type="server"
+              title="Erro ao carregar contas a receber"
+              message="Ocorreu um erro ao tentar carregar as contas a receber. Por favor, tente novamente."
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
+            />
           ) : (
             <>
-              <Table aria-label="Tabela de contas a receber">
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="w-[120px] hidden md:table-cell">
-                      Código
-                    </TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Cliente
-                    </TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Vencimento
-                    </TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[60px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {entries.map(entry => (
-                    <TableRow
-                      key={entry.id}
-                      className={cn(
-                        'transition-colors',
-                        canView && 'cursor-pointer'
-                      )}
-                      onClick={() => handleRowClick(entry)}
-                    >
-                      <TableCell className="font-mono text-sm hidden md:table-cell">
-                        {entry.code}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {entry.description}
-                          </span>
-                          {entry.currentInstallment != null &&
-                            entry.totalInstallments != null &&
-                            entry.totalInstallments > 1 && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs shrink-0"
-                              >
-                                Parcela {entry.currentInstallment}/
-                                {entry.totalInstallments}
-                              </Badge>
-                            )}
-                        </div>
-                        {entry.notes && (
-                          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
-                            {entry.notes}
-                          </p>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm hidden md:table-cell">
-                        {entry.customerName || '\u2014'}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {formatCurrency(entry.expectedAmount)}
-                      </TableCell>
-                      <TableCell className="text-sm hidden md:table-cell">
-                        <span
-                          className={cn(
-                            entry.isOverdue &&
-                              entry.status !== 'RECEIVED' &&
-                              entry.status !== 'PAID' &&
-                              entry.status !== 'CANCELLED'
-                              ? 'text-destructive font-medium'
-                              : ''
-                          )}
-                        >
-                          {formatDate(entry.dueDate)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(entry.status)}>
-                          {FINANCE_ENTRY_STATUS_LABELS[entry.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {(canView || canEdit || canDelete) && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Ações</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {canView && (
-                                <DropdownMenuItem
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleView(entry.id);
-                                  }}
-                                >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Visualizar
-                                </DropdownMenuItem>
-                              )}
-                              {canEdit &&
-                                RECEIVABLE_STATUSES.includes(entry.status) && (
-                                  <DropdownMenuItem
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleOpenBaixa(entry);
-                                    }}
-                                  >
-                                    <DollarSign className="h-4 w-4 mr-2" />
-                                    Registrar Recebimento
-                                  </DropdownMenuItem>
-                                )}
-                              {canEdit && (
-                                <DropdownMenuItem
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleEdit(entry.id);
-                                  }}
-                                >
-                                  <Pencil className="h-4 w-4 mr-2" />
-                                  Editar
-                                </DropdownMenuItem>
-                              )}
-                              {canDelete && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleDeleteRequest(entry.id);
-                                    }}
-                                    className="text-destructive focus:text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Excluir
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <EntityGrid
+                config={financeEntryConfig}
+                items={entries}
+                showItemCount={false}
+                toolbarStart={
+                  <>
+                    <FilterDropdown
+                      label="Status"
+                      icon={ArrowUpCircle}
+                      options={STATUS_OPTIONS}
+                      selected={statusIds}
+                      onSelectionChange={setStatusFilter}
+                      activeColor="green"
+                      searchPlaceholder="Buscar status..."
+                      emptyText="Nenhum status encontrado."
+                    />
+                    <FilterDropdown
+                      label="Categoria"
+                      icon={Tag}
+                      options={categoryOptions}
+                      selected={categoryIds}
+                      onSelectionChange={setCategoryFilter}
+                      activeColor="teal"
+                      searchPlaceholder="Buscar categoria..."
+                      emptyText="Nenhuma categoria encontrada."
+                    />
+                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                      {total}{' '}
+                      {total === 1 ? 'recebimento' : 'recebimentos'}
+                      {entries.length < total &&
+                        ` (${entries.length} carregados)`}
+                    </p>
+                  </>
+                }
+                renderGridItem={renderGridCard}
+                renderListItem={renderListCard}
+                isLoading={isLoading}
+                isSearching={!!debouncedSearch}
+                onItemDoubleClick={item =>
+                  router.push(`/finance/receivable/${item.id}`)
+                }
+                showSorting={true}
+                defaultSortField="dueDate"
+                defaultSortDirection="desc"
+                onSortChange={(field, direction) => {
+                  if (field !== 'custom') {
+                    setSortBy(
+                      field as
+                        | 'createdAt'
+                        | 'dueDate'
+                        | 'expectedAmount'
+                        | 'description'
+                        | 'status'
+                    );
+                    setSortOrder(direction);
+                  }
+                }}
+              />
 
-              {/* Pagination */}
-              {meta.totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t">
-                  {/* Results info */}
-                  <div className="text-sm text-muted-foreground">
-                    Mostrando <span className="font-medium">{startItem}</span> a{' '}
-                    <span className="font-medium">{endItem}</span> de{' '}
-                    <span className="font-medium">{meta.total}</span> resultados
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {/* Per page selector */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        Por página:
-                      </span>
-                      <Select
-                        value={String(perPage)}
-                        onValueChange={value =>
-                          handlePerPageChange(Number(value))
-                        }
-                      >
-                        <SelectTrigger className="w-[80px] h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[10, 20, 50, 100].map(size => (
-                            <SelectItem key={size} value={String(size)}>
-                              {size}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Page navigation */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(1)}
-                        disabled={!meta.hasPrev}
-                        title="Primeira página"
-                      >
-                        <span className="text-xs font-bold">1</span>
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.page - 1)}
-                        disabled={!meta.hasPrev}
-                        title="Página anterior"
-                      >
-                        <span className="sr-only">Anterior</span>
-                        &#8249;
-                      </Button>
-
-                      {/* Page numbers (desktop) */}
-                      <div className="hidden sm:flex items-center gap-1">
-                        {getPageNumbers().map((pageNum, index) =>
-                          pageNum === 'ellipsis' ? (
-                            <span
-                              key={`ellipsis-${index}`}
-                              className="px-2 text-muted-foreground"
-                            >
-                              ...
-                            </span>
-                          ) : (
-                            <Button
-                              key={pageNum}
-                              variant={
-                                pageNum === meta.page ? 'default' : 'outline'
-                              }
-                              size="icon"
-                              className="h-9 w-9"
-                              onClick={() => handlePageChange(pageNum)}
-                            >
-                              {pageNum}
-                            </Button>
-                          )
-                        )}
-                      </div>
-
-                      {/* Mobile: Current page indicator */}
-                      <span className="sm:hidden px-3 text-sm">
-                        {meta.page} / {meta.totalPages}
-                      </span>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.page + 1)}
-                        disabled={!meta.hasNext}
-                        title="Próxima página"
-                      >
-                        <span className="sr-only">Próximo</span>
-                        &#8250;
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handlePageChange(meta.totalPages)}
-                        disabled={!meta.hasNext}
-                        title="Última página"
-                      >
-                        <span className="text-xs font-bold">
-                          {meta.totalPages}
-                        </span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Single page info */}
-              {meta.totalPages <= 1 && meta.total > 0 && (
-                <div className="p-4 border-t text-sm text-muted-foreground text-center">
-                  {meta.total} {meta.total === 1 ? 'resultado' : 'resultados'}
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               )}
             </>
           )}
-        </Card>
 
-        {/* Receivable Wizard Modal */}
-        <ReceivableWizardModal
-          open={wizardOpen}
-          onOpenChange={setWizardOpen}
-          onCreated={() => {
-            refetch();
-          }}
-        />
-
-        {/* Baixa Modal */}
-        {baixaEntry && (
-          <BaixaModal
-            open={baixaOpen}
-            onOpenChange={v => {
-              setBaixaOpen(v);
-              if (!v) setBaixaEntry(null);
+          {/* Create Wizard */}
+          <ReceivableWizardModal
+            open={wizardOpen}
+            onOpenChange={setWizardOpen}
+            onCreated={() => {
+              refetch();
             }}
-            entry={baixaEntry}
-            categoryInterestRate={baixaCategoryRates.interestRate}
-            categoryPenaltyRate={baixaCategoryRates.penaltyRate}
           />
-        )}
 
-        {/* Delete PIN Confirmation Modal */}
-        <VerifyActionPinModal
-          isOpen={pinModalOpen}
-          onClose={() => {
-            setPinModalOpen(false);
-            setDeleteTargetId(null);
-          }}
-          onSuccess={handleDeleteConfirmed}
-          title="Confirmar Exclusão"
-          description="Digite seu PIN de Ação para confirmar a exclusão desta conta a receber."
-        />
-      </PageBody>
-    </PageLayout>
+          {/* Baixa (Receipt Registration) Modal */}
+          {baixaEntry && (
+            <BaixaModal
+              open={baixaOpen}
+              onOpenChange={v => {
+                setBaixaOpen(v);
+                if (!v) setBaixaEntry(null);
+              }}
+              entry={baixaEntry}
+              categoryInterestRate={baixaCategoryRates.interestRate}
+              categoryPenaltyRate={baixaCategoryRates.penaltyRate}
+            />
+          )}
+
+          {/* Delete PIN Confirmation Modal */}
+          <VerifyActionPinModal
+            isOpen={deleteModalOpen}
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setItemsToDelete([]);
+            }}
+            onSuccess={handleDeleteConfirm}
+            title="Confirmar Exclusão"
+            description={
+              itemsToDelete.length === 1
+                ? 'Digite seu PIN de Ação para confirmar a exclusão desta conta a receber. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de Ação para excluir ${itemsToDelete.length} contas a receber. Esta ação não pode ser desfeita.`
+            }
+          />
+        </PageBody>
+      </PageLayout>
+    </CoreProvider>
   );
 }
