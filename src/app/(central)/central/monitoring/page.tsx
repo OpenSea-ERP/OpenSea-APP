@@ -13,13 +13,9 @@ import {
 import {
   useIntegrationStatus,
   useRevenueMetrics,
+  useSupportMetrics,
   useSystemHealth,
 } from '@/hooks/admin/use-admin';
-import type {
-  IntegrationStatusReport,
-  RevenueMetrics,
-  SystemHealth,
-} from '@/types/admin';
 import {
   Activity,
   ArrowDownRight,
@@ -39,85 +35,6 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-// ─── Mock Data ──────────────────────────────────────────────────────────────────
-
-const MOCK_HEALTH: SystemHealth = {
-  apiUptime: '99.97%',
-  databaseStatus: 'ok',
-  databaseLatencyMs: 12,
-  eventBusStatus: 'ok',
-  eventBusEventsPerMinute: 230,
-};
-
-const MOCK_INTEGRATIONS: IntegrationStatusReport = {
-  byType: [
-    {
-      type: 'Email (IMAP)',
-      connected: 42,
-      disconnected: 3,
-      error: 1,
-      total: 46,
-    },
-    { type: 'Pagamento', connected: 28, disconnected: 0, error: 0, total: 28 },
-    {
-      type: 'Nota Fiscal',
-      connected: 15,
-      disconnected: 2,
-      error: 2,
-      total: 19,
-    },
-    { type: 'Webhook', connected: 67, disconnected: 5, error: 0, total: 72 },
-    {
-      type: 'S3 / Storage',
-      connected: 34,
-      disconnected: 0,
-      error: 0,
-      total: 34,
-    },
-  ],
-  errors: [
-    {
-      tenantName: 'Acme Corp',
-      integrationType: 'Nota Fiscal',
-      errorMessage: 'Certificado A1 expirado',
-      lastCheckAt: '2026-03-21T08:30:00Z',
-    },
-    {
-      tenantName: 'TechFlow Solutions',
-      integrationType: 'Email (IMAP)',
-      errorMessage: 'Falha na autenticação OAuth',
-      lastCheckAt: '2026-03-21T07:15:00Z',
-    },
-    {
-      tenantName: 'Global Trade',
-      integrationType: 'Nota Fiscal',
-      errorMessage: 'Timeout na SEFAZ',
-      lastCheckAt: '2026-03-21T06:45:00Z',
-    },
-  ],
-};
-
-const MOCK_REVENUE: RevenueMetrics = {
-  mrr: 12500,
-  churnRate: 2.1,
-  overageTotal: 340,
-  tenantsByStatus: [
-    { status: 'Ativo', count: 45 },
-    { status: 'Trial', count: 8 },
-    { status: 'Suspenso', count: 2 },
-    { status: 'Cancelado', count: 5 },
-  ],
-  upgradesThisMonth: 3,
-  downgradesThisMonth: 1,
-};
-
-const MOCK_SUPPORT_METRICS = {
-  avgFirstResponse: '2h15min',
-  avgResolution: '18h',
-  satisfaction: '4.2/5',
-  aiResolution: '68%',
-};
 
 // ─── Components ─────────────────────────────────────────────────────────────────
 
@@ -249,13 +166,11 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+function formatMinutes(mins: number): string {
+  if (mins < 60) return `${mins}min`;
+  const hours = Math.floor(mins / 60);
+  const remaining = mins % 60;
+  return remaining > 0 ? `${hours}h${remaining}min` : `${hours}h`;
 }
 
 // ─── Page ───────────────────────────────────────────────────────────────────────
@@ -263,35 +178,35 @@ function formatDate(dateStr: string): string {
 export default function MonitoringDashboardPage() {
   const router = useRouter();
 
-  const { data: apiHealth, isLoading: loadingHealth } = useSystemHealth();
-  const { data: apiIntegrations, isLoading: loadingIntegrations } =
+  const { data: health, isLoading: loadingHealth } = useSystemHealth();
+  const { data: integrations, isLoading: loadingIntegrations } =
     useIntegrationStatus();
-  const { data: apiRevenue } = useRevenueMetrics();
+  const { data: revenue, isLoading: loadingRevenue } = useRevenueMetrics();
+  const { data: supportMetrics, isLoading: loadingSupport } =
+    useSupportMetrics();
 
-  const health = apiHealth ?? MOCK_HEALTH;
-  const integrations = apiIntegrations ?? MOCK_INTEGRATIONS;
-  const revenue = apiRevenue ?? MOCK_REVENUE;
-
-  const dbStatus: HealthStatus =
-    health.databaseStatus === 'ok'
+  const dbStatus: HealthStatus = health
+    ? health.databaseStatus === 'ok'
       ? 'ok'
       : health.databaseStatus === 'warning'
         ? 'warning'
-        : 'error';
+        : 'error'
+    : 'ok';
 
-  const busStatus: HealthStatus =
-    health.eventBusStatus === 'ok'
+  const busStatus: HealthStatus = health
+    ? health.eventBusStatus === 'ok'
       ? 'ok'
       : health.eventBusStatus === 'warning'
         ? 'warning'
-        : 'error';
+        : 'error'
+    : 'ok';
 
   return (
     <div className="px-6 py-5 space-y-4">
       {/* Header */}
       <CentralPageHeader
         title="Monitoramento"
-        description="Saúde do sistema, integrações e métricas"
+        description="Saude do sistema, integracoes e metricas"
       />
 
       {/* System Health */}
@@ -305,7 +220,7 @@ export default function MonitoringDashboardPage() {
             className="text-sm font-semibold"
             style={{ color: 'var(--central-text-primary)' }}
           >
-            Saúde do Sistema
+            Saude do Sistema
           </h3>
         </div>
 
@@ -316,6 +231,13 @@ export default function MonitoringDashboardPage() {
               style={{ color: 'var(--central-text-muted)' }}
             />
           </div>
+        ) : !health ? (
+          <p
+            className="text-xs text-center py-8"
+            style={{ color: 'var(--central-text-muted)' }}
+          >
+            Dados de saude indisponiveis
+          </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <HealthItem
@@ -327,7 +249,7 @@ export default function MonitoringDashboardPage() {
             <HealthItem
               icon={<Database className="h-4 w-4" />}
               label="Banco de Dados"
-              value={`${health.databaseLatencyMs}ms latência média`}
+              value={`${health.databaseLatencyMs}ms latencia media`}
               status={dbStatus}
             />
             <HealthItem
@@ -352,7 +274,7 @@ export default function MonitoringDashboardPage() {
               className="text-sm font-semibold"
               style={{ color: 'var(--central-text-primary)' }}
             >
-              Status das Integrações
+              Status das Integracoes
             </h3>
             <span
               className="text-xs"
@@ -377,11 +299,18 @@ export default function MonitoringDashboardPage() {
               style={{ color: 'var(--central-text-muted)' }}
             />
           </div>
+        ) : !integrations || integrations.byType.length === 0 ? (
+          <p
+            className="text-xs text-center py-8"
+            style={{ color: 'var(--central-text-muted)' }}
+          >
+            Nenhuma integracao encontrada
+          </p>
         ) : (
           <CentralTable className="!p-0">
             <CentralTableHeader>
               <CentralTableRow>
-                <CentralTableHead>Integração</CentralTableHead>
+                <CentralTableHead>Integracao</CentralTableHead>
                 <CentralTableHead>Conectados</CentralTableHead>
                 <CentralTableHead>Desconectados</CentralTableHead>
                 <CentralTableHead>Erros</CentralTableHead>
@@ -434,32 +363,41 @@ export default function MonitoringDashboardPage() {
       </CentralCard>
 
       {/* Revenue */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <RevenueCard
-          icon={<DollarSign className="h-4 w-4" />}
-          label="MRR"
-          value={formatCurrency(revenue.mrr)}
-          trend="up"
-        />
-        <RevenueCard
-          icon={<ArrowDownRight className="h-4 w-4" />}
-          label="Churn"
-          value={`${revenue.churnRate}%`}
-          trend="down"
-        />
-        <RevenueCard
-          icon={<ArrowUpRight className="h-4 w-4" />}
-          label="Overage"
-          value={formatCurrency(revenue.overageTotal)}
-          trend="neutral"
-        />
-        <RevenueCard
-          icon={<TrendingUp className="h-4 w-4" />}
-          label="Upgrades este mês"
-          value={String(revenue.upgradesThisMonth)}
-          trend="up"
-        />
-      </div>
+      {loadingRevenue ? (
+        <div className="flex items-center justify-center py-4">
+          <Loader2
+            className="h-5 w-5 animate-spin"
+            style={{ color: 'var(--central-text-muted)' }}
+          />
+        </div>
+      ) : revenue ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <RevenueCard
+            icon={<DollarSign className="h-4 w-4" />}
+            label="MRR"
+            value={formatCurrency(revenue.mrr)}
+            trend="up"
+          />
+          <RevenueCard
+            icon={<ArrowDownRight className="h-4 w-4" />}
+            label="Churn"
+            value={`${revenue.churnRate}%`}
+            trend="down"
+          />
+          <RevenueCard
+            icon={<ArrowUpRight className="h-4 w-4" />}
+            label="Overage"
+            value={formatCurrency(revenue.overageTotal)}
+            trend="neutral"
+          />
+          <RevenueCard
+            icon={<TrendingUp className="h-4 w-4" />}
+            label="Upgrades este mes"
+            value={String(revenue.upgradesThisMonth)}
+            trend="up"
+          />
+        </div>
+      ) : null}
 
       {/* AI Usage link */}
       <CentralCard
@@ -497,7 +435,7 @@ export default function MonitoringDashboardPage() {
             className="text-xs font-medium"
             style={{ color: 'var(--central-accent)' }}
           >
-            Ver relatório
+            Ver relatorio
           </span>
         </div>
       </CentralCard>
@@ -525,100 +463,116 @@ export default function MonitoringDashboardPage() {
             Ver tickets
           </button>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div
-            className="flex items-center gap-3 p-3 rounded-lg"
-            style={{ backgroundColor: 'var(--central-card-bg)' }}
-          >
-            <Timer
-              className="h-4 w-4"
+        {loadingSupport ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2
+              className="h-5 w-5 animate-spin"
               style={{ color: 'var(--central-text-muted)' }}
             />
-            <div>
-              <p
-                className="text-sm font-semibold"
-                style={{ color: 'var(--central-text-primary)' }}
-              >
-                {MOCK_SUPPORT_METRICS.avgFirstResponse}
-              </p>
-              <p
-                className="text-xs"
-                style={{ color: 'var(--central-text-secondary)' }}
-              >
-                Tempo médio 1.a resposta
-              </p>
-            </div>
           </div>
-          <div
-            className="flex items-center gap-3 p-3 rounded-lg"
-            style={{ backgroundColor: 'var(--central-card-bg)' }}
+        ) : !supportMetrics ? (
+          <p
+            className="text-xs text-center py-8"
+            style={{ color: 'var(--central-text-muted)' }}
           >
-            <Clock
-              className="h-4 w-4"
-              style={{ color: 'var(--central-text-muted)' }}
-            />
-            <div>
-              <p
-                className="text-sm font-semibold"
-                style={{ color: 'var(--central-text-primary)' }}
-              >
-                {MOCK_SUPPORT_METRICS.avgResolution}
-              </p>
-              <p
-                className="text-xs"
-                style={{ color: 'var(--central-text-secondary)' }}
-              >
-                Tempo médio resolução
-              </p>
+            Metricas de suporte indisponiveis
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div
+              className="flex items-center gap-3 p-3 rounded-lg"
+              style={{ backgroundColor: 'var(--central-card-bg)' }}
+            >
+              <Timer
+                className="h-4 w-4"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
+              <div>
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: 'var(--central-text-primary)' }}
+                >
+                  {formatMinutes(supportMetrics.avgFirstResponseMinutes)}
+                </p>
+                <p
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                >
+                  Tempo medio 1.a resposta
+                </p>
+              </div>
+            </div>
+            <div
+              className="flex items-center gap-3 p-3 rounded-lg"
+              style={{ backgroundColor: 'var(--central-card-bg)' }}
+            >
+              <Clock
+                className="h-4 w-4"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
+              <div>
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: 'var(--central-text-primary)' }}
+                >
+                  {formatMinutes(supportMetrics.avgResolutionMinutes)}
+                </p>
+                <p
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                >
+                  Tempo medio resolucao
+                </p>
+              </div>
+            </div>
+            <div
+              className="flex items-center gap-3 p-3 rounded-lg"
+              style={{ backgroundColor: 'var(--central-card-bg)' }}
+            >
+              <Star
+                className="h-4 w-4"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
+              <div>
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: 'var(--central-text-primary)' }}
+                >
+                  {supportMetrics.satisfactionAvg.toFixed(1)}/5
+                </p>
+                <p
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                >
+                  Satisfacao
+                </p>
+              </div>
+            </div>
+            <div
+              className="flex items-center gap-3 p-3 rounded-lg"
+              style={{ backgroundColor: 'var(--central-card-bg)' }}
+            >
+              <Sparkles
+                className="h-4 w-4"
+                style={{ color: 'var(--central-text-muted)' }}
+              />
+              <div>
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: 'var(--central-text-primary)' }}
+                >
+                  {supportMetrics.aiResolutionRate}%
+                </p>
+                <p
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                >
+                  Resolvidos por IA
+                </p>
+              </div>
             </div>
           </div>
-          <div
-            className="flex items-center gap-3 p-3 rounded-lg"
-            style={{ backgroundColor: 'var(--central-card-bg)' }}
-          >
-            <Star
-              className="h-4 w-4"
-              style={{ color: 'var(--central-text-muted)' }}
-            />
-            <div>
-              <p
-                className="text-sm font-semibold"
-                style={{ color: 'var(--central-text-primary)' }}
-              >
-                {MOCK_SUPPORT_METRICS.satisfaction}
-              </p>
-              <p
-                className="text-xs"
-                style={{ color: 'var(--central-text-secondary)' }}
-              >
-                Satisfação
-              </p>
-            </div>
-          </div>
-          <div
-            className="flex items-center gap-3 p-3 rounded-lg"
-            style={{ backgroundColor: 'var(--central-card-bg)' }}
-          >
-            <Sparkles
-              className="h-4 w-4"
-              style={{ color: 'var(--central-text-muted)' }}
-            />
-            <div>
-              <p
-                className="text-sm font-semibold"
-                style={{ color: 'var(--central-text-primary)' }}
-              >
-                {MOCK_SUPPORT_METRICS.aiResolution}
-              </p>
-              <p
-                className="text-xs"
-                style={{ color: 'var(--central-text-secondary)' }}
-              >
-                Resolvidos por IA
-              </p>
-            </div>
-          </div>
-        </div>
+        )}
       </CentralCard>
     </div>
   );

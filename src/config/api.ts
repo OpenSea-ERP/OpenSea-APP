@@ -478,23 +478,22 @@ export const API_ENDPOINTS = {
     // Catalog (Skills)
     CATALOG: {
       SKILLS: '/v1/admin/catalog/skills',
-      SKILL_TREE: '/v1/admin/catalog/skill-tree',
+      SKILL_TREE: '/v1/admin/catalog/skills/tree',
       PRICING: '/v1/admin/catalog/pricing',
       UPSERT_PRICING: (skillCode: string) =>
-        `/v1/admin/catalog/skills/${skillCode}/pricing`,
+        `/v1/admin/catalog/pricing/${skillCode}`,
     },
     // Tenant Subscriptions
     SUBSCRIPTIONS: {
-      GET: (tenantId: string) => `/v1/admin/tenants/${tenantId}/subscriptions`,
-      ADD: (tenantId: string) => `/v1/admin/tenants/${tenantId}/subscriptions`,
+      GET: (tenantId: string) => `/v1/admin/tenants/${tenantId}/subscription`,
+      ADD: (tenantId: string) => `/v1/admin/tenants/${tenantId}/subscription`,
       REMOVE: (tenantId: string, skillCode: string) =>
-        `/v1/admin/tenants/${tenantId}/subscriptions/${skillCode}`,
-      DISCOUNT: (tenantId: string) =>
-        `/v1/admin/tenants/${tenantId}/subscriptions/discount`,
+        `/v1/admin/tenants/${tenantId}/subscription/${skillCode}`,
+      DISCOUNT: (tenantId: string) => `/v1/admin/tenants/${tenantId}/discount`,
       CONSUMPTION: (tenantId: string) =>
         `/v1/admin/tenants/${tenantId}/consumption`,
       OVERRIDE_LIMIT: (tenantId: string) =>
-        `/v1/admin/tenants/${tenantId}/consumption/override`,
+        `/v1/admin/tenants/${tenantId}/limit-override`,
       OVERVIEW: (tenantId: string) => `/v1/admin/tenants/${tenantId}/overview`,
       INTEGRATIONS: (tenantId: string) =>
         `/v1/admin/tenants/${tenantId}/integrations`,
@@ -524,9 +523,16 @@ export const API_ENDPOINTS = {
     // Central Team
     TEAM: {
       LIST: '/v1/admin/team',
-      INVITE: '/v1/admin/team',
+      INVITE: '/v1/admin/team/invite',
       UPDATE_ROLE: (userId: string) => `/v1/admin/team/${userId}/role`,
       REMOVE: (userId: string) => `/v1/admin/team/${userId}`,
+    },
+    // Billing
+    BILLING: {
+      LIST: '/v1/admin/billing',
+      GET: (tenantId: string) => `/v1/admin/billing/${tenantId}`,
+      GENERATE: '/v1/admin/billing/generate',
+      MARK_PAID: (id: string) => `/v1/admin/billing/${id}/paid`,
     },
   },
   // Finance - Cost Centers
@@ -977,7 +983,8 @@ export const API_ENDPOINTS = {
       SEND: '/v1/ai/chat',
       LIST_CONVERSATIONS: '/v1/ai/chat/conversations',
       GET_CONVERSATION: (id: string) => `/v1/ai/chat/conversations/${id}`,
-      ARCHIVE_CONVERSATION: (id: string) => `/v1/ai/chat/conversations/${id}/archive`,
+      ARCHIVE_CONVERSATION: (id: string) =>
+        `/v1/ai/chat/conversations/${id}/archive`,
     },
     INSIGHTS: {
       LIST: '/v1/ai/insights',

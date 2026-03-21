@@ -129,3 +129,51 @@
     color 300ms ease,
     box-shadow 300ms ease;
 }
+
+/* ===========================================
+   SHADCN COMPONENT OVERRIDES
+   Override shadcn CSS variables inside Central
+   so components render correctly in both themes.
+   =========================================== */
+
+[data-central-theme='light'] input,
+[data-central-theme='light'] select,
+[data-central-theme='light'] textarea,
+[data-central-theme='light'] [role='dialog'],
+[data-central-theme='light'] [role='combobox'],
+[data-central-theme='light'] [data-radix-popper-content-wrapper] {
+  --background: 255 255 255;
+  --foreground: 24 24 27;
+  --border: 228 228 231;
+  --input: 228 228 231;
+  --ring: 99 102 241;
+  --popover: 255 255 255;
+  --popover-foreground: 24 24 27;
+  --muted: 244 244 245;
+  --muted-foreground: 113 113 122;
+  --accent: 244 244 245;
+  --accent-foreground: 24 24 27;
+  --card: 255 255 255;
+  --card-foreground: 24 24 27;
+}
+
+[data-central-theme='dark'] input,
+[data-central-theme='dark'] select,
+[data-central-theme='dark'] textarea,
+[data-central-theme='dark'] [role='dialog'],
+[data-central-theme='dark'] [role='combobox'],
+[data-central-theme='dark'] [data-radix-popper-content-wrapper] {
+  --background: 12 10 30;
+  --foreground: 244 244 245;
+  --border: 139 92 246 / 0.15;
+  --input: 139 92 246 / 0.15;
+  --ring: 139 92 246;
+  --popover: 14 11 36;
+  --popover-foreground: 244 244 245;
+  --muted: 139 92 246 / 0.06;
+  --muted-foreground: 109 92 174;
+  --accent: 139 92 246 / 0.1;
+  --accent-foreground: 196 181 253;
+  --card: 139 92 246 / 0.03;
+  --card-foreground: 244 244 245;
+}

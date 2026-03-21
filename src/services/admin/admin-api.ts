@@ -428,7 +428,7 @@ export const adminApi = {
   },
 
   assignTicket: async (ticketId: string, userId: string) => {
-    const response = await apiClient.patch<unknown>(
+    const response = await apiClient.post<unknown>(
       API_ENDPOINTS.ADMIN.SUPPORT.ASSIGN(ticketId),
       { userId }
     );

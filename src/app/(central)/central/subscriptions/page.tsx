@@ -12,25 +12,20 @@ import {
   CentralTableRow,
 } from '@/components/central/central-table';
 import { Button } from '@/components/ui/button';
-import { useAdminTenants } from '@/hooks/admin/use-admin';
 import {
+  useAdminTenants,
+  useDashboardStats,
+  useRevenueMetrics,
+} from '@/hooks/admin/use-admin';
+import {
+  AlertTriangle,
   Building2,
   CreditCard,
   DollarSign,
   Eye,
   TrendingUp,
-  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
-
-// ─── Mock billing data (will be replaced by real API) ──────────────────────────
-
-const MOCK_STATS = {
-  mrr: 12500,
-  activeTenants: 42,
-  overage: 340,
-  pendingBilling: 3,
-};
 
 const statusVariants: Record<
   string,
@@ -91,29 +86,15 @@ function StatCard({
   );
 }
 
-// ─── Module badges ─────────────────────────────────────────────────────────────
-
-function ModuleBadges({ count }: { count: number }) {
-  return (
-    <CentralBadge variant="sky">
-      {count} módulo{count !== 1 ? 's' : ''}
-    </CentralBadge>
-  );
-}
-
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function SubscriptionsPage() {
   const { data, isLoading } = useAdminTenants(1, 50);
+  const { data: dashStats } = useDashboardStats();
+  const { data: revenue } = useRevenueMetrics();
   const tenants = data?.tenants ?? [];
 
-  // Derive mock MRR per tenant (random but deterministic based on index)
-  const tenantsWithBilling = tenants.map((t, i) => ({
-    ...t,
-    mrr: [89, 199, 349, 499, 149, 299, 79, 599, 249, 189][i % 10],
-    moduleCount: (i % 5) + 2,
-    lastInvoice: t.status === 'ACTIVE' ? 'Pago' : 'Pendente',
-  }));
+  const activeTenants = tenants.filter(t => t.status === 'ACTIVE').length;
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', {
@@ -125,33 +106,33 @@ export default function SubscriptionsPage() {
     <div className="px-6 py-5 space-y-4">
       <CentralPageHeader
         title="Assinaturas & Billing"
-        description="Visão geral de todas as assinaturas e faturamento"
+        description="Visao geral de todas as assinaturas e faturamento"
       />
 
-      {/* Summary stats */}
+      {/* Summary stats — derived from real data */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           icon={DollarSign}
           label="MRR Total"
-          value={formatCurrency(MOCK_STATS.mrr)}
+          value={formatCurrency(dashStats?.mrr ?? revenue?.mrr ?? 0)}
           iconColor="#10b981"
         />
         <StatCard
           icon={Building2}
           label="Tenants ativos"
-          value={String(MOCK_STATS.activeTenants)}
+          value={String(activeTenants)}
           iconColor="#3b82f6"
         />
         <StatCard
           icon={TrendingUp}
-          label="Overage este mês"
-          value={formatCurrency(MOCK_STATS.overage)}
+          label="Overage este mes"
+          value={formatCurrency(revenue?.overageTotal ?? 0)}
           iconColor="#f59e0b"
         />
         <StatCard
           icon={AlertTriangle}
-          label="Billing pendente"
-          value={String(MOCK_STATS.pendingBilling)}
+          label="Upgrades este mes"
+          value={String(revenue?.upgradesThisMonth ?? 0)}
           iconColor="#ef4444"
         />
       </div>
@@ -182,15 +163,14 @@ export default function SubscriptionsPage() {
           <CentralTableHeader>
             <CentralTableRow>
               <CentralTableHead>Tenant</CentralTableHead>
-              <CentralTableHead>Módulos</CentralTableHead>
-              <CentralTableHead>MRR</CentralTableHead>
+              <CentralTableHead>Slug</CentralTableHead>
               <CentralTableHead>Status</CentralTableHead>
-              <CentralTableHead>Última fatura</CentralTableHead>
-              <CentralTableHead className="w-[80px]">Ações</CentralTableHead>
+              <CentralTableHead>Criado em</CentralTableHead>
+              <CentralTableHead className="w-[80px]">Acoes</CentralTableHead>
             </CentralTableRow>
           </CentralTableHeader>
           <CentralTableBody>
-            {tenantsWithBilling.map(t => (
+            {tenants.map(t => (
               <CentralTableRow key={t.id}>
                 <CentralTableCell>
                   <div className="flex items-center gap-2.5">
@@ -207,11 +187,11 @@ export default function SubscriptionsPage() {
                   </div>
                 </CentralTableCell>
                 <CentralTableCell>
-                  <ModuleBadges count={t.moduleCount} />
-                </CentralTableCell>
-                <CentralTableCell>
-                  <span className="font-semibold tabular-nums">
-                    {formatCurrency(t.mrr)}
+                  <span
+                    className="font-mono text-sm"
+                    style={{ color: 'var(--central-text-secondary)' }}
+                  >
+                    {t.slug}
                   </span>
                 </CentralTableCell>
                 <CentralTableCell>
@@ -221,18 +201,7 @@ export default function SubscriptionsPage() {
                 </CentralTableCell>
                 <CentralTableCell>
                   <span style={{ color: 'var(--central-text-secondary)' }}>
-                    Mar/26 —{' '}
-                    <span
-                      className="font-medium"
-                      style={{
-                        color:
-                          t.lastInvoice === 'Pago'
-                            ? 'var(--central-text-primary)'
-                            : undefined,
-                      }}
-                    >
-                      {t.lastInvoice}
-                    </span>
+                    {new Date(t.createdAt).toLocaleDateString('pt-BR')}
                   </span>
                 </CentralTableCell>
                 <CentralTableCell>

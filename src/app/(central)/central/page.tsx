@@ -6,8 +6,14 @@ import { CentralCard } from '@/components/central/central-card';
 import { CentralHero } from '@/components/central/central-hero';
 import { CentralStatPill } from '@/components/central/central-stat-pill';
 import { useCentralTheme } from '@/contexts/central-theme-context';
-import { useDashboardStats } from '@/hooks/admin/use-admin';
-import { Building2, Clock, DollarSign, Users } from 'lucide-react';
+import {
+  useAdminTenants,
+  useDashboardStats,
+  useRevenueMetrics,
+} from '@/hooks/admin/use-admin';
+import { adminApi } from '@/services/admin/admin-api';
+import { useQuery } from '@tanstack/react-query';
+import { Building2, Clock, DollarSign, Loader2, Users } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -44,89 +50,14 @@ const MODULE_COLORS = {
   },
 };
 
-const PRIORITY_COLORS = {
+const PRIORITY_COLORS: Record<string, string> = {
   critical: '#f43f5e',
+  high: '#f43f5e',
   medium: '#f97316',
   low: '#10b981',
 };
 
 const TENANT_AVATAR_COLORS = ['#8b5cf6', '#0ea5e9', '#10b981', '#f43f5e'];
-
-// ========================
-// Mock data (until backend integration)
-// ========================
-
-const MOCK_REVENUE_DATA = [
-  { name: 'SALES', value: 4200 },
-  { name: 'HR', value: 3100 },
-  { name: 'STOCK', value: 2800 },
-  { name: 'FIN', value: 2100 },
-  { name: 'TOOLS', value: 1500 },
-  { name: 'AI', value: 900 },
-];
-
-const MOCK_TICKETS = [
-  {
-    id: '1',
-    priority: 'critical' as const,
-    number: '#1842',
-    tenant: 'Acme Corp',
-    description: 'Falha na sincronização de estoque',
-    time: '12min',
-  },
-  {
-    id: '2',
-    priority: 'medium' as const,
-    number: '#1841',
-    tenant: 'TechFlow',
-    description: 'Relatório financeiro incompleto',
-    time: '45min',
-  },
-  {
-    id: '3',
-    priority: 'low' as const,
-    number: '#1840',
-    tenant: 'StartUp Inc',
-    description: 'Solicitação de novo módulo',
-    time: '2h',
-  },
-];
-
-const MOCK_TOP_TENANTS = [
-  {
-    id: '1',
-    name: 'Acme Corporation',
-    initials: 'AC',
-    modules: 'SALES, HR, STOCK, FIN',
-    mrr: 'R$2.450',
-    color: TENANT_AVATAR_COLORS[0],
-  },
-  {
-    id: '2',
-    name: 'TechFlow Solutions',
-    initials: 'TF',
-    modules: 'SALES, HR, TOOLS',
-    mrr: 'R$1.890',
-    color: TENANT_AVATAR_COLORS[1],
-  },
-  {
-    id: '3',
-    name: 'StartUp Inc',
-    initials: 'SI',
-    modules: 'SALES, STOCK',
-    mrr: 'R$980',
-    color: TENANT_AVATAR_COLORS[2],
-  },
-];
-
-const MOCK_GROWTH_DATA = [
-  { month: 'Out', tenants: 28, users: 240 },
-  { month: 'Nov', tenants: 31, users: 280 },
-  { month: 'Dez', tenants: 34, users: 310 },
-  { month: 'Jan', tenants: 36, users: 330 },
-  { month: 'Fev', tenants: 39, users: 355 },
-  { month: 'Mar', tenants: 42, users: 380 },
-];
 
 // ========================
 // Helpers
@@ -139,12 +70,27 @@ function formatMrr(value: number): string {
   return `R$${value}`;
 }
 
+function getTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
 // ========================
 // Page Component
 // ========================
 
 export default function CentralDashboardPage() {
   const { data: stats, isLoading } = useDashboardStats();
+  const { data: revenueData } = useRevenueMetrics();
+  const { data: tenantsData } = useAdminTenants(1, 5);
+  const { data: tickets } = useQuery({
+    queryKey: ['admin', 'support', 'tickets'],
+    queryFn: () => adminApi.listTickets(),
+  });
   const { theme } = useCentralTheme();
   const isDark = theme === 'dark';
 
@@ -166,64 +112,85 @@ export default function CentralDashboardPage() {
     AI: moduleColors.AI,
   };
 
-  // Use real data if available, otherwise mock
-  const totalTenants = stats?.totalTenants ?? 42;
-  const totalUsers = stats?.totalUsers ?? 380;
-  const mrr = stats?.mrr ?? 12500;
+  const totalTenants = stats?.totalTenants ?? 0;
+  const totalUsers = stats?.totalUsers ?? 0;
+  const mrr = stats?.mrr ?? 0;
+
+  // Derive revenue per module from revenueMetrics tenantsByStatus or show empty
+  const revenueChartData =
+    revenueData?.tenantsByStatus?.map(s => ({
+      name: s.status,
+      value: s.count,
+    })) ?? [];
+
+  // Growth chart from real monthly data
+  const growthData = stats?.monthlyGrowth ?? [];
+
+  // Recent tickets (top 3)
+  const recentTickets = (tickets ?? []).slice(0, 3);
+
+  // Top tenants
+  const topTenants = (tenantsData?.tenants ?? []).slice(0, 3);
 
   const lineStroke = isDark ? '#a78bfa' : '#8b5cf6';
+
+  const ticketCount = tickets?.length ?? 0;
 
   return (
     <div>
       {/* Hero Banner */}
       <CentralHero
         greeting="Bom dia, Admin"
-        subtitle="Visão geral do sistema e métricas em tempo real"
+        subtitle="Visao geral do sistema e metricas em tempo real"
       >
-        <CentralStatPill
-          icon={<Building2 className="h-3.5 w-3.5" />}
-          iconColor="violet"
-          value={String(totalTenants)}
-          label="Tenants"
-          change="+3"
-          changeType="up"
-        />
-        <CentralStatPill
-          icon={<Users className="h-3.5 w-3.5" />}
-          iconColor="sky"
-          value={String(totalUsers)}
-          label="Usuários"
-          change="+28"
-          changeType="up"
-        />
-        <CentralStatPill
-          icon={<DollarSign className="h-3.5 w-3.5" />}
-          iconColor="emerald"
-          value={formatMrr(mrr)}
-          label="MRR"
-          change="+8%"
-          changeType="up"
-        />
-        <CentralStatPill
-          icon={<Clock className="h-3.5 w-3.5" />}
-          iconColor="teal"
-          value="12"
-          label="Tickets"
-          change="2 SLA"
-          changeType="warn"
-        />
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-white/50" />
+        ) : (
+          <>
+            <CentralStatPill
+              icon={<Building2 className="h-3.5 w-3.5" />}
+              iconColor="violet"
+              value={String(totalTenants)}
+              label="Tenants"
+            />
+            <CentralStatPill
+              icon={<Users className="h-3.5 w-3.5" />}
+              iconColor="sky"
+              value={String(totalUsers)}
+              label="Usuarios"
+            />
+            <CentralStatPill
+              icon={<DollarSign className="h-3.5 w-3.5" />}
+              iconColor="emerald"
+              value={formatMrr(mrr)}
+              label="MRR"
+            />
+            <CentralStatPill
+              icon={<Clock className="h-3.5 w-3.5" />}
+              iconColor="teal"
+              value={String(ticketCount)}
+              label="Tickets"
+            />
+          </>
+        )}
       </CentralHero>
 
       {/* Content area */}
       <div className="px-6 py-4 space-y-3">
-        {/* Alert bar */}
-        <CentralAlertBar
-          items={[
-            { text: '3 tenants com overage' },
-            { text: '2 integrações com erro' },
-            { text: '1 cert. expirando' },
-          ]}
-        />
+        {/* Alert bar — only show if there are actual issues */}
+        {revenueData &&
+          (revenueData.overageTotal > 0 || revenueData.churnRate > 5) && (
+            <CentralAlertBar
+              items={[
+                ...(revenueData.overageTotal > 0
+                  ? [{ text: `Overage total: R$${revenueData.overageTotal}` }]
+                  : []),
+                ...(revenueData.churnRate > 5
+                  ? [{ text: `Churn elevado: ${revenueData.churnRate}%` }]
+                  : []),
+              ]}
+            />
+          )}
 
         {/* Row 1: Revenue chart + Tickets */}
         <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-3">
@@ -234,18 +201,32 @@ export default function CentralDashboardPage() {
                 className="font-semibold text-xs"
                 style={{ color: 'var(--central-text-primary)' }}
               >
-                Receita por Módulo
+                Tenants por Status
               </span>
-              <CentralBadge variant="violet">Mar 2026</CentralBadge>
+              <CentralBadge variant="violet">
+                {new Date().toLocaleDateString('pt-BR', {
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </CentralBadge>
             </div>
             {isLoading ? (
               <div
                 className="h-[200px] animate-pulse rounded-lg"
                 style={{ background: 'var(--central-card-bg)' }}
               />
+            ) : revenueChartData.length === 0 ? (
+              <div className="h-[200px] flex items-center justify-center">
+                <p
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
+                  Sem dados disponiveis
+                </p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={MOCK_REVENUE_DATA} barCategoryGap="20%">
+                <BarChart data={revenueChartData} barCategoryGap="20%">
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke={chartGridColor}
@@ -261,7 +242,6 @@ export default function CentralDashboardPage() {
                     tick={{ fill: chartTextColor, fontSize: 10 }}
                     axisLine={false}
                     tickLine={false}
-                    tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
                     contentStyle={{
@@ -271,16 +251,18 @@ export default function CentralDashboardPage() {
                       color: tooltipColor,
                       fontSize: '11px',
                     }}
-                    formatter={(value: number) => [
-                      `R$${value.toLocaleString('pt-BR')}`,
-                      'Receita',
-                    ]}
+                    formatter={(value: number) => [value, 'Quantidade']}
                   />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {MOCK_REVENUE_DATA.map(entry => (
+                    {revenueChartData.map((entry, i) => (
                       <Cell
                         key={entry.name}
-                        fill={moduleColorMap[entry.name] ?? '#8b5cf6'}
+                        fill={
+                          moduleColorMap[entry.name] ??
+                          Object.values(moduleColorMap)[
+                            i % Object.values(moduleColorMap).length
+                          ]
+                        }
                       />
                     ))}
                   </Bar>
@@ -298,108 +280,127 @@ export default function CentralDashboardPage() {
               >
                 Tickets Recentes
               </span>
-              <CentralBadge variant="rose">3 novos</CentralBadge>
+              {ticketCount > 0 && (
+                <CentralBadge variant="rose">
+                  {ticketCount} {ticketCount === 1 ? 'ticket' : 'tickets'}
+                </CentralBadge>
+              )}
             </div>
             <div className="space-y-3">
-              {MOCK_TICKETS.map(ticket => (
-                <div key={ticket.id} className="flex items-start gap-2.5">
-                  {/* Priority dot */}
-                  <span
-                    className="mt-1.5 flex-shrink-0 rounded-full"
-                    style={{
-                      width: 7,
-                      height: 7,
-                      backgroundColor: PRIORITY_COLORS[ticket.priority],
-                    }}
-                  />
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs leading-tight">
-                      <span
-                        className="font-bold"
-                        style={{ color: 'var(--central-text-primary)' }}
+              {recentTickets.length === 0 ? (
+                <p
+                  className="text-xs py-4 text-center"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
+                  Nenhum ticket encontrado
+                </p>
+              ) : (
+                recentTickets.map(ticket => (
+                  <div key={ticket.id} className="flex items-start gap-2.5">
+                    <span
+                      className="mt-1.5 flex-shrink-0 rounded-full"
+                      style={{
+                        width: 7,
+                        height: 7,
+                        backgroundColor:
+                          PRIORITY_COLORS[ticket.priority] ?? '#a1a1aa',
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs leading-tight">
+                        <span
+                          className="font-bold"
+                          style={{ color: 'var(--central-text-primary)' }}
+                        >
+                          #{ticket.ticketNumber}
+                        </span>
+                        <span
+                          className="ml-1.5"
+                          style={{ color: isDark ? '#a78bfa' : '#8b5cf6' }}
+                        >
+                          {ticket.tenantName ?? ''}
+                        </span>
+                      </p>
+                      <p
+                        className="text-[11px] mt-0.5 truncate"
+                        style={{ color: 'var(--central-text-secondary)' }}
                       >
-                        {ticket.number}
-                      </span>
-                      <span
-                        className="ml-1.5"
-                        style={{ color: isDark ? '#a78bfa' : '#8b5cf6' }}
-                      >
-                        {ticket.tenant}
-                      </span>
-                    </p>
-                    <p
-                      className="text-[11px] mt-0.5 truncate"
+                        {ticket.subject}
+                      </p>
+                    </div>
+                    <span
+                      className="text-[10px] flex-shrink-0 mt-0.5"
                       style={{ color: 'var(--central-text-secondary)' }}
                     >
-                      {ticket.description}
-                    </p>
+                      {getTimeAgo(ticket.createdAt)}
+                    </span>
                   </div>
-                  {/* Time */}
-                  <span
-                    className="text-[10px] flex-shrink-0 mt-0.5"
-                    style={{ color: 'var(--central-text-secondary)' }}
-                  >
-                    {ticket.time}
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CentralCard>
         </div>
 
         {/* Row 2: Top Tenants + Growth chart */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* Top Tenants by Revenue */}
+          {/* Top Tenants */}
           <CentralCard className="p-5">
             <div className="flex items-center justify-between mb-4">
               <span
                 className="font-semibold text-xs"
                 style={{ color: 'var(--central-text-primary)' }}
               >
-                Top Tenants por Receita
+                Tenants Recentes
               </span>
             </div>
             <div className="space-y-3">
-              {MOCK_TOP_TENANTS.map(tenant => (
-                <div key={tenant.id} className="flex items-center gap-3">
-                  {/* Circular avatar */}
-                  <div
-                    className="flex items-center justify-center rounded-full flex-shrink-0"
-                    style={{
-                      width: 30,
-                      height: 30,
-                      backgroundColor: tenant.color,
-                    }}
-                  >
-                    <span className="text-white text-[10px] font-bold">
-                      {tenant.initials}
-                    </span>
-                  </div>
-                  {/* Name + Modules */}
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="font-semibold text-xs truncate"
-                      style={{ color: 'var(--central-text-primary)' }}
+              {topTenants.length === 0 ? (
+                <p
+                  className="text-xs py-4 text-center"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
+                  Nenhum tenant encontrado
+                </p>
+              ) : (
+                topTenants.map((tenant, i) => (
+                  <div key={tenant.id} className="flex items-center gap-3">
+                    <div
+                      className="flex items-center justify-center rounded-full flex-shrink-0"
+                      style={{
+                        width: 30,
+                        height: 30,
+                        backgroundColor:
+                          TENANT_AVATAR_COLORS[i % TENANT_AVATAR_COLORS.length],
+                      }}
                     >
-                      {tenant.name}
-                    </p>
-                    <p
-                      className="text-[9px] truncate"
-                      style={{ color: 'var(--central-text-secondary)' }}
+                      <span className="text-white text-[10px] font-bold">
+                        {tenant.name.slice(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="font-semibold text-xs truncate"
+                        style={{ color: 'var(--central-text-primary)' }}
+                      >
+                        {tenant.name}
+                      </p>
+                      <p
+                        className="text-[9px] truncate"
+                        style={{ color: 'var(--central-text-secondary)' }}
+                      >
+                        {tenant.slug}
+                      </p>
+                    </div>
+                    <CentralBadge
+                      variant={
+                        tenant.status === 'ACTIVE' ? 'emerald' : 'orange'
+                      }
                     >
-                      {tenant.modules}
-                    </p>
+                      {tenant.status === 'ACTIVE' ? 'Ativa' : tenant.status}
+                    </CentralBadge>
                   </div>
-                  {/* MRR */}
-                  <span
-                    className="font-bold text-xs flex-shrink-0"
-                    style={{ color: 'var(--central-text-primary)' }}
-                  >
-                    {tenant.mrr}
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CentralCard>
 
@@ -412,16 +413,27 @@ export default function CentralDashboardPage() {
               >
                 Crescimento
               </span>
-              <CentralBadge variant="sky">6 meses</CentralBadge>
+              <CentralBadge variant="sky">
+                {growthData.length} {growthData.length === 1 ? 'mes' : 'meses'}
+              </CentralBadge>
             </div>
             {isLoading ? (
               <div
                 className="h-[200px] animate-pulse rounded-lg"
                 style={{ background: 'var(--central-card-bg)' }}
               />
+            ) : growthData.length === 0 ? (
+              <div className="h-[200px] flex items-center justify-center">
+                <p
+                  className="text-xs"
+                  style={{ color: 'var(--central-text-muted)' }}
+                >
+                  Sem dados de crescimento
+                </p>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={MOCK_GROWTH_DATA}>
+                <AreaChart data={growthData}>
                   <defs>
                     <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
                       <stop
@@ -460,14 +472,11 @@ export default function CentralDashboardPage() {
                       color: tooltipColor,
                       fontSize: '11px',
                     }}
-                    formatter={(value: number, name: string) => [
-                      value,
-                      name === 'tenants' ? 'Tenants' : 'Usuários',
-                    ]}
+                    formatter={(value: number) => [value, 'Tenants']}
                   />
                   <Area
                     type="monotone"
-                    dataKey="tenants"
+                    dataKey="count"
                     stroke={lineStroke}
                     strokeWidth={2}
                     fill="url(#growthFill)"

@@ -12,7 +12,6 @@ import {
   CentralTableRow,
 } from '@/components/central/central-table';
 import { useAiUsageReport } from '@/hooks/admin/use-admin';
-import type { AiUsageReport } from '@/types/admin';
 import {
   ArrowLeft,
   Brain,
@@ -23,31 +22,6 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-// ─── Mock Data ──────────────────────────────────────────────────────────────────
-
-const MOCK_AI_USAGE: AiUsageReport = {
-  period: 'Mar 2026',
-  totalQueries: 156000,
-  totalCost: 890,
-  byTier: [
-    { tier: 'Starter', queries: 42000, cost: 120, percentage: 27 },
-    { tier: 'Professional', queries: 68000, cost: 380, percentage: 43 },
-    { tier: 'Enterprise', queries: 46000, cost: 390, percentage: 30 },
-  ],
-  topTenants: [
-    { tenantName: 'Global Trade', cost: 145 },
-    { tenantName: 'Acme Corp', cost: 132 },
-    { tenantName: 'TechFlow Solutions', cost: 98 },
-    { tenantName: 'StartUp Inc', cost: 87 },
-    { tenantName: 'Digital Agency', cost: 76 },
-    { tenantName: 'Consulting Pro', cost: 62 },
-    { tenantName: 'MarketPlace Plus', cost: 54 },
-    { tenantName: 'DataHub', cost: 48 },
-    { tenantName: 'CloudSoft', cost: 42 },
-    { tenantName: 'SmartRetail', cost: 38 },
-  ],
-};
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -69,7 +43,7 @@ export default function AiUsagePage() {
   const router = useRouter();
   const { data: apiData, isLoading } = useAiUsageReport();
 
-  const report = apiData ?? MOCK_AI_USAGE;
+  const report = apiData;
 
   return (
     <div className="px-6 py-5 space-y-4">
@@ -97,6 +71,16 @@ export default function AiUsagePage() {
             className="h-6 w-6 animate-spin"
             style={{ color: 'var(--central-text-muted)' }}
           />
+        </div>
+      ) : !report ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <Brain
+            className="h-12 w-12"
+            style={{ color: 'var(--central-text-muted)' }}
+          />
+          <p className="text-sm" style={{ color: 'var(--central-text-muted)' }}>
+            Dados de uso de IA indisponiveis
+          </p>
         </div>
       ) : (
         <>
