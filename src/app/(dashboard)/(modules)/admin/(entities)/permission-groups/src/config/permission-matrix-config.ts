@@ -92,14 +92,14 @@ export const MATRIX_TABS: MatrixTab[] = [
       { label: 'Variantes', group: 'Cadastros', backendResources: ['stock.variants'],
         availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export', 'print', 'admin', 'onlyself'] },
       { label: 'Templates', group: 'Cadastros', backendResources: ['stock.templates'],
-        availableActions: ['access', 'register', 'modify', 'remove'] },
+        availableActions: ['access', 'register', 'modify', 'remove', 'import'] },
       { label: 'Categorias', group: 'Cadastros', backendResources: ['stock.categories'],
         availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export'] },
       { label: 'Fabricantes', group: 'Cadastros', backendResources: ['stock.manufacturers'],
         availableActions: ['access', 'register', 'modify', 'remove', 'import', 'export'] },
       // Operações
       { label: 'Itens', group: 'Operações', backendResources: ['stock.items'],
-        availableActions: ['access', 'export', 'print', 'admin'] },
+        availableActions: ['access', 'import', 'export', 'print', 'admin'] },
       { label: 'Ordens de Compra', group: 'Operações', backendResources: ['stock.purchase-orders'],
         availableActions: ['access', 'register', 'modify', 'remove', 'export', 'print', 'admin', 'onlyself'] },
       { label: 'Volumes', group: 'Operações', backendResources: ['stock.volumes'],
@@ -147,9 +147,9 @@ export const MATRIX_TABS: MatrixTab[] = [
     resources: [
       // Cadastros
       { label: 'Cargos', group: 'Cadastros', backendResources: ['hr.positions'],
-        availableActions: ['access', 'register', 'modify', 'remove'] },
+        availableActions: ['access', 'register', 'modify', 'remove', 'import'] },
       { label: 'Departamentos', group: 'Cadastros', backendResources: ['hr.departments'],
-        availableActions: ['access', 'register', 'modify', 'remove'] },
+        availableActions: ['access', 'register', 'modify', 'remove', 'import'] },
       { label: 'Escalas de Trabalho', group: 'Cadastros', backendResources: ['hr.work-schedules'],
         availableActions: ['access', 'register', 'modify', 'remove'] },
       // Operações
@@ -191,11 +191,11 @@ export const MATRIX_TABS: MatrixTab[] = [
     resources: [
       // Gestão
       { label: 'Usuários', group: 'Gestão', backendResources: ['admin.users'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'admin'] },
+        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'admin'] },
       { label: 'Grupos de Permissão', group: 'Gestão', backendResources: ['admin.permission-groups'],
         availableActions: ['access', 'register', 'modify', 'remove', 'admin'] },
       { label: 'Empresas', group: 'Gestão', backendResources: ['admin.companies'],
-        availableActions: ['access', 'register', 'modify', 'remove', 'admin'] },
+        availableActions: ['access', 'register', 'modify', 'remove', 'import', 'admin'] },
       // Sistema
       { label: 'Sessões', group: 'Sistema', backendResources: ['admin.sessions'],
         availableActions: ['access', 'admin'] },
