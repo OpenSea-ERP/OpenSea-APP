@@ -922,6 +922,26 @@ export const API_ENDPOINTS = {
     MARK_ALL_AS_READ: '/v1/notifications/mark-all-read',
     DELETE: (id: string) => `/v1/notifications/${id}`,
   },
+  // Marketplace Integration
+  MARKETPLACE_CONNECTIONS: {
+    LIST: '/v1/marketplace-connections',
+    CREATE: '/v1/marketplace-connections',
+    GET: (id: string) => `/v1/marketplace-connections/${id}`,
+    UPDATE: (id: string) => `/v1/marketplace-connections/${id}`,
+    DELETE: (id: string) => `/v1/marketplace-connections/${id}`,
+    RECONCILIATION: (id: string) => `/v1/marketplace-connections/${id}/reconciliation`,
+    LISTINGS: (connectionId: string) => `/v1/marketplace-connections/${connectionId}/listings`,
+  },
+  MARKETPLACE_ORDERS: {
+    LIST: '/v1/marketplace-orders',
+    ACKNOWLEDGE: (id: string) => `/v1/marketplace-orders/${id}/acknowledge`,
+  },
+  MARKETPLACE_LISTINGS: {
+    DEACTIVATE: (id: string) => `/v1/marketplace-listings/${id}/deactivate`,
+  },
+  MARKETPLACE_PAYMENTS: {
+    LIST: '/v1/marketplace-payments',
+  },
   // Health
   HEALTH: '/health',
 } as const;

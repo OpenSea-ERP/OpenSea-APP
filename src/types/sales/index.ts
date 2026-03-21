@@ -12,3 +12,4 @@ export * from './price-table.types';
 export * from './campaign.types';
 export * from './coupon.types';
 export * from './combo.types';
+export * from './marketplace.types';
