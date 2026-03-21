@@ -1,0 +1,8 @@
+Produto,Variante,Preço,SKU,Cor,Referência,Fora de Linha
+Camiseta Básica,P,29.90,CAM-P,#FF0000,REF-001,não
+Camiseta Básica,M,29.90,CAM-M,#00FF00,REF-002,não
+Camiseta Básica,G,34.90,CAM-G,#0000FF,REF-003,sim
+Calça Jeans,38,89.90,CJ-38,#000000,REF-004,não
+Calça Jeans,40,89.90,CJ-40,#000000,REF-005,não
+Jaqueta Couro,M,199.90,JC-M,#8B4513,REF-006,não
+Jaqueta Couro,G,199.90,JC-G,#8B4513,REF-007,não

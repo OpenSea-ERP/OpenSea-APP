@@ -1,0 +1,216 @@
+- generic [active] [ref=e110]:
+    - generic [ref=e112]:
+        - link "Pular para o conteudo principal" [ref=e113] [cursor=pointer]:
+            - /url: '#main-content'
+        - navigation [ref=e114]:
+            - generic [ref=e116]:
+                - link "OpenSea" [ref=e117] [cursor=pointer]:
+                    - /url: /
+                    - img [ref=e119]
+                    - generic [ref=e124]: OpenSea
+                - generic [ref=e125]:
+                    - button "Fila de impressao" [ref=e126] [cursor=pointer]:
+                        - img
+                    - button "Notificações" [ref=e127] [cursor=pointer]:
+                        - img
+                    - button "Abrir menu de navegação" [ref=e128] [cursor=pointer]:
+                        - img
+                    - button "AD" [ref=e129] [cursor=pointer]:
+                        - generic [ref=e131]: AD
+        - main [ref=e132]:
+            - generic [ref=e134]:
+                - generic [ref=e136]:
+                    - generic [ref=e137]:
+                        - generic [ref=e138]:
+                            - heading "Importar Catálogo" [level=1] [ref=e139]
+                            - paragraph [ref=e140]: Produtos e Variantes em lote
+                        - button "Cancelar" [ref=e141] [cursor=pointer]:
+                            - img
+                            - text: Cancelar
+                    - navigation "Progresso do wizard" [ref=e142]:
+                        - list [ref=e143]:
+                            - listitem [ref=e144]:
+                                - button "Upload" [ref=e145] [cursor=pointer]:
+                                    - img [ref=e147]
+                                    - generic [ref=e150]: Upload
+                            - listitem [ref=e151]:
+                                - button "Template" [ref=e152] [cursor=pointer]:
+                                    - img [ref=e584]
+                                    - generic [ref=e158]: Template
+                            - listitem [ref=e159]:
+                                - button "Mapeamento" [ref=e160] [cursor=pointer]:
+                                    - img [ref=e647]
+                                    - generic [ref=e166]: Mapeamento
+                            - listitem [ref=e167]:
+                                - button "Preview" [disabled] [ref=e168]:
+                                    - img [ref=e170]
+                                    - generic [ref=e174]: Preview
+                            - listitem [ref=e175]:
+                                - button "Validar" [disabled] [ref=e176]:
+                                    - img [ref=e178]
+                                    - generic [ref=e182]: Validar
+                            - listitem [ref=e183]:
+                                - button "Importar" [disabled] [ref=e184]:
+                                    - img [ref=e186]
+                                    - generic [ref=e189]: Importar
+                - generic [ref=e190]:
+                    - generic [ref=e192]:
+                        - img [ref=e649]
+                        - generic [ref=e197]:
+                            - 'heading "Passo 3: Mapeamento" [level=2] [ref=e652]'
+                            - paragraph [ref=e199]: Mapeie as colunas do arquivo
+                    - generic [ref=e653]:
+                        - generic [ref=e654]:
+                            - generic [ref=e655]:
+                                - heading "Mapeamento de Colunas" [level=3] [ref=e656]
+                                - paragraph [ref=e657]: Associe as colunas do arquivo aos campos do sistema
+                            - generic [ref=e658]:
+                                - button "Limpar" [ref=e659] [cursor=pointer]:
+                                    - img
+                                    - text: Limpar
+                                - button "Auto-mapear" [ref=e660] [cursor=pointer]:
+                                    - img
+                                    - text: Auto-mapear
+                        - generic [ref=e663]:
+                            - img [ref=e664]
+                            - paragraph [ref=e667]: Todos os campos obrigatórios estão mapeados
+                        - generic [ref=e668]:
+                            - generic [ref=e669]:
+                                - generic [ref=e670]:
+                                    - img [ref=e671]
+                                    - text: Coluna de Agrupamento
+                                - generic [ref=e673]: Selecione a coluna que identifica o produto. Linhas com o mesmo valor serão agrupadas como variantes do mesmo produto.
+                            - combobox [ref=e675]:
+                                - generic: Produto
+                                - img
+                        - generic [ref=e676]:
+                            - generic [ref=e677]:
+                                - generic [ref=e678]:
+                                    - generic [ref=e679]:
+                                        - img [ref=e680]
+                                        - text: Campos do Produto
+                                    - generic [ref=e684]: Mapeie as colunas para os campos do produto
+                                - generic [ref=e689]:
+                                    - generic [ref=e690]:
+                                        - generic [ref=e691]:
+                                            - paragraph [ref=e692]: Produto
+                                            - generic [ref=e693]: Agrupamento
+                                        - img [ref=e694]
+                                        - combobox [disabled]:
+                                            - generic:
+                                                - generic:
+                                                    - text: Nome do Produto
+                                                    - generic: '*'
+                                            - img
+                                    - generic [ref=e696]:
+                                        - paragraph [ref=e698]: Variante
+                                        - img [ref=e699]
+                                        - combobox [ref=e701]:
+                                            - generic: Não mapeado
+                                            - img
+                                    - generic [ref=e702]:
+                                        - paragraph [ref=e704]: Preço
+                                        - img [ref=e705]
+                                        - combobox [ref=e707]:
+                                            - generic: Não mapeado
+                                            - img
+                                    - generic [ref=e708]:
+                                        - paragraph [ref=e710]: SKU
+                                        - img [ref=e711]
+                                        - combobox [ref=e713]:
+                                            - generic: Não mapeado
+                                            - img
+                                    - generic [ref=e714]:
+                                        - paragraph [ref=e716]: Cor
+                                        - img [ref=e717]
+                                        - combobox [ref=e719]:
+                                            - generic: Não mapeado
+                                            - img
+                                    - generic [ref=e720]:
+                                        - paragraph [ref=e722]: Referência
+                                        - img [ref=e723]
+                                        - combobox [ref=e725]:
+                                            - generic: Não mapeado
+                                            - img
+                                    - generic [ref=e726]:
+                                        - paragraph [ref=e728]: Fora de Linha
+                                        - img [ref=e729]
+                                        - combobox [ref=e731]:
+                                            - generic: Não mapeado
+                                            - img
+                            - generic [ref=e732]:
+                                - generic [ref=e733]:
+                                    - generic [ref=e734]:
+                                        - img [ref=e735]
+                                        - text: Campos da Variante
+                                    - generic [ref=e739]: Mapeie as colunas para os campos da variante
+                                - generic [ref=e744]:
+                                    - generic [ref=e745]:
+                                        - generic [ref=e746]:
+                                            - paragraph [ref=e747]: Produto
+                                            - generic [ref=e748]: Agrupamento
+                                        - img [ref=e749]
+                                        - combobox [ref=e751]:
+                                            - generic: Não mapeado
+                                            - img
+                                    - generic [ref=e752]:
+                                        - paragraph [ref=e754]: Variante
+                                        - img [ref=e755]
+                                        - combobox [ref=e757]:
+                                            - generic:
+                                                - generic:
+                                                    - text: Nome da Variante
+                                                    - generic: '*'
+                                            - img
+                                    - generic [ref=e758]:
+                                        - paragraph [ref=e760]: Preço
+                                        - img [ref=e761]
+                                        - combobox [ref=e763]:
+                                            - generic:
+                                                - generic: Preço
+                                            - img
+                                    - generic [ref=e764]:
+                                        - paragraph [ref=e766]: SKU
+                                        - img [ref=e767]
+                                        - combobox [ref=e769]:
+                                            - generic:
+                                                - generic: SKU
+                                            - img
+                                    - generic [ref=e770]:
+                                        - paragraph [ref=e772]: Cor
+                                        - img [ref=e773]
+                                        - combobox [ref=e775]:
+                                            - generic: Não mapeado
+                                            - img
+                                    - generic [ref=e776]:
+                                        - paragraph [ref=e778]: Referência
+                                        - img [ref=e779]
+                                        - combobox [ref=e781]:
+                                            - generic:
+                                                - generic: Referência
+                                            - img
+                                    - generic [ref=e782]:
+                                        - paragraph [ref=e784]: Fora de Linha
+                                        - img [ref=e785]
+                                        - combobox [ref=e787]:
+                                            - generic: Não mapeado
+                                            - img
+                        - generic [ref=e790]:
+                            - generic [ref=e791]: Resumo do Mapeamento
+                            - button "Ver detalhes" [ref=e792] [cursor=pointer]
+                    - generic [ref=e305]:
+                        - button "Voltar" [ref=e583] [cursor=pointer]:
+                            - img
+                            - text: Voltar
+                        - generic [ref=e307]: Passo 3 de 6
+                        - button "Próximo" [ref=e308] [cursor=pointer]:
+                            - text: Próximo
+                            - img
+    - generic [ref=e1]:
+        - img [ref=e3]
+        - button "Open Tanstack query devtools" [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+    - region "Notifications alt+T"
+    - button "Open Next.js Dev Tools" [ref=e105] [cursor=pointer]:
+        - img [ref=e106]
+    - alert [ref=e109]

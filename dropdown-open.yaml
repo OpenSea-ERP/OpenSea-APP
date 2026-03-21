@@ -1,0 +1,103 @@
+- generic:
+    - generic:
+        - generic:
+            - link:
+                - /url: '#main-content'
+                - text: Pular para o conteudo principal
+            - navigation:
+                - generic:
+                    - generic:
+                        - link:
+                            - /url: /
+                            - generic:
+                                - img
+                            - generic: OpenSea
+                        - generic:
+                            - button:
+                                - img
+                            - button:
+                                - img
+                            - button:
+                                - img
+                            - button:
+                                - generic:
+                                    - generic: AD
+            - main:
+                - generic:
+                    - generic:
+                        - generic:
+                            - navigation:
+                                - list:
+                                    - listitem:
+                                        - link:
+                                            - /url: /
+                                            - text: Início
+                                    - listitem:
+                                        - img
+                                    - listitem:
+                                        - link:
+                                            - /url: /import
+                                            - text: Importação
+                                    - listitem:
+                                        - img
+                                    - listitem:
+                                        - link:
+                                            - /url: /import/stock/products
+                                            - text: Produtos
+                                    - listitem:
+                                        - img
+                                    - listitem:
+                                        - link [disabled]: Planilha
+                            - generic:
+                                - button [disabled]:
+                                    - img
+                                    - generic: Validar
+                                - button [disabled]:
+                                    - img
+                                    - generic: Importar
+                        - generic:
+                            - generic:
+                                - generic:
+                                    - generic:
+                                        - generic:
+                                            - img
+                                        - generic:
+                                            - heading [level=1]: Importar Produtos
+                                            - paragraph: Preencha a planilha ou cole dados do Excel (Ctrl+V)
+                                    - generic:
+                                        - generic: 'Template:'
+                                        - combobox [expanded]:
+                                            - generic: Selecione...
+                                            - img
+                                - generic:
+                                    - generic:
+                                        - generic: 0 linhas preenchidas
+                                    - generic:
+                                        - generic:
+                                            - generic: 'Decimal: Vírgula'
+                                            - switch
+                        - generic:
+                            - generic:
+                                - generic:
+                                    - img
+                                - heading [level=3]: Selecione um Template
+                                - paragraph: Para iniciar a importação, selecione um template de produto no campo acima. O template define os atributos disponíveis para preenchimento.
+    - generic:
+        - generic:
+            - img
+        - button:
+            - img
+    - region "Notifications alt+T"
+    - button "Open Next.js Dev Tools" [ref=e207] [cursor=pointer]:
+        - generic [ref=e210]:
+            - text: Compiling
+            - generic [ref=e211]:
+                - generic [ref=e212]: .
+                - generic [ref=e213]: .
+                - generic [ref=e214]: .
+    - alert
+    - listbox [ref=e202]:
+        - option "Selecione..." [active] [selected] [ref=e203] [cursor=pointer]:
+            - generic [ref=e205]:
+                - img
+            - generic [ref=e206]: Selecione...

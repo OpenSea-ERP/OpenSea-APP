@@ -1,0 +1,82 @@
+- generic [ref=e110]:
+    - generic [ref=e112]:
+        - link "Pular para o conteudo principal" [ref=e113] [cursor=pointer]:
+            - /url: '#main-content'
+        - navigation [ref=e114]:
+            - generic [ref=e116]:
+                - link "OpenSea" [ref=e117] [cursor=pointer]:
+                    - /url: /
+                    - img [ref=e119]
+                    - generic [ref=e124]: OpenSea
+                - generic [ref=e125]:
+                    - button "Fila de impressao" [ref=e126] [cursor=pointer]:
+                        - img
+                    - button "Notificações" [ref=e127] [cursor=pointer]:
+                        - img
+                    - button "Abrir menu de navegação" [ref=e128] [cursor=pointer]:
+                        - img
+                    - button "AD" [ref=e129] [cursor=pointer]:
+                        - generic [ref=e131]: AD
+        - main [ref=e132]:
+            - generic [ref=e134]:
+                - generic [ref=e135]:
+                    - navigation "breadcrumb" [ref=e136]:
+                        - list [ref=e137]:
+                            - listitem [ref=e138]:
+                                - link "Início" [ref=e139] [cursor=pointer]:
+                                    - /url: /
+                            - listitem [ref=e140]:
+                                - img [ref=e141]
+                            - listitem [ref=e143]:
+                                - link "Importação" [ref=e144] [cursor=pointer]:
+                                    - /url: /import
+                            - listitem [ref=e145]:
+                                - img [ref=e146]
+                            - listitem [ref=e148]:
+                                - link "Produtos" [ref=e149] [cursor=pointer]:
+                                    - /url: /import/stock/products
+                            - listitem [ref=e150]:
+                                - img [ref=e151]
+                            - listitem [ref=e153]:
+                                - link "Planilha" [disabled] [ref=e154]
+                    - generic [ref=e155]:
+                        - button "Validar" [disabled]:
+                            - img
+                            - generic: Validar
+                        - button "Importar" [disabled]:
+                            - img
+                            - generic: Importar
+                - generic [ref=e159]:
+                    - generic [ref=e160]:
+                        - generic [ref=e161]:
+                            - img [ref=e163]
+                            - generic [ref=e167]:
+                                - heading "Importar Produtos" [level=1] [ref=e168]
+                                - paragraph [ref=e169]: Preencha a planilha ou cole dados do Excel (Ctrl+V)
+                        - generic [ref=e170]:
+                            - generic [ref=e171]: 'Template:'
+                            - combobox [active] [ref=e172]:
+                                - generic: Selecione...
+                                - img
+                    - generic [ref=e173]:
+                        - generic [ref=e175]: 0 linhas preenchidas
+                        - generic [ref=e177]:
+                            - generic [ref=e178] [cursor=pointer]: 'Decimal: Vírgula'
+                            - 'switch "Decimal: Vírgula" [ref=e179] [cursor=pointer]'
+                - generic [ref=e181]:
+                    - img [ref=e183]
+                    - heading "Selecione um Template" [level=3] [ref=e187]
+                    - paragraph [ref=e188]: Para iniciar a importação, selecione um template de produto no campo acima. O template define os atributos disponíveis para preenchimento.
+    - generic [ref=e1]:
+        - img [ref=e3]
+        - button "Open Tanstack query devtools" [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+    - region "Notifications alt+T"
+    - button "Open Next.js Dev Tools" [ref=e194] [cursor=pointer]:
+        - generic [ref=e197]:
+            - text: Compiling
+            - generic [ref=e198]:
+                - generic [ref=e199]: .
+                - generic [ref=e200]: .
+                - generic [ref=e201]: .
+    - alert [ref=e109]
