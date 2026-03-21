@@ -5,6 +5,9 @@ import type {
   SkillDefinition,
   SkillPricing,
   SkillTreeNode,
+  SlaConfig,
+  SupportMetrics,
+  SupportTicket,
   TenantConsumption,
   TenantIntegrationStatus,
   TenantOverview,
@@ -393,6 +396,83 @@ export const adminApi = {
     );
     return (response as Record<string, unknown>)
       .integrations as TenantIntegrationStatus[];
+  },
+
+  // === Support ===
+  listTickets: async (filters?: {
+    status?: string;
+    priority?: string;
+    category?: string;
+    tenantId?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.status) params.set('status', filters.status);
+    if (filters?.priority) params.set('priority', filters.priority);
+    if (filters?.category) params.set('category', filters.category);
+    if (filters?.tenantId) params.set('tenantId', filters.tenantId);
+    const query = params.toString();
+    const url = `${API_ENDPOINTS.ADMIN.SUPPORT.LIST}${query ? `?${query}` : ''}`;
+    const response = await apiClient.get<unknown>(url);
+    return (response as Record<string, unknown>).tickets as SupportTicket[];
+  },
+
+  getTicket: async (ticketId: string) => {
+    const response = await apiClient.get<unknown>(
+      API_ENDPOINTS.ADMIN.SUPPORT.GET(ticketId)
+    );
+    return (response as Record<string, unknown>).ticket as SupportTicket;
+  },
+
+  assignTicket: async (ticketId: string, userId: string) => {
+    const response = await apiClient.patch<unknown>(
+      API_ENDPOINTS.ADMIN.SUPPORT.ASSIGN(ticketId),
+      { userId }
+    );
+    return (response as Record<string, unknown>).ticket as SupportTicket;
+  },
+
+  replyTicket: async (
+    ticketId: string,
+    data: { content: string; isInternal?: boolean }
+  ) => {
+    const response = await apiClient.post<unknown>(
+      API_ENDPOINTS.ADMIN.SUPPORT.REPLY(ticketId),
+      data
+    );
+    return response;
+  },
+
+  updateTicketStatus: async (ticketId: string, status: string) => {
+    const response = await apiClient.patch<unknown>(
+      API_ENDPOINTS.ADMIN.SUPPORT.UPDATE_STATUS(ticketId),
+      { status }
+    );
+    return (response as Record<string, unknown>).ticket as SupportTicket;
+  },
+
+  getSupportMetrics: async () => {
+    const response = await apiClient.get<unknown>(
+      API_ENDPOINTS.ADMIN.SUPPORT.METRICS
+    );
+    return response as SupportMetrics;
+  },
+
+  getSlaConfig: async () => {
+    const response = await apiClient.get<unknown>(
+      API_ENDPOINTS.ADMIN.SUPPORT.SLA_CONFIG
+    );
+    return (response as Record<string, unknown>).configs as SlaConfig[];
+  },
+
+  updateSlaConfig: async (
+    priority: string,
+    data: { firstResponseMinutes: number; resolutionMinutes: number }
+  ) => {
+    const response = await apiClient.put<unknown>(
+      API_ENDPOINTS.ADMIN.SUPPORT.SLA_CONFIG_UPDATE(priority),
+      data
+    );
+    return (response as Record<string, unknown>).config as SlaConfig;
   },
 
   // === Team ===

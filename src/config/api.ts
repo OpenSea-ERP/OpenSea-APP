@@ -499,6 +499,21 @@ export const API_ENDPOINTS = {
       INTEGRATIONS: (tenantId: string) =>
         `/v1/admin/tenants/${tenantId}/integrations`,
     },
+    // Support
+    SUPPORT: {
+      LIST: '/v1/admin/support/tickets',
+      GET: (ticketId: string) => `/v1/admin/support/tickets/${ticketId}`,
+      ASSIGN: (ticketId: string) =>
+        `/v1/admin/support/tickets/${ticketId}/assign`,
+      REPLY: (ticketId: string) =>
+        `/v1/admin/support/tickets/${ticketId}/reply`,
+      UPDATE_STATUS: (ticketId: string) =>
+        `/v1/admin/support/tickets/${ticketId}/status`,
+      METRICS: '/v1/admin/support/metrics',
+      SLA_CONFIG: '/v1/admin/support/sla',
+      SLA_CONFIG_UPDATE: (priority: string) =>
+        `/v1/admin/support/sla/${priority}`,
+    },
     // Central Team
     TEAM: {
       LIST: '/v1/admin/team',
@@ -881,6 +896,14 @@ export const API_ENDPOINTS = {
       UNLINK: (teamId: string, accountId: string) =>
         `/v1/teams/${teamId}/emails/${accountId}`,
     },
+  },
+  // Support (tenant-facing)
+  SUPPORT: {
+    CREATE: '/v1/support/tickets',
+    LIST_MY: '/v1/support/tickets',
+    GET_MY: (ticketId: string) => `/v1/support/tickets/${ticketId}`,
+    REPLY_MY: (ticketId: string) => `/v1/support/tickets/${ticketId}/reply`,
+    RATE: (ticketId: string) => `/v1/support/tickets/${ticketId}/rate`,
   },
   // Notifications
   NOTIFICATIONS: {

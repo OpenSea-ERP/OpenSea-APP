@@ -30,6 +30,16 @@ export const adminKeys = {
     [...adminKeys.all, 'tenant', tenantId, 'integrations'] as const,
   // Team
   centralUsers: (role?: string) => [...adminKeys.all, 'team', role] as const,
+  // Support
+  supportTickets: (filters?: {
+    status?: string;
+    priority?: string;
+    category?: string;
+  }) => [...adminKeys.all, 'support-tickets', filters] as const,
+  supportTicket: (id: string) =>
+    [...adminKeys.all, 'support-ticket', id] as const,
+  supportMetrics: () => [...adminKeys.all, 'support-metrics'] as const,
+  slaConfig: () => [...adminKeys.all, 'sla-config'] as const,
 };
 
 // =====================
@@ -493,6 +503,114 @@ export function useRemoveCentralUser() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: [...adminKeys.all, 'team'],
+      });
+    },
+  });
+}
+
+// =====================
+// Support
+// =====================
+
+export function useSupportTickets(filters?: {
+  status?: string;
+  priority?: string;
+  category?: string;
+}) {
+  return useQuery({
+    queryKey: adminKeys.supportTickets(filters),
+    queryFn: () => adminApi.listTickets(filters),
+  });
+}
+
+export function useSupportTicket(id: string) {
+  return useQuery({
+    queryKey: adminKeys.supportTicket(id),
+    queryFn: () => adminApi.getTicket(id),
+    enabled: !!id,
+  });
+}
+
+export function useSupportMetrics() {
+  return useQuery({
+    queryKey: adminKeys.supportMetrics(),
+    queryFn: () => adminApi.getSupportMetrics(),
+  });
+}
+
+export function useSlaConfig() {
+  return useQuery({
+    queryKey: adminKeys.slaConfig(),
+    queryFn: () => adminApi.getSlaConfig(),
+  });
+}
+
+export function useAssignTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, userId }: { ticketId: string; userId: string }) =>
+      adminApi.assignTicket(ticketId, userId),
+    onSuccess: async (_, { ticketId }) => {
+      await queryClient.invalidateQueries({
+        queryKey: adminKeys.supportTicket(ticketId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKeys.all, 'support-tickets'],
+      });
+    },
+  });
+}
+
+export function useReplyTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      ticketId,
+      data,
+    }: {
+      ticketId: string;
+      data: { content: string; isInternal?: boolean };
+    }) => adminApi.replyTicket(ticketId, data),
+    onSuccess: async (_, { ticketId }) => {
+      await queryClient.invalidateQueries({
+        queryKey: adminKeys.supportTicket(ticketId),
+      });
+    },
+  });
+}
+
+export function useUpdateTicketStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, status }: { ticketId: string; status: string }) =>
+      adminApi.updateTicketStatus(ticketId, status),
+    onSuccess: async (_, { ticketId }) => {
+      await queryClient.invalidateQueries({
+        queryKey: adminKeys.supportTicket(ticketId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [...adminKeys.all, 'support-tickets'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: adminKeys.supportMetrics(),
+      });
+    },
+  });
+}
+
+export function useUpdateSlaConfig() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      priority,
+      data,
+    }: {
+      priority: string;
+      data: { firstResponseMinutes: number; resolutionMinutes: number };
+    }) => adminApi.updateSlaConfig(priority, data),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: adminKeys.slaConfig(),
       });
     },
   });
