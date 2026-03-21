@@ -28,6 +28,12 @@ export const adminKeys = {
     [...adminKeys.all, 'tenant', tenantId, 'overview'] as const,
   tenantIntegrations: (tenantId: string) =>
     [...adminKeys.all, 'tenant', tenantId, 'integrations'] as const,
+  // Monitoring
+  systemHealth: () => [...adminKeys.all, 'monitoring', 'health'] as const,
+  integrationStatus: () =>
+    [...adminKeys.all, 'monitoring', 'integrations'] as const,
+  aiUsage: () => [...adminKeys.all, 'monitoring', 'ai-usage'] as const,
+  revenueMetrics: () => [...adminKeys.all, 'monitoring', 'revenue'] as const,
   // Team
   centralUsers: (role?: string) => [...adminKeys.all, 'team', role] as const,
   // Support
@@ -451,6 +457,43 @@ export function useOverrideTenantLimit() {
         queryKey: adminKeys.tenantConsumption(tenantId),
       });
     },
+  });
+}
+
+// =====================
+// Monitoring
+// =====================
+
+export function useSystemHealth() {
+  return useQuery({
+    queryKey: adminKeys.systemHealth(),
+    queryFn: () => adminApi.getSystemHealth(),
+    retry: 1,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useIntegrationStatus() {
+  return useQuery({
+    queryKey: adminKeys.integrationStatus(),
+    queryFn: () => adminApi.getIntegrationStatus(),
+    retry: 1,
+  });
+}
+
+export function useAiUsageReport() {
+  return useQuery({
+    queryKey: adminKeys.aiUsage(),
+    queryFn: () => adminApi.getAiUsageReport(),
+    retry: 1,
+  });
+}
+
+export function useRevenueMetrics() {
+  return useQuery({
+    queryKey: adminKeys.revenueMetrics(),
+    queryFn: () => adminApi.getRevenueMetrics(),
+    retry: 1,
   });
 }
 

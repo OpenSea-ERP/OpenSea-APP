@@ -514,6 +514,13 @@ export const API_ENDPOINTS = {
       SLA_CONFIG_UPDATE: (priority: string) =>
         `/v1/admin/support/sla/${priority}`,
     },
+    // Monitoring
+    MONITORING: {
+      SYSTEM_HEALTH: '/v1/admin/monitoring/health',
+      INTEGRATION_STATUS: '/v1/admin/monitoring/integrations',
+      AI_USAGE: '/v1/admin/monitoring/ai-usage',
+      REVENUE: '/v1/admin/monitoring/revenue',
+    },
     // Central Team
     TEAM: {
       LIST: '/v1/admin/team',
@@ -911,6 +918,58 @@ export const API_ENDPOINTS = {
     MARK_AS_READ: (id: string) => `/v1/notifications/${id}/read`,
     MARK_ALL_AS_READ: '/v1/notifications/mark-all-read',
     DELETE: (id: string) => `/v1/notifications/${id}`,
+  },
+  // Digital Signature
+  SIGNATURE: {
+    CERTIFICATES: {
+      LIST: '/v1/signature/certificates',
+      CREATE: '/v1/signature/certificates',
+      DELETE: (id: string) => `/v1/signature/certificates/${id}`,
+    },
+    ENVELOPES: {
+      LIST: '/v1/signature/envelopes',
+      CREATE: '/v1/signature/envelopes',
+      GET: (id: string) => `/v1/signature/envelopes/${id}`,
+      CANCEL: (id: string) => `/v1/signature/envelopes/${id}`,
+      RESEND: (id: string) =>
+        `/v1/signature/envelopes/${id}/resend-notifications`,
+    },
+    SIGNING: {
+      GET: (token: string) => `/v1/signature/sign/${token}`,
+      SIGN: (token: string) => `/v1/signature/sign/${token}`,
+      REJECT: (token: string) => `/v1/signature/sign/${token}/reject`,
+    },
+    TEMPLATES: {
+      LIST: '/v1/signature/templates',
+      CREATE: '/v1/signature/templates',
+    },
+  },
+  // Sales - Analytics
+  ANALYTICS: {
+    GOALS: {
+      LIST: '/v1/sales/analytics/goals',
+      CREATE: '/v1/sales/analytics/goals',
+      UPDATE: (id: string) => `/v1/sales/analytics/goals/${id}`,
+      DELETE: (id: string) => `/v1/sales/analytics/goals/${id}`,
+      PROGRESS: (id: string) => `/v1/sales/analytics/goals/${id}/progress`,
+    },
+    DASHBOARDS: {
+      LIST: '/v1/sales/analytics/dashboards',
+      CREATE: '/v1/sales/analytics/dashboards',
+    },
+    REPORTS: {
+      LIST: '/v1/sales/analytics/reports',
+      CREATE: '/v1/sales/analytics/reports',
+    },
+    RANKINGS: {
+      SELLERS: '/v1/sales/analytics/rankings/sellers',
+      PRODUCTS: '/v1/sales/analytics/rankings/products',
+      CUSTOMERS: '/v1/sales/analytics/rankings/customers',
+    },
+    CUSTOMER_PORTAL: {
+      CREATE: '/v1/sales/analytics/customer-portal',
+      GET: (token: string) => `/v1/sales/analytics/customer-portal/${token}`,
+    },
   },
   // Health
   HEALTH: '/health',

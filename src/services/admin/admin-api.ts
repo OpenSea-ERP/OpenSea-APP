@@ -1,13 +1,17 @@
 import { API_ENDPOINTS } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
 import type {
+  AiUsageReport,
   CentralUser,
+  IntegrationStatusReport,
+  RevenueMetrics,
   SkillDefinition,
   SkillPricing,
   SkillTreeNode,
   SlaConfig,
   SupportMetrics,
   SupportTicket,
+  SystemHealth,
   TenantConsumption,
   TenantIntegrationStatus,
   TenantOverview,
@@ -473,6 +477,35 @@ export const adminApi = {
       data
     );
     return (response as Record<string, unknown>).config as SlaConfig;
+  },
+
+  // === Monitoring ===
+  getSystemHealth: async () => {
+    const response = await apiClient.get<unknown>(
+      API_ENDPOINTS.ADMIN.MONITORING.SYSTEM_HEALTH
+    );
+    return response as SystemHealth;
+  },
+
+  getIntegrationStatus: async () => {
+    const response = await apiClient.get<unknown>(
+      API_ENDPOINTS.ADMIN.MONITORING.INTEGRATION_STATUS
+    );
+    return response as IntegrationStatusReport;
+  },
+
+  getAiUsageReport: async () => {
+    const response = await apiClient.get<unknown>(
+      API_ENDPOINTS.ADMIN.MONITORING.AI_USAGE
+    );
+    return response as AiUsageReport;
+  },
+
+  getRevenueMetrics: async () => {
+    const response = await apiClient.get<unknown>(
+      API_ENDPOINTS.ADMIN.MONITORING.REVENUE
+    );
+    return response as RevenueMetrics;
   },
 
   // === Team ===
