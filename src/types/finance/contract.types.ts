@@ -81,6 +81,8 @@ export interface ContractsQuery {
   startDateTo?: string;
   endDateFrom?: string;
   endDateTo?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface SupplierHistory {

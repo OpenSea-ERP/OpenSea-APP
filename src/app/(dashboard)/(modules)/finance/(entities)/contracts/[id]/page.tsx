@@ -1,14 +1,24 @@
 /**
- * Contract Detail Page
+ * OpenSea OS - Contract Detail Page
+ * Follows the standard detail page pattern: PageLayout > PageHeader > PageBody
+ * with Identity Card, info sections, supplier history, and attachments.
  */
 
 'use client';
 
+import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
+import type { HeaderButton } from '@/components/layout/types/header.types';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
   useContract,
@@ -26,22 +36,23 @@ import {
 import type { StorageFile } from '@/types/storage';
 import {
   AlertTriangle,
-  ArrowLeft,
   Building2,
   Calendar,
   DollarSign,
   Download,
   Edit,
   FileText,
+  Info,
+  Landmark,
   Loader2,
   Paperclip,
   Play,
+  RefreshCw,
   Trash2,
   Upload,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { use, useCallback, useEffect, useRef, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // =============================================================================
@@ -94,15 +105,15 @@ function InfoRow({
   className?: string;
 }) {
   return (
-    <div className={className}>
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium">{value ?? '\u2014'}</p>
+    <div className="flex justify-between items-start gap-4">
+      <span className="text-sm text-muted-foreground shrink-0">{label}</span>
+      <span className={`text-sm text-right ${className ?? ''}`}>{value}</span>
     </div>
   );
 }
 
 // =============================================================================
-// MAIN
+// MAIN PAGE COMPONENT
 // =============================================================================
 
 export default function ContractDetailPage({
@@ -113,8 +124,7 @@ export default function ContractDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const { hasPermission } = usePermissions();
-
-  const { data, isLoading, refetch } = useContract(id);
+  const { data, isLoading, error, refetch } = useContract(id);
   const deleteContract = useDeleteContract();
   const generateEntries = useGenerateContractEntries();
 
@@ -122,18 +132,15 @@ export default function ContractDetailPage({
   const generatedEntriesCount = data?.generatedEntriesCount ?? 0;
   const nextPaymentDate = data?.nextPaymentDate;
 
+  const canEdit = hasPermission(FINANCE_PERMISSIONS.CONTRACTS.MODIFY);
+  const canDelete = hasPermission(FINANCE_PERMISSIONS.CONTRACTS.REMOVE);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   // Supplier history
   const { data: historyData } = useSupplierHistory({
     companyName: contract?.companyName,
   });
-
-  // Permissions
-  const canEdit = hasPermission(FINANCE_PERMISSIONS.CONTRACTS.MODIFY);
-  const canDelete = hasPermission(FINANCE_PERMISSIONS.CONTRACTS.REMOVE);
-  const canManage = hasPermission(FINANCE_PERMISSIONS.CONTRACTS.MODIFY);
-
-  // Delete modal
-  const [pinModalOpen, setPinModalOpen] = useState(false);
 
   // Attachments
   const [attachments, setAttachments] = useState<StorageFile[]>([]);
@@ -180,16 +187,15 @@ export default function ContractDetailPage({
   );
 
   const handleDelete = useCallback(async () => {
+    if (!contract) return;
     try {
-      await deleteContract.mutateAsync(id);
+      await deleteContract.mutateAsync(contract.id);
       toast.success('Contrato excluído com sucesso.');
       router.push('/finance/contracts');
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Erro ao excluir contrato';
-      toast.error(message);
+    } catch {
+      toast.error('Erro ao excluir contrato.');
     }
-  }, [id, deleteContract, router]);
+  }, [contract, deleteContract, router]);
 
   const handleGenerateEntries = useCallback(async () => {
     try {
@@ -205,37 +211,94 @@ export default function ContractDetailPage({
     }
   }, [id, generateEntries, refetch]);
 
-  // Loading
+  // ============================================================================
+  // ACTION BUTTONS
+  // ============================================================================
+
+  const actionButtons = useMemo<HeaderButton[]>(() => {
+    const buttons: HeaderButton[] = [];
+
+    if (canEdit && contract && !contract.isCancelled) {
+      buttons.push({
+        id: 'generate-entries',
+        title: generateEntries.isPending ? 'Gerando...' : 'Gerar Lançamentos',
+        icon: generateEntries.isPending ? Loader2 : Play,
+        onClick: handleGenerateEntries,
+        variant: 'outline',
+        disabled: generateEntries.isPending,
+      });
+    }
+
+    if (canEdit) {
+      buttons.push({
+        id: 'edit-contract',
+        title: 'Editar',
+        icon: Edit,
+        onClick: () => router.push(`/finance/contracts/${id}/edit`),
+        variant: 'outline',
+      });
+    }
+
+    if (canDelete) {
+      buttons.push({
+        id: 'delete-contract',
+        title: 'Excluir',
+        icon: Trash2,
+        onClick: () => setDeleteModalOpen(true),
+        variant: 'default',
+        className:
+          'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+      });
+    }
+
+    return buttons;
+  }, [canEdit, canDelete, router, id, contract, generateEntries, handleGenerateEntries]);
+
+  // ============================================================================
+  // BREADCRUMBS
+  // ============================================================================
+
+  const breadcrumbItems = [
+    { label: 'Financeiro', href: '/finance' },
+    { label: 'Contratos', href: '/finance/contracts' },
+    { label: contract?.title || '...' },
+  ];
+
+  // ============================================================================
+  // LOADING / ERROR
+  // ============================================================================
+
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-20" />
-          <Skeleton className="h-8 w-64" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-64 lg:col-span-2" />
-          <Skeleton className="h-64" />
-        </div>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridLoading count={3} layout="list" size="md" />
+        </PageBody>
+      </PageLayout>
     );
   }
 
-  // Not found
-  if (!contract) {
+  if (error || !contract) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 gap-4">
-        <FileText className="h-12 w-12 text-muted-foreground" />
-        <p className="text-destructive text-lg font-medium">
-          Contrato não encontrado.
-        </p>
-        <Link href="/finance/contracts">
-          <Button variant="outline">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para contratos
-          </Button>
-        </Link>
-      </div>
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridError
+            type="not-found"
+            title="Contrato não encontrado"
+            message="O contrato solicitado não foi encontrado."
+            action={{
+              label: 'Voltar para Contratos',
+              onClick: () => router.push('/finance/contracts'),
+            }}
+          />
+        </PageBody>
+      </PageLayout>
     );
   }
 
@@ -243,166 +306,137 @@ export default function ContractDetailPage({
     contract.daysUntilExpiration > 0 &&
     contract.daysUntilExpiration <= contract.alertDaysBefore;
 
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/finance/contracts">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Voltar
-            </Button>
-          </Link>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold">{contract.title}</h1>
-              <Badge variant={getStatusVariant(contract.status)}>
-                {CONTRACT_STATUS_LABELS[contract.status]}
-              </Badge>
-              <span className="text-sm font-mono text-muted-foreground">
-                {contract.code}
-              </span>
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={breadcrumbItems}
+          buttons={actionButtons}
+        />
+      </PageHeader>
+
+      <PageBody>
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-teal-600 shadow-lg">
+              <FileText className="h-7 w-7 text-white" />
             </div>
-            {contract.description && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {contract.description}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold truncate">
+                  {contract.title}
+                </h1>
+                <Badge variant={getStatusVariant(contract.status)}>
+                  {CONTRACT_STATUS_LABELS[contract.status]}
+                </Badge>
+                {contract.autoRenew && (
+                  <Badge variant="outline" className="gap-1">
+                    <RefreshCw className="h-3 w-3" />
+                    Auto-renovação
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {contract.companyName}
+                {contract.code && ` · ${contract.code}`}
               </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {canManage && !contract.isCancelled && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleGenerateEntries}
-              disabled={generateEntries.isPending}
-            >
-              <Play className="h-4 w-4 mr-2" />
-              {generateEntries.isPending ? 'Gerando...' : 'Gerar Lançamentos'}
-            </Button>
-          )}
-          {canEdit && !contract.isCancelled && (
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/finance/contracts/${id}`}>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Link>
-            </Button>
-          )}
-          {canDelete && !contract.isCancelled && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setPinModalOpen(true)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Excluir
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Alerts */}
-      {isNearExpiry && !contract.isExpired && (
-        <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <div>
-              <p className="font-medium text-amber-800 dark:text-amber-300">
-                Contrato próximo do vencimento
-              </p>
-              <p className="text-sm text-amber-700 dark:text-amber-400">
-                Este contrato vence em {contract.daysUntilExpiration} dia(s) (
-                {formatDate(contract.endDate)}).
-              </p>
+            </div>
+            <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
+              <div className="text-right">
+                <p className="text-xs font-semibold">Parcela</p>
+                <p className="text-[11px] text-muted-foreground font-mono">
+                  {formatCurrency(contract.paymentAmount)}
+                </p>
+              </div>
             </div>
           </div>
         </Card>
-      )}
 
-      {contract.isExpired && (
-        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
-            <div>
-              <p className="font-medium text-red-800 dark:text-red-300">
-                Contrato expirado
-              </p>
-              <p className="text-sm text-red-700 dark:text-red-400">
-                Este contrato expirou em {formatDate(contract.endDate)}.
-              </p>
+        {/* Alerts */}
+        {isNearExpiry && !contract.isExpired && (
+          <Card className="border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/20">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <div>
+                  <p className="text-base font-semibold text-amber-800 dark:text-amber-200">
+                    Contrato próximo do vencimento
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    Este contrato vence em {contract.daysUntilExpiration} dia(s) ({formatDate(contract.endDate)}).
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        )}
 
-      {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Contract details */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Values */}
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Valores e Pagamento
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {contract.isExpired && (
+          <Card className="border-rose-300 dark:border-rose-700 bg-rose-50 dark:bg-rose-950/20">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                <div>
+                  <p className="text-base font-semibold text-rose-800 dark:text-rose-200">
+                    Contrato expirado
+                  </p>
+                  <p className="text-sm text-rose-700 dark:text-rose-300">
+                    Este contrato expirou em {formatDate(contract.endDate)}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Info Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card 1: Dados do Contrato */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                Dados do Contrato
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow label="Título" value={contract.title} />
+              {contract.code && <InfoRow label="Código" value={contract.code} />}
+              {contract.description && (
+                <InfoRow label="Descrição" value={contract.description} />
+              )}
               <InfoRow
-                label="Valor Total"
-                value={
-                  <span className="text-lg font-bold">
-                    {formatCurrency(contract.totalValue)}
-                  </span>
-                }
+                label="Status"
+                value={CONTRACT_STATUS_LABELS[contract.status]}
               />
               <InfoRow
-                label="Valor da Parcela"
-                value={
-                  <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                    {formatCurrency(contract.paymentAmount)}
-                  </span>
-                }
-              />
-              <InfoRow
-                label="Frequencia"
+                label="Frequência"
                 value={
                   PAYMENT_FREQUENCY_LABELS[contract.paymentFrequency] ??
                   contract.paymentFrequency
                 }
               />
-              <InfoRow
-                label="Lançamentos Gerados"
-                value={generatedEntriesCount}
-              />
-            </div>
-            {nextPaymentDate && (
-              <div className="mt-4 pt-4 border-t">
-                <InfoRow
-                  label="Próximo Pagamento"
-                  value={
-                    <span className="text-orange-600 dark:text-orange-400 font-medium">
-                      {formatDate(nextPaymentDate)}
-                    </span>
-                  }
-                />
-              </div>
-            )}
+            </CardContent>
           </Card>
 
-          {/* Vigencia */}
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Vigencia
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Card 2: Período e Renovação */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Período e Renovação
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <InfoRow label="Início" value={formatDate(contract.startDate)} />
               <InfoRow label="Término" value={formatDate(contract.endDate)} />
               <InfoRow
-                label="Dias ate o Vencimento"
+                label="Dias até o Vencimento"
                 value={
                   contract.daysUntilExpiration > 0
                     ? `${contract.daysUntilExpiration} dia(s)`
@@ -413,111 +447,150 @@ export default function ContractDetailPage({
                 label="Alerta"
                 value={`${contract.alertDaysBefore} dias antes`}
               />
-            </div>
-            {contract.autoRenew && (
-              <div className="mt-4 pt-4 border-t">
-                <InfoRow
-                  label="Renovação Automática"
-                  value={`Sim - a cada ${contract.renewalPeriodMonths ?? 12} meses`}
-                />
-              </div>
-            )}
+              <InfoRow
+                label="Renovação Automática"
+                value={
+                  contract.autoRenew
+                    ? `Sim - a cada ${contract.renewalPeriodMonths ?? 12} meses`
+                    : 'Não'
+                }
+              />
+            </CardContent>
           </Card>
 
-          {/* Classification */}
-          {(contract.categoryId ||
-            contract.costCenterId ||
-            contract.bankAccountId) && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Classificação</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {contract.categoryId && (
-                  <InfoRow label="Categoria" value={contract.categoryId} />
-                )}
-                {contract.costCenterId && (
+          {/* Card 3: Valores */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Valores
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow
+                label="Valor Total"
+                value={formatCurrency(contract.totalValue)}
+                className="font-bold"
+              />
+              <InfoRow
+                label="Valor da Parcela"
+                value={formatCurrency(contract.paymentAmount)}
+              />
+              <InfoRow
+                label="Lançamentos Gerados"
+                value={String(generatedEntriesCount)}
+              />
+              {nextPaymentDate && (
+                <div className="pt-2 border-t">
                   <InfoRow
-                    label="Centro de Custo"
-                    value={contract.costCenterId}
+                    label="Próximo Pagamento"
+                    value={formatDate(nextPaymentDate)}
+                    className="font-semibold text-amber-600 dark:text-amber-400"
                   />
-                )}
-                {contract.bankAccountId && (
-                  <InfoRow
-                    label="Conta Bancária"
-                    value={contract.bankAccountId}
-                  />
-                )}
-              </div>
-            </Card>
-          )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          {/* Notes */}
-          {contract.notes && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-2">Observações</h2>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {contract.notes}
-              </p>
-            </Card>
-          )}
+          {/* Card 4: Vinculação */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Landmark className="h-4 w-4" />
+                Vinculação
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {contract.bankAccountId && (
+                <InfoRow label="Conta Bancária" value={contract.bankAccountId} />
+              )}
+              {contract.costCenterId && (
+                <InfoRow label="Centro de Custo" value={contract.costCenterId} />
+              )}
+              {contract.categoryId && (
+                <InfoRow label="Categoria" value={contract.categoryId} />
+              )}
+              {!contract.bankAccountId && !contract.costCenterId && !contract.categoryId && (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma vinculação configurada.
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Right sidebar */}
-        <div className="space-y-6">
-          {/* Supplier info */}
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
+        {/* Fornecedor */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
               Fornecedor
-            </h2>
-            <div className="space-y-3">
-              <InfoRow label="Empresa" value={contract.companyName} />
-              {contract.contactName && (
-                <InfoRow label="Contato" value={contract.contactName} />
-              )}
-              {contract.contactEmail && (
-                <InfoRow label="E-mail" value={contract.contactEmail} />
-              )}
-            </div>
-          </Card>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow label="Empresa" value={contract.companyName} />
+            {contract.contactName && (
+              <InfoRow label="Contato" value={contract.contactName} />
+            )}
+            {contract.contactEmail && (
+              <InfoRow label="E-mail" value={contract.contactEmail} />
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Supplier history */}
-          {historyData && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+        {/* Supplier History */}
+        {historyData && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4" />
                 Histórico do Fornecedor
-              </h2>
-              <div className="space-y-3">
-                <InfoRow
-                  label="Total de Contratos"
-                  value={historyData.totalContracts}
-                />
-                <InfoRow
-                  label="Total de Pagamentos"
-                  value={historyData.totalPaymentsCount}
-                />
-                <InfoRow
-                  label="Valor Total Pago"
-                  value={
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                      {formatCurrency(historyData.totalPaymentsValue)}
-                    </span>
-                  }
-                />
-              </div>
-            </Card>
-          )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow
+                label="Total de Contratos"
+                value={String(historyData.totalContracts)}
+              />
+              <InfoRow
+                label="Total de Pagamentos"
+                value={String(historyData.totalPaymentsCount)}
+              />
+              <InfoRow
+                label="Valor Total Pago"
+                value={formatCurrency(historyData.totalPaymentsValue)}
+                className="font-semibold text-emerald-600 dark:text-emerald-400"
+              />
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Attachments */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Paperclip className="h-5 w-5" />
+        {/* Notes */}
+        {contract.notes && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Observações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-wrap">{contract.notes}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Attachments */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Paperclip className="h-4 w-4" />
                 Documentos
                 {attachments.length > 0 && (
                   <Badge variant="secondary">{attachments.length}</Badge>
                 )}
-              </h2>
+              </CardTitle>
               <Button
                 variant="outline"
                 size="sm"
@@ -540,6 +613,8 @@ export default function ContractDetailPage({
                 onChange={handleFileSelect}
               />
             </div>
+          </CardHeader>
+          <CardContent>
             {attachments.length > 0 ? (
               <div className="space-y-2">
                 {attachments.map(file => (
@@ -580,38 +655,18 @@ export default function ContractDetailPage({
                 documentos do contrato.
               </p>
             )}
-          </Card>
+          </CardContent>
+        </Card>
+      </PageBody>
 
-          {/* Metadata */}
-          <Card className="p-6">
-            <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-              Metadados
-            </h2>
-            <div className="space-y-2 text-xs">
-              <InfoRow label="ID" value={contract.id} />
-              <InfoRow
-                label="Criado em"
-                value={formatDate(contract.createdAt)}
-              />
-              {contract.updatedAt && (
-                <InfoRow
-                  label="Atualizado em"
-                  value={formatDate(contract.updatedAt)}
-                />
-              )}
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Delete PIN modal */}
+      {/* Delete Confirmation */}
       <VerifyActionPinModal
-        isOpen={pinModalOpen}
-        onClose={() => setPinModalOpen(false)}
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDelete}
         title="Confirmar Exclusão"
-        description={`Digite seu PIN de Ação para excluir o contrato "${contract.title}". Os lançamentos pendentes serão cancelados.`}
+        description={`Digite seu PIN de Ação para excluir o contrato "${contract.title}". Os lançamentos pendentes serão cancelados. Esta ação não pode ser desfeita.`}
       />
-    </div>
+    </PageLayout>
   );
 }
