@@ -784,8 +784,7 @@ export default function VariantsSheetsPage() {
       <PageActionBar
         breadcrumbItems={[
           { label: 'Importação', href: '/import' },
-          { label: 'Variantes', href: basePath },
-          { label: 'Planilha' },
+          { label: 'Variantes' },
         ]}
         buttons={actionBarButtons}
       />

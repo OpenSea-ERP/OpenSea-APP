@@ -816,8 +816,7 @@ export default function ProductsSheetsPage() {
       <PageActionBar
         breadcrumbItems={[
           { label: 'Importação', href: '/import' },
-          { label: 'Produtos', href: basePath },
-          { label: 'Planilha' },
+          { label: 'Produtos' },
         ]}
         buttons={actionBarButtons}
       />
