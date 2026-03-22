@@ -13,6 +13,7 @@ import {
 } from '@/components/central/central-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import {
   Select,
   SelectContent,
@@ -74,11 +75,6 @@ const STATUS_OPTIONS = [
   { value: 'SUSPENDED', label: 'Suspensas' },
 ];
 
-const TENANT_STATUS_OPTIONS = [
-  { value: 'ACTIVE', label: 'Ativa' },
-  { value: 'INACTIVE', label: 'Inativa' },
-  { value: 'SUSPENDED', label: 'Suspensa' },
-];
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -98,9 +94,7 @@ export default function TenantsListPage() {
   // Form state for wizard
   const [tenantForm, setTenantForm] = useState({
     name: '',
-    slug: '',
     logoUrl: '',
-    status: 'ACTIVE',
   });
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [userForm, setUserForm] = useState({
@@ -142,7 +136,7 @@ export default function TenantsListPage() {
 
   const resetWizard = () => {
     setWizardStep(1);
-    setTenantForm({ name: '', slug: '', logoUrl: '', status: 'ACTIVE' });
+    setTenantForm({ name: '', logoUrl: '' });
     setSelectedPlanId(null);
     setUserForm({ email: '', username: '', password: '' });
     setIsSubmitting(false);
@@ -158,9 +152,7 @@ export default function TenantsListPage() {
     try {
       const tenant = await createTenant.mutateAsync({
         name: tenantForm.name,
-        slug: tenantForm.slug || undefined,
         logoUrl: tenantForm.logoUrl || undefined,
-        status: tenantForm.status,
       });
 
       const tenantId = tenant.id;
@@ -230,19 +222,6 @@ export default function TenantsListPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Slug (opcional)</label>
-            <Input
-              value={tenantForm.slug}
-              onChange={e =>
-                setTenantForm(f => ({ ...f, slug: e.target.value }))
-              }
-              placeholder="Gerado automaticamente se vazio"
-            />
-            <p className="text-xs text-muted-foreground">
-              Identificador unico na URL. Gerado a partir do nome se vazio.
-            </p>
-          </div>
-          <div className="space-y-1.5">
             <label className="text-sm font-medium">
               URL do Logo (opcional)
             </label>
@@ -253,24 +232,6 @@ export default function TenantsListPage() {
               }
               placeholder="https://exemplo.com/logo.png"
             />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Status</label>
-            <Select
-              value={tenantForm.status}
-              onValueChange={v => setTenantForm(f => ({ ...f, status: v }))}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TENANT_STATUS_OPTIONS.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </div>
       ),
@@ -343,11 +304,6 @@ export default function TenantsListPage() {
                 })}
             </div>
           )}
-          {selectedPlanId && (
-            <p className="text-xs text-muted-foreground text-center">
-              Clique novamente no plano selecionado para desmarcar
-            </p>
-          )}
         </div>
       ),
     },
@@ -407,8 +363,7 @@ export default function TenantsListPage() {
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Senha</label>
-            <Input
-              type="password"
+            <PasswordInput
               value={userForm.password}
               onChange={e =>
                 setUserForm(f => ({ ...f, password: e.target.value }))
