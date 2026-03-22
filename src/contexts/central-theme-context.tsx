@@ -31,6 +31,12 @@ export function CentralThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.setAttribute('data-central-theme', theme);
     localStorage.setItem('central-theme', theme);
+
+    // Cleanup: remove attribute when leaving Central to prevent
+    // shadcn CSS variable overrides from leaking into the main app
+    return () => {
+      document.documentElement.removeAttribute('data-central-theme');
+    };
   }, [theme]);
 
   const toggleTheme = () =>

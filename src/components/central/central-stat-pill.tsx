@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils';
 import { ReactNode } from 'react';
 
-export type StatPillIconColor = 'violet' | 'sky' | 'emerald' | 'teal';
+export type StatPillIconColor = 'violet' | 'indigo' | 'sky' | 'emerald' | 'teal';
 
 export interface CentralStatPillProps {
   icon: ReactNode;
@@ -16,6 +16,7 @@ export interface CentralStatPillProps {
 
 const iconBgClasses: Record<StatPillIconColor, string> = {
   violet: 'bg-violet-500/20',
+  indigo: 'bg-indigo-500/20',
   sky: 'bg-sky-500/20',
   emerald: 'bg-emerald-500/20',
   teal: 'bg-teal-500/20',
@@ -23,6 +24,7 @@ const iconBgClasses: Record<StatPillIconColor, string> = {
 
 const iconTextClasses: Record<StatPillIconColor, string> = {
   violet: 'text-violet-300',
+  indigo: 'text-indigo-300',
   sky: 'text-sky-300',
   emerald: 'text-emerald-300',
   teal: 'text-teal-300',

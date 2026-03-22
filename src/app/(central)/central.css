@@ -2,6 +2,9 @@
  * Central-only CSS — Dual Theme System
  * These styles are only loaded in the /central route group (super admin area).
  * Uses CSS custom properties for light/dark theme switching.
+ *
+ * IMPORTANT: data-central-theme is set on <html> by CentralThemeProvider,
+ * so ALL elements (including Radix portals) inherit these variables.
  */
 
 /* ===========================================
@@ -52,55 +55,65 @@
   --central-ticket-tenant: #7c3aed;
   --central-ticket-desc: #71717a;
   --central-ticket-time: #a1a1aa;
+  --central-accent: #6366f1;
+  --central-input-bg: #ffffff;
+  --central-input-border: #e4e4e7;
+  --central-input-text: #18181b;
+  --central-input-placeholder: #a1a1aa;
 }
 
 /* ===========================================
-   DARK THEME
+   DARK THEME — Slate/Gray palette
    =========================================== */
 
 [data-central-theme='dark'] {
-  --central-bg: #0c0a1e;
-  --central-card-bg: rgba(139, 92, 246, 0.03);
+  --central-bg: #0f1117;
+  --central-card-bg: #1a1d25;
   --central-card-shadow: none;
-  --central-card-border: rgba(139, 92, 246, 0.06);
-  --central-sidebar-bg: #0e0b24;
-  --central-sidebar-border: rgba(139, 92, 246, 0.06);
-  --central-hero-gradient: linear-gradient(135deg, #1a0f3e, #251652, #1a1145);
+  --central-card-border: #262a33;
+  --central-sidebar-bg: #12141b;
+  --central-sidebar-border: #1e2028;
+  --central-hero-gradient: linear-gradient(135deg, #1a1d25, #252830, #1e2028);
   --central-hero-radius: 0 0 16px 16px;
-  --central-text-primary: #f4f4f5;
-  --central-text-secondary: #6d5cae;
-  --central-text-muted: #5b4a8a;
-  --central-nav-active-bg: rgba(139, 92, 246, 0.1);
-  --central-nav-active-text: #c4b5fd;
-  --central-nav-text: #4c3d7a;
-  --central-nav-hover-bg: rgba(139, 92, 246, 0.06);
-  --central-nav-hover-text: #a78bfa;
-  --central-hero-pill-bg: rgba(139, 92, 246, 0.06);
-  --central-hero-pill-border: rgba(139, 92, 246, 0.08);
-  --central-hero-text: #f4f4f5;
-  --central-hero-muted: #6d5cae;
-  --central-hero-search-bg: rgba(139, 92, 246, 0.08);
+  --central-text-primary: #f0f0f3;
+  --central-text-secondary: #8b8fa3;
+  --central-text-muted: #5c607a;
+  --central-nav-active-bg: rgba(99, 102, 241, 0.1);
+  --central-nav-active-text: #a5b4fc;
+  --central-nav-text: #5c607a;
+  --central-nav-hover-bg: #1e2028;
+  --central-nav-hover-text: #c4c7d4;
+  --central-hero-pill-bg: rgba(255, 255, 255, 0.04);
+  --central-hero-pill-border: rgba(255, 255, 255, 0.06);
+  --central-hero-text: #f0f0f3;
+  --central-hero-muted: #8b8fa3;
+  --central-hero-search-bg: rgba(255, 255, 255, 0.05);
   --central-hero-search-text: #d4d4d8;
-  --central-hero-btn-bg: rgba(139, 92, 246, 0.08);
-  --central-hero-btn-text: #8b7cc8;
-  --central-hero-kbd-bg: rgba(139, 92, 246, 0.12);
-  --central-hero-kbd-text: #6d5cae;
-  --central-alert-bg: rgba(244, 63, 94, 0.05);
-  --central-alert-border: rgba(244, 63, 94, 0.1);
+  --central-hero-btn-bg: rgba(255, 255, 255, 0.05);
+  --central-hero-btn-text: #8b8fa3;
+  --central-hero-kbd-bg: rgba(255, 255, 255, 0.08);
+  --central-hero-kbd-text: #5c607a;
+  --central-alert-bg: rgba(244, 63, 94, 0.06);
+  --central-alert-border: rgba(244, 63, 94, 0.12);
   --central-alert-text: #fb7185;
   --central-alert-dot: #f43f5e;
-  --central-separator: rgba(139, 92, 246, 0.08);
-  --central-avatar-bg: rgba(139, 92, 246, 0.08);
-  --central-avatar-text: #a78bfa;
-  --central-logo-bg: linear-gradient(135deg, #7c3aed, #6366f1);
-  --central-logo-text: #ffffff;
+  --central-separator: #262a33;
+  --central-avatar-bg: #262a33;
+  --central-avatar-text: #c4c7d4;
+  --central-logo-bg: #f0f0f3;
+  --central-logo-text: #0f1117;
   --central-badge-dot: #f43f5e;
-  --central-ticket-bg: rgba(139, 92, 246, 0.03);
-  --central-ticket-border: rgba(139, 92, 246, 0.04);
+  --central-ticket-bg: #1e2028;
+  --central-ticket-border: #262a33;
   --central-ticket-num: #e4e4e7;
-  --central-ticket-tenant: #a78bfa;
-  --central-ticket-desc: #71717a;
-  --central-ticket-time: #5b4a8a;
+  --central-ticket-tenant: #a5b4fc;
+  --central-ticket-desc: #8b8fa3;
+  --central-ticket-time: #5c607a;
+  --central-accent: #818cf8;
+  --central-input-bg: #1e2028;
+  --central-input-border: #2e323d;
+  --central-input-text: #f0f0f3;
+  --central-input-placeholder: #5c607a;
 }
 
 /* ===========================================
@@ -130,18 +143,26 @@
     box-shadow 300ms ease;
 }
 
+/* Central input — applies to all inputs, selects, textareas inside Central */
+.central-input {
+  background-color: var(--central-input-bg) !important;
+  border-color: var(--central-input-border) !important;
+  color: var(--central-input-text) !important;
+}
+
+.central-input::placeholder {
+  color: var(--central-input-placeholder) !important;
+}
+
 /* ===========================================
    SHADCN COMPONENT OVERRIDES
    Override shadcn CSS variables inside Central
    so components render correctly in both themes.
+   Applied on <html> so portals (dialogs, popovers)
+   also inherit these values.
    =========================================== */
 
-[data-central-theme='light'] input,
-[data-central-theme='light'] select,
-[data-central-theme='light'] textarea,
-[data-central-theme='light'] [role='dialog'],
-[data-central-theme='light'] [role='combobox'],
-[data-central-theme='light'] [data-radix-popper-content-wrapper] {
+:root[data-central-theme='light'] {
   --background: 255 255 255;
   --foreground: 24 24 27;
   --border: 228 228 231;
@@ -155,25 +176,32 @@
   --accent-foreground: 24 24 27;
   --card: 255 255 255;
   --card-foreground: 24 24 27;
+  --primary: 99 102 241;
+  --primary-foreground: 255 255 255;
+  --secondary: 244 244 245;
+  --secondary-foreground: 24 24 27;
+  --destructive: 244 63 94;
+  --destructive-foreground: 255 255 255;
 }
 
-[data-central-theme='dark'] input,
-[data-central-theme='dark'] select,
-[data-central-theme='dark'] textarea,
-[data-central-theme='dark'] [role='dialog'],
-[data-central-theme='dark'] [role='combobox'],
-[data-central-theme='dark'] [data-radix-popper-content-wrapper] {
-  --background: 12 10 30;
-  --foreground: 244 244 245;
-  --border: 139 92 246 / 0.15;
-  --input: 139 92 246 / 0.15;
-  --ring: 139 92 246;
-  --popover: 14 11 36;
-  --popover-foreground: 244 244 245;
-  --muted: 139 92 246 / 0.06;
-  --muted-foreground: 109 92 174;
-  --accent: 139 92 246 / 0.1;
-  --accent-foreground: 196 181 253;
-  --card: 139 92 246 / 0.03;
-  --card-foreground: 244 244 245;
+:root[data-central-theme='dark'] {
+  --background: 15 17 23;
+  --foreground: 240 240 243;
+  --border: 38 42 51;
+  --input: 46 50 61;
+  --ring: 129 140 248;
+  --popover: 26 29 37;
+  --popover-foreground: 240 240 243;
+  --muted: 30 32 40;
+  --muted-foreground: 139 143 163;
+  --accent: 30 32 40;
+  --accent-foreground: 196 199 212;
+  --card: 26 29 37;
+  --card-foreground: 240 240 243;
+  --primary: 129 140 248;
+  --primary-foreground: 15 17 23;
+  --secondary: 30 32 40;
+  --secondary-foreground: 240 240 243;
+  --destructive: 244 63 94;
+  --destructive-foreground: 255 255 255;
 }

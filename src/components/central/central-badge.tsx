@@ -6,6 +6,7 @@ import { HTMLAttributes, forwardRef } from 'react';
 
 export type CentralBadgeVariant =
   | 'violet'
+  | 'indigo'
   | 'rose'
   | 'sky'
   | 'emerald'
@@ -19,6 +20,7 @@ export interface CentralBadgeProps extends HTMLAttributes<HTMLSpanElement> {
 
 const lightClasses: Record<CentralBadgeVariant, string> = {
   violet: 'bg-violet-50 text-violet-700',
+  indigo: 'bg-indigo-50 text-indigo-700',
   rose: 'bg-rose-50 text-rose-700',
   sky: 'bg-sky-50 text-sky-700',
   emerald: 'bg-emerald-50 text-emerald-700',
@@ -29,6 +31,7 @@ const lightClasses: Record<CentralBadgeVariant, string> = {
 
 const darkClasses: Record<CentralBadgeVariant, string> = {
   violet: 'bg-violet-500/10 text-violet-300',
+  indigo: 'bg-indigo-500/10 text-indigo-300',
   rose: 'bg-rose-500/10 text-rose-300',
   sky: 'bg-sky-500/10 text-sky-300',
   emerald: 'bg-emerald-500/10 text-emerald-300',

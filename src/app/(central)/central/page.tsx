@@ -33,20 +33,20 @@ import {
 
 const MODULE_COLORS = {
   light: {
-    SALES: '#8b5cf6',
+    SALES: '#6366f1',
     HR: '#0ea5e9',
     STOCK: '#10b981',
     FIN: '#f43f5e',
     TOOLS: '#14b8a6',
-    AI: '#6366f1',
+    AI: '#4f46e5',
   },
   dark: {
-    SALES: '#a78bfa',
+    SALES: '#818cf8',
     HR: '#38bdf8',
     STOCK: '#34d399',
     FIN: '#fb7185',
     TOOLS: '#2dd4bf',
-    AI: '#818cf8',
+    AI: '#a5b4fc',
   },
 };
 
@@ -57,7 +57,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   low: '#10b981',
 };
 
-const TENANT_AVATAR_COLORS = ['#8b5cf6', '#0ea5e9', '#10b981', '#f43f5e'];
+const TENANT_AVATAR_COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f43f5e'];
 
 // ========================
 // Helpers
@@ -132,7 +132,7 @@ export default function CentralDashboardPage() {
   // Top tenants
   const topTenants = (tenantsData?.tenants ?? []).slice(0, 3);
 
-  const lineStroke = isDark ? '#a78bfa' : '#8b5cf6';
+  const lineStroke = isDark ? '#818cf8' : '#6366f1';
 
   const ticketCount = tickets?.length ?? 0;
 
@@ -149,7 +149,7 @@ export default function CentralDashboardPage() {
           <>
             <CentralStatPill
               icon={<Building2 className="h-3.5 w-3.5" />}
-              iconColor="violet"
+              iconColor="indigo"
               value={String(totalTenants)}
               label="Tenants"
             />
@@ -316,7 +316,7 @@ export default function CentralDashboardPage() {
                         </span>
                         <span
                           className="ml-1.5"
-                          style={{ color: isDark ? '#a78bfa' : '#8b5cf6' }}
+                          style={{ color: isDark ? '#818cf8' : '#6366f1' }}
                         >
                           {ticket.tenantName ?? ''}
                         </span>

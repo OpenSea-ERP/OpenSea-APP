@@ -39,7 +39,6 @@ import {
   ChevronRight,
   CreditCard,
   Eye,
-  Filter,
   Loader2,
   Plus,
   Search,
@@ -458,26 +457,26 @@ export default function TenantsListPage() {
               placeholder="Buscar por nome ou slug..."
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
-              className="pl-10"
+              className="pl-10 central-input"
             />
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Filter
-            className="h-4 w-4"
-            style={{ color: 'var(--central-text-muted)' }}
-          />
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-ring transition-all appearance-none cursor-pointer"
+          <Select
+            value={statusFilter || 'ALL'}
+            onValueChange={v => setStatusFilter(v === 'ALL' ? '' : v)}
           >
-            {STATUS_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-[180px] central-input">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map(opt => (
+                <SelectItem key={opt.value || 'ALL'} value={opt.value || 'ALL'}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {(debouncedSearch || statusFilter) && (
             <Button
               variant="ghost"

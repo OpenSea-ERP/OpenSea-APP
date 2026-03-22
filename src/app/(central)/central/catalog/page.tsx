@@ -446,14 +446,7 @@ function PricingEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="sm:max-w-[480px]"
-        style={{
-          background: 'var(--central-card-bg)',
-          color: 'var(--central-text-primary)',
-          borderColor: 'var(--central-separator)',
-        }}
-      >
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Editar Preço</DialogTitle>
         </DialogHeader>
@@ -463,7 +456,6 @@ function PricingEditDialog({
           <div className="space-y-1.5">
             <Label
               className="text-xs font-medium"
-              style={{ color: 'var(--central-text-secondary)' }}
             >
               Skill
             </Label>
@@ -482,7 +474,6 @@ function PricingEditDialog({
           <div className="space-y-1.5">
             <Label
               htmlFor="pricingType"
-              style={{ color: 'var(--central-text-secondary)' }}
             >
               Tipo de Preço
             </Label>
@@ -493,11 +484,7 @@ function PricingEditDialog({
               }
             >
               <SelectTrigger
-                style={{
-                  background: 'var(--central-card-bg)',
-                  color: 'var(--central-text-primary)',
-                  borderColor: 'var(--central-separator)',
-                }}
+                className="central-input"
               >
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
@@ -526,11 +513,7 @@ function PricingEditDialog({
                 placeholder="0.00"
                 value={form.flatPrice}
                 onChange={e => updateField('flatPrice', e.target.value)}
-                style={{
-                  background: 'var(--central-card-bg)',
-                  color: 'var(--central-text-primary)',
-                  borderColor: 'var(--central-separator)',
-                }}
+                className="central-input"
               />
             </div>
           )}
@@ -552,11 +535,7 @@ function PricingEditDialog({
                   placeholder="0.00"
                   value={form.unitPrice}
                   onChange={e => updateField('unitPrice', e.target.value)}
-                  style={{
-                    background: 'var(--central-card-bg)',
-                    color: 'var(--central-text-primary)',
-                    borderColor: 'var(--central-separator)',
-                  }}
+                  className="central-input"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -572,11 +551,7 @@ function PricingEditDialog({
                     placeholder="ex: user"
                     value={form.unitMetric}
                     onChange={e => updateField('unitMetric', e.target.value)}
-                    style={{
-                      background: 'var(--central-card-bg)',
-                      color: 'var(--central-text-primary)',
-                      borderColor: 'var(--central-separator)',
-                    }}
+                    className="central-input"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -593,11 +568,7 @@ function PricingEditDialog({
                     onChange={e =>
                       updateField('unitMetricLabel', e.target.value)
                     }
-                    style={{
-                      background: 'var(--central-card-bg)',
-                      color: 'var(--central-text-primary)',
-                      borderColor: 'var(--central-separator)',
-                    }}
+                    className="central-input"
                   />
                 </div>
               </div>
@@ -620,11 +591,7 @@ function PricingEditDialog({
                   placeholder="0"
                   value={form.usageIncluded}
                   onChange={e => updateField('usageIncluded', e.target.value)}
-                  style={{
-                    background: 'var(--central-card-bg)',
-                    color: 'var(--central-text-primary)',
-                    borderColor: 'var(--central-separator)',
-                  }}
+                  className="central-input"
                 />
               </div>
               <div className="space-y-1.5">
@@ -642,11 +609,7 @@ function PricingEditDialog({
                   placeholder="0.00"
                   value={form.usagePrice}
                   onChange={e => updateField('usagePrice', e.target.value)}
-                  style={{
-                    background: 'var(--central-card-bg)',
-                    color: 'var(--central-text-primary)',
-                    borderColor: 'var(--central-separator)',
-                  }}
+                  className="central-input"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -662,11 +625,7 @@ function PricingEditDialog({
                     placeholder="ex: email"
                     value={form.usageMetric}
                     onChange={e => updateField('usageMetric', e.target.value)}
-                    style={{
-                      background: 'var(--central-card-bg)',
-                      color: 'var(--central-text-primary)',
-                      borderColor: 'var(--central-separator)',
-                    }}
+                    className="central-input"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -683,11 +642,7 @@ function PricingEditDialog({
                     onChange={e =>
                       updateField('usageMetricLabel', e.target.value)
                     }
-                    style={{
-                      background: 'var(--central-card-bg)',
-                      color: 'var(--central-text-primary)',
-                      borderColor: 'var(--central-separator)',
-                    }}
+                    className="central-input"
                   />
                 </div>
               </div>
@@ -711,11 +666,7 @@ function PricingEditDialog({
               placeholder="0"
               value={form.annualDiscount}
               onChange={e => updateField('annualDiscount', e.target.value)}
-              style={{
-                background: 'var(--central-card-bg)',
-                color: 'var(--central-text-primary)',
-                borderColor: 'var(--central-separator)',
-              }}
+              className="central-input"
             />
           </div>
         </div>
@@ -780,23 +731,11 @@ export default function CatalogPage() {
             placeholder="Buscar skill..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-9"
-            style={{
-              backgroundColor: 'var(--central-card-bg)',
-              borderColor: 'var(--central-border)',
-              color: 'var(--central-text-primary)',
-            }}
+            className="pl-9 central-input"
           />
         </div>
         <Select value={moduleFilter} onValueChange={setModuleFilter}>
-          <SelectTrigger
-            className="w-[200px]"
-            style={{
-              backgroundColor: 'var(--central-card-bg)',
-              borderColor: 'var(--central-border)',
-              color: 'var(--central-text-primary)',
-            }}
-          >
+          <SelectTrigger className="w-[200px] central-input">
             <SelectValue placeholder="Filtrar por módulo" />
           </SelectTrigger>
           <SelectContent>
