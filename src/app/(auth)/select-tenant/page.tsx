@@ -12,23 +12,33 @@ import { useEffect, useRef } from 'react';
 
 export default function SelectTenantPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isSuperAdmin } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading, isSuperAdmin } = useAuth();
   const { tenants, isLoading, selectTenant, refreshTenants } = useTenant();
   const autoSelectAttempted = useRef(false);
 
+  // Wait for auth to be fully loaded before any logic
+  const authReady = isAuthenticated && !isAuthLoading;
+
+  // Super admins go directly to Central — no tenant selection needed
   useEffect(() => {
-    if (isAuthenticated) {
+    if (authReady && isSuperAdmin) {
+      router.push('/central');
+    }
+  }, [authReady, isSuperAdmin, router]);
+
+  useEffect(() => {
+    if (authReady && !isSuperAdmin) {
       refreshTenants();
     }
-  }, [isAuthenticated, refreshTenants]);
+  }, [authReady, isSuperAdmin, refreshTenants]);
 
   // Auto-select if only one tenant (only attempt once to prevent infinite loop)
   useEffect(() => {
-    if (!isLoading && tenants.length === 1 && !autoSelectAttempted.current) {
+    if (authReady && !isLoading && !isSuperAdmin && tenants.length === 1 && !autoSelectAttempted.current) {
       autoSelectAttempted.current = true;
       handleSelect(tenants[0].id);
     }
-  }, [isLoading, tenants]);
+  }, [authReady, isLoading, isSuperAdmin, tenants]);
 
   const handleSelect = async (tenantId: string) => {
     try {
