@@ -227,7 +227,7 @@ export default function SalesLandingPage() {
 
       const catalogCount =
         catalogsRes.status === 'fulfilled'
-          ? (catalogsRes.value.catalogs?.length ?? null)
+          ? (catalogsRes.value.data?.length ?? null)
           : null;
 
       setKpi({

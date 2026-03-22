@@ -187,8 +187,18 @@ export default function ContentPage() {
           <GridError message={error?.message} />
         ) : (
           <EntityGrid
+            config={
+              {
+                display: {
+                  labels: {
+                    singular: 'conteúdo',
+                    plural: 'conteúdos',
+                    emptyState: 'Nenhum conteúdo encontrado',
+                  },
+                },
+              } as never
+            }
             items={contents}
-            getKey={c => c.id}
             toolbarStart={
               <>
                 <FilterDropdown
@@ -205,66 +215,69 @@ export default function ContentPage() {
                 />
               </>
             }
-            renderItem={content => (
-              <EntityContextMenu
-                key={content.id}
-                actions={[
-                  ...(canApprove && content.status !== 'APPROVED'
-                    ? [
-                        {
-                          label: 'Aprovar',
-                          icon: CheckCircle2,
-                          onClick: () => handleApprove(content),
-                        },
-                      ]
-                    : []),
-                  ...(canDelete
-                    ? [
-                        {
-                          label: 'Excluir',
-                          icon: Trash2,
-                          variant: 'destructive' as const,
-                          separator: 'before' as const,
-                          onClick: () => handleDeleteRequest([content.id]),
-                        },
-                      ]
-                    : []),
-                ]}
-              >
-                <EntityCard className="cursor-pointer">
-                  <div className="flex items-start gap-3 p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-500/10">
-                      {getTypeIcon(content.type)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="truncate text-sm font-medium">
-                          {content.title ?? 'Sem título'}
-                        </h3>
-                        {getStatusBadge(content.status)}
-                        {content.aiGenerated && (
-                          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                        )}
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {content.type}
-                        {content.channel ? ` / ${content.channel}` : ''}
-                      </p>
-                      {content.caption && (
-                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                          {content.caption}
-                        </p>
+            emptyMessage="Nenhum conteúdo encontrado"
+            emptyIcon={<FileImage className="w-8 h-8 text-gray-400" />}
+            onItemsDelete={
+              canDelete ? ids => handleDeleteRequest(ids) : undefined
+            }
+            renderGridItem={(content: GeneratedContent) => (
+              <EntityCard className="cursor-pointer">
+                <div className="flex items-start gap-3 p-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-500/10">
+                    {getTypeIcon(content.type)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-sm font-medium">
+                        {content.title ?? 'Sem título'}
+                      </h3>
+                      {getStatusBadge(content.status)}
+                      {content.aiGenerated && (
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                       )}
                     </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {content.type}
+                      {content.channel ? ` / ${content.channel}` : ''}
+                    </p>
+                    {content.caption && (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {content.caption}
+                      </p>
+                    )}
                   </div>
-                </EntityCard>
-              </EntityContextMenu>
+                </div>
+              </EntityCard>
             )}
-            emptyState={{
-              icon: FileImage,
-              title: 'Nenhum conteúdo encontrado',
-              description: 'Gere conteúdo para suas campanhas e catálogos.',
-            }}
+            renderListItem={(content: GeneratedContent) => (
+              <EntityCard className="cursor-pointer">
+                <div className="flex items-start gap-3 p-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-500/10">
+                    {getTypeIcon(content.type)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-sm font-medium">
+                        {content.title ?? 'Sem título'}
+                      </h3>
+                      {getStatusBadge(content.status)}
+                      {content.aiGenerated && (
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {content.type}
+                      {content.channel ? ` / ${content.channel}` : ''}
+                    </p>
+                    {content.caption && (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {content.caption}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </EntityCard>
+            )}
           />
         )}
 

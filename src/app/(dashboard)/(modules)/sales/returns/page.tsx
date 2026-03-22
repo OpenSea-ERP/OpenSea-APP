@@ -132,8 +132,18 @@ export default function ReturnsPage() {
             <GridError />
           ) : (
             <EntityGrid
+              config={
+                {
+                  display: {
+                    labels: {
+                      singular: 'devolução',
+                      plural: 'devoluções',
+                      emptyState: 'Nenhuma devolução encontrada',
+                    },
+                  },
+                } as never
+              }
               items={returns}
-              getId={ret => ret.id}
               toolbarStart={
                 <FilterDropdown
                   label="Status"
@@ -142,7 +152,9 @@ export default function ReturnsPage() {
                   onChange={setStatusFilter}
                 />
               }
-              renderItem={(ret: OrderReturnDTO) => (
+              emptyMessage="Nenhuma devolução encontrada"
+              emptyIcon={<RotateCcw className="w-8 h-8 text-gray-400" />}
+              renderGridItem={(ret: OrderReturnDTO) => (
                 <EntityCard>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -174,14 +186,38 @@ export default function ReturnsPage() {
                   </div>
                 </EntityCard>
               )}
-              onLoadMore={hasNextPage ? () => fetchNextPage() : undefined}
-              isLoadingMore={isFetchingNextPage}
-              observerRef={observerRef}
-              emptyState={{
-                icon: RotateCcw,
-                title: 'Nenhuma devolução encontrada',
-                description: 'As devoluções de pedidos aparecerão aqui.',
-              }}
+              renderListItem={(ret: OrderReturnDTO) => (
+                <EntityCard>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
+                        <RotateCcw className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">
+                          {ret.returnNumber}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {TYPE_LABELS[ret.type]} - {REASON_LABELS[ret.reason]}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {ret.refundAmount > 0 && (
+                        <p className="font-medium text-sm">
+                          {formatCurrency(ret.refundAmount)}
+                        </p>
+                      )}
+                      <Badge
+                        variant={getStatusVariant(ret.status)}
+                        className="text-xs"
+                      >
+                        {STATUS_LABELS[ret.status] ?? ret.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </EntityCard>
+              )}
             />
           )}
 

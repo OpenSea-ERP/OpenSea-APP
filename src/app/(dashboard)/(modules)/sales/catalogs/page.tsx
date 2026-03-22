@@ -169,8 +169,18 @@ export default function CatalogsPage() {
           <GridError message={error?.message} />
         ) : (
           <EntityGrid
+            config={
+              {
+                display: {
+                  labels: {
+                    singular: 'catálogo',
+                    plural: 'catálogos',
+                    emptyState: 'Nenhum catálogo encontrado',
+                  },
+                },
+              } as never
+            }
             items={catalogs}
-            getKey={c => c.id}
             toolbarStart={
               <>
                 <FilterDropdown
@@ -187,63 +197,85 @@ export default function CatalogsPage() {
                 />
               </>
             }
-            renderItem={catalog => (
-              <EntityContextMenu
-                key={catalog.id}
-                onView={canView ? () => handleView(catalog) : undefined}
-                onEdit={canEdit ? () => handleEdit(catalog) : undefined}
-                actions={
-                  canDelete
-                    ? [
-                        {
-                          label: 'Excluir',
-                          icon: Trash2,
-                          variant: 'destructive' as const,
-                          separator: 'before' as const,
-                          onClick: () => handleDeleteRequest([catalog.id]),
-                        },
-                      ]
-                    : []
-                }
+            emptyMessage="Nenhum catálogo encontrado"
+            emptyIcon={<BookOpen className="w-8 h-8 text-gray-400" />}
+            onItemsView={
+              canView
+                ? ids => router.push(`/sales/catalogs/${ids[0]}`)
+                : undefined
+            }
+            onItemsEdit={
+              canEdit
+                ? ids => router.push(`/sales/catalogs/${ids[0]}/edit`)
+                : undefined
+            }
+            onItemsDelete={
+              canDelete ? ids => handleDeleteRequest(ids) : undefined
+            }
+            renderGridItem={(catalog: Catalog) => (
+              <EntityCard
+                onClick={() => canView && handleView(catalog)}
+                className="cursor-pointer"
               >
-                <EntityCard
-                  onClick={() => canView && handleView(catalog)}
-                  className="cursor-pointer"
-                >
-                  <div className="flex items-start gap-3 p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10">
-                      <BookOpen className="h-5 w-5 text-indigo-500" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="truncate text-sm font-medium">
-                          {catalog.name}
-                        </h3>
-                        {catalog.isPublic ? (
-                          <Globe className="h-3.5 w-3.5 text-emerald-500" />
-                        ) : (
-                          <Lock className="h-3.5 w-3.5 text-slate-400" />
-                        )}
-                      </div>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {getStatusLabel(catalog.status)} &middot; {catalog.type}
-                      </p>
-                      {catalog.description && (
-                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                          {catalog.description}
-                        </p>
+                <div className="flex items-start gap-3 p-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10">
+                    <BookOpen className="h-5 w-5 text-indigo-500" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-sm font-medium">
+                        {catalog.name}
+                      </h3>
+                      {catalog.isPublic ? (
+                        <Globe className="h-3.5 w-3.5 text-emerald-500" />
+                      ) : (
+                        <Lock className="h-3.5 w-3.5 text-slate-400" />
                       )}
                     </div>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {getStatusLabel(catalog.status)} &middot; {catalog.type}
+                    </p>
+                    {catalog.description && (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {catalog.description}
+                      </p>
+                    )}
                   </div>
-                </EntityCard>
-              </EntityContextMenu>
+                </div>
+              </EntityCard>
             )}
-            emptyState={{
-              icon: BookOpen,
-              title: 'Nenhum catálogo encontrado',
-              description:
-                'Crie seu primeiro catálogo para exibir seus produtos.',
-            }}
+            renderListItem={(catalog: Catalog) => (
+              <EntityCard
+                onClick={() => canView && handleView(catalog)}
+                className="cursor-pointer"
+              >
+                <div className="flex items-start gap-3 p-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10">
+                    <BookOpen className="h-5 w-5 text-indigo-500" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-sm font-medium">
+                        {catalog.name}
+                      </h3>
+                      {catalog.isPublic ? (
+                        <Globe className="h-3.5 w-3.5 text-emerald-500" />
+                      ) : (
+                        <Lock className="h-3.5 w-3.5 text-slate-400" />
+                      )}
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {getStatusLabel(catalog.status)} &middot; {catalog.type}
+                    </p>
+                    {catalog.description && (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {catalog.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </EntityCard>
+            )}
           />
         )}
 

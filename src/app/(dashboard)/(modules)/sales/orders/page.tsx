@@ -213,10 +213,18 @@ export default function OrdersPage() {
             <GridError />
           ) : (
             <EntityGrid
+              config={
+                {
+                  display: {
+                    labels: {
+                      singular: 'pedido',
+                      plural: 'pedidos',
+                      emptyState: 'Nenhum pedido encontrado',
+                    },
+                  },
+                } as never
+              }
               items={orders}
-              getId={order => order.id}
-              selectedIds={selectedIds}
-              onSelectionChange={setSelectedIds}
               toolbarStart={
                 <>
                   <FilterDropdown
@@ -233,85 +241,144 @@ export default function OrdersPage() {
                   />
                 </>
               }
-              renderItem={order => (
-                <EntityContextMenu
-                  onView={canView ? () => handleView(order) : undefined}
-                  onEdit={canEdit ? () => handleEdit(order) : undefined}
-                  actions={getContextMenuActions(order)}
+              emptyMessage="Nenhum pedido encontrado"
+              emptyIcon={<ClipboardList className="w-8 h-8 text-gray-400" />}
+              onItemsView={
+                canView
+                  ? ids => router.push(`/sales/orders/${ids[0]}`)
+                  : undefined
+              }
+              onItemsEdit={
+                canEdit
+                  ? ids => router.push(`/sales/orders/${ids[0]}/edit`)
+                  : undefined
+              }
+              onItemsDelete={
+                canDelete
+                  ? ids => {
+                      setDeleteTargetId(ids[0]);
+                      setDeleteModalOpen(true);
+                    }
+                  : undefined
+              }
+              renderGridItem={(order: OrderDTO) => (
+                <EntityCard
+                  onClick={canView ? () => handleView(order) : undefined}
                 >
-                  <EntityCard
-                    onClick={canView ? () => handleView(order) : undefined}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                          {order.type === 'QUOTE' ? (
-                            <FileText className="h-5 w-5 text-blue-500" />
-                          ) : (
-                            <ShoppingCart className="h-5 w-5 text-blue-500" />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {order.orderNumber}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {ORDER_TYPE_LABELS[order.type] ?? order.type} via{' '}
-                            {ORDER_CHANNEL_LABELS[order.channel] ??
-                              order.channel}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="font-semibold text-sm">
-                          {formatCurrency(order.grandTotal)}
-                        </p>
-                        {order.remainingAmount > 0 && (
-                          <p className="text-xs text-amber-500">
-                            Restante: {formatCurrency(order.remainingAmount)}
-                          </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
+                        {order.type === 'QUOTE' ? (
+                          <FileText className="h-5 w-5 text-blue-500" />
+                        ) : (
+                          <ShoppingCart className="h-5 w-5 text-blue-500" />
                         )}
                       </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {order.orderNumber}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {ORDER_TYPE_LABELS[order.type] ?? order.type} via{' '}
+                          {ORDER_CHANNEL_LABELS[order.channel] ?? order.channel}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="outline" className="text-xs">
-                        {ORDER_TYPE_LABELS[order.type] ?? order.type}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {ORDER_CHANNEL_LABELS[order.channel] ?? order.channel}
-                      </Badge>
-                      {order.needsApproval && (
-                        <Badge variant="destructive" className="text-xs">
-                          Aprovação pendente
-                        </Badge>
+                    <div className="text-right shrink-0">
+                      <p className="font-semibold text-sm">
+                        {formatCurrency(order.grandTotal)}
+                      </p>
+                      {order.remainingAmount > 0 && (
+                        <p className="text-xs text-amber-500">
+                          Restante: {formatCurrency(order.remainingAmount)}
+                        </p>
                       )}
                     </div>
-                  </EntityCard>
-                </EntityContextMenu>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs">
+                      {ORDER_TYPE_LABELS[order.type] ?? order.type}
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      {ORDER_CHANNEL_LABELS[order.channel] ?? order.channel}
+                    </Badge>
+                    {order.needsApproval && (
+                      <Badge variant="destructive" className="text-xs">
+                        Aprovação pendente
+                      </Badge>
+                    )}
+                  </div>
+                </EntityCard>
               )}
-              onLoadMore={hasNextPage ? () => fetchNextPage() : undefined}
-              isLoadingMore={isFetchingNextPage}
-              observerRef={observerRef}
-              emptyState={{
-                icon: ClipboardList,
-                title: 'Nenhum pedido encontrado',
-                description: 'Crie seu primeiro pedido para começar.',
-              }}
+              renderListItem={(order: OrderDTO) => (
+                <EntityCard
+                  onClick={canView ? () => handleView(order) : undefined}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
+                        {order.type === 'QUOTE' ? (
+                          <FileText className="h-5 w-5 text-blue-500" />
+                        ) : (
+                          <ShoppingCart className="h-5 w-5 text-blue-500" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {order.orderNumber}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {ORDER_TYPE_LABELS[order.type] ?? order.type} via{' '}
+                          {ORDER_CHANNEL_LABELS[order.channel] ?? order.channel}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-semibold text-sm">
+                        {formatCurrency(order.grandTotal)}
+                      </p>
+                      {order.remainingAmount > 0 && (
+                        <p className="text-xs text-amber-500">
+                          Restante: {formatCurrency(order.remainingAmount)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs">
+                      {ORDER_TYPE_LABELS[order.type] ?? order.type}
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      {ORDER_CHANNEL_LABELS[order.channel] ?? order.channel}
+                    </Badge>
+                    {order.needsApproval && (
+                      <Badge variant="destructive" className="text-xs">
+                        Aprovação pendente
+                      </Badge>
+                    )}
+                  </div>
+                </EntityCard>
+              )}
             />
           )}
 
           {selectedIds.length > 0 && (
             <SelectionToolbar
-              count={selectedIds.length}
-              onClearSelection={() => setSelectedIds([])}
-              actions={{
+              selectedIds={selectedIds}
+              totalItems={orders.length}
+              onClear={() => setSelectedIds([])}
+              defaultActions={{
                 view: canView,
                 edit: canEdit,
                 delete: canDelete,
               }}
-              onDelete={() => {
-                setDeleteTargetId(selectedIds[0]);
-                setDeleteModalOpen(true);
+              handlers={{
+                onView: ids => router.push(`/sales/orders/${ids[0]}`),
+                onEdit: ids => router.push(`/sales/orders/${ids[0]}/edit`),
+                onDelete: ids => {
+                  setDeleteTargetId(ids[0]);
+                  setDeleteModalOpen(true);
+                },
               }}
             />
           )}
