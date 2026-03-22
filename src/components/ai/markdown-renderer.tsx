@@ -39,9 +39,9 @@ export function AiMarkdownRenderer({ content, className }: AiMarkdownRendererPro
   const syntaxTheme = resolvedTheme === 'dark' ? oneDark : oneLight;
 
   return (
+    <div className={cn('prose prose-sm dark:prose-invert max-w-none', className)}>
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
-      className={cn('prose prose-sm dark:prose-invert max-w-none', className)}
       components={{
         code({ className: codeClassName, children, ...props }) {
           const match = /language-(\w+)/.exec(codeClassName || '');
@@ -135,5 +135,6 @@ export function AiMarkdownRenderer({ content, className }: AiMarkdownRendererPro
     >
       {content}
     </ReactMarkdown>
+    </div>
   );
 }
