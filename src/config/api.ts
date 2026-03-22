@@ -256,12 +256,12 @@ export const API_ENDPOINTS = {
     BATCH: '/v1/scan/batch',
   },
   // Stock - Analytics & Dashboard
-  ANALYTICS: {
+  STOCK_ANALYTICS: {
     STOCK_SUMMARY: '/v1/analytics/stock-summary',
     MOVEMENTS_SUMMARY: '/v1/analytics/movements-summary',
     ABC_CURVE: '/v1/analytics/abc-curve',
     STOCK_TURNOVER: '/v1/analytics/stock-turnover',
-    DASHBOARD: '/v1/dashboard/stock',
+    DASHBOARDS: '/v1/dashboard/stock',
   },
   // Sales - Customers
   CUSTOMERS: {

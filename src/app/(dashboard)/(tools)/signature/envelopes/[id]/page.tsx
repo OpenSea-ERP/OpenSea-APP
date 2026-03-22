@@ -12,7 +12,12 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { envelopesService } from '@/services/signature';
-import type { SignatureEnvelopeSigner, SignatureAuditEvent, EnvelopeStatus, SignerStatus } from '@/types/signature';
+import type {
+  SignatureEnvelopeSigner,
+  SignatureAuditEvent,
+  EnvelopeStatus,
+  SignerStatus,
+} from '@/types/signature';
 import {
   FileSignature,
   Send,
@@ -30,17 +35,46 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
-const STATUS_CONFIG: Record<EnvelopeStatus, { label: string; color: string }> = {
-  DRAFT: { label: 'Rascunho', color: 'bg-slate-100 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300' },
-  PENDING: { label: 'Pendente', color: 'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300' },
-  IN_PROGRESS: { label: 'Em Andamento', color: 'bg-blue-50 text-blue-700 dark:bg-blue-500/8 dark:text-blue-300' },
-  COMPLETED: { label: 'Concluído', color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300' },
-  CANCELLED: { label: 'Cancelado', color: 'bg-slate-100 text-slate-500 dark:bg-slate-500/8 dark:text-slate-400' },
-  EXPIRED: { label: 'Expirado', color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300' },
-  REJECTED: { label: 'Rejeitado', color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300' },
-};
+const STATUS_CONFIG: Record<EnvelopeStatus, { label: string; color: string }> =
+  {
+    DRAFT: {
+      label: 'Rascunho',
+      color:
+        'bg-slate-100 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300',
+    },
+    PENDING: {
+      label: 'Pendente',
+      color:
+        'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
+    },
+    IN_PROGRESS: {
+      label: 'Em Andamento',
+      color: 'bg-blue-50 text-blue-700 dark:bg-blue-500/8 dark:text-blue-300',
+    },
+    COMPLETED: {
+      label: 'Concluído',
+      color:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300',
+    },
+    CANCELLED: {
+      label: 'Cancelado',
+      color:
+        'bg-slate-100 text-slate-500 dark:bg-slate-500/8 dark:text-slate-400',
+    },
+    EXPIRED: {
+      label: 'Expirado',
+      color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
+    },
+    REJECTED: {
+      label: 'Rejeitado',
+      color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
+    },
+  };
 
-const SIGNER_STATUS_CONFIG: Record<SignerStatus, { label: string; color: string }> = {
+const SIGNER_STATUS_CONFIG: Record<
+  SignerStatus,
+  { label: string; color: string }
+> = {
   PENDING: { label: 'Pendente', color: 'bg-slate-100 text-slate-600' },
   NOTIFIED: { label: 'Notificado', color: 'bg-amber-50 text-amber-700' },
   VIEWED: { label: 'Visualizou', color: 'bg-blue-50 text-blue-700' },
@@ -131,7 +165,9 @@ export default function EnvelopeDetailPage({
   const cancelMutation = useMutation({
     mutationFn: () => envelopesService.cancelEnvelope(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['signature', 'envelope', id] });
+      queryClient.invalidateQueries({
+        queryKey: ['signature', 'envelope', id],
+      });
       queryClient.invalidateQueries({ queryKey: ['signature', 'envelopes'] });
       toast.success('Envelope cancelado');
       setShowCancelModal(false);
@@ -141,8 +177,10 @@ export default function EnvelopeDetailPage({
 
   const resendMutation = useMutation({
     mutationFn: () => envelopesService.resendNotifications(id),
-    onSuccess: (result) => {
-      toast.success(`Notificações reenviadas para ${result.notifiedCount} assinante(s)`);
+    onSuccess: result => {
+      toast.success(
+        `Notificações reenviadas para ${result.notifiedCount} assinante(s)`
+      );
     },
     onError: () => toast.error('Erro ao reenviar notificações'),
   });
@@ -189,11 +227,15 @@ export default function EnvelopeDetailPage({
   }
 
   const statusConfig = STATUS_CONFIG[envelope.status];
-  const canCancel = canModify && !['COMPLETED', 'CANCELLED'].includes(envelope.status);
-  const canResend = canModify && ['PENDING', 'IN_PROGRESS'].includes(envelope.status);
+  const canCancel =
+    canModify && !['COMPLETED', 'CANCELLED'].includes(envelope.status);
+  const canResend =
+    canModify && ['PENDING', 'IN_PROGRESS'].includes(envelope.status);
 
   return (
-    <ProtectedRoute requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.ACCESS}>
+    <ProtectedRoute
+      requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.ACCESS}
+    >
       <div className="flex flex-col h-full">
         <PageActionBar
           breadcrumbItems={[
@@ -203,10 +245,29 @@ export default function EnvelopeDetailPage({
           ]}
           buttons={[
             ...(canResend
-              ? [{ title: 'Reenviar', icon: Bell, onClick: () => resendMutation.mutate(), variant: 'outline' as const, disabled: resendMutation.isPending }]
+              ? [
+                  {
+                    title: 'Reenviar',
+                    icon: Bell,
+                    onClick: () => resendMutation.mutate(),
+                    variant: 'outline' as const,
+                    disabled: resendMutation.isPending,
+                  },
+                ]
               : []),
             ...(canCancel
-              ? [{ title: 'Cancelar', icon: Trash2, onClick: () => setShowCancelModal(true), variant: 'outline' as const, style: { className: 'text-rose-600 hover:text-rose-700 hover:bg-rose-50' } }]
+              ? [
+                  {
+                    title: 'Cancelar',
+                    icon: Trash2,
+                    onClick: () => setShowCancelModal(true),
+                    variant: 'outline' as const,
+                    style: {
+                      className:
+                        'text-rose-600 hover:text-rose-700 hover:bg-rose-50',
+                    },
+                  },
+                ]
               : []),
           ]}
         />
@@ -239,10 +300,12 @@ export default function EnvelopeDetailPage({
                   <span>Nível: {envelope.signatureLevel}</span>
                   <span>Roteamento: {envelope.routingType}</span>
                   <span>
-                    Criado em: {new Date(envelope.createdAt).toLocaleDateString('pt-BR')}
+                    Criado em:{' '}
+                    {new Date(envelope.createdAt).toLocaleDateString('pt-BR')}
                   </span>
                   <span>
-                    Origem: {envelope.sourceModule} / {envelope.sourceEntityType}
+                    Origem: {envelope.sourceModule} /{' '}
+                    {envelope.sourceEntityType}
                   </span>
                 </div>
               </div>
@@ -258,7 +321,7 @@ export default function EnvelopeDetailPage({
               </h2>
             </div>
             <div className="px-5 py-3 space-y-2">
-              {envelope.signers?.map((signer) => (
+              {envelope.signers?.map(signer => (
                 <SignerCard key={signer.id} signer={signer} />
               )) ?? (
                 <p className="text-sm text-muted-foreground">
@@ -278,7 +341,7 @@ export default function EnvelopeDetailPage({
             </div>
             <div className="px-5 py-3">
               {envelope.auditTrail?.length ? (
-                envelope.auditTrail.map((event) => (
+                envelope.auditTrail.map(event => (
                   <AuditEventRow key={event.id} event={event} />
                 ))
               ) : (

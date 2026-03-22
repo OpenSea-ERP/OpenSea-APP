@@ -11,14 +11,7 @@ import { aiFavoritesService, aiChatService } from '@/services/ai';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import {
-  Star,
-  Play,
-  Trash2,
-  Plus,
-  Loader2,
-  Hash,
-} from 'lucide-react';
+import { Star, Play, Trash2, Plus, Loader2, Hash } from 'lucide-react';
 import type { AiFavoriteQuery, AiFavoriteCategory } from '@/types/ai';
 
 const CATEGORY_LABELS: Record<AiFavoriteCategory, string> = {
@@ -74,7 +67,7 @@ export default function AiFavoritesPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       <PageActionBar
-        breadcrumbs={[
+        breadcrumbItems={[
           { label: 'Ferramentas' },
           { label: 'Assistente IA', href: '/ai' },
           { label: 'Consultas Favoritas' },
@@ -91,11 +84,13 @@ export default function AiFavoritesPage() {
         {/* Create form */}
         {showCreate && (
           <Card className="p-4 mb-6">
-            <h3 className="font-medium text-sm mb-3">Salvar nova consulta favorita</h3>
+            <h3 className="font-medium text-sm mb-3">
+              Salvar nova consulta favorita
+            </h3>
             <div className="flex gap-2">
               <Input
                 value={newQuery}
-                onChange={(e) => setNewQuery(e.target.value)}
+                onChange={e => setNewQuery(e.target.value)}
                 placeholder="Ex: Qual o faturamento do mes?"
                 className="flex-1"
               />

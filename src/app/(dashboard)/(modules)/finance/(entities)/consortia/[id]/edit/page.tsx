@@ -93,11 +93,7 @@ export default function EditConsortiumPage({
   // DATA FETCHING
   // ============================================================================
 
-  const {
-    data,
-    isLoading: isLoadingConsortium,
-    error,
-  } = useConsortium(id);
+  const { data, isLoading: isLoadingConsortium, error } = useConsortium(id);
   const consortium = data?.consortium;
 
   const updateMutation = useUpdateConsortium();
@@ -446,9 +442,7 @@ export default function EditConsortiumPage({
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="totalInstallments">
-                      Total de Parcelas
-                    </Label>
+                    <Label htmlFor="totalInstallments">Total de Parcelas</Label>
                     <Input
                       id="totalInstallments"
                       type="number"

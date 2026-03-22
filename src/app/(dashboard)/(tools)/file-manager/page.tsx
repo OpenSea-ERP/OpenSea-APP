@@ -61,7 +61,9 @@ export default function FileManagerPage() {
   ];
 
   return (
-    <ProtectedRoute requiredPermission={TOOLS_PERMISSIONS.STORAGE.FOLDERS.ACCESS}>
+    <ProtectedRoute
+      requiredPermission={TOOLS_PERMISSIONS.STORAGE.FOLDERS.ACCESS}
+    >
       <div className="flex flex-col gap-6 h-[calc(100vh-10rem)]">
         {/* Quota Warning */}
         <QuotaWarningBanner />

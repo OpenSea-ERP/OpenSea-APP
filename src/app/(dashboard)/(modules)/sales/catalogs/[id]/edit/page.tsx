@@ -29,12 +29,7 @@ import {
 } from '@/hooks/sales/use-catalogs';
 import { usePermissions } from '@/hooks/use-permissions';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
-import {
-  BookOpen,
-  Calendar,
-  Save,
-  Trash2,
-} from 'lucide-react';
+import { BookOpen, Calendar, Save, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -116,7 +111,7 @@ export default function EditCatalogPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas' },
               { label: 'Catálogos', href: '/sales/catalogs' },
               { label: 'Carregando...' },
@@ -135,7 +130,7 @@ export default function EditCatalogPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas' },
               { label: 'Catálogos', href: '/sales/catalogs' },
               { label: 'Erro' },
@@ -143,7 +138,7 @@ export default function EditCatalogPage() {
           />
         </PageHeader>
         <PageBody>
-          <GridError error={error} />
+          <GridError message={error?.message} />
         </PageBody>
       </PageLayout>
     );
@@ -153,7 +148,7 @@ export default function EditCatalogPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Catálogos', href: '/sales/catalogs' },
             { label: data.catalog.name, href: `/sales/catalogs/${catalogId}` },
@@ -210,7 +205,7 @@ export default function EditCatalogPage() {
                   <Input
                     id="name"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={e => setName(e.target.value)}
                     placeholder="Nome do catálogo"
                   />
                 </div>
@@ -219,7 +214,7 @@ export default function EditCatalogPage() {
                   <Input
                     id="slug"
                     value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
+                    onChange={e => setSlug(e.target.value)}
                     placeholder="url-slug"
                   />
                 </div>
@@ -229,7 +224,7 @@ export default function EditCatalogPage() {
                 <Textarea
                   id="description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                   placeholder="Descrição do catálogo"
                   rows={3}
                 />
@@ -238,7 +233,9 @@ export default function EditCatalogPage() {
 
             {/* Display Settings */}
             <div className="space-y-4">
-              <h2 className="text-sm font-semibold">Configurações de Exibição</h2>
+              <h2 className="text-sm font-semibold">
+                Configurações de Exibição
+              </h2>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Status</Label>

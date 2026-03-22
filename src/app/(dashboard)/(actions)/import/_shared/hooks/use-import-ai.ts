@@ -50,10 +50,7 @@ export function useImportAI(options: UseImportAIOptions): ImportAIBridge {
     [onApplyMapping]
   );
 
-  const getEntityDef = useCallback(
-    () => entityDefinition,
-    [entityDefinition]
-  );
+  const getEntityDef = useCallback(() => entityDefinition, [entityDefinition]);
 
   return useMemo(
     () => ({

@@ -35,7 +35,10 @@ import {
 } from '@/hooks/finance/use-contracts';
 import { cn } from '@/lib/utils';
 import type { Contract, ContractStatus } from '@/types/finance';
-import { CONTRACT_STATUS_LABELS, PAYMENT_FREQUENCY_LABELS } from '@/types/finance';
+import {
+  CONTRACT_STATUS_LABELS,
+  PAYMENT_FREQUENCY_LABELS,
+} from '@/types/finance';
 import {
   AlertTriangle,
   Calendar,
@@ -519,7 +522,8 @@ function ContractsPageContent() {
               {formatCurrency(item.paymentAmount)}
             </span>
             <span className="text-xs text-muted-foreground">
-              {item.companyName} · {PAYMENT_FREQUENCY_LABELS[item.paymentFrequency]}
+              {item.companyName} ·{' '}
+              {PAYMENT_FREQUENCY_LABELS[item.paymentFrequency]}
             </span>
           </div>
         </EntityCard>
@@ -632,13 +636,12 @@ function ContractsPageContent() {
                       options={STATUS_OPTIONS}
                       selected={statusIds}
                       onSelectionChange={setStatusFilter}
-                      activeColor="teal"
+                      activeColor="cyan"
                       searchPlaceholder="Buscar status..."
                       emptyText="Nenhum status encontrado."
                     />
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
-                      {total}{' '}
-                      {total === 1 ? 'contrato' : 'contratos'}
+                      {total} {total === 1 ? 'contrato' : 'contratos'}
                       {contracts.length < total &&
                         ` (${contracts.length} carregados)`}
                     </p>

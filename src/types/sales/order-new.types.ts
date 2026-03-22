@@ -1,9 +1,23 @@
 // Order Types (new pipeline-based system)
 
 export type OrderType = 'QUOTE' | 'ORDER';
-export type OrderChannel = 'PDV' | 'WEB' | 'WHATSAPP' | 'MARKETPLACE' | 'BID' | 'MANUAL' | 'API';
+export type OrderChannel =
+  | 'PDV'
+  | 'WEB'
+  | 'WHATSAPP'
+  | 'MARKETPLACE'
+  | 'BID'
+  | 'MANUAL'
+  | 'API';
 export type DeliveryMethod = 'PICKUP' | 'OWN_FLEET' | 'CARRIER' | 'PARTIAL';
-export type PriceSourceType = 'CUSTOMER' | 'CAMPAIGN' | 'COUPON' | 'QUANTITY_TIER' | 'TABLE' | 'DEFAULT' | 'MANUAL';
+export type PriceSourceType =
+  | 'CUSTOMER'
+  | 'CAMPAIGN'
+  | 'COUPON'
+  | 'QUANTITY_TIER'
+  | 'TABLE'
+  | 'DEFAULT'
+  | 'MANUAL';
 
 export interface OrderDTO {
   id: string;

@@ -40,7 +40,12 @@ import React, {
 
 export type ViewMode = 'grid' | 'list';
 
-export type SortField = 'name' | 'createdAt' | 'updatedAt' | 'custom';
+export type SortField =
+  | 'name'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'dueDate'
+  | 'custom';
 export type SortDirection = 'asc' | 'desc';
 
 export interface SortOption {

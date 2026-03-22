@@ -24,23 +24,48 @@ import {
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const STATUS_CONFIG: Record<
-  EnvelopeStatus,
-  { label: string; color: string }
-> = {
-  DRAFT: { label: 'Rascunho', color: 'bg-slate-100 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300' },
-  PENDING: { label: 'Pendente', color: 'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300' },
-  IN_PROGRESS: { label: 'Em Andamento', color: 'bg-blue-50 text-blue-700 dark:bg-blue-500/8 dark:text-blue-300' },
-  COMPLETED: { label: 'Concluído', color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300' },
-  CANCELLED: { label: 'Cancelado', color: 'bg-slate-100 text-slate-500 dark:bg-slate-500/8 dark:text-slate-400' },
-  EXPIRED: { label: 'Expirado', color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300' },
-  REJECTED: { label: 'Rejeitado', color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300' },
-};
+const STATUS_CONFIG: Record<EnvelopeStatus, { label: string; color: string }> =
+  {
+    DRAFT: {
+      label: 'Rascunho',
+      color:
+        'bg-slate-100 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300',
+    },
+    PENDING: {
+      label: 'Pendente',
+      color:
+        'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
+    },
+    IN_PROGRESS: {
+      label: 'Em Andamento',
+      color: 'bg-blue-50 text-blue-700 dark:bg-blue-500/8 dark:text-blue-300',
+    },
+    COMPLETED: {
+      label: 'Concluído',
+      color:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300',
+    },
+    CANCELLED: {
+      label: 'Cancelado',
+      color:
+        'bg-slate-100 text-slate-500 dark:bg-slate-500/8 dark:text-slate-400',
+    },
+    EXPIRED: {
+      label: 'Expirado',
+      color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
+    },
+    REJECTED: {
+      label: 'Rejeitado',
+      color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
+    },
+  };
 
 export default function EnvelopesListPage() {
   const router = useRouter();
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission(TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.REGISTER);
+  const canCreate = hasPermission(
+    TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.REGISTER
+  );
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
 
@@ -56,7 +81,7 @@ export default function EnvelopesListPage() {
         });
         return response;
       },
-      getNextPageParam: (lastPage) =>
+      getNextPageParam: lastPage =>
         lastPage.meta.page < lastPage.meta.totalPages
           ? lastPage.meta.page + 1
           : undefined,
@@ -64,24 +89,36 @@ export default function EnvelopesListPage() {
     });
 
   const envelopes = useMemo(
-    () => data?.pages.flatMap((p) => p.envelopes) ?? [],
-    [data],
+    () => data?.pages.flatMap(p => p.envelopes) ?? [],
+    [data]
   );
 
   const handleEnvelopeClick = useCallback(
     (id: string) => router.push(`/signature/envelopes/${id}`),
-    [router],
+    [router]
   );
 
   return (
-    <ProtectedRoute requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.ACCESS}>
+    <ProtectedRoute
+      requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.ACCESS}
+    >
       <div className="flex flex-col h-full">
         <PageActionBar
           breadcrumbItems={[
             { label: 'Assinatura Digital', href: '/signature' },
             { label: 'Envelopes' },
           ]}
-          buttons={canCreate ? [{ title: 'Novo Envelope', icon: Plus, onClick: () => router.push('/signature/envelopes/new') }] : []}
+          buttons={
+            canCreate
+              ? [
+                  {
+                    title: 'Novo Envelope',
+                    icon: Plus,
+                    onClick: () => router.push('/signature/envelopes/new'),
+                  },
+                ]
+              : []
+          }
         />
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -92,24 +129,24 @@ export default function EnvelopesListPage() {
               <Input
                 placeholder="Buscar envelopes..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={e => setSearch(e.target.value)}
                 className="pl-9 h-9"
               />
             </div>
             <div className="flex gap-1">
-              {(['', 'PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'] as const).map(
-                (s) => (
-                  <Button
-                    key={s}
-                    variant={statusFilter === s ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-9 px-2.5 text-xs"
-                    onClick={() => setStatusFilter(s)}
-                  >
-                    {s === '' ? 'Todos' : STATUS_CONFIG[s].label}
-                  </Button>
-                ),
-              )}
+              {(
+                ['', 'PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'] as const
+              ).map(s => (
+                <Button
+                  key={s}
+                  variant={statusFilter === s ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-9 px-2.5 text-xs"
+                  onClick={() => setStatusFilter(s)}
+                >
+                  {s === '' ? 'Todos' : STATUS_CONFIG[s].label}
+                </Button>
+              ))}
             </div>
           </div>
 
@@ -129,10 +166,11 @@ export default function EnvelopesListPage() {
             </Card>
           ) : (
             <div className="space-y-2">
-              {envelopes.map((envelope) => {
+              {envelopes.map(envelope => {
                 const config = STATUS_CONFIG[envelope.status];
                 const signedCount =
-                  envelope.signers?.filter((s) => s.status === 'SIGNED').length ?? 0;
+                  envelope.signers?.filter(s => s.status === 'SIGNED').length ??
+                  0;
                 const totalSigners = envelope.signers?.length ?? 0;
 
                 return (
@@ -158,10 +196,14 @@ export default function EnvelopesListPage() {
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>{signedCount}/{totalSigners} assinatura(s)</span>
+                      <span>
+                        {signedCount}/{totalSigners} assinatura(s)
+                      </span>
                       <span>Nível: {envelope.signatureLevel}</span>
                       <span>
-                        {new Date(envelope.createdAt).toLocaleDateString('pt-BR')}
+                        {new Date(envelope.createdAt).toLocaleDateString(
+                          'pt-BR'
+                        )}
                       </span>
                     </div>
                   </Card>

@@ -22,18 +22,20 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'Todos' },
-  { value: 'ACTIVE', label: 'Ativo' },
-  { value: 'ACHIEVED', label: 'Atingido' },
-  { value: 'MISSED', label: 'Perdido' },
-  { value: 'ARCHIVED', label: 'Arquivado' },
+  { id: '', label: 'Todos' },
+  { id: 'ACTIVE', label: 'Ativo' },
+  { id: 'ACHIEVED', label: 'Atingido' },
+  { id: 'MISSED', label: 'Perdido' },
+  { id: 'ARCHIVED', label: 'Arquivado' },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'bg-blue-50 text-blue-700 dark:bg-blue-500/8 dark:text-blue-300',
-  ACHIEVED: 'bg-green-50 text-green-700 dark:bg-green-500/8 dark:text-green-300',
+  ACHIEVED:
+    'bg-green-50 text-green-700 dark:bg-green-500/8 dark:text-green-300',
   MISSED: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
-  ARCHIVED: 'bg-slate-50 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300',
+  ARCHIVED:
+    'bg-slate-50 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -80,19 +82,25 @@ export default function GoalsPage() {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const filters = useMemo(() => {
-    const f: Record<string, unknown> = {};
+    const f: Record<string, string> = {};
     if (statusFilter) f.status = statusFilter;
     return f;
   }, [statusFilter]);
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useGoalsInfinite(filters);
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGoalsInfinite(filters);
 
   const deleteGoalMutation = useDeleteGoal();
 
   const goals = useMemo(
-    () => data?.pages.flatMap((page) => page.goals) ?? [],
-    [data],
+    () => data?.pages.flatMap(page => page.goals) ?? [],
+    [data]
   );
 
   const handleDeleteConfirm = useCallback(async () => {
@@ -110,7 +118,7 @@ export default function GoalsPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Analytics', href: '/sales/analytics' },
             { label: 'Metas' },
@@ -146,7 +154,9 @@ export default function GoalsPage() {
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <Target className="h-12 w-12 mb-3 opacity-40" />
               <p className="text-lg font-medium">Nenhuma meta encontrada</p>
-              <p className="text-sm">Crie sua primeira meta para acompanhar o progresso das vendas.</p>
+              <p className="text-sm">
+                Crie sua primeira meta para acompanhar o progresso das vendas.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -186,7 +196,10 @@ export default function GoalsPage() {
                           {goal.progressPercentage.toFixed(0)}%
                         </span>
                       </div>
-                      <Progress value={goal.progressPercentage} className="h-2" />
+                      <Progress
+                        value={goal.progressPercentage}
+                        className="h-2"
+                      />
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>
                           {goal.unit === 'BRL'
@@ -217,10 +230,7 @@ export default function GoalsPage() {
 
           {/* Infinite scroll sentinel */}
           {hasNextPage && (
-            <div
-              ref={sentinelRef}
-              className="flex justify-center py-4"
-            >
+            <div ref={sentinelRef} className="flex justify-center py-4">
               {isFetchingNextPage && <GridLoading />}
               <button
                 onClick={() => fetchNextPage()}

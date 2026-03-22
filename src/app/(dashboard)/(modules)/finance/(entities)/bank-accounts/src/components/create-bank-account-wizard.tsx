@@ -262,7 +262,10 @@ function StepPixConfig({
       {/* Conta Padrao */}
       <div className="flex items-center justify-between rounded-lg border p-4">
         <div className="space-y-0.5">
-          <Label htmlFor="wiz-isDefault" className="text-sm font-medium cursor-pointer">
+          <Label
+            htmlFor="wiz-isDefault"
+            className="text-sm font-medium cursor-pointer"
+          >
             Conta Padrão
           </Label>
           <p className="text-xs text-muted-foreground">
@@ -341,10 +344,7 @@ export function CreateBankAccountWizard({
       title: 'Dados da Conta',
       description: 'Preencha as informações bancárias da conta.',
       icon: (
-        <Landmark
-          className="h-16 w-16 text-purple-400"
-          strokeWidth={1.2}
-        />
+        <Landmark className="h-16 w-16 text-purple-400" strokeWidth={1.2} />
       ),
       content: (
         <StepAccountData
@@ -359,19 +359,9 @@ export function CreateBankAccountWizard({
     {
       title: 'PIX e Configuração',
       description: 'Configure chave PIX e preferências da conta.',
-      icon: (
-        <QrCode
-          className="h-16 w-16 text-emerald-400"
-          strokeWidth={1.2}
-        />
-      ),
+      icon: <QrCode className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />,
       onBack: () => setCurrentStep(1),
-      content: (
-        <StepPixConfig
-          form={form}
-          onChange={handleChange}
-        />
-      ),
+      content: <StepPixConfig form={form} onChange={handleChange} />,
       isValid: true,
       footer: (
         <Button

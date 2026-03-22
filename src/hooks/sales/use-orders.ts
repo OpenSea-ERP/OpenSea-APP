@@ -32,7 +32,7 @@ export function useOrdersInfinite(filters?: OrdersFilters, limit = 20) {
       });
       return response;
     },
-    getNextPageParam: (lastPage) =>
+    getNextPageParam: lastPage =>
       lastPage.meta.page < lastPage.meta.pages
         ? lastPage.meta.page + 1
         : undefined,
@@ -63,13 +63,8 @@ export function useUpdateOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateOrderRequest;
-    }) => ordersService.updateOrder(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateOrderRequest }) =>
+      ordersService.updateOrder(id, data),
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });
       await queryClient.invalidateQueries({
@@ -105,13 +100,8 @@ export function useCancelOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: CancelOrderRequest;
-    }) => ordersService.cancelOrder(id, data),
+    mutationFn: ({ id, data }: { id: string; data: CancelOrderRequest }) =>
+      ordersService.cancelOrder(id, data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });
     },
@@ -122,13 +112,8 @@ export function useChangeOrderStage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: ChangeOrderStageRequest;
-    }) => ordersService.changeOrderStage(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ChangeOrderStageRequest }) =>
+      ordersService.changeOrderStage(id, data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ORDER_KEYS.all });
     },

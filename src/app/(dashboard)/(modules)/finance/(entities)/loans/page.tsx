@@ -36,14 +36,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { Loan, LoanStatus, LoanType } from '@/types/finance';
 import { LOAN_STATUS_LABELS, LOAN_TYPE_LABELS } from '@/types/finance';
-import {
-  DollarSign,
-  Landmark,
-  Loader2,
-  Plus,
-  Tag,
-  Trash2,
-} from 'lucide-react';
+import { DollarSign, Landmark, Loader2, Plus, Tag, Trash2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Suspense,
@@ -78,7 +71,11 @@ const TYPE_OPTIONS = [
   { id: 'OTHER', label: 'Outro' },
 ];
 
-const ACTIVE_LOAN_STATUSES: LoanStatus[] = ['ACTIVE', 'DEFAULTED', 'RENEGOTIATED'];
+const ACTIVE_LOAN_STATUSES: LoanStatus[] = [
+  'ACTIVE',
+  'DEFAULTED',
+  'RENEGOTIATED',
+];
 
 // ============================================================================
 // HELPERS
@@ -172,7 +169,13 @@ function LoansPageContent() {
 
   // Sorting state (server-side)
   const [sortBy, setSortBy] = useState<
-    'createdAt' | 'totalAmount' | 'institution' | 'status' | 'name' | 'principalAmount' | 'outstandingBalance'
+    | 'createdAt'
+    | 'totalAmount'
+    | 'institution'
+    | 'status'
+    | 'name'
+    | 'principalAmount'
+    | 'outstandingBalance'
   >('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -654,10 +657,8 @@ function LoansPageContent() {
                       emptyText="Nenhum tipo encontrado."
                     />
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
-                      {total}{' '}
-                      {total === 1 ? 'empréstimo' : 'empréstimos'}
-                      {loans.length < total &&
-                        ` (${loans.length} carregados)`}
+                      {total} {total === 1 ? 'empréstimo' : 'empréstimos'}
+                      {loans.length < total && ` (${loans.length} carregados)`}
                     </p>
                   </>
                 }
@@ -673,9 +674,7 @@ function LoansPageContent() {
                 defaultSortDirection="desc"
                 onSortChange={(field, direction) => {
                   if (field !== 'custom') {
-                    setSortBy(
-                      field as typeof sortBy
-                    );
+                    setSortBy(field as typeof sortBy);
                     setSortOrder(direction);
                   }
                 }}

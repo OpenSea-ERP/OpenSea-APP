@@ -24,16 +24,16 @@ function buildQueryString(query?: AnalyticsQuery): string {
   return qs ? `?${qs}` : '';
 }
 
-export const analyticsService = {
+export const stockAnalyticsService = {
   // GET /v1/analytics/stock-summary
   async getStockSummary(query?: AnalyticsQuery): Promise<StockSummary> {
-    const url = `${API_ENDPOINTS.ANALYTICS.STOCK_SUMMARY}${buildQueryString(query)}`;
+    const url = `${API_ENDPOINTS.STOCK_ANALYTICS.STOCK_SUMMARY}${buildQueryString(query)}`;
     return apiClient.get<StockSummary>(url);
   },
 
   // GET /v1/analytics/movements-summary
   async getMovementsSummary(query?: AnalyticsQuery): Promise<MovementsSummary> {
-    const url = `${API_ENDPOINTS.ANALYTICS.MOVEMENTS_SUMMARY}${buildQueryString(query)}`;
+    const url = `${API_ENDPOINTS.STOCK_ANALYTICS.MOVEMENTS_SUMMARY}${buildQueryString(query)}`;
     return apiClient.get<MovementsSummary>(url);
   },
 
@@ -58,7 +58,7 @@ export const analyticsService = {
       percentage: number;
     }>;
   }> {
-    const url = `${API_ENDPOINTS.ANALYTICS.ABC_CURVE}${buildQueryString(query)}`;
+    const url = `${API_ENDPOINTS.STOCK_ANALYTICS.ABC_CURVE}${buildQueryString(query)}`;
     return apiClient.get(url);
   },
 
@@ -68,13 +68,15 @@ export const analyticsService = {
     byCategory: Array<{ categoryId: string; name: string; turnover: number }>;
     byProduct: Array<{ productId: string; name: string; turnover: number }>;
   }> {
-    const url = `${API_ENDPOINTS.ANALYTICS.STOCK_TURNOVER}${buildQueryString(query)}`;
+    const url = `${API_ENDPOINTS.STOCK_ANALYTICS.STOCK_TURNOVER}${buildQueryString(query)}`;
     return apiClient.get(url);
   },
 
   // GET /v1/dashboard/stock
   async getDashboard(): Promise<DashboardData> {
-    return apiClient.get<DashboardData>(API_ENDPOINTS.ANALYTICS.DASHBOARD);
+    return apiClient.get<DashboardData>(
+      API_ENDPOINTS.STOCK_ANALYTICS.DASHBOARDS
+    );
   },
 
   // ============================================

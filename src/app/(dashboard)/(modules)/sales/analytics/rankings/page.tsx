@@ -35,9 +35,12 @@ function formatCurrency(value: number): string {
 }
 
 function RankingMedal({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="text-amber-500 font-bold text-lg">1</span>;
-  if (rank === 2) return <span className="text-slate-400 font-bold text-lg">2</span>;
-  if (rank === 3) return <span className="text-amber-700 font-bold text-lg">3</span>;
+  if (rank === 1)
+    return <span className="text-amber-500 font-bold text-lg">1</span>;
+  if (rank === 2)
+    return <span className="text-slate-400 font-bold text-lg">2</span>;
+  if (rank === 3)
+    return <span className="text-amber-700 font-bold text-lg">3</span>;
   return <span className="text-muted-foreground font-medium">{rank}</span>;
 }
 
@@ -63,7 +66,7 @@ function RankingList({
 
   return (
     <div className="space-y-2">
-      {rankings.map((entry) => (
+      {rankings.map(entry => (
         <div
           key={`${entry.rank}-${entry.userId ?? entry.customerId ?? entry.variantId}`}
           className="flex items-center gap-4 p-3 rounded-lg bg-white dark:bg-slate-800/40 border border-border"
@@ -80,7 +83,9 @@ function RankingList({
             )}
           </div>
           <div className="text-right">
-            <p className="font-semibold">{formatCurrency(entry.totalRevenue)}</p>
+            <p className="font-semibold">
+              {formatCurrency(entry.totalRevenue)}
+            </p>
             <p className="text-xs text-muted-foreground">
               {entry.orderCount} pedido{entry.orderCount !== 1 ? 's' : ''}
             </p>
@@ -94,17 +99,20 @@ function RankingList({
 export default function RankingsPage() {
   const [period, setPeriod] = useState<string>('month');
 
-  const params = useMemo(() => ({ period, limit: 10 }), [period]);
+  const params = useMemo(() => ({ period, limit: '10' }), [period]);
 
-  const { data: sellerData, isLoading: sellerLoading } = useSellerRanking(params);
-  const { data: productData, isLoading: productLoading } = useProductRanking(params);
-  const { data: customerData, isLoading: customerLoading } = useCustomerRanking(params);
+  const { data: sellerData, isLoading: sellerLoading } =
+    useSellerRanking(params);
+  const { data: productData, isLoading: productLoading } =
+    useProductRanking(params);
+  const { data: customerData, isLoading: customerLoading } =
+    useCustomerRanking(params);
 
   return (
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Analytics', href: '/sales/analytics' },
             { label: 'Rankings' },

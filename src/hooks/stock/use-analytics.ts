@@ -1,4 +1,4 @@
-import { analyticsService } from '@/services/stock';
+import { stockAnalyticsService } from '@/services/stock';
 import { useQuery } from '@tanstack/react-query';
 
 interface AnalyticsQuery {
@@ -23,7 +23,7 @@ export const ANALYTICS_QUERY_KEYS = {
 export function useStockSummary(query?: AnalyticsQuery) {
   return useQuery({
     queryKey: [...ANALYTICS_QUERY_KEYS.STOCK_SUMMARY, query],
-    queryFn: () => analyticsService.getStockSummary(query),
+    queryFn: () => stockAnalyticsService.getStockSummary(query),
     staleTime: 60000, // Cache for 1 minute
   });
 }
@@ -32,7 +32,7 @@ export function useStockSummary(query?: AnalyticsQuery) {
 export function useMovementsSummary(query?: AnalyticsQuery) {
   return useQuery({
     queryKey: [...ANALYTICS_QUERY_KEYS.MOVEMENTS_SUMMARY, query],
-    queryFn: () => analyticsService.getMovementsSummary(query),
+    queryFn: () => stockAnalyticsService.getMovementsSummary(query),
     staleTime: 60000,
   });
 }
@@ -41,7 +41,7 @@ export function useMovementsSummary(query?: AnalyticsQuery) {
 export function useABCCurve(query?: AnalyticsQuery) {
   return useQuery({
     queryKey: [...ANALYTICS_QUERY_KEYS.ABC_CURVE, query],
-    queryFn: () => analyticsService.getABCCurve(query),
+    queryFn: () => stockAnalyticsService.getABCCurve(query),
     staleTime: 300000, // Cache for 5 minutes (expensive query)
   });
 }
@@ -50,7 +50,7 @@ export function useABCCurve(query?: AnalyticsQuery) {
 export function useStockTurnover(query?: AnalyticsQuery) {
   return useQuery({
     queryKey: [...ANALYTICS_QUERY_KEYS.STOCK_TURNOVER, query],
-    queryFn: () => analyticsService.getStockTurnover(query),
+    queryFn: () => stockAnalyticsService.getStockTurnover(query),
     staleTime: 300000,
   });
 }
@@ -59,7 +59,7 @@ export function useStockTurnover(query?: AnalyticsQuery) {
 export function useStockDashboard() {
   return useQuery({
     queryKey: ANALYTICS_QUERY_KEYS.DASHBOARD,
-    queryFn: () => analyticsService.getDashboard(),
+    queryFn: () => stockAnalyticsService.getDashboard(),
     staleTime: 60000,
     refetchInterval: 300000, // Auto-refresh every 5 minutes
   });
@@ -73,7 +73,7 @@ export function useStockDashboard() {
 export function useWeeklySummary() {
   return useQuery({
     queryKey: ANALYTICS_QUERY_KEYS.WEEKLY_SUMMARY,
-    queryFn: () => analyticsService.getWeeklySummary(),
+    queryFn: () => stockAnalyticsService.getWeeklySummary(),
     staleTime: 60000,
   });
 }
@@ -82,7 +82,7 @@ export function useWeeklySummary() {
 export function useCurrentMonthSummary() {
   return useQuery({
     queryKey: ANALYTICS_QUERY_KEYS.MONTHLY_SUMMARY,
-    queryFn: () => analyticsService.getCurrentMonthSummary(),
+    queryFn: () => stockAnalyticsService.getCurrentMonthSummary(),
     staleTime: 60000,
   });
 }
@@ -91,7 +91,7 @@ export function useCurrentMonthSummary() {
 export function useLowStockAlerts() {
   return useQuery({
     queryKey: ANALYTICS_QUERY_KEYS.LOW_STOCK_ALERTS,
-    queryFn: () => analyticsService.getLowStockAlerts(),
+    queryFn: () => stockAnalyticsService.getLowStockAlerts(),
     staleTime: 60000,
     refetchInterval: 600000, // Auto-refresh every 10 minutes
   });
@@ -101,7 +101,7 @@ export function useLowStockAlerts() {
 export function useStockValueByWarehouse() {
   return useQuery({
     queryKey: [...ANALYTICS_QUERY_KEYS.STOCK_SUMMARY, 'by-warehouse'],
-    queryFn: () => analyticsService.getStockValueByWarehouse(),
+    queryFn: () => stockAnalyticsService.getStockValueByWarehouse(),
     staleTime: 60000,
   });
 }

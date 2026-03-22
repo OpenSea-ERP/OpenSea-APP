@@ -31,21 +31,21 @@ export const paymentConditionsService = {
   },
 
   async create(
-    data: CreatePaymentConditionRequest,
+    data: CreatePaymentConditionRequest
   ): Promise<{ paymentCondition: PaymentConditionDTO }> {
     return apiClient.post<{ paymentCondition: PaymentConditionDTO }>(
       API_ENDPOINTS.PAYMENT_CONDITIONS.CREATE,
-      data,
+      data
     );
   },
 
   async update(
     id: string,
-    data: UpdatePaymentConditionRequest,
+    data: UpdatePaymentConditionRequest
   ): Promise<{ paymentCondition: PaymentConditionDTO }> {
     return apiClient.put<{ paymentCondition: PaymentConditionDTO }>(
       API_ENDPOINTS.PAYMENT_CONDITIONS.UPDATE(id),
-      data,
+      data
     );
   },
 

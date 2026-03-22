@@ -9,12 +9,23 @@ import { PageActionBar } from '@/components/layout/page-action-bar';
 import { aiActionsService } from '@/services/ai';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Activity, CheckCircle2, XCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  Activity,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
 import type { AiActionLog, AiActionStatus } from '@/types/ai';
 
 const STATUS_CONFIG: Record<
   AiActionStatus,
-  { label: string; icon: React.ElementType; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  {
+    label: string;
+    icon: React.ElementType;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
 > = {
   PROPOSED: { label: 'Proposta', icon: Clock, variant: 'outline' },
   CONFIRMED: { label: 'Confirmada', icon: CheckCircle2, variant: 'default' },
@@ -42,7 +53,7 @@ export default function AiActionsPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       <PageActionBar
-        breadcrumbs={[
+        breadcrumbItems={[
           { label: 'Ferramentas' },
           { label: 'Assistente IA', href: '/ai' },
           { label: 'Historico de Acoes' },
@@ -59,21 +70,27 @@ export default function AiActionsPage() {
           >
             Todas
           </Button>
-          {(['PROPOSED', 'CONFIRMED', 'EXECUTED', 'FAILED', 'CANCELLED'] as AiActionStatus[]).map(
-            (status) => {
-              const config = STATUS_CONFIG[status];
-              return (
-                <Button
-                  key={status}
-                  variant={statusFilter === status ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter(status)}
-                >
-                  {config.label}
-                </Button>
-              );
-            },
-          )}
+          {(
+            [
+              'PROPOSED',
+              'CONFIRMED',
+              'EXECUTED',
+              'FAILED',
+              'CANCELLED',
+            ] as AiActionStatus[]
+          ).map(status => {
+            const config = STATUS_CONFIG[status];
+            return (
+              <Button
+                key={status}
+                variant={statusFilter === status ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter(status)}
+              >
+                {config.label}
+              </Button>
+            );
+          })}
         </div>
 
         {/* Actions list */}
@@ -84,7 +101,9 @@ export default function AiActionsPage() {
         ) : actions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Activity className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium mb-1">Nenhuma acao registrada</h3>
+            <h3 className="text-lg font-medium mb-1">
+              Nenhuma acao registrada
+            </h3>
             <p className="text-sm text-muted-foreground">
               As acoes executadas pelo assistente IA aparecerao aqui.
             </p>
@@ -105,7 +124,10 @@ export default function AiActionsPage() {
                           <span className="font-medium text-sm">
                             {action.actionType}
                           </span>
-                          <Badge variant={statusConfig.variant} className="text-xs">
+                          <Badge
+                            variant={statusConfig.variant}
+                            className="text-xs"
+                          >
                             {statusConfig.label}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
@@ -114,7 +136,8 @@ export default function AiActionsPage() {
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           {action.targetEntityType}
-                          {action.targetEntityId && ` (${action.targetEntityId.slice(0, 8)}...)`}
+                          {action.targetEntityId &&
+                            ` (${action.targetEntityId.slice(0, 8)}...)`}
                         </p>
                         {action.error && (
                           <p className="text-xs text-rose-500 mt-1">

@@ -95,14 +95,30 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
     // Compute permission objects for context menus
     const folderPermissions = useMemo<FolderPermissions>(
       () => ({
-        canEditUserFolders: hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.MODIFY),
-        canDeleteUserFolders: hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.REMOVE),
-        canShareUserFolders: hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.SHARE),
-        canShareSystemFolders: hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.SHARE),
-        canShareFilterFolders: hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.SHARE),
-        canDownloadUserFolders: hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.ACCESS),
-        canDownloadSystemFolders: hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.ACCESS),
-        canDownloadFilterFolders: hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.ACCESS),
+        canEditUserFolders: hasPermission(
+          TOOLS_PERMISSIONS.STORAGE.FOLDERS.MODIFY
+        ),
+        canDeleteUserFolders: hasPermission(
+          TOOLS_PERMISSIONS.STORAGE.FOLDERS.REMOVE
+        ),
+        canShareUserFolders: hasPermission(
+          TOOLS_PERMISSIONS.STORAGE.FOLDERS.SHARE
+        ),
+        canShareSystemFolders: hasPermission(
+          TOOLS_PERMISSIONS.STORAGE.FOLDERS.SHARE
+        ),
+        canShareFilterFolders: hasPermission(
+          TOOLS_PERMISSIONS.STORAGE.FOLDERS.SHARE
+        ),
+        canDownloadUserFolders: hasPermission(
+          TOOLS_PERMISSIONS.STORAGE.FOLDERS.ACCESS
+        ),
+        canDownloadSystemFolders: hasPermission(
+          TOOLS_PERMISSIONS.STORAGE.FOLDERS.ACCESS
+        ),
+        canDownloadFilterFolders: hasPermission(
+          TOOLS_PERMISSIONS.STORAGE.FOLDERS.ACCESS
+        ),
       }),
       [hasPermission]
     );
@@ -852,12 +868,14 @@ export const FileManager = forwardRef<FileManagerRef, FileManagerProps>(
         showHidden={manager.showHidden}
         onToggleHidden={handleToggleHidden}
         onUpload={
-          hideToolbarActions || !hasPermission(TOOLS_PERMISSIONS.STORAGE.FILES.REGISTER)
+          hideToolbarActions ||
+          !hasPermission(TOOLS_PERMISSIONS.STORAGE.FILES.REGISTER)
             ? undefined
             : () => setShowUpload(true)
         }
         onNewFolder={
-          hideToolbarActions || !hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.REGISTER)
+          hideToolbarActions ||
+          !hasPermission(TOOLS_PERMISSIONS.STORAGE.FOLDERS.REGISTER)
             ? undefined
             : () => setShowNewFolder(true)
         }

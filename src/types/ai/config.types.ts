@@ -1,4 +1,9 @@
-export type AiPersonality = 'PROFESSIONAL' | 'FRIENDLY' | 'CASUAL' | 'FORMAL' | 'CUSTOM';
+export type AiPersonality =
+  | 'PROFESSIONAL'
+  | 'FRIENDLY'
+  | 'CASUAL'
+  | 'FORMAL'
+  | 'CUSTOM';
 export type AiToneOfVoice = 'NEUTRAL' | 'WARM' | 'DIRECT' | 'ENTHUSIASTIC';
 
 export interface AiTenantConfig {

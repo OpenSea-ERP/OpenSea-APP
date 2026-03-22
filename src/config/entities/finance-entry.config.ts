@@ -70,19 +70,13 @@ export const financeEntryConfig = defineEntityConfig<FinanceEntry>()({
         field: 'status',
         label: 'Status',
         colorMap: {
-          PENDING:
-            'bg-slate-500/20 text-slate-700 dark:text-slate-400',
-          OVERDUE:
-            'bg-rose-500/20 text-rose-700 dark:text-rose-400',
+          PENDING: 'bg-slate-500/20 text-slate-700 dark:text-slate-400',
+          OVERDUE: 'bg-rose-500/20 text-rose-700 dark:text-rose-400',
           PAID: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-          RECEIVED:
-            'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-          PARTIALLY_PAID:
-            'bg-amber-500/20 text-amber-700 dark:text-amber-400',
-          CANCELLED:
-            'bg-gray-500/20 text-gray-700 dark:text-gray-400',
-          SCHEDULED:
-            'bg-sky-500/20 text-sky-700 dark:text-sky-400',
+          RECEIVED: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+          PARTIALLY_PAID: 'bg-amber-500/20 text-amber-700 dark:text-amber-400',
+          CANCELLED: 'bg-gray-500/20 text-gray-700 dark:text-gray-400',
+          SCHEDULED: 'bg-sky-500/20 text-sky-700 dark:text-sky-400',
         },
         render: (value: unknown) => {
           const labels = {

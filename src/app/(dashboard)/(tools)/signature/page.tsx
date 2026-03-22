@@ -30,19 +30,51 @@ const STATUS_CONFIG: Record<
   EnvelopeStatus,
   { label: string; color: string; icon: React.ReactNode }
 > = {
-  DRAFT: { label: 'Rascunho', color: 'bg-slate-100 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300', icon: <Clock className="h-3.5 w-3.5" /> },
-  PENDING: { label: 'Pendente', color: 'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300', icon: <Send className="h-3.5 w-3.5" /> },
-  IN_PROGRESS: { label: 'Em Andamento', color: 'bg-blue-50 text-blue-700 dark:bg-blue-500/8 dark:text-blue-300', icon: <FileSignature className="h-3.5 w-3.5" /> },
-  COMPLETED: { label: 'Concluído', color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300', icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
-  CANCELLED: { label: 'Cancelado', color: 'bg-slate-100 text-slate-500 dark:bg-slate-500/8 dark:text-slate-400', icon: <XCircle className="h-3.5 w-3.5" /> },
-  EXPIRED: { label: 'Expirado', color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300', icon: <Clock className="h-3.5 w-3.5" /> },
-  REJECTED: { label: 'Rejeitado', color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300', icon: <XCircle className="h-3.5 w-3.5" /> },
+  DRAFT: {
+    label: 'Rascunho',
+    color:
+      'bg-slate-100 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300',
+    icon: <Clock className="h-3.5 w-3.5" />,
+  },
+  PENDING: {
+    label: 'Pendente',
+    color: 'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
+    icon: <Send className="h-3.5 w-3.5" />,
+  },
+  IN_PROGRESS: {
+    label: 'Em Andamento',
+    color: 'bg-blue-50 text-blue-700 dark:bg-blue-500/8 dark:text-blue-300',
+    icon: <FileSignature className="h-3.5 w-3.5" />,
+  },
+  COMPLETED: {
+    label: 'Concluído',
+    color:
+      'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300',
+    icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+  },
+  CANCELLED: {
+    label: 'Cancelado',
+    color:
+      'bg-slate-100 text-slate-500 dark:bg-slate-500/8 dark:text-slate-400',
+    icon: <XCircle className="h-3.5 w-3.5" />,
+  },
+  EXPIRED: {
+    label: 'Expirado',
+    color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
+    icon: <Clock className="h-3.5 w-3.5" />,
+  },
+  REJECTED: {
+    label: 'Rejeitado',
+    color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
+    icon: <XCircle className="h-3.5 w-3.5" />,
+  },
 };
 
 function EnvelopeCard({ envelope }: { envelope: SignatureEnvelope }) {
   const router = useRouter();
   const config = STATUS_CONFIG[envelope.status];
-  const signedCount = envelope.signers?.filter((s) => s.status === 'SIGNED').length ?? 0;
+  const signedCount =
+    envelope.signers?.filter(s => s.status === 'SIGNED').length ?? 0;
   const totalSigners = envelope.signers?.length ?? 0;
 
   return (
@@ -57,13 +89,18 @@ function EnvelopeCard({ envelope }: { envelope: SignatureEnvelope }) {
             {envelope.sourceModule} / {envelope.sourceEntityType}
           </p>
         </div>
-        <Badge variant="secondary" className={`text-xs shrink-0 gap-1 ${config.color}`}>
+        <Badge
+          variant="secondary"
+          className={`text-xs shrink-0 gap-1 ${config.color}`}
+        >
           {config.icon}
           {config.label}
         </Badge>
       </div>
       <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-        <span>{signedCount}/{totalSigners} assinatura(s)</span>
+        <span>
+          {signedCount}/{totalSigners} assinatura(s)
+        </span>
         <span>{new Date(envelope.createdAt).toLocaleDateString('pt-BR')}</span>
       </div>
     </Card>
@@ -73,34 +110,33 @@ function EnvelopeCard({ envelope }: { envelope: SignatureEnvelope }) {
 export default function SignatureDashboardPage() {
   const router = useRouter();
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission(TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.REGISTER);
-  const canViewCerts = hasPermission(TOOLS_PERMISSIONS.SIGNATURE.CERTIFICATES.ACCESS);
+  const canCreate = hasPermission(
+    TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.REGISTER
+  );
+  const canViewCerts = hasPermission(
+    TOOLS_PERMISSIONS.SIGNATURE.CERTIFICATES.ACCESS
+  );
 
-  const {
-    data,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['signature', 'envelopes', 'dashboard'],
-    queryFn: async ({ pageParam = 1 }) => {
-      const response = await envelopesService.listEnvelopes({
-        page: pageParam,
-        limit: 20,
-      });
-      return response;
-    },
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.page < lastPage.meta.totalPages
-        ? lastPage.meta.page + 1
-        : undefined,
-    initialPageParam: 1,
-  });
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ['signature', 'envelopes', 'dashboard'],
+      queryFn: async ({ pageParam = 1 }) => {
+        const response = await envelopesService.listEnvelopes({
+          page: pageParam,
+          limit: 20,
+        });
+        return response;
+      },
+      getNextPageParam: lastPage =>
+        lastPage.meta.page < lastPage.meta.totalPages
+          ? lastPage.meta.page + 1
+          : undefined,
+      initialPageParam: 1,
+    });
 
   const envelopes = useMemo(
-    () => data?.pages.flatMap((p) => p.envelopes) ?? [],
-    [data],
+    () => data?.pages.flatMap(p => p.envelopes) ?? [],
+    [data]
   );
 
   const statusCounts = useMemo(() => {
@@ -112,16 +148,31 @@ export default function SignatureDashboardPage() {
   }, [envelopes]);
 
   return (
-    <ProtectedRoute requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.ACCESS}>
+    <ProtectedRoute
+      requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.ACCESS}
+    >
       <div className="flex flex-col h-full">
         <PageActionBar
           breadcrumbItems={[{ label: 'Assinatura Digital' }]}
           buttons={[
             ...(canViewCerts
-              ? [{ title: 'Certificados', icon: FileKey, onClick: () => router.push('/signature/certificates'), variant: 'outline' as const }]
+              ? [
+                  {
+                    title: 'Certificados',
+                    icon: FileKey,
+                    onClick: () => router.push('/signature/certificates'),
+                    variant: 'outline' as const,
+                  },
+                ]
               : []),
             ...(canCreate
-              ? [{ title: 'Novo Envelope', icon: Plus, onClick: () => router.push('/signature/envelopes/new') }]
+              ? [
+                  {
+                    title: 'Novo Envelope',
+                    icon: Plus,
+                    onClick: () => router.push('/signature/envelopes/new'),
+                  },
+                ]
               : []),
           ]}
         />
@@ -129,20 +180,29 @@ export default function SignatureDashboardPage() {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Status summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'] as EnvelopeStatus[]).map(
-              (status) => {
-                const config = STATUS_CONFIG[status];
-                return (
-                  <Card key={status} className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      {config.icon}
-                      <span className="text-xs text-muted-foreground">{config.label}</span>
-                    </div>
-                    <p className="text-2xl font-semibold">{statusCounts[status] ?? 0}</p>
-                  </Card>
-                );
-              },
-            )}
+            {(
+              [
+                'PENDING',
+                'IN_PROGRESS',
+                'COMPLETED',
+                'REJECTED',
+              ] as EnvelopeStatus[]
+            ).map(status => {
+              const config = STATUS_CONFIG[status];
+              return (
+                <Card key={status} className="p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    {config.icon}
+                    <span className="text-xs text-muted-foreground">
+                      {config.label}
+                    </span>
+                  </div>
+                  <p className="text-2xl font-semibold">
+                    {statusCounts[status] ?? 0}
+                  </p>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Quick links */}
@@ -186,7 +246,7 @@ export default function SignatureDashboardPage() {
               </Card>
             ) : (
               <div className="space-y-2">
-                {envelopes.map((envelope) => (
+                {envelopes.map(envelope => (
                   <EnvelopeCard key={envelope.id} envelope={envelope} />
                 ))}
                 {hasNextPage && (

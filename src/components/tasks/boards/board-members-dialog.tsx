@@ -35,6 +35,7 @@ interface BoardMembersDialogProps {
 }
 
 const ROLE_LABELS: Record<BoardMemberRole, string> = {
+  OWNER: 'Proprietário',
   VIEWER: 'Visualizador',
   EDITOR: 'Editor',
 };

@@ -1,6 +1,10 @@
 // Payment Condition Types
 
-export type PaymentConditionType = 'CASH' | 'INSTALLMENT' | 'CUSTOM' | 'CREDIT_LIMIT';
+export type PaymentConditionType =
+  | 'CASH'
+  | 'INSTALLMENT'
+  | 'CUSTOM'
+  | 'CREDIT_LIMIT';
 export type InterestType = 'SIMPLE' | 'COMPOUND';
 export type PaymentConditionApplicable = 'ALL' | 'RETAIL' | 'WHOLESALE' | 'BID';
 

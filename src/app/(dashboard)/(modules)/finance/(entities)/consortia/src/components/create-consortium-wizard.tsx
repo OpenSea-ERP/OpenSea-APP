@@ -21,16 +21,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useBankAccounts, useCostCenters, useCreateConsortium } from '@/hooks/finance';
-import type { CreateConsortiumData } from '@/types/finance';
 import {
-  Calendar,
-  FileText,
-  Link,
-  Loader2,
-  Plus,
-  Users,
-} from 'lucide-react';
+  useBankAccounts,
+  useCostCenters,
+  useCreateConsortium,
+} from '@/hooks/finance';
+import type { CreateConsortiumData } from '@/types/finance';
+import { Calendar, FileText, Link, Loader2, Plus, Users } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -95,7 +92,9 @@ export function CreateConsortiumWizard({
 }: CreateConsortiumWizardProps) {
   const [activeSection, setActiveSection] = useState<SectionId>('basic');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
-  const [sectionErrors, setSectionErrors] = useState<Record<string, boolean>>({});
+  const [sectionErrors, setSectionErrors] = useState<Record<string, boolean>>(
+    {}
+  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Data sources for linking section
@@ -246,9 +245,7 @@ export function CreateConsortiumWizard({
       groupNumber: formData.groupNumber.trim() || undefined,
       quotaNumber: formData.quotaNumber.trim() || undefined,
       contractNumber: formData.contractNumber.trim() || undefined,
-      paymentDay: formData.paymentDay
-        ? Number(formData.paymentDay)
-        : undefined,
+      paymentDay: formData.paymentDay ? Number(formData.paymentDay) : undefined,
       notes: formData.notes.trim() || undefined,
     };
 
@@ -352,7 +349,9 @@ export function CreateConsortiumWizard({
               />
             </div>
             {fieldErrors.administrator && (
-              <p className="text-xs text-rose-500">{fieldErrors.administrator}</p>
+              <p className="text-xs text-rose-500">
+                {fieldErrors.administrator}
+              </p>
             )}
           </div>
 
@@ -446,7 +445,9 @@ export function CreateConsortiumWizard({
               disabled={isPending}
             />
             {fieldErrors.monthlyPayment && (
-              <p className="text-xs text-rose-500">{fieldErrors.monthlyPayment}</p>
+              <p className="text-xs text-rose-500">
+                {fieldErrors.monthlyPayment}
+              </p>
             )}
           </div>
 

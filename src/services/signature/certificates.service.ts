@@ -1,6 +1,9 @@
 import { API_ENDPOINTS } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
-import type { DigitalCertificate, CreateCertificateData } from '@/types/signature';
+import type {
+  DigitalCertificate,
+  CreateCertificateData,
+} from '@/types/signature';
 import type { PaginationMeta } from '@/types/pagination';
 
 export interface CertificatesListResponse {
@@ -32,14 +35,18 @@ export const certificatesService = {
     return apiClient.get<CertificatesListResponse>(url);
   },
 
-  async createCertificate(data: CreateCertificateData): Promise<CertificateResponse> {
+  async createCertificate(
+    data: CreateCertificateData
+  ): Promise<CertificateResponse> {
     return apiClient.post<CertificateResponse>(
       API_ENDPOINTS.SIGNATURE.CERTIFICATES.CREATE,
-      data,
+      data
     );
   },
 
   async deleteCertificate(id: string): Promise<void> {
-    await apiClient.delete<void>(API_ENDPOINTS.SIGNATURE.CERTIFICATES.DELETE(id));
+    await apiClient.delete<void>(
+      API_ENDPOINTS.SIGNATURE.CERTIFICATES.DELETE(id)
+    );
   },
 };

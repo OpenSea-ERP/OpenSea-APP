@@ -100,9 +100,6 @@ export const permissionsByModule = Object.fromEntries(
     .filter(([key]) => key !== 'WILDCARD')
     .map(([key, obj]) => [
       key.toLowerCase(),
-      extractPermissions(
-        key,
-        obj as Record<string, Record<string, string>>
-      ),
+      extractPermissions(key, obj as Record<string, Record<string, string>>),
     ])
 );

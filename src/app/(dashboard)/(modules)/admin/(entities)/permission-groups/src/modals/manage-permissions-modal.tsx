@@ -191,9 +191,7 @@ export function ManagePermissionsModal({
 
       const allApiCodes: string[] = [];
       for (const moduleGroup of allPermissions.permissions) {
-        for (const [, resourceGroup] of Object.entries(
-          moduleGroup.resources
-        )) {
+        for (const [, resourceGroup] of Object.entries(moduleGroup.resources)) {
           for (const perm of resourceGroup.permissions) {
             allApiCodes.push(perm.code);
           }
@@ -592,14 +590,10 @@ export function ManagePermissionsModal({
                               >
                                 <Checkbox
                                   checked={selectedCodes.has(code)}
-                                  onCheckedChange={() =>
-                                    handleToggleCode(code)
-                                  }
+                                  onCheckedChange={() => handleToggleCode(code)}
                                   className="h-3.5 w-3.5"
                                 />
-                                <span className="truncate text-xs">
-                                  {code}
-                                </span>
+                                <span className="truncate text-xs">{code}</span>
                               </label>
                             ))}
                           </div>

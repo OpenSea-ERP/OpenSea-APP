@@ -51,7 +51,7 @@ export function Header({
 
   const handleButtonClick = async (button: (typeof effectiveButtons)[0]) => {
     try {
-      setLoadingButtonId(button.id || button.title);
+      setLoadingButtonId(button.id || button.title || button.label || null);
       const result = button.onClick();
       if (result instanceof Promise) {
         await result;

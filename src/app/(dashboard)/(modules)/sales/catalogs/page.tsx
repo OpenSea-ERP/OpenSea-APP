@@ -10,11 +10,7 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import {
-  EntityCard,
-  EntityContextMenu,
-  EntityGrid,
-} from '@/core';
+import { EntityCard, EntityContextMenu, EntityGrid } from '@/core';
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   useCatalogsInfinite,
@@ -26,15 +22,7 @@ import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import type { Catalog } from '@/types/sales';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { Button } from '@/components/ui/button';
-import {
-  BookOpen,
-  Eye,
-  Globe,
-  Lock,
-  Pencil,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { BookOpen, Eye, Globe, Lock, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
@@ -91,8 +79,8 @@ export default function CatalogsPage() {
   } = useCatalogsInfinite(filters);
 
   const catalogs = useMemo(
-    () => data?.pages.flatMap((p) => p.data) ?? [],
-    [data],
+    () => data?.pages.flatMap(p => p.data) ?? [],
+    [data]
   );
 
   // Mutations
@@ -104,14 +92,14 @@ export default function CatalogsPage() {
     (node: HTMLDivElement | null) => {
       if (observerRef.current) observerRef.current.disconnect();
       if (!node) return;
-      observerRef.current = new IntersectionObserver((entries) => {
+      observerRef.current = new IntersectionObserver(entries => {
         if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       });
       observerRef.current.observe(node);
     },
-    [hasNextPage, isFetchingNextPage, fetchNextPage],
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
   );
 
   // Handlers
@@ -138,10 +126,14 @@ export default function CatalogsPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'DRAFT': return 'Rascunho';
-      case 'ACTIVE': return 'Ativo';
-      case 'ARCHIVED': return 'Arquivado';
-      default: return status;
+      case 'DRAFT':
+        return 'Rascunho';
+      case 'ACTIVE':
+        return 'Ativo';
+      case 'ARCHIVED':
+        return 'Arquivado';
+      default:
+        return status;
     }
   };
 
@@ -149,10 +141,7 @@ export default function CatalogsPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
-            { label: 'Vendas' },
-            { label: 'Catálogos' },
-          ]}
+          breadcrumbItems={[{ label: 'Vendas' }, { label: 'Catálogos' }]}
           actions={
             canCreate
               ? [
@@ -170,18 +159,18 @@ export default function CatalogsPage() {
       <PageBody>
         <SearchBar
           value={searchQuery}
-          onChange={setSearchQuery}
+          onSearch={setSearchQuery}
           placeholder="Buscar catálogos..."
         />
 
         {isLoading ? (
           <GridLoading />
         ) : error ? (
-          <GridError error={error} />
+          <GridError message={error?.message} />
         ) : (
           <EntityGrid
             items={catalogs}
-            getKey={(c) => c.id}
+            getKey={c => c.id}
             toolbarStart={
               <>
                 <FilterDropdown
@@ -198,7 +187,7 @@ export default function CatalogsPage() {
                 />
               </>
             }
-            renderItem={(catalog) => (
+            renderItem={catalog => (
               <EntityContextMenu
                 key={catalog.id}
                 onView={canView ? () => handleView(catalog) : undefined}
@@ -252,7 +241,8 @@ export default function CatalogsPage() {
             emptyState={{
               icon: BookOpen,
               title: 'Nenhum catálogo encontrado',
-              description: 'Crie seu primeiro catálogo para exibir seus produtos.',
+              description:
+                'Crie seu primeiro catálogo para exibir seus produtos.',
             }}
           />
         )}

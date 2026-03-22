@@ -167,7 +167,8 @@ function StepBudget({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Os valores de orçamento são opcionais e servem como referência para acompanhamento dos gastos.
+        Os valores de orçamento são opcionais e servem como referência para
+        acompanhamento dos gastos.
       </p>
     </div>
   );
@@ -280,12 +281,7 @@ export function CreateCostCenterWizard({
     {
       title: 'Dados do Centro de Custo',
       description: 'Preencha as informações básicas do centro de custo.',
-      icon: (
-        <Target
-          className="h-16 w-16 text-emerald-400"
-          strokeWidth={1.2}
-        />
-      ),
+      icon: <Target className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />,
       content: (
         <StepCostCenterData
           name={name}
@@ -304,10 +300,7 @@ export function CreateCostCenterWizard({
       title: 'Orçamento',
       description: 'Defina os limites orçamentários do centro de custo.',
       icon: (
-        <DollarSign
-          className="h-16 w-16 text-amber-400"
-          strokeWidth={1.2}
-        />
+        <DollarSign className="h-16 w-16 text-amber-400" strokeWidth={1.2} />
       ),
       onBack: () => setCurrentStep(1),
       content: (

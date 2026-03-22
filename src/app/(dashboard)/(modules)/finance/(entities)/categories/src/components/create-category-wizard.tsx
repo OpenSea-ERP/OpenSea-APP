@@ -91,7 +91,10 @@ function StepCategoryData({
         <Label htmlFor="cat-wiz-type">
           Tipo <span className="text-rose-500">*</span>
         </Label>
-        <Select value={type} onValueChange={v => onTypeChange(v as FinanceCategoryType)}>
+        <Select
+          value={type}
+          onValueChange={v => onTypeChange(v as FinanceCategoryType)}
+        >
           <SelectTrigger id="cat-wiz-type">
             <SelectValue />
           </SelectTrigger>
@@ -192,7 +195,9 @@ function StepCategoryConfig({
           type="number"
           min="1"
           value={displayOrder}
-          onChange={e => onDisplayOrderChange(parseInt(e.target.value, 10) || 1)}
+          onChange={e =>
+            onDisplayOrderChange(parseInt(e.target.value, 10) || 1)
+          }
         />
         <p className="text-xs text-muted-foreground">
           Define a posição desta categoria na listagem.
@@ -308,10 +313,7 @@ export function CreateCategoryWizard({
       title: 'Dados da Categoria',
       description: 'Preencha as informações básicas da categoria.',
       icon: (
-        <FolderTree
-          className="h-16 w-16 text-cyan-400"
-          strokeWidth={1.2}
-        />
+        <FolderTree className="h-16 w-16 text-cyan-400" strokeWidth={1.2} />
       ),
       content: (
         <StepCategoryData
@@ -331,12 +333,7 @@ export function CreateCategoryWizard({
     {
       title: 'Configuração',
       description: 'Defina taxas padrão e ordem de exibição.',
-      icon: (
-        <Settings
-          className="h-16 w-16 text-slate-400"
-          strokeWidth={1.2}
-        />
-      ),
+      icon: <Settings className="h-16 w-16 text-slate-400" strokeWidth={1.2} />,
       onBack: () => setCurrentStep(1),
       content: (
         <StepCategoryConfig

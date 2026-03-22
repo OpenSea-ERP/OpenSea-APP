@@ -11,11 +11,7 @@ import {
 import { SearchBar } from '@/components/layout/search-bar';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { Badge } from '@/components/ui/badge';
-import {
-  CoreProvider,
-  EntityCard,
-  EntityGrid,
-} from '@/core';
+import { CoreProvider, EntityCard, EntityGrid } from '@/core';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useReturnsInfinite } from '@/hooks/sales/use-returns';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
@@ -50,12 +46,12 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'Todos os status' },
-  { value: 'REQUESTED', label: 'Solicitada' },
-  { value: 'APPROVED', label: 'Aprovada' },
-  { value: 'RECEIVING', label: 'Recebendo' },
-  { value: 'RECEIVED', label: 'Recebida' },
-  { value: 'REJECTED', label: 'Rejeitada' },
+  { id: '', label: 'Todos os status' },
+  { id: 'REQUESTED', label: 'Solicitada' },
+  { id: 'APPROVED', label: 'Aprovada' },
+  { id: 'RECEIVING', label: 'Recebendo' },
+  { id: 'RECEIVED', label: 'Recebida' },
+  { id: 'REJECTED', label: 'Rejeitada' },
 ];
 
 function formatCurrency(value: number): string {
@@ -86,8 +82,8 @@ export default function ReturnsPage() {
   });
 
   const returns = useMemo(
-    () => data?.pages.flatMap((page) => page.data) ?? [],
-    [data],
+    () => data?.pages.flatMap(page => page.data) ?? [],
+    [data]
   );
 
   const getStatusVariant = useCallback(
@@ -108,7 +104,7 @@ export default function ReturnsPage() {
           return 'outline';
       }
     },
-    [],
+    []
   );
 
   return (
@@ -116,7 +112,7 @@ export default function ReturnsPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
               { label: 'Devoluções' },
             ]}
@@ -126,7 +122,7 @@ export default function ReturnsPage() {
         <PageBody>
           <SearchBar
             value={search}
-            onChange={setSearch}
+            onSearch={setSearch}
             placeholder="Buscar devoluções por número..."
           />
 
@@ -137,7 +133,7 @@ export default function ReturnsPage() {
           ) : (
             <EntityGrid
               items={returns}
-              getId={(ret) => ret.id}
+              getId={ret => ret.id}
               toolbarStart={
                 <FilterDropdown
                   label="Status"
@@ -158,8 +154,7 @@ export default function ReturnsPage() {
                           {ret.returnNumber}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {TYPE_LABELS[ret.type]} -{' '}
-                          {REASON_LABELS[ret.reason]}
+                          {TYPE_LABELS[ret.type]} - {REASON_LABELS[ret.reason]}
                         </p>
                       </div>
                     </div>

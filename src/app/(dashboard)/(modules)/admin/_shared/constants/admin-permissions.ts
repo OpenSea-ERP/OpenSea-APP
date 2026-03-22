@@ -8,9 +8,7 @@
  *   ACCESS, REGISTER, MODIFY, REMOVE, ADMIN
  */
 
-import {
-  ADMIN_PERMISSIONS as ADMIN_CODES,
-} from '@/config/rbac/permission-codes';
+import { ADMIN_PERMISSIONS as ADMIN_CODES } from '@/config/rbac/permission-codes';
 
 export const ADMIN_PERMISSIONS = {
   /**

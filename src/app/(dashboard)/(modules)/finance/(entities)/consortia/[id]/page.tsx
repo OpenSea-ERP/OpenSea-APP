@@ -554,7 +554,8 @@ export default function ConsortiumDetailPage({
               <div className="text-right">
                 <p className="text-xs font-semibold">Progresso</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {consortium.paidInstallments}/{consortium.totalInstallments} ({progressPercentage}%)
+                  {consortium.paidInstallments}/{consortium.totalInstallments} (
+                  {progressPercentage}%)
                 </p>
               </div>
             </div>
@@ -585,7 +586,10 @@ export default function ConsortiumDetailPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <InfoRow label="Administradora" value={consortium.administrator} />
+              <InfoRow
+                label="Administradora"
+                value={consortium.administrator}
+              />
               {consortium.groupNumber && (
                 <InfoRow label="Grupo" value={consortium.groupNumber} />
               )}
@@ -672,19 +676,21 @@ export default function ConsortiumDetailPage({
                   }
                 />
               )}
-              {!consortium.isContemplated && consortium.status === 'ACTIVE' && canEdit && (
-                <div className="pt-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setContemplationModalOpen(true)}
-                    className="gap-2"
-                  >
-                    <Star className="h-4 w-4" />
-                    Marcar como Contemplado
-                  </Button>
-                </div>
-              )}
+              {!consortium.isContemplated &&
+                consortium.status === 'ACTIVE' &&
+                canEdit && (
+                  <div className="pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setContemplationModalOpen(true)}
+                      className="gap-2"
+                    >
+                      <Star className="h-4 w-4" />
+                      Marcar como Contemplado
+                    </Button>
+                  </div>
+                )}
             </CardContent>
           </Card>
 
@@ -698,10 +704,16 @@ export default function ConsortiumDetailPage({
             </CardHeader>
             <CardContent className="space-y-3">
               {consortium.bankAccountName && (
-                <InfoRow label="Conta Bancária" value={consortium.bankAccountName} />
+                <InfoRow
+                  label="Conta Bancária"
+                  value={consortium.bankAccountName}
+                />
               )}
               {consortium.costCenterName && (
-                <InfoRow label="Centro de Custo" value={consortium.costCenterName} />
+                <InfoRow
+                  label="Centro de Custo"
+                  value={consortium.costCenterName}
+                />
               )}
               <InfoRow
                 label="Data de Adesão"

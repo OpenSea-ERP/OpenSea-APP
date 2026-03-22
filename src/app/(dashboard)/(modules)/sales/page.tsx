@@ -207,16 +207,17 @@ export default function SalesLandingPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const [ordersRes, customersRes, catalogsRes] =
-        await Promise.allSettled([
-          ordersService.listOrders({ page: 1, limit: 1 }),
-          customersService.listCustomers(),
-          catalogsService.listCatalogs(),
-        ]);
+      const [ordersRes, customersRes, catalogsRes] = await Promise.allSettled([
+        ordersService.listOrders({ page: 1, limit: 1 }),
+        customersService.listCustomers(),
+        catalogsService.listCatalogs(),
+      ]);
 
       const orderCount =
         ordersRes.status === 'fulfilled'
-          ? (ordersRes.value.meta?.total ?? ordersRes.value.data?.length ?? null)
+          ? (ordersRes.value.meta?.total ??
+            ordersRes.value.data?.length ??
+            null)
           : null;
 
       const customerCount =
@@ -248,9 +249,7 @@ export default function SalesLandingPage() {
 
   return (
     <div className="space-y-8">
-      <PageActionBar
-        breadcrumbItems={[{ label: 'Vendas', href: '/sales' }]}
-      />
+      <PageActionBar breadcrumbItems={[{ label: 'Vendas', href: '/sales' }]} />
 
       <PageHeroBanner
         title="Vendas"

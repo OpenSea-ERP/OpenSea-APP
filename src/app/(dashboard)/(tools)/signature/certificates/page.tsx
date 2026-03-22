@@ -9,7 +9,11 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { usePermissions } from '@/hooks/use-permissions';
 import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { certificatesService } from '@/services/signature';
 import type { DigitalCertificate, CertificateStatus } from '@/types/signature';
 import {
@@ -24,11 +28,28 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
-const STATUS_BADGE: Record<CertificateStatus, { label: string; color: string }> = {
-  ACTIVE: { label: 'Ativo', color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300' },
-  EXPIRED: { label: 'Expirado', color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300' },
-  REVOKED: { label: 'Revogado', color: 'bg-slate-100 text-slate-500 dark:bg-slate-500/8 dark:text-slate-400' },
-  PENDING_ACTIVATION: { label: 'Pendente', color: 'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300' },
+const STATUS_BADGE: Record<
+  CertificateStatus,
+  { label: string; color: string }
+> = {
+  ACTIVE: {
+    label: 'Ativo',
+    color:
+      'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300',
+  },
+  EXPIRED: {
+    label: 'Expirado',
+    color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
+  },
+  REVOKED: {
+    label: 'Revogado',
+    color:
+      'bg-slate-100 text-slate-500 dark:bg-slate-500/8 dark:text-slate-400',
+  },
+  PENDING_ACTIVATION: {
+    label: 'Pendente',
+    color: 'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
+  },
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -71,7 +92,10 @@ function CertificateCard({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className={`text-xs ${statusConfig.color}`}>
+          <Badge
+            variant="secondary"
+            className={`text-xs ${statusConfig.color}`}
+          >
             {statusConfig.label}
           </Badge>
           {canDelete && (
@@ -112,8 +136,12 @@ function CertificateCard({
 
 export default function CertificatesPage() {
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission(TOOLS_PERMISSIONS.SIGNATURE.CERTIFICATES.REGISTER);
-  const canDelete = hasPermission(TOOLS_PERMISSIONS.SIGNATURE.CERTIFICATES.REMOVE);
+  const canCreate = hasPermission(
+    TOOLS_PERMISSIONS.SIGNATURE.CERTIFICATES.REGISTER
+  );
+  const canDelete = hasPermission(
+    TOOLS_PERMISSIONS.SIGNATURE.CERTIFICATES.REMOVE
+  );
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -127,7 +155,7 @@ export default function CertificatesPage() {
         });
         return response;
       },
-      getNextPageParam: (lastPage) =>
+      getNextPageParam: lastPage =>
         lastPage.meta.page < lastPage.meta.totalPages
           ? lastPage.meta.page + 1
           : undefined,
@@ -135,14 +163,16 @@ export default function CertificatesPage() {
     });
 
   const certificates = useMemo(
-    () => data?.pages.flatMap((p) => p.certificates) ?? [],
-    [data],
+    () => data?.pages.flatMap(p => p.certificates) ?? [],
+    [data]
   );
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => certificatesService.deleteCertificate(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['signature', 'certificates'] });
+      queryClient.invalidateQueries({
+        queryKey: ['signature', 'certificates'],
+      });
       toast.success('Certificado excluído com sucesso');
       setDeleteId(null);
     },
@@ -152,14 +182,20 @@ export default function CertificatesPage() {
   });
 
   return (
-    <ProtectedRoute requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.CERTIFICATES.ACCESS}>
+    <ProtectedRoute
+      requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.CERTIFICATES.ACCESS}
+    >
       <div className="flex flex-col h-full">
         <PageActionBar
           breadcrumbItems={[
             { label: 'Assinatura Digital', href: '/signature' },
             { label: 'Certificados' },
           ]}
-          buttons={canCreate ? [{ title: 'Novo Certificado', icon: Plus, onClick: () => {} }] : []}
+          buttons={
+            canCreate
+              ? [{ title: 'Novo Certificado', icon: Plus, onClick: () => {} }]
+              : []
+          }
         />
 
         <div className="flex-1 overflow-y-auto p-4">
@@ -178,7 +214,7 @@ export default function CertificatesPage() {
             </Card>
           ) : (
             <div className="space-y-2">
-              {certificates.map((cert) => (
+              {certificates.map(cert => (
                 <CertificateCard
                   key={cert.id}
                   cert={cert}

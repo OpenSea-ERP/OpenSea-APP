@@ -41,11 +41,11 @@ export const ordersService = {
 
   async updateOrder(
     id: string,
-    data: UpdateOrderRequest,
+    data: UpdateOrderRequest
   ): Promise<{ order: OrderResponse['order'] }> {
     return apiClient.put<{ order: OrderResponse['order'] }>(
       API_ENDPOINTS.ORDERS.UPDATE(id),
-      data,
+      data
     );
   },
 
@@ -53,41 +53,37 @@ export const ordersService = {
     return apiClient.delete<void>(API_ENDPOINTS.ORDERS.DELETE(id));
   },
 
-  async confirmOrder(
-    id: string,
-  ): Promise<{ order: OrderResponse['order'] }> {
+  async confirmOrder(id: string): Promise<{ order: OrderResponse['order'] }> {
     return apiClient.post<{ order: OrderResponse['order'] }>(
       API_ENDPOINTS.ORDERS.CONFIRM(id),
-      {},
+      {}
     );
   },
 
   async cancelOrder(
     id: string,
-    data: CancelOrderRequest,
+    data: CancelOrderRequest
   ): Promise<{ order: OrderResponse['order'] }> {
     return apiClient.post<{ order: OrderResponse['order'] }>(
       API_ENDPOINTS.ORDERS.CANCEL(id),
-      data,
+      data
     );
   },
 
   async changeOrderStage(
     id: string,
-    data: ChangeOrderStageRequest,
+    data: ChangeOrderStageRequest
   ): Promise<{ order: OrderResponse['order'] }> {
     return apiClient.patch<{ order: OrderResponse['order'] }>(
       API_ENDPOINTS.ORDERS.CHANGE_STAGE(id),
-      data,
+      data
     );
   },
 
-  async convertQuote(
-    id: string,
-  ): Promise<{ order: OrderResponse['order'] }> {
+  async convertQuote(id: string): Promise<{ order: OrderResponse['order'] }> {
     return apiClient.post<{ order: OrderResponse['order'] }>(
       API_ENDPOINTS.ORDERS.CONVERT_QUOTE(id),
-      {},
+      {}
     );
   },
 };

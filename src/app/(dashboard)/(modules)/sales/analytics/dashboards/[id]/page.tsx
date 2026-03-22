@@ -18,7 +18,7 @@ export default function DashboardViewPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Analytics', href: '/sales/analytics' },
             { label: 'Dashboards', href: '/sales/analytics/dashboards' },
@@ -36,7 +36,7 @@ export default function DashboardViewPage() {
               { title: 'Ticket Médio', icon: BarChart3, color: 'green' },
               { title: 'Meta', icon: LayoutDashboard, color: 'amber' },
               { title: 'Novos Clientes', icon: PieChart, color: 'purple' },
-            ].map((widget) => (
+            ].map(widget => (
               <Card
                 key={widget.title}
                 className="bg-white dark:bg-slate-800/60 border border-border"
@@ -44,10 +44,14 @@ export default function DashboardViewPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg bg-${widget.color}-500/10`}>
-                      <widget.icon className={`h-5 w-5 text-${widget.color}-500`} />
+                      <widget.icon
+                        className={`h-5 w-5 text-${widget.color}-500`}
+                      />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">{widget.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {widget.title}
+                      </p>
                       <p className="text-xl font-semibold">--</p>
                     </div>
                   </div>
@@ -66,7 +70,9 @@ export default function DashboardViewPage() {
                 <div className="h-64 flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
                     <BarChart3 className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">Gráfico será carregado com dados reais</p>
+                    <p className="text-sm">
+                      Gráfico será carregado com dados reais
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Dashboard ID: {dashboardId}
                     </p>
@@ -77,7 +83,9 @@ export default function DashboardViewPage() {
 
             <Card className="bg-white dark:bg-slate-800/60 border border-border">
               <CardHeader>
-                <CardTitle className="text-sm">Distribuição por Canal</CardTitle>
+                <CardTitle className="text-sm">
+                  Distribuição por Canal
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-64 flex items-center justify-center text-muted-foreground">

@@ -108,7 +108,9 @@ export function CreateContractWizard({
 }: CreateContractWizardProps) {
   const [activeSection, setActiveSection] = useState<SectionId>('basic');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
-  const [sectionErrors, setSectionErrors] = useState<Record<string, boolean>>({});
+  const [sectionErrors, setSectionErrors] = useState<Record<string, boolean>>(
+    {}
+  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Data sources for linking section
@@ -213,7 +215,11 @@ export function CreateContractWizard({
       errors.endDate = 'Data de término é obrigatória';
       secErrors.period = true;
     }
-    if (formData.startDate && formData.endDate && formData.startDate >= formData.endDate) {
+    if (
+      formData.startDate &&
+      formData.endDate &&
+      formData.startDate >= formData.endDate
+    ) {
       errors.endDate = 'Data de término deve ser posterior ao início';
       secErrors.period = true;
     }
@@ -456,7 +462,10 @@ export function CreateContractWizard({
                 }
                 disabled={isPending}
               />
-              <Label htmlFor="contract-auto-renew" className="font-normal text-sm">
+              <Label
+                htmlFor="contract-auto-renew"
+                className="font-normal text-sm"
+              >
                 Renovação automática
               </Label>
             </div>
@@ -472,7 +481,9 @@ export function CreateContractWizard({
                   max="120"
                   placeholder="12"
                   value={formData.renewalPeriodMonths}
-                  onChange={e => updateField('renewalPeriodMonths', e.target.value)}
+                  onChange={e =>
+                    updateField('renewalPeriodMonths', e.target.value)
+                  }
                   disabled={isPending}
                 />
               </div>
@@ -540,7 +551,9 @@ export function CreateContractWizard({
               disabled={isPending}
             />
             {fieldErrors.paymentAmount && (
-              <p className="text-xs text-rose-500">{fieldErrors.paymentAmount}</p>
+              <p className="text-xs text-rose-500">
+                {fieldErrors.paymentAmount}
+              </p>
             )}
           </div>
 
@@ -549,18 +562,22 @@ export function CreateContractWizard({
             <Label htmlFor="contract-frequency">Frequência de Pagamento</Label>
             <Select
               value={formData.paymentFrequency}
-              onValueChange={v => updateField('paymentFrequency', v as PaymentFrequency)}
+              onValueChange={v =>
+                updateField('paymentFrequency', v as PaymentFrequency)
+              }
               disabled={isPending}
             >
               <SelectTrigger id="contract-frequency">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(PAYMENT_FREQUENCY_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
+                {Object.entries(PAYMENT_FREQUENCY_LABELS).map(
+                  ([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
           </div>

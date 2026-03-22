@@ -31,16 +31,18 @@ export const aiFavoritesService = {
     return apiClient.get<FavoritesResponse>(url);
   },
 
-  async create(data: CreateFavoriteRequest): Promise<{ favorite: AiFavoriteQuery }> {
+  async create(
+    data: CreateFavoriteRequest
+  ): Promise<{ favorite: AiFavoriteQuery }> {
     return apiClient.post<{ favorite: AiFavoriteQuery }>(
       API_ENDPOINTS.AI.FAVORITES.CREATE,
-      data,
+      data
     );
   },
 
   async delete(favoriteId: string): Promise<{ success: boolean }> {
     return apiClient.delete<{ success: boolean }>(
-      API_ENDPOINTS.AI.FAVORITES.DELETE(favoriteId),
+      API_ENDPOINTS.AI.FAVORITES.DELETE(favoriteId)
     );
   },
 };

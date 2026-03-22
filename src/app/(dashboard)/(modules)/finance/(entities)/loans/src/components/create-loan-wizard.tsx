@@ -21,7 +21,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useBankAccounts, useCostCenters, useCreateLoan } from '@/hooks/finance';
+import {
+  useBankAccounts,
+  useCostCenters,
+  useCreateLoan,
+} from '@/hooks/finance';
 import type { CreateLoanData, LoanType } from '@/types/finance';
 import { LOAN_TYPE_LABELS } from '@/types/finance';
 import {
@@ -112,7 +116,9 @@ export function CreateLoanWizard({
 }: CreateLoanWizardProps) {
   const [activeSection, setActiveSection] = useState<SectionId>('basic');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
-  const [sectionErrors, setSectionErrors] = useState<Record<string, boolean>>({});
+  const [sectionErrors, setSectionErrors] = useState<Record<string, boolean>>(
+    {}
+  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Data sources for linking section

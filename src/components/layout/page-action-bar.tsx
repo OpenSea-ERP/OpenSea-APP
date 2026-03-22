@@ -39,6 +39,11 @@ export interface PageActionBarProps {
   className?: string;
   /** Classes customizadas para a seção de buttons */
   buttonsClassName?: string;
+  /** Custom actions element rendered on the right side */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  actions?: any;
+  /** Additional children rendered after the buttons */
+  children?: React.ReactNode;
 }
 
 /**
@@ -62,6 +67,8 @@ export function PageActionBar({
   hasPermission,
   className,
   buttonsClassName,
+  actions,
+  children,
 }: PageActionBarProps) {
   return (
     <div
@@ -141,6 +148,8 @@ export function PageActionBar({
               return btn;
             })
           : null}
+        {actions}
+        {children}
       </div>
     </div>
   );

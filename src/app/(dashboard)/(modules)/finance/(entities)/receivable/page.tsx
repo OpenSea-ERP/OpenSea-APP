@@ -683,7 +683,7 @@ function ReceivablePageContent() {
                       options={STATUS_OPTIONS}
                       selected={statusIds}
                       onSelectionChange={setStatusFilter}
-                      activeColor="green"
+                      activeColor="emerald"
                       searchPlaceholder="Buscar status..."
                       emptyText="Nenhum status encontrado."
                     />
@@ -693,13 +693,12 @@ function ReceivablePageContent() {
                       options={categoryOptions}
                       selected={categoryIds}
                       onSelectionChange={setCategoryFilter}
-                      activeColor="teal"
+                      activeColor="cyan"
                       searchPlaceholder="Buscar categoria..."
                       emptyText="Nenhuma categoria encontrada."
                     />
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
-                      {total}{' '}
-                      {total === 1 ? 'recebimento' : 'recebimentos'}
+                      {total} {total === 1 ? 'recebimento' : 'recebimentos'}
                       {entries.length < total &&
                         ` (${entries.length} carregados)`}
                     </p>

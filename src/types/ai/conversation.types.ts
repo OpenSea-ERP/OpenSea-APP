@@ -1,4 +1,8 @@
-export type AiConversationContext = 'DEDICATED' | 'INLINE' | 'COMMAND_BAR' | 'VOICE';
+export type AiConversationContext =
+  | 'DEDICATED'
+  | 'INLINE'
+  | 'COMMAND_BAR'
+  | 'VOICE';
 export type AiConversationStatus = 'ACTIVE' | 'ARCHIVED';
 
 export interface AiConversation {
@@ -16,8 +20,21 @@ export interface AiConversation {
   updatedAt: string | null;
 }
 
-export type AiMessageRole = 'USER' | 'ASSISTANT' | 'SYSTEM' | 'TOOL_CALL' | 'TOOL_RESULT';
-export type AiMessageContentType = 'TEXT' | 'CHART' | 'TABLE' | 'KPI_CARD' | 'ACTION_CARD' | 'IMAGE' | 'ERROR' | 'LOADING';
+export type AiMessageRole =
+  | 'USER'
+  | 'ASSISTANT'
+  | 'SYSTEM'
+  | 'TOOL_CALL'
+  | 'TOOL_RESULT';
+export type AiMessageContentType =
+  | 'TEXT'
+  | 'CHART'
+  | 'TABLE'
+  | 'KPI_CARD'
+  | 'ACTION_CARD'
+  | 'IMAGE'
+  | 'ERROR'
+  | 'LOADING';
 
 export interface AiMessage {
   id: string;

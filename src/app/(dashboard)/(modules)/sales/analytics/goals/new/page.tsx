@@ -68,7 +68,7 @@ export default function NewGoalPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Analytics', href: '/sales/analytics' },
             { label: 'Metas', href: '/sales/analytics/goals' },
@@ -99,7 +99,7 @@ export default function NewGoalPage() {
                 <Input
                   placeholder="Nome da meta"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   className="text-lg font-medium border-0 p-0 h-auto focus-visible:ring-0"
                 />
               </div>
@@ -109,23 +109,36 @@ export default function NewGoalPage() {
           {/* Form Card */}
           <Card className="bg-white/5 py-2 overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Configuração da Meta</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Configuração da Meta
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Tipo</Label>
-                  <Select value={type} onValueChange={(v) => setType(v as GoalType)}>
+                  <Select
+                    value={type}
+                    onValueChange={v => setType(v as GoalType)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="REVENUE">Receita</SelectItem>
                       <SelectItem value="QUANTITY">Quantidade</SelectItem>
-                      <SelectItem value="DEALS_WON">Negócios Fechados</SelectItem>
-                      <SelectItem value="NEW_CUSTOMERS">Novos Clientes</SelectItem>
-                      <SelectItem value="TICKET_AVERAGE">Ticket Médio</SelectItem>
-                      <SelectItem value="CONVERSION_RATE">Taxa de Conversão</SelectItem>
+                      <SelectItem value="DEALS_WON">
+                        Negócios Fechados
+                      </SelectItem>
+                      <SelectItem value="NEW_CUSTOMERS">
+                        Novos Clientes
+                      </SelectItem>
+                      <SelectItem value="TICKET_AVERAGE">
+                        Ticket Médio
+                      </SelectItem>
+                      <SelectItem value="CONVERSION_RATE">
+                        Taxa de Conversão
+                      </SelectItem>
                       <SelectItem value="COMMISSION">Comissão</SelectItem>
                       <SelectItem value="CUSTOM">Personalizado</SelectItem>
                     </SelectContent>
@@ -134,7 +147,10 @@ export default function NewGoalPage() {
 
                 <div className="space-y-2">
                   <Label>Escopo</Label>
-                  <Select value={scope} onValueChange={(v) => setScope(v as GoalScope)}>
+                  <Select
+                    value={scope}
+                    onValueChange={v => setScope(v as GoalScope)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -154,7 +170,7 @@ export default function NewGoalPage() {
                     type="number"
                     placeholder="100000"
                     value={targetValue}
-                    onChange={(e) => setTargetValue(e.target.value)}
+                    onChange={e => setTargetValue(e.target.value)}
                   />
                 </div>
 
@@ -175,7 +191,10 @@ export default function NewGoalPage() {
 
               <div className="space-y-2">
                 <Label>Período</Label>
-                <Select value={period} onValueChange={(v) => setPeriod(v as GoalPeriod)}>
+                <Select
+                  value={period}
+                  onValueChange={v => setPeriod(v as GoalPeriod)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -196,7 +215,7 @@ export default function NewGoalPage() {
                   <Input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={e => setStartDate(e.target.value)}
                   />
                 </div>
 
@@ -205,7 +224,7 @@ export default function NewGoalPage() {
                   <Input
                     type="date"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={e => setEndDate(e.target.value)}
                   />
                 </div>
               </div>

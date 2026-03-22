@@ -23,7 +23,12 @@ export interface FinanceEntriesFilters {
   search?: string;
   status?: string;
   categoryId?: string;
-  sortBy?: 'createdAt' | 'dueDate' | 'expectedAmount' | 'description' | 'status';
+  sortBy?:
+    | 'createdAt'
+    | 'dueDate'
+    | 'expectedAmount'
+    | 'description'
+    | 'status';
   sortOrder?: 'asc' | 'desc';
 }
 

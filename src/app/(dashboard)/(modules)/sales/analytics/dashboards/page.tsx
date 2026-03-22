@@ -26,7 +26,10 @@ const ROLE_LABELS: Record<string, string> = {
   CASHIER: 'Caixa',
 };
 
-const VISIBILITY_CONFIG: Record<string, { label: string; icon: typeof Lock; color: string }> = {
+const VISIBILITY_CONFIG: Record<
+  string,
+  { label: string; icon: typeof Lock; color: string }
+> = {
   PRIVATE: { label: 'Privado', icon: Lock, color: 'text-slate-500' },
   TEAM: { label: 'Equipe', icon: Users, color: 'text-blue-500' },
   TENANT: { label: 'Todos', icon: Eye, color: 'text-green-500' },
@@ -37,15 +40,15 @@ export default function DashboardsPage() {
   const { data, isLoading, error } = useDashboardsInfinite();
 
   const dashboards = useMemo(
-    () => data?.pages.flatMap((page) => page.dashboards) ?? [],
-    [data],
+    () => data?.pages.flatMap(page => page.dashboards) ?? [],
+    [data]
   );
 
   return (
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Analytics', href: '/sales/analytics' },
             { label: 'Dashboards' },
@@ -67,19 +70,25 @@ export default function DashboardsPage() {
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <LayoutDashboard className="h-12 w-12 mb-3 opacity-40" />
             <p className="text-lg font-medium">Nenhum dashboard encontrado</p>
-            <p className="text-sm">Crie um dashboard personalizado para visualizar seus dados.</p>
+            <p className="text-sm">
+              Crie um dashboard personalizado para visualizar seus dados.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {dashboards.map((dashboard: AnalyticsDashboard) => {
-              const vis = VISIBILITY_CONFIG[dashboard.visibility] ?? VISIBILITY_CONFIG.PRIVATE;
+              const vis =
+                VISIBILITY_CONFIG[dashboard.visibility] ??
+                VISIBILITY_CONFIG.PRIVATE;
               const VisIcon = vis.icon;
 
               return (
                 <Card
                   key={dashboard.id}
                   className="bg-white dark:bg-slate-800/60 border border-border hover:border-primary/20 transition-colors cursor-pointer"
-                  onClick={() => router.push(`/sales/analytics/dashboards/${dashboard.id}`)}
+                  onClick={() =>
+                    router.push(`/sales/analytics/dashboards/${dashboard.id}`)
+                  }
                 >
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between">
@@ -101,7 +110,9 @@ export default function DashboardsPage() {
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-1">
                         <VisIcon className={`h-3.5 w-3.5 ${vis.color}`} />
-                        <span className="text-xs text-muted-foreground">{vis.label}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {vis.label}
+                        </span>
                       </div>
                       {dashboard.role && (
                         <Badge variant="outline" className="text-xs">

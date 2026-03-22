@@ -44,20 +44,20 @@ const FREQUENCY_LABELS: Record<string, string> = {
 };
 
 const TYPE_FILTER_OPTIONS = [
-  { value: '', label: 'Todos os tipos' },
-  { value: 'SALES_SUMMARY', label: 'Resumo de Vendas' },
-  { value: 'COMMISSION_REPORT', label: 'Comissões' },
-  { value: 'PRODUCT_PERFORMANCE', label: 'Performance de Produtos' },
-  { value: 'CUSTOMER_ANALYSIS', label: 'Análise de Clientes' },
-  { value: 'GOAL_PROGRESS', label: 'Progresso de Metas' },
-  { value: 'CURVA_ABC', label: 'Curva ABC' },
+  { id: '', label: 'Todos os tipos' },
+  { id: 'SALES_SUMMARY', label: 'Resumo de Vendas' },
+  { id: 'COMMISSION_REPORT', label: 'Comissões' },
+  { id: 'PRODUCT_PERFORMANCE', label: 'Performance de Produtos' },
+  { id: 'CUSTOMER_ANALYSIS', label: 'Análise de Clientes' },
+  { id: 'GOAL_PROGRESS', label: 'Progresso de Metas' },
+  { id: 'CURVA_ABC', label: 'Curva ABC' },
 ];
 
 export default function ReportsPage() {
   const [typeFilter, setTypeFilter] = useState('');
 
   const filters = useMemo(() => {
-    const f: Record<string, unknown> = {};
+    const f: Record<string, string> = {};
     if (typeFilter) f.type = typeFilter;
     return f;
   }, [typeFilter]);
@@ -65,15 +65,15 @@ export default function ReportsPage() {
   const { data, isLoading, error } = useReportsInfinite(filters);
 
   const reports = useMemo(
-    () => data?.pages.flatMap((page) => page.reports) ?? [],
-    [data],
+    () => data?.pages.flatMap(page => page.reports) ?? [],
+    [data]
   );
 
   return (
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Analytics', href: '/sales/analytics' },
             { label: 'Relatórios' },
@@ -105,7 +105,9 @@ export default function ReportsPage() {
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <FileText className="h-12 w-12 mb-3 opacity-40" />
               <p className="text-lg font-medium">Nenhum relatório encontrado</p>
-              <p className="text-sm">Crie seu primeiro relatório para gerar insights de vendas.</p>
+              <p className="text-sm">
+                Crie seu primeiro relatório para gerar insights de vendas.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -146,7 +148,9 @@ export default function ReportsPage() {
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <Calendar className="h-3.5 w-3.5" />
                             <span className="text-xs">
-                              {new Date(report.lastGeneratedAt).toLocaleDateString('pt-BR')}
+                              {new Date(
+                                report.lastGeneratedAt
+                              ).toLocaleDateString('pt-BR')}
                             </span>
                           </div>
                         )}

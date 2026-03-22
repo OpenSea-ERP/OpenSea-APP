@@ -86,7 +86,7 @@ export default function OrderDetailPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
               { label: 'Pedidos', href: '/sales/orders' },
               { label: 'Carregando...' },
@@ -105,7 +105,7 @@ export default function OrderDetailPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
               { label: 'Pedidos', href: '/sales/orders' },
               { label: 'Erro' },
@@ -181,7 +181,7 @@ export default function OrderDetailPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
             { label: 'Pedidos', href: '/sales/orders' },
             { label: order.orderNumber },
@@ -209,9 +209,7 @@ export default function OrderDetailPage() {
                 {formatDate(order.createdAt)}
               </p>
               <div className="flex gap-2 mt-2">
-                <Badge variant="outline">
-                  {ORDER_TYPE_LABELS[order.type]}
-                </Badge>
+                <Badge variant="outline">{ORDER_TYPE_LABELS[order.type]}</Badge>
                 <Badge variant="secondary">
                   {CHANNEL_LABELS[order.channel]}
                 </Badge>
@@ -319,7 +317,9 @@ export default function OrderDetailPage() {
                 <p className="text-xs text-muted-foreground">
                   Crédito Utilizado
                 </p>
-                <p className="font-medium">{formatCurrency(order.creditUsed)}</p>
+                <p className="font-medium">
+                  {formatCurrency(order.creditUsed)}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Restante</p>
@@ -334,9 +334,7 @@ export default function OrderDetailPage() {
         {/* Items Table */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-5 py-3">
-            <h2 className="font-semibold mb-3">
-              Itens ({items.length})
-            </h2>
+            <h2 className="font-semibold mb-3">Itens ({items.length})</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

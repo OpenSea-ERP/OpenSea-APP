@@ -14,7 +14,7 @@ const RETURN_KEYS = {
 
 export function useReturnsInfinite(
   filters?: { search?: string; status?: string; orderId?: string },
-  limit = 20,
+  limit = 20
 ) {
   return useInfiniteQuery({
     queryKey: RETURN_KEYS.list(filters),
@@ -26,7 +26,7 @@ export function useReturnsInfinite(
       });
       return response;
     },
-    getNextPageParam: (lastPage) =>
+    getNextPageParam: lastPage =>
       lastPage.meta.page < lastPage.meta.pages
         ? lastPage.meta.page + 1
         : undefined,

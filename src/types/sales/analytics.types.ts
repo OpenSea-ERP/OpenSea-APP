@@ -10,7 +10,13 @@ export type GoalType =
   | 'BID_WIN_RATE'
   | 'CUSTOM';
 
-export type GoalPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'CUSTOM';
+export type GoalPeriod =
+  | 'DAILY'
+  | 'WEEKLY'
+  | 'MONTHLY'
+  | 'QUARTERLY'
+  | 'YEARLY'
+  | 'CUSTOM';
 export type GoalScope = 'INDIVIDUAL' | 'TEAM' | 'TENANT';
 export type GoalStatus = 'ACTIVE' | 'ACHIEVED' | 'MISSED' | 'ARCHIVED';
 
@@ -79,7 +85,13 @@ export interface GoalProgressResponse {
 }
 
 // Analytics Dashboard
-export type DashboardRole = 'SELLER' | 'MANAGER' | 'DIRECTOR' | 'BID_SPECIALIST' | 'MARKETPLACE_OPS' | 'CASHIER';
+export type DashboardRole =
+  | 'SELLER'
+  | 'MANAGER'
+  | 'DIRECTOR'
+  | 'BID_SPECIALIST'
+  | 'MARKETPLACE_OPS'
+  | 'CASHIER';
 export type DashboardVisibility = 'PRIVATE' | 'TEAM' | 'TENANT';
 
 export interface AnalyticsDashboard {
@@ -132,7 +144,11 @@ export type ReportType =
 
 export type ReportFormat = 'PDF' | 'EXCEL' | 'CSV';
 export type ReportFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY';
-export type ReportDeliveryMethod = 'EMAIL' | 'WHATSAPP' | 'BOTH' | 'DOWNLOAD_ONLY';
+export type ReportDeliveryMethod =
+  | 'EMAIL'
+  | 'WHATSAPP'
+  | 'BOTH'
+  | 'DOWNLOAD_ONLY';
 
 export interface AnalyticsReport {
   id: string;

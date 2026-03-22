@@ -1,6 +1,11 @@
 import { API_ENDPOINTS } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
-import type { AiConversation, AiMessage, SendMessageRequest, SendMessageResponse } from '@/types/ai';
+import type {
+  AiConversation,
+  AiMessage,
+  SendMessageRequest,
+  SendMessageResponse,
+} from '@/types/ai';
 
 export interface ConversationsResponse {
   conversations: AiConversation[];
@@ -25,7 +30,10 @@ export interface ConversationDetailResponse {
 
 export const aiChatService = {
   async sendMessage(data: SendMessageRequest): Promise<SendMessageResponse> {
-    return apiClient.post<SendMessageResponse>(API_ENDPOINTS.AI.CHAT.SEND, data);
+    return apiClient.post<SendMessageResponse>(
+      API_ENDPOINTS.AI.CHAT.SEND,
+      data
+    );
   },
 
   async listConversations(params?: {
@@ -50,7 +58,7 @@ export const aiChatService = {
 
   async getConversation(
     conversationId: string,
-    params?: { page?: number; limit?: number },
+    params?: { page?: number; limit?: number }
   ): Promise<ConversationDetailResponse> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', String(params.page));
@@ -64,9 +72,11 @@ export const aiChatService = {
     return apiClient.get<ConversationDetailResponse>(url);
   },
 
-  async archiveConversation(conversationId: string): Promise<{ success: boolean }> {
+  async archiveConversation(
+    conversationId: string
+  ): Promise<{ success: boolean }> {
     return apiClient.patch<{ success: boolean }>(
-      API_ENDPOINTS.AI.CHAT.ARCHIVE_CONVERSATION(conversationId),
+      API_ENDPOINTS.AI.CHAT.ARCHIVE_CONVERSATION(conversationId)
     );
   },
 };

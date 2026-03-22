@@ -24,7 +24,8 @@ export const envelopesService = {
     if (params?.page) searchParams.set('page', String(params.page));
     if (params?.limit) searchParams.set('limit', String(params.limit));
     if (params?.status) searchParams.set('status', params.status);
-    if (params?.sourceModule) searchParams.set('sourceModule', params.sourceModule);
+    if (params?.sourceModule)
+      searchParams.set('sourceModule', params.sourceModule);
     if (params?.search) searchParams.set('search', params.search);
 
     const query = searchParams.toString();
@@ -33,13 +34,15 @@ export const envelopesService = {
   },
 
   async getEnvelope(id: string): Promise<EnvelopeResponse> {
-    return apiClient.get<EnvelopeResponse>(API_ENDPOINTS.SIGNATURE.ENVELOPES.GET(id));
+    return apiClient.get<EnvelopeResponse>(
+      API_ENDPOINTS.SIGNATURE.ENVELOPES.GET(id)
+    );
   },
 
   async createEnvelope(data: CreateEnvelopeData): Promise<EnvelopeResponse> {
     return apiClient.post<EnvelopeResponse>(
       API_ENDPOINTS.SIGNATURE.ENVELOPES.CREATE,
-      data,
+      data
     );
   },
 
@@ -49,7 +52,7 @@ export const envelopesService = {
 
   async resendNotifications(id: string): Promise<{ notifiedCount: number }> {
     return apiClient.post<{ notifiedCount: number }>(
-      API_ENDPOINTS.SIGNATURE.ENVELOPES.RESEND(id),
+      API_ENDPOINTS.SIGNATURE.ENVELOPES.RESEND(id)
     );
   },
 };

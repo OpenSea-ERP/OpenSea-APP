@@ -111,11 +111,7 @@ export default function EditRecurringPage({
   // DATA FETCHING
   // ============================================================================
 
-  const {
-    data,
-    isLoading: isLoadingConfig,
-    error,
-  } = useRecurringConfig(id);
+  const { data, isLoading: isLoadingConfig, error } = useRecurringConfig(id);
   const config = data?.config;
 
   const updateMutation = useUpdateRecurringConfig();
@@ -138,7 +134,9 @@ export default function EditRecurringPage({
   const [endDate, setEndDate] = useState('');
 
   // Section 3: Taxas
-  const [interestRate, setInterestRate] = useState<number | undefined>(undefined);
+  const [interestRate, setInterestRate] = useState<number | undefined>(
+    undefined
+  );
   const [penaltyRate, setPenaltyRate] = useState<number | undefined>(undefined);
 
   // Section 4: Observacoes
@@ -446,7 +444,9 @@ export default function EditRecurringPage({
                     <Input
                       id="startDate"
                       type="date"
-                      value={config.startDate ? config.startDate.split('T')[0] : ''}
+                      value={
+                        config.startDate ? config.startDate.split('T')[0] : ''
+                      }
                       disabled
                     />
                     <p className="text-xs text-muted-foreground">
@@ -493,7 +493,9 @@ export default function EditRecurringPage({
                       value={interestRate ?? ''}
                       onChange={e =>
                         setInterestRate(
-                          e.target.value ? parseFloat(e.target.value) : undefined
+                          e.target.value
+                            ? parseFloat(e.target.value)
+                            : undefined
                         )
                       }
                       placeholder="0,00"
@@ -510,7 +512,9 @@ export default function EditRecurringPage({
                       value={penaltyRate ?? ''}
                       onChange={e =>
                         setPenaltyRate(
-                          e.target.value ? parseFloat(e.target.value) : undefined
+                          e.target.value
+                            ? parseFloat(e.target.value)
+                            : undefined
                         )
                       }
                       placeholder="0,00"

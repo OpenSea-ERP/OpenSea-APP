@@ -17,7 +17,7 @@ const PC_KEYS = {
 
 export function usePaymentConditionsInfinite(
   filters?: { search?: string; type?: string; isActive?: boolean },
-  limit = 20,
+  limit = 20
 ) {
   return useInfiniteQuery({
     queryKey: PC_KEYS.list(filters),
@@ -29,7 +29,7 @@ export function usePaymentConditionsInfinite(
       });
       return response;
     },
-    getNextPageParam: (lastPage) =>
+    getNextPageParam: lastPage =>
       lastPage.meta.page < lastPage.meta.pages
         ? lastPage.meta.page + 1
         : undefined,

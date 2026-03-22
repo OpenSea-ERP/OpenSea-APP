@@ -425,7 +425,14 @@ function RecurringPageContent() {
 
       return actions;
     },
-    [canEdit, canAdmin, handlePause, handleResume, handleCancelRequest, handleDeleteRequest]
+    [
+      canEdit,
+      canAdmin,
+      handlePause,
+      handleResume,
+      handleCancelRequest,
+      handleDeleteRequest,
+    ]
   );
 
   const renderGridCard = (item: RecurringConfig, isSelected: boolean) => {
@@ -440,7 +447,10 @@ function RecurringPageContent() {
           id={item.id}
           variant="grid"
           title={item.description}
-          subtitle={getFrequencyLabel(item.frequencyUnit, item.frequencyInterval)}
+          subtitle={getFrequencyLabel(
+            item.frequencyUnit,
+            item.frequencyInterval
+          )}
           icon={RefreshCw}
           iconBgColor="bg-linear-to-br from-violet-500 to-violet-600"
           badges={[
@@ -465,7 +475,9 @@ function RecurringPageContent() {
             },
             right: {
               icon: Calendar,
-              label: item.nextDueDate ? formatDate(item.nextDueDate) : 'Sem data',
+              label: item.nextDueDate
+                ? formatDate(item.nextDueDate)
+                : 'Sem data',
               onClick: () => {},
               color: 'secondary',
             },
@@ -675,13 +687,12 @@ function RecurringPageContent() {
                       options={TYPE_OPTIONS}
                       selected={typeIds}
                       onSelectionChange={setTypeFilter}
-                      activeColor="sky"
+                      activeColor="blue"
                       searchPlaceholder="Buscar tipo..."
                       emptyText="Nenhum tipo encontrado."
                     />
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
-                      {total}{' '}
-                      {total === 1 ? 'recorrência' : 'recorrências'}
+                      {total} {total === 1 ? 'recorrência' : 'recorrências'}
                       {configs.length < total &&
                         ` (${configs.length} carregadas)`}
                     </p>

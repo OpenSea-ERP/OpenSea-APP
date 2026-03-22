@@ -7,12 +7,26 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import { aiConfigService } from '@/services/ai';
 import { toast } from 'sonner';
-import { Save, Bot, Loader2, Settings2, Cpu, Shield, Lightbulb } from 'lucide-react';
+import {
+  Save,
+  Bot,
+  Loader2,
+  Settings2,
+  Cpu,
+  Shield,
+  Lightbulb,
+} from 'lucide-react';
 import type { AiTenantConfig, UpdateAiConfigRequest } from '@/types/ai';
 
 export default function AiSettingsPage() {
@@ -70,9 +84,9 @@ export default function AiSettingsPage() {
 
   const updateField = <K extends keyof UpdateAiConfigRequest>(
     key: K,
-    value: UpdateAiConfigRequest[K],
+    value: UpdateAiConfigRequest[K]
   ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm(prev => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
 
@@ -91,7 +105,7 @@ export default function AiSettingsPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       <PageActionBar
-        breadcrumbs={[
+        breadcrumbItems={[
           { label: 'Ferramentas' },
           { label: 'Assistente IA', href: '/ai' },
           { label: 'Configuracoes' },
@@ -124,7 +138,7 @@ export default function AiSettingsPage() {
               <Label>Nome do assistente</Label>
               <Input
                 value={form.assistantName ?? ''}
-                onChange={(e) => updateField('assistantName', e.target.value)}
+                onChange={e => updateField('assistantName', e.target.value)}
                 placeholder="Atlas"
                 className="mt-1"
               />
@@ -133,7 +147,12 @@ export default function AiSettingsPage() {
               <Label>Personalidade</Label>
               <Select
                 value={form.personality}
-                onValueChange={(v) => updateField('personality', v as UpdateAiConfigRequest['personality'])}
+                onValueChange={v =>
+                  updateField(
+                    'personality',
+                    v as UpdateAiConfigRequest['personality']
+                  )
+                }
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
@@ -151,7 +170,12 @@ export default function AiSettingsPage() {
               <Label>Tom de voz</Label>
               <Select
                 value={form.toneOfVoice}
-                onValueChange={(v) => updateField('toneOfVoice', v as UpdateAiConfigRequest['toneOfVoice'])}
+                onValueChange={v =>
+                  updateField(
+                    'toneOfVoice',
+                    v as UpdateAiConfigRequest['toneOfVoice']
+                  )
+                }
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
@@ -168,7 +192,7 @@ export default function AiSettingsPage() {
               <Label>Mensagem de boas-vindas</Label>
               <Textarea
                 value={form.greeting ?? ''}
-                onChange={(e) => updateField('greeting', e.target.value || null)}
+                onChange={e => updateField('greeting', e.target.value || null)}
                 placeholder="Ola! Como posso ajudar?"
                 className="mt-1"
                 rows={3}
@@ -193,7 +217,7 @@ export default function AiSettingsPage() {
               </div>
               <Switch
                 checked={form.enableDedicatedChat ?? true}
-                onCheckedChange={(v) => updateField('enableDedicatedChat', v)}
+                onCheckedChange={v => updateField('enableDedicatedChat', v)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -205,7 +229,7 @@ export default function AiSettingsPage() {
               </div>
               <Switch
                 checked={form.enableInlineContext ?? true}
-                onCheckedChange={(v) => updateField('enableInlineContext', v)}
+                onCheckedChange={v => updateField('enableInlineContext', v)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -217,7 +241,7 @@ export default function AiSettingsPage() {
               </div>
               <Switch
                 checked={form.enableCommandBar ?? true}
-                onCheckedChange={(v) => updateField('enableCommandBar', v)}
+                onCheckedChange={v => updateField('enableCommandBar', v)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -229,7 +253,7 @@ export default function AiSettingsPage() {
               </div>
               <Switch
                 checked={form.enableVoice ?? false}
-                onCheckedChange={(v) => updateField('enableVoice', v)}
+                onCheckedChange={v => updateField('enableVoice', v)}
               />
             </div>
             {form.enableVoice && (
@@ -237,7 +261,9 @@ export default function AiSettingsPage() {
                 <Label>Wake word</Label>
                 <Input
                   value={form.wakeWord ?? ''}
-                  onChange={(e) => updateField('wakeWord', e.target.value || null)}
+                  onChange={e =>
+                    updateField('wakeWord', e.target.value || null)
+                  }
                   placeholder="Hey OpenSea"
                   className="mt-1"
                 />
@@ -257,7 +283,7 @@ export default function AiSettingsPage() {
               <Label>Nivel 1 (rapido, simples)</Label>
               <Input
                 value={form.tier1Provider ?? ''}
-                onChange={(e) => updateField('tier1Provider', e.target.value)}
+                onChange={e => updateField('tier1Provider', e.target.value)}
                 placeholder="GROQ_SMALL"
                 className="mt-1"
               />
@@ -266,7 +292,7 @@ export default function AiSettingsPage() {
               <Label>Nivel 2 (balanceado)</Label>
               <Input
                 value={form.tier2Provider ?? ''}
-                onChange={(e) => updateField('tier2Provider', e.target.value)}
+                onChange={e => updateField('tier2Provider', e.target.value)}
                 placeholder="GROQ"
                 className="mt-1"
               />
@@ -275,7 +301,7 @@ export default function AiSettingsPage() {
               <Label>Nivel 3 (avancado, complexo)</Label>
               <Input
                 value={form.tier3Provider ?? ''}
-                onChange={(e) => updateField('tier3Provider', e.target.value)}
+                onChange={e => updateField('tier3Provider', e.target.value)}
                 placeholder="CLAUDE"
                 className="mt-1"
               />
@@ -299,7 +325,7 @@ export default function AiSettingsPage() {
               </div>
               <Switch
                 checked={form.canExecuteActions ?? false}
-                onCheckedChange={(v) => updateField('canExecuteActions', v)}
+                onCheckedChange={v => updateField('canExecuteActions', v)}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -311,7 +337,7 @@ export default function AiSettingsPage() {
               </div>
               <Switch
                 checked={form.requireConfirmation ?? true}
-                onCheckedChange={(v) => updateField('requireConfirmation', v)}
+                onCheckedChange={v => updateField('requireConfirmation', v)}
               />
             </div>
             <div>
@@ -321,7 +347,7 @@ export default function AiSettingsPage() {
                 min={1}
                 max={60}
                 value={form.maxActionsPerMinute ?? 5}
-                onChange={(e) =>
+                onChange={e =>
                   updateField('maxActionsPerMinute', Number(e.target.value))
                 }
                 className="mt-1 w-24"
@@ -346,14 +372,14 @@ export default function AiSettingsPage() {
               </div>
               <Switch
                 checked={form.enableProactiveInsights ?? true}
-                onCheckedChange={(v) => updateField('enableProactiveInsights', v)}
+                onCheckedChange={v => updateField('enableProactiveInsights', v)}
               />
             </div>
             <div>
               <Label>Frequencia</Label>
               <Select
                 value={form.insightFrequency}
-                onValueChange={(v) => updateField('insightFrequency', v)}
+                onValueChange={v => updateField('insightFrequency', v)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
@@ -374,7 +400,7 @@ export default function AiSettingsPage() {
               </div>
               <Switch
                 checked={form.enableScheduledReports ?? false}
-                onCheckedChange={(v) => updateField('enableScheduledReports', v)}
+                onCheckedChange={v => updateField('enableScheduledReports', v)}
               />
             </div>
           </div>

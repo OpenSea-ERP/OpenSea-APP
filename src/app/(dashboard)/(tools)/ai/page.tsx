@@ -26,27 +26,33 @@ import type { AiConversation, AiMessage } from '@/types/ai';
 
 export default function AiChatPage() {
   const queryClient = useQueryClient();
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
   const [inputValue, setInputValue] = useState('');
   const [localMessages, setLocalMessages] = useState<AiMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // List conversations
-  const { data: conversationsData, isLoading: loadingConversations } = useQuery({
-    queryKey: ['ai', 'conversations'],
-    queryFn: async () => {
-      const response = await aiChatService.listConversations({ limit: 50 });
-      return response.conversations;
-    },
-  });
+  const { data: conversationsData, isLoading: loadingConversations } = useQuery(
+    {
+      queryKey: ['ai', 'conversations'],
+      queryFn: async () => {
+        const response = await aiChatService.listConversations({ limit: 50 });
+        return response.conversations;
+      },
+    }
+  );
 
   // Get conversation messages
   const { data: conversationDetail, isLoading: loadingMessages } = useQuery({
     queryKey: ['ai', 'conversation', selectedConversationId],
     queryFn: async () => {
       if (!selectedConversationId) return null;
-      return aiChatService.getConversation(selectedConversationId, { limit: 100 });
+      return aiChatService.getConversation(selectedConversationId, {
+        limit: 100,
+      });
     },
     enabled: !!selectedConversationId,
   });
@@ -56,8 +62,10 @@ export default function AiChatPage() {
     ? [
         ...(conversationDetail?.messages ?? []),
         ...localMessages.filter(
-          (lm) =>
-            !conversationDetail?.messages?.some((m: AiMessage) => m.id === lm.id),
+          lm =>
+            !conversationDetail?.messages?.some(
+              (m: AiMessage) => m.id === lm.id
+            )
         ),
       ]
     : localMessages;
@@ -65,10 +73,10 @@ export default function AiChatPage() {
   // Send message mutation
   const sendMessage = useMutation({
     mutationFn: aiChatService.sendMessage,
-    onSuccess: (data) => {
+    onSuccess: data => {
       setSelectedConversationId(data.conversationId);
-      setLocalMessages((prev) => [
-        ...prev.filter((m) => m.role !== 'ASSISTANT' || m.content !== null),
+      setLocalMessages(prev => [
+        ...prev.filter(m => m.role !== 'ASSISTANT' || m.content !== null),
         data.assistantMessage,
       ]);
       queryClient.invalidateQueries({ queryKey: ['ai', 'conversations'] });
@@ -111,7 +119,11 @@ export default function AiChatPage() {
       createdAt: new Date().toISOString(),
     };
 
-    setLocalMessages((prev) => [...prev, optimisticUserMsg, optimisticLoadingMsg]);
+    setLocalMessages(prev => [
+      ...prev,
+      optimisticUserMsg,
+      optimisticLoadingMsg,
+    ]);
 
     sendMessage.mutate({
       conversationId: selectedConversationId ?? undefined,
@@ -135,10 +147,7 @@ export default function AiChatPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
       <PageActionBar
-        breadcrumbs={[
-          { label: 'Ferramentas' },
-          { label: 'Assistente IA' },
-        ]}
+        breadcrumbItems={[{ label: 'Ferramentas' }, { label: 'Assistente IA' }]}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -181,11 +190,13 @@ export default function AiChatPage() {
                       'hover:bg-accent/50',
                       selectedConversationId === conv.id
                         ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground',
+                        : 'text-muted-foreground'
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      {conv.isPinned && <Pin className="h-3 w-3 text-amber-500" />}
+                      {conv.isPinned && (
+                        <Pin className="h-3 w-3 text-amber-500" />
+                      )}
                       <MessageSquare className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate font-medium">
                         {conv.title ?? 'Conversa sem titulo'}
@@ -241,9 +252,7 @@ export default function AiChatPage() {
                 <div className="rounded-full bg-primary/10 p-6 mb-4">
                   <Sparkles className="h-10 w-10 text-primary" />
                 </div>
-                <h2 className="text-xl font-semibold mb-2">
-                  Assistente IA
-                </h2>
+                <h2 className="text-xl font-semibold mb-2">Assistente IA</h2>
                 <p className="text-muted-foreground max-w-md">
                   Pergunte qualquer coisa sobre seus dados, solicite relatorios,
                   analise tendencias ou execute acoes. Como posso ajudar?
@@ -256,7 +265,7 @@ export default function AiChatPage() {
                     key={msg.id}
                     className={cn(
                       'flex gap-3',
-                      msg.role === 'USER' ? 'justify-end' : 'justify-start',
+                      msg.role === 'USER' ? 'justify-end' : 'justify-start'
                     )}
                   >
                     {msg.role !== 'USER' && (
@@ -269,13 +278,15 @@ export default function AiChatPage() {
                         'max-w-[75%] px-4 py-3 text-sm',
                         msg.role === 'USER'
                           ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted',
+                          : 'bg-muted'
                       )}
                     >
                       {msg.contentType === 'LOADING' ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-muted-foreground">Pensando...</span>
+                          <span className="text-muted-foreground">
+                            Pensando...
+                          </span>
                         </div>
                       ) : (
                         <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -305,8 +316,8 @@ export default function AiChatPage() {
               <Input
                 ref={inputRef}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => {
+                onChange={e => setInputValue(e.target.value)}
+                onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleSend();

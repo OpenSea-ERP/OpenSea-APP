@@ -29,20 +29,18 @@ export const returnsService = {
   },
 
   async create(
-    data: CreateReturnRequest,
+    data: CreateReturnRequest
   ): Promise<{ orderReturn: OrderReturnDTO }> {
     return apiClient.post<{ orderReturn: OrderReturnDTO }>(
       API_ENDPOINTS.RETURNS.CREATE,
-      data,
+      data
     );
   },
 
-  async approve(
-    id: string,
-  ): Promise<{ orderReturn: OrderReturnDTO }> {
+  async approve(id: string): Promise<{ orderReturn: OrderReturnDTO }> {
     return apiClient.patch<{ orderReturn: OrderReturnDTO }>(
       API_ENDPOINTS.RETURNS.APPROVE(id),
-      {},
+      {}
     );
   },
 };

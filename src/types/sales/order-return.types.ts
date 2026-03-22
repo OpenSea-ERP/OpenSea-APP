@@ -1,9 +1,27 @@
 // Order Return Types
 
 export type ReturnType = 'FULL_RETURN' | 'PARTIAL_RETURN' | 'EXCHANGE';
-export type ReturnStatus = 'REQUESTED' | 'APPROVED' | 'RECEIVING' | 'RECEIVED' | 'CREDIT_ISSUED' | 'EXCHANGE_COMPLETED' | 'REJECTED' | 'CANCELLED';
-export type ReturnReason = 'DEFECTIVE' | 'WRONG_ITEM' | 'CHANGED_MIND' | 'DAMAGED' | 'NOT_AS_DESCRIBED' | 'OTHER';
-export type RefundMethod = 'SAME_METHOD' | 'STORE_CREDIT' | 'BANK_TRANSFER' | 'PIX';
+export type ReturnStatus =
+  | 'REQUESTED'
+  | 'APPROVED'
+  | 'RECEIVING'
+  | 'RECEIVED'
+  | 'CREDIT_ISSUED'
+  | 'EXCHANGE_COMPLETED'
+  | 'REJECTED'
+  | 'CANCELLED';
+export type ReturnReason =
+  | 'DEFECTIVE'
+  | 'WRONG_ITEM'
+  | 'CHANGED_MIND'
+  | 'DAMAGED'
+  | 'NOT_AS_DESCRIBED'
+  | 'OTHER';
+export type RefundMethod =
+  | 'SAME_METHOD'
+  | 'STORE_CREDIT'
+  | 'BANK_TRANSFER'
+  | 'PIX';
 
 export interface OrderReturnDTO {
   id: string;

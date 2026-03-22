@@ -22,7 +22,14 @@ export interface LoansFilters {
   search?: string;
   status?: LoanStatus;
   type?: LoanType;
-  sortBy?: 'createdAt' | 'totalAmount' | 'institution' | 'status' | 'name' | 'principalAmount' | 'outstandingBalance';
+  sortBy?:
+    | 'createdAt'
+    | 'totalAmount'
+    | 'institution'
+    | 'status'
+    | 'name'
+    | 'principalAmount'
+    | 'outstandingBalance';
   sortOrder?: 'asc' | 'desc';
 }
 

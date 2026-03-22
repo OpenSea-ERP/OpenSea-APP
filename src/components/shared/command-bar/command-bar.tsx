@@ -68,7 +68,7 @@ export function CommandBar() {
       setOpen(false);
       router.push(href);
     },
-    [router],
+    [router]
   );
 
   const navigationItems: CommandBarItem[] = [
@@ -202,7 +202,7 @@ export function CommandBar() {
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
         {groups.map((group, groupIdx) => {
           const visibleItems = group.items.filter(
-            item => !item.permission || hasPermission(item.permission),
+            item => !item.permission || hasPermission(item.permission)
           );
 
           if (visibleItems.length === 0) return null;

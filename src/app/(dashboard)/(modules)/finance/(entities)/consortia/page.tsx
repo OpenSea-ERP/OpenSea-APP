@@ -177,7 +177,8 @@ function ConsortiaPageContent() {
     () => ({
       search: debouncedSearch || undefined,
       status: statusIds.length === 1 ? statusIds[0] : undefined,
-      isContemplated: contemplatedIds.length === 1 ? contemplatedIds[0] : undefined,
+      isContemplated:
+        contemplatedIds.length === 1 ? contemplatedIds[0] : undefined,
       sortBy,
       sortOrder,
     }),
@@ -233,7 +234,10 @@ function ConsortiaPageContent() {
     (params: { status?: string[]; contemplated?: string[] }) => {
       const parts: string[] = [];
       const sts = params.status !== undefined ? params.status : statusIds;
-      const cont = params.contemplated !== undefined ? params.contemplated : contemplatedIds;
+      const cont =
+        params.contemplated !== undefined
+          ? params.contemplated
+          : contemplatedIds;
       if (sts.length > 0) parts.push(`status=${sts.join(',')}`);
       if (cont.length > 0) parts.push(`contemplated=${cont.join(',')}`);
       return parts.length > 0
@@ -505,7 +509,8 @@ function ConsortiaPageContent() {
               {formatCurrency(item.monthlyPayment)}
             </span>
             <span className="text-xs text-muted-foreground">
-              {item.paidInstallments}/{item.totalInstallments} parcelas ({progressPercentage}%)
+              {item.paidInstallments}/{item.totalInstallments} parcelas (
+              {progressPercentage}%)
             </span>
           </div>
         </EntityCard>
@@ -618,7 +623,7 @@ function ConsortiaPageContent() {
                       options={STATUS_OPTIONS}
                       selected={statusIds}
                       onSelectionChange={setStatusFilter}
-                      activeColor="pink"
+                      activeColor="violet"
                       searchPlaceholder="Buscar status..."
                       emptyText="Nenhum status encontrado."
                     />
@@ -633,8 +638,7 @@ function ConsortiaPageContent() {
                       emptyText="Nenhuma opção encontrada."
                     />
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
-                      {total}{' '}
-                      {total === 1 ? 'consórcio' : 'consórcios'}
+                      {total} {total === 1 ? 'consórcio' : 'consórcios'}
                       {consortia.length < total &&
                         ` (${consortia.length} carregados)`}
                     </p>

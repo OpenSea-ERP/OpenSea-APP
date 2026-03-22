@@ -6,13 +6,7 @@
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { defineEntityConfig } from '@/core/types';
 import type { RecurringConfig } from '@/types/finance';
-import {
-  Edit,
-  Eye,
-  Plus,
-  RefreshCw,
-  XCircle,
-} from 'lucide-react';
+import { Edit, Eye, Plus, RefreshCw, XCircle } from 'lucide-react';
 
 export const recurringConfig = defineEntityConfig<RecurringConfig>()({
   // ======================== IDENTIFICACAO ========================
@@ -69,12 +63,9 @@ export const recurringConfig = defineEntityConfig<RecurringConfig>()({
         field: 'status',
         label: 'Status',
         colorMap: {
-          ACTIVE:
-            'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-          PAUSED:
-            'bg-amber-500/20 text-amber-700 dark:text-amber-400',
-          CANCELLED:
-            'bg-rose-500/20 text-rose-700 dark:text-rose-400',
+          ACTIVE: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+          PAUSED: 'bg-amber-500/20 text-amber-700 dark:text-amber-400',
+          CANCELLED: 'bg-rose-500/20 text-rose-700 dark:text-rose-400',
         },
         render: (value: unknown) => {
           const labels = {

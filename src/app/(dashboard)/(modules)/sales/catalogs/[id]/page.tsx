@@ -32,7 +32,11 @@ function getStatusBadge(status: string) {
     case 'DRAFT':
       return <Badge variant="secondary">Rascunho</Badge>;
     case 'ACTIVE':
-      return <Badge variant="default" className="bg-emerald-500">Ativo</Badge>;
+      return (
+        <Badge variant="default" className="bg-emerald-500">
+          Ativo
+        </Badge>
+      );
     case 'ARCHIVED':
       return <Badge variant="outline">Arquivado</Badge>;
     default:
@@ -42,12 +46,18 @@ function getStatusBadge(status: string) {
 
 function getTypeLabel(type: string) {
   switch (type) {
-    case 'GENERAL': return 'Geral';
-    case 'SELLER': return 'Vendedor';
-    case 'CAMPAIGN': return 'Campanha';
-    case 'CUSTOMER': return 'Cliente';
-    case 'AI_GENERATED': return 'Gerado por IA';
-    default: return type;
+    case 'GENERAL':
+      return 'Geral';
+    case 'SELLER':
+      return 'Vendedor';
+    case 'CAMPAIGN':
+      return 'Campanha';
+    case 'CUSTOMER':
+      return 'Cliente';
+    case 'AI_GENERATED':
+      return 'Gerado por IA';
+    default:
+      return type;
   }
 }
 
@@ -67,7 +77,7 @@ export default function CatalogDetailPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas' },
               { label: 'Catálogos', href: '/sales/catalogs' },
               { label: 'Carregando...' },
@@ -86,7 +96,7 @@ export default function CatalogDetailPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas' },
               { label: 'Catálogos', href: '/sales/catalogs' },
               { label: 'Erro' },
@@ -94,7 +104,7 @@ export default function CatalogDetailPage() {
           />
         </PageHeader>
         <PageBody>
-          <GridError error={error} />
+          <GridError message={error?.message} />
         </PageBody>
       </PageLayout>
     );
@@ -104,7 +114,7 @@ export default function CatalogDetailPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Catálogos', href: '/sales/catalogs' },
             { label: catalog.name },
@@ -149,7 +159,8 @@ export default function CatalogDetailPage() {
               <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5" />
-                  Criado em {new Date(catalog.createdAt).toLocaleDateString('pt-BR')}
+                  Criado em{' '}
+                  {new Date(catalog.createdAt).toLocaleDateString('pt-BR')}
                 </span>
                 <span>Tipo: {getTypeLabel(catalog.type)}</span>
                 <span>Layout: {catalog.layout}</span>
@@ -164,7 +175,9 @@ export default function CatalogDetailPage() {
           <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
             <div>
               <span className="text-muted-foreground">Exibir Preços</span>
-              <p className="font-medium">{catalog.showPrices ? 'Sim' : 'Não'}</p>
+              <p className="font-medium">
+                {catalog.showPrices ? 'Sim' : 'Não'}
+              </p>
             </div>
             <div>
               <span className="text-muted-foreground">Exibir Estoque</span>

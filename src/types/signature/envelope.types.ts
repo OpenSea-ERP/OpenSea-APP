@@ -1,13 +1,36 @@
-export type EnvelopeStatus = 'DRAFT' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED' | 'REJECTED';
+export type EnvelopeStatus =
+  | 'DRAFT'
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'REJECTED';
 export type SignatureLevel = 'SIMPLE' | 'ADVANCED' | 'QUALIFIED';
 export type EnvelopeRoutingType = 'SEQUENTIAL' | 'PARALLEL' | 'HYBRID';
 export type SignerRole = 'SIGNER' | 'APPROVER' | 'WITNESS' | 'REVIEWER';
-export type SignerStatus = 'PENDING' | 'NOTIFIED' | 'VIEWED' | 'SIGNED' | 'REJECTED' | 'EXPIRED';
+export type SignerStatus =
+  | 'PENDING'
+  | 'NOTIFIED'
+  | 'VIEWED'
+  | 'SIGNED'
+  | 'REJECTED'
+  | 'EXPIRED';
 export type SignatureAuditType =
-  | 'CREATED' | 'SENT' | 'VIEWED' | 'SIGNED' | 'REJECTED'
-  | 'REMINDED' | 'EXPIRED' | 'CANCELLED' | 'DOWNLOADED'
-  | 'DOCUMENT_VERIFIED' | 'CERTIFICATE_VALIDATED'
-  | 'OTP_SENT' | 'OTP_VERIFIED' | 'LINK_ACCESSED';
+  | 'CREATED'
+  | 'SENT'
+  | 'VIEWED'
+  | 'SIGNED'
+  | 'REJECTED'
+  | 'REMINDED'
+  | 'EXPIRED'
+  | 'CANCELLED'
+  | 'DOWNLOADED'
+  | 'DOCUMENT_VERIFIED'
+  | 'CERTIFICATE_VALIDATED'
+  | 'OTP_SENT'
+  | 'OTP_VERIFIED'
+  | 'LINK_ACCESSED';
 
 export interface SignatureEnvelopeSigner {
   id: string;

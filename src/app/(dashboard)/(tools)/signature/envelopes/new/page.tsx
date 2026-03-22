@@ -12,7 +12,11 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { envelopesService } from '@/services/signature';
-import type { SignerInput, SignatureLevel, EnvelopeRoutingType } from '@/types/signature';
+import type {
+  SignerInput,
+  SignatureLevel,
+  EnvelopeRoutingType,
+} from '@/types/signature';
 import { Plus, Trash2, FileSignature, Save, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,8 +26,10 @@ export default function CreateEnvelopePage() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [signatureLevel, setSignatureLevel] = useState<SignatureLevel>('ADVANCED');
-  const [routingType, setRoutingType] = useState<EnvelopeRoutingType>('SEQUENTIAL');
+  const [signatureLevel, setSignatureLevel] =
+    useState<SignatureLevel>('ADVANCED');
+  const [routingType, setRoutingType] =
+    useState<EnvelopeRoutingType>('SEQUENTIAL');
   const [sourceModule, setSourceModule] = useState('manual');
   const [sourceEntityType, setSourceEntityType] = useState('document');
   const [sourceEntityId, setSourceEntityId] = useState('');
@@ -39,7 +45,7 @@ export default function CreateEnvelopePage() {
   ]);
 
   const addSigner = () => {
-    setSigners((prev) => [
+    setSigners(prev => [
       ...prev,
       {
         order: prev.length + 1,
@@ -51,12 +57,16 @@ export default function CreateEnvelopePage() {
   };
 
   const removeSigner = (index: number) => {
-    setSigners((prev) => prev.filter((_, i) => i !== index));
+    setSigners(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateSigner = (index: number, field: string, value: string | number) => {
-    setSigners((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
+  const updateSigner = (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
+    setSigners(prev =>
+      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
     );
   };
 
@@ -74,7 +84,7 @@ export default function CreateEnvelopePage() {
         routingType,
         signers,
       }),
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ['signature', 'envelopes'] });
       toast.success('Envelope criado com sucesso');
       router.push(`/signature/envelopes/${data.envelope.id}`);
@@ -84,10 +94,13 @@ export default function CreateEnvelopePage() {
     },
   });
 
-  const canSubmit = title.trim() && documentFileId && documentHash && signers.length > 0;
+  const canSubmit =
+    title.trim() && documentFileId && documentHash && signers.length > 0;
 
   return (
-    <ProtectedRoute requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.REGISTER}>
+    <ProtectedRoute
+      requiredPermission={TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.REGISTER}
+    >
       <div className="flex flex-col h-full">
         <PageActionBar
           breadcrumbItems={[
@@ -117,7 +130,7 @@ export default function CreateEnvelopePage() {
                 <Label>Título *</Label>
                 <Input
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={e => setTitle(e.target.value)}
                   placeholder="Ex: Contrato de Prestação de Serviços"
                   className="mt-1"
                 />
@@ -126,7 +139,7 @@ export default function CreateEnvelopePage() {
                 <Label>Descrição</Label>
                 <Textarea
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                   placeholder="Descreva o documento..."
                   className="mt-1"
                   rows={2}
@@ -136,7 +149,7 @@ export default function CreateEnvelopePage() {
                 <Label>ID do Arquivo (Storage) *</Label>
                 <Input
                   value={documentFileId}
-                  onChange={(e) => setDocumentFileId(e.target.value)}
+                  onChange={e => setDocumentFileId(e.target.value)}
                   placeholder="UUID do arquivo no Storage"
                   className="mt-1"
                 />
@@ -145,7 +158,7 @@ export default function CreateEnvelopePage() {
                 <Label>Hash do Documento (SHA-256) *</Label>
                 <Input
                   value={documentHash}
-                  onChange={(e) => setDocumentHash(e.target.value)}
+                  onChange={e => setDocumentHash(e.target.value)}
                   placeholder="Hash SHA-256"
                   className="mt-1"
                 />
@@ -154,7 +167,9 @@ export default function CreateEnvelopePage() {
                 <Label>Nível de Assinatura</Label>
                 <select
                   value={signatureLevel}
-                  onChange={(e) => setSignatureLevel(e.target.value as SignatureLevel)}
+                  onChange={e =>
+                    setSignatureLevel(e.target.value as SignatureLevel)
+                  }
                   className="w-full mt-1 h-9 rounded-md border border-input bg-background px-3 text-sm"
                 >
                   <option value="SIMPLE">Simples</option>
@@ -166,7 +181,9 @@ export default function CreateEnvelopePage() {
                 <Label>Tipo de Roteamento</Label>
                 <select
                   value={routingType}
-                  onChange={(e) => setRoutingType(e.target.value as EnvelopeRoutingType)}
+                  onChange={e =>
+                    setRoutingType(e.target.value as EnvelopeRoutingType)
+                  }
                   className="w-full mt-1 h-9 rounded-md border border-input bg-background px-3 text-sm"
                 >
                   <option value="SEQUENTIAL">Sequencial</option>
@@ -178,7 +195,7 @@ export default function CreateEnvelopePage() {
                 <Label>Módulo de Origem</Label>
                 <Input
                   value={sourceModule}
-                  onChange={(e) => setSourceModule(e.target.value)}
+                  onChange={e => setSourceModule(e.target.value)}
                   className="mt-1"
                 />
               </div>
@@ -186,7 +203,7 @@ export default function CreateEnvelopePage() {
                 <Label>Tipo de Entidade</Label>
                 <Input
                   value={sourceEntityType}
-                  onChange={(e) => setSourceEntityType(e.target.value)}
+                  onChange={e => setSourceEntityType(e.target.value)}
                   className="mt-1"
                 />
               </div>
@@ -194,7 +211,7 @@ export default function CreateEnvelopePage() {
                 <Label>ID da Entidade</Label>
                 <Input
                   value={sourceEntityId}
-                  onChange={(e) => setSourceEntityId(e.target.value)}
+                  onChange={e => setSourceEntityId(e.target.value)}
                   className="mt-1"
                 />
               </div>
@@ -240,7 +257,7 @@ export default function CreateEnvelopePage() {
                       <Label className="text-xs">E-mail externo</Label>
                       <Input
                         value={signer.externalEmail ?? ''}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateSigner(index, 'externalEmail', e.target.value)
                         }
                         placeholder="email@exemplo.com"
@@ -251,7 +268,7 @@ export default function CreateEnvelopePage() {
                       <Label className="text-xs">Nome</Label>
                       <Input
                         value={signer.externalName ?? ''}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateSigner(index, 'externalName', e.target.value)
                         }
                         placeholder="Nome completo"
@@ -262,7 +279,7 @@ export default function CreateEnvelopePage() {
                       <Label className="text-xs">Papel</Label>
                       <select
                         value={signer.role}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateSigner(index, 'role', e.target.value)
                         }
                         className="w-full mt-0.5 h-8 rounded-md border border-input bg-background px-2 text-xs"
@@ -279,7 +296,7 @@ export default function CreateEnvelopePage() {
                         type="number"
                         min={1}
                         value={signer.order}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateSigner(index, 'order', Number(e.target.value))
                         }
                         className="mt-0.5 h-8 text-sm"

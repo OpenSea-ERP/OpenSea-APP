@@ -1,6 +1,19 @@
-export type AiInsightType = 'TREND' | 'ANOMALY' | 'OPPORTUNITY' | 'RISK' | 'PREDICTION' | 'RECOMMENDATION' | 'ALERT' | 'CELEBRATION';
+export type AiInsightType =
+  | 'TREND'
+  | 'ANOMALY'
+  | 'OPPORTUNITY'
+  | 'RISK'
+  | 'PREDICTION'
+  | 'RECOMMENDATION'
+  | 'ALERT'
+  | 'CELEBRATION';
 export type AiInsightPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-export type AiInsightStatus = 'NEW' | 'VIEWED' | 'ACTED_ON' | 'DISMISSED' | 'EXPIRED';
+export type AiInsightStatus =
+  | 'NEW'
+  | 'VIEWED'
+  | 'ACTED_ON'
+  | 'DISMISSED'
+  | 'EXPIRED';
 
 export interface AiInsight {
   id: string;

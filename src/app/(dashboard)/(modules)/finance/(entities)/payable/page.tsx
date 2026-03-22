@@ -340,9 +340,7 @@ function PayablePageContent() {
 
   const renderGridCard = (item: FinanceEntry, isSelected: boolean) => {
     const isOverdue =
-      item.isOverdue &&
-      item.status !== 'PAID' &&
-      item.status !== 'CANCELLED';
+      item.isOverdue && item.status !== 'PAID' && item.status !== 'CANCELLED';
 
     return (
       <EntityContextMenu
@@ -436,9 +434,7 @@ function PayablePageContent() {
 
   const renderListCard = (item: FinanceEntry, isSelected: boolean) => {
     const isOverdue =
-      item.isOverdue &&
-      item.status !== 'PAID' &&
-      item.status !== 'CANCELLED';
+      item.isOverdue && item.status !== 'PAID' && item.status !== 'CANCELLED';
 
     const installmentLabel =
       item.currentInstallment != null &&
@@ -680,7 +676,7 @@ function PayablePageContent() {
                       options={STATUS_OPTIONS}
                       selected={statusIds}
                       onSelectionChange={setStatusFilter}
-                      activeColor="rose"
+                      activeColor="violet"
                       searchPlaceholder="Buscar status..."
                       emptyText="Nenhum status encontrado."
                     />
@@ -690,13 +686,12 @@ function PayablePageContent() {
                       options={categoryOptions}
                       selected={categoryIds}
                       onSelectionChange={setCategoryFilter}
-                      activeColor="teal"
+                      activeColor="cyan"
                       searchPlaceholder="Buscar categoria..."
                       emptyText="Nenhuma categoria encontrada."
                     />
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
-                      {total}{' '}
-                      {total === 1 ? 'lançamento' : 'lançamentos'}
+                      {total} {total === 1 ? 'lançamento' : 'lançamentos'}
                       {entries.length < total &&
                         ` (${entries.length} carregados)`}
                     </p>

@@ -1,4 +1,9 @@
-export type AiActionStatus = 'PROPOSED' | 'CONFIRMED' | 'EXECUTED' | 'FAILED' | 'CANCELLED';
+export type AiActionStatus =
+  | 'PROPOSED'
+  | 'CONFIRMED'
+  | 'EXECUTED'
+  | 'FAILED'
+  | 'CANCELLED';
 
 export interface AiActionLog {
   id: string;

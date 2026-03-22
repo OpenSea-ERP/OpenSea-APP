@@ -39,13 +39,13 @@ export const aiInsightsService = {
 
   async markViewed(insightId: string): Promise<{ success: boolean }> {
     return apiClient.patch<{ success: boolean }>(
-      API_ENDPOINTS.AI.INSIGHTS.VIEW(insightId),
+      API_ENDPOINTS.AI.INSIGHTS.VIEW(insightId)
     );
   },
 
   async dismiss(insightId: string): Promise<{ success: boolean }> {
     return apiClient.patch<{ success: boolean }>(
-      API_ENDPOINTS.AI.INSIGHTS.DISMISS(insightId),
+      API_ENDPOINTS.AI.INSIGHTS.DISMISS(insightId)
     );
   },
 };

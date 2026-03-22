@@ -309,8 +309,7 @@ export const baseGroups: Array<
   // =========================
   {
     name: 'Operador de Estoque',
-    description:
-      'Visualiza estoque e pode operar itens e volumes.',
+    description: 'Visualiza estoque e pode operar itens e volumes.',
     color: '#10B981',
     priority: 300,
     permissions: [

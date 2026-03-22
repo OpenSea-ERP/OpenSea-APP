@@ -23,10 +23,10 @@ import React, { useCallback, useState } from 'react';
 // =============================================================================
 
 export interface ContextMenuAction {
-  id: string;
+  id?: string;
   label: string;
   icon?: LucideIcon;
-  onClick: (ids: string[]) => void;
+  onClick: ((ids: string[]) => void) | (() => void);
   variant?: 'default' | 'destructive';
   separator?: 'before' | 'after';
   /** Oculta a ação dinamicamente com base nos IDs selecionados */
@@ -35,7 +35,7 @@ export interface ContextMenuAction {
 
 export interface EntityContextMenuProps {
   /** ID do item atual */
-  itemId: string;
+  itemId?: string;
   /** Filhos (o card/item que será envolvido) */
   children: React.ReactNode;
   /** Ações customizadas do context menu */
@@ -76,6 +76,8 @@ export function EntityContextMenu({
 }: EntityContextMenuProps) {
   const selectionContext = useOptionalSelectionContext();
 
+  const effectiveItemId = itemId ?? '';
+
   // Estado para armazenar informações do menu quando aberto
   const [menuState, setMenuState] = useState<{
     isMultiple: boolean;
@@ -84,7 +86,7 @@ export function EntityContextMenu({
   }>({
     isMultiple: false,
     count: 1,
-    actionIds: [itemId],
+    actionIds: [effectiveItemId],
   });
 
   // Handler chamado quando o menu está prestes a abrir
@@ -94,15 +96,15 @@ export function EntityContextMenu({
 
       // Pegar o estado atual da seleção
       const selectedIds = selectionContext?.state.selectedIds;
-      const isItemSelected = selectedIds?.has(itemId) ?? false;
+      const isItemSelected = selectedIds?.has(effectiveItemId) ?? false;
 
       if (!isItemSelected && selectionContext?.actions) {
         // Item não está selecionado - seleciona apenas ele
-        selectionContext.actions.select(itemId);
+        selectionContext.actions.select(effectiveItemId);
         setMenuState({
           isMultiple: false,
           count: 1,
-          actionIds: [itemId],
+          actionIds: [effectiveItemId],
         });
       } else if (selectedIds) {
         // Item está selecionado - usa a seleção atual
@@ -111,11 +113,11 @@ export function EntityContextMenu({
         setMenuState({
           isMultiple,
           count: currentIds.length,
-          actionIds: isMultiple ? currentIds : [itemId],
+          actionIds: isMultiple ? currentIds : [effectiveItemId],
         });
       }
     },
-    [itemId, selectionContext]
+    [effectiveItemId, selectionContext]
   );
 
   // Ações padrão

@@ -101,12 +101,12 @@ function StepCustomer({
     () =>
       search.trim()
         ? customers.filter(
-            (c) =>
+            c =>
               c.name.toLowerCase().includes(search.toLowerCase()) ||
-              (c.document ?? '').includes(search),
+              (c.document ?? '').includes(search)
           )
         : customers,
-    [customers, search],
+    [customers, search]
   );
 
   if (selected) {
@@ -148,7 +148,7 @@ function StepCustomer({
         <Input
           placeholder="Buscar cliente por nome ou documento..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={e => setSearch(e.target.value)}
           className="pl-9"
         />
       </div>
@@ -164,7 +164,7 @@ function StepCustomer({
             Nenhum cliente encontrado.
           </p>
         ) : (
-          filtered.map((c) => (
+          filtered.map(c => (
             <button
               key={c.id}
               type="button"
@@ -186,7 +186,12 @@ function StepCustomer({
       </div>
 
       <div className="pt-2 border-t">
-        <Button variant="ghost" size="sm" onClick={onSkip} className="text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onSkip}
+          className="text-muted-foreground"
+        >
           Pular — pedido anônimo
         </Button>
       </div>
@@ -214,7 +219,7 @@ function StepItems({
         const disc = it.unitPrice * (it.discountPercent / 100);
         return acc + (it.unitPrice - disc) * it.quantity;
       }, 0),
-    [items],
+    [items]
   );
 
   function handleAdd() {
@@ -235,12 +240,14 @@ function StepItems({
   }
 
   function handleRemove(id: string) {
-    onItemsChange(items.filter((i) => i.id !== id));
+    onItemsChange(items.filter(i => i.id !== id));
   }
 
   function handleQtyChange(id: string, newQty: number) {
     onItemsChange(
-      items.map((i) => (i.id === id ? { ...i, quantity: Math.max(1, newQty) } : i)),
+      items.map(i =>
+        i.id === id ? { ...i, quantity: Math.max(1, newQty) } : i
+      )
     );
   }
 
@@ -254,14 +261,14 @@ function StepItems({
             <Input
               placeholder="Nome do produto *"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
             />
           </div>
           <div className="col-span-2">
             <Input
               placeholder="SKU"
               value={sku}
-              onChange={(e) => setSku(e.target.value)}
+              onChange={e => setSku(e.target.value)}
             />
           </div>
           <div className="col-span-2">
@@ -270,7 +277,7 @@ function StepItems({
               min={1}
               placeholder="Qtd"
               value={qty}
-              onChange={(e) => setQty(e.target.value)}
+              onChange={e => setQty(e.target.value)}
             />
           </div>
           <div className="col-span-2">
@@ -280,7 +287,7 @@ function StepItems({
               step={0.01}
               placeholder="Preço unit."
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={e => setPrice(e.target.value)}
             />
           </div>
           <div className="col-span-1 flex items-center">
@@ -307,14 +314,12 @@ function StepItems({
                 <th className="text-right px-4 py-2 font-medium w-28">
                   Preço Unit.
                 </th>
-                <th className="text-right px-4 py-2 font-medium w-28">
-                  Total
-                </th>
+                <th className="text-right px-4 py-2 font-medium w-28">Total</th>
                 <th className="w-10" />
               </tr>
             </thead>
             <tbody>
-              {items.map((it) => (
+              {items.map(it => (
                 <tr key={it.id} className="border-b last:border-b-0">
                   <td className="px-4 py-2">
                     <p className="font-medium">{it.name}</p>
@@ -327,7 +332,7 @@ function StepItems({
                       type="number"
                       min={1}
                       value={it.quantity}
-                      onChange={(e) =>
+                      onChange={e =>
                         handleQtyChange(it.id, Number(e.target.value))
                       }
                       className="h-8 text-center w-16 mx-auto"
@@ -388,7 +393,7 @@ function StepConditions({
   onExpiresAtChange: (v: string) => void;
 }) {
   const { data: pcData } = usePaymentConditionsInfinite(undefined, 50);
-  const conditions = pcData?.pages?.flatMap((p) => p.data) ?? [];
+  const conditions = pcData?.pages?.flatMap(p => p.data) ?? [];
 
   return (
     <div className="space-y-5">
@@ -397,10 +402,10 @@ function StepConditions({
         <select
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           value={paymentConditionId}
-          onChange={(e) => onPaymentConditionChange(e.target.value)}
+          onChange={e => onPaymentConditionChange(e.target.value)}
         >
           <option value="">Selecione...</option>
-          {conditions.map((pc) => (
+          {conditions.map(pc => (
             <option key={pc.id} value={pc.id}>
               {pc.name}
             </option>
@@ -413,7 +418,7 @@ function StepConditions({
         <Input
           type="date"
           value={expiresAt}
-          onChange={(e) => onExpiresAtChange(e.target.value)}
+          onChange={e => onExpiresAtChange(e.target.value)}
         />
       </div>
 
@@ -423,7 +428,7 @@ function StepConditions({
           placeholder="Notas adicionais sobre o pedido..."
           rows={4}
           value={notes}
-          onChange={(e) => onNotesChange(e.target.value)}
+          onChange={e => onNotesChange(e.target.value)}
         />
       </div>
     </div>
@@ -485,7 +490,7 @@ function StepReview({
             </tr>
           </thead>
           <tbody>
-            {items.map((it) => (
+            {items.map(it => (
               <tr key={it.id} className="border-b last:border-b-0">
                 <td className="px-4 py-1.5">{it.name}</td>
                 <td className="text-center px-2 py-1.5">{it.quantity}</td>
@@ -572,12 +577,12 @@ export default function NewOrderPage() {
 
   function handleNext() {
     if (step < totalSteps && canAdvance()) {
-      setStep((s) => s + 1);
+      setStep(s => s + 1);
     }
   }
 
   function handleBack() {
-    if (step > 1) setStep((s) => s - 1);
+    if (step > 1) setStep(s => s - 1);
   }
 
   function handleSkipCustomer() {
@@ -623,7 +628,7 @@ export default function NewOrderPage() {
       toast.success(
         type === 'QUOTE'
           ? 'Orçamento criado com sucesso!'
-          : 'Pedido criado com sucesso!',
+          : 'Pedido criado com sucesso!'
       );
       router.push('/sales/orders');
     } catch {
@@ -698,9 +703,7 @@ export default function NewOrderPage() {
       <StepIndicator current={step} total={totalSteps} />
 
       {/* Step content */}
-      <Card className="bg-white/5 p-6 mb-6 min-h-[400px]">
-        {renderStep()}
-      </Card>
+      <Card className="bg-white/5 p-6 mb-6 min-h-[400px]">{renderStep()}</Card>
 
       {/* Navigation */}
       <div className="flex items-center justify-between">

@@ -50,8 +50,8 @@ export function useRecurringInfinite(filters?: RecurringFilters) {
       };
       return financeRecurringService.list(params);
     },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.meta.page < lastPage.meta.pages) {
+    getNextPageParam: lastPage => {
+      if (lastPage.meta.page < lastPage.meta.totalPages) {
         return lastPage.meta.page + 1;
       }
       return undefined;
@@ -59,8 +59,7 @@ export function useRecurringInfinite(filters?: RecurringFilters) {
     initialPageParam: 1,
   });
 
-  const configs =
-    query.data?.pages.flatMap((page) => page.configs) ?? [];
+  const configs = query.data?.pages.flatMap(page => page.configs) ?? [];
   const total = query.data?.pages[0]?.meta.total ?? 0;
 
   return {

@@ -91,7 +91,8 @@ function getStatusBadgeConfig(status: string) {
     case 'CLOSED':
       return {
         variant: 'destructive' as const,
-        color: 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/20',
+        color:
+          'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/20',
       };
     default:
       return { variant: 'secondary' as const, color: '' };

@@ -173,8 +173,14 @@ export function PermissionMatrixTable({
         {/* Header */}
         <thead>
           {/* Super-header: column groups */}
-          <tr className="sticky top-0 z-20" style={{ backgroundColor: 'var(--modal-bg)' }}>
-            <th rowSpan={2} className="w-[200px] min-w-[200px] text-left px-3 py-2 border-b border-border/50">
+          <tr
+            className="sticky top-0 z-20"
+            style={{ backgroundColor: 'var(--modal-bg)' }}
+          >
+            <th
+              rowSpan={2}
+              className="w-[200px] min-w-[200px] text-left px-3 py-2 border-b border-border/50"
+            >
               <span className="text-xs font-medium text-muted-foreground">
                 Recurso
               </span>
@@ -192,7 +198,10 @@ export function PermissionMatrixTable({
             ))}
           </tr>
           {/* Action headers with select-all buttons */}
-          <tr className="sticky top-[29px] z-20 border-b border-border/50 shadow-[0_1px_3px_-1px_rgba(0,0,0,0.1)]" style={{ backgroundColor: 'var(--modal-bg)' }}>
+          <tr
+            className="sticky top-[29px] z-20 border-b border-border/50 shadow-[0_1px_3px_-1px_rgba(0,0,0,0.1)]"
+            style={{ backgroundColor: 'var(--modal-bg)' }}
+          >
             {STANDARD_ACTIONS.map(action => {
               const state = getSelectionState(
                 columnCodes[action],
@@ -261,9 +270,7 @@ export function PermissionMatrixTable({
 
                 {/* Resource rows in this group */}
                 {groupResources.map(({ resource, idx }) => {
-                  const pm = permissionMaps.find(
-                    p => p.resourceIndex === idx
-                  );
+                  const pm = permissionMaps.find(p => p.resourceIndex === idx);
 
                   const rowCodes = new Set<string>();
                   if (pm) {
@@ -320,10 +327,7 @@ export function PermissionMatrixTable({
 
                         if (!isAvailable || !hasAnyCodes) {
                           return (
-                            <td
-                              key={action}
-                              className="text-center px-1 py-2"
-                            >
+                            <td key={action} className="text-center px-1 py-2">
                               <div className="flex items-center justify-center">
                                 <div className="h-4 w-4 rounded border border-muted/30 opacity-20" />
                               </div>
@@ -343,10 +347,7 @@ export function PermissionMatrixTable({
                               : false;
 
                         return (
-                          <td
-                            key={action}
-                            className="text-center px-1 py-2"
-                          >
+                          <td key={action} className="text-center px-1 py-2">
                             <div className="flex items-center justify-center">
                               <Checkbox
                                 checked={checked}

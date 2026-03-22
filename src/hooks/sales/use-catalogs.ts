@@ -40,7 +40,7 @@ export function useCatalogsInfinite(filters?: Record<string, string>) {
       });
       return response;
     },
-    getNextPageParam: (lastPage) =>
+    getNextPageParam: lastPage =>
       lastPage.meta.page < lastPage.meta.pages
         ? lastPage.meta.page + 1
         : undefined,
@@ -92,8 +92,7 @@ export function useDeleteCatalog() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (catalogId: string) =>
-      catalogsService.deleteCatalog(catalogId),
+    mutationFn: (catalogId: string) => catalogsService.deleteCatalog(catalogId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CATALOGS });
     },
@@ -175,7 +174,7 @@ export function useContentsInfinite(filters?: Record<string, string>) {
       });
       return response;
     },
-    getNextPageParam: (lastPage) =>
+    getNextPageParam: lastPage =>
       lastPage.meta.page < lastPage.meta.pages
         ? lastPage.meta.page + 1
         : undefined,
@@ -207,8 +206,7 @@ export function useDeleteContent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (contentId: string) =>
-      contentService.deleteContent(contentId),
+    mutationFn: (contentId: string) => contentService.deleteContent(contentId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTENTS });
     },
@@ -219,8 +217,7 @@ export function useApproveContent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (contentId: string) =>
-      contentService.approveContent(contentId),
+    mutationFn: (contentId: string) => contentService.approveContent(contentId),
     onSuccess: async (_, contentId) => {
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTENTS });
       await queryClient.invalidateQueries({

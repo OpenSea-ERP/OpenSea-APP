@@ -73,7 +73,7 @@ export default function BrandPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas' },
               { label: 'Identidade Visual' },
             ]}
@@ -91,14 +91,14 @@ export default function BrandPage() {
       <PageLayout>
         <PageHeader>
           <PageActionBar
-            breadcrumbs={[
+            breadcrumbItems={[
               { label: 'Vendas' },
               { label: 'Identidade Visual' },
             ]}
           />
         </PageHeader>
         <PageBody>
-          <GridError error={error} />
+          <GridError message={error?.message} />
         </PageBody>
       </PageLayout>
     );
@@ -108,7 +108,7 @@ export default function BrandPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Identidade Visual' },
           ]}
@@ -144,13 +144,13 @@ export default function BrandPage() {
                     type="color"
                     id="primaryColor"
                     value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    onChange={e => setPrimaryColor(e.target.value)}
                     className="h-9 w-9 cursor-pointer rounded border-0"
                     disabled={!canEdit}
                   />
                   <Input
                     value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    onChange={e => setPrimaryColor(e.target.value)}
                     className="flex-1"
                     disabled={!canEdit}
                   />
@@ -164,13 +164,13 @@ export default function BrandPage() {
                     type="color"
                     id="secondaryColor"
                     value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    onChange={e => setSecondaryColor(e.target.value)}
                     className="h-9 w-9 cursor-pointer rounded border-0"
                     disabled={!canEdit}
                   />
                   <Input
                     value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    onChange={e => setSecondaryColor(e.target.value)}
                     className="flex-1"
                     disabled={!canEdit}
                   />
@@ -184,13 +184,13 @@ export default function BrandPage() {
                     type="color"
                     id="accentColor"
                     value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
+                    onChange={e => setAccentColor(e.target.value)}
                     className="h-9 w-9 cursor-pointer rounded border-0"
                     disabled={!canEdit}
                   />
                   <Input
                     value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
+                    onChange={e => setAccentColor(e.target.value)}
                     className="flex-1"
                     disabled={!canEdit}
                   />
@@ -204,13 +204,13 @@ export default function BrandPage() {
                     type="color"
                     id="backgroundColor"
                     value={backgroundColor}
-                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    onChange={e => setBackgroundColor(e.target.value)}
                     className="h-9 w-9 cursor-pointer rounded border-0"
                     disabled={!canEdit}
                   />
                   <Input
                     value={backgroundColor}
-                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    onChange={e => setBackgroundColor(e.target.value)}
                     className="flex-1"
                     disabled={!canEdit}
                   />
@@ -224,13 +224,13 @@ export default function BrandPage() {
                     type="color"
                     id="textColor"
                     value={textColor}
-                    onChange={(e) => setTextColor(e.target.value)}
+                    onChange={e => setTextColor(e.target.value)}
                     className="h-9 w-9 cursor-pointer rounded border-0"
                     disabled={!canEdit}
                   />
                   <Input
                     value={textColor}
-                    onChange={(e) => setTextColor(e.target.value)}
+                    onChange={e => setTextColor(e.target.value)}
                     className="flex-1"
                     disabled={!canEdit}
                   />
@@ -285,7 +285,7 @@ export default function BrandPage() {
                 <Input
                   id="fontFamily"
                   value={fontFamily}
-                  onChange={(e) => setFontFamily(e.target.value)}
+                  onChange={e => setFontFamily(e.target.value)}
                   placeholder="Inter"
                   disabled={!canEdit}
                 />
@@ -295,7 +295,7 @@ export default function BrandPage() {
                 <Input
                   id="fontHeading"
                   value={fontHeading}
-                  onChange={(e) => setFontHeading(e.target.value)}
+                  onChange={e => setFontHeading(e.target.value)}
                   placeholder="Mesmo da fonte do corpo"
                   disabled={!canEdit}
                 />
@@ -307,7 +307,7 @@ export default function BrandPage() {
               <Input
                 id="tagline"
                 value={tagline}
-                onChange={(e) => setTagline(e.target.value)}
+                onChange={e => setTagline(e.target.value)}
                 placeholder="Seu slogan aqui"
                 disabled={!canEdit}
               />

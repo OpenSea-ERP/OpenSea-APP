@@ -12,6 +12,9 @@ export const aiConfigService = {
   },
 
   async update(data: UpdateAiConfigRequest): Promise<AiConfigResponse> {
-    return apiClient.put<AiConfigResponse>(API_ENDPOINTS.AI.CONFIG.UPDATE, data);
+    return apiClient.put<AiConfigResponse>(
+      API_ENDPOINTS.AI.CONFIG.UPDATE,
+      data
+    );
   },
 };

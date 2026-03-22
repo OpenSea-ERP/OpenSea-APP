@@ -176,7 +176,12 @@ export interface FinanceEntriesQuery {
   supplierName?: string;
   overdueRange?: OverdueRange;
   includeDeleted?: boolean;
-  sortBy?: 'createdAt' | 'dueDate' | 'expectedAmount' | 'description' | 'status';
+  sortBy?:
+    | 'createdAt'
+    | 'dueDate'
+    | 'expectedAmount'
+    | 'description'
+    | 'status';
   sortOrder?: 'asc' | 'desc';
 }
 

@@ -15,10 +15,14 @@ import type {
 
 export const catalogsService = {
   // GET /v1/catalogs
-  async listCatalogs(params?: Record<string, string>): Promise<CatalogsResponse> {
-    const searchParams = params ? `?${new URLSearchParams(params).toString()}` : '';
+  async listCatalogs(
+    params?: Record<string, string>
+  ): Promise<CatalogsResponse> {
+    const searchParams = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : '';
     return apiClient.get<CatalogsResponse>(
-      `${API_ENDPOINTS.CATALOGS.LIST}${searchParams}`,
+      `${API_ENDPOINTS.CATALOGS.LIST}${searchParams}`
     );
   },
 
@@ -29,20 +33,17 @@ export const catalogsService = {
 
   // POST /v1/catalogs
   async createCatalog(data: CreateCatalogRequest): Promise<CatalogResponse> {
-    return apiClient.post<CatalogResponse>(
-      API_ENDPOINTS.CATALOGS.CREATE,
-      data,
-    );
+    return apiClient.post<CatalogResponse>(API_ENDPOINTS.CATALOGS.CREATE, data);
   },
 
   // PUT /v1/catalogs/:id
   async updateCatalog(
     id: string,
-    data: UpdateCatalogRequest,
+    data: UpdateCatalogRequest
   ): Promise<CatalogResponse> {
     return apiClient.put<CatalogResponse>(
       API_ENDPOINTS.CATALOGS.UPDATE(id),
-      data,
+      data
     );
   },
 
@@ -54,21 +55,18 @@ export const catalogsService = {
   // POST /v1/catalogs/:id/items
   async addCatalogItem(
     catalogId: string,
-    data: AddCatalogItemRequest,
+    data: AddCatalogItemRequest
   ): Promise<{ itemId: string }> {
     return apiClient.post<{ itemId: string }>(
       API_ENDPOINTS.CATALOGS.ADD_ITEM(catalogId),
-      data,
+      data
     );
   },
 
   // DELETE /v1/catalogs/:id/items/:itemId
-  async removeCatalogItem(
-    catalogId: string,
-    itemId: string,
-  ): Promise<void> {
+  async removeCatalogItem(catalogId: string, itemId: string): Promise<void> {
     return apiClient.delete<void>(
-      API_ENDPOINTS.CATALOGS.REMOVE_ITEM(catalogId, itemId),
+      API_ENDPOINTS.CATALOGS.REMOVE_ITEM(catalogId, itemId)
     );
   },
 };
@@ -88,30 +86,30 @@ export const brandService = {
 export const contentService = {
   // GET /v1/content
   async listContents(
-    params?: Record<string, string>,
+    params?: Record<string, string>
   ): Promise<GeneratedContentsResponse> {
     const searchParams = params
       ? `?${new URLSearchParams(params).toString()}`
       : '';
     return apiClient.get<GeneratedContentsResponse>(
-      `${API_ENDPOINTS.CONTENT.LIST}${searchParams}`,
+      `${API_ENDPOINTS.CONTENT.LIST}${searchParams}`
     );
   },
 
   // GET /v1/content/:id
   async getContent(id: string): Promise<GeneratedContentResponse> {
     return apiClient.get<GeneratedContentResponse>(
-      API_ENDPOINTS.CONTENT.GET(id),
+      API_ENDPOINTS.CONTENT.GET(id)
     );
   },
 
   // POST /v1/content/generate
   async generateContent(
-    data: CreateGeneratedContentRequest,
+    data: CreateGeneratedContentRequest
   ): Promise<GeneratedContentResponse> {
     return apiClient.post<GeneratedContentResponse>(
       API_ENDPOINTS.CONTENT.GENERATE,
-      data,
+      data
     );
   },
 
@@ -123,7 +121,7 @@ export const contentService = {
   // PATCH /v1/content/:id/approve
   async approveContent(id: string): Promise<GeneratedContentResponse> {
     return apiClient.patch<GeneratedContentResponse>(
-      API_ENDPOINTS.CONTENT.APPROVE(id),
+      API_ENDPOINTS.CONTENT.APPROVE(id)
     );
   },
 };

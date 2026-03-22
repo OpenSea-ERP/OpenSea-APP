@@ -56,20 +56,20 @@ const ORDER_CHANNEL_LABELS: Record<string, string> = {
 };
 
 const CHANNEL_OPTIONS = [
-  { value: '', label: 'Todos os canais' },
-  { value: 'PDV', label: 'PDV' },
-  { value: 'WEB', label: 'Web' },
-  { value: 'WHATSAPP', label: 'WhatsApp' },
-  { value: 'MARKETPLACE', label: 'Marketplace' },
-  { value: 'BID', label: 'Licitação' },
-  { value: 'MANUAL', label: 'Manual' },
-  { value: 'API', label: 'API' },
+  { id: '', label: 'Todos os canais' },
+  { id: 'PDV', label: 'PDV' },
+  { id: 'WEB', label: 'Web' },
+  { id: 'WHATSAPP', label: 'WhatsApp' },
+  { id: 'MARKETPLACE', label: 'Marketplace' },
+  { id: 'BID', label: 'Licitação' },
+  { id: 'MANUAL', label: 'Manual' },
+  { id: 'API', label: 'API' },
 ];
 
 const TYPE_OPTIONS = [
-  { value: '', label: 'Todos os tipos' },
-  { value: 'ORDER', label: 'Pedidos' },
-  { value: 'QUOTE', label: 'Orçamentos' },
+  { id: '', label: 'Todos os tipos' },
+  { id: 'ORDER', label: 'Pedidos' },
+  { id: 'QUOTE', label: 'Orçamentos' },
 ];
 
 function formatCurrency(value: number): string {
@@ -107,8 +107,8 @@ export default function OrdersPage() {
   const deleteOrder = useDeleteOrder();
 
   const orders = useMemo(
-    () => data?.pages.flatMap((page) => page.data) ?? [],
-    [data],
+    () => data?.pages.flatMap(page => page.data) ?? [],
+    [data]
   );
 
   const handleSearch = useCallback((value: string) => {
@@ -119,14 +119,14 @@ export default function OrdersPage() {
     (order: OrderDTO) => {
       router.push(`/sales/orders/${order.id}`);
     },
-    [router],
+    [router]
   );
 
   const handleEdit = useCallback(
     (order: OrderDTO) => {
       router.push(`/sales/orders/${order.id}/edit`);
     },
-    [router],
+    [router]
   );
 
   const handleDeleteRequest = useCallback((id: string) => {
@@ -148,12 +148,12 @@ export default function OrdersPage() {
 
   const handleFilterChange = useCallback(
     (key: keyof OrdersFilters, value: string) => {
-      setFilters((prev) => ({
+      setFilters(prev => ({
         ...prev,
         [key]: value || undefined,
       }));
     },
-    [],
+    []
   );
 
   const getContextMenuActions = useCallback(
@@ -172,7 +172,7 @@ export default function OrdersPage() {
 
       return actions;
     },
-    [canDelete, handleDeleteRequest],
+    [canDelete, handleDeleteRequest]
   );
 
   const breadcrumbs = [
@@ -194,13 +194,16 @@ export default function OrdersPage() {
     <CoreProvider>
       <PageLayout>
         <PageHeader>
-          <PageActionBar breadcrumbs={breadcrumbs} buttons={headerButtons} />
+          <PageActionBar
+            breadcrumbItems={breadcrumbs}
+            buttons={headerButtons}
+          />
         </PageHeader>
 
         <PageBody>
           <SearchBar
             value={search}
-            onChange={handleSearch}
+            onSearch={handleSearch}
             placeholder="Buscar pedidos por número..."
           />
 
@@ -211,7 +214,7 @@ export default function OrdersPage() {
           ) : (
             <EntityGrid
               items={orders}
-              getId={(order) => order.id}
+              getId={order => order.id}
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
               toolbarStart={
@@ -220,17 +223,17 @@ export default function OrdersPage() {
                     label="Tipo"
                     options={TYPE_OPTIONS}
                     value={filters.type ?? ''}
-                    onChange={(v) => handleFilterChange('type', v)}
+                    onChange={v => handleFilterChange('type', v)}
                   />
                   <FilterDropdown
                     label="Canal"
                     options={CHANNEL_OPTIONS}
                     value={filters.channel ?? ''}
-                    onChange={(v) => handleFilterChange('channel', v)}
+                    onChange={v => handleFilterChange('channel', v)}
                   />
                 </>
               }
-              renderItem={(order) => (
+              renderItem={order => (
                 <EntityContextMenu
                   onView={canView ? () => handleView(order) : undefined}
                   onEdit={canEdit ? () => handleEdit(order) : undefined}

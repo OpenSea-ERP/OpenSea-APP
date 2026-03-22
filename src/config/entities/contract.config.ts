@@ -6,14 +6,7 @@
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { defineEntityConfig } from '@/core/types';
 import type { Contract } from '@/types/finance';
-import {
-  DollarSign,
-  Edit,
-  Eye,
-  FileText,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { DollarSign, Edit, Eye, FileText, Plus, Trash2 } from 'lucide-react';
 
 export const contractConfig = defineEntityConfig<Contract>()({
   // ======================== IDENTIFICACAO ========================
@@ -70,16 +63,11 @@ export const contractConfig = defineEntityConfig<Contract>()({
         field: 'status',
         label: 'Status',
         colorMap: {
-          DRAFT:
-            'bg-gray-500/20 text-gray-700 dark:text-gray-400',
-          ACTIVE:
-            'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-          EXPIRED:
-            'bg-rose-500/20 text-rose-700 dark:text-rose-400',
-          RENEWED:
-            'bg-sky-500/20 text-sky-700 dark:text-sky-400',
-          CANCELLED:
-            'bg-gray-500/20 text-gray-700 dark:text-gray-400',
+          DRAFT: 'bg-gray-500/20 text-gray-700 dark:text-gray-400',
+          ACTIVE: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+          EXPIRED: 'bg-rose-500/20 text-rose-700 dark:text-rose-400',
+          RENEWED: 'bg-sky-500/20 text-sky-700 dark:text-sky-400',
+          CANCELLED: 'bg-gray-500/20 text-gray-700 dark:text-gray-400',
         },
         render: (value: unknown) => {
           const labels = {

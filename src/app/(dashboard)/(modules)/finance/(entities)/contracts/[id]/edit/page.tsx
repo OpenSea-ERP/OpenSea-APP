@@ -100,11 +100,7 @@ export default function EditContractPage({
   // DATA FETCHING
   // ============================================================================
 
-  const {
-    data,
-    isLoading: isLoadingContract,
-    error,
-  } = useContract(id);
+  const { data, isLoading: isLoadingContract, error } = useContract(id);
   const contract = data?.contract;
 
   const updateMutation = useUpdateContract();
@@ -141,7 +137,8 @@ export default function EditContractPage({
   // Section 3: Valores
   const [totalValue, setTotalValue] = useState(0);
   const [paymentAmount, setPaymentAmount] = useState(0);
-  const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>('MONTHLY');
+  const [paymentFrequency, setPaymentFrequency] =
+    useState<PaymentFrequency>('MONTHLY');
 
   // Section 4: Vinculação
   const [bankAccountId, setBankAccountId] = useState('');
@@ -347,9 +344,7 @@ export default function EditContractPage({
               <FileText className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground">
-                Editando contrato
-              </p>
+              <p className="text-sm text-muted-foreground">Editando contrato</p>
               <h1 className="text-xl font-bold truncate">
                 {contract.title || 'Sem título'}
               </h1>
@@ -418,7 +413,8 @@ export default function EditContractPage({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2 grid gap-2">
                     <Label htmlFor="companyName">
-                      Empresa/Fornecedor <span className="text-rose-500">*</span>
+                      Empresa/Fornecedor{' '}
+                      <span className="text-rose-500">*</span>
                     </Label>
                     <Input
                       id="companyName"
@@ -471,7 +467,11 @@ export default function EditContractPage({
                     <Input
                       id="startDate"
                       type="date"
-                      value={contract.startDate ? contract.startDate.split('T')[0] : ''}
+                      value={
+                        contract.startDate
+                          ? contract.startDate.split('T')[0]
+                          : ''
+                      }
                       disabled
                       className="opacity-60"
                     />
@@ -586,7 +586,9 @@ export default function EditContractPage({
                     <Label htmlFor="paymentFrequency">Frequência</Label>
                     <Select
                       value={paymentFrequency}
-                      onValueChange={v => setPaymentFrequency(v as PaymentFrequency)}
+                      onValueChange={v =>
+                        setPaymentFrequency(v as PaymentFrequency)
+                      }
                     >
                       <SelectTrigger id="paymentFrequency">
                         <SelectValue />
@@ -660,10 +662,7 @@ export default function EditContractPage({
 
                   <div className="grid gap-2">
                     <Label htmlFor="categoryId">Categoria</Label>
-                    <Select
-                      value={categoryId}
-                      onValueChange={setCategoryId}
-                    >
+                    <Select value={categoryId} onValueChange={setCategoryId}>
                       <SelectTrigger id="categoryId">
                         <SelectValue placeholder="Selecione uma categoria..." />
                       </SelectTrigger>

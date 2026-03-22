@@ -89,7 +89,14 @@ export interface LoansQuery {
   costCenterId?: string;
   type?: LoanType;
   status?: LoanStatus;
-  sortBy?: 'createdAt' | 'totalAmount' | 'institution' | 'status' | 'name' | 'principalAmount' | 'outstandingBalance';
+  sortBy?:
+    | 'createdAt'
+    | 'totalAmount'
+    | 'institution'
+    | 'status'
+    | 'name'
+    | 'principalAmount'
+    | 'outstandingBalance';
   sortOrder?: 'asc' | 'desc';
 }
 

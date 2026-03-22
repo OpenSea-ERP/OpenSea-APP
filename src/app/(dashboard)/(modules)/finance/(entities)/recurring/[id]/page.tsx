@@ -313,7 +313,10 @@ export default function RecurringDetailPage({
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {getFrequencyLabel(config.frequencyUnit, config.frequencyInterval)}
+                {getFrequencyLabel(
+                  config.frequencyUnit,
+                  config.frequencyInterval
+                )}
                 {' \u2022 '}
                 Criada em {formatDate(config.createdAt)}
               </p>
@@ -347,7 +350,10 @@ export default function RecurringDetailPage({
               />
               <InfoRow
                 label="Frequência"
-                value={getFrequencyLabel(config.frequencyUnit, config.frequencyInterval)}
+                value={getFrequencyLabel(
+                  config.frequencyUnit,
+                  config.frequencyInterval
+                )}
               />
               <InfoRow
                 label="Unidade"

@@ -57,10 +57,7 @@ export default function AnalyticsPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
-            { label: 'Vendas' },
-            { label: 'Analytics' },
-          ]}
+          breadcrumbItems={[{ label: 'Vendas' }, { label: 'Analytics' }]}
         />
       </PageHeader>
 
@@ -75,7 +72,9 @@ export default function AnalyticsPage() {
                     <TrendingUp className="h-5 w-5 text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Vendas do Mês</p>
+                    <p className="text-sm text-muted-foreground">
+                      Vendas do Mês
+                    </p>
                     <p className="text-xl font-semibold">--</p>
                   </div>
                 </div>
@@ -88,7 +87,9 @@ export default function AnalyticsPage() {
                     <Target className="h-5 w-5 text-green-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Progresso da Meta</p>
+                    <p className="text-sm text-muted-foreground">
+                      Progresso da Meta
+                    </p>
                     <p className="text-xl font-semibold">--</p>
                   </div>
                 </div>
@@ -101,7 +102,9 @@ export default function AnalyticsPage() {
                     <BarChart3 className="h-5 w-5 text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Ticket Médio</p>
+                    <p className="text-sm text-muted-foreground">
+                      Ticket Médio
+                    </p>
                     <p className="text-xl font-semibold">--</p>
                   </div>
                 </div>
@@ -114,7 +117,9 @@ export default function AnalyticsPage() {
                     <Trophy className="h-5 w-5 text-purple-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Novos Clientes</p>
+                    <p className="text-sm text-muted-foreground">
+                      Novos Clientes
+                    </p>
                     <p className="text-xl font-semibold">--</p>
                   </div>
                 </div>
@@ -124,7 +129,7 @@ export default function AnalyticsPage() {
 
           {/* Section Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {ANALYTICS_SECTIONS.map((section) => (
+            {ANALYTICS_SECTIONS.map(section => (
               <Link key={section.href} href={section.href}>
                 <Card className="bg-white dark:bg-slate-800/60 border border-border hover:border-primary/30 transition-colors cursor-pointer h-full">
                   <CardHeader className="pb-2">
@@ -132,7 +137,9 @@ export default function AnalyticsPage() {
                       <div className={`p-2.5 rounded-lg ${section.bgColor}`}>
                         <section.icon className={`h-5 w-5 ${section.color}`} />
                       </div>
-                      <CardTitle className="text-base">{section.title}</CardTitle>
+                      <CardTitle className="text-base">
+                        {section.title}
+                      </CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent>

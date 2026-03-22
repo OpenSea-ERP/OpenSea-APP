@@ -45,10 +45,7 @@ import {
   useUpdateFinanceEntry,
 } from '@/hooks/finance';
 import { logger } from '@/lib/logger';
-import type {
-  CostCenterAllocation,
-  FinanceEntryStatus,
-} from '@/types/finance';
+import type { CostCenterAllocation, FinanceEntryStatus } from '@/types/finance';
 import { FINANCE_ENTRY_STATUS_LABELS } from '@/types/finance';
 import {
   ArrowDownCircle,
@@ -118,11 +115,7 @@ export default function EditPayablePage({
   // DATA FETCHING
   // ============================================================================
 
-  const {
-    data,
-    isLoading: isLoadingEntry,
-    error,
-  } = useFinanceEntry(id);
+  const { data, isLoading: isLoadingEntry, error } = useFinanceEntry(id);
   const entry = data?.entry;
 
   const updateMutation = useUpdateFinanceEntry();
@@ -273,14 +266,19 @@ export default function EditPayablePage({
         toast.error('Adicione ao menos um centro de custo ao rateio.');
         return;
       }
-      const total = allocations.reduce((sum, a) => sum + (a.percentage || 0), 0);
+      const total = allocations.reduce(
+        (sum, a) => sum + (a.percentage || 0),
+        0
+      );
       if (Math.abs(total - 100) > 0.01) {
         toast.error('A soma dos percentuais do rateio deve ser 100%.');
         return;
       }
       const hasEmpty = allocations.some(a => !a.costCenterId);
       if (hasEmpty) {
-        toast.error('Selecione o centro de custo em todas as linhas do rateio.');
+        toast.error(
+          'Selecione o centro de custo em todas as linhas do rateio.'
+        );
         return;
       }
     } else {
@@ -666,9 +664,7 @@ export default function EditPayablePage({
                 {/* Toggle: simple vs allocation mode */}
                 <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-white dark:bg-slate-800/60">
                   <div className="space-y-0.5">
-                    <Label className="text-sm font-medium">
-                      Modo Rateio
-                    </Label>
+                    <Label className="text-sm font-medium">Modo Rateio</Label>
                     <p className="text-xs text-muted-foreground">
                       {useAllocations
                         ? 'Distribuir entre múltiplos centros de custo'
@@ -692,8 +688,7 @@ export default function EditPayablePage({
                 {!useAllocations && (
                   <div className="grid gap-2">
                     <Label htmlFor="costCenterId">
-                      Centro de Custo{' '}
-                      <span className="text-rose-500">*</span>
+                      Centro de Custo <span className="text-rose-500">*</span>
                     </Label>
                     <Select
                       value={costCenterId}

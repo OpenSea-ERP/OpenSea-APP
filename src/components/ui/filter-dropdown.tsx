@@ -12,7 +12,8 @@ import { Check, CheckCheck, ChevronsUpDown, Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 export interface FilterOption {
-  id: string;
+  id?: string;
+  value?: string;
   label: string;
 }
 
@@ -25,10 +26,13 @@ export interface FilterFooterAction {
 
 export interface FilterDropdownProps {
   label: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   options: FilterOption[];
-  selected: string[];
-  onSelectionChange: (ids: string[]) => void;
+  selected?: string[];
+  onSelectionChange?: (ids: string[]) => void;
+  /** Single-value mode (alternative to selected/onSelectionChange) */
+  value?: string;
+  onChange?: (value: string) => void;
   activeColor?: 'violet' | 'cyan' | 'emerald' | 'blue';
   searchPlaceholder?: string;
   emptyText?: string;
@@ -103,6 +107,8 @@ export function FilterDropdown({
   options,
   selected,
   onSelectionChange,
+  value,
+  onChange,
   activeColor = 'blue',
   searchPlaceholder = 'Buscar...',
   emptyText = 'Nenhum encontrado.',
@@ -113,8 +119,12 @@ export function FilterDropdown({
   const [searchQuery, setSearchQuery] = useState('');
 
   const colors = colorMap[activeColor];
-  const hasSelection = selected.length > 0;
-  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const effectiveSelected = selected ?? (value ? [value] : []);
+  const hasSelection = effectiveSelected.length > 0;
+  const selectedSet = useMemo(
+    () => new Set(effectiveSelected),
+    [effectiveSelected]
+  );
 
   const { selectedOptions, unselectedOptions } = useMemo(() => {
     const query = searchQuery.toLowerCase();
@@ -123,7 +133,7 @@ export function FilterDropdown({
 
     for (const option of options) {
       if (query && !option.label.toLowerCase().includes(query)) continue;
-      if (selectedSet.has(option.id)) {
+      if (selectedSet.has(option.id ?? option.value ?? '')) {
         sel.push(option);
       } else {
         unsel.push(option);
@@ -133,20 +143,28 @@ export function FilterDropdown({
     return { selectedOptions: sel, unselectedOptions: unsel };
   }, [options, selectedSet, searchQuery]);
 
+  const handleSelectionChange = (ids: string[]) => {
+    if (onSelectionChange) {
+      onSelectionChange(ids);
+    } else if (onChange) {
+      onChange(ids[0] ?? '');
+    }
+  };
+
   const toggleOption = (id: string) => {
     if (selectedSet.has(id)) {
-      onSelectionChange(selected.filter(s => s !== id));
+      handleSelectionChange(effectiveSelected.filter(s => s !== id));
     } else {
-      onSelectionChange([...selected, id]);
+      handleSelectionChange([...effectiveSelected, id]);
     }
   };
 
   const clearAll = () => {
-    onSelectionChange([]);
+    handleSelectionChange([]);
   };
 
   const selectAll = () => {
-    onSelectionChange(options.map(o => o.id));
+    handleSelectionChange(options.map(o => o.id ?? o.value ?? ''));
   };
 
   const totalFiltered = selectedOptions.length + unselectedOptions.length;
@@ -162,7 +180,7 @@ export function FilterDropdown({
             hasSelection && [colors.border, colors.text]
           )}
         >
-          <Icon className="w-3.5 h-3.5" />
+          {Icon && <Icon className="w-3.5 h-3.5" />}
           {label}
           {hasSelection && (
             <span
@@ -171,7 +189,7 @@ export function FilterDropdown({
                 colors.badgeBg
               )}
             >
-              {selected.length}
+              {effectiveSelected.length}
             </span>
           )}
           <ChevronsUpDown className="w-3.5 h-3.5 opacity-50" />
@@ -203,7 +221,8 @@ export function FilterDropdown({
           {hasSelection ? (
             <>
               <span className="text-xs opacity-60">
-                {selected.length} selecionado{selected.length > 1 ? 's' : ''}
+                {effectiveSelected.length} selecionado
+                {effectiveSelected.length > 1 ? 's' : ''}
               </span>
               <button
                 onClick={clearAll}
@@ -248,8 +267,8 @@ export function FilterDropdown({
               {/* Selected items first */}
               {selectedOptions.map(option => (
                 <button
-                  key={option.id}
-                  onClick={() => toggleOption(option.id)}
+                  key={option.id ?? option.value ?? ''}
+                  onClick={() => toggleOption(option.id ?? option.value ?? '')}
                   className={cn(
                     'w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left cursor-pointer hover:opacity-80 transition-opacity',
                     colors.itemBg
@@ -270,8 +289,8 @@ export function FilterDropdown({
               {/* Unselected items */}
               {unselectedOptions.map(option => (
                 <button
-                  key={option.id}
-                  onClick={() => toggleOption(option.id)}
+                  key={option.id ?? option.value ?? ''}
+                  onClick={() => toggleOption(option.id ?? option.value ?? '')}
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 >
                   <Check className="w-4 h-4 shrink-0 opacity-0" />

@@ -33,15 +33,33 @@ const INSIGHT_TYPE_CONFIG: Record<
 > = {
   TREND: { label: 'Tendencia', icon: TrendingUp, color: 'text-blue-500' },
   ANOMALY: { label: 'Anomalia', icon: AlertTriangle, color: 'text-amber-500' },
-  OPPORTUNITY: { label: 'Oportunidade', icon: Target, color: 'text-emerald-500' },
+  OPPORTUNITY: {
+    label: 'Oportunidade',
+    icon: Target,
+    color: 'text-emerald-500',
+  },
   RISK: { label: 'Risco', icon: ShieldAlert, color: 'text-rose-500' },
   PREDICTION: { label: 'Previsao', icon: LineChart, color: 'text-violet-500' },
-  RECOMMENDATION: { label: 'Recomendacao', icon: ThumbsUp, color: 'text-sky-500' },
+  RECOMMENDATION: {
+    label: 'Recomendacao',
+    icon: ThumbsUp,
+    color: 'text-sky-500',
+  },
   ALERT: { label: 'Alerta', icon: Bell, color: 'text-orange-500' },
-  CELEBRATION: { label: 'Conquista', icon: PartyPopper, color: 'text-pink-500' },
+  CELEBRATION: {
+    label: 'Conquista',
+    icon: PartyPopper,
+    color: 'text-pink-500',
+  },
 };
 
-const PRIORITY_CONFIG: Record<AiInsightPriority, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const PRIORITY_CONFIG: Record<
+  AiInsightPriority,
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
+> = {
   LOW: { label: 'Baixa', variant: 'secondary' },
   MEDIUM: { label: 'Media', variant: 'default' },
   HIGH: { label: 'Alta', variant: 'destructive' },
@@ -82,7 +100,7 @@ export default function AiInsightsPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       <PageActionBar
-        breadcrumbs={[
+        breadcrumbItems={[
           { label: 'Ferramentas' },
           { label: 'Assistente IA', href: '/ai' },
           { label: 'Insights' },
@@ -92,12 +110,14 @@ export default function AiInsightsPage() {
       <div className="flex-1 overflow-auto p-6">
         {/* Filters */}
         <div className="flex gap-2 mb-6">
-          {['NEW', 'VIEWED', 'ACTED_ON', 'DISMISSED'].map((status) => (
+          {['NEW', 'VIEWED', 'ACTED_ON', 'DISMISSED'].map(status => (
             <Button
               key={status}
               variant={statusFilter === status ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setStatusFilter(statusFilter === status ? '' : status)}
+              onClick={() =>
+                setStatusFilter(statusFilter === status ? '' : status)
+              }
             >
               {status === 'NEW' && 'Novos'}
               {status === 'VIEWED' && 'Visualizados'}
@@ -115,9 +135,12 @@ export default function AiInsightsPage() {
         ) : insights.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Lightbulb className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium mb-1">Nenhum insight encontrado</h3>
+            <h3 className="text-lg font-medium mb-1">
+              Nenhum insight encontrado
+            </h3>
             <p className="text-sm text-muted-foreground">
-              Os insights proativos aparecerao aqui conforme a IA analisa seus dados.
+              Os insights proativos aparecerao aqui conforme a IA analisa seus
+              dados.
             </p>
           </div>
         ) : (
@@ -132,7 +155,10 @@ export default function AiInsightsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <TypeIcon className={cn('h-5 w-5', typeConfig.color)} />
-                      <Badge variant={priorityConfig.variant} className="text-xs">
+                      <Badge
+                        variant={priorityConfig.variant}
+                        className="text-xs"
+                      >
                         {priorityConfig.label}
                       </Badge>
                       <Badge variant="outline" className="text-xs">

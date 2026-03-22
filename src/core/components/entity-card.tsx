@@ -55,7 +55,7 @@ export type FooterButtonColor =
 /** Botão de footer com ação ou link */
 export interface FooterButton {
   /** Ícone do botão */
-  icon: LucideIcon | ComponentType<{ className?: string }>;
+  icon?: LucideIcon | ComponentType<{ className?: string }>;
   /** Texto do botão */
   label: string;
   /** URL do link (mutuamente exclusivo com onClick) */
@@ -93,13 +93,13 @@ export type EntityCardFooter =
 /** Props do EntityCard */
 export interface EntityCardProps {
   /** ID único do item */
-  id: string;
+  id?: string;
   /** Variante de exibição */
   variant?: EntityCardVariant;
 
   // Conteúdo Principal
   /** Título/nome do item (truncado automaticamente). Aceita ReactNode para composição com badges. */
-  title: ReactNode;
+  title?: ReactNode;
   /** Subtítulo/descrição (max 2 linhas no grid, truncado no list/compact) */
   subtitle?: string;
   /** Linha de metadados (ReactNode para flexibilidade) */
@@ -414,7 +414,7 @@ function FooterButtonRenderer({
   const content = (
     <>
       <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4" />
+        {Icon && <Icon className="w-4 h-4" />}
         <span className="truncate">{label}</span>
       </div>
       <ChevronRight className="w-4 h-4 shrink-0" />
@@ -423,7 +423,7 @@ function FooterButtonRenderer({
 
   const listContent = (
     <>
-      <Icon className={isGrid ? 'w-4 h-4' : 'w-3.5 h-3.5'} />
+      {Icon && <Icon className={isGrid ? 'w-4 h-4' : 'w-3.5 h-3.5'} />}
       <span className="truncate">{label}</span>
       <ChevronRight className={isGrid ? 'w-4 h-4' : 'w-3.5 h-3.5'} />
     </>

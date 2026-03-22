@@ -1,5 +1,14 @@
-export type CertificateType = 'A1' | 'A3' | 'CLOUD_NEOID' | 'CLOUD_BIRDID' | 'CLOUD_OTHER';
-export type CertificateStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED' | 'PENDING_ACTIVATION';
+export type CertificateType =
+  | 'A1'
+  | 'A3'
+  | 'CLOUD_NEOID'
+  | 'CLOUD_BIRDID'
+  | 'CLOUD_OTHER';
+export type CertificateStatus =
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'REVOKED'
+  | 'PENDING_ACTIVATION';
 
 export interface DigitalCertificate {
   id: string;

@@ -64,12 +64,8 @@ export default function CalendarPage() {
   const canDelete = hasPermission(TOOLS_PERMISSIONS.CALENDAR.REMOVE);
   const canInvite = hasPermission(TOOLS_PERMISSIONS.CALENDAR.SHARE);
   const canRespond = hasPermission(TOOLS_PERMISSIONS.CALENDAR.ACCESS);
-  const canManageParticipants = hasPermission(
-    TOOLS_PERMISSIONS.CALENDAR.ADMIN
-  );
-  const canManageReminders = hasPermission(
-    TOOLS_PERMISSIONS.CALENDAR.REGISTER
-  );
+  const canManageParticipants = hasPermission(TOOLS_PERMISSIONS.CALENDAR.ADMIN);
+  const canManageReminders = hasPermission(TOOLS_PERMISSIONS.CALENDAR.REGISTER);
   const canShare =
     hasPermission(TOOLS_PERMISSIONS.CALENDAR.SHARE) ||
     hasPermission(TOOLS_PERMISSIONS.CALENDAR.SHARE);

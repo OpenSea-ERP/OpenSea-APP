@@ -22,7 +22,8 @@ export const signatureTemplatesService = {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', String(params.page));
     if (params?.limit) searchParams.set('limit', String(params.limit));
-    if (params?.isActive !== undefined) searchParams.set('isActive', String(params.isActive));
+    if (params?.isActive !== undefined)
+      searchParams.set('isActive', String(params.isActive));
     if (params?.search) searchParams.set('search', params.search);
 
     const query = searchParams.toString();
@@ -33,7 +34,7 @@ export const signatureTemplatesService = {
   async createTemplate(data: CreateTemplateData): Promise<TemplateResponse> {
     return apiClient.post<TemplateResponse>(
       API_ENDPOINTS.SIGNATURE.TEMPLATES.CREATE,
-      data,
+      data
     );
   },
 };

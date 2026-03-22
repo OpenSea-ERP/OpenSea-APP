@@ -76,7 +76,15 @@ export const STOCK_PERMISSIONS = {
     'admin',
     'onlyself'
   ),
-  TEMPLATES: perm('stock', 'templates', 'access', 'register', 'modify', 'remove', 'import'),
+  TEMPLATES: perm(
+    'stock',
+    'templates',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'import'
+  ),
   CATEGORIES: perm(
     'stock',
     'categories',
@@ -233,7 +241,15 @@ export const FINANCE_PERMISSIONS = {
 // =============================================================================
 
 export const HR_PERMISSIONS = {
-  POSITIONS: perm('hr', 'positions', 'access', 'register', 'modify', 'remove', 'import'),
+  POSITIONS: perm(
+    'hr',
+    'positions',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'import'
+  ),
   DEPARTMENTS: perm(
     'hr',
     'departments',
@@ -292,7 +308,14 @@ export const HR_PERMISSIONS = {
     'print',
     'admin'
   ),
-  TIME_CONTROL: perm('hr', 'time-control', 'access', 'register', 'export', 'print'),
+  TIME_CONTROL: perm(
+    'hr',
+    'time-control',
+    'access',
+    'register',
+    'export',
+    'print'
+  ),
 } as const;
 
 // =============================================================================
@@ -341,12 +364,7 @@ export const SALES_PERMISSIONS = {
     'admin',
     'onlyself'
   ),
-  PIPELINES: perm(
-    'sales',
-    'pipelines',
-    'access',
-    'admin'
-  ),
+  PIPELINES: perm('sales', 'pipelines', 'access', 'admin'),
   PRICE_TABLES: perm(
     'sales',
     'price-tables',
@@ -371,42 +389,11 @@ export const SALES_PERMISSIONS = {
     'modify',
     'remove'
   ),
-  COUPONS: perm(
-    'sales',
-    'coupons',
-    'access',
-    'register',
-    'remove'
-  ),
-  COMBOS: perm(
-    'sales',
-    'combos',
-    'access',
-    'register',
-    'remove'
-  ),
-  CATALOGS: perm(
-    'sales',
-    'catalogs',
-    'access',
-    'register',
-    'modify',
-    'remove'
-  ),
-  BRAND: perm(
-    'sales',
-    'brand',
-    'access',
-    'modify'
-  ),
-  CONTENT: perm(
-    'sales',
-    'content',
-    'access',
-    'register',
-    'remove',
-    'admin'
-  ),
+  COUPONS: perm('sales', 'coupons', 'access', 'register', 'remove'),
+  COMBOS: perm('sales', 'combos', 'access', 'register', 'remove'),
+  CATALOGS: perm('sales', 'catalogs', 'access', 'register', 'modify', 'remove'),
+  BRAND: perm('sales', 'brand', 'access', 'modify'),
+  CONTENT: perm('sales', 'content', 'access', 'register', 'remove', 'admin'),
   ANALYTICS_GOALS: perm(
     'sales',
     'analytics-goals',
@@ -431,11 +418,7 @@ export const SALES_PERMISSIONS = {
     'modify',
     'remove'
   ),
-  ANALYTICS_RANKINGS: perm(
-    'sales',
-    'analytics-rankings',
-    'access'
-  ),
+  ANALYTICS_RANKINGS: perm('sales', 'analytics-rankings', 'access'),
   CUSTOMER_PORTAL: perm(
     'sales',
     'customer-portal',
@@ -468,13 +451,7 @@ export const SALES_PERMISSIONS = {
     'modify',
     'remove'
   ),
-  BID_EMPENHOS: perm(
-    'sales',
-    'bid-empenhos',
-    'access',
-    'register',
-    'modify'
-  ),
+  BID_EMPENHOS: perm('sales', 'bid-empenhos', 'access', 'register', 'modify'),
   MARKETPLACE_CONNECTIONS: perm(
     'sales',
     'marketplace-connections',
@@ -491,17 +468,8 @@ export const SALES_PERMISSIONS = {
     'modify',
     'remove'
   ),
-  MARKETPLACE_ORDERS: perm(
-    'sales',
-    'marketplace-orders',
-    'access',
-    'modify'
-  ),
-  MARKETPLACE_PAYMENTS: perm(
-    'sales',
-    'marketplace-payments',
-    'access'
-  ),
+  MARKETPLACE_ORDERS: perm('sales', 'marketplace-orders', 'access', 'modify'),
+  MARKETPLACE_PAYMENTS: perm('sales', 'marketplace-payments', 'access'),
 } as const;
 
 // =============================================================================

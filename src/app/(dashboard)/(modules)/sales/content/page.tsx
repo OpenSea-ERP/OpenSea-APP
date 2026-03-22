@@ -10,11 +10,7 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import {
-  EntityCard,
-  EntityContextMenu,
-  EntityGrid,
-} from '@/core';
+import { EntityCard, EntityContextMenu, EntityGrid } from '@/core';
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   useContentsInfinite,
@@ -122,8 +118,8 @@ export default function ContentPage() {
   } = useContentsInfinite(filters);
 
   const contents = useMemo(
-    () => data?.pages.flatMap((p) => p.data) ?? [],
-    [data],
+    () => data?.pages.flatMap(p => p.data) ?? [],
+    [data]
   );
 
   const deleteMutation = useDeleteContent();
@@ -135,14 +131,14 @@ export default function ContentPage() {
     (node: HTMLDivElement | null) => {
       if (observerRef.current) observerRef.current.disconnect();
       if (!node) return;
-      observerRef.current = new IntersectionObserver((entries) => {
+      observerRef.current = new IntersectionObserver(entries => {
         if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       });
       observerRef.current.observe(node);
     },
-    [hasNextPage, isFetchingNextPage, fetchNextPage],
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
   );
 
   const handleDeleteRequest = (ids: string[]) => {
@@ -171,7 +167,7 @@ export default function ContentPage() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbs={[
+          breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Biblioteca de Conteúdo' },
           ]}
@@ -181,18 +177,18 @@ export default function ContentPage() {
       <PageBody>
         <SearchBar
           value={searchQuery}
-          onChange={setSearchQuery}
+          onSearch={setSearchQuery}
           placeholder="Buscar conteúdos..."
         />
 
         {isLoading ? (
           <GridLoading />
         ) : error ? (
-          <GridError error={error} />
+          <GridError message={error?.message} />
         ) : (
           <EntityGrid
             items={contents}
-            getKey={(c) => c.id}
+            getKey={c => c.id}
             toolbarStart={
               <>
                 <FilterDropdown
@@ -209,7 +205,7 @@ export default function ContentPage() {
                 />
               </>
             }
-            renderItem={(content) => (
+            renderItem={content => (
               <EntityContextMenu
                 key={content.id}
                 actions={[
@@ -267,8 +263,7 @@ export default function ContentPage() {
             emptyState={{
               icon: FileImage,
               title: 'Nenhum conteúdo encontrado',
-              description:
-                'Gere conteúdo para suas campanhas e catálogos.',
+              description: 'Gere conteúdo para suas campanhas e catálogos.',
             }}
           />
         )}

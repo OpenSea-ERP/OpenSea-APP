@@ -6,14 +6,7 @@
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { defineEntityConfig } from '@/core/types';
 import type { Consortium } from '@/types/finance';
-import {
-  DollarSign,
-  Edit,
-  Eye,
-  Plus,
-  Trash2,
-  Users,
-} from 'lucide-react';
+import { DollarSign, Edit, Eye, Plus, Trash2, Users } from 'lucide-react';
 
 export const consortiumConfig = defineEntityConfig<Consortium>()({
   // ======================== IDENTIFICACAO ========================
@@ -70,16 +63,11 @@ export const consortiumConfig = defineEntityConfig<Consortium>()({
         field: 'status',
         label: 'Status',
         colorMap: {
-          ACTIVE:
-            'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-          CONTEMPLATED:
-            'bg-violet-500/20 text-violet-700 dark:text-violet-400',
-          WITHDRAWN:
-            'bg-amber-500/20 text-amber-700 dark:text-amber-400',
-          COMPLETED:
-            'bg-sky-500/20 text-sky-700 dark:text-sky-400',
-          CANCELLED:
-            'bg-gray-500/20 text-gray-700 dark:text-gray-400',
+          ACTIVE: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+          CONTEMPLATED: 'bg-violet-500/20 text-violet-700 dark:text-violet-400',
+          WITHDRAWN: 'bg-amber-500/20 text-amber-700 dark:text-amber-400',
+          COMPLETED: 'bg-sky-500/20 text-sky-700 dark:text-sky-400',
+          CANCELLED: 'bg-gray-500/20 text-gray-700 dark:text-gray-400',
         },
         render: (value: unknown) => {
           const labels = {

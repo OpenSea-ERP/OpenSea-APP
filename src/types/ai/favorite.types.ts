@@ -1,4 +1,10 @@
-export type AiFavoriteCategory = 'SALES' | 'STOCK' | 'FINANCE' | 'HR' | 'CRM' | 'GENERAL';
+export type AiFavoriteCategory =
+  | 'SALES'
+  | 'STOCK'
+  | 'FINANCE'
+  | 'HR'
+  | 'CRM'
+  | 'GENERAL';
 
 export interface AiFavoriteQuery {
   id: string;

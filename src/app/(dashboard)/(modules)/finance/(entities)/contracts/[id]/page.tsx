@@ -252,7 +252,15 @@ export default function ContractDetailPage({
     }
 
     return buttons;
-  }, [canEdit, canDelete, router, id, contract, generateEntries, handleGenerateEntries]);
+  }, [
+    canEdit,
+    canDelete,
+    router,
+    id,
+    contract,
+    generateEntries,
+    handleGenerateEntries,
+  ]);
 
   // ============================================================================
   // BREADCRUMBS
@@ -328,9 +336,7 @@ export default function ContractDetailPage({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold truncate">
-                  {contract.title}
-                </h1>
+                <h1 className="text-xl font-bold truncate">{contract.title}</h1>
                 <Badge variant={getStatusVariant(contract.status)}>
                   {CONTRACT_STATUS_LABELS[contract.status]}
                 </Badge>
@@ -368,7 +374,8 @@ export default function ContractDetailPage({
                     Contrato próximo do vencimento
                   </p>
                   <p className="text-sm text-amber-700 dark:text-amber-300">
-                    Este contrato vence em {contract.daysUntilExpiration} dia(s) ({formatDate(contract.endDate)}).
+                    Este contrato vence em {contract.daysUntilExpiration} dia(s)
+                    ({formatDate(contract.endDate)}).
                   </p>
                 </div>
               </div>
@@ -406,7 +413,9 @@ export default function ContractDetailPage({
             </CardHeader>
             <CardContent className="space-y-3">
               <InfoRow label="Título" value={contract.title} />
-              {contract.code && <InfoRow label="Código" value={contract.code} />}
+              {contract.code && (
+                <InfoRow label="Código" value={contract.code} />
+              )}
               {contract.description && (
                 <InfoRow label="Descrição" value={contract.description} />
               )}
@@ -502,19 +511,27 @@ export default function ContractDetailPage({
             </CardHeader>
             <CardContent className="space-y-3">
               {contract.bankAccountId && (
-                <InfoRow label="Conta Bancária" value={contract.bankAccountId} />
+                <InfoRow
+                  label="Conta Bancária"
+                  value={contract.bankAccountId}
+                />
               )}
               {contract.costCenterId && (
-                <InfoRow label="Centro de Custo" value={contract.costCenterId} />
+                <InfoRow
+                  label="Centro de Custo"
+                  value={contract.costCenterId}
+                />
               )}
               {contract.categoryId && (
                 <InfoRow label="Categoria" value={contract.categoryId} />
               )}
-              {!contract.bankAccountId && !contract.costCenterId && !contract.categoryId && (
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma vinculação configurada.
-                </p>
-              )}
+              {!contract.bankAccountId &&
+                !contract.costCenterId &&
+                !contract.categoryId && (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma vinculação configurada.
+                  </p>
+                )}
             </CardContent>
           </Card>
         </div>

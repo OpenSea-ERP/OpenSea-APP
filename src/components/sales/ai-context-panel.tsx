@@ -133,8 +133,7 @@ const PLACEHOLDER_SUGGESTIONS: Record<string, string> = {
   deal: 'Envie uma proposta revisada com condi\u00e7\u00e3o especial de pagamento para reativar o interesse.',
   customer:
     'Este cliente tem potencial para upgrade. Considere uma oferta personalizada de acess\u00f3rios.',
-  contact:
-    'Agende um follow-up para manter o engajamento com este contato.',
+  contact: 'Agende um follow-up para manter o engajamento com este contato.',
   catalog:
     'Reorganize os itens por popularidade para melhorar a experi\u00eancia de navega\u00e7\u00e3o.',
 };
@@ -146,14 +145,16 @@ export function AiContextPanel({
   dealTitle,
   className,
 }: AiContextPanelProps) {
-  const insights = PLACEHOLDER_INSIGHTS[entityType] ?? PLACEHOLDER_INSIGHTS.customer;
-  const suggestion = PLACEHOLDER_SUGGESTIONS[entityType] ?? PLACEHOLDER_SUGGESTIONS.customer;
+  const insights =
+    PLACEHOLDER_INSIGHTS[entityType] ?? PLACEHOLDER_INSIGHTS.customer;
+  const suggestion =
+    PLACEHOLDER_SUGGESTIONS[entityType] ?? PLACEHOLDER_SUGGESTIONS.customer;
 
   return (
     <Card
       className={cn(
         'bg-slate-50 dark:bg-slate-800/40 border border-border p-4',
-        className,
+        className
       )}
     >
       {/* Header */}
@@ -173,7 +174,9 @@ export function AiContextPanel({
           const Icon = insight.icon;
           return (
             <li key={index} className="flex items-start gap-2 text-xs">
-              <Icon className={cn('h-3.5 w-3.5 mt-0.5 shrink-0', insight.color)} />
+              <Icon
+                className={cn('h-3.5 w-3.5 mt-0.5 shrink-0', insight.color)}
+              />
               <span className="text-muted-foreground">{insight.text}</span>
             </li>
           );
@@ -192,7 +195,12 @@ export function AiContextPanel({
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="h-7 text-xs flex-1" asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs flex-1"
+          asChild
+        >
           <Link href="/ai">
             <MessageCircle className="h-3 w-3 mr-1" />
             Perguntar mais
