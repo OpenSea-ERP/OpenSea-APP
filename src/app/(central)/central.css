@@ -165,6 +165,19 @@
   border-color: var(--modal-border) !important;
 }
 
+/* TabsTrigger: override dark: variant text color that conflicts with Central theme */
+:root[data-central-theme] [data-slot="tabs-trigger"] {
+  color: rgb(var(--color-foreground-muted)) !important;
+}
+:root[data-central-theme] [data-slot="tabs-trigger"][data-state="active"] {
+  color: rgb(var(--color-foreground)) !important;
+}
+
+/* TabsContent: force flex-col layout (default flex makes it flex-row) */
+:root[data-central-theme] [data-slot="tabs-content"][data-state="active"] {
+  flex-direction: column;
+}
+
 /* ===========================================
    SHADCN / TAILWIND v4 COMPONENT OVERRIDES
    Override --color-* variables inside Central
@@ -258,6 +271,13 @@
   --btn-ghost-bg: transparent;
   --btn-ghost-bg-hover: var(--color-background-muted);
   --btn-ghost-text: var(--color-foreground);
+
+  /* Component tokens: Tabs */
+  --tabs-list-bg: rgb(241 245 249 / 0.6);
+  --tabs-trigger-text: var(--color-foreground-muted);
+  --tabs-trigger-hover: rgb(255 255 255 / 0.7);
+  --tabs-trigger-active-bg: rgb(255 255 255);
+  --tabs-trigger-active-text: var(--color-foreground);
 }
 
 :root[data-central-theme='dark'] {
@@ -337,4 +357,11 @@
   --btn-ghost-bg: transparent;
   --btn-ghost-bg-hover: var(--color-background-muted);
   --btn-ghost-text: var(--color-foreground);
+
+  /* Component tokens: Tabs */
+  --tabs-list-bg: rgb(15 17 23 / 0.8);
+  --tabs-trigger-text: var(--color-foreground-muted);
+  --tabs-trigger-hover: rgb(30 32 40 / 0.5);
+  --tabs-trigger-active-bg: rgb(30 32 40);
+  --tabs-trigger-active-text: var(--color-foreground);
 }
