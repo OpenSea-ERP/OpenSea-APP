@@ -58,31 +58,34 @@ export function AiHeroBanner({
           </div>
         </div>
 
-        {/* View toggle toolbar (same pattern as tasks board) */}
+        {/* Toolbar (same pattern as tasks board) */}
         <div className="bg-muted/30 dark:bg-white/5 rounded-md px-3 py-2">
-          <div className="flex items-center gap-0.5">
-            {VIEW_TABS.map(({ id, label, icon: Icon }) => {
-              const isActive = activeView === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative',
-                    isActive
-                      ? 'text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  )}
-                  onClick={() => onViewChange(id)}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{label}</span>
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                  )}
-                </button>
-              );
-            })}
+          <div className="flex items-center justify-end">
+            {/* Right: view toggle */}
+            <div className="flex items-center gap-0.5">
+              {VIEW_TABS.map(({ id, label, icon: Icon }) => {
+                const isActive = activeView === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className={cn(
+                      'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative',
+                      isActive
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                    onClick={() => onViewChange(id)}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{label}</span>
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
