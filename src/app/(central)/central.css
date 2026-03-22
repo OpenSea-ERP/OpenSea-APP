@@ -154,6 +154,17 @@
   color: var(--central-input-placeholder) !important;
 }
 
+/*
+ * SelectContent fix: the component uses hard-coded bg-white dark:bg-gray-900.
+ * When the main app is in .dark but Central is in light mode (or vice-versa),
+ * the dropdown colors break. Override with CSS variables from the Central theme.
+ */
+:root[data-central-theme] [data-slot="select-content"] {
+  background-color: var(--modal-bg) !important;
+  color: var(--modal-text) !important;
+  border-color: var(--modal-border) !important;
+}
+
 /* ===========================================
    SHADCN / TAILWIND v4 COMPONENT OVERRIDES
    Override --color-* variables inside Central
@@ -162,31 +173,50 @@
    Applied on :root via data-central-theme attribute.
    =========================================== */
 
+/*
+ * IMPORTANT: --color-* semantic tokens store RAW channel values
+ * (e.g. "99 102 241") WITHOUT rgb() wrapper. Components wrap them
+ * with rgb() when using: bg-[rgb(var(--btn-primary-bg))].
+ * --btn-*, --input-*, --modal-* component tokens use var(--color-*)
+ * references so rgb() is applied by the component.
+ */
+
 :root[data-central-theme='light'] {
-  /* Semantic tokens */
-  --color-background: rgb(244 244 245);
-  --color-background-subtle: rgb(255 255 255);
-  --color-background-muted: rgb(241 245 249);
-  --color-background-elevated: rgb(255 255 255);
-  --color-foreground: rgb(24 24 27);
-  --color-foreground-muted: rgb(113 113 122);
-  --color-foreground-subtle: rgb(161 161 170);
+  /* Semantic tokens (raw channels, NO rgb()) */
+  --color-background: 244 244 245;
+  --color-background-subtle: 255 255 255;
+  --color-background-muted: 241 245 249;
+  --color-background-elevated: 255 255 255;
+  --color-foreground: 24 24 27;
+  --color-foreground-muted: 113 113 122;
+  --color-foreground-subtle: 161 161 170;
+  --color-foreground-inverted: 255 255 255;
 
   /* Primary (indigo) */
-  --color-primary: rgb(99 102 241);
-  --color-primary-hover: rgb(79 70 229);
-  --color-primary-foreground: rgb(255 255 255);
+  --color-primary: 99 102 241;
+  --color-primary-hover: 79 70 229;
+  --color-primary-foreground: 255 255 255;
 
   /* Secondary */
-  --color-secondary: rgb(244 244 245);
-  --color-secondary-hover: rgb(228 228 231);
-  --color-secondary-foreground: rgb(24 24 27);
+  --color-secondary: 244 244 245;
+  --color-secondary-hover: 228 228 231;
+  --color-secondary-foreground: 24 24 27;
 
   /* Destructive */
-  --color-destructive: rgb(244 63 94);
-  --color-destructive-foreground: rgb(255 255 255);
+  --color-destructive: 244 63 94;
+  --color-destructive-foreground: 255 255 255;
 
-  /* Muted / Accent / Card / Popover */
+  /* Borders */
+  --color-border: 228 228 231;
+  --color-border-muted: 244 244 245;
+  --color-border-focus: 99 102 241;
+  --color-ring: 99 102 241;
+
+  /* Glassmorphism (used by secondary button) */
+  --glass-bg: 255 255 255;
+  --glass-border: 209 213 219;
+
+  /* Compat: used by shadcn/Tailwind (rgb() format) */
   --color-muted: rgb(244 244 245);
   --color-muted-foreground: rgb(113 113 122);
   --color-accent: rgb(244 244 245);
@@ -195,14 +225,9 @@
   --color-card-foreground: rgb(24 24 27);
   --color-popover: rgb(255 255 255);
   --color-popover-foreground: rgb(24 24 27);
-
-  /* Border & Input */
-  --color-border: rgb(228 228 231);
-  --color-border-input: rgb(228 228 231);
   --color-input: rgb(228 228 231);
-  --color-ring: rgb(99 102 241);
 
-  /* Component tokens: Modal */
+  /* Component tokens: Modal (rgb() values) */
   --modal-bg: rgb(255 255 255);
   --modal-text: rgb(24 24 27);
   --modal-border: rgb(228 228 231);
@@ -210,60 +235,67 @@
 
   /* Component tokens: Input */
   --input-bg: rgb(255 255 255);
-  --input-text: rgb(24 24 27);
-  --input-placeholder: rgb(161 161 170);
-  --input-border: rgb(228 228 231);
-  --input-border-hover: rgb(161 161 170);
-  --input-border-focus: rgb(99 102 241);
-  --input-ring: rgb(99 102 241);
+  --input-text: var(--color-foreground);
+  --input-placeholder: var(--color-foreground-subtle);
+  --input-border: var(--color-border);
+  --input-border-hover: var(--color-foreground-subtle);
+  --input-border-focus: var(--color-border-focus);
+  --input-ring: var(--color-ring);
 
   /* Component tokens: Buttons */
-  --btn-primary-bg: rgb(99 102 241);
-  --btn-primary-bg-hover: rgb(79 70 229);
-  --btn-primary-text: rgb(255 255 255);
-  --btn-secondary-bg: rgb(244 244 245);
-  --btn-secondary-bg-hover: rgb(228 228 231);
-  --btn-secondary-text: rgb(24 24 27);
-  --btn-secondary-border: rgb(228 228 231);
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-bg-hover: var(--color-primary-hover);
+  --btn-primary-text: var(--color-primary-foreground);
+  --btn-primary-border: transparent;
+  --btn-secondary-bg: var(--color-secondary);
+  --btn-secondary-bg-hover: var(--color-secondary-hover);
+  --btn-secondary-text: var(--color-secondary-foreground);
+  --btn-secondary-border: var(--color-border);
   --btn-outline-bg: transparent;
-  --btn-outline-bg-hover: rgb(244 244 245);
-  --btn-outline-text: rgb(24 24 27);
-  --btn-outline-border: rgb(209 213 219);
+  --btn-outline-bg-hover: var(--color-background-muted);
+  --btn-outline-text: var(--color-foreground);
+  --btn-outline-border: 209 213 219;
   --btn-ghost-bg: transparent;
-  --btn-ghost-bg-hover: rgb(244 244 245);
-  --btn-ghost-text: rgb(24 24 27);
-
-  /* Component tokens: Select / Dropdown */
-  --select-trigger-bg: rgb(255 255 255);
-  --select-trigger-text: rgb(24 24 27);
-  --select-trigger-border: rgb(228 228 231);
+  --btn-ghost-bg-hover: var(--color-background-muted);
+  --btn-ghost-text: var(--color-foreground);
 }
 
 :root[data-central-theme='dark'] {
-  /* Semantic tokens */
-  --color-background: rgb(15 17 23);
-  --color-background-subtle: rgb(26 29 37);
-  --color-background-muted: rgb(30 32 40);
-  --color-background-elevated: rgb(26 29 37);
-  --color-foreground: rgb(240 240 243);
-  --color-foreground-muted: rgb(139 143 163);
-  --color-foreground-subtle: rgb(92 96 122);
+  /* Semantic tokens (raw channels, NO rgb()) */
+  --color-background: 15 17 23;
+  --color-background-subtle: 26 29 37;
+  --color-background-muted: 30 32 40;
+  --color-background-elevated: 26 29 37;
+  --color-foreground: 240 240 243;
+  --color-foreground-muted: 139 143 163;
+  --color-foreground-subtle: 92 96 122;
+  --color-foreground-inverted: 15 17 23;
 
   /* Primary (indigo) */
-  --color-primary: rgb(129 140 248);
-  --color-primary-hover: rgb(165 180 252);
-  --color-primary-foreground: rgb(15 17 23);
+  --color-primary: 129 140 248;
+  --color-primary-hover: 165 180 252;
+  --color-primary-foreground: 15 17 23;
 
   /* Secondary */
-  --color-secondary: rgb(30 32 40);
-  --color-secondary-hover: rgb(38 42 51);
-  --color-secondary-foreground: rgb(240 240 243);
+  --color-secondary: 30 32 40;
+  --color-secondary-hover: 38 42 51;
+  --color-secondary-foreground: 240 240 243;
 
   /* Destructive */
-  --color-destructive: rgb(244 63 94);
-  --color-destructive-foreground: rgb(255 255 255);
+  --color-destructive: 244 63 94;
+  --color-destructive-foreground: 255 255 255;
 
-  /* Muted / Accent / Card / Popover */
+  /* Borders */
+  --color-border: 38 42 51;
+  --color-border-muted: 26 29 37;
+  --color-border-focus: 129 140 248;
+  --color-ring: 129 140 248;
+
+  /* Glassmorphism (used by secondary button) */
+  --glass-bg: 30 32 40;
+  --glass-border: 46 50 61;
+
+  /* Compat: used by shadcn/Tailwind (rgb() format) */
   --color-muted: rgb(30 32 40);
   --color-muted-foreground: rgb(139 143 163);
   --color-accent: rgb(30 32 40);
@@ -272,14 +304,9 @@
   --color-card-foreground: rgb(240 240 243);
   --color-popover: rgb(26 29 37);
   --color-popover-foreground: rgb(240 240 243);
-
-  /* Border & Input */
-  --color-border: rgb(38 42 51);
-  --color-border-input: rgb(38 42 51);
   --color-input: rgb(46 50 61);
-  --color-ring: rgb(129 140 248);
 
-  /* Component tokens: Modal */
+  /* Component tokens: Modal (rgb() values) */
   --modal-bg: rgb(26 29 37);
   --modal-text: rgb(240 240 243);
   --modal-border: rgb(38 42 51);
@@ -287,31 +314,27 @@
 
   /* Component tokens: Input */
   --input-bg: rgb(30 32 40);
-  --input-text: rgb(240 240 243);
-  --input-placeholder: rgb(92 96 122);
-  --input-border: rgb(46 50 61);
-  --input-border-hover: rgb(92 96 122);
-  --input-border-focus: rgb(129 140 248);
-  --input-ring: rgb(129 140 248);
+  --input-text: var(--color-foreground);
+  --input-placeholder: var(--color-foreground-subtle);
+  --input-border: var(--color-border);
+  --input-border-hover: var(--color-foreground-subtle);
+  --input-border-focus: var(--color-border-focus);
+  --input-ring: var(--color-ring);
 
   /* Component tokens: Buttons */
-  --btn-primary-bg: rgb(129 140 248);
-  --btn-primary-bg-hover: rgb(165 180 252);
-  --btn-primary-text: rgb(15 17 23);
-  --btn-secondary-bg: rgb(30 32 40);
-  --btn-secondary-bg-hover: rgb(38 42 51);
-  --btn-secondary-text: rgb(240 240 243);
-  --btn-secondary-border: rgb(38 42 51);
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-bg-hover: var(--color-primary-hover);
+  --btn-primary-text: var(--color-primary-foreground);
+  --btn-primary-border: transparent;
+  --btn-secondary-bg: var(--color-secondary);
+  --btn-secondary-bg-hover: var(--color-secondary-hover);
+  --btn-secondary-text: var(--color-secondary-foreground);
+  --btn-secondary-border: var(--color-border);
   --btn-outline-bg: transparent;
-  --btn-outline-bg-hover: rgb(30 32 40);
-  --btn-outline-text: rgb(240 240 243);
-  --btn-outline-border: rgb(46 50 61);
+  --btn-outline-bg-hover: var(--color-background-muted);
+  --btn-outline-text: var(--color-foreground);
+  --btn-outline-border: 46 50 61;
   --btn-ghost-bg: transparent;
-  --btn-ghost-bg-hover: rgb(30 32 40);
-  --btn-ghost-text: rgb(240 240 243);
-
-  /* Component tokens: Select / Dropdown */
-  --select-trigger-bg: rgb(30 32 40);
-  --select-trigger-text: rgb(240 240 243);
-  --select-trigger-border: rgb(46 50 61);
+  --btn-ghost-bg-hover: var(--color-background-muted);
+  --btn-ghost-text: var(--color-foreground);
 }
