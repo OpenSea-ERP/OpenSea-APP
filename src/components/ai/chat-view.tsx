@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { AiEmptyState } from './empty-state';
 import { AiMessageBubble } from './message-bubble';
 import { AiChatInput } from './chat-input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { toast } from 'sonner';
 import type { AiMessage } from '@/types/ai';
 
@@ -126,8 +126,8 @@ export function AiChatView({
   const hasMessages = allMessages.length > 0;
 
   return (
-    <div className="flex flex-1 flex-col min-h-0">
-      <ScrollArea className="flex-1">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {!hasMessages ? (
           <AiEmptyState onSendSuggestion={text => handleSend(text)} />
         ) : (
@@ -148,14 +148,16 @@ export function AiChatView({
             <div ref={messagesEndRef} />
           </div>
         )}
-      </ScrollArea>
+      </div>
 
-      <AiChatInput
+      <div className="shrink-0">
+        <AiChatInput
         value={inputValue}
         onChange={setInputValue}
         onSend={() => handleSend()}
         isPending={sendMessage.isPending}
       />
+      </div>
     </div>
   );
 }
