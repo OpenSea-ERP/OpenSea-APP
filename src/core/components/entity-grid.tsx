@@ -651,17 +651,7 @@ export function EntityGrid<T extends BaseEntity>({
     config.display.labels.emptyState ??
     'Nenhum item encontrado';
 
-  // Empty state
-  if (items.length === 0 && !isLoading) {
-    return (
-      <Card className="p-12 text-center bg-white/90 dark:bg-white/5 border-gray-200/50 dark:border-white/10">
-        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
-          {emptyIcon ?? <Grid3x3 className="w-8 h-8 text-gray-400" />}
-        </div>
-        <p className="text-gray-600 dark:text-white/60">{finalEmptyMessage}</p>
-      </Card>
-    );
-  }
+  const isEmpty = items.length === 0 && !isLoading;
 
   return (
     <div className={cn('entity-grid', className)}>
@@ -750,7 +740,20 @@ export function EntityGrid<T extends BaseEntity>({
         </div>
       )}
 
+      {/* Empty State */}
+      {isEmpty && (
+        <Card className="p-12 text-center bg-white/90 dark:bg-white/5 border-gray-200/50 dark:border-white/10">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+            {emptyIcon ?? <Grid3x3 className="w-8 h-8 text-gray-400" />}
+          </div>
+          <p className="text-gray-600 dark:text-white/60">
+            {finalEmptyMessage}
+          </p>
+        </Card>
+      )}
+
       {/* Items Container */}
+      {!isEmpty && (
       <div
         ref={containerRef}
         data-entity-grid
@@ -844,6 +847,7 @@ export function EntityGrid<T extends BaseEntity>({
             />
           )}
       </div>
+      )}
     </div>
   );
 }
