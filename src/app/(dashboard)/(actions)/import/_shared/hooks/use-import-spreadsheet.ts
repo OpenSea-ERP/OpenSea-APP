@@ -577,8 +577,8 @@ export function useImportSpreadsheet(
       });
 
       // Check for duplicate names within the spreadsheet
-      // For variants, scope by productId (same name in different products is OK)
-      if (nameFieldIndex >= 0) {
+      // Skip for variants (parentFieldIndex >= 0) — same name is allowed even in same product
+      if (nameFieldIndex >= 0 && parentFieldIndex < 0) {
         const nameValue = row[nameFieldIndex]?.value?.trim();
         if (nameValue) {
           const nameLower = nameValue.toLowerCase();
