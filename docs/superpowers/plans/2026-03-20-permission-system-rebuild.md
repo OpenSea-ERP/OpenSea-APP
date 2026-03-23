@@ -14,28 +14,29 @@
 
 ### Backend (OpenSea-API)
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Rewrite | `src/constants/rbac/permission-codes.ts` | New 238 permission codes, DEFAULT_USER_PERMISSIONS, isValidPermissionCode |
-| Modify | `src/constants/rbac/permission-groups.ts` | No changes needed (ADMIN/USER slugs stay) |
-| Modify | `prisma/seed.ts` | Seed uses new codes; cleanup deletes old; groups reassigned |
-| Create | `src/constants/rbac/permission-migration-map.ts` | Maps old controller permission references → new codes (used during controller update) |
-| Modify | ~80 controller route files | Remap `createPermissionMiddleware` calls to new codes |
+| Action  | File                                             | Responsibility                                                                        |
+| ------- | ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Rewrite | `src/constants/rbac/permission-codes.ts`         | New 238 permission codes, DEFAULT_USER_PERMISSIONS, isValidPermissionCode             |
+| Modify  | `src/constants/rbac/permission-groups.ts`        | No changes needed (ADMIN/USER slugs stay)                                             |
+| Modify  | `prisma/seed.ts`                                 | Seed uses new codes; cleanup deletes old; groups reassigned                           |
+| Create  | `src/constants/rbac/permission-migration-map.ts` | Maps old controller permission references → new codes (used during controller update) |
+| Modify  | ~80 controller route files                       | Remap `createPermissionMiddleware` calls to new codes                                 |
 
 ### Frontend (OpenSea-APP)
 
-| Action | File | Responsibility |
-|--------|------|----------------|
-| Rewrite | `src/config/rbac/permission-codes.ts` | New permission constants matching backend |
-| Modify | `src/config/rbac/base-groups.ts` | Update group definitions with new codes |
-| Modify | `src/config/rbac/base-permissions.ts` | Update seed permission data |
-| Modify | ~30 page files | Update `hasPermission()` calls to new codes |
+| Action  | File                                  | Responsibility                              |
+| ------- | ------------------------------------- | ------------------------------------------- |
+| Rewrite | `src/config/rbac/permission-codes.ts` | New permission constants matching backend   |
+| Modify  | `src/config/rbac/base-groups.ts`      | Update group definitions with new codes     |
+| Modify  | `src/config/rbac/base-permissions.ts` | Update seed permission data                 |
+| Modify  | ~30 page files                        | Update `hasPermission()` calls to new codes |
 
 ---
 
 ## Task 1: Rewrite Backend Permission Codes
 
 **Files:**
+
 - Rewrite: `OpenSea-API/src/constants/rbac/permission-codes.ts`
 
 The entire file (~1247 lines) is replaced with the new 238 codes organized by the 7 UI modules.
@@ -43,6 +44,7 @@ The entire file (~1247 lines) is replaced with the new 238 codes organized by th
 - [ ] **Step 1: Write the new permission codes file**
 
 Structure:
+
 ```ts
 export const PermissionCodes = {
   STOCK: {
@@ -59,9 +61,15 @@ export const PermissionCodes = {
     },
     // ... all stock resources
   },
-  FINANCE: { /* ... */ },
-  HR: { /* ... */ },
-  SALES: { /* ... */ },
+  FINANCE: {
+    /* ... */
+  },
+  HR: {
+    /* ... */
+  },
+  SALES: {
+    /* ... */
+  },
   ADMIN: {
     USERS: { ACCESS, REGISTER, MODIFY, REMOVE, ADMIN },
     PERMISSION_GROUPS: { ACCESS, REGISTER, MODIFY, REMOVE, ADMIN },
@@ -74,7 +82,16 @@ export const PermissionCodes = {
     EMAIL_MESSAGES: { ACCESS, REGISTER, MODIFY, REMOVE, ONLYSELF },
     TASK_BOARDS: { ACCESS, REGISTER, MODIFY, REMOVE, SHARE },
     TASK_CARDS: { ACCESS, REGISTER, MODIFY, REMOVE, ADMIN, SHARE, ONLYSELF },
-    CALENDAR: { ACCESS, REGISTER, MODIFY, REMOVE, EXPORT, ADMIN, SHARE, ONLYSELF },
+    CALENDAR: {
+      ACCESS,
+      REGISTER,
+      MODIFY,
+      REMOVE,
+      EXPORT,
+      ADMIN,
+      SHARE,
+      ONLYSELF,
+    },
     STORAGE_FOLDERS: { ACCESS, REGISTER, MODIFY, REMOVE, ADMIN, SHARE },
     STORAGE_FILES: { ACCESS, REGISTER, MODIFY, REMOVE, ADMIN, SHARE },
   },
@@ -149,6 +166,7 @@ git commit -m "feat(rbac): rewrite permission codes — 238 new humanized codes 
 ## Task 2: Create Migration Map
 
 **Files:**
+
 - Create: `OpenSea-API/src/constants/rbac/permission-migration-map.ts`
 
 A `Record<string, string>` mapping old permission code → new permission code. Used by controllers update task and optionally by seed to migrate existing group permissions.
@@ -156,6 +174,7 @@ A `Record<string, string>` mapping old permission code → new permission code. 
 - [ ] **Step 1: Create the migration map**
 
 Key mappings:
+
 ```ts
 export const PERMISSION_MIGRATION_MAP: Record<string, string> = {
   // STOCK
@@ -201,9 +220,11 @@ git commit -m "feat(rbac): add old→new permission migration map for controller
 ## Task 3: Update Seed
 
 **Files:**
+
 - Modify: `OpenSea-API/prisma/seed.ts`
 
 The seed already handles creating/deleting permissions and assigning them to groups. The key changes:
+
 1. `extractAllCodes(PermissionCodes)` still works (recursive leaf extraction)
 2. `buildPermissionData(code)` still works (splits by `.` for module/resource/action)
 3. `cleanupStalePermissions()` will delete all 721 old codes
@@ -228,6 +249,7 @@ Expected: Creates 238 permissions, deletes 721 old ones, assigns all to Admin gr
 ## Task 4: Remap Backend Controllers
 
 **Files:**
+
 - Modify: ~80 controller route files across all modules
 
 This is the largest task. Every `createPermissionMiddleware({ permissionCode: PermissionCodes.XXX })` call needs to reference the new code.
@@ -275,6 +297,7 @@ This is the largest task. Every `createPermissionMiddleware({ permissionCode: Pe
 - [ ] **Step 1-15: Update each module's controllers** (one commit per module)
 
 For each controller file:
+
 - Find `createPermissionMiddleware({ permissionCode: PermissionCodes.OLD.PATH })`
 - Replace with `createPermissionMiddleware({ permissionCode: PermissionCodes.NEW.PATH })`
 - Action mapping: `create→register`, `read/list→access`, `update→modify`, `delete→remove`, `manage→admin`
@@ -300,6 +323,7 @@ git commit -m "feat(rbac): remap all controller permissions to new codes"
 ## Task 5: Update Frontend Permission Codes
 
 **Files:**
+
 - Rewrite: `OpenSea-APP/src/config/rbac/permission-codes.ts`
 - Modify: `OpenSea-APP/src/config/rbac/base-groups.ts`
 - Modify: `OpenSea-APP/src/config/rbac/base-permissions.ts`
@@ -307,6 +331,7 @@ git commit -m "feat(rbac): remap all controller permissions to new codes"
 - [ ] **Step 1: Rewrite permission-codes.ts**
 
 Replace all module exports with new structure:
+
 ```ts
 export const STOCK_PERMISSIONS = {
   PRODUCTS: {
@@ -352,6 +377,7 @@ git commit -m "feat(rbac): rewrite frontend permission constants to match new ba
 ## Task 6: Update Frontend Permission Checks
 
 **Files:**
+
 - Modify: ~30 page/component files that call `hasPermission()`
 
 - [ ] **Step 1: Find all permission check usages**
@@ -363,6 +389,7 @@ grep -r "hasPermission\|PERMISSIONS\." src/app/ src/components/ --include="*.tsx
 - [ ] **Step 2-N: Update each file**
 
 For each file:
+
 - Find `hasPermission(STOCK_PERMISSIONS.PRODUCTS.CREATE)` → `hasPermission(STOCK_PERMISSIONS.PRODUCTS.REGISTER)`
 - Find `hasPermission(RBAC_PERMISSIONS.GROUPS.LIST)` → `hasPermission(ADMIN_PERMISSIONS.PERMISSION_GROUPS.ACCESS)`
 - etc.
@@ -413,14 +440,14 @@ cd OpenSea-API && npm test
 
 ## Summary
 
-| Task | Description | Scope |
-|------|-------------|-------|
-| 1 | Rewrite backend permission-codes.ts | 1 file, ~300 lines |
-| 2 | Create migration map | 1 new file |
-| 3 | Update/verify seed | Minimal changes |
-| 4 | Remap ~80 backend controllers | Largest task |
-| 5 | Rewrite frontend permission constants | 3 files |
-| 6 | Update ~30 frontend permission checks | Medium task |
-| 7 | Integration verification | Testing |
+| Task | Description                           | Scope              |
+| ---- | ------------------------------------- | ------------------ |
+| 1    | Rewrite backend permission-codes.ts   | 1 file, ~300 lines |
+| 2    | Create migration map                  | 1 new file         |
+| 3    | Update/verify seed                    | Minimal changes    |
+| 4    | Remap ~80 backend controllers         | Largest task       |
+| 5    | Rewrite frontend permission constants | 3 files            |
+| 6    | Update ~30 frontend permission checks | Medium task        |
+| 7    | Integration verification              | Testing            |
 
 Total new permissions: **238** (down from 721, reduction of 67%)

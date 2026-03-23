@@ -39,18 +39,18 @@ Redesign the AI assistant interface ("Atlas") from a basic chat page into a poli
 
 ### Component Breakdown
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| `AiPage` | `app/(dashboard)/(tools)/ai/page.tsx` | Main page orchestrator with view state |
-| `AiChatView` | `components/ai/chat-view.tsx` | Chat messages + input area |
-| `AiEmptyState` | `components/ai/empty-state.tsx` | Welcome + suggestion chips |
-| `AiMessageBubble` | `components/ai/message-bubble.tsx` | Single message (user or assistant) |
-| `AiMarkdownRenderer` | `components/ai/markdown-renderer.tsx` | Markdown → React with custom components |
-| `AiConversationsDrawer` | `components/ai/conversations-drawer.tsx` | Sheet with conversation list |
-| `AiInsightsView` | `components/ai/insights-view.tsx` | Refactored from current insights page |
-| `AiFavoritesView` | `components/ai/favorites-view.tsx` | Refactored from current favorites page |
-| `AiActionsView` | `components/ai/actions-view.tsx` | Refactored from current actions page |
-| `AiSettingsView` | `components/ai/settings-view.tsx` | Refactored from current settings page |
+| Component               | File                                     | Purpose                                 |
+| ----------------------- | ---------------------------------------- | --------------------------------------- |
+| `AiPage`                | `app/(dashboard)/(tools)/ai/page.tsx`    | Main page orchestrator with view state  |
+| `AiChatView`            | `components/ai/chat-view.tsx`            | Chat messages + input area              |
+| `AiEmptyState`          | `components/ai/empty-state.tsx`          | Welcome + suggestion chips              |
+| `AiMessageBubble`       | `components/ai/message-bubble.tsx`       | Single message (user or assistant)      |
+| `AiMarkdownRenderer`    | `components/ai/markdown-renderer.tsx`    | Markdown → React with custom components |
+| `AiConversationsDrawer` | `components/ai/conversations-drawer.tsx` | Sheet with conversation list            |
+| `AiInsightsView`        | `components/ai/insights-view.tsx`        | Refactored from current insights page   |
+| `AiFavoritesView`       | `components/ai/favorites-view.tsx`       | Refactored from current favorites page  |
+| `AiActionsView`         | `components/ai/actions-view.tsx`         | Refactored from current actions page    |
+| `AiSettingsView`        | `components/ai/settings-view.tsx`        | Refactored from current settings page   |
 
 ## Detailed Design
 
@@ -69,11 +69,41 @@ interface AiHeroButton {
 }
 
 const heroButtons: AiHeroButton[] = [
-  { id: 'chat', label: 'Chat', icon: MessageSquare, view: 'chat', gradient: 'from-violet-500 to-violet-600' },
-  { id: 'insights', label: 'Insights', icon: Lightbulb, view: 'insights', gradient: 'from-teal-500 to-teal-600' },
-  { id: 'favorites', label: 'Favoritos', icon: Star, view: 'favorites', gradient: 'from-cyan-500 to-cyan-600' },
-  { id: 'actions', label: 'Ações', icon: Activity, view: 'actions', gradient: 'from-emerald-500 to-emerald-600' },
-  { id: 'settings', label: 'Configurações', icon: Settings, view: 'settings', gradient: 'from-slate-500 to-slate-600' },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessageSquare,
+    view: 'chat',
+    gradient: 'from-violet-500 to-violet-600',
+  },
+  {
+    id: 'insights',
+    label: 'Insights',
+    icon: Lightbulb,
+    view: 'insights',
+    gradient: 'from-teal-500 to-teal-600',
+  },
+  {
+    id: 'favorites',
+    label: 'Favoritos',
+    icon: Star,
+    view: 'favorites',
+    gradient: 'from-cyan-500 to-cyan-600',
+  },
+  {
+    id: 'actions',
+    label: 'Ações',
+    icon: Activity,
+    view: 'actions',
+    gradient: 'from-emerald-500 to-emerald-600',
+  },
+  {
+    id: 'settings',
+    label: 'Configurações',
+    icon: Settings,
+    view: 'settings',
+    gradient: 'from-slate-500 to-slate-600',
+  },
 ];
 ```
 
@@ -119,6 +149,7 @@ Chip styling: `bg-white dark:bg-slate-800/60 border border-border` with hover ef
 Messages use a layout inspired by ChatGPT/Claude:
 
 **Assistant messages (left-aligned):**
+
 - Avatar: 32px gradient violet→cyan rounded-lg with "A"
 - Name "Atlas" in `text-violet-400` + timestamp in muted
 - Content rendered through `AiMarkdownRenderer`
@@ -127,14 +158,17 @@ Messages use a layout inspired by ChatGPT/Claude:
 - Model info line (muted, small): model name, latency, function called
 
 **User messages (right-aligned):**
+
 - Content in indigo bubble (`bg-indigo-600 rounded-2xl rounded-tr-sm`)
 - Avatar: 32px slate rounded-lg with user initial
 - Name "Você" + timestamp
 
 **Loading state:**
+
 - Atlas avatar + animated dots or skeleton pulse
 
 **Error state:**
+
 - If `sendMessage` fails, the user message stays but gets a red border indicator
 - Inline error text below: "Erro ao enviar. Tente novamente." with a retry button
 - Toast notification via `sonner` for network errors
@@ -161,6 +195,7 @@ Fixed at bottom of the page. Max-width 720px centered.
 Dependencies: `react-markdown`, `remark-gfm`, `react-syntax-highlighter`
 
 Custom component overrides (dual-theme):
+
 - **Tables**: `bg-white dark:bg-slate-800 border-border`, header `bg-slate-100 dark:bg-slate-700/50`
 - **Code blocks**: syntax highlighted with `oneLight`/`oneDark` theme (based on system), copy button
 - **Inline code**: `bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-violet-700 dark:text-violet-300`
@@ -174,6 +209,7 @@ Custom component overrides (dual-theme):
 Uses shadcn `Sheet` component, opens from the right.
 
 Content:
+
 - Header: "Conversas" title + count + New (+) button + Close (X)
 - Search input (client-side filtering on conversation title — no server search needed for initial implementation)
 - Conversation list:
@@ -186,6 +222,7 @@ Content:
 ### 7. Sub-Views (Insights, Favorites, Actions, Settings)
 
 These are refactored from the existing standalone pages:
+
 - Remove their `PageActionBar` (the main page handles breadcrumbs)
 - Remove the outer layout wrapper (`flex flex-col h-[calc(100vh-4rem)]`)
 - Keep all React Query hooks, mutations, and UI logic intact
@@ -194,6 +231,7 @@ These are refactored from the existing standalone pages:
 ### 8. Removed Pages
 
 After consolidation, delete:
+
 - `app/(tools)/ai/insights/page.tsx`
 - `app/(tools)/ai/favorites/page.tsx`
 - `app/(tools)/ai/actions/page.tsx`
@@ -204,6 +242,7 @@ Keep `app/(tools)/ai/loading.tsx` — update skeleton to match new layout.
 ## Visual Design
 
 ### Color System
+
 - **Atlas brand**: gradient `from-violet-500 to-cyan-500` (icon, accents)
 - **User messages**: `bg-indigo-600` bubble
 - **Assistant messages**: no bubble, content directly on page background
@@ -214,6 +253,7 @@ Keep `app/(tools)/ai/loading.tsx` — update skeleton to match new layout.
 - **No yellow/amber**: use teal for Insights gradient (project color rule)
 
 ### Responsive Behavior
+
 - Hero banner buttons wrap on smaller screens
 - Chat max-width 720px, centered
 - Drawer is full-width on mobile
@@ -222,6 +262,7 @@ Keep `app/(tools)/ai/loading.tsx` — update skeleton to match new layout.
 ## Dependencies
 
 New npm packages:
+
 - `react-markdown` — markdown parsing
 - `remark-gfm` — GitHub Flavored Markdown (tables, strikethrough, etc.)
 - `react-syntax-highlighter` — code block syntax highlighting

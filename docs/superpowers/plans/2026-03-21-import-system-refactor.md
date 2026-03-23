@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-03-21-import-system-refactor-design.md`
 
 **Important paths:**
+
 - All frontend import routes: `OpenSea-APP/src/app/(dashboard)/(actions)/import/`
 - Backend permissions: `OpenSea-API/src/constants/rbac/permission-codes.ts`
 - Frontend permissions: `OpenSea-APP/src/config/rbac/permission-codes.ts`
@@ -22,6 +23,7 @@
 ### Task 1: Add `.import` permission codes to backend
 
 **Files:**
+
 - Modify: `OpenSea-API/src/constants/rbac/permission-codes.ts`
 
 - [ ] **Step 1: Add IMPORT to STOCK.TEMPLATES**
@@ -128,6 +130,7 @@ git commit -m "feat(rbac): add .import permission codes for templates, items, po
 ### Task 2: Update bulk controllers to use `.import` permission
 
 **Files:**
+
 - Modify: `OpenSea-API/src/http/controllers/stock/products/v1-bulk-create-products.controller.ts`
 - Modify: `OpenSea-API/src/http/controllers/stock/variants/v1-bulk-create-variants.controller.ts`
 
@@ -180,6 +183,7 @@ git commit -m "feat(rbac): switch bulk controllers from .register to .import per
 ### Task 3: Write E2E tests for bulk import permissions
 
 **Files:**
+
 - Modify: `OpenSea-API/src/http/controllers/stock/products/v1-bulk-create-products.e2e.spec.ts`
 - Modify: `OpenSea-API/src/http/controllers/stock/variants/v1-bulk-create-variants.e2e.spec.ts`
 
@@ -234,7 +238,9 @@ it('should return 201 when user has import permission', async () => {
     .post('/v1/products/bulk')
     .set('Authorization', `Bearer ${token}`)
     .send({
-      products: [{ name: `Import Perm Test ${Date.now()}`, templateId: template.id }],
+      products: [
+        { name: `Import Perm Test ${Date.now()}`, templateId: template.id },
+      ],
     });
 
   expect(response.status).toBe(201);
@@ -254,7 +260,9 @@ it('should return 403 when user has register but not import permission', async (
   });
 
   // Need a product first
-  const { token: adminToken } = await createAndAuthenticateUser(app, { tenantId });
+  const { token: adminToken } = await createAndAuthenticateUser(app, {
+    tenantId,
+  });
   const template = await prisma.template.create({
     data: {
       tenantId,
@@ -273,17 +281,21 @@ it('should return 403 when user has register but not import permission', async (
     .post('/v1/variants/bulk')
     .set('Authorization', `Bearer ${token}`)
     .send({
-      variants: [{
-        name: `Variant Perm ${Date.now()}`,
-        productId: productRes.body.id,
-      }],
+      variants: [
+        {
+          name: `Variant Perm ${Date.now()}`,
+          productId: productRes.body.id,
+        },
+      ],
     });
 
   expect(response.status).toBe(403);
 });
 
 it('should return 201 when user has import permission', async () => {
-  const { token: adminToken } = await createAndAuthenticateUser(app, { tenantId });
+  const { token: adminToken } = await createAndAuthenticateUser(app, {
+    tenantId,
+  });
   const template = await prisma.template.create({
     data: {
       tenantId,
@@ -307,10 +319,12 @@ it('should return 201 when user has import permission', async () => {
     .post('/v1/variants/bulk')
     .set('Authorization', `Bearer ${token}`)
     .send({
-      variants: [{
-        name: `Variant Import ${Date.now()}`,
-        productId: productRes.body.id,
-      }],
+      variants: [
+        {
+          name: `Variant Import ${Date.now()}`,
+          productId: productRes.body.id,
+        },
+      ],
     });
 
   expect(response.status).toBe(201);
@@ -336,6 +350,7 @@ git commit -m "test(e2e): add import permission tests for bulk create products a
 ### Task 4: Add `.import` permission codes to frontend
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/config/rbac/permission-codes.ts`
 
 - [ ] **Step 1: Add IMPORT to STOCK_PERMISSIONS.TEMPLATES**
@@ -412,6 +427,7 @@ git commit -m "feat(rbac): add .import permission codes for templates, items, po
 ### Task 5: Delete old orphan route directories
 
 **Files:**
+
 - Delete: `OpenSea-APP/src/app/(dashboard)/(actions)/import/products/` (entire directory)
 - Delete: `OpenSea-APP/src/app/(dashboard)/(actions)/import/variants/` (entire directory)
 - Delete: `OpenSea-APP/src/app/(dashboard)/(actions)/import/categories/` (entire directory)
@@ -449,6 +465,7 @@ git commit -m "refactor(import): delete old route directories without module pre
 ### Task 6: Delete catalog wizard
 
 **Files:**
+
 - Delete: `OpenSea-APP/src/app/(dashboard)/(actions)/import/catalog/` (entire directory)
 
 - [ ] **Step 1: Delete catalog directory**
@@ -471,6 +488,7 @@ git commit -m "refactor(import): delete catalog wizard (replaced by per-entity s
 ### Task 7: Delete config pages and special routes
 
 **Files:**
+
 - Delete: All `config/page.tsx` files under import routes
 - Delete: `/import/stock/products/home/`
 - Delete: `/import/stock/variants/by-product/`
@@ -512,6 +530,7 @@ git commit -m "refactor(import): delete config pages, home route, by-product rou
 ### Task 8: Delete unused shared components and update barrels
 
 **Files:**
+
 - Delete: `OpenSea-APP/src/app/(dashboard)/(actions)/import/_shared/components/entity-import-page.tsx`
 - Delete: `OpenSea-APP/src/app/(dashboard)/(actions)/import/_shared/components/entity-config-page.tsx`
 - Delete: `OpenSea-APP/src/app/(dashboard)/(actions)/import/_shared/components/import-method-selector.tsx`
@@ -582,6 +601,7 @@ git commit -m "refactor(import): delete unused shared components (entity-import-
 For each entity, the sheets page content replaces the intermediate method selector page.
 
 **Files:**
+
 - For products: Move `import/stock/products/sheets/page.tsx` → `import/stock/products/page.tsx`
 - For variants: Move `import/stock/variants/sheets/page.tsx` → `import/stock/variants/page.tsx`
 - Same for: items, product-categories, admin/users, hr/departments, hr/employees, hr/positions
@@ -661,6 +681,7 @@ Same EntitySheetsPage wrapper conversion for all three.
 - [ ] **Step 8: Convert EntitySheetsPage wrappers to standalone pages**
 
 All pages that were thin wrappers around `<EntitySheetsPage entityType="..." />` need to be rewritten as standalone pages. They should:
+
 1. Import and use the shared hooks directly (`useImportSpreadsheet`, `useImportProcess`, `useReferenceData`)
 2. Import `ImportSpreadsheet` and `ImportProgressDialog` from `_shared/components`
 3. Use `PageActionBar` with breadcrumbs
@@ -692,6 +713,7 @@ git commit -m "refactor(import): relocate sheets pages to direct routes, delete 
 ### Task 10: Update entity definitions
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/app/(dashboard)/(actions)/import/_shared/config/entity-definitions.ts`
 - Modify: `OpenSea-APP/src/app/(dashboard)/(actions)/import/_shared/types/index.ts`
 
@@ -792,6 +814,7 @@ git commit -m "feat(import): add permission field to entity definitions, remove 
 ### Task 11: Rewrite import dashboard page
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/app/(dashboard)/(actions)/import/page.tsx`
 
 - [ ] **Step 1: Rewrite `/import/page.tsx` with standard dashboard pattern**
@@ -1016,6 +1039,7 @@ git commit -m "feat(import): rewrite import hub as standard dashboard with PageD
 ### Task 12: Update listing page import buttons
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/app/(dashboard)/(modules)/stock/(entities)/products/page.tsx`
 - Modify: `OpenSea-APP/src/app/(dashboard)/(modules)/stock/(entities)/templates/page.tsx`
 - Modify: `OpenSea-APP/src/app/(dashboard)/(modules)/hr/(entities)/employees/page.tsx`
@@ -1055,6 +1079,7 @@ git commit -m "fix(import): update listing page import button URLs to new routes
 ### Task 13: Add AI bridge types and hook
 
 **Files:**
+
 - Modify: `OpenSea-APP/src/app/(dashboard)/(actions)/import/_shared/types/index.ts`
 - Create: `OpenSea-APP/src/app/(dashboard)/(actions)/import/_shared/hooks/use-import-ai.ts`
 
@@ -1148,10 +1173,7 @@ export function useImportAI(options: UseImportAIOptions): ImportAIBridge {
     [onApplyMapping]
   );
 
-  const getEntityDef = useCallback(
-    () => entityDefinition,
-    [entityDefinition]
-  );
+  const getEntityDef = useCallback(() => entityDefinition, [entityDefinition]);
 
   return useMemo(
     () => ({
@@ -1191,6 +1213,7 @@ git commit -m "feat(import): add AI bridge types and useImportAI hook for future
 ### Task 14: Run backend permission seed and verify
 
 **Files:**
+
 - No file changes — run seed to sync new permissions
 
 - [ ] **Step 1: Run permission seed**

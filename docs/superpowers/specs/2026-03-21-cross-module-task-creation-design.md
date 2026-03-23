@@ -28,15 +28,15 @@ Módulo (Email, Stock, Finance, HR, Sales, Calendar)
 
 ```typescript
 interface CreateTaskFromEntityOptions {
-  sourceType: IntegrationType;   // 'CUSTOMER' | 'PRODUCT' | 'EMAIL' | 'FINANCE_ENTRY' | 'DEPARTMENT' | 'CALENDAR_EVENT'
-  sourceId: string;              // ID da entidade de origem
-  sourceLabel: string;           // Label para exibição (nome, assunto, etc.)
-  suggestedTitle?: string;       // Título pré-preenchido para o card
+  sourceType: IntegrationType; // 'CUSTOMER' | 'PRODUCT' | 'EMAIL' | 'FINANCE_ENTRY' | 'DEPARTMENT' | 'CALENDAR_EVENT'
+  sourceId: string; // ID da entidade de origem
+  sourceLabel: string; // Label para exibição (nome, assunto, etc.)
+  suggestedTitle?: string; // Título pré-preenchido para o card
 }
 
 interface UseCreateTaskFromEntityReturn {
   openQuickCreate: (options: CreateTaskFromEntityOptions) => void;
-  QuickCreateModal: React.FC;    // Componente modal para renderizar no JSX
+  QuickCreateModal: React.FC; // Componente modal para renderizar no JSX
 }
 ```
 
@@ -48,12 +48,16 @@ function EmailToolbar({ message }) {
 
   return (
     <>
-      <Button onClick={() => openQuickCreate({
-        sourceType: 'EMAIL',
-        sourceId: message.id,
-        sourceLabel: message.subject,
-        suggestedTitle: message.subject,
-      })}>
+      <Button
+        onClick={() =>
+          openQuickCreate({
+            sourceType: 'EMAIL',
+            sourceId: message.id,
+            sourceLabel: message.subject,
+            suggestedTitle: message.subject,
+          })
+        }
+      >
         Criar Tarefa
       </Button>
       <QuickCreateModal />
@@ -159,18 +163,19 @@ systemSourceId?: string;
 
 ### Mapeamento
 
-| Módulo | Onde aparece | `sourceType` | `suggestedTitle` | Dados extras |
-|--------|-------------|-------------|-----------------|-------------|
-| Email | Toolbar da mensagem | `EMAIL` | `msg.subject` | — |
-| Stock/Produtos | Context menu (EntityContextMenu) | `PRODUCT` | `"Tarefa: {product.name}"` | — |
-| Finance/Entradas | Context menu da entrada | `FINANCE_ENTRY` | `entry.description` | — |
-| HR/Funcionários | Context menu do funcionário | `DEPARTMENT` | `"Tarefa: {employee.name}"` | — |
-| Sales/Clientes | Context menu do cliente | `CUSTOMER` | `"Tarefa: {customer.name}"` | — |
-| Calendar/Eventos | Menu de ações do evento | `CALENDAR_EVENT` | `event.title` | — |
+| Módulo           | Onde aparece                     | `sourceType`     | `suggestedTitle`            | Dados extras |
+| ---------------- | -------------------------------- | ---------------- | --------------------------- | ------------ |
+| Email            | Toolbar da mensagem              | `EMAIL`          | `msg.subject`               | —            |
+| Stock/Produtos   | Context menu (EntityContextMenu) | `PRODUCT`        | `"Tarefa: {product.name}"`  | —            |
+| Finance/Entradas | Context menu da entrada          | `FINANCE_ENTRY`  | `entry.description`         | —            |
+| HR/Funcionários  | Context menu do funcionário      | `DEPARTMENT`     | `"Tarefa: {employee.name}"` | —            |
+| Sales/Clientes   | Context menu do cliente          | `CUSTOMER`       | `"Tarefa: {customer.name}"` | —            |
+| Calendar/Eventos | Menu de ações do evento          | `CALENDAR_EVENT` | `event.title`               | —            |
 
 ### Gating
 
 O item "Criar Tarefa" só aparece se:
+
 ```typescript
 const { hasPermission } = usePermissions();
 const canCreateTask = hasPermission('tools.tasks.cards.register');
@@ -226,20 +231,23 @@ model TaskAutomationRule {
 
 ### Domain Events planejados
 
-| Evento | Módulo | Trigger |
-|--------|--------|---------|
-| `EMAIL_RECEIVED_FLAGGED` | Email | Email importante recebido |
-| `FINANCE_ENTRY_OVERDUE` | Finance | Entrada vencida |
-| `STOCK_PO_CREATED` | Stock | Pedido de compra criado |
-| `SALES_ORDER_CREATED` | Sales | Pedido de venda criado |
-| `HR_ABSENCE_APPROVED` | HR | Ausência aprovada |
+| Evento                   | Módulo  | Trigger                   |
+| ------------------------ | ------- | ------------------------- |
+| `EMAIL_RECEIVED_FLAGGED` | Email   | Email importante recebido |
+| `FINANCE_ENTRY_OVERDUE`  | Finance | Entrada vencida           |
+| `STOCK_PO_CREATED`       | Stock   | Pedido de compra criado   |
+| `SALES_ORDER_CREATED`    | Sales   | Pedido de venda criado    |
+| `HR_ABSENCE_APPROVED`    | HR      | Ausência aprovada         |
 
 ### Subscriber
 
 ```typescript
 // domain-event-subscribers.ts
-DomainEvents.subscribe('FINANCE_ENTRY_OVERDUE', async (event) => {
-  const rules = await taskAutomationRulesRepo.findByEvent(event.tenantId, 'FINANCE_ENTRY_OVERDUE');
+DomainEvents.subscribe('FINANCE_ENTRY_OVERDUE', async event => {
+  const rules = await taskAutomationRulesRepo.findByEvent(
+    event.tenantId,
+    'FINANCE_ENTRY_OVERDUE'
+  );
   for (const rule of rules) {
     if (matchesConditions(rule.conditions, event.data)) {
       await createCardUseCase.execute({
@@ -259,6 +267,7 @@ DomainEvents.subscribe('FINANCE_ENTRY_OVERDUE', async (event) => {
 ### UI de configuração
 
 Tab "Automações" no Board Settings (StepWizard):
+
 - Step 1: Selecionar evento trigger
 - Step 2: Configurar condições (filtros)
 - Step 3: Definir card template (título, prioridade, coluna, responsável)
@@ -288,6 +297,7 @@ interface TaskLinkBadgeProps {
 Badge compacto mostrando ícone de task + status. Clicável — abre o card no modal.
 
 Usado nos módulos de origem:
+
 ```tsx
 <TaskLinkBadge sourceType="EMAIL" sourceId={message.id} />
 ```
@@ -297,6 +307,7 @@ Usado nos módulos de origem:
 ## 8. Permissões
 
 Usa permissões existentes:
+
 - `tools.tasks.cards.register` — criar card (gating do botão "Criar Tarefa")
 - `tools.tasks.boards.access` — listar boards (select no quick modal)
 
@@ -308,19 +319,19 @@ Não requer permissões novas.
 
 ### Fase 1 (implementar agora)
 
-| Arquivo | Tipo | Descrição |
-|---------|------|-----------|
-| `OpenSea-APP/src/hooks/tasks/use-create-task-from-entity.ts` | Hook | Hook reutilizável |
-| `OpenSea-APP/src/components/tasks/cards/create-task-quick-modal.tsx` | Componente | Modal rápido de criação |
-| `OpenSea-API/src/http/schemas/tasks/card.schema.ts` | Schema | Adicionar systemSource ao create |
-| `OpenSea-APP/src/types/tasks/card.types.ts` | Tipos | Adicionar systemSource ao CreateCardRequest |
-| Módulos diversos | Modificação | Adicionar "Criar Tarefa" nos context menus/toolbars |
+| Arquivo                                                              | Tipo        | Descrição                                           |
+| -------------------------------------------------------------------- | ----------- | --------------------------------------------------- |
+| `OpenSea-APP/src/hooks/tasks/use-create-task-from-entity.ts`         | Hook        | Hook reutilizável                                   |
+| `OpenSea-APP/src/components/tasks/cards/create-task-quick-modal.tsx` | Componente  | Modal rápido de criação                             |
+| `OpenSea-API/src/http/schemas/tasks/card.schema.ts`                  | Schema      | Adicionar systemSource ao create                    |
+| `OpenSea-APP/src/types/tasks/card.types.ts`                          | Tipos       | Adicionar systemSource ao CreateCardRequest         |
+| Módulos diversos                                                     | Modificação | Adicionar "Criar Tarefa" nos context menus/toolbars |
 
 ### Fase 2 (projetado, implementar depois)
 
-| Arquivo | Tipo | Descrição |
-|---------|------|-----------|
-| `OpenSea-API/prisma/schema.prisma` | Schema | Model TaskAutomationRule |
-| `OpenSea-API/src/lib/domain-event-subscribers.ts` | Subscriber | Handler para criar tasks automaticamente |
-| `OpenSea-APP/src/components/tasks/shared/task-link-badge.tsx` | Componente | Badge reverso nos módulos de origem |
-| `OpenSea-API/src/http/controllers/tasks/cards/v1-get-card-by-source.controller.ts` | Controller | Endpoint by-source |
+| Arquivo                                                                            | Tipo       | Descrição                                |
+| ---------------------------------------------------------------------------------- | ---------- | ---------------------------------------- |
+| `OpenSea-API/prisma/schema.prisma`                                                 | Schema     | Model TaskAutomationRule                 |
+| `OpenSea-API/src/lib/domain-event-subscribers.ts`                                  | Subscriber | Handler para criar tasks automaticamente |
+| `OpenSea-APP/src/components/tasks/shared/task-link-badge.tsx`                      | Componente | Badge reverso nos módulos de origem      |
+| `OpenSea-API/src/http/controllers/tasks/cards/v1-get-card-by-source.controller.ts` | Controller | Endpoint by-source                       |

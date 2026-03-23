@@ -159,22 +159,22 @@
  * When the main app is in .dark but Central is in light mode (or vice-versa),
  * the dropdown colors break. Override with CSS variables from the Central theme.
  */
-:root[data-central-theme] [data-slot="select-content"] {
+:root[data-central-theme] [data-slot='select-content'] {
   background-color: var(--modal-bg) !important;
   color: var(--modal-text) !important;
   border-color: var(--modal-border) !important;
 }
 
 /* TabsTrigger: override dark: variant text color that conflicts with Central theme */
-:root[data-central-theme] [data-slot="tabs-trigger"] {
+:root[data-central-theme] [data-slot='tabs-trigger'] {
   color: rgb(var(--color-foreground-muted)) !important;
 }
-:root[data-central-theme] [data-slot="tabs-trigger"][data-state="active"] {
+:root[data-central-theme] [data-slot='tabs-trigger'][data-state='active'] {
   color: rgb(var(--color-foreground)) !important;
 }
 
 /* TabsContent: force flex-col layout (default flex makes it flex-row) */
-:root[data-central-theme] [data-slot="tabs-content"][data-state="active"] {
+:root[data-central-theme] [data-slot='tabs-content'][data-state='active'] {
   flex-direction: column;
 }
 

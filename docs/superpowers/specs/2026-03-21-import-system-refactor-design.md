@@ -68,6 +68,7 @@ Suppliers uses `stock` module for routing but `finance.suppliers.import` for per
 All of these directories and their contents:
 
 **Old routes without module prefix:**
+
 - `/import/products/` (page.tsx, config/page.tsx, sheets/page.tsx)
 - `/import/variants/` (page.tsx, config/page.tsx, sheets/page.tsx)
 - `/import/categories/` (page.tsx, config/page.tsx, sheets/page.tsx)
@@ -76,9 +77,11 @@ All of these directories and their contents:
 - `/import/templates/` (page.tsx, sheets/page.tsx)
 
 **Catalog wizard:**
+
 - `/import/catalog/` — entire directory (page.tsx + 7 components + 4 hooks = 12 files)
 
 **Intermediate method selector pages (replaced by direct sheets):**
+
 - `/import/stock/products/page.tsx` (replaced by sheets content)
 - `/import/stock/variants/page.tsx`
 - `/import/stock/items/page.tsx`
@@ -86,6 +89,7 @@ All of these directories and their contents:
 - `/import/stock/product-categories/page.tsx`
 
 **Config pages (configuration is now inline in sheets):**
+
 - `/import/stock/products/config/page.tsx`
 - `/import/stock/variants/config/page.tsx`
 - `/import/stock/items/config/page.tsx`
@@ -96,13 +100,16 @@ All of these directories and their contents:
 - `/import/hr/positions/config/page.tsx`
 
 **Special routes:**
+
 - `/import/stock/variants/by-product/[productId]/page.tsx`
 - `/import/stock/products/home/page.tsx`
 
 **HR companies route (moved to admin):**
+
 - `/import/hr/companies/page.tsx`
 
 **Shared components to remove:**
+
 - `_shared/components/entity-import-page.tsx` (method selector wrapper)
 - `_shared/components/entity-config-page.tsx` (standalone config page)
 - `_shared/components/import-method-selector.tsx` (method cards)
@@ -110,6 +117,7 @@ All of these directories and their contents:
 - `_shared/hooks/use-import-config.ts` (used only by entity-config-page and entity-sheets-page)
 
 **Barrel file update:**
+
 - `_shared/components/index.ts` — remove exports for deleted components, keep: `ImportSpreadsheet`, `FieldConfigList`, `ImportProgressDialog`, `CSVUpload`
 
 ---
@@ -132,12 +140,12 @@ Each card must include all required fields from `PageDashboardSections`:
 interface DashboardCard {
   id: string;
   title: string;
-  description: string;   // REQUIRED — short entity description
+  description: string; // REQUIRED — short entity description
   icon: React.ElementType;
   href: string;
-  gradient: string;       // REQUIRED — e.g., 'from-blue-500 to-blue-600'
-  hoverBg: string;        // REQUIRED — e.g., 'hover:bg-blue-50 dark:hover:bg-blue-500/10'
-  permission?: string;    // import permission code
+  gradient: string; // REQUIRED — e.g., 'from-blue-500 to-blue-600'
+  hoverBg: string; // REQUIRED — e.g., 'hover:bg-blue-50 dark:hover:bg-blue-500/10'
+  permission?: string; // import permission code
 }
 ```
 
@@ -301,10 +309,12 @@ The existing `/import/stock/products/sheets/page.tsx` and `/import/stock/variant
 ### File Relocation
 
 For entities that already have a `/sheets/page.tsx`:
+
 - Move content from `/sheets/page.tsx` → `/page.tsx` (one level up)
 - Delete the `/sheets/` subdirectory
 
 For entities that only had `EntitySheetsPage` wrapper pages:
+
 - Create new standalone sheets pages based on the products/variants pattern
 
 ### Standard Features (all entities)
@@ -322,12 +332,14 @@ For entities that only had `EntitySheetsPage` wrapper pages:
 ### Shared Infrastructure (kept)
 
 Components:
+
 - `_shared/components/import-spreadsheet.tsx`
 - `_shared/components/import-progress-dialog.tsx`
 - `_shared/components/csv-upload.tsx`
 - `_shared/components/field-config-list.tsx`
 
 Hooks:
+
 - `_shared/hooks/use-import-process.ts`
 - `_shared/hooks/use-import-spreadsheet.ts`
 - `_shared/hooks/use-reference-data.ts`
@@ -335,16 +347,19 @@ Hooks:
 - `_shared/hooks/use-code-generator.ts`
 
 Config:
+
 - `_shared/config/entity-definitions.ts` (updated)
 - `_shared/config/code-patterns.ts`
 
 Utils:
+
 - `_shared/utils/excel-parser.ts`
 - `_shared/utils/excel-parser.worker.ts`
 - `_shared/utils/excel-utils.ts`
 - `_shared/utils/code-generator.ts`
 
 Types:
+
 - `_shared/types/index.ts` (updated with AI types)
 
 ---
@@ -424,22 +439,23 @@ interface AIImportProcessResponse {
 
 ### Permission Audit — Current State vs Required
 
-| Permission Code | Frontend Constant | Status | Action |
-|---|---|---|---|
-| `stock.products.import` | `STOCK_PERMISSIONS.PRODUCTS.IMPORT` | EXISTS | No change |
-| `stock.variants.import` | `STOCK_PERMISSIONS.VARIANTS.IMPORT` | EXISTS | No change |
-| `stock.items.import` | `STOCK_PERMISSIONS.ITEMS.IMPORT` | **MISSING** | Add `'import'` to `ITEMS` perm() |
-| `finance.suppliers.import` | `FINANCE_PERMISSIONS.SUPPLIERS.IMPORT` | EXISTS | No change |
-| `stock.categories.import` | `STOCK_PERMISSIONS.CATEGORIES.IMPORT` | EXISTS | No change |
-| `stock.manufacturers.import` | `STOCK_PERMISSIONS.MANUFACTURERS.IMPORT` | EXISTS | No change |
-| `stock.templates.import` | `STOCK_PERMISSIONS.TEMPLATES.IMPORT` | **MISSING** | Add `'import'` to `TEMPLATES` perm() |
-| `hr.employees.import` | `HR_PERMISSIONS.EMPLOYEES.IMPORT` | EXISTS | No change |
-| `hr.departments.import` | `HR_PERMISSIONS.DEPARTMENTS.IMPORT` | **MISSING** | Add `'import'` to `DEPARTMENTS` perm() |
-| `hr.positions.import` | `HR_PERMISSIONS.POSITIONS.IMPORT` | **MISSING** | Add `'import'` to `POSITIONS` perm() |
-| `admin.companies.import` | `ADMIN_PERMISSIONS.COMPANIES.IMPORT` | **MISSING** | Add `'import'` to `COMPANIES` perm() |
-| `admin.users.import` | `ADMIN_PERMISSIONS.USERS.IMPORT` | **MISSING** | Add `'import'` to `USERS` perm() |
+| Permission Code              | Frontend Constant                        | Status      | Action                                 |
+| ---------------------------- | ---------------------------------------- | ----------- | -------------------------------------- |
+| `stock.products.import`      | `STOCK_PERMISSIONS.PRODUCTS.IMPORT`      | EXISTS      | No change                              |
+| `stock.variants.import`      | `STOCK_PERMISSIONS.VARIANTS.IMPORT`      | EXISTS      | No change                              |
+| `stock.items.import`         | `STOCK_PERMISSIONS.ITEMS.IMPORT`         | **MISSING** | Add `'import'` to `ITEMS` perm()       |
+| `finance.suppliers.import`   | `FINANCE_PERMISSIONS.SUPPLIERS.IMPORT`   | EXISTS      | No change                              |
+| `stock.categories.import`    | `STOCK_PERMISSIONS.CATEGORIES.IMPORT`    | EXISTS      | No change                              |
+| `stock.manufacturers.import` | `STOCK_PERMISSIONS.MANUFACTURERS.IMPORT` | EXISTS      | No change                              |
+| `stock.templates.import`     | `STOCK_PERMISSIONS.TEMPLATES.IMPORT`     | **MISSING** | Add `'import'` to `TEMPLATES` perm()   |
+| `hr.employees.import`        | `HR_PERMISSIONS.EMPLOYEES.IMPORT`        | EXISTS      | No change                              |
+| `hr.departments.import`      | `HR_PERMISSIONS.DEPARTMENTS.IMPORT`      | **MISSING** | Add `'import'` to `DEPARTMENTS` perm() |
+| `hr.positions.import`        | `HR_PERMISSIONS.POSITIONS.IMPORT`        | **MISSING** | Add `'import'` to `POSITIONS` perm()   |
+| `admin.companies.import`     | `ADMIN_PERMISSIONS.COMPANIES.IMPORT`     | **MISSING** | Add `'import'` to `COMPANIES` perm()   |
+| `admin.users.import`         | `ADMIN_PERMISSIONS.USERS.IMPORT`         | **MISSING** | Add `'import'` to `USERS` perm()       |
 
 **Important module/permission mapping:**
+
 - Suppliers route is `/import/stock/suppliers` but permission is `finance.suppliers.import` (suppliers belong to finance module in RBAC)
 - Companies route is `/import/admin/companies` and permission is `admin.companies.import` (NOT hr)
 
@@ -519,6 +535,7 @@ Button only renders if user has the entity's `.import` permission.
 ### Delete (~45 files)
 
 **Old route directories (entire contents):**
+
 - `/import/products/` (3 files)
 - `/import/variants/` (3 files)
 - `/import/categories/` (3 files)
@@ -528,11 +545,13 @@ Button only renders if user has the entity's `.import` permission.
 - `/import/catalog/` (12 files: page + 7 components + 4 hooks)
 
 **Special routes:**
+
 - `/import/stock/products/home/page.tsx`
 - `/import/stock/variants/by-product/[productId]/page.tsx`
 - `/import/hr/companies/page.tsx` (moved to admin)
 
 **Sheets subdirectories (after content moves up to page.tsx):**
+
 - `/import/stock/products/sheets/` (content moved to `/import/stock/products/page.tsx`)
 - `/import/stock/variants/sheets/` (content moved to `/import/stock/variants/page.tsx`)
 - `/import/stock/items/sheets/` (if exists)
@@ -543,6 +562,7 @@ Button only renders if user has the entity's `.import` permission.
 - `/import/hr/positions/sheets/` (if exists)
 
 **Config directories:**
+
 - `/import/stock/products/config/page.tsx`
 - `/import/stock/variants/config/page.tsx`
 - `/import/stock/items/config/page.tsx`
@@ -553,6 +573,7 @@ Button only renders if user has the entity's `.import` permission.
 - `/import/hr/positions/config/page.tsx`
 
 **Shared components/hooks:**
+
 - `_shared/components/entity-import-page.tsx`
 - `_shared/components/entity-config-page.tsx`
 - `_shared/components/import-method-selector.tsx`

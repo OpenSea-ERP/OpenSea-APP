@@ -15,40 +15,44 @@
 ## File Map
 
 ### New Files (Create)
-| File | Responsibility |
-|------|---------------|
-| `src/components/ai/ai-hero-banner.tsx` | Custom hero banner with onClick view switching |
-| `src/components/ai/chat-view.tsx` | Chat view orchestrator (messages + input) |
-| `src/components/ai/empty-state.tsx` | Welcome screen with suggestion chips |
-| `src/components/ai/message-bubble.tsx` | Single message renderer (user or assistant) |
-| `src/components/ai/markdown-renderer.tsx` | Markdown → React with themed components |
-| `src/components/ai/chat-input.tsx` | Auto-expanding textarea input area |
-| `src/components/ai/conversations-drawer.tsx` | Sheet with conversation list + search |
-| `src/components/ai/insights-view.tsx` | Refactored insights (from standalone page) |
-| `src/components/ai/favorites-view.tsx` | Refactored favorites (from standalone page) |
-| `src/components/ai/actions-view.tsx` | Refactored actions (from standalone page) |
-| `src/components/ai/settings-view.tsx` | Refactored settings (from standalone page) |
-| `src/components/ai/index.ts` | Barrel export |
+
+| File                                         | Responsibility                                 |
+| -------------------------------------------- | ---------------------------------------------- |
+| `src/components/ai/ai-hero-banner.tsx`       | Custom hero banner with onClick view switching |
+| `src/components/ai/chat-view.tsx`            | Chat view orchestrator (messages + input)      |
+| `src/components/ai/empty-state.tsx`          | Welcome screen with suggestion chips           |
+| `src/components/ai/message-bubble.tsx`       | Single message renderer (user or assistant)    |
+| `src/components/ai/markdown-renderer.tsx`    | Markdown → React with themed components        |
+| `src/components/ai/chat-input.tsx`           | Auto-expanding textarea input area             |
+| `src/components/ai/conversations-drawer.tsx` | Sheet with conversation list + search          |
+| `src/components/ai/insights-view.tsx`        | Refactored insights (from standalone page)     |
+| `src/components/ai/favorites-view.tsx`       | Refactored favorites (from standalone page)    |
+| `src/components/ai/actions-view.tsx`         | Refactored actions (from standalone page)      |
+| `src/components/ai/settings-view.tsx`        | Refactored settings (from standalone page)     |
+| `src/components/ai/index.ts`                 | Barrel export                                  |
 
 ### Modified Files
-| File | Change |
-|------|--------|
-| `src/app/(dashboard)/(tools)/ai/page.tsx` | Complete rewrite — single page orchestrator |
-| `src/app/(dashboard)/(tools)/ai/loading.tsx` | Update skeleton to match new layout |
+
+| File                                         | Change                                      |
+| -------------------------------------------- | ------------------------------------------- |
+| `src/app/(dashboard)/(tools)/ai/page.tsx`    | Complete rewrite — single page orchestrator |
+| `src/app/(dashboard)/(tools)/ai/loading.tsx` | Update skeleton to match new layout         |
 
 ### Deleted Files (after consolidation)
-| File | Reason |
-|------|--------|
-| `src/app/(dashboard)/(tools)/ai/insights/page.tsx` | Moved to component |
+
+| File                                                | Reason             |
+| --------------------------------------------------- | ------------------ |
+| `src/app/(dashboard)/(tools)/ai/insights/page.tsx`  | Moved to component |
 | `src/app/(dashboard)/(tools)/ai/favorites/page.tsx` | Moved to component |
-| `src/app/(dashboard)/(tools)/ai/actions/page.tsx` | Moved to component |
-| `src/app/(dashboard)/(tools)/ai/settings/page.tsx` | Moved to component |
+| `src/app/(dashboard)/(tools)/ai/actions/page.tsx`   | Moved to component |
+| `src/app/(dashboard)/(tools)/ai/settings/page.tsx`  | Moved to component |
 
 ---
 
 ## Task 1: Install Dependencies
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Install markdown rendering packages**
@@ -81,6 +85,7 @@ git commit -m "chore: add react-markdown, remark-gfm, react-syntax-highlighter f
 ## Task 2: Markdown Renderer Component
 
 **Files:**
+
 - Create: `src/components/ai/markdown-renderer.tsx`
 
 This is the foundation — all other components depend on it for rich content.
@@ -94,7 +99,10 @@ This is the foundation — all other components depend on it for rich content.
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import {
+  oneDark,
+  oneLight,
+} from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
@@ -119,12 +127,19 @@ function CopyButton({ text }: { text: string }) {
       onClick={handleCopy}
       className="absolute top-2 right-2 p-1.5 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
     >
-      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? (
+        <Check className="h-3.5 w-3.5" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
     </button>
   );
 }
 
-export function AiMarkdownRenderer({ content, className }: AiMarkdownRendererProps) {
+export function AiMarkdownRenderer({
+  content,
+  className,
+}: AiMarkdownRendererProps) {
   const { resolvedTheme } = useTheme();
   const syntaxTheme = resolvedTheme === 'dark' ? oneDark : oneLight;
 
@@ -222,7 +237,9 @@ export function AiMarkdownRenderer({ content, className }: AiMarkdownRendererPro
           return <ul className="list-disc pl-5 my-2 space-y-1">{children}</ul>;
         },
         ol({ children }) {
-          return <ol className="list-decimal pl-5 my-2 space-y-1">{children}</ol>;
+          return (
+            <ol className="list-decimal pl-5 my-2 space-y-1">{children}</ol>
+          );
         },
 
         // Paragraphs
@@ -232,7 +249,11 @@ export function AiMarkdownRenderer({ content, className }: AiMarkdownRendererPro
 
         // Strong
         strong({ children }) {
-          return <strong className="font-semibold text-foreground">{children}</strong>;
+          return (
+            <strong className="font-semibold text-foreground">
+              {children}
+            </strong>
+          );
         },
       }}
     >
@@ -264,6 +285,7 @@ git commit -m "feat(ai): add markdown renderer with syntax highlighting and them
 ## Task 3: Message Bubble Component
 
 **Files:**
+
 - Create: `src/components/ai/message-bubble.tsx`
 
 - [ ] **Step 1: Create the message bubble**
@@ -293,18 +315,14 @@ export function AiMessageBubble({
 }: AiMessageBubbleProps) {
   const isUser = message.role === 'USER';
   const isLoading = message.contentType === 'LOADING';
-  const isToolCall = message.role === 'TOOL_CALL' || message.role === 'TOOL_RESULT';
+  const isToolCall =
+    message.role === 'TOOL_CALL' || message.role === 'TOOL_RESULT';
 
   // Hide system/tool messages from display
   if (message.role === 'SYSTEM' || isToolCall) return null;
 
   return (
-    <div
-      className={cn(
-        'flex gap-3',
-        isUser ? 'justify-end' : 'justify-start'
-      )}
-    >
+    <div className={cn('flex gap-3', isUser ? 'justify-end' : 'justify-start')}>
       {/* Assistant avatar */}
       {!isUser && (
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex-shrink-0 flex items-center justify-center">
@@ -425,6 +443,7 @@ git commit -m "feat(ai): add message bubble component with user/assistant varian
 ## Task 4: Empty State + Chat Input Components
 
 **Files:**
+
 - Create: `src/components/ai/empty-state.tsx`
 - Create: `src/components/ai/chat-input.tsx`
 
@@ -586,6 +605,7 @@ git commit -m "feat(ai): add empty state with suggestion chips and auto-expandin
 ## Task 5: Chat View Component
 
 **Files:**
+
 - Create: `src/components/ai/chat-view.tsx`
 
 This orchestrates empty state, messages, and input.
@@ -696,7 +716,11 @@ export function AiChatView({
         createdAt: new Date().toISOString(),
       };
 
-      setLocalMessages(prev => [...prev, optimisticUserMsg, optimisticLoadingMsg]);
+      setLocalMessages(prev => [
+        ...prev,
+        optimisticUserMsg,
+        optimisticLoadingMsg,
+      ]);
 
       sendMessage.mutate({
         conversationId: selectedConversationId ?? undefined,
@@ -768,6 +792,7 @@ git commit -m "feat(ai): add chat view orchestrator with optimistic messages and
 ## Task 6: Hero Banner + Conversations Drawer
 
 **Files:**
+
 - Create: `src/components/ai/ai-hero-banner.tsx`
 - Create: `src/components/ai/conversations-drawer.tsx`
 
@@ -804,11 +829,36 @@ const VIEW_BUTTONS: {
   icon: React.ElementType;
   gradient: string;
 }[] = [
-  { id: 'chat', label: 'Chat', icon: MessageSquare, gradient: 'from-violet-500 to-violet-600' },
-  { id: 'insights', label: 'Insights', icon: Lightbulb, gradient: 'from-teal-500 to-teal-600' },
-  { id: 'favorites', label: 'Favoritos', icon: Star, gradient: 'from-cyan-500 to-cyan-600' },
-  { id: 'actions', label: 'Ações', icon: Activity, gradient: 'from-emerald-500 to-emerald-600' },
-  { id: 'settings', label: 'Configurações', icon: Settings, gradient: 'from-slate-500 to-slate-600' },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessageSquare,
+    gradient: 'from-violet-500 to-violet-600',
+  },
+  {
+    id: 'insights',
+    label: 'Insights',
+    icon: Lightbulb,
+    gradient: 'from-teal-500 to-teal-600',
+  },
+  {
+    id: 'favorites',
+    label: 'Favoritos',
+    icon: Star,
+    gradient: 'from-cyan-500 to-cyan-600',
+  },
+  {
+    id: 'actions',
+    label: 'Ações',
+    icon: Activity,
+    gradient: 'from-emerald-500 to-emerald-600',
+  },
+  {
+    id: 'settings',
+    label: 'Configurações',
+    icon: Settings,
+    gradient: 'from-slate-500 to-slate-600',
+  },
 ];
 
 export function AiHeroBanner({
@@ -835,7 +885,8 @@ export function AiHeroBanner({
 
         {/* Description */}
         <p className="text-lg text-gray-600 dark:text-white/60 mb-6">
-          Assistente inteligente com IA para análise de dados e automação do sistema.
+          Assistente inteligente com IA para análise de dados e automação do
+          sistema.
         </p>
 
         {/* Navigation buttons */}
@@ -937,8 +988,7 @@ export function AiConversationsDrawer({
     if (!search.trim()) return conversations;
     const q = search.toLowerCase();
     return conversations.filter(
-      (c: AiConversation) =>
-        c.title?.toLowerCase().includes(q) ?? false
+      (c: AiConversation) => c.title?.toLowerCase().includes(q) ?? false
     );
   }, [conversations, search]);
 
@@ -959,7 +1009,8 @@ export function AiConversationsDrawer({
           <div>
             <SheetTitle>Conversas</SheetTitle>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {conversations.length} conversa{conversations.length !== 1 ? 's' : ''}
+              {conversations.length} conversa
+              {conversations.length !== 1 ? 's' : ''}
             </p>
           </div>
           <Button size="sm" onClick={handleNew} className="gap-1.5">
@@ -987,7 +1038,9 @@ export function AiConversationsDrawer({
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">
-              {search ? 'Nenhuma conversa encontrada.' : 'Nenhuma conversa ainda.'}
+              {search
+                ? 'Nenhuma conversa encontrada.'
+                : 'Nenhuma conversa ainda.'}
             </p>
           ) : (
             filtered.map((conv: AiConversation) => {
@@ -1007,9 +1060,7 @@ export function AiConversationsDrawer({
                     <span
                       className={cn(
                         'text-sm font-medium truncate',
-                        isActive
-                          ? 'text-foreground'
-                          : 'text-muted-foreground'
+                        isActive ? 'text-foreground' : 'text-muted-foreground'
                       )}
                     >
                       {conv.isPinned && (
@@ -1025,7 +1076,8 @@ export function AiConversationsDrawer({
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground/70">
                     <span>
-                      {conv.messageCount} msg{conv.messageCount !== 1 ? 's' : ''}
+                      {conv.messageCount} msg
+                      {conv.messageCount !== 1 ? 's' : ''}
                     </span>
                     {conv.lastMessageAt && (
                       <span>
@@ -1078,6 +1130,7 @@ git commit -m "feat(ai): add hero banner with view switching and conversations d
 ## Task 7: Refactor Sub-Views into Components
 
 **Files:**
+
 - Create: `src/components/ai/insights-view.tsx`
 - Create: `src/components/ai/favorites-view.tsx`
 - Create: `src/components/ai/actions-view.tsx`
@@ -1088,6 +1141,7 @@ These are extracted from the existing standalone pages with their layout wrapper
 - [ ] **Step 1: Create insights-view.tsx**
 
 Copy the content of `src/app/(dashboard)/(tools)/ai/insights/page.tsx` into `src/components/ai/insights-view.tsx` with these changes:
+
 - Rename `AiInsightsPage` → `AiInsightsView`
 - Remove the outer `<div className="flex flex-col h-[calc(100vh-4rem)]">` wrapper
 - Remove the `<PageActionBar>` component and its import
@@ -1098,6 +1152,7 @@ Copy the content of `src/app/(dashboard)/(tools)/ai/insights/page.tsx` into `src
 - [ ] **Step 2: Create favorites-view.tsx**
 
 Same refactor for `src/app/(dashboard)/(tools)/ai/favorites/page.tsx`:
+
 - Rename → `AiFavoritesView`
 - Remove layout wrapper + `PageActionBar`
 - Keep filters, create form, favorites list
@@ -1105,6 +1160,7 @@ Same refactor for `src/app/(dashboard)/(tools)/ai/favorites/page.tsx`:
 - [ ] **Step 3: Create actions-view.tsx**
 
 Same refactor for `src/app/(dashboard)/(tools)/ai/actions/page.tsx`:
+
 - Rename → `AiActionsView`
 - Remove layout wrapper + `PageActionBar`
 - Keep filters + actions list
@@ -1112,6 +1168,7 @@ Same refactor for `src/app/(dashboard)/(tools)/ai/actions/page.tsx`:
 - [ ] **Step 4: Create settings-view.tsx**
 
 Same refactor for `src/app/(dashboard)/(tools)/ai/settings/page.tsx`:
+
 - Rename → `AiSettingsView`
 - Remove layout wrapper + `PageActionBar`
 - Remove the save button from the old `PageActionBar` — move it as a floating/inline button at the top of the settings form
@@ -1149,6 +1206,7 @@ git commit -m "feat(ai): refactor insights, favorites, actions, settings into vi
 ## Task 8: Main Page Orchestrator + Cleanup
 
 **Files:**
+
 - Modify: `src/app/(dashboard)/(tools)/ai/page.tsx` (complete rewrite)
 - Modify: `src/app/(dashboard)/(tools)/ai/loading.tsx`
 - Delete: `src/app/(dashboard)/(tools)/ai/insights/page.tsx`
@@ -1195,10 +1253,7 @@ export default function AiPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
       <PageActionBar
-        breadcrumbItems={[
-          { label: 'Ferramentas' },
-          { label: 'Assistente IA' },
-        ]}
+        breadcrumbItems={[{ label: 'Ferramentas' }, { label: 'Assistente IA' }]}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -1310,6 +1365,7 @@ git commit -m "feat(ai): consolidate AI pages into single-page Atlas experience 
 ## Task 9: Visual Polish + E2E Verification
 
 **Files:**
+
 - Possibly tweak: any component from Tasks 2-8
 
 - [ ] **Step 1: Start dev server and visually verify**
@@ -1320,6 +1376,7 @@ npm run dev
 ```
 
 Open `http://localhost:3000/ai` in the browser. Verify:
+
 1. Hero banner renders with Atlas identity and all navigation buttons
 2. Default view shows empty state with suggestion chips
 3. Clicking a suggestion chip sends a message
@@ -1332,6 +1389,7 @@ Open `http://localhost:3000/ai` in the browser. Verify:
 - [ ] **Step 2: Fix any visual issues found**
 
 Address spacing, colors, overflow, or alignment issues. Common things to watch:
+
 - ScrollArea height not filling available space
 - Hero banner buttons not wrapping properly on small screens
 - Drawer width on mobile
@@ -1349,16 +1407,16 @@ git commit -m "fix(ai): visual polish and adjustments for Atlas UI"
 
 ## Summary
 
-| Task | Description | Est. Files |
-|------|------------|-----------|
-| 1 | Install dependencies | 2 |
-| 2 | Markdown renderer | 1 |
-| 3 | Message bubble | 1 |
-| 4 | Empty state + chat input | 2 |
-| 5 | Chat view orchestrator | 1 |
-| 6 | Hero banner + conversations drawer | 2 |
-| 7 | Refactor sub-views + barrel | 5 |
-| 8 | Main page rewrite + cleanup | 6 |
-| 9 | Visual polish + E2E verification | 0-N |
+| Task | Description                        | Est. Files |
+| ---- | ---------------------------------- | ---------- |
+| 1    | Install dependencies               | 2          |
+| 2    | Markdown renderer                  | 1          |
+| 3    | Message bubble                     | 1          |
+| 4    | Empty state + chat input           | 2          |
+| 5    | Chat view orchestrator             | 1          |
+| 6    | Hero banner + conversations drawer | 2          |
+| 7    | Refactor sub-views + barrel        | 5          |
+| 8    | Main page rewrite + cleanup        | 6          |
+| 9    | Visual polish + E2E verification   | 0-N        |
 
 **Total: 9 tasks, ~20 files, 9 commits**

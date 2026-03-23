@@ -54,25 +54,26 @@ src/app/(dashboard)/(actions)/import/
 
 ## Rotas
 
-| Rota | Entidade | Permissão |
-|------|----------|-----------|
-| `/import` | Dashboard central | — |
-| `/import/stock/products` | Produtos | `stock.products.import` |
-| `/import/stock/variants` | Variantes | `stock.variants.import` |
-| `/import/stock/items` | Itens | `stock.items.import` |
-| `/import/stock/suppliers` | Fornecedores | `finance.suppliers.import` |
-| `/import/stock/product-categories` | Categorias | `stock.categories.import` |
-| `/import/stock/manufacturers` | Fabricantes | `stock.manufacturers.import` |
-| `/import/stock/templates` | Templates | `stock.templates.import` |
-| `/import/hr/employees` | Funcionários | `hr.employees.import` |
-| `/import/hr/departments` | Departamentos | `hr.departments.import` |
-| `/import/hr/positions` | Cargos | `hr.positions.import` |
-| `/import/admin/companies` | Empresas | `admin.companies.import` |
-| `/import/admin/users` | Usuários | `admin.users.import` |
+| Rota                               | Entidade          | Permissão                    |
+| ---------------------------------- | ----------------- | ---------------------------- |
+| `/import`                          | Dashboard central | —                            |
+| `/import/stock/products`           | Produtos          | `stock.products.import`      |
+| `/import/stock/variants`           | Variantes         | `stock.variants.import`      |
+| `/import/stock/items`              | Itens             | `stock.items.import`         |
+| `/import/stock/suppliers`          | Fornecedores      | `finance.suppliers.import`   |
+| `/import/stock/product-categories` | Categorias        | `stock.categories.import`    |
+| `/import/stock/manufacturers`      | Fabricantes       | `stock.manufacturers.import` |
+| `/import/stock/templates`          | Templates         | `stock.templates.import`     |
+| `/import/hr/employees`             | Funcionários      | `hr.employees.import`        |
+| `/import/hr/departments`           | Departamentos     | `hr.departments.import`      |
+| `/import/hr/positions`             | Cargos            | `hr.positions.import`        |
+| `/import/admin/companies`          | Empresas          | `admin.companies.import`     |
+| `/import/admin/users`              | Usuários          | `admin.users.import`         |
 
 ## Dashboard Central (`/import/page.tsx`)
 
 Segue o padrão de dashboard do projeto com:
+
 - `PageActionBar` — breadcrumb: "Importação"
 - `PageHeroBanner` — ícone Upload, título, descrição
 - `PageDashboardSections` — cards agrupados por módulo (Estoque, RH, Administração)
@@ -168,15 +169,15 @@ Card com overflow hidden, decorative blobs, gradient icon, título, badge de val
 
 ### 3. Secondary Bar — Controles
 
-| Controle | Descrição |
-|----------|-----------|
-| Badge row count | `{N} linhas preenchidas` |
-| Keyboard hint | `Pressione Enter em uma célula para ver os valores possíveis.` |
-| File Popover | `Arquivo` — abre popover com "Baixar Template Excel" e "Enviar Arquivo" |
-| Add Row | `+ Linha` — adiciona uma linha vazia |
-| Clear | `Limpar` — limpa toda a planilha |
-| Decimal toggle | Apenas em entities com campos numéricos (items) |
-| Columns popover | Apenas em entities com template (products, variants) |
+| Controle        | Descrição                                                               |
+| --------------- | ----------------------------------------------------------------------- |
+| Badge row count | `{N} linhas preenchidas`                                                |
+| Keyboard hint   | `Pressione Enter em uma célula para ver os valores possíveis.`          |
+| File Popover    | `Arquivo` — abre popover com "Baixar Template Excel" e "Enviar Arquivo" |
+| Add Row         | `+ Linha` — adiciona uma linha vazia                                    |
+| Clear           | `Limpar` — limpa toda a planilha                                        |
+| Decimal toggle  | Apenas em entities com campos numéricos (items)                         |
+| Columns popover | Apenas em entities com template (products, variants)                    |
 
 ### 4. ImportSpreadsheet
 
@@ -190,8 +191,8 @@ Card com overflow hidden, decorative blobs, gradient icon, título, badge de val
     onClearAll={spreadsheet.clearAll}
     validationResult={validationResult}
     entityName={entityDef.labelPlural}
-    showFileUpload={false}         // File ops estão no popover
-    showDownloadTemplate={false}   // Template download está no popover
+    showFileUpload={false} // File ops estão no popover
+    showDownloadTemplate={false} // Template download está no popover
   />
 </Card>
 ```
@@ -233,6 +234,7 @@ Categorias, departamentos, cargos, templates, usuários, fornecedores — seguem
 ### Entidades com Template (Products, Variants)
 
 Produtos e variantes precisam de seleção de template porque os atributos variam por template. Incluem:
+
 - Template selector no hero banner
 - Column configuration com DnD (localStorage)
 - Attribute fields dinâmicos do template
@@ -245,6 +247,7 @@ Fabricantes e empresas usam `useCNPJImportProcess` ao invés de `useImportProces
 ### Entidade Items
 
 Itens de estoque tem lógica especial:
+
 - Seleção de variante (single vs all)
 - Decimal separator toggle
 - Reference data: variants com detalhes, bins (localizações)
@@ -260,6 +263,7 @@ Cada página de importação pode ser acessada de duas formas:
 ## Permissões RBAC
 
 Cada entidade tem uma permissão `.import` dedicada:
+
 - Dashboard: cards filtrados por `hasPermission(entity.permission)`
 - Listing pages: botão "Importar" só aparece se tem permissão
 - Backend: bulk controllers usam `verifyPermission(ENTITY.IMPORT)`
@@ -278,6 +282,7 @@ Cada entidade tem uma permissão `.import` dedicada:
 ## AI Integration (Futuro)
 
 O hook `useImportAI` expõe a interface `ImportAIBridge`:
+
 - `fillFromAI(rows)` — preencher planilha com dados processados pela IA
 - `exportForAI()` — exportar estado atual para processamento
 - `applySuggestedMapping(mapping)` — aplicar mapeamento de colunas sugerido
@@ -287,17 +292,17 @@ Tipos em `_shared/types/index.ts`: `ImportAIBridge`, `ImportRow`, `ColumnMapping
 
 ## Cores por Entidade
 
-| Entidade | Gradient | Blob Primary |
-|----------|----------|-------------|
-| Produtos | `from-blue-500 to-indigo-600` | `blue-500` |
-| Variantes | `from-purple-500 to-violet-600` | `purple-500` |
-| Itens | `from-green-500 to-emerald-600` | `green-500` |
-| Fornecedores | `from-orange-500 to-amber-600` | `orange-500` |
-| Categorias | `from-yellow-500 to-amber-600` | `yellow-500` |
-| Fabricantes | `from-indigo-500 to-violet-600` | `indigo-500` |
-| Templates | `from-violet-500 to-purple-600` | `violet-500` |
-| Funcionários | `from-teal-500 to-emerald-600` | `teal-500` |
-| Departamentos | `from-cyan-500 to-blue-600` | `cyan-500` |
-| Cargos | `from-amber-500 to-orange-600` | `amber-500` |
-| Empresas | `from-emerald-500 to-teal-600` | `emerald-500` |
-| Usuários | `from-pink-500 to-rose-600` | `pink-500` |
+| Entidade      | Gradient                        | Blob Primary  |
+| ------------- | ------------------------------- | ------------- |
+| Produtos      | `from-blue-500 to-indigo-600`   | `blue-500`    |
+| Variantes     | `from-purple-500 to-violet-600` | `purple-500`  |
+| Itens         | `from-green-500 to-emerald-600` | `green-500`   |
+| Fornecedores  | `from-orange-500 to-amber-600`  | `orange-500`  |
+| Categorias    | `from-yellow-500 to-amber-600`  | `yellow-500`  |
+| Fabricantes   | `from-indigo-500 to-violet-600` | `indigo-500`  |
+| Templates     | `from-violet-500 to-purple-600` | `violet-500`  |
+| Funcionários  | `from-teal-500 to-emerald-600`  | `teal-500`    |
+| Departamentos | `from-cyan-500 to-blue-600`     | `cyan-500`    |
+| Cargos        | `from-amber-500 to-orange-600`  | `amber-500`   |
+| Empresas      | `from-emerald-500 to-teal-600`  | `emerald-500` |
+| Usuários      | `from-pink-500 to-rose-600`     | `pink-500`    |
