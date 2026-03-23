@@ -637,6 +637,7 @@ export function useImportSpreadsheet(
     const currentData = dataRef.current;
     const currentHeaders = headersRef.current;
     const currentDecimalSeparator = decimalSeparatorRef.current;
+    const currentReferenceData = referenceDataRef.current;
     const dataRows = currentData.slice(1); // Excluir header
     const result: ImportRowData[] = [];
 
@@ -688,6 +689,24 @@ export function useImportSpreadsheet(
           case 'date':
             value = new Date(value as string).toISOString();
             break;
+          case 'reference': {
+            // Resolve name → ID (case-insensitive)
+            const refOptions = currentReferenceData?.[field.key];
+            if (refOptions && refOptions.length > 0) {
+              const strValue = (value as string).toLowerCase();
+              // If it's already a valid ID, keep it
+              const byId = refOptions.find(o => o.value === value);
+              if (!byId) {
+                const byLabel = refOptions.find(
+                  o => o.label.toLowerCase() === strValue
+                );
+                if (byLabel) {
+                  value = byLabel.value;
+                }
+              }
+            }
+            break;
+          }
         }
 
         // Handle nested keys (e.g., "profile.name")

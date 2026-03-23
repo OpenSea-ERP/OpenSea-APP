@@ -65,6 +65,7 @@ import { toast } from 'sonner';
 
 import { ImportProgressDialog } from '../../_shared/components/import-progress-dialog';
 import { ImportSpreadsheet } from '../../_shared/components/import-spreadsheet';
+import { ValidationErrorsDialog } from '../../_shared/components/validation-errors-dialog';
 import {
   ENTITY_DEFINITIONS,
   getBasePath,
@@ -330,6 +331,7 @@ export default function ProductsSheetsPage() {
   const [validationResult, setValidationResult] =
     useState<ValidationResult | null>(null);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [showErrorsDialog, setShowErrorsDialog] = useState(false);
   const [decimalSeparator, setDecimalSeparator] =
     useState<DecimalSeparator>('comma');
   const [columnsConfig, setColumnsConfig] = useState<ColumnConfig[]>([]);
@@ -849,7 +851,11 @@ export default function ProductsSheetsPage() {
                         Dados válidos
                       </Badge>
                     ) : (
-                      <Badge variant="destructive" className="gap-1">
+                      <Badge
+                        variant="destructive"
+                        className="gap-1 cursor-pointer hover:bg-rose-700"
+                        onClick={() => setShowErrorsDialog(true)}
+                      >
                         <AlertTriangle className="w-3 h-3" />
                         {validationResult.errors.length} erros
                       </Badge>
@@ -1080,6 +1086,14 @@ export default function ProductsSheetsPage() {
         onCancel={importProcess.cancelImport}
         onClose={handleProgressClose}
         entityLabel={entityDef.labelPlural}
+      />
+
+      {/* Validation Errors Dialog */}
+      <ValidationErrorsDialog
+        isOpen={showErrorsDialog}
+        onClose={() => setShowErrorsDialog(false)}
+        validationResult={validationResult}
+        headers={enabledFields}
       />
     </div>
   );

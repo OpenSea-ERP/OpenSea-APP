@@ -8,9 +8,28 @@ import type {
 } from '@/types/stock';
 
 export const categoriesService = {
-  // GET /v1/categories
+  // GET /v1/categories (all pages)
   async listCategories(): Promise<CategoriesResponse> {
-    return apiClient.get<CategoriesResponse>(API_ENDPOINTS.CATEGORIES.LIST);
+    const allCategories: CategoriesResponse['categories'] = [];
+    let page = 1;
+    const limit = 100;
+
+    while (true) {
+      const response = await apiClient.get<Record<string, unknown>>(
+        `${API_ENDPOINTS.CATEGORIES.LIST}?page=${page}&limit=${limit}`
+      );
+
+      const items = response.categories as CategoriesResponse['categories'] | undefined;
+      if (items && items.length > 0) {
+        allCategories.push(...items);
+      }
+
+      const meta = response.meta as { pages: number } | undefined;
+      if (!meta || page >= meta.pages) break;
+      page++;
+    }
+
+    return { categories: allCategories } as CategoriesResponse;
   },
 
   // GET /v1/categories/:id
