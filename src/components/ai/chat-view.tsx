@@ -150,11 +150,11 @@ export function AiChatView({
 
       <div className="shrink-0">
         <AiChatInput
-        value={inputValue}
-        onChange={setInputValue}
-        onSend={() => handleSend()}
-        isPending={sendMessage.isPending}
-      />
+          value={inputValue}
+          onChange={setInputValue}
+          onSend={() => handleSend()}
+          isPending={sendMessage.isPending}
+        />
       </div>
     </div>
   );

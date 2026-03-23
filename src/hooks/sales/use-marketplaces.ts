@@ -54,7 +54,7 @@ export function useMarketplaceConnectionsInfinite() {
       });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.page < lastPage.totalPages) {
         return lastPage.page + 1;
       }
@@ -131,7 +131,7 @@ export function useMarketplaceListingsInfinite(connectionId: string) {
       });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.page < lastPage.totalPages) {
         return lastPage.page + 1;
       }
@@ -174,7 +174,7 @@ export function useDeactivateMarketplaceListing() {
 // === Orders ===
 export function useMarketplaceOrdersInfinite(
   connectionId?: string,
-  status?: MarketplaceOrderStatus,
+  status?: MarketplaceOrderStatus
 ) {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.ORDERS_INFINITE(connectionId, status),
@@ -187,7 +187,7 @@ export function useMarketplaceOrdersInfinite(
       });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.page < lastPage.totalPages) {
         return lastPage.page + 1;
       }
@@ -220,7 +220,7 @@ export function useMarketplacePaymentsInfinite(connectionId?: string) {
       });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.page < lastPage.totalPages) {
         return lastPage.page + 1;
       }

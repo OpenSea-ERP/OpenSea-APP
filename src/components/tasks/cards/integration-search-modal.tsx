@@ -148,9 +148,9 @@ function EmailSearchContent({
       setAccountsLoading(true);
       try {
         const response = await emailService.listAccounts();
-        const activeAccounts = response.data.filter((a) => a.isActive);
+        const activeAccounts = response.data.filter(a => a.isActive);
         setAccounts(activeAccounts);
-        accountIdsRef.current = activeAccounts.map((a) => a.id);
+        accountIdsRef.current = activeAccounts.map(a => a.id);
 
         if (activeAccounts.length === 0) {
           setNoAccounts(true);
@@ -159,7 +159,10 @@ function EmailSearchContent({
         }
 
         // Fetch initial recent messages
-        await fetchMessages(activeAccounts.map((a) => a.id), '');
+        await fetchMessages(
+          activeAccounts.map(a => a.id),
+          ''
+        );
       } catch {
         toast.error('Erro ao carregar contas de email.');
       } finally {
@@ -244,7 +247,7 @@ function EmailSearchContent({
         <Input
           ref={searchInputRef}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={e => setSearch(e.target.value)}
           placeholder="Buscar por assunto, remetente..."
           className="pl-9"
         />
@@ -257,7 +260,7 @@ function EmailSearchContent({
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : messages.length > 0 ? (
-          messages.map((message) => (
+          messages.map(message => (
             <button
               key={message.id}
               type="button"
@@ -275,7 +278,7 @@ function EmailSearchContent({
                     getAccountDotColor(message.accountId)
                   )}
                   title={
-                    accounts.find((a) => a.id === message.accountId)?.address ??
+                    accounts.find(a => a.id === message.accountId)?.address ??
                     ''
                   }
                 />
@@ -454,7 +457,7 @@ export function IntegrationSearchModal({
               <Input
                 ref={searchInputRef}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar por descrição, fornecedor ou cliente..."
                 className="pl-9"
               />
@@ -462,7 +465,7 @@ export function IntegrationSearchModal({
 
             {/* Type filter tabs */}
             <div className="flex gap-1">
-              {typeFilters.map((filter) => (
+              {typeFilters.map(filter => (
                 <button
                   key={filter.value}
                   type="button"
@@ -486,7 +489,7 @@ export function IntegrationSearchModal({
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : results.length > 0 ? (
-                results.map((entry) => (
+                results.map(entry => (
                   <button
                     key={entry.id}
                     type="button"

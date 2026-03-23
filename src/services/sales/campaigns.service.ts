@@ -31,15 +31,26 @@ export const campaignsService = {
   },
 
   async create(data: CreateCampaignRequest): Promise<CampaignResponse> {
-    return apiClient.post<CampaignResponse>(API_ENDPOINTS.CAMPAIGNS.CREATE, data);
+    return apiClient.post<CampaignResponse>(
+      API_ENDPOINTS.CAMPAIGNS.CREATE,
+      data
+    );
   },
 
-  async update(id: string, data: UpdateCampaignRequest): Promise<CampaignResponse> {
-    return apiClient.put<CampaignResponse>(API_ENDPOINTS.CAMPAIGNS.UPDATE(id), data);
+  async update(
+    id: string,
+    data: UpdateCampaignRequest
+  ): Promise<CampaignResponse> {
+    return apiClient.put<CampaignResponse>(
+      API_ENDPOINTS.CAMPAIGNS.UPDATE(id),
+      data
+    );
   },
 
   async activate(id: string): Promise<CampaignResponse> {
-    return apiClient.patch<CampaignResponse>(API_ENDPOINTS.CAMPAIGNS.ACTIVATE(id));
+    return apiClient.patch<CampaignResponse>(
+      API_ENDPOINTS.CAMPAIGNS.ACTIVATE(id)
+    );
   },
 
   async delete(id: string): Promise<void> {

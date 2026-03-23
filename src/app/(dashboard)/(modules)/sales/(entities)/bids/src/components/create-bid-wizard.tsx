@@ -16,12 +16,7 @@ import type {
   CreateBidRequest,
 } from '@/types/sales';
 import { BID_MODALITY_LABELS } from '@/types/sales';
-import {
-  CalendarDays,
-  Check,
-  FileText,
-  Loader2,
-} from 'lucide-react';
+import { CalendarDays, Check, FileText, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -107,7 +102,9 @@ function StepBasicInfo({
           <select
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             value={criterionType}
-            onChange={e => onCriterionTypeChange(e.target.value as BidCriterion)}
+            onChange={e =>
+              onCriterionTypeChange(e.target.value as BidCriterion)
+            }
           >
             <option value="MENOR_PRECO">Menor Preço</option>
             <option value="MAIOR_DESCONTO">Maior Desconto</option>
@@ -254,18 +251,17 @@ function StepDatesAndValues({
 
 // ─── Main Wizard Component ────────────────────────────────────
 
-export function CreateBidWizard({
-  open,
-  onOpenChange,
-}: CreateBidWizardProps) {
+export function CreateBidWizard({ open, onOpenChange }: CreateBidWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
 
   // Step 1 state
   const [editalNumber, setEditalNumber] = useState('');
   const [portalName, setPortalName] = useState('');
   const [modality, setModality] = useState<BidModality>('PREGAO_ELETRONICO');
-  const [criterionType, setCriterionType] = useState<BidCriterion>('MENOR_PRECO');
-  const [legalFramework, setLegalFramework] = useState<BidLegalFramework>('LEI_14133_2021');
+  const [criterionType, setCriterionType] =
+    useState<BidCriterion>('MENOR_PRECO');
+  const [legalFramework, setLegalFramework] =
+    useState<BidLegalFramework>('LEI_14133_2021');
   const [object, setObject] = useState('');
   const [organName, setOrganName] = useState('');
 
@@ -338,7 +334,9 @@ export function CreateBidWizard({
     {
       title: 'Informações Básicas',
       description: 'Preencha os dados principais da licitação.',
-      icon: <FileText className="h-16 w-16 text-indigo-400" strokeWidth={1.2} />,
+      icon: (
+        <FileText className="h-16 w-16 text-indigo-400" strokeWidth={1.2} />
+      ),
       content: (
         <StepBasicInfo
           editalNumber={editalNumber}

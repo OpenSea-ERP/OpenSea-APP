@@ -34,8 +34,7 @@ import { PIPELINE_TYPE_LABELS } from '@/types/sales';
 
 const TYPE_COLORS: Record<PipelineType, string> = {
   SALES: 'bg-blue-50 text-blue-700 dark:bg-blue-500/8 dark:text-blue-300',
-  SUPPORT:
-    'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
+  SUPPORT: 'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
   CUSTOM:
     'bg-purple-50 text-purple-700 dark:bg-purple-500/8 dark:text-purple-300',
 };

@@ -104,7 +104,9 @@ test.describe('Sales Module - Smoke Test', () => {
 
       // Collect console errors
       const consoleErrors: string[] = [];
-      const consoleHandler = (msg: import('@playwright/test').ConsoleMessage) => {
+      const consoleHandler = (
+        msg: import('@playwright/test').ConsoleMessage
+      ) => {
         if (msg.type() === 'error') {
           const text = msg.text();
           // Ignore known noise
@@ -122,7 +124,9 @@ test.describe('Sales Module - Smoke Test', () => {
 
       // Collect API errors
       const apiErrors: string[] = [];
-      const responseHandler = (response: import('@playwright/test').Response) => {
+      const responseHandler = (
+        response: import('@playwright/test').Response
+      ) => {
         const status = response.status();
         const url = response.url();
         if (
@@ -163,7 +167,9 @@ test.describe('Sales Module - Smoke Test', () => {
 
         // Check for infinite loading — spinner still visible after 3s
         const loadingSpinner = await page
-          .locator('[data-testid="grid-loading"], .animate-spin, .animate-pulse, [class*="GridLoading"], [class*="Skeleton"]')
+          .locator(
+            '[data-testid="grid-loading"], .animate-spin, .animate-pulse, [class*="GridLoading"], [class*="Skeleton"]'
+          )
           .first()
           .isVisible()
           .catch(() => false);
@@ -172,7 +178,9 @@ test.describe('Sales Module - Smoke Test', () => {
           // Wait 4 more seconds — if still loading, it's stuck
           await page.waitForTimeout(4000);
           const stillLoading = await page
-            .locator('[data-testid="grid-loading"], .animate-spin, .animate-pulse, [class*="GridLoading"], [class*="Skeleton"]')
+            .locator(
+              '[data-testid="grid-loading"], .animate-spin, .animate-pulse, [class*="GridLoading"], [class*="Skeleton"]'
+            )
             .first()
             .isVisible()
             .catch(() => false);
@@ -182,21 +190,26 @@ test.describe('Sales Module - Smoke Test', () => {
               route: route.path,
               name: route.name,
               type: 'render_error',
-              message: 'Infinite loading detected — spinner still visible after 7s',
+              message:
+                'Infinite loading detected — spinner still visible after 7s',
             });
           }
         }
 
         // Check for error boundaries / crash screens
         const errorBoundary = await page
-          .locator('[data-testid="error-boundary"], .error-boundary, .next-error-h1')
+          .locator(
+            '[data-testid="error-boundary"], .error-boundary, .next-error-h1'
+          )
           .first()
           .isVisible()
           .catch(() => false);
 
         if (errorBoundary) {
           const errorText = await page
-            .locator('[data-testid="error-boundary"], .error-boundary, .next-error-h1')
+            .locator(
+              '[data-testid="error-boundary"], .error-boundary, .next-error-h1'
+            )
             .first()
             .textContent()
             .catch(() => 'Unknown error');
@@ -219,7 +232,10 @@ test.describe('Sales Module - Smoke Test', () => {
 
         if (!hasContent) {
           // Check if there's any visible text at all
-          const bodyText = await page.locator('body').textContent().catch(() => '');
+          const bodyText = await page
+            .locator('body')
+            .textContent()
+            .catch(() => '');
           if (!bodyText || bodyText.trim().length < 20) {
             pageErrors.push({
               route: route.path,
@@ -265,7 +281,8 @@ test.describe('Sales Module - Smoke Test', () => {
       allErrors.push(...pageErrors);
 
       // Log progress
-      const status = pageErrors.length === 0 ? '✅' : `❌ (${pageErrors.length} errors)`;
+      const status =
+        pageErrors.length === 0 ? '✅' : `❌ (${pageErrors.length} errors)`;
       console.log(`  ${status} ${route.name} [${route.path}]`);
 
       if (pageErrors.length > 0) {

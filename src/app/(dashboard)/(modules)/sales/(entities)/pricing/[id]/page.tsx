@@ -98,7 +98,9 @@ function PriceTableDetailContent() {
         />
         <Header
           title={priceTable.name}
-          description={priceTable.description || PRICE_TABLE_TYPE_LABELS[priceTable.type]}
+          description={
+            priceTable.description || PRICE_TABLE_TYPE_LABELS[priceTable.type]
+          }
         />
       </PageHeader>
 
@@ -120,7 +122,7 @@ function PriceTableDetailContent() {
                 <span
                   className={cn(
                     'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border',
-                    'border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300',
+                    'border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300'
                   )}
                 >
                   {PRICE_TABLE_TYPE_LABELS[priceTable.type]}
@@ -130,7 +132,7 @@ function PriceTableDetailContent() {
                     'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border',
                     priceTable.isActive
                       ? 'border-emerald-600/25 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
-                      : 'border-gray-300 bg-gray-50 dark:bg-white/[0.04] text-gray-500',
+                      : 'border-gray-300 bg-gray-50 dark:bg-white/[0.04] text-gray-500'
                   )}
                 >
                   {priceTable.isActive ? 'Ativa' : 'Inativa'}
@@ -169,16 +171,18 @@ function PriceTableDetailContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
+                  {items.map(item => (
                     <tr key={item.id} className="border-b last:border-0">
-                      <td className="py-2 font-mono text-xs">{item.variantId.slice(0, 8)}...</td>
-                      <td className="py-2">
-                        R$ {item.price.toFixed(2)}
+                      <td className="py-2 font-mono text-xs">
+                        {item.variantId.slice(0, 8)}...
                       </td>
+                      <td className="py-2">R$ {item.price.toFixed(2)}</td>
                       <td className="py-2">{item.minQuantity}</td>
                       <td className="py-2">{item.maxQuantity ?? '-'}</td>
                       <td className="py-2">
-                        {item.costPrice ? `R$ ${item.costPrice.toFixed(2)}` : '-'}
+                        {item.costPrice
+                          ? `R$ ${item.costPrice.toFixed(2)}`
+                          : '-'}
                       </td>
                       <td className="py-2">
                         {item.marginPercent ? `${item.marginPercent}%` : '-'}

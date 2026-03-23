@@ -98,7 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Routine check: runs backend side-effects (overdue, reminders) periodically
   // Disabled for super admins without tenant (routine-check requires tenant scope)
-  const hasTenantScope = hasToken && typeof window !== 'undefined' && !!localStorage.getItem('selected_tenant_id');
+  const hasTenantScope =
+    hasToken &&
+    typeof window !== 'undefined' &&
+    !!localStorage.getItem('selected_tenant_id');
   useRoutineCheck(hasTenantScope);
 
   // E2E bypass: when running E2E tests, we may want to short-circuit auth

@@ -1,41 +1,130 @@
 // Bid (Licitacao) Types
 import type { PaginatedQuery, PaginationMeta } from '../pagination';
 
-export type BidModality = 'PREGAO_ELETRONICO' | 'PREGAO_PRESENCIAL' | 'CONCORRENCIA' | 'TOMADA_PRECOS' | 'CONVITE' | 'LEILAO' | 'DIALOGO_COMPETITIVO' | 'CONCURSO' | 'DISPENSA' | 'INEXIGIBILIDADE';
-export type BidCriterion = 'MENOR_PRECO' | 'MAIOR_DESCONTO' | 'MELHOR_TECNICA' | 'TECNICA_PRECO' | 'MAIOR_LANCE' | 'MAIOR_RETORNO';
-export type BidLegalFramework = 'LEI_14133_2021' | 'LEI_8666_1993' | 'LEI_10520_2002' | 'LEI_12462_2011' | 'DECRETO_10024_2019';
-export type BidStatus = 'DISCOVERED' | 'ANALYZING' | 'VIABLE' | 'NOT_VIABLE' | 'PREPARING' | 'PROPOSAL_SENT' | 'AWAITING_DISPUTE' | 'IN_DISPUTE' | 'WON' | 'LOST' | 'DESERTED' | 'REVOKED' | 'SUSPENDED' | 'MONITORING' | 'CONTRACTED' | 'COMPLETED' | 'ARCHIVED';
-export type BidDocumentType = 'CERTIDAO_FEDERAL' | 'CERTIDAO_ESTADUAL' | 'CERTIDAO_MUNICIPAL' | 'CERTIDAO_TRABALHISTA' | 'CERTIDAO_FGTS' | 'CERTIDAO_FALENCIA' | 'BALANCO_PATRIMONIAL' | 'CONTRATO_SOCIAL' | 'ALVARA' | 'ATESTADO_CAPACIDADE' | 'PROPOSTA_TECNICA' | 'PROPOSTA_COMERCIAL' | 'EDITAL' | 'ATA_REGISTRO' | 'OUTROS';
-export type BidContractStatus = 'DRAFT_CONTRACT' | 'ACTIVE_CONTRACT' | 'SUSPENDED_CONTRACT' | 'COMPLETED_CONTRACT' | 'TERMINATED_CONTRACT' | 'RENEWED_CONTRACT';
+export type BidModality =
+  | 'PREGAO_ELETRONICO'
+  | 'PREGAO_PRESENCIAL'
+  | 'CONCORRENCIA'
+  | 'TOMADA_PRECOS'
+  | 'CONVITE'
+  | 'LEILAO'
+  | 'DIALOGO_COMPETITIVO'
+  | 'CONCURSO'
+  | 'DISPENSA'
+  | 'INEXIGIBILIDADE';
+export type BidCriterion =
+  | 'MENOR_PRECO'
+  | 'MAIOR_DESCONTO'
+  | 'MELHOR_TECNICA'
+  | 'TECNICA_PRECO'
+  | 'MAIOR_LANCE'
+  | 'MAIOR_RETORNO';
+export type BidLegalFramework =
+  | 'LEI_14133_2021'
+  | 'LEI_8666_1993'
+  | 'LEI_10520_2002'
+  | 'LEI_12462_2011'
+  | 'DECRETO_10024_2019';
+export type BidStatus =
+  | 'DISCOVERED'
+  | 'ANALYZING'
+  | 'VIABLE'
+  | 'NOT_VIABLE'
+  | 'PREPARING'
+  | 'PROPOSAL_SENT'
+  | 'AWAITING_DISPUTE'
+  | 'IN_DISPUTE'
+  | 'WON'
+  | 'LOST'
+  | 'DESERTED'
+  | 'REVOKED'
+  | 'SUSPENDED'
+  | 'MONITORING'
+  | 'CONTRACTED'
+  | 'COMPLETED'
+  | 'ARCHIVED';
+export type BidDocumentType =
+  | 'CERTIDAO_FEDERAL'
+  | 'CERTIDAO_ESTADUAL'
+  | 'CERTIDAO_MUNICIPAL'
+  | 'CERTIDAO_TRABALHISTA'
+  | 'CERTIDAO_FGTS'
+  | 'CERTIDAO_FALENCIA'
+  | 'BALANCO_PATRIMONIAL'
+  | 'CONTRATO_SOCIAL'
+  | 'ALVARA'
+  | 'ATESTADO_CAPACIDADE'
+  | 'PROPOSTA_TECNICA'
+  | 'PROPOSTA_COMERCIAL'
+  | 'EDITAL'
+  | 'ATA_REGISTRO'
+  | 'OUTROS';
+export type BidContractStatus =
+  | 'DRAFT_CONTRACT'
+  | 'ACTIVE_CONTRACT'
+  | 'SUSPENDED_CONTRACT'
+  | 'COMPLETED_CONTRACT'
+  | 'TERMINATED_CONTRACT'
+  | 'RENEWED_CONTRACT';
 
 export const BID_STATUS_LABELS: Record<BidStatus, string> = {
-  DISCOVERED: 'Descoberta', ANALYZING: 'Analisando', VIABLE: 'Viavel', NOT_VIABLE: 'Inviavel',
-  PREPARING: 'Preparando', PROPOSAL_SENT: 'Proposta Enviada', AWAITING_DISPUTE: 'Aguardando Disputa',
-  IN_DISPUTE: 'Em Disputa', WON: 'Vencida', LOST: 'Perdida', DESERTED: 'Deserta',
-  REVOKED: 'Revogada', SUSPENDED: 'Suspensa', MONITORING: 'Monitorando',
-  CONTRACTED: 'Contratada', COMPLETED: 'Concluida', ARCHIVED: 'Arquivada',
+  DISCOVERED: 'Descoberta',
+  ANALYZING: 'Analisando',
+  VIABLE: 'Viavel',
+  NOT_VIABLE: 'Inviavel',
+  PREPARING: 'Preparando',
+  PROPOSAL_SENT: 'Proposta Enviada',
+  AWAITING_DISPUTE: 'Aguardando Disputa',
+  IN_DISPUTE: 'Em Disputa',
+  WON: 'Vencida',
+  LOST: 'Perdida',
+  DESERTED: 'Deserta',
+  REVOKED: 'Revogada',
+  SUSPENDED: 'Suspensa',
+  MONITORING: 'Monitorando',
+  CONTRACTED: 'Contratada',
+  COMPLETED: 'Concluida',
+  ARCHIVED: 'Arquivada',
 };
 
 export const BID_MODALITY_LABELS: Record<BidModality, string> = {
-  PREGAO_ELETRONICO: 'Pregao Eletronico', PREGAO_PRESENCIAL: 'Pregao Presencial',
-  CONCORRENCIA: 'Concorrencia', TOMADA_PRECOS: 'Tomada de Precos', CONVITE: 'Convite',
-  LEILAO: 'Leilao', DIALOGO_COMPETITIVO: 'Dialogo Competitivo', CONCURSO: 'Concurso',
-  DISPENSA: 'Dispensa', INEXIGIBILIDADE: 'Inexigibilidade',
+  PREGAO_ELETRONICO: 'Pregao Eletronico',
+  PREGAO_PRESENCIAL: 'Pregao Presencial',
+  CONCORRENCIA: 'Concorrencia',
+  TOMADA_PRECOS: 'Tomada de Precos',
+  CONVITE: 'Convite',
+  LEILAO: 'Leilao',
+  DIALOGO_COMPETITIVO: 'Dialogo Competitivo',
+  CONCURSO: 'Concurso',
+  DISPENSA: 'Dispensa',
+  INEXIGIBILIDADE: 'Inexigibilidade',
 };
 
 export const BID_CONTRACT_STATUS_LABELS: Record<BidContractStatus, string> = {
-  DRAFT_CONTRACT: 'Rascunho', ACTIVE_CONTRACT: 'Ativo', SUSPENDED_CONTRACT: 'Suspenso',
-  COMPLETED_CONTRACT: 'Concluido', TERMINATED_CONTRACT: 'Encerrado', RENEWED_CONTRACT: 'Renovado',
+  DRAFT_CONTRACT: 'Rascunho',
+  ACTIVE_CONTRACT: 'Ativo',
+  SUSPENDED_CONTRACT: 'Suspenso',
+  COMPLETED_CONTRACT: 'Concluido',
+  TERMINATED_CONTRACT: 'Encerrado',
+  RENEWED_CONTRACT: 'Renovado',
 };
 
 export const BID_DOCUMENT_TYPE_LABELS: Record<BidDocumentType, string> = {
-  CERTIDAO_FEDERAL: 'Certidao Federal', CERTIDAO_ESTADUAL: 'Certidao Estadual',
-  CERTIDAO_MUNICIPAL: 'Certidao Municipal', CERTIDAO_TRABALHISTA: 'Certidao Trabalhista',
-  CERTIDAO_FGTS: 'Certidao FGTS', CERTIDAO_FALENCIA: 'Certidao Falencia',
-  BALANCO_PATRIMONIAL: 'Balanco Patrimonial', CONTRATO_SOCIAL: 'Contrato Social',
-  ALVARA: 'Alvara', ATESTADO_CAPACIDADE: 'Atestado Capacidade Tecnica',
-  PROPOSTA_TECNICA: 'Proposta Tecnica', PROPOSTA_COMERCIAL: 'Proposta Comercial',
-  EDITAL: 'Edital', ATA_REGISTRO: 'Ata de Registro', OUTROS: 'Outros',
+  CERTIDAO_FEDERAL: 'Certidao Federal',
+  CERTIDAO_ESTADUAL: 'Certidao Estadual',
+  CERTIDAO_MUNICIPAL: 'Certidao Municipal',
+  CERTIDAO_TRABALHISTA: 'Certidao Trabalhista',
+  CERTIDAO_FGTS: 'Certidao FGTS',
+  CERTIDAO_FALENCIA: 'Certidao Falencia',
+  BALANCO_PATRIMONIAL: 'Balanco Patrimonial',
+  CONTRATO_SOCIAL: 'Contrato Social',
+  ALVARA: 'Alvara',
+  ATESTADO_CAPACIDADE: 'Atestado Capacidade Tecnica',
+  PROPOSTA_TECNICA: 'Proposta Tecnica',
+  PROPOSTA_COMERCIAL: 'Proposta Comercial',
+  EDITAL: 'Edital',
+  ATA_REGISTRO: 'Ata de Registro',
+  OUTROS: 'Outros',
 };
 
 export interface Bid {
@@ -234,11 +323,32 @@ export interface BidsQuery extends PaginatedQuery {
   sortBy?: 'createdAt' | 'openingDate' | 'estimatedValue' | 'editalNumber';
 }
 
-export interface PaginatedBidsResponse { bids: Bid[]; meta: PaginationMeta; }
-export interface BidResponse { bid: Bid; }
-export interface PaginatedBidItemsResponse { items: BidItem[]; meta: PaginationMeta; }
-export interface PaginatedBidDocumentsResponse { documents: BidDocument[]; meta: PaginationMeta; }
-export interface PaginatedBidContractsResponse { contracts: BidContract[]; meta: PaginationMeta; }
-export interface PaginatedBidHistoryResponse { history: BidHistory[]; meta: PaginationMeta; }
-export interface BidDocumentResponse { document: BidDocument; }
-export interface BidContractResponse { contract: BidContract; }
+export interface PaginatedBidsResponse {
+  bids: Bid[];
+  meta: PaginationMeta;
+}
+export interface BidResponse {
+  bid: Bid;
+}
+export interface PaginatedBidItemsResponse {
+  items: BidItem[];
+  meta: PaginationMeta;
+}
+export interface PaginatedBidDocumentsResponse {
+  documents: BidDocument[];
+  meta: PaginationMeta;
+}
+export interface PaginatedBidContractsResponse {
+  contracts: BidContract[];
+  meta: PaginationMeta;
+}
+export interface PaginatedBidHistoryResponse {
+  history: BidHistory[];
+  meta: PaginationMeta;
+}
+export interface BidDocumentResponse {
+  document: BidDocument;
+}
+export interface BidContractResponse {
+  contract: BidContract;
+}

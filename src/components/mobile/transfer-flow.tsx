@@ -20,7 +20,7 @@ import type { LookupResult } from '@/services/stock/lookup.service';
 
 const ScannerCamera = dynamic(
   () =>
-    import('@/components/mobile/scanner-camera').then((m) => ({
+    import('@/components/mobile/scanner-camera').then(m => ({
       default: m.ScannerCamera,
     })),
   { ssr: false }
@@ -57,9 +57,7 @@ function getItemCode(item: LookupResult): string {
 function getItemBinLabel(item: LookupResult): string | undefined {
   const entity = item.entity;
   return (
-    (entity.binLabel as string) ||
-    (entity.location as string) ||
-    undefined
+    (entity.binLabel as string) || (entity.location as string) || undefined
   );
 }
 
@@ -86,7 +84,7 @@ export function TransferFlow({ item, onClose, onSuccess }: TransferFlowProps) {
     (code: string) => {
       setCameraEnabled(false);
       binLookup.mutate(code, {
-        onSuccess: (result) => {
+        onSuccess: result => {
           if (result.entityType === 'BIN') {
             const address =
               (result.entity.label as string) ||
@@ -136,12 +134,10 @@ export function TransferFlow({ item, onClose, onSuccess }: TransferFlowProps) {
         onSuccess: () => {
           scanSuccess();
           addBin(selectedBin.id, selectedBin.address);
-          toast.success(
-            `${itemName} transferido para ${selectedBin.address}`
-          );
+          toast.success(`${itemName} transferido para ${selectedBin.address}`);
           onSuccess();
         },
-        onError: (error) => {
+        onError: error => {
           scanError();
           const message =
             (error as { message?: string })?.message ||
@@ -244,7 +240,7 @@ export function TransferFlow({ item, onClose, onSuccess }: TransferFlowProps) {
               ref={inputRef}
               type="text"
               value={manualAddress}
-              onChange={(e) => setManualAddress(e.target.value)}
+              onChange={e => setManualAddress(e.target.value)}
               placeholder="Endereço manual da bin..."
               className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />

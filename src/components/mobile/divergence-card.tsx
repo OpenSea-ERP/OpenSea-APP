@@ -90,8 +90,7 @@ function getResolutionOptions(
           label: 'Encaminhar p/ Supervisor',
           icon: <UserCheck className="h-4 w-4" />,
           colorClass: 'text-amber-400',
-          bgClass:
-            'bg-amber-500/10 border-amber-500/30 active:bg-amber-500/20',
+          bgClass: 'bg-amber-500/10 border-amber-500/30 active:bg-amber-500/20',
         },
       ];
     case 'EXTRA':
@@ -116,8 +115,7 @@ function getResolutionOptions(
           label: 'Encaminhar p/ Supervisor',
           icon: <UserCheck className="h-4 w-4" />,
           colorClass: 'text-amber-400',
-          bgClass:
-            'bg-amber-500/10 border-amber-500/30 active:bg-amber-500/20',
+          bgClass: 'bg-amber-500/10 border-amber-500/30 active:bg-amber-500/20',
         },
       ];
     case 'WRONG_BIN':
@@ -141,8 +139,7 @@ function getResolutionOptions(
           label: 'Encaminhar p/ Supervisor',
           icon: <UserCheck className="h-4 w-4" />,
           colorClass: 'text-amber-400',
-          bgClass:
-            'bg-amber-500/10 border-amber-500/30 active:bg-amber-500/20',
+          bgClass: 'bg-amber-500/10 border-amber-500/30 active:bg-amber-500/20',
         },
       ];
     default:
@@ -159,16 +156,14 @@ export function DivergenceCard({
   const options = getResolutionOptions(item.status);
 
   const itemName =
-    item.item?.productName || item.item?.variantName || item.item?.sku || 'Item';
+    item.item?.productName ||
+    item.item?.variantName ||
+    item.item?.sku ||
+    'Item';
   const itemCode = item.item?.sku || item.item?.barcode || '';
 
   return (
-    <div
-      className={cn(
-        'rounded-xl border p-3 space-y-3',
-        statusConfig.bg
-      )}
-    >
+    <div className={cn('rounded-xl border p-3 space-y-3', statusConfig.bg)}>
       {/* Header */}
       <div className="flex items-center gap-2">
         <div className={cn('shrink-0', statusConfig.color)}>
@@ -187,7 +182,7 @@ export function DivergenceCard({
 
       {/* Resolution options */}
       <div className="space-y-1.5">
-        {options.map((option) => (
+        {options.map(option => (
           <button
             key={option.resolution}
             onClick={() => onResolve(option.resolution)}

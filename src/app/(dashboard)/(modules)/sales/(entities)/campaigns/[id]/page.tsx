@@ -114,8 +114,7 @@ function CampaignDetailContent() {
                     id: 'edit',
                     title: 'Editar',
                     icon: Edit,
-                    onClick: () =>
-                      router.push(`/sales/campaigns/${id}/edit`),
+                    onClick: () => router.push(`/sales/campaigns/${id}/edit`),
                     variant: 'outline' as const,
                   },
                 ]
@@ -135,7 +134,9 @@ function CampaignDetailContent() {
         />
         <Header
           title={campaign.name}
-          description={campaign.description || CAMPAIGN_TYPE_LABELS[campaign.type]}
+          description={
+            campaign.description || CAMPAIGN_TYPE_LABELS[campaign.type]
+          }
         />
       </PageHeader>
 
@@ -157,7 +158,7 @@ function CampaignDetailContent() {
                 <span
                   className={cn(
                     'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border',
-                    CAMPAIGN_STATUS_COLORS[campaign.status],
+                    CAMPAIGN_STATUS_COLORS[campaign.status]
                   )}
                 >
                   {CAMPAIGN_STATUS_LABELS[campaign.status]}

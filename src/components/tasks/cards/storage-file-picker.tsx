@@ -119,9 +119,7 @@ export function StorageFilePicker({
                   : 'Nenhum arquivo disponível'}
               </p>
               {isSearching && (
-                <p className="text-xs mt-1">
-                  Tente outro termo de busca
-                </p>
+                <p className="text-xs mt-1">Tente outro termo de busca</p>
               )}
             </div>
           ) : (

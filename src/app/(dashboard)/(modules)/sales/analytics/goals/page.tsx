@@ -252,10 +252,7 @@ export default function GoalsPage() {
           description="Digite seu PIN de ação para excluir esta meta."
         />
 
-        <CreateGoalWizard
-          open={wizardOpen}
-          onOpenChange={setWizardOpen}
-        />
+        <CreateGoalWizard open={wizardOpen} onOpenChange={setWizardOpen} />
       </PageBody>
     </PageLayout>
   );

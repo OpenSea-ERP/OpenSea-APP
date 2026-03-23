@@ -169,12 +169,11 @@ export default function EditContactPage() {
   const [role, setRole] = useState<ContactRole | ''>('');
 
   // Qualification
-  const [lifecycleStage, setLifecycleStage] =
-    useState<LifecycleStage>('LEAD');
+  const [lifecycleStage, setLifecycleStage] = useState<LifecycleStage>('LEAD');
   const [leadScore, setLeadScore] = useState(0);
-  const [leadTemperature, setLeadTemperature] = useState<
-    LeadTemperature | ''
-  >('');
+  const [leadTemperature, setLeadTemperature] = useState<LeadTemperature | ''>(
+    ''
+  );
 
   // Social
   const [linkedinUrl, setLinkedinUrl] = useState('');
@@ -228,8 +227,7 @@ export default function EditContactPage() {
           role: (role as ContactRole) || undefined,
           lifecycleStage,
           leadScore,
-          leadTemperature:
-            (leadTemperature as LeadTemperature) || undefined,
+          leadTemperature: (leadTemperature as LeadTemperature) || undefined,
         },
       });
 
@@ -243,8 +241,7 @@ export default function EditContactPage() {
         'Erro ao atualizar contato',
         err instanceof Error ? err : undefined
       );
-      const message =
-        err instanceof Error ? err.message : 'Erro desconhecido';
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
       toast.error('Erro ao atualizar contato', { description: message });
     } finally {
       setIsSaving(false);
@@ -261,8 +258,7 @@ export default function EditContactPage() {
         'Erro ao deletar contato',
         err instanceof Error ? err : undefined
       );
-      const message =
-        err instanceof Error ? err.message : 'Erro desconhecido';
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
       toast.error('Erro ao deletar contato', { description: message });
     }
   };
@@ -349,8 +345,7 @@ export default function EditContactPage() {
 
   const stageColor =
     LIFECYCLE_STAGE_COLORS[lifecycleStage] || LIFECYCLE_STAGE_COLORS.LEAD;
-  const stageLabel =
-    LIFECYCLE_STAGE_LABELS[lifecycleStage] || lifecycleStage;
+  const stageLabel = LIFECYCLE_STAGE_LABELS[lifecycleStage] || lifecycleStage;
 
   // ============================================================================
   // RENDER
@@ -375,12 +370,8 @@ export default function EditContactPage() {
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground">
-                Editando contato
-              </p>
-              <h1 className="text-xl font-bold truncate">
-                {contact.fullName}
-              </h1>
+              <p className="text-sm text-muted-foreground">Editando contato</p>
+              <h1 className="text-xl font-bold truncate">{contact.fullName}</h1>
             </div>
             <div className="hidden sm:flex items-center gap-3 shrink-0">
               <div

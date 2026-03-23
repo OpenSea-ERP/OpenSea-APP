@@ -18,30 +18,16 @@ import { SearchBar } from '@/components/layout/search-bar';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { usePermissions } from '@/hooks/use-permissions';
-import {
-  useCombosInfinite,
-  useDeleteCombo,
-} from '@/hooks/sales/use-combos';
+import { useCombosInfinite, useDeleteCombo } from '@/hooks/sales/use-combos';
 import type { Combo } from '@/types/sales';
 import { COMBO_TYPE_LABELS } from '@/types/sales';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
 import { CreateComboWizard } from './src/components/create-combo-wizard';
-import {
-  Layers,
-  Package,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { Layers, Package, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {
-  Suspense,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function CombosPage() {
@@ -98,7 +84,7 @@ function CombosPageContent() {
     }
     if (!el) return;
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (
           entries[0].isIntersecting &&
           hasNextPageRef.current &&
@@ -107,7 +93,7 @@ function CombosPageContent() {
           fetchNextPageRef.current();
         }
       },
-      { rootMargin: '300px' },
+      { rootMargin: '300px' }
     );
     observer.observe(el);
     observerRef.current = observer;
@@ -119,7 +105,7 @@ function CombosPageContent() {
         id,
         label,
       })),
-    [],
+    []
   );
 
   const handleDelete = (ids: string[]) => {
@@ -136,7 +122,7 @@ function CombosPageContent() {
     toast.success(
       itemsToDelete.length === 1
         ? 'Combo excluido com sucesso!'
-        : `${itemsToDelete.length} combos excluidos!`,
+        : `${itemsToDelete.length} combos excluidos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -185,7 +171,12 @@ function CombosPageContent() {
             type="server"
             title="Erro ao carregar combos"
             message="Ocorreu um erro. Por favor, tente novamente."
-            action={{ label: 'Tentar Novamente', onClick: () => { refetch(); } }}
+            action={{
+              label: 'Tentar Novamente',
+              onClick: () => {
+                refetch();
+              },
+            }}
           />
         ) : (
           <>
@@ -212,7 +203,7 @@ function CombosPageContent() {
                   onClick={() => router.push(`/sales/combos/${combo.id}`)}
                   className={cn(
                     'group relative rounded-xl border bg-card p-4 cursor-pointer transition-all',
-                    'hover:shadow-md hover:border-primary/20',
+                    'hover:shadow-md hover:border-primary/20'
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -238,7 +229,7 @@ function CombosPageContent() {
                         'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
                         combo.isActive
                           ? 'border-emerald-600/25 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
-                          : 'border-gray-300 bg-gray-50 dark:bg-white/[0.04] text-gray-500',
+                          : 'border-gray-300 bg-gray-50 dark:bg-white/[0.04] text-gray-500'
                       )}
                     >
                       {combo.isActive ? 'Ativo' : 'Inativo'}
@@ -252,7 +243,7 @@ function CombosPageContent() {
 
                   {hasPermission(SALES_PERMISSIONS.COMBOS.ADMIN) && (
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleDelete([combo.id]);
                       }}
@@ -269,10 +260,7 @@ function CombosPageContent() {
           </>
         )}
 
-        <CreateComboWizard
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-        />
+        <CreateComboWizard open={createOpen} onOpenChange={setCreateOpen} />
 
         <VerifyActionPinModal
           isOpen={deleteModalOpen}

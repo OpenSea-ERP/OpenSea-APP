@@ -32,20 +32,9 @@ import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
 import { CreateCampaignWizard } from './src/components/create-campaign-wizard';
-import {
-  Megaphone,
-  Plus,
-  Trash2,
-  Zap,
-} from 'lucide-react';
+import { Megaphone, Plus, Trash2, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {
-  Suspense,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function CampaignsPage() {
@@ -104,7 +93,7 @@ function CampaignsPageContent() {
     }
     if (!el) return;
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (
           entries[0].isIntersecting &&
           hasNextPageRef.current &&
@@ -113,7 +102,7 @@ function CampaignsPageContent() {
           fetchNextPageRef.current();
         }
       },
-      { rootMargin: '300px' },
+      { rootMargin: '300px' }
     );
     observer.observe(el);
     observerRef.current = observer;
@@ -125,7 +114,7 @@ function CampaignsPageContent() {
         id,
         label,
       })),
-    [],
+    []
   );
 
   const typeOptions = useMemo(
@@ -134,7 +123,7 @@ function CampaignsPageContent() {
         id,
         label,
       })),
-    [],
+    []
   );
 
   const handleDelete = (ids: string[]) => {
@@ -151,7 +140,7 @@ function CampaignsPageContent() {
     toast.success(
       itemsToDelete.length === 1
         ? 'Campanha excluida com sucesso!'
-        : `${itemsToDelete.length} campanhas excluidas!`,
+        : `${itemsToDelete.length} campanhas excluidas!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -208,7 +197,12 @@ function CampaignsPageContent() {
             type="server"
             title="Erro ao carregar campanhas"
             message="Ocorreu um erro. Por favor, tente novamente."
-            action={{ label: 'Tentar Novamente', onClick: () => { refetch(); } }}
+            action={{
+              label: 'Tentar Novamente',
+              onClick: () => {
+                refetch();
+              },
+            }}
           />
         ) : (
           <>
@@ -242,12 +236,10 @@ function CampaignsPageContent() {
               {campaigns.map((campaign: Campaign) => (
                 <div
                   key={campaign.id}
-                  onClick={() =>
-                    router.push(`/sales/campaigns/${campaign.id}`)
-                  }
+                  onClick={() => router.push(`/sales/campaigns/${campaign.id}`)}
                   className={cn(
                     'group relative rounded-xl border bg-card p-4 cursor-pointer transition-all',
-                    'hover:shadow-md hover:border-primary/20',
+                    'hover:shadow-md hover:border-primary/20'
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -269,7 +261,7 @@ function CampaignsPageContent() {
                     <span
                       className={cn(
                         'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
-                        CAMPAIGN_STATUS_COLORS[campaign.status],
+                        CAMPAIGN_STATUS_COLORS[campaign.status]
                       )}
                     >
                       {CAMPAIGN_STATUS_LABELS[campaign.status]}
@@ -286,7 +278,7 @@ function CampaignsPageContent() {
 
                   {hasPermission(SALES_PERMISSIONS.CAMPAIGNS.ADMIN) && (
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleDelete([campaign.id]);
                       }}
@@ -303,10 +295,7 @@ function CampaignsPageContent() {
           </>
         )}
 
-        <CreateCampaignWizard
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-        />
+        <CreateCampaignWizard open={createOpen} onOpenChange={setCreateOpen} />
 
         <VerifyActionPinModal
           isOpen={deleteModalOpen}

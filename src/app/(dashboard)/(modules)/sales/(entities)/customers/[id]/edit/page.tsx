@@ -410,10 +410,7 @@ export default function EditCustomerPage() {
                         {isActive ? 'Ativo' : 'Inativo'}
                       </p>
                     </div>
-                    <Switch
-                      checked={isActive}
-                      onCheckedChange={setIsActive}
-                    />
+                    <Switch checked={isActive} onCheckedChange={setIsActive} />
                   </div>
                 </div>
               </div>

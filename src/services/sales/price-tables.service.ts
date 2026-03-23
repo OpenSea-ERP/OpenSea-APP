@@ -31,22 +31,36 @@ export const priceTablesService = {
   },
 
   async get(id: string): Promise<PriceTableResponse> {
-    return apiClient.get<PriceTableResponse>(API_ENDPOINTS.PRICE_TABLES.GET(id));
+    return apiClient.get<PriceTableResponse>(
+      API_ENDPOINTS.PRICE_TABLES.GET(id)
+    );
   },
 
   async create(data: CreatePriceTableRequest): Promise<PriceTableResponse> {
-    return apiClient.post<PriceTableResponse>(API_ENDPOINTS.PRICE_TABLES.CREATE, data);
+    return apiClient.post<PriceTableResponse>(
+      API_ENDPOINTS.PRICE_TABLES.CREATE,
+      data
+    );
   },
 
-  async update(id: string, data: UpdatePriceTableRequest): Promise<PriceTableResponse> {
-    return apiClient.put<PriceTableResponse>(API_ENDPOINTS.PRICE_TABLES.UPDATE(id), data);
+  async update(
+    id: string,
+    data: UpdatePriceTableRequest
+  ): Promise<PriceTableResponse> {
+    return apiClient.put<PriceTableResponse>(
+      API_ENDPOINTS.PRICE_TABLES.UPDATE(id),
+      data
+    );
   },
 
   async delete(id: string): Promise<void> {
     return apiClient.delete<void>(API_ENDPOINTS.PRICE_TABLES.DELETE(id));
   },
 
-  async listItems(tableId: string, query?: PriceTablesQuery): Promise<PriceTableItemsResponse> {
+  async listItems(
+    tableId: string,
+    query?: PriceTablesQuery
+  ): Promise<PriceTableItemsResponse> {
     const params = new URLSearchParams();
     if (query?.page) params.append('page', query.page.toString());
     if (query?.limit) params.append('limit', query.limit.toString());
@@ -58,11 +72,22 @@ export const priceTablesService = {
     return apiClient.get<PriceTableItemsResponse>(url);
   },
 
-  async upsertItems(tableId: string, data: UpsertPriceTableItemRequest): Promise<{ items: unknown[] }> {
-    return apiClient.put<{ items: unknown[] }>(API_ENDPOINTS.PRICE_TABLES.ITEMS.UPSERT(tableId), data);
+  async upsertItems(
+    tableId: string,
+    data: UpsertPriceTableItemRequest
+  ): Promise<{ items: unknown[] }> {
+    return apiClient.put<{ items: unknown[] }>(
+      API_ENDPOINTS.PRICE_TABLES.ITEMS.UPSERT(tableId),
+      data
+    );
   },
 
-  async resolvePrice(data: ResolvePriceRequest): Promise<{ result: ResolvePriceResult }> {
-    return apiClient.post<{ result: ResolvePriceResult }>(API_ENDPOINTS.PRICE_TABLES.RESOLVE, data);
+  async resolvePrice(
+    data: ResolvePriceRequest
+  ): Promise<{ result: ResolvePriceResult }> {
+    return apiClient.post<{ result: ResolvePriceResult }>(
+      API_ENDPOINTS.PRICE_TABLES.RESOLVE,
+      data
+    );
   },
 };

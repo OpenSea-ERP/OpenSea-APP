@@ -12,7 +12,12 @@ import { useEffect, useRef } from 'react';
 
 export default function SelectTenantPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: isAuthLoading, isSuperAdmin } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    isSuperAdmin,
+  } = useAuth();
   const { tenants, isLoading, selectTenant, refreshTenants } = useTenant();
   const autoSelectAttempted = useRef(false);
 
@@ -34,7 +39,13 @@ export default function SelectTenantPage() {
 
   // Auto-select if only one tenant (only attempt once to prevent infinite loop)
   useEffect(() => {
-    if (authReady && !isLoading && !isSuperAdmin && tenants.length === 1 && !autoSelectAttempted.current) {
+    if (
+      authReady &&
+      !isLoading &&
+      !isSuperAdmin &&
+      tenants.length === 1 &&
+      !autoSelectAttempted.current
+    ) {
       autoSelectAttempted.current = true;
       handleSelect(tenants[0].id);
     }

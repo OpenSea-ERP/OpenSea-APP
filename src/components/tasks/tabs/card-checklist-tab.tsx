@@ -179,7 +179,10 @@ function ChecklistSection({
               title: checklist.title,
               items: (checklist.items ?? []).map(i => i.title),
             };
-            localStorage.setItem('task-checklist-clipboard', JSON.stringify(data));
+            localStorage.setItem(
+              'task-checklist-clipboard',
+              JSON.stringify(data)
+            );
             onCopy?.(data);
             toast.success('Checklist copiado');
           }}
@@ -273,19 +276,26 @@ export function CardChecklistTab({ boardId, cardId }: CardChecklistTabProps) {
   const [showCreate, setShowCreate] = useState(false);
   const [newChecklistTitle, setNewChecklistTitle] = useState('');
 
-  const [clipboard, setClipboard] = useState<{ title: string; items: string[] } | null>(() => {
+  const [clipboard, setClipboard] = useState<{
+    title: string;
+    items: string[];
+  } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
       const raw = localStorage.getItem(CLIPBOARD_KEY);
       return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   });
 
   const handleImportChecklist = useCallback(async () => {
     if (!clipboard) return;
 
     try {
-      const result = await createChecklist.mutateAsync({ title: clipboard.title });
+      const result = await createChecklist.mutateAsync({
+        title: clipboard.title,
+      });
       const newChecklistId = result?.checklist?.id;
 
       if (newChecklistId) {
@@ -423,7 +433,7 @@ export function CardChecklistTab({ boardId, cardId }: CardChecklistTabProps) {
               checklist={cl}
               boardId={boardId}
               cardId={cardId}
-              onCopy={(data) => setClipboard(data)}
+              onCopy={data => setClipboard(data)}
             />
           ))}
         </div>

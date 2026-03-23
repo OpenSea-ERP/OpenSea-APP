@@ -72,7 +72,11 @@ function StepAccountData({
 }: {
   form: typeof INITIAL_FORM;
   onChange: (updates: Partial<typeof INITIAL_FORM>) => void;
-  companies: Array<{ id: string; tradeName?: string | null; legalName: string }>;
+  companies: Array<{
+    id: string;
+    tradeName?: string | null;
+    legalName: string;
+  }>;
   isLoadingCompanies: boolean;
 }) {
   return (

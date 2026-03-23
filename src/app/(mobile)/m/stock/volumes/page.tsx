@@ -14,26 +14,33 @@ import {
 } from 'lucide-react';
 import type { Volume, VolumeStatus } from '@/types/stock';
 
-const STATUS_CONFIG: Record<VolumeStatus, { label: string; classes: string }> = {
-  OPEN: {
-    label: 'Aberto',
-    classes: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
-  },
-  CLOSED: {
-    label: 'Fechado',
-    classes: 'bg-indigo-500/10 text-indigo-400 ring-indigo-500/20',
-  },
-  DELIVERED: {
-    label: 'Entregue',
-    classes: 'bg-sky-500/10 text-sky-400 ring-sky-500/20',
-  },
-  RETURNED: {
-    label: 'Devolvido',
-    classes: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',
-  },
-};
+const STATUS_CONFIG: Record<VolumeStatus, { label: string; classes: string }> =
+  {
+    OPEN: {
+      label: 'Aberto',
+      classes: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
+    },
+    CLOSED: {
+      label: 'Fechado',
+      classes: 'bg-indigo-500/10 text-indigo-400 ring-indigo-500/20',
+    },
+    DELIVERED: {
+      label: 'Entregue',
+      classes: 'bg-sky-500/10 text-sky-400 ring-sky-500/20',
+    },
+    RETURNED: {
+      label: 'Devolvido',
+      classes: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',
+    },
+  };
 
-function VolumeCard({ volume, onClick }: { volume: Volume; onClick: () => void }) {
+function VolumeCard({
+  volume,
+  onClick,
+}: {
+  volume: Volume;
+  onClick: () => void;
+}) {
   const config = STATUS_CONFIG[volume.status];
 
   return (
@@ -87,7 +94,7 @@ export default function VolumesListPage() {
     (node: HTMLDivElement | null) => {
       if (!node) return;
       const observer = new IntersectionObserver(
-        (entries) => {
+        entries => {
           if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
           }
@@ -111,7 +118,7 @@ export default function VolumesListPage() {
     }
   };
 
-  const allVolumes = data?.pages.flatMap((p) => p.volumes) ?? [];
+  const allVolumes = data?.pages.flatMap(p => p.volumes) ?? [];
 
   // Sort: open first, then closed/delivered/returned
   const sortedVolumes = [...allVolumes].sort((a, b) => {
@@ -173,7 +180,7 @@ export default function VolumesListPage() {
           </div>
         )}
 
-        {sortedVolumes.map((volume) => (
+        {sortedVolumes.map(volume => (
           <VolumeCard
             key={volume.id}
             volume={volume}

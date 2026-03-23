@@ -88,7 +88,9 @@ export function useUpdateCampaign() {
       campaignsService.update(id, data),
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['campaigns'] });
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CAMPAIGN(variables.id) });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.CAMPAIGN(variables.id),
+      });
     },
   });
 }

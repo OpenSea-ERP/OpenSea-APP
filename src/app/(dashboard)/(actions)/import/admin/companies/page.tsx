@@ -242,7 +242,7 @@ export default function ImportCompaniesPage() {
         });
 
         const newRows = parsed.rows.map(row => {
-          const newRow = enabledFields.map((h) => ({
+          const newRow = enabledFields.map(h => ({
             value: '',
             fieldKey: h.key,
           }));
@@ -346,7 +346,8 @@ export default function ImportCompaniesPage() {
                 </div>
                 <p className="text-sm text-slate-500 dark:text-white/60">
                   Os dados serão consultados automaticamente na Receita Federal
-                  via BrasilAPI. O CNPJ pode ser informado com ou sem formatação.
+                  via BrasilAPI. O CNPJ pode ser informado com ou sem
+                  formatação.
                 </p>
               </div>
             </div>

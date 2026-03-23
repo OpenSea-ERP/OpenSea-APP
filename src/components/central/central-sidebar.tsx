@@ -208,7 +208,10 @@ export function CentralSidebar() {
           }}
         >
           {/* User info */}
-          <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--central-separator)' }}>
+          <div
+            className="px-4 py-3"
+            style={{ borderBottom: '1px solid var(--central-separator)' }}
+          >
             <p
               className="text-sm font-semibold truncate"
               style={{ color: 'var(--central-text-primary)' }}
@@ -230,16 +233,23 @@ export function CentralSidebar() {
               className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm central-transition"
               style={{ color: 'var(--central-text-primary)' }}
               onMouseEnter={e => {
-                e.currentTarget.style.background = 'var(--central-nav-hover-bg)';
+                e.currentTarget.style.background =
+                  'var(--central-nav-hover-bg)';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.background = 'transparent';
               }}
             >
               {theme === 'dark' ? (
-                <Sun className="h-4 w-4" style={{ color: 'var(--central-text-secondary)' }} />
+                <Sun
+                  className="h-4 w-4"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                />
               ) : (
-                <Moon className="h-4 w-4" style={{ color: 'var(--central-text-secondary)' }} />
+                <Moon
+                  className="h-4 w-4"
+                  style={{ color: 'var(--central-text-secondary)' }}
+                />
               )}
               {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
             </button>
@@ -249,13 +259,17 @@ export function CentralSidebar() {
               className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm central-transition"
               style={{ color: 'var(--central-text-primary)' }}
               onMouseEnter={e => {
-                e.currentTarget.style.background = 'var(--central-nav-hover-bg)';
+                e.currentTarget.style.background =
+                  'var(--central-nav-hover-bg)';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.background = 'transparent';
               }}
             >
-              <ArrowLeft className="h-4 w-4" style={{ color: 'var(--central-text-secondary)' }} />
+              <ArrowLeft
+                className="h-4 w-4"
+                style={{ color: 'var(--central-text-secondary)' }}
+              />
               Voltar ao App
             </button>
 

@@ -18,30 +18,16 @@ import { SearchBar } from '@/components/layout/search-bar';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { usePermissions } from '@/hooks/use-permissions';
-import {
-  useCouponsInfinite,
-  useDeleteCoupon,
-} from '@/hooks/sales/use-coupons';
+import { useCouponsInfinite, useDeleteCoupon } from '@/hooks/sales/use-coupons';
 import type { Coupon } from '@/types/sales';
 import { COUPON_TYPE_LABELS } from '@/types/sales';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
 import { CreateCouponWizard } from './src/components/create-coupon-wizard';
-import {
-  Plus,
-  Tag,
-  Ticket,
-  Trash2,
-} from 'lucide-react';
+import { Plus, Tag, Ticket, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {
-  Suspense,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function CouponsPage() {
@@ -98,7 +84,7 @@ function CouponsPageContent() {
     }
     if (!el) return;
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (
           entries[0].isIntersecting &&
           hasNextPageRef.current &&
@@ -107,7 +93,7 @@ function CouponsPageContent() {
           fetchNextPageRef.current();
         }
       },
-      { rootMargin: '300px' },
+      { rootMargin: '300px' }
     );
     observer.observe(el);
     observerRef.current = observer;
@@ -119,7 +105,7 @@ function CouponsPageContent() {
         id,
         label,
       })),
-    [],
+    []
   );
 
   const handleDelete = (ids: string[]) => {
@@ -136,7 +122,7 @@ function CouponsPageContent() {
     toast.success(
       itemsToDelete.length === 1
         ? 'Cupom excluido com sucesso!'
-        : `${itemsToDelete.length} cupons excluidos!`,
+        : `${itemsToDelete.length} cupons excluidos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -146,7 +132,8 @@ function CouponsPageContent() {
       month: 'short',
     });
 
-  const isExpired = (coupon: Coupon) => new Date(coupon.validUntil) < new Date();
+  const isExpired = (coupon: Coupon) =>
+    new Date(coupon.validUntil) < new Date();
 
   return (
     <PageLayout>
@@ -193,7 +180,12 @@ function CouponsPageContent() {
             type="server"
             title="Erro ao carregar cupons"
             message="Ocorreu um erro. Por favor, tente novamente."
-            action={{ label: 'Tentar Novamente', onClick: () => { refetch(); } }}
+            action={{
+              label: 'Tentar Novamente',
+              onClick: () => {
+                refetch();
+              },
+            }}
           />
         ) : (
           <>
@@ -221,7 +213,7 @@ function CouponsPageContent() {
                     key={coupon.id}
                     className={cn(
                       'group relative rounded-xl border bg-card p-4 transition-all',
-                      expired && 'opacity-60',
+                      expired && 'opacity-60'
                     )}
                   >
                     <div className="flex items-start gap-3">
@@ -230,7 +222,7 @@ function CouponsPageContent() {
                           'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white',
                           expired
                             ? 'bg-gray-400'
-                            : 'bg-linear-to-br from-teal-500 to-emerald-600',
+                            : 'bg-linear-to-br from-teal-500 to-emerald-600'
                         )}
                       >
                         <Ticket className="h-5 w-5" />
@@ -255,25 +247,33 @@ function CouponsPageContent() {
                           'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
                           coupon.isActive && !expired
                             ? 'border-emerald-600/25 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
-                            : 'border-gray-300 bg-gray-50 dark:bg-white/[0.04] text-gray-500',
+                            : 'border-gray-300 bg-gray-50 dark:bg-white/[0.04] text-gray-500'
                         )}
                       >
-                        {expired ? 'Expirado' : coupon.isActive ? 'Ativo' : 'Inativo'}
+                        {expired
+                          ? 'Expirado'
+                          : coupon.isActive
+                            ? 'Ativo'
+                            : 'Inativo'}
                       </span>
                       <span className="text-[11px] text-muted-foreground">
-                        {formatDate(coupon.validFrom)} - {formatDate(coupon.validUntil)}
+                        {formatDate(coupon.validFrom)} -{' '}
+                        {formatDate(coupon.validUntil)}
                       </span>
                       {coupon.usageCount > 0 && (
                         <span className="text-[11px] text-muted-foreground">
                           {coupon.usageCount}
-                          {coupon.maxUsageTotal ? `/${coupon.maxUsageTotal}` : ''} usos
+                          {coupon.maxUsageTotal
+                            ? `/${coupon.maxUsageTotal}`
+                            : ''}{' '}
+                          usos
                         </span>
                       )}
                     </div>
 
                     {hasPermission(SALES_PERMISSIONS.COUPONS.ADMIN) && (
                       <button
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           handleDelete([coupon.id]);
                         }}
@@ -291,10 +291,7 @@ function CouponsPageContent() {
           </>
         )}
 
-        <CreateCouponWizard
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-        />
+        <CreateCouponWizard open={createOpen} onOpenChange={setCreateOpen} />
 
         <VerifyActionPinModal
           isOpen={deleteModalOpen}

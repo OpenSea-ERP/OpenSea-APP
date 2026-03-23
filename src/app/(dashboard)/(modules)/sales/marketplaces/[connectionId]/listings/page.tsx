@@ -20,7 +20,13 @@ import { ArrowLeft, Box, ExternalLink } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
-const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const STATUS_LABELS: Record<
+  string,
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
+> = {
   DRAFT: { label: 'Rascunho', variant: 'outline' },
   PENDING: { label: 'Pendente', variant: 'secondary' },
   ACTIVE: { label: 'Ativo', variant: 'default' },
@@ -32,7 +38,10 @@ const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secon
 };
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
 }
 
 function ListingRow({ listing }: { listing: MarketplaceListingDTO }) {
@@ -53,7 +62,7 @@ function ListingRow({ listing }: { listing: MarketplaceListingDTO }) {
                   href={listing.externalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={e => e.stopPropagation()}
                   className="text-primary hover:text-primary/80"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -88,7 +97,9 @@ function ListingRow({ listing }: { listing: MarketplaceListingDTO }) {
           <span>Avaliacao: {listing.averageRating.toFixed(1)}</span>
         )}
         {listing.buyBoxOwner && (
-          <Badge variant="default" className="text-xs">Buy Box</Badge>
+          <Badge variant="default" className="text-xs">
+            Buy Box
+          </Badge>
         )}
       </div>
     </Card>
@@ -102,22 +113,28 @@ export default function ListingsPage() {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { data: connection } = useMarketplaceConnection(connectionId);
-  const { data, isLoading, error, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useMarketplaceListingsInfinite(connectionId);
+  const {
+    data,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useMarketplaceListingsInfinite(connectionId);
 
-  const listings = data?.pages.flatMap((page) => page.listings) ?? [];
+  const listings = data?.pages.flatMap(page => page.listings) ?? [];
 
   // Infinite scroll sentinel
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel || !hasNextPage) return;
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -130,7 +147,10 @@ export default function ListingsPage() {
           breadcrumbItems={[
             { label: 'Vendas' },
             { label: 'Marketplaces', href: '/sales/marketplaces' },
-            { label: connection?.name ?? '...', href: `/sales/marketplaces/${connectionId}` },
+            {
+              label: connection?.name ?? '...',
+              href: `/sales/marketplaces/${connectionId}`,
+            },
             { label: 'Anuncios' },
           ]}
         >
@@ -162,7 +182,7 @@ export default function ListingsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {listings.map((listing) => (
+            {listings.map(listing => (
               <ListingRow key={listing.id} listing={listing} />
             ))}
             <div ref={sentinelRef} className="h-1" />

@@ -14,12 +14,7 @@ import type {
   GoalScope,
   CreateGoalRequest,
 } from '@/types/sales';
-import {
-  CalendarDays,
-  Check,
-  Loader2,
-  Target,
-} from 'lucide-react';
+import { CalendarDays, Check, Loader2, Target } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -207,8 +202,8 @@ function StepPeriod({
 
       <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
         <p>
-          A meta será acompanhada automaticamente durante o período
-          selecionado. Você poderá editar os valores a qualquer momento.
+          A meta será acompanhada automaticamente durante o período selecionado.
+          Você poderá editar os valores a qualquer momento.
         </p>
       </div>
     </div>

@@ -85,80 +85,80 @@ export function BoardSettingsDialog({
   }
 
   return (
-  <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Configurações do Quadro</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Configurações do Quadro</DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-6">
-          <BoardSettingsGeneral
-            name={name}
-            onNameChange={setName}
-            description={description}
-            onDescriptionChange={setDescription}
-            visibility={visibility}
-            onVisibilityChange={setVisibility}
-          />
+          <div className="space-y-6">
+            <BoardSettingsGeneral
+              name={name}
+              onNameChange={setName}
+              description={description}
+              onDescriptionChange={setDescription}
+              visibility={visibility}
+              onVisibilityChange={setVisibility}
+            />
 
-          <BoardSettingsGradient
-            boardId={boardId}
-            currentGradientId={board?.gradientId}
-            updateBoard={updateBoard}
-          />
+            <BoardSettingsGradient
+              boardId={boardId}
+              currentGradientId={board?.gradientId}
+              updateBoard={updateBoard}
+            />
 
-          <BoardSettingsColumns
-            columns={columns}
-            createColumn={createColumn}
-            updateColumn={updateColumn}
-            deleteColumn={deleteColumn}
-            reorderColumns={reorderColumns}
-          />
+            <BoardSettingsColumns
+              columns={columns}
+              createColumn={createColumn}
+              updateColumn={updateColumn}
+              deleteColumn={deleteColumn}
+              reorderColumns={reorderColumns}
+            />
 
-          {/* Custom Fields */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">Campos Personalizados</h3>
-            <p className="text-xs text-muted-foreground">
-              Defina campos extras para os cartões deste quadro.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 px-2.5 gap-1.5"
-              onClick={() => setCustomFieldsOpen(true)}
-              type="button"
-            >
-              <Settings2 className="h-3.5 w-3.5" />
-              Gerenciar Campos
-            </Button>
+            {/* Custom Fields */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold">Campos Personalizados</h3>
+              <p className="text-xs text-muted-foreground">
+                Defina campos extras para os cartões deste quadro.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-2.5 gap-1.5"
+                onClick={() => setCustomFieldsOpen(true)}
+                type="button"
+              >
+                <Settings2 className="h-3.5 w-3.5" />
+                Gerenciar Campos
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <DialogFooter className="gap-2 sm:gap-0 mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={updateBoard.isPending}
-          >
-            Fechar
-          </Button>
-          <Button onClick={handleSave} disabled={updateBoard.isPending}>
-            {updateBoard.isPending && (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            )}
-            Salvar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="gap-2 sm:gap-0 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={updateBoard.isPending}
+            >
+              Fechar
+            </Button>
+            <Button onClick={handleSave} disabled={updateBoard.isPending}>
+              {updateBoard.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-    <BoardCustomFieldsDialog
-      open={customFieldsOpen}
-      onOpenChange={setCustomFieldsOpen}
-      boardId={boardId}
-    />
-  </>
+      <BoardCustomFieldsDialog
+        open={customFieldsOpen}
+        onOpenChange={setCustomFieldsOpen}
+        boardId={boardId}
+      />
+    </>
   );
 }

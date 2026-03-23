@@ -17,7 +17,10 @@ import {
   useMarketplaceOrdersInfinite,
   useAcknowledgeMarketplaceOrder,
 } from '@/hooks/sales/use-marketplaces';
-import type { MarketplaceOrderDTO, MarketplaceOrderStatus } from '@/types/sales';
+import type {
+  MarketplaceOrderDTO,
+  MarketplaceOrderStatus,
+} from '@/types/sales';
 import {
   ArrowLeft,
   CheckCircle,
@@ -33,7 +36,11 @@ import { toast } from 'sonner';
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType }
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    icon: React.ElementType;
+  }
 > = {
   RECEIVED: { label: 'Recebido', variant: 'secondary', icon: Clock },
   ACKNOWLEDGED: { label: 'Confirmado', variant: 'default', icon: CheckCircle },
@@ -58,7 +65,10 @@ const STATUS_OPTIONS = [
 ];
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
 }
 
 function OrderRow({
@@ -134,11 +144,11 @@ export default function MarketplaceOrdersPage() {
     isFetchingNextPage,
   } = useMarketplaceOrdersInfinite(
     connectionId,
-    statusFilter ? (statusFilter as MarketplaceOrderStatus) : undefined,
+    statusFilter ? (statusFilter as MarketplaceOrderStatus) : undefined
   );
   const acknowledgeMutation = useAcknowledgeMarketplaceOrder();
 
-  const orders = data?.pages.flatMap((page) => page.orders) ?? [];
+  const orders = data?.pages.flatMap(page => page.orders) ?? [];
 
   const handleAcknowledge = useCallback(
     async (id: string) => {
@@ -149,19 +159,19 @@ export default function MarketplaceOrdersPage() {
         toast.error('Erro ao confirmar pedido.');
       }
     },
-    [acknowledgeMutation],
+    [acknowledgeMutation]
   );
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel || !hasNextPage) return;
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -185,9 +195,7 @@ export default function MarketplaceOrdersPage() {
             variant="outline"
             size="sm"
             className="h-9 px-2.5"
-            onClick={() =>
-              router.push(`/sales/marketplaces/${connectionId}`)
-            }
+            onClick={() => router.push(`/sales/marketplaces/${connectionId}`)}
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Voltar
@@ -220,7 +228,7 @@ export default function MarketplaceOrdersPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {orders.map((order) => (
+            {orders.map(order => (
               <OrderRow
                 key={order.id}
                 order={order}

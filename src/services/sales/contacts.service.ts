@@ -42,10 +42,7 @@ export const contactsService = {
 
   // POST /v1/contacts
   async create(data: CreateContactRequest): Promise<ContactResponse> {
-    return apiClient.post<ContactResponse>(
-      API_ENDPOINTS.CONTACTS.CREATE,
-      data
-    );
+    return apiClient.post<ContactResponse>(API_ENDPOINTS.CONTACTS.CREATE, data);
   },
 
   // PUT /v1/contacts/:contactId

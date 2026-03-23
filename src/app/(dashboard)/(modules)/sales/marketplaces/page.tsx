@@ -40,7 +40,11 @@ const MARKETPLACE_LABELS: Record<string, string> = {
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType }
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    icon: React.ElementType;
+  }
 > = {
   ACTIVE: { label: 'Ativo', variant: 'default', icon: Wifi },
   PAUSED: { label: 'Pausado', variant: 'secondary', icon: Pause },
@@ -48,7 +52,11 @@ const STATUS_CONFIG: Record<
   ERROR: { label: 'Erro', variant: 'destructive', icon: AlertTriangle },
 };
 
-function ConnectionCard({ connection }: { connection: MarketplaceConnectionDTO }) {
+function ConnectionCard({
+  connection,
+}: {
+  connection: MarketplaceConnectionDTO;
+}) {
   const router = useRouter();
   const statusCfg = STATUS_CONFIG[connection.status] ?? STATUS_CONFIG.ERROR;
   const StatusIcon = statusCfg.icon;
@@ -56,9 +64,7 @@ function ConnectionCard({ connection }: { connection: MarketplaceConnectionDTO }
   return (
     <Card
       className="bg-white dark:bg-slate-800/60 border border-border p-5 cursor-pointer hover:border-primary/40 transition-colors"
-      onClick={() =>
-        router.push(`/sales/marketplaces/${connection.id}`)
-      }
+      onClick={() => router.push(`/sales/marketplaces/${connection.id}`)}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -68,7 +74,8 @@ function ConnectionCard({ connection }: { connection: MarketplaceConnectionDTO }
           <div>
             <h3 className="font-medium text-sm">{connection.name}</h3>
             <p className="text-xs text-muted-foreground">
-              {MARKETPLACE_LABELS[connection.marketplace] ?? connection.marketplace}
+              {MARKETPLACE_LABELS[connection.marketplace] ??
+                connection.marketplace}
             </p>
           </div>
         </div>
@@ -81,7 +88,9 @@ function ConnectionCard({ connection }: { connection: MarketplaceConnectionDTO }
       <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
         <div className="rounded-md bg-muted/50 px-2 py-1.5">
           <p className="text-muted-foreground">Produtos</p>
-          <p className="font-medium">{connection.syncProducts ? 'Sim' : 'Nao'}</p>
+          <p className="font-medium">
+            {connection.syncProducts ? 'Sim' : 'Nao'}
+          </p>
         </div>
         <div className="rounded-md bg-muted/50 px-2 py-1.5">
           <p className="text-muted-foreground">Pedidos</p>
@@ -113,17 +122,13 @@ export default function MarketplacesPage() {
   const router = useRouter();
   const { data, isLoading, error } = useMarketplaceConnectionsInfinite();
 
-  const connections =
-    data?.pages.flatMap((page) => page.connections) ?? [];
+  const connections = data?.pages.flatMap(page => page.connections) ?? [];
 
   return (
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbItems={[
-            { label: 'Vendas' },
-            { label: 'Marketplaces' },
-          ]}
+          breadcrumbItems={[{ label: 'Vendas' }, { label: 'Marketplaces' }]}
         >
           <Button
             size="sm"
@@ -160,11 +165,8 @@ export default function MarketplacesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {connections.map((connection) => (
-              <ConnectionCard
-                key={connection.id}
-                connection={connection}
-              />
+            {connections.map(connection => (
+              <ConnectionCard key={connection.id} connection={connection} />
             ))}
           </div>
         )}

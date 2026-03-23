@@ -2,10 +2,7 @@
 
 import { useState } from 'react';
 import { PageActionBar } from '@/components/layout/page-action-bar';
-import {
-  PageBody,
-  PageLayout,
-} from '@/components/layout/page-layout';
+import { PageBody, PageLayout } from '@/components/layout/page-layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

@@ -11,10 +11,7 @@ import {
   useCreateInventorySession,
   useResumeSession,
 } from '@/hooks/mobile/use-inventory-sessions';
-import type {
-  InventorySession,
-  InventorySessionMode,
-} from '@/types/stock';
+import type { InventorySession, InventorySessionMode } from '@/types/stock';
 import {
   MapPin,
   Map,
@@ -31,7 +28,7 @@ import { cn } from '@/lib/utils';
 
 const ScannerCamera = dynamic(
   () =>
-    import('@/components/mobile/scanner-camera').then((m) => ({
+    import('@/components/mobile/scanner-camera').then(m => ({
       default: m.ScannerCamera,
     })),
   { ssr: false }
@@ -157,13 +154,12 @@ function SessionCard({
             {session.binLabel || session.zoneName || modeLabels[session.mode]}
           </p>
           <p className="text-[11px] text-slate-500">
-            {modeLabels[session.mode]} ·{' '}
-            {config.label} · {progress}%
+            {modeLabels[session.mode]} · {config.label} · {progress}%
           </p>
         </div>
         {(isActive || isPaused) && (
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               if (isPaused && onResume) {
                 onResume();
@@ -275,7 +271,7 @@ function BinScanModal({
         <input
           type="text"
           value={manualCode}
-          onChange={(e) => setManualCode(e.target.value)}
+          onChange={e => setManualCode(e.target.value)}
           placeholder="Código do bin..."
           className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
@@ -307,10 +303,10 @@ export default function InventoryHubPage() {
 
   const sessions = sessionsQuery.data?.sessions ?? [];
   const activeSessions = sessions.filter(
-    (s) => s.status === 'ACTIVE' || s.status === 'PAUSED'
+    s => s.status === 'ACTIVE' || s.status === 'PAUSED'
   );
   const historySessions = sessions.filter(
-    (s) => s.status === 'COMPLETED' || s.status === 'CANCELLED'
+    s => s.status === 'COMPLETED' || s.status === 'CANCELLED'
   );
 
   const handleModeSelect = useCallback(
@@ -322,10 +318,8 @@ export default function InventoryHubPage() {
         createSession.mutate(
           { mode: 'ZONE' },
           {
-            onSuccess: (data) => {
-              router.push(
-                `/m/stock/inventory/session/${data.session.id}`
-              );
+            onSuccess: data => {
+              router.push(`/m/stock/inventory/session/${data.session.id}`);
             },
           }
         );
@@ -334,10 +328,8 @@ export default function InventoryHubPage() {
         createSession.mutate(
           { mode: 'PRODUCT' },
           {
-            onSuccess: (data) => {
-              router.push(
-                `/m/stock/inventory/session/${data.session.id}`
-              );
+            onSuccess: data => {
+              router.push(`/m/stock/inventory/session/${data.session.id}`);
             },
           }
         );
@@ -352,10 +344,8 @@ export default function InventoryHubPage() {
       createSession.mutate(
         { mode: 'BIN', binId: code },
         {
-          onSuccess: (data) => {
-            router.push(
-              `/m/stock/inventory/session/${data.session.id}`
-            );
+          onSuccess: data => {
+            router.push(`/m/stock/inventory/session/${data.session.id}`);
           },
         }
       );
@@ -398,7 +388,7 @@ export default function InventoryHubPage() {
             <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Sessões Ativas
             </h2>
-            {activeSessions.map((session) => (
+            {activeSessions.map(session => (
               <SessionCard
                 key={session.id}
                 session={session}
@@ -459,7 +449,7 @@ export default function InventoryHubPage() {
             <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Histórico
             </h2>
-            {historySessions.map((session) => (
+            {historySessions.map(session => (
               <SessionCard key={session.id} session={session} />
             ))}
           </div>
@@ -471,9 +461,7 @@ export default function InventoryHubPage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-800">
               <ScanLine className="h-6 w-6 text-slate-500" />
             </div>
-            <p className="text-sm text-slate-400">
-              Nenhuma sessão encontrada
-            </p>
+            <p className="text-sm text-slate-400">Nenhuma sessão encontrada</p>
             <p className="text-xs text-slate-600">
               Selecione um modo acima para iniciar
             </p>

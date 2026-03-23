@@ -7,11 +7,7 @@ import type {
   UpdatePipelineRequest,
   UpdatePipelineStageRequest,
 } from '@/types/sales';
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface PipelinesFilters {
   search?: string;

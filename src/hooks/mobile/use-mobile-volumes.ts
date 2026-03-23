@@ -27,7 +27,7 @@ export function useVolumes(filters?: Pick<VolumesQuery, 'status' | 'search'>) {
       });
       return response;
     },
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (!lastPage.pagination) return undefined;
       const { page, totalPages } = lastPage.pagination;
       return page < totalPages ? page + 1 : undefined;

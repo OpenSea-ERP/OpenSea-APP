@@ -196,7 +196,17 @@ export function CreateCatalogWizard({
 
     await onSubmit(payload);
     handleClose();
-  }, [name, description, type, layout, showPrices, showStock, isPublic, onSubmit, handleClose]);
+  }, [
+    name,
+    description,
+    type,
+    layout,
+    showPrices,
+    showStock,
+    isPublic,
+    onSubmit,
+    handleClose,
+  ]);
 
   const steps: WizardStep[] = [
     {
@@ -238,11 +248,7 @@ export function CreateCatalogWizard({
       ),
       isValid: true,
       footer: (
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
+        <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (

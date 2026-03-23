@@ -10,12 +10,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateCombo } from '@/hooks/sales/use-combos';
 import type { ComboDiscountType, CreateComboRequest } from '@/types/sales';
-import {
-  CalendarDays,
-  Check,
-  Loader2,
-  Package,
-} from 'lucide-react';
+import { CalendarDays, Check, Loader2, Package } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -33,7 +28,8 @@ export function CreateComboWizard({
   // Step 1 — Basic info
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [discountType, setDiscountType] = useState<ComboDiscountType>('PERCENTAGE');
+  const [discountType, setDiscountType] =
+    useState<ComboDiscountType>('PERCENTAGE');
   const [discountValue, setDiscountValue] = useState('');
 
   // Step 2 — Dates & activation
@@ -123,7 +119,9 @@ export function CreateComboWizard({
                 type="number"
                 min={0}
                 step={0.01}
-                placeholder={discountType === 'PERCENTAGE' ? 'Ex: 15' : 'Ex: 30.00'}
+                placeholder={
+                  discountType === 'PERCENTAGE' ? 'Ex: 15' : 'Ex: 30.00'
+                }
                 value={discountValue}
                 onChange={e => setDiscountValue(e.target.value)}
               />
@@ -136,7 +134,12 @@ export function CreateComboWizard({
     {
       title: 'Datas e Ativação',
       description: 'Configure o período de vigência e status do combo.',
-      icon: <CalendarDays className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />,
+      icon: (
+        <CalendarDays
+          className="h-16 w-16 text-emerald-400"
+          strokeWidth={1.2}
+        />
+      ),
       onBack: () => setCurrentStep(1),
       content: (
         <div className="space-y-4">
@@ -175,7 +178,10 @@ export function CreateComboWizard({
                 }`}
               />
             </button>
-            <Label className="cursor-pointer" onClick={() => setIsActive(!isActive)}>
+            <Label
+              className="cursor-pointer"
+              onClick={() => setIsActive(!isActive)}
+            >
               {isActive ? 'Combo ativo' : 'Combo inativo'}
             </Label>
           </div>

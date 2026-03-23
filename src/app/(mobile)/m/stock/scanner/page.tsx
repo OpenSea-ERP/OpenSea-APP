@@ -3,7 +3,10 @@
 import { useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { MobileTopBar } from '@/components/mobile/mobile-top-bar';
-import { ScanModeChips, type ScanMode } from '@/components/mobile/scan-mode-chips';
+import {
+  ScanModeChips,
+  type ScanMode,
+} from '@/components/mobile/scan-mode-chips';
 import { ScanResultSheet } from '@/components/mobile/scan-result-sheet';
 import { useCodeLookup } from '@/hooks/mobile/use-code-lookup';
 import { cn } from '@/lib/utils';
@@ -11,7 +14,7 @@ import { Search, ScanLine, Loader2, AlertCircle } from 'lucide-react';
 
 const ScannerCamera = dynamic(
   () =>
-    import('@/components/mobile/scanner-camera').then((m) => ({
+    import('@/components/mobile/scanner-camera').then(m => ({
       default: m.ScannerCamera,
     })),
   { ssr: false }
@@ -133,7 +136,7 @@ export default function ScannerPage() {
           ref={inputRef}
           type="text"
           value={manualCode}
-          onChange={(e) => setManualCode(e.target.value)}
+          onChange={e => setManualCode(e.target.value)}
           placeholder="Código manual..."
           className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />

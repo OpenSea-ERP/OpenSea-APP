@@ -75,7 +75,6 @@ const STATUS_OPTIONS = [
   { value: 'SUSPENDED', label: 'Suspensas' },
 ];
 
-
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TenantsListPage() {

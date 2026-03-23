@@ -40,8 +40,7 @@ export function useFinanceCustomers(params?: {
 export function useCreateFinanceCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateCustomerRequest) =>
-      customersService.create(data),
+    mutationFn: (data: CreateCustomerRequest) => customersService.create(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.FINANCE_CUSTOMERS,

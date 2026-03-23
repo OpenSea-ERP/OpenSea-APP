@@ -17,23 +17,65 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-const MARKETPLACES: { type: MarketplaceType; label: string; description: string }[] = [
-  { type: 'MERCADO_LIVRE', label: 'Mercado Livre', description: 'Maior marketplace da America Latina' },
-  { type: 'SHOPEE', label: 'Shopee', description: 'Marketplace com forte presenca no Brasil' },
-  { type: 'AMAZON', label: 'Amazon Brasil', description: 'Marketplace global com operacao brasileira' },
-  { type: 'MAGALU', label: 'Magazine Luiza', description: 'Grande varejista brasileiro' },
-  { type: 'TIKTOK_SHOP', label: 'TikTok Shop', description: 'Social commerce em crescimento' },
-  { type: 'AMERICANAS', label: 'Americanas', description: 'Marketplace Via Varejo' },
-  { type: 'ALIEXPRESS', label: 'AliExpress', description: 'Marketplace internacional' },
-  { type: 'CASAS_BAHIA', label: 'Casas Bahia', description: 'Grande varejista brasileiro' },
+const MARKETPLACES: {
+  type: MarketplaceType;
+  label: string;
+  description: string;
+}[] = [
+  {
+    type: 'MERCADO_LIVRE',
+    label: 'Mercado Livre',
+    description: 'Maior marketplace da America Latina',
+  },
+  {
+    type: 'SHOPEE',
+    label: 'Shopee',
+    description: 'Marketplace com forte presenca no Brasil',
+  },
+  {
+    type: 'AMAZON',
+    label: 'Amazon Brasil',
+    description: 'Marketplace global com operacao brasileira',
+  },
+  {
+    type: 'MAGALU',
+    label: 'Magazine Luiza',
+    description: 'Grande varejista brasileiro',
+  },
+  {
+    type: 'TIKTOK_SHOP',
+    label: 'TikTok Shop',
+    description: 'Social commerce em crescimento',
+  },
+  {
+    type: 'AMERICANAS',
+    label: 'Americanas',
+    description: 'Marketplace Via Varejo',
+  },
+  {
+    type: 'ALIEXPRESS',
+    label: 'AliExpress',
+    description: 'Marketplace internacional',
+  },
+  {
+    type: 'CASAS_BAHIA',
+    label: 'Casas Bahia',
+    description: 'Grande varejista brasileiro',
+  },
   { type: 'SHEIN', label: 'Shein', description: 'Marketplace de moda' },
-  { type: 'CUSTOM', label: 'Personalizado', description: 'Configuracao manual de API' },
+  {
+    type: 'CUSTOM',
+    label: 'Personalizado',
+    description: 'Configuracao manual de API',
+  },
 ];
 
 export default function ConnectMarketplacePage() {
   const router = useRouter();
   const createMutation = useCreateMarketplaceConnection();
-  const [selectedType, setSelectedType] = useState<MarketplaceType | null>(null);
+  const [selectedType, setSelectedType] = useState<MarketplaceType | null>(
+    null
+  );
   const [name, setName] = useState('');
   const [sellerId, setSellerId] = useState('');
 
@@ -86,7 +128,7 @@ export default function ConnectMarketplacePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {MARKETPLACES.map((mp) => (
+            {MARKETPLACES.map(mp => (
               <Card
                 key={mp.type}
                 className={`cursor-pointer p-4 text-center transition-all ${
@@ -114,7 +156,7 @@ export default function ConnectMarketplacePage() {
                   <Input
                     placeholder="Ex: Minha Loja Mercado Livre"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={e => setName(e.target.value)}
                     maxLength={128}
                   />
                 </div>
@@ -123,7 +165,7 @@ export default function ConnectMarketplacePage() {
                   <Input
                     placeholder="Seu ID de vendedor no marketplace"
                     value={sellerId}
-                    onChange={(e) => setSellerId(e.target.value)}
+                    onChange={e => setSellerId(e.target.value)}
                   />
                 </div>
               </div>

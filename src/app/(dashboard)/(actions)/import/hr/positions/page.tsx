@@ -175,7 +175,7 @@ export default function ImportPositionsPage() {
         });
 
         const newRows = parsed.rows.map(row => {
-          const newRow = enabledFields.map((h) => ({
+          const newRow = enabledFields.map(h => ({
             value: '',
             fieldKey: h.key,
           }));

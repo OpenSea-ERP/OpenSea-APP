@@ -3,7 +3,12 @@
 import { cn } from '@/lib/utils';
 import { ReactNode } from 'react';
 
-export type StatPillIconColor = 'violet' | 'indigo' | 'sky' | 'emerald' | 'teal';
+export type StatPillIconColor =
+  | 'violet'
+  | 'indigo'
+  | 'sky'
+  | 'emerald'
+  | 'teal';
 
 export interface CentralStatPillProps {
   icon: ReactNode;

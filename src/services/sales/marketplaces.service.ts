@@ -32,50 +32,50 @@ export const marketplacesService = {
   },
 
   async getConnection(
-    id: string,
+    id: string
   ): Promise<{ connection: MarketplaceConnectionDTO }> {
     return apiClient.get<{ connection: MarketplaceConnectionDTO }>(
-      API_ENDPOINTS.MARKETPLACE_CONNECTIONS.GET(id),
+      API_ENDPOINTS.MARKETPLACE_CONNECTIONS.GET(id)
     );
   },
 
   async createConnection(
-    data: CreateMarketplaceConnectionRequest,
+    data: CreateMarketplaceConnectionRequest
   ): Promise<{ connection: MarketplaceConnectionDTO }> {
     return apiClient.post<{ connection: MarketplaceConnectionDTO }>(
       API_ENDPOINTS.MARKETPLACE_CONNECTIONS.CREATE,
-      data,
+      data
     );
   },
 
   async updateConnection(
     id: string,
-    data: UpdateMarketplaceConnectionRequest,
+    data: UpdateMarketplaceConnectionRequest
   ): Promise<{ connection: MarketplaceConnectionDTO }> {
     return apiClient.put<{ connection: MarketplaceConnectionDTO }>(
       API_ENDPOINTS.MARKETPLACE_CONNECTIONS.UPDATE(id),
-      data,
+      data
     );
   },
 
   async deleteConnection(id: string): Promise<{ message: string }> {
     return apiClient.delete<{ message: string }>(
-      API_ENDPOINTS.MARKETPLACE_CONNECTIONS.DELETE(id),
+      API_ENDPOINTS.MARKETPLACE_CONNECTIONS.DELETE(id)
     );
   },
 
   async getReconciliation(
-    connectionId: string,
+    connectionId: string
   ): Promise<MarketplaceReconciliationDTO> {
     return apiClient.get<MarketplaceReconciliationDTO>(
-      API_ENDPOINTS.MARKETPLACE_CONNECTIONS.RECONCILIATION(connectionId),
+      API_ENDPOINTS.MARKETPLACE_CONNECTIONS.RECONCILIATION(connectionId)
     );
   },
 
   // === Listings ===
   async listListings(
     connectionId: string,
-    params?: { page?: number; perPage?: number },
+    params?: { page?: number; perPage?: number }
   ): Promise<MarketplaceListingsResponse> {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', String(params.page));
@@ -88,17 +88,17 @@ export const marketplacesService = {
 
   async publishListing(
     connectionId: string,
-    data: PublishMarketplaceListingRequest,
+    data: PublishMarketplaceListingRequest
   ): Promise<{ listing: MarketplaceListingDTO }> {
     return apiClient.post<{ listing: MarketplaceListingDTO }>(
       API_ENDPOINTS.MARKETPLACE_CONNECTIONS.LISTINGS(connectionId),
-      data,
+      data
     );
   },
 
   async deactivateListing(id: string): Promise<{ message: string }> {
     return apiClient.patch<{ message: string }>(
-      API_ENDPOINTS.MARKETPLACE_LISTINGS.DEACTIVATE(id),
+      API_ENDPOINTS.MARKETPLACE_LISTINGS.DEACTIVATE(id)
     );
   },
 
@@ -122,11 +122,9 @@ export const marketplacesService = {
     return apiClient.get<MarketplaceOrdersResponse>(url);
   },
 
-  async acknowledgeOrder(
-    id: string,
-  ): Promise<{ order: MarketplaceOrderDTO }> {
+  async acknowledgeOrder(id: string): Promise<{ order: MarketplaceOrderDTO }> {
     return apiClient.patch<{ order: MarketplaceOrderDTO }>(
-      API_ENDPOINTS.MARKETPLACE_ORDERS.ACKNOWLEDGE(id),
+      API_ENDPOINTS.MARKETPLACE_ORDERS.ACKNOWLEDGE(id)
     );
   },
 

@@ -11,12 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCreatePriceTable } from '@/hooks/sales/use-price-tables';
 import type { PriceTableType, CreatePriceTableRequest } from '@/types/sales';
 import { PRICE_TABLE_TYPE_LABELS } from '@/types/sales';
-import {
-  CalendarDays,
-  Check,
-  DollarSign,
-  Loader2,
-} from 'lucide-react';
+import { CalendarDays, Check, DollarSign, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -236,10 +231,7 @@ export function CreatePriceTableWizard({
       title: 'Informações Básicas',
       description: 'Defina o nome, tipo e prioridade da tabela.',
       icon: (
-        <DollarSign
-          className="h-16 w-16 text-blue-400"
-          strokeWidth={1.2}
-        />
+        <DollarSign className="h-16 w-16 text-blue-400" strokeWidth={1.2} />
       ),
       content: (
         <StepBasicInfo
@@ -277,11 +269,7 @@ export function CreatePriceTableWizard({
       ),
       isValid: true,
       footer: (
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
+        <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (

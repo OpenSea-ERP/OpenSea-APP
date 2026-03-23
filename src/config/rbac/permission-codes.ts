@@ -139,7 +139,17 @@ export const STOCK_PERMISSIONS = {
     'remove',
     'admin'
   ),
-  INVENTORY: perm('stock', 'inventory', 'access', 'register', 'modify', 'remove', 'admin', 'export', 'print'),
+  INVENTORY: perm(
+    'stock',
+    'inventory',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin',
+    'export',
+    'print'
+  ),
 } as const;
 
 // =============================================================================
@@ -418,7 +428,15 @@ export const SALES_PERMISSIONS = {
   ),
   DISCOUNTS: salesPerm('discounts', 'access', 'admin'),
   COUPONS: salesPerm('coupons', 'access', 'register', 'remove', 'admin'),
-  CAMPAIGNS: salesPerm('campaigns', 'access', 'register', 'modify', 'remove', 'admin', 'activate'),
+  CAMPAIGNS: salesPerm(
+    'campaigns',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin',
+    'activate'
+  ),
   COMBOS: salesPerm('combos', 'access', 'register', 'remove', 'admin'),
 
   // --- Promoções (existente) ---
@@ -526,14 +544,45 @@ export const SALES_PERMISSIONS = {
   BIDS: salesPerm('bids', 'access', 'register', 'modify', 'remove', 'admin'),
   BID_PROPOSALS: salesPerm('bid-proposals', 'access', 'admin', 'send'),
   BID_BOT: salesPerm('bid-bot', 'access', 'admin', 'activate'),
-  BID_CONTRACTS: salesPerm('bid-contracts', 'access', 'admin', 'register', 'modify', 'remove'),
-  BID_DOCUMENTS: salesPerm('bid-documents', 'access', 'admin', 'register', 'modify', 'remove'),
+  BID_CONTRACTS: salesPerm(
+    'bid-contracts',
+    'access',
+    'admin',
+    'register',
+    'modify',
+    'remove'
+  ),
+  BID_DOCUMENTS: salesPerm(
+    'bid-documents',
+    'access',
+    'admin',
+    'register',
+    'modify',
+    'remove'
+  ),
   BID_EMPENHOS: perm('sales', 'bid-empenhos', 'access', 'register', 'modify'),
 
   // --- Catálogos e Conteúdo ---
-  CATALOGS: salesPerm('catalogs', 'access', 'register', 'modify', 'remove', 'admin', 'publish'),
+  CATALOGS: salesPerm(
+    'catalogs',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin',
+    'publish'
+  ),
   BRAND: perm('sales', 'brand', 'access', 'modify'),
-  CONTENT: salesPerm('content', 'access', 'register', 'remove', 'generate', 'publish', 'approve', 'admin'),
+  CONTENT: salesPerm(
+    'content',
+    'access',
+    'register',
+    'remove',
+    'generate',
+    'publish',
+    'approve',
+    'admin'
+  ),
   CUSTOMER_PORTAL: perm(
     'sales',
     'customer-portal',
@@ -560,8 +609,22 @@ export const SALES_PERMISSIONS = {
     'modify',
     'remove'
   ),
-  MARKETPLACE_ORDERS: perm('sales', 'marketplace-orders', 'access', 'register', 'modify', 'remove'),
-  MARKETPLACE_PAYMENTS: perm('sales', 'marketplace-payments', 'access', 'register', 'modify', 'remove'),
+  MARKETPLACE_ORDERS: perm(
+    'sales',
+    'marketplace-orders',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
+  MARKETPLACE_PAYMENTS: perm(
+    'sales',
+    'marketplace-payments',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
 
   // --- Analytics ---
   ANALYTICS: salesPerm('analytics', 'access', 'admin', 'export', 'onlyself'),

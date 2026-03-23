@@ -43,7 +43,11 @@ const MARKETPLACE_LABELS: Record<string, string> = {
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType }
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    icon: React.ElementType;
+  }
 > = {
   ACTIVE: { label: 'Ativo', variant: 'default', icon: Wifi },
   PAUSED: { label: 'Pausado', variant: 'secondary', icon: Pause },
@@ -63,7 +67,11 @@ export default function ConnectionDetailPage() {
   const params = useParams();
   const connectionId = params.connectionId as string;
 
-  const { data: connection, isLoading, error } = useMarketplaceConnection(connectionId);
+  const {
+    data: connection,
+    isLoading,
+    error,
+  } = useMarketplaceConnection(connectionId);
   const { data: reconciliation } = useMarketplaceReconciliation(connectionId);
 
   if (isLoading) {
@@ -78,7 +86,9 @@ export default function ConnectionDetailPage() {
             ]}
           />
         </PageHeader>
-        <PageBody><GridLoading /></PageBody>
+        <PageBody>
+          <GridLoading />
+        </PageBody>
       </PageLayout>
     );
   }
@@ -95,7 +105,9 @@ export default function ConnectionDetailPage() {
             ]}
           />
         </PageHeader>
-        <PageBody><GridError /></PageBody>
+        <PageBody>
+          <GridError />
+        </PageBody>
       </PageLayout>
     );
   }
@@ -141,7 +153,8 @@ export default function ConnectionDetailPage() {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {MARKETPLACE_LABELS[connection.marketplace] ?? connection.marketplace}
+                  {MARKETPLACE_LABELS[connection.marketplace] ??
+                    connection.marketplace}
                   {connection.sellerName && ` - ${connection.sellerName}`}
                 </p>
               </div>
@@ -152,7 +165,9 @@ export default function ConnectionDetailPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Card
               className="bg-white dark:bg-slate-800/60 border border-border p-4 cursor-pointer hover:border-primary/40 transition-colors"
-              onClick={() => router.push(`/sales/marketplaces/${connectionId}/listings`)}
+              onClick={() =>
+                router.push(`/sales/marketplaces/${connectionId}/listings`)
+              }
             >
               <div className="flex items-center gap-3">
                 <Box className="h-5 w-5 text-blue-500" />
@@ -166,7 +181,9 @@ export default function ConnectionDetailPage() {
             </Card>
             <Card
               className="bg-white dark:bg-slate-800/60 border border-border p-4 cursor-pointer hover:border-primary/40 transition-colors"
-              onClick={() => router.push(`/sales/marketplaces/${connectionId}/orders`)}
+              onClick={() =>
+                router.push(`/sales/marketplaces/${connectionId}/orders`)
+              }
             >
               <div className="flex items-center gap-3">
                 <ListOrdered className="h-5 w-5 text-green-500" />
@@ -240,7 +257,7 @@ export default function ConnectionDetailPage() {
                 { label: 'Estoque', active: connection.syncStock },
                 { label: 'Pedidos', active: connection.syncOrders },
                 { label: 'Mensagens', active: connection.syncMessages },
-              ].map((item) => (
+              ].map(item => (
                 <div
                   key={item.label}
                   className={`rounded-lg px-3 py-2 text-center ${

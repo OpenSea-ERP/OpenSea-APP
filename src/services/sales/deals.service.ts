@@ -47,10 +47,7 @@ export const dealsService = {
   },
 
   // PUT /v1/deals/:dealId
-  async update(
-    dealId: string,
-    data: UpdateDealRequest
-  ): Promise<DealResponse> {
+  async update(dealId: string, data: UpdateDealRequest): Promise<DealResponse> {
     return apiClient.put<DealResponse>(
       API_ENDPOINTS.DEALS.UPDATE(dealId),
       data

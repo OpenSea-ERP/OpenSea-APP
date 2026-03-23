@@ -78,8 +78,7 @@ export function useCreateActivity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateActivityRequest) =>
-      activitiesService.create(data),
+    mutationFn: (data: CreateActivityRequest) => activitiesService.create(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['activities'] });
       await queryClient.invalidateQueries({ queryKey: ['timeline'] });

@@ -267,12 +267,8 @@ function StepItems({
               <tr className="border-b bg-muted/50">
                 <th className="text-left px-3 py-2 font-medium">Produto</th>
                 <th className="text-center px-2 py-2 font-medium w-16">Qtd</th>
-                <th className="text-right px-3 py-2 font-medium w-24">
-                  Preço
-                </th>
-                <th className="text-right px-3 py-2 font-medium w-24">
-                  Total
-                </th>
+                <th className="text-right px-3 py-2 font-medium w-24">Preço</th>
+                <th className="text-right px-3 py-2 font-medium w-24">Total</th>
                 <th className="w-8" />
               </tr>
             </thead>
@@ -500,7 +496,9 @@ export function CreateOrderWizard({
     {
       title: 'Adicione os Itens',
       description: 'Informe os produtos e quantidades do pedido.',
-      icon: <Package className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />,
+      icon: (
+        <Package className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />
+      ),
       onBack: () => setCurrentStep(1),
       content: <StepItems items={items} onItemsChange={setItems} />,
       isValid: items.length > 0,
@@ -509,10 +507,7 @@ export function CreateOrderWizard({
       title: 'Condições e Finalização',
       description: 'Defina as condições de pagamento e finalize o pedido.',
       icon: (
-        <ShoppingCart
-          className="h-16 w-16 text-violet-400"
-          strokeWidth={1.2}
-        />
+        <ShoppingCart className="h-16 w-16 text-violet-400" strokeWidth={1.2} />
       ),
       onBack: () => setCurrentStep(2),
       content: (

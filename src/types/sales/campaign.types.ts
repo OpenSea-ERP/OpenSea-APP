@@ -37,12 +37,18 @@ export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = {
 };
 
 export const CAMPAIGN_STATUS_COLORS: Record<CampaignStatus, string> = {
-  DRAFT: 'border-gray-300 dark:border-white/[0.1] bg-gray-50 dark:bg-white/[0.04] text-gray-700 dark:text-gray-300',
-  SCHEDULED: 'border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300',
-  ACTIVE: 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
-  PAUSED: 'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
-  ENDED: 'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300',
-  ARCHIVED: 'border-gray-300 dark:border-white/[0.1] bg-gray-50 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400',
+  DRAFT:
+    'border-gray-300 dark:border-white/[0.1] bg-gray-50 dark:bg-white/[0.04] text-gray-700 dark:text-gray-300',
+  SCHEDULED:
+    'border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300',
+  ACTIVE:
+    'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+  PAUSED:
+    'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+  ENDED:
+    'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300',
+  ARCHIVED:
+    'border-gray-300 dark:border-white/[0.1] bg-gray-50 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400',
 };
 
 export interface Campaign {
@@ -96,7 +102,7 @@ export interface CreateCampaignRequest {
   }>;
 }
 
-export interface UpdateCampaignRequest extends Partial<CreateCampaignRequest> {}
+export type UpdateCampaignRequest = Partial<CreateCampaignRequest>;
 
 export interface CampaignResponse {
   campaign: Campaign;

@@ -49,7 +49,7 @@ interface ScanModeChipsProps {
 export function ScanModeChips({ value, onChange }: ScanModeChipsProps) {
   return (
     <div className="flex gap-2 overflow-x-auto px-4 py-2 no-scrollbar">
-      {MODES.map((mode) => {
+      {MODES.map(mode => {
         const isActive = value === mode.value;
         return (
           <button

@@ -12,9 +12,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { usePermissions } from '@/hooks/use-permissions';
-import { useDeal, useUpdateDeal, useDeleteDeal, useChangeDealStage } from '@/hooks/sales/use-deals';
+import {
+  useDeal,
+  useUpdateDeal,
+  useDeleteDeal,
+  useChangeDealStage,
+} from '@/hooks/sales/use-deals';
 import { useTimeline } from '@/hooks/sales/use-timeline';
-import { useActivitiesInfinite, useCreateActivity } from '@/hooks/sales/use-activities';
+import {
+  useActivitiesInfinite,
+  useCreateActivity,
+} from '@/hooks/sales/use-activities';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -45,10 +53,7 @@ import type {
   TimelineItem,
   Activity,
 } from '@/types/sales';
-import {
-  DEAL_STATUS_LABELS,
-  ACTIVITY_TYPE_LABELS,
-} from '@/types/sales';
+import { DEAL_STATUS_LABELS, ACTIVITY_TYPE_LABELS } from '@/types/sales';
 
 /* ──────────────────────────────────────────────────────────
    Status styles
@@ -309,17 +314,23 @@ function DealDetailContent() {
                   className={cn(
                     'flex-1 min-w-0 relative flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-all',
                     'border',
-                    isCurrent && !isWon && !isLost &&
+                    isCurrent &&
+                      !isWon &&
+                      !isLost &&
                       'bg-violet-50 dark:bg-violet-500/10 border-violet-300 dark:border-violet-500/30 text-violet-700 dark:text-violet-300',
-                    isCurrent && isWon &&
+                    isCurrent &&
+                      isWon &&
                       'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300',
-                    isCurrent && isLost &&
+                    isCurrent &&
+                      isLost &&
                       'bg-rose-50 dark:bg-rose-500/10 border-rose-300 dark:border-rose-500/30 text-rose-700 dark:text-rose-300',
                     isPast &&
                       'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400',
-                    !isCurrent && !isPast &&
+                    !isCurrent &&
+                      !isPast &&
                       'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500',
-                    canModify && 'cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/30',
+                    canModify &&
+                      'cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/30',
                     !canModify && 'cursor-default'
                   )}
                 >

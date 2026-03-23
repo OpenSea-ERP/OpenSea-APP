@@ -11,12 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCreateCampaign } from '@/hooks/sales/use-campaigns';
 import type { CampaignType, CreateCampaignRequest } from '@/types/sales';
 import { CAMPAIGN_TYPE_LABELS } from '@/types/sales';
-import {
-  CalendarDays,
-  Check,
-  Loader2,
-  Megaphone,
-} from 'lucide-react';
+import { CalendarDays, Check, Loader2, Megaphone } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -35,7 +30,9 @@ export function CreateCampaignWizard({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<CampaignType>('PERCENTAGE');
-  const [discountType, setDiscountType] = useState<'PERCENTAGE' | 'FIXED_VALUE'>('PERCENTAGE');
+  const [discountType, setDiscountType] = useState<
+    'PERCENTAGE' | 'FIXED_VALUE'
+  >('PERCENTAGE');
   const [discountValue, setDiscountValue] = useState('');
 
   // Step 2 — Dates & conditions
@@ -96,7 +93,9 @@ export function CreateCampaignWizard({
     {
       title: 'Informações Básicas',
       description: 'Defina o nome, tipo e desconto da campanha.',
-      icon: <Megaphone className="h-16 w-16 text-violet-400" strokeWidth={1.2} />,
+      icon: (
+        <Megaphone className="h-16 w-16 text-violet-400" strokeWidth={1.2} />
+      ),
       content: (
         <div className="space-y-4">
           <div className="space-y-2">
@@ -140,7 +139,9 @@ export function CreateCampaignWizard({
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={discountType}
                 onChange={e =>
-                  setDiscountType(e.target.value as 'PERCENTAGE' | 'FIXED_VALUE')
+                  setDiscountType(
+                    e.target.value as 'PERCENTAGE' | 'FIXED_VALUE'
+                  )
                 }
               >
                 <option value="PERCENTAGE">Percentual (%)</option>
@@ -153,7 +154,9 @@ export function CreateCampaignWizard({
                 type="number"
                 min={0}
                 step={0.01}
-                placeholder={discountType === 'PERCENTAGE' ? 'Ex: 10' : 'Ex: 25.00'}
+                placeholder={
+                  discountType === 'PERCENTAGE' ? 'Ex: 10' : 'Ex: 25.00'
+                }
                 value={discountValue}
                 onChange={e => setDiscountValue(e.target.value)}
               />
@@ -166,7 +169,12 @@ export function CreateCampaignWizard({
     {
       title: 'Datas e Condições',
       description: 'Configure o período de vigência e regras da campanha.',
-      icon: <CalendarDays className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />,
+      icon: (
+        <CalendarDays
+          className="h-16 w-16 text-emerald-400"
+          strokeWidth={1.2}
+        />
+      ),
       onBack: () => setCurrentStep(1),
       content: (
         <div className="space-y-4">
@@ -229,7 +237,10 @@ export function CreateCampaignWizard({
                 }`}
               />
             </button>
-            <Label className="cursor-pointer" onClick={() => setIsActive(!isActive)}>
+            <Label
+              className="cursor-pointer"
+              onClick={() => setIsActive(!isActive)}
+            >
               {isActive ? 'Campanha ativa' : 'Campanha inativa'}
             </Label>
           </div>

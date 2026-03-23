@@ -188,7 +188,8 @@ export default function EditBankAccountPage({
             icon: Trash,
             onClick: () => setDeleteModalOpen(true),
             variant: 'outline' as const,
-            className: 'text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10',
+            className:
+              'text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10',
           },
         ]
       : []),

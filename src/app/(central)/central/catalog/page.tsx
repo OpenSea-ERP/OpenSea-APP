@@ -454,11 +454,7 @@ function PricingEditDialog({
         <div className="space-y-4 py-2">
           {/* Skill name (read-only) */}
           <div className="space-y-1.5">
-            <Label
-              className="text-xs font-medium"
-            >
-              Skill
-            </Label>
+            <Label className="text-xs font-medium">Skill</Label>
             <div className="text-sm font-medium">
               {node?.skill.name}{' '}
               <code
@@ -472,20 +468,14 @@ function PricingEditDialog({
 
           {/* Pricing type */}
           <div className="space-y-1.5">
-            <Label
-              htmlFor="pricingType"
-            >
-              Tipo de Preço
-            </Label>
+            <Label htmlFor="pricingType">Tipo de Preço</Label>
             <Select
               value={form.pricingType}
               onValueChange={v =>
                 updateField('pricingType', v as PricingFormData['pricingType'])
               }
             >
-              <SelectTrigger
-                className="central-input"
-              >
+              <SelectTrigger className="central-input">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>

@@ -1,12 +1,54 @@
 // Marketplace Integration Types
 
-export type MarketplaceType = 'MERCADO_LIVRE' | 'SHOPEE' | 'AMAZON' | 'MAGALU' | 'TIKTOK_SHOP' | 'AMERICANAS' | 'ALIEXPRESS' | 'CASAS_BAHIA' | 'SHEIN' | 'CUSTOM';
-export type MarketplaceConnectionStatus = 'ACTIVE' | 'PAUSED' | 'DISCONNECTED' | 'ERROR';
+export type MarketplaceType =
+  | 'MERCADO_LIVRE'
+  | 'SHOPEE'
+  | 'AMAZON'
+  | 'MAGALU'
+  | 'TIKTOK_SHOP'
+  | 'AMERICANAS'
+  | 'ALIEXPRESS'
+  | 'CASAS_BAHIA'
+  | 'SHEIN'
+  | 'CUSTOM';
+export type MarketplaceConnectionStatus =
+  | 'ACTIVE'
+  | 'PAUSED'
+  | 'DISCONNECTED'
+  | 'ERROR';
 export type MarketplaceFulfillmentType = 'SELF' | 'MARKETPLACE' | 'HYBRID';
-export type MarketplaceListingStatus = 'DRAFT' | 'PENDING' | 'ACTIVE' | 'PAUSED' | 'ERROR' | 'OUT_OF_STOCK' | 'BLOCKED' | 'DELETED';
-export type MarketplaceOrderStatus = 'RECEIVED' | 'ACKNOWLEDGED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'RETURNED' | 'DISPUTE';
-export type MarketplacePaymentType = 'SALE' | 'REFUND' | 'COMMISSION' | 'SHIPPING_FEE' | 'AD_CHARGE' | 'FULFILLMENT_FEE' | 'ADJUSTMENT' | 'TRANSFER';
-export type MarketplacePaymentStatus = 'PENDING' | 'SETTLED' | 'DISPUTED' | 'CANCELLED';
+export type MarketplaceListingStatus =
+  | 'DRAFT'
+  | 'PENDING'
+  | 'ACTIVE'
+  | 'PAUSED'
+  | 'ERROR'
+  | 'OUT_OF_STOCK'
+  | 'BLOCKED'
+  | 'DELETED';
+export type MarketplaceOrderStatus =
+  | 'RECEIVED'
+  | 'ACKNOWLEDGED'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'RETURNED'
+  | 'DISPUTE';
+export type MarketplacePaymentType =
+  | 'SALE'
+  | 'REFUND'
+  | 'COMMISSION'
+  | 'SHIPPING_FEE'
+  | 'AD_CHARGE'
+  | 'FULFILLMENT_FEE'
+  | 'ADJUSTMENT'
+  | 'TRANSFER';
+export type MarketplacePaymentStatus =
+  | 'PENDING'
+  | 'SETTLED'
+  | 'DISPUTED'
+  | 'CANCELLED';
 
 export interface MarketplaceConnectionDTO {
   id: string;

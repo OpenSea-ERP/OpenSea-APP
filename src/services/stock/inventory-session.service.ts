@@ -21,9 +21,7 @@ export const inventorySessionService = {
   },
 
   // GET /v1/stock/inventory-sessions — list sessions
-  async list(params?: {
-    status?: string;
-  }): Promise<InventorySessionsResponse> {
+  async list(params?: { status?: string }): Promise<InventorySessionsResponse> {
     const searchParams = new URLSearchParams();
     if (params?.status) searchParams.append('status', params.status);
     const qs = searchParams.toString();

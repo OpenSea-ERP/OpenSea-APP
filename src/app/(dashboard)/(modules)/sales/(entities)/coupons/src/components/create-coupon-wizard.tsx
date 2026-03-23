@@ -11,12 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCreateCoupon } from '@/hooks/sales/use-coupons';
 import type { CouponType, CreateCouponRequest } from '@/types/sales';
 import { COUPON_TYPE_LABELS } from '@/types/sales';
-import {
-  Check,
-  Loader2,
-  ShieldCheck,
-  Ticket,
-} from 'lucide-react';
+import { Check, Loader2, ShieldCheck, Ticket } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -86,8 +81,7 @@ export function CreateCouponWizard({
     }
   }
 
-  const step1Valid =
-    code.trim().length > 0 && discountValue.trim().length > 0;
+  const step1Valid = code.trim().length > 0 && discountValue.trim().length > 0;
   const step2Valid = startDate.length > 0 && endDate.length > 0;
 
   const steps: WizardStep[] = [
@@ -161,7 +155,9 @@ export function CreateCouponWizard({
     {
       title: 'Regras e Vigência',
       description: 'Configure limites de uso e período de validade.',
-      icon: <ShieldCheck className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />,
+      icon: (
+        <ShieldCheck className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />
+      ),
       onBack: () => setCurrentStep(1),
       content: (
         <div className="space-y-4">
@@ -235,7 +231,10 @@ export function CreateCouponWizard({
                 }`}
               />
             </button>
-            <Label className="cursor-pointer" onClick={() => setIsActive(!isActive)}>
+            <Label
+              className="cursor-pointer"
+              onClick={() => setIsActive(!isActive)}
+            >
               {isActive ? 'Cupom ativo' : 'Cupom inativo'}
             </Label>
           </div>

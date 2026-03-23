@@ -11,10 +11,7 @@ export interface IntegrationResponse {
 }
 
 export const integrationsService = {
-  async list(
-    boardId: string,
-    cardId: string
-  ): Promise<IntegrationsResponse> {
+  async list(boardId: string, cardId: string): Promise<IntegrationsResponse> {
     return apiClient.get<IntegrationsResponse>(
       API_ENDPOINTS.TASKS.INTEGRATIONS.LIST(boardId, cardId)
     );

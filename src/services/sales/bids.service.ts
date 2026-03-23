@@ -31,7 +31,7 @@ function buildParams(query?: Record<string, unknown>): string {
 export const bidsService = {
   async list(query?: BidsQuery): Promise<PaginatedBidsResponse> {
     return apiClient.get<PaginatedBidsResponse>(
-      `${API_ENDPOINTS.BIDS.LIST}${buildParams(query as Record<string, unknown>)}`,
+      `${API_ENDPOINTS.BIDS.LIST}${buildParams(query as Record<string, unknown>)}`
     );
   },
 
@@ -51,35 +51,61 @@ export const bidsService = {
     return apiClient.delete(API_ENDPOINTS.BIDS.DELETE(id));
   },
 
-  async listItems(bidId: string, query?: { page?: number; limit?: number }): Promise<PaginatedBidItemsResponse> {
+  async listItems(
+    bidId: string,
+    query?: { page?: number; limit?: number }
+  ): Promise<PaginatedBidItemsResponse> {
     return apiClient.get<PaginatedBidItemsResponse>(
-      `${API_ENDPOINTS.BIDS.ITEMS(bidId)}${buildParams(query as Record<string, unknown>)}`,
+      `${API_ENDPOINTS.BIDS.ITEMS(bidId)}${buildParams(query as Record<string, unknown>)}`
     );
   },
 
-  async listHistory(bidId: string, query?: { page?: number; limit?: number }): Promise<PaginatedBidHistoryResponse> {
+  async listHistory(
+    bidId: string,
+    query?: { page?: number; limit?: number }
+  ): Promise<PaginatedBidHistoryResponse> {
     return apiClient.get<PaginatedBidHistoryResponse>(
-      `${API_ENDPOINTS.BIDS.HISTORY(bidId)}${buildParams(query as Record<string, unknown>)}`,
+      `${API_ENDPOINTS.BIDS.HISTORY(bidId)}${buildParams(query as Record<string, unknown>)}`
     );
   },
 
-  async listDocuments(query?: { page?: number; limit?: number; bidId?: string; type?: string }): Promise<PaginatedBidDocumentsResponse> {
+  async listDocuments(query?: {
+    page?: number;
+    limit?: number;
+    bidId?: string;
+    type?: string;
+  }): Promise<PaginatedBidDocumentsResponse> {
     return apiClient.get<PaginatedBidDocumentsResponse>(
-      `${API_ENDPOINTS.BID_DOCUMENTS.LIST}${buildParams(query as Record<string, unknown>)}`,
+      `${API_ENDPOINTS.BID_DOCUMENTS.LIST}${buildParams(query as Record<string, unknown>)}`
     );
   },
 
-  async createDocument(data: CreateBidDocumentRequest): Promise<BidDocumentResponse> {
-    return apiClient.post<BidDocumentResponse>(API_ENDPOINTS.BID_DOCUMENTS.CREATE, data);
+  async createDocument(
+    data: CreateBidDocumentRequest
+  ): Promise<BidDocumentResponse> {
+    return apiClient.post<BidDocumentResponse>(
+      API_ENDPOINTS.BID_DOCUMENTS.CREATE,
+      data
+    );
   },
 
-  async listContracts(query?: { page?: number; limit?: number; status?: string; bidId?: string }): Promise<PaginatedBidContractsResponse> {
+  async listContracts(query?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    bidId?: string;
+  }): Promise<PaginatedBidContractsResponse> {
     return apiClient.get<PaginatedBidContractsResponse>(
-      `${API_ENDPOINTS.BID_CONTRACTS.LIST}${buildParams(query as Record<string, unknown>)}`,
+      `${API_ENDPOINTS.BID_CONTRACTS.LIST}${buildParams(query as Record<string, unknown>)}`
     );
   },
 
-  async createContract(data: CreateBidContractRequest): Promise<BidContractResponse> {
-    return apiClient.post<BidContractResponse>(API_ENDPOINTS.BID_CONTRACTS.CREATE, data);
+  async createContract(
+    data: CreateBidContractRequest
+  ): Promise<BidContractResponse> {
+    return apiClient.post<BidContractResponse>(
+      API_ENDPOINTS.BID_CONTRACTS.CREATE,
+      data
+    );
   },
 };

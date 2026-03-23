@@ -41,10 +41,7 @@ export default function AiPage() {
     <div className="flex flex-col gap-3 h-[calc(100vh-10rem)] overflow-hidden -mb-12">
       {/* Action Bar */}
       <PageActionBar
-        breadcrumbItems={[
-          { label: 'Ferramentas' },
-          { label: 'Assistente IA' },
-        ]}
+        breadcrumbItems={[{ label: 'Ferramentas' }, { label: 'Assistente IA' }]}
         buttons={[
           {
             id: 'conversations',
@@ -65,10 +62,7 @@ export default function AiPage() {
 
       {/* Hero Banner */}
       <div className="mt-1">
-        <AiHeroBanner
-          activeView={activeView}
-          onViewChange={setActiveView}
-        />
+        <AiHeroBanner activeView={activeView} onViewChange={setActiveView} />
       </div>
 
       {/* Dynamic content area — fills remaining space */}

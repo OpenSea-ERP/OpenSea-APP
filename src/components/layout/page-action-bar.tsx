@@ -100,7 +100,8 @@ export function PageActionBar({
         {/* Renderiza HeaderButtons se fornecidos */}
         {buttons
           ? buttons.map((button, index) => {
-              const buttonKey = button.id || button.title || button.label || `btn-${index}`;
+              const buttonKey =
+                button.id || button.title || button.label || `btn-${index}`;
               const isIconOnly = !!button.tooltip;
 
               const btn = (

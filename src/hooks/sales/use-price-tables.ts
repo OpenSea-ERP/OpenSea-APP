@@ -81,7 +81,8 @@ export function usePriceTableItems(tableId: string) {
 export function useCreatePriceTable() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreatePriceTableRequest) => priceTablesService.create(data),
+    mutationFn: (data: CreatePriceTableRequest) =>
+      priceTablesService.create(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['price-tables'] });
     },
@@ -95,7 +96,9 @@ export function useUpdatePriceTable() {
       priceTablesService.update(id, data),
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['price-tables'] });
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PRICE_TABLE(variables.id) });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PRICE_TABLE(variables.id),
+      });
     },
   });
 }

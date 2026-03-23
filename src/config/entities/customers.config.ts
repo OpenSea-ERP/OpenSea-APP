@@ -63,10 +63,8 @@ export const customersConfig = defineEntityConfig<Customer>()({
         field: 'type',
         label: 'Tipo',
         colorMap: {
-          INDIVIDUAL:
-            'bg-sky-500/20 text-sky-700 dark:text-sky-400',
-          BUSINESS:
-            'bg-violet-500/20 text-violet-700 dark:text-violet-400',
+          INDIVIDUAL: 'bg-sky-500/20 text-sky-700 dark:text-sky-400',
+          BUSINESS: 'bg-violet-500/20 text-violet-700 dark:text-violet-400',
         },
         render: (value: unknown) => {
           const labels = {

@@ -28,20 +28,9 @@ import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
 import { CreatePriceTableWizard } from './src/components/create-price-table-wizard';
-import {
-  DollarSign,
-  Plus,
-  Table2,
-  Trash2,
-} from 'lucide-react';
+import { DollarSign, Plus, Table2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {
-  Suspense,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function PricingPage() {
@@ -111,7 +100,7 @@ function PricingPageContent() {
     }
     if (!el) return;
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (
           entries[0].isIntersecting &&
           hasNextPageRef.current &&
@@ -120,7 +109,7 @@ function PricingPageContent() {
           fetchNextPageRef.current();
         }
       },
-      { rootMargin: '300px' },
+      { rootMargin: '300px' }
     );
     observer.observe(el);
     observerRef.current = observer;
@@ -133,7 +122,7 @@ function PricingPageContent() {
         id,
         label,
       })),
-    [],
+    []
   );
 
   // Handlers
@@ -151,7 +140,7 @@ function PricingPageContent() {
     toast.success(
       itemsToDelete.length === 1
         ? 'Tabela de preco excluida com sucesso!'
-        : `${itemsToDelete.length} tabelas excluidas!`,
+        : `${itemsToDelete.length} tabelas excluidas!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -200,7 +189,12 @@ function PricingPageContent() {
             type="server"
             title="Erro ao carregar tabelas de preco"
             message="Ocorreu um erro. Por favor, tente novamente."
-            action={{ label: 'Tentar Novamente', onClick: () => { refetch(); } }}
+            action={{
+              label: 'Tentar Novamente',
+              onClick: () => {
+                refetch();
+              },
+            }}
           />
         ) : (
           <>
@@ -228,7 +222,7 @@ function PricingPageContent() {
                   className={cn(
                     'group relative rounded-xl border bg-card p-4 cursor-pointer transition-all',
                     'hover:shadow-md hover:border-primary/20',
-                    'dark:hover:border-primary/30',
+                    'dark:hover:border-primary/30'
                   )}
                 >
                   <div className="flex items-start gap-3">
@@ -240,7 +234,8 @@ function PricingPageContent() {
                         {table.name}
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {table.description || PRICE_TABLE_TYPE_LABELS[table.type]}
+                        {table.description ||
+                          PRICE_TABLE_TYPE_LABELS[table.type]}
                       </p>
                     </div>
                   </div>
@@ -249,7 +244,7 @@ function PricingPageContent() {
                     <span
                       className={cn(
                         'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
-                        'border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300',
+                        'border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300'
                       )}
                     >
                       {PRICE_TABLE_TYPE_LABELS[table.type]}
@@ -259,7 +254,7 @@ function PricingPageContent() {
                         'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
                         table.isActive
                           ? 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
-                          : 'border-gray-300 dark:border-white/[0.1] bg-gray-50 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400',
+                          : 'border-gray-300 dark:border-white/[0.1] bg-gray-50 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400'
                       )}
                     >
                       {table.isActive ? 'Ativa' : 'Inativa'}
@@ -273,7 +268,7 @@ function PricingPageContent() {
 
                   {hasPermission(SALES_PERMISSIONS.PRICE_TABLES.REMOVE) && (
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleDelete([table.id]);
                       }}

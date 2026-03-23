@@ -292,11 +292,7 @@ export function CreateContactWizard({
       ),
       isValid: true,
       footer: (
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
+        <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
           {isSubmitting ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (

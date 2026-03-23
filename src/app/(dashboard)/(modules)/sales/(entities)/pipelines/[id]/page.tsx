@@ -51,7 +51,9 @@ function getDaysInStage(stageEnteredAt?: string): number {
   if (!stageEnteredAt) return 0;
   const entered = new Date(stageEnteredAt);
   const now = new Date();
-  return Math.floor((now.getTime() - entered.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.floor(
+    (now.getTime() - entered.getTime()) / (1000 * 60 * 60 * 24)
+  );
 }
 
 function getDaysLabel(days: number): string {
@@ -91,10 +93,7 @@ function getStageColumnStyle(type: PipelineStageType): {
    Build stage → deals map
    ────────────────────────────────────────────────────────── */
 
-function buildDealMap(
-  stageIds: string[],
-  deals: Deal[]
-): Map<string, Deal[]> {
+function buildDealMap(stageIds: string[], deals: Deal[]): Map<string, Deal[]> {
   const map = new Map<string, Deal[]>();
   for (const id of stageIds) map.set(id, []);
   for (const deal of deals) {
@@ -198,13 +197,10 @@ function PipelineKanbanContent() {
       const targetStage = stages.find(s => s.id === newStageId);
 
       // Optimistic: update deals cache
-      queryClient.setQueriesData(
-        { queryKey: ['deals'] },
-        (old: unknown) => {
-          if (!old || typeof old !== 'object') return old;
-          return old;
-        }
-      );
+      queryClient.setQueriesData({ queryKey: ['deals'] }, (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        return old;
+      });
 
       changeDealStage.mutate(
         {
@@ -387,9 +383,7 @@ function PipelineKanbanContent() {
                     allDeals.reduce((sum, d) => sum + (d.value ?? 0), 0)
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Valor Total
-                </div>
+                <div className="text-xs text-muted-foreground">Valor Total</div>
               </div>
               <div className="text-center">
                 <div className="font-bold text-lg text-slate-900 dark:text-white">
@@ -427,9 +421,7 @@ function PipelineKanbanContent() {
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="pipeline" type="CARD" direction="horizontal">
             {boardProvided => (
-              <div
-                className="kanban-scroll h-full overflow-x-auto sm:overflow-y-hidden overflow-y-auto pb-2"
-              >
+              <div className="kanban-scroll h-full overflow-x-auto sm:overflow-y-hidden overflow-y-auto pb-2">
                 <div
                   ref={boardProvided.innerRef}
                   {...boardProvided.droppableProps}
@@ -527,9 +519,7 @@ function StageColumn({
         )}
 
         {/* Stage name */}
-        <h3 className="text-sm font-semibold truncate flex-1">
-          {stage.name}
-        </h3>
+        <h3 className="text-sm font-semibold truncate flex-1">{stage.name}</h3>
 
         {/* Count + value */}
         <div className="flex items-center gap-2 shrink-0">
@@ -554,7 +544,8 @@ function StageColumn({
               'flex-1 space-y-2 rounded-b-xl border p-2 transition-colors min-h-[80px]',
               columnStyle.bgClass,
               columnStyle.borderClass,
-              dropSnapshot.isDraggingOver && 'ring-2 ring-inset ring-violet-300 dark:ring-violet-500/30'
+              dropSnapshot.isDraggingOver &&
+                'ring-2 ring-inset ring-violet-300 dark:ring-violet-500/30'
             )}
           >
             {isLoading && deals.length === 0 && (
@@ -597,7 +588,13 @@ interface DealCardProps {
   isDragging: boolean;
 }
 
-function DealCard({ deal, stage, onClick, provided, isDragging }: DealCardProps) {
+function DealCard({
+  deal,
+  stage,
+  onClick,
+  provided,
+  isDragging,
+}: DealCardProps) {
   const daysInStage = getDaysInStage(deal.stageEnteredAt);
   const isRotten =
     stage.rottenAfterDays !== undefined &&

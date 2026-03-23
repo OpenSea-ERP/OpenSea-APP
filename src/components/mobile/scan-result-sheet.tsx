@@ -141,15 +141,16 @@ export function ScanResultSheet({
       label: 'Status',
       value: getEntityDetail(result, 'status'),
     },
-  ].filter((f) => f.value != null);
+  ].filter(f => f.value != null);
 
   const isTransferable =
-    canTransfer && (result.entityType === 'ITEM' || result.entityType === 'VARIANT');
+    canTransfer &&
+    (result.entityType === 'ITEM' || result.entityType === 'VARIANT');
 
   return (
     <Drawer
       open={open}
-      onOpenChange={(value) => {
+      onOpenChange={value => {
         if (!value) setShowTransfer(false);
         onOpenChange(value);
       }}
@@ -183,7 +184,7 @@ export function ScanResultSheet({
 
             {/* Detail grid */}
             <div className="space-y-1 px-4 pb-3">
-              {detailFields.map((field) => (
+              {detailFields.map(field => (
                 <div
                   key={field.label}
                   className="flex items-center justify-between py-1.5 text-sm"

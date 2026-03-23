@@ -25,7 +25,7 @@ import type { VolumeItem } from '@/types/stock';
 
 const ScannerCamera = dynamic(
   () =>
-    import('@/components/mobile/scanner-camera').then((m) => ({
+    import('@/components/mobile/scanner-camera').then(m => ({
       default: m.ScannerCamera,
     })),
   { ssr: false }
@@ -43,7 +43,8 @@ function ItemRow({
   canRemove: boolean;
 }) {
   const item = volumeItem.item;
-  const label = item?.variantSku || item?.uniqueCode || volumeItem.itemId.slice(0, 8);
+  const label =
+    item?.variantSku || item?.uniqueCode || volumeItem.itemId.slice(0, 8);
   const subtitle = item?.productName;
   const addedAt = new Date(volumeItem.addedAt).toLocaleTimeString('pt-BR', {
     hour: '2-digit',
@@ -60,9 +61,7 @@ function ItemRow({
         {subtitle && (
           <p className="truncate text-[11px] text-slate-400">{subtitle}</p>
         )}
-        <p className="text-[11px] text-slate-500">
-          Adicionado {addedAt}
-        </p>
+        <p className="text-[11px] text-slate-500">Adicionado {addedAt}</p>
       </div>
       {canRemove && (
         <button
@@ -107,10 +106,10 @@ export default function VolumeDetailPage({
   // Compute stats
   const totalItems = items.length;
   const uniqueVariants = new Set(
-    items.map((vi) => vi.item?.variantId).filter(Boolean)
+    items.map(vi => vi.item?.variantId).filter(Boolean)
   ).size;
   const uniqueProducts = new Set(
-    items.map((vi) => vi.item?.productId).filter(Boolean)
+    items.map(vi => vi.item?.productId).filter(Boolean)
   ).size;
 
   const handleScan = useCallback(
@@ -122,7 +121,10 @@ export default function VolumeDetailPage({
         if (result.entityType === 'ITEM') {
           await addItem.mutateAsync(result.entityId);
           scanSuccess();
-          setScanStatus({ message: `Item adicionado: ${code}`, type: 'success' });
+          setScanStatus({
+            message: `Item adicionado: ${code}`,
+            type: 'success',
+          });
         } else {
           scanError();
           setScanStatus({
@@ -189,9 +191,7 @@ export default function VolumeDetailPage({
       <MobileTopBar
         title={volume.code}
         subtitle={
-          volume.destinationRef
-            ? `Pedido: ${volume.destinationRef}`
-            : undefined
+          volume.destinationRef ? `Pedido: ${volume.destinationRef}` : undefined
         }
         showBack
         rightContent={
@@ -273,7 +273,7 @@ export default function VolumeDetailPage({
             )}
           </div>
         ) : (
-          items.map((vi) => (
+          items.map(vi => (
             <ItemRow
               key={vi.id}
               volumeItem={vi}

@@ -33,7 +33,10 @@ export const couponsService = {
   },
 
   async validate(data: ValidateCouponRequest): Promise<ValidateCouponResponse> {
-    return apiClient.post<ValidateCouponResponse>(API_ENDPOINTS.COUPONS.VALIDATE, data);
+    return apiClient.post<ValidateCouponResponse>(
+      API_ENDPOINTS.COUPONS.VALIDATE,
+      data
+    );
   },
 
   async delete(id: string): Promise<void> {

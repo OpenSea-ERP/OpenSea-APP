@@ -20,53 +20,81 @@ const SUPPORTED_FORMATS = [
   Html5QrcodeSupportedFormats.UPC_E,
 ];
 
-export function ScannerCamera({ onScan, onError, enabled = true, className }: ScannerCameraProps) {
+export function ScannerCamera({
+  onScan,
+  onError,
+  enabled = true,
+  className,
+}: ScannerCameraProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [flashOn, setFlashOn] = useState(false);
   const lastScanRef = useRef<string>('');
   const lastScanTimeRef = useRef<number>(0);
 
-  const handleScan = useCallback((decodedText: string) => {
-    const now = Date.now();
-    // Debounce: ignore same code within 2 seconds
-    if (decodedText === lastScanRef.current && now - lastScanTimeRef.current < 2000) return;
-    lastScanRef.current = decodedText;
-    lastScanTimeRef.current = now;
-    onScan(decodedText);
-  }, [onScan]);
+  const handleScan = useCallback(
+    (decodedText: string) => {
+      const now = Date.now();
+      // Debounce: ignore same code within 2 seconds
+      if (
+        decodedText === lastScanRef.current &&
+        now - lastScanTimeRef.current < 2000
+      )
+        return;
+      lastScanRef.current = decodedText;
+      lastScanTimeRef.current = now;
+      onScan(decodedText);
+    },
+    [onScan]
+  );
 
   useEffect(() => {
     if (!enabled || !containerRef.current) return;
 
     let cancelled = false;
-    const scanner = new Html5Qrcode('scanner-region', { formatsToSupport: SUPPORTED_FORMATS, verbose: false });
+    const scanner = new Html5Qrcode('scanner-region', {
+      formatsToSupport: SUPPORTED_FORMATS,
+      verbose: false,
+    });
     scannerRef.current = scanner;
 
-    scanner.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
-      handleScan,
-      () => {}, // ignore scan failures (continuous)
-    ).then(() => {
-      // If unmounted before start completed, stop immediately
-      if (cancelled) {
-        scanner.stop().then(() => scanner.clear()).catch(() => {});
-      }
-    }).catch((err) => {
-      if (!cancelled) {
-        onError?.(err?.message || 'Falha ao acessar câmera');
-      }
-    });
+    scanner
+      .start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
+        handleScan,
+        () => {} // ignore scan failures (continuous)
+      )
+      .then(() => {
+        // If unmounted before start completed, stop immediately
+        if (cancelled) {
+          scanner
+            .stop()
+            .then(() => scanner.clear())
+            .catch(() => {});
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          onError?.(err?.message || 'Falha ao acessar câmera');
+        }
+      });
 
     return () => {
       cancelled = true;
       const state = scanner.getState();
       // Only stop if scanner is actually running or paused (state 2 = SCANNING, 3 = PAUSED)
       if (state === 2 || state === 3) {
-        scanner.stop().then(() => scanner.clear()).catch(() => {});
+        scanner
+          .stop()
+          .then(() => scanner.clear())
+          .catch(() => {});
       } else {
-        try { scanner.clear(); } catch { /* already cleared */ }
+        try {
+          scanner.clear();
+        } catch {
+          /* already cleared */
+        }
       }
     };
   }, [enabled, handleScan, onError]);
@@ -78,7 +106,9 @@ export function ScannerCamera({ onScan, onError, enabled = true, className }: Sc
         await track.torchFeature().apply(!flashOn);
         setFlashOn(!flashOn);
       }
-    } catch { /* Flash not supported */ }
+    } catch {
+      /* Flash not supported */
+    }
   };
 
   return (
@@ -101,7 +131,11 @@ export function ScannerCamera({ onScan, onError, enabled = true, className }: Sc
         onClick={toggleFlash}
         className="absolute right-3 top-3 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm active:bg-black/70"
       >
-        {flashOn ? <FlashlightOff className="h-4 w-4" /> : <Flashlight className="h-4 w-4" />}
+        {flashOn ? (
+          <FlashlightOff className="h-4 w-4" />
+        ) : (
+          <Flashlight className="h-4 w-4" />
+        )}
       </button>
     </div>
   );

@@ -1,10 +1,7 @@
 'use client';
 
 import { PageActionBar } from '@/components/layout/page-action-bar';
-import {
-  PageBody,
-  PageLayout,
-} from '@/components/layout/page-layout';
+import { PageBody, PageLayout } from '@/components/layout/page-layout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,7 +52,10 @@ export default function PosTerminalSelectorPage() {
   return (
     <PageLayout>
       <PageActionBar
-        breadcrumbItems={[{ label: 'Vendas', href: '/sales' }, { label: 'PDV' }]}
+        breadcrumbItems={[
+          { label: 'Vendas', href: '/sales' },
+          { label: 'PDV' },
+        ]}
         actions={
           <div className="flex gap-2">
             <Button

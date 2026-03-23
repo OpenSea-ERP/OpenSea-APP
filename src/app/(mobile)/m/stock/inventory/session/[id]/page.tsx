@@ -34,7 +34,7 @@ import { cn } from '@/lib/utils';
 
 const ScannerCamera = dynamic(
   () =>
-    import('@/components/mobile/scanner-camera').then((m) => ({
+    import('@/components/mobile/scanner-camera').then(m => ({
       default: m.ScannerCamera,
     })),
   { ssr: false }
@@ -96,7 +96,10 @@ function ItemRow({
     item.status === 'WRONG_BIN';
 
   const itemName =
-    item.item?.productName || item.item?.variantName || item.item?.sku || 'Item';
+    item.item?.productName ||
+    item.item?.variantName ||
+    item.item?.sku ||
+    'Item';
   const itemCode = item.item?.sku || item.item?.barcode || '';
 
   return (
@@ -214,7 +217,7 @@ function ScanOverlay({
         <input
           type="text"
           value={manualCode}
-          onChange={(e) => setManualCode(e.target.value)}
+          onChange={e => setManualCode(e.target.value)}
           placeholder="Código manual..."
           className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
@@ -407,7 +410,7 @@ export default function InventorySessionPage() {
           </div>
         )}
 
-        {sortedItems.map((item) => (
+        {sortedItems.map(item => (
           <ItemRow
             key={item.id}
             item={item}

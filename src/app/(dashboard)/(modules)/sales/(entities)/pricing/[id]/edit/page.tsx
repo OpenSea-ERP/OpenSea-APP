@@ -160,8 +160,8 @@ function EditPriceTableContent() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                onChange={e =>
+                  setFormData(prev => ({ ...prev, name: e.target.value }))
                 }
                 placeholder="Nome da tabela"
               />
@@ -172,8 +172,8 @@ function EditPriceTableContent() {
               <select
                 id="type"
                 value={formData.type}
-                onChange={(e) =>
-                  setFormData((prev) => ({
+                onChange={e =>
+                  setFormData(prev => ({
                     ...prev,
                     type: e.target.value as PriceTableType,
                   }))
@@ -193,8 +193,8 @@ function EditPriceTableContent() {
               <Input
                 id="description"
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
+                onChange={e =>
+                  setFormData(prev => ({
                     ...prev,
                     description: e.target.value,
                   }))
@@ -208,8 +208,8 @@ function EditPriceTableContent() {
               <Input
                 id="currency"
                 value={formData.currency}
-                onChange={(e) =>
-                  setFormData((prev) => ({
+                onChange={e =>
+                  setFormData(prev => ({
                     ...prev,
                     currency: e.target.value,
                   }))
@@ -224,8 +224,8 @@ function EditPriceTableContent() {
                 id="priority"
                 type="number"
                 value={formData.priority}
-                onChange={(e) =>
-                  setFormData((prev) => ({
+                onChange={e =>
+                  setFormData(prev => ({
                     ...prev,
                     priority: parseInt(e.target.value) || 0,
                   }))
@@ -238,8 +238,8 @@ function EditPriceTableContent() {
                 <input
                   type="checkbox"
                   checked={formData.isActive}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
+                  onChange={e =>
+                    setFormData(prev => ({
                       ...prev,
                       isActive: e.target.checked,
                     }))
@@ -252,8 +252,8 @@ function EditPriceTableContent() {
                 <input
                   type="checkbox"
                   checked={formData.isDefault}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
+                  onChange={e =>
+                    setFormData(prev => ({
                       ...prev,
                       isDefault: e.target.checked,
                     }))
@@ -266,8 +266,8 @@ function EditPriceTableContent() {
                 <input
                   type="checkbox"
                   checked={formData.priceIncludesTax}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
+                  onChange={e =>
+                    setFormData(prev => ({
                       ...prev,
                       priceIncludesTax: e.target.checked,
                     }))

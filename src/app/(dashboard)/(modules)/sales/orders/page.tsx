@@ -12,12 +12,7 @@ import { SearchBar } from '@/components/layout/search-bar';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { Badge } from '@/components/ui/badge';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import {
-  CoreProvider,
-  EntityCard,
-  EntityGrid,
-  SelectionToolbar,
-} from '@/core';
+import { CoreProvider, EntityCard, EntityGrid, SelectionToolbar } from '@/core';
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   useOrdersInfinite,

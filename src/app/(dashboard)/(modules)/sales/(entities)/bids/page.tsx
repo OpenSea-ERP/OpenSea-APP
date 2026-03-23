@@ -4,11 +4,20 @@ import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
-import { PageBody, PageHeader, PageLayout } from '@/components/layout/page-layout';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
-import { CoreProvider, EntityCard, EntityContextMenu, EntityGrid } from '@/core';
+import {
+  CoreProvider,
+  EntityCard,
+  EntityContextMenu,
+  EntityGrid,
+} from '@/core';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useBidsInfinite, useDeleteBid } from '@/hooks/sales/use-bids';
@@ -17,7 +26,14 @@ import type { Bid, BidStatus, BidModality } from '@/types/sales';
 import { BID_STATUS_LABELS, BID_MODALITY_LABELS } from '@/types/sales';
 import { Badge } from '@/components/ui/badge';
 import { CreateBidWizard } from './src/components/create-bid-wizard';
-import { Building2, Calendar, DollarSign, Gavel, Plus, Trash2 } from 'lucide-react';
+import {
+  Building2,
+  Calendar,
+  DollarSign,
+  Gavel,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
@@ -26,14 +42,20 @@ import { toast } from 'sonner';
 const STATUS_COLOR: Record<string, string> = {
   DISCOVERED: 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300',
   ANALYZING: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300',
-  VIABLE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
-  NOT_VIABLE: 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300',
-  PREPARING: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
-  PROPOSAL_SENT: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300',
+  VIABLE:
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
+  NOT_VIABLE:
+    'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300',
+  PREPARING:
+    'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
+  PROPOSAL_SENT:
+    'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300',
   WON: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300',
   LOST: 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300',
-  CONTRACTED: 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300',
-  ARCHIVED: 'bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-300',
+  CONTRACTED:
+    'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300',
+  ARCHIVED:
+    'bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-300',
 };
 
 function BidsPageContent() {
@@ -51,7 +73,14 @@ function BidsPageContent() {
   const canEdit = hasPermission('sales.bids.modify');
   const canDelete = hasPermission('sales.bids.remove');
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useBidsInfinite({
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useBidsInfinite({
     search: search || undefined,
     status: statusFilter || undefined,
     modality: modalityFilter || undefined,
@@ -61,38 +90,53 @@ function BidsPageContent() {
   const deleteMutation = useDeleteBid();
 
   const bids = useMemo(
-    () => data?.pages.flatMap((page) => page.bids) ?? [],
-    [data],
+    () => data?.pages.flatMap(page => page.bids) ?? [],
+    [data]
   );
 
   const handleSearch = useCallback((value: string) => {
     setSearch(value);
   }, []);
 
-  const handleView = useCallback((bid: Bid) => {
-    router.push(`/sales/bids/${bid.id}`);
-  }, [router]);
+  const handleView = useCallback(
+    (bid: Bid) => {
+      router.push(`/sales/bids/${bid.id}`);
+    },
+    [router]
+  );
 
-  const handleEdit = useCallback((bid: Bid) => {
-    router.push(`/sales/bids/${bid.id}/edit`);
-  }, [router]);
+  const handleEdit = useCallback(
+    (bid: Bid) => {
+      router.push(`/sales/bids/${bid.id}/edit`);
+    },
+    [router]
+  );
 
-  const handleContextView = useCallback((ids: string[]) => {
-    if (ids.length === 1) {
-      router.push(`/sales/bids/${ids[0]}`);
-    }
-  }, [router]);
+  const handleContextView = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 1) {
+        router.push(`/sales/bids/${ids[0]}`);
+      }
+    },
+    [router]
+  );
 
-  const handleContextEdit = useCallback((ids: string[]) => {
-    if (ids.length === 1) {
-      router.push(`/sales/bids/${ids[0]}/edit`);
-    }
-  }, [router]);
+  const handleContextEdit = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 1) {
+        router.push(`/sales/bids/${ids[0]}/edit`);
+      }
+    },
+    [router]
+  );
 
-  const handleContextDelete = useCallback((ids: string[]) => {
-    const bid = bids.find(b => b.id === ids[0]);
-    if (bid) setDeleteTarget(bid);
-  }, [bids]);
+  const handleContextDelete = useCallback(
+    (ids: string[]) => {
+      const bid = bids.find(b => b.id === ids[0]);
+      if (bid) setDeleteTarget(bid);
+    },
+    [bids]
+  );
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteTarget) return;
@@ -106,12 +150,22 @@ function BidsPageContent() {
   }, [deleteTarget, deleteMutation]);
 
   const headerButtons: HeaderButton[] = canCreate
-    ? [{ title: 'Nova Licitação', icon: Plus, onClick: () => setWizardOpen(true), variant: 'default' }]
+    ? [
+        {
+          title: 'Nova Licitação',
+          icon: Plus,
+          onClick: () => setWizardOpen(true),
+          variant: 'default',
+        },
+      ]
     : [];
 
   const formatCurrency = (value: number | null) => {
     if (value === null || value === undefined) return '-';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -119,13 +173,19 @@ function BidsPageContent() {
     return new Date(dateStr).toLocaleDateString('pt-BR');
   };
 
-  const statusOptions = Object.entries(BID_STATUS_LABELS).map(([value, label]) => ({
-    value, label,
-  }));
+  const statusOptions = Object.entries(BID_STATUS_LABELS).map(
+    ([value, label]) => ({
+      value,
+      label,
+    })
+  );
 
-  const modalityOptions = Object.entries(BID_MODALITY_LABELS).map(([value, label]) => ({
-    value, label,
-  }));
+  const modalityOptions = Object.entries(BID_MODALITY_LABELS).map(
+    ([value, label]) => ({
+      value,
+      label,
+    })
+  );
 
   const renderGridItem = (bid: Bid, _isSelected: boolean) => (
     <EntityContextMenu
@@ -134,14 +194,16 @@ function BidsPageContent() {
       onEdit={canEdit ? handleContextEdit : undefined}
       actions={[
         ...(canDelete
-          ? [{
-              id: 'delete',
-              label: 'Excluir',
-              icon: Trash2,
-              onClick: handleContextDelete,
-              variant: 'destructive' as const,
-              separator: 'before' as const,
-            }]
+          ? [
+              {
+                id: 'delete',
+                label: 'Excluir',
+                icon: Trash2,
+                onClick: handleContextDelete,
+                variant: 'destructive' as const,
+                separator: 'before' as const,
+              },
+            ]
           : []),
       ]}
     >
@@ -183,14 +245,16 @@ function BidsPageContent() {
       onEdit={canEdit ? handleContextEdit : undefined}
       actions={[
         ...(canDelete
-          ? [{
-              id: 'delete',
-              label: 'Excluir',
-              icon: Trash2,
-              onClick: handleContextDelete,
-              variant: 'destructive' as const,
-              separator: 'before' as const,
-            }]
+          ? [
+              {
+                id: 'delete',
+                label: 'Excluir',
+                icon: Trash2,
+                onClick: handleContextDelete,
+                variant: 'destructive' as const,
+                separator: 'before' as const,
+              },
+            ]
           : []),
       ]}
     >
@@ -203,7 +267,12 @@ function BidsPageContent() {
         iconBgColor="bg-linear-to-br from-indigo-500 to-purple-600"
         metadata={
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <Badge className={cn('shrink-0 text-xs', STATUS_COLOR[bid.status] ?? 'bg-slate-100 text-slate-700')}>
+            <Badge
+              className={cn(
+                'shrink-0 text-xs',
+                STATUS_COLOR[bid.status] ?? 'bg-slate-100 text-slate-700'
+              )}
+            >
               {BID_STATUS_LABELS[bid.status] ?? bid.status}
             </Badge>
             <span className="flex items-center gap-1">
@@ -270,19 +339,25 @@ function BidsPageContent() {
                   label="Modalidade"
                   value={modalityFilter}
                   options={modalityOptions}
-                  onChange={(v: string) => setModalityFilter(v as BidModality | '')}
+                  onChange={(v: string) =>
+                    setModalityFilter(v as BidModality | '')
+                  }
                 />
               </>
             }
             renderGridItem={renderGridItem}
             renderListItem={renderListItem}
-            onItemDoubleClick={(bid) => handleView(bid)}
+            onItemDoubleClick={bid => handleView(bid)}
           />
         )}
 
         {hasNextPage && (
           <div ref={observerRef} className="flex justify-center py-4">
-            <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage} className="text-sm text-muted-foreground hover:text-foreground">
+            <button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
               {isFetchingNextPage ? 'Carregando...' : 'Carregar mais'}
             </button>
           </div>
@@ -297,10 +372,7 @@ function BidsPageContent() {
         />
 
         {canCreate && (
-          <CreateBidWizard
-            open={wizardOpen}
-            onOpenChange={setWizardOpen}
-          />
+          <CreateBidWizard open={wizardOpen} onOpenChange={setWizardOpen} />
         )}
       </PageBody>
     </PageLayout>

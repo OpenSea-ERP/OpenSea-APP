@@ -30,10 +30,7 @@ const VIEW_TABS: {
   { id: 'settings', label: 'Configurações', icon: Settings },
 ];
 
-export function AiHeroBanner({
-  activeView,
-  onViewChange,
-}: AiHeroBannerProps) {
+export function AiHeroBanner({ activeView, onViewChange }: AiHeroBannerProps) {
   return (
     <Card className="relative overflow-hidden px-5 py-4 bg-white shadow-sm dark:shadow-none dark:bg-white/5 border-gray-200 dark:border-white/10 shrink-0">
       {/* Decorative blobs */}

@@ -1,9 +1,5 @@
 import { combosService } from '@/services/sales';
-import type {
-  CombosQuery,
-  ComboType,
-  CreateComboRequest,
-} from '@/types/sales';
+import type { CombosQuery, ComboType, CreateComboRequest } from '@/types/sales';
 import {
   useInfiniteQuery,
   useMutation,
@@ -21,11 +17,7 @@ export interface CombosFilters {
 
 const QUERY_KEYS = {
   COMBOS: ['combos'],
-  COMBOS_INFINITE: (filters?: CombosFilters) => [
-    'combos',
-    'infinite',
-    filters,
-  ],
+  COMBOS_INFINITE: (filters?: CombosFilters) => ['combos', 'infinite', filters],
   COMBO: (id: string) => ['combos', id],
 } as const;
 

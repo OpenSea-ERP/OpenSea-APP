@@ -76,7 +76,9 @@ test.describe('CardModal - Estrutura', () => {
 
     // Footer com botões
     await expect(
-      dialog.locator('button:has-text("Salvar"), button:has-text("Cancelar")').first()
+      dialog
+        .locator('button:has-text("Salvar"), button:has-text("Cancelar")')
+        .first()
     ).toBeVisible();
   });
 
@@ -129,7 +131,9 @@ test.describe('CardModal - Edição de Conteúdo', () => {
     await expect(dialog).not.toBeVisible({ timeout: 3_000 });
 
     // Card deve aparecer com novo título no kanban
-    await expect(page.locator(`text="${newTitle}"`)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(`text="${newTitle}"`)).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test('Editar descrição do cartão', async ({ page }) => {
@@ -159,7 +163,9 @@ test.describe('CardModal - Edição de Conteúdo', () => {
 // Navegação entre Tabs
 // ────────────────────────────────────────────
 test.describe('CardModal - Tabs', () => {
-  test('Navegar entre tabs Geral, Comentários e Atividade', async ({ page }) => {
+  test('Navegar entre tabs Geral, Comentários e Atividade', async ({
+    page,
+  }) => {
     const card = await createCardViaApi(userToken, boardId, {
       title: `e2e-tabs-nav-${Date.now()}`,
     });
@@ -207,14 +213,14 @@ test.describe('CardModal - Propriedades na Sidebar', () => {
 
     // Procurar botões de prioridade (dots com title)
     const urgentDot = dialog.locator('button[title="Urgente"]');
-    if (await urgentDot.count() > 0) {
+    if ((await urgentDot.count()) > 0) {
       await urgentDot.first().click();
       await page.waitForTimeout(1_000);
       // Dot deve estar selecionado (borda primary)
     }
 
     const altaDot = dialog.locator('button[title="Alta"]');
-    if (await altaDot.count() > 0) {
+    if ((await altaDot.count()) > 0) {
       await altaDot.first().click();
       await page.waitForTimeout(1_000);
     }
@@ -232,7 +238,7 @@ test.describe('CardModal - Propriedades na Sidebar', () => {
 
     // Seção de integrações deve mostrar botão "+ Vincular"
     const vincularBtn = dialog.getByText('Vincular', { exact: false });
-    if (await vincularBtn.count() > 0) {
+    if ((await vincularBtn.count()) > 0) {
       await expect(vincularBtn.first()).toBeVisible();
     }
   });
@@ -257,8 +263,8 @@ test.describe('CardModal - Ações no Footer', () => {
     const archive = dialog.getByText('Arquivar', { exact: false });
 
     // Pelo menos um deve estar visível
-    const hasCopy = await copyLink.count() > 0;
-    const hasArchive = await archive.count() > 0;
+    const hasCopy = (await copyLink.count()) > 0;
+    const hasArchive = (await archive.count()) > 0;
     expect(hasCopy || hasArchive).toBeTruthy();
   });
 });
@@ -307,12 +313,18 @@ test.describe('CardModal - Fechar', () => {
     const dialog = await openCardModal(page, card.title);
 
     // Botão X (fechar)
-    const closeBtn = dialog.locator('button:has-text("Fechar"), button[aria-label="Fechar"]');
-    if (await closeBtn.count() > 0) {
+    const closeBtn = dialog.locator(
+      'button:has-text("Fechar"), button[aria-label="Fechar"]'
+    );
+    if ((await closeBtn.count()) > 0) {
       await closeBtn.first().click();
     } else {
       // Fallback: botão com ícone X (sr-only "Fechar")
-      await dialog.locator('button').filter({ hasText: 'Fechar' }).first().click();
+      await dialog
+        .locator('button')
+        .filter({ hasText: 'Fechar' })
+        .first()
+        .click();
     }
 
     await expect(dialog).not.toBeVisible({ timeout: 3_000 });
