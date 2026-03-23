@@ -538,7 +538,11 @@ export function useImportSpreadsheet(
     const nameFieldIndex = currentHeaders.findIndex(
       h => h.key === 'name' && h.required
     );
-    const seenNames = new Map<string, number>(); // lowercase name → first row
+    // For entities like variants, duplicates are scoped by parent (e.g. productId)
+    const parentFieldIndex = currentHeaders.findIndex(
+      h => h.key === 'productId'
+    );
+    const seenNames = new Map<string, number>(); // duplicate key → first row
 
     dataRows.forEach((row, rowIndex) => {
       // Verificar se a linha tem algum dado
@@ -573,11 +577,19 @@ export function useImportSpreadsheet(
       });
 
       // Check for duplicate names within the spreadsheet
+      // For variants, scope by productId (same name in different products is OK)
       if (nameFieldIndex >= 0) {
         const nameValue = row[nameFieldIndex]?.value?.trim();
         if (nameValue) {
           const nameLower = nameValue.toLowerCase();
-          const firstRow = seenNames.get(nameLower);
+          const parentValue =
+            parentFieldIndex >= 0
+              ? (row[parentFieldIndex]?.value?.trim()?.toLowerCase() ?? '')
+              : '';
+          const duplicateKey = parentValue
+            ? `${parentValue}::${nameLower}`
+            : nameLower;
+          const firstRow = seenNames.get(duplicateKey);
           if (firstRow !== undefined) {
             errors.push({
               row: rowIndex + 1,
@@ -588,7 +600,7 @@ export function useImportSpreadsheet(
             });
             rowHasError = true;
           } else {
-            seenNames.set(nameLower, rowIndex + 1);
+            seenNames.set(duplicateKey, rowIndex + 1);
           }
         }
       }
