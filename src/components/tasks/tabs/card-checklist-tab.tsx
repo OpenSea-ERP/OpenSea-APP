@@ -11,6 +11,8 @@ import {
   CheckSquare,
   ChevronDown,
   ChevronRight,
+  Copy,
+  ClipboardPaste,
 } from 'lucide-react';
 import {
   useChecklists,
@@ -32,10 +34,12 @@ function ChecklistSection({
   checklist,
   boardId,
   cardId,
+  onCopy,
 }: {
   checklist: Checklist;
   boardId: string;
   cardId: string;
+  onCopy?: (data: { title: string; items: string[] }) => void;
 }) {
   const updateChecklist = useUpdateChecklist(boardId, cardId);
   const deleteChecklist = useDeleteChecklist(boardId, cardId);
@@ -166,6 +170,23 @@ function ChecklistSection({
           {completedCount}/{totalCount}
         </span>
 
+        <button
+          type="button"
+          title="Copiar checklist"
+          className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-muted transition-colors shrink-0"
+          onClick={() => {
+            const data = {
+              title: checklist.title,
+              items: (checklist.items ?? []).map(i => i.title),
+            };
+            localStorage.setItem('task-checklist-clipboard', JSON.stringify(data));
+            onCopy?.(data);
+            toast.success('Checklist copiado');
+          }}
+        >
+          <Copy className="h-3 w-3" />
+        </button>
+
         <Button
           variant="ghost"
           size="icon"
@@ -241,13 +262,48 @@ function ChecklistSection({
   );
 }
 
+const CLIPBOARD_KEY = 'task-checklist-clipboard';
+
 export function CardChecklistTab({ boardId, cardId }: CardChecklistTabProps) {
   const { data: checklistsData, isLoading } = useChecklists(boardId, cardId);
   const checklists = checklistsData?.checklists ?? [];
 
   const createChecklist = useCreateChecklist(boardId, cardId);
+  const addItem = useAddChecklistItem(boardId, cardId);
   const [showCreate, setShowCreate] = useState(false);
   const [newChecklistTitle, setNewChecklistTitle] = useState('');
+
+  const [clipboard, setClipboard] = useState<{ title: string; items: string[] } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(CLIPBOARD_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  });
+
+  const handleImportChecklist = useCallback(async () => {
+    if (!clipboard) return;
+
+    try {
+      const result = await createChecklist.mutateAsync({ title: clipboard.title });
+      const newChecklistId = result?.checklist?.id;
+
+      if (newChecklistId) {
+        for (const itemTitle of clipboard.items) {
+          await addItem.mutateAsync({
+            checklistId: newChecklistId,
+            data: { title: itemTitle },
+          });
+        }
+      }
+
+      localStorage.removeItem(CLIPBOARD_KEY);
+      setClipboard(null);
+      toast.success(`Checklist "${clipboard.title}" importado`);
+    } catch {
+      toast.error('Não foi possível importar o checklist.');
+    }
+  }, [clipboard, createChecklist, addItem]);
 
   const handleCreateChecklist = useCallback(() => {
     const title = newChecklistTitle.trim();
@@ -281,15 +337,29 @@ export function CardChecklistTab({ boardId, cardId }: CardChecklistTabProps) {
             </span>
           )}
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 text-xs gap-1 text-secondary-foreground/70 hover:text-secondary-foreground"
-          onClick={() => setShowCreate(true)}
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Adicionar
-        </Button>
+        <div className="flex items-center gap-1">
+          {clipboard && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs gap-1 text-secondary-foreground/70 hover:text-secondary-foreground"
+              onClick={handleImportChecklist}
+              disabled={createChecklist.isPending || addItem.isPending}
+            >
+              <ClipboardPaste className="h-3.5 w-3.5" />
+              Importar &ldquo;{clipboard.title}&rdquo;
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs gap-1 text-secondary-foreground/70 hover:text-secondary-foreground"
+            onClick={() => setShowCreate(true)}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Adicionar
+          </Button>
+        </div>
       </div>
 
       {/* Inline create */}
@@ -353,6 +423,7 @@ export function CardChecklistTab({ boardId, cardId }: CardChecklistTabProps) {
               checklist={cl}
               boardId={boardId}
               cardId={cardId}
+              onCopy={(data) => setClipboard(data)}
             />
           ))}
         </div>

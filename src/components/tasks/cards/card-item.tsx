@@ -6,7 +6,13 @@ import type { Card } from '@/types/tasks';
 import { PRIORITY_CONFIG } from '@/types/tasks';
 import { isOverdue, formatDueDate, PRIORITY_HEX } from '../_utils';
 import type { DraggableProvided } from '@hello-pangea/dnd';
-import { MessageSquare, Paperclip, CalendarClock, CheckSquare } from 'lucide-react';
+import {
+  MessageSquare,
+  Paperclip,
+  CalendarClock,
+  CheckSquare,
+} from 'lucide-react';
+import { LuCreditCard } from 'react-icons/lu';
 import { MemberAvatar } from '../shared/member-avatar';
 
 interface CardItemProps {
@@ -16,6 +22,9 @@ interface CardItemProps {
   provided?: DraggableProvided;
   isDragging?: boolean;
   compact?: boolean;
+  parentCardTitle?: string;
+  boardGradientFrom?: string;
+  boardGradientTo?: string;
 }
 
 function getCardTopColor(card: Card): string | null {
@@ -35,6 +44,9 @@ export const CardItem = memo(function CardItem({
   provided,
   isDragging = false,
   compact = false,
+  parentCardTitle,
+  boardGradientFrom,
+  boardGradientTo,
 }: CardItemProps) {
   const topColor = getCardTopColor(card);
   const overdue = isOverdue(card.dueDate, card.status);
@@ -83,7 +95,7 @@ export const CardItem = memo(function CardItem({
         <div className="h-1 w-full" style={{ backgroundColor: topColor }} />
       )}
 
-      <div className="p-3">
+      <div className={cn('px-3 pb-3', isSubtask && !compact ? 'pt-2' : 'pt-3')}>
         {/* Labels as compact colored dots */}
         {!compact && card.labels && card.labels.length > 0 && (
           <div className="flex items-center gap-1 mb-2">
@@ -98,18 +110,30 @@ export const CardItem = memo(function CardItem({
           </div>
         )}
 
-        {/* Subtask badge */}
+        {/* Subtask badge with parent name */}
         {!compact && isSubtask && (
-          <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 rounded px-1 py-0.5 mb-1 w-fit">
-            Sub
+          <span
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium text-white mb-1.5 max-w-full shadow-sm"
+            style={
+              boardGradientFrom && boardGradientTo
+                ? {
+                    background: `linear-gradient(to right, ${boardGradientFrom}80, ${boardGradientTo}80)`,
+                  }
+                : { backgroundColor: '#6366f180' }
+            }
+          >
+            <LuCreditCard className="h-2.5 w-2.5 shrink-0" />
+            <span className="truncate">{parentCardTitle ?? 'Subtarefa'}</span>
           </span>
         )}
 
         {/* Title */}
-        <p className={cn(
-          'text-sm font-medium leading-snug',
-          compact ? 'line-clamp-1' : 'line-clamp-2'
-        )}>
+        <p
+          className={cn(
+            'text-sm font-medium leading-snug',
+            compact ? 'line-clamp-1' : 'line-clamp-2'
+          )}
+        >
           {card.title}
         </p>
 
@@ -167,7 +191,8 @@ export const CardItem = memo(function CardItem({
               {hasChecklist && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-medium">
                   <CheckSquare className="h-3 w-3" />
-                  {card.checklistProgress!.completed}/{card.checklistProgress!.total}
+                  {card.checklistProgress!.completed}/
+                  {card.checklistProgress!.total}
                 </span>
               )}
             </div>

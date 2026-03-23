@@ -65,6 +65,11 @@ export function KanbanView({
 
   const columnIds = useMemo(() => columns.map(c => c.id), [columns]);
 
+  const cardTitleMap = useMemo(
+    () => new Map(cards.map(c => [c.id, c.title])),
+    [cards]
+  );
+
   const cardsByColumn = useMemo(
     () => buildCardMap(columnIds, cards),
     [cards, columnIds]
@@ -133,6 +138,8 @@ export function KanbanView({
                         cards={colCards}
                         boardId={boardId}
                         boardGradientFrom={gradient.from}
+                        boardGradientTo={gradient.to}
+                        cardTitleMap={cardTitleMap}
                         allColumns={columns}
                         onCardClick={onCardClick}
                         provided={colProvided}
@@ -162,6 +169,8 @@ interface KanbanColumnProps {
   cards: Card[];
   boardId: string;
   boardGradientFrom: string;
+  boardGradientTo: string;
+  cardTitleMap: Map<string, string>;
   allColumns: Column[];
   onCardClick?: (card: Card) => void;
   provided: import('@hello-pangea/dnd').DraggableProvided;
@@ -174,6 +183,8 @@ function KanbanColumn({
   cards,
   boardId,
   boardGradientFrom,
+  boardGradientTo,
+  cardTitleMap,
   allColumns,
   onCardClick,
   provided,
@@ -224,6 +235,9 @@ function KanbanColumn({
 
   const isOverWip = column.wipLimit ? cards.length >= column.wipLimit : false;
   const colColor = column.color || boardGradientFrom;
+  const headerGradient = column.color
+    ? column.color
+    : `linear-gradient(to right, ${boardGradientFrom}, ${boardGradientTo})`;
 
   /* eslint-disable react-hooks/refs -- provided refs are callback refs from @hello-pangea/dnd */
   return (
@@ -237,10 +251,10 @@ function KanbanColumn({
     >
       {/* Column header with color accent + drag handle */}
       <div
-        className="group/header flex items-center gap-1.5 px-3 py-2.5 rounded-t-xl border border-b-0 border-gray-200 dark:border-white/10"
+        className="group/header flex items-center gap-1.5 px-3 py-2.5 rounded-t-xl"
         style={{
-          background: colColor,
-          borderTopColor: colColor,
+          background: headerGradient,
+          boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.15), 0 1px 3px rgba(0,0,0,0.1)`,
         }}
       >
         {/* Drag handle — visible on hover */}
@@ -353,6 +367,13 @@ function KanbanColumn({
                     provided={cardProvided}
                     isDragging={cardSnapshot.isDragging}
                     compact={compact}
+                    parentCardTitle={
+                      card.parentCardId
+                        ? cardTitleMap.get(card.parentCardId)
+                        : undefined
+                    }
+                    boardGradientFrom={boardGradientFrom}
+                    boardGradientTo={boardGradientTo}
                   />
                 )}
               </Draggable>

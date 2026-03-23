@@ -29,6 +29,7 @@ const CalendarView = lazy(() =>
 );
 import { CardModal } from '@/components/tasks/cards/card-modal';
 import { BoardSettingsDialog } from '@/components/tasks/boards/board-settings-dialog';
+import { BoardCustomFieldsWizard } from '@/components/tasks/boards/board-custom-fields-wizard';
 import { getGradientForBoard } from '@/components/tasks/shared/board-gradients';
 import { MemberAvatar } from '@/components/tasks/shared/member-avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -37,6 +38,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
   Settings,
+  Settings2,
   AlertTriangle,
   ArrowLeft,
   Archive,
@@ -61,12 +63,14 @@ function BoardPageContent() {
   } = useBoard(boardId);
   const { data: cardsData } = useCards(boardId, {
     limit: 100,
+    includeArchived: true,
   });
 
   const [filters, setFilters] = useState<BoardFiltersState>({});
   const [search, setSearch] = useState('');
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [customFieldsOpen, setCustomFieldsOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [compactCards, setCompactCards] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -121,6 +125,18 @@ function BoardPageContent() {
   const handleCardClick = (card: TaskCard) => {
     setSelectedCardId(card.id);
   };
+
+  // Listen for open-card events (from subtask/parent navigation)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.boardId === boardId && detail?.cardId) {
+        setSelectedCardId(detail.cardId);
+      }
+    };
+    window.addEventListener('open-card', handler);
+    return () => window.removeEventListener('open-card', handler);
+  }, [boardId]);
 
   const isArchived = !!board?.archivedAt;
   const gradient = getGradientForBoard(boardId, board?.gradientId);
@@ -214,6 +230,20 @@ function BoardPageContent() {
           { label: board.title },
         ]}
         buttons={[
+          {
+            id: 'custom-fields',
+            title: 'Campos',
+            icon: Settings2,
+            variant: 'outline' as const,
+            onClick: () => setCustomFieldsOpen(true),
+          },
+          {
+            id: 'archived',
+            title: 'Arquivados',
+            icon: Archive,
+            variant: showArchived ? ('default' as const) : ('outline' as const),
+            onClick: () => setShowArchived(prev => !prev),
+          },
           {
             id: 'settings',
             title: 'Configurações',
@@ -309,23 +339,21 @@ function BoardPageContent() {
               </div>
 
               <Button
-                variant={showArchived ? 'default' : 'outline'}
-                size="sm"
-                className="h-9 gap-1.5 shrink-0"
-                onClick={() => setShowArchived(prev => !prev)}
-              >
-                <Archive className="h-4 w-4" />
-                <span className="hidden sm:inline">Arquivados</span>
-              </Button>
-
-              <Button
                 variant="outline"
                 size="sm"
                 className="h-9 gap-1.5 shrink-0"
                 onClick={() => setCompactCards(prev => !prev)}
-                title={compactCards ? 'Visualização completa' : 'Visualização simplificada'}
+                title={
+                  compactCards
+                    ? 'Visualização completa'
+                    : 'Visualização simplificada'
+                }
               >
-                {compactCards ? <LayoutGrid className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
+                {compactCards ? (
+                  <LayoutGrid className="h-4 w-4" />
+                ) : (
+                  <LayoutList className="h-4 w-4" />
+                )}
               </Button>
 
               {/* Right: view modes */}
@@ -402,6 +430,13 @@ function BoardPageContent() {
       <BoardSettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
+        boardId={boardId}
+      />
+
+      {/* Custom Fields Wizard */}
+      <BoardCustomFieldsWizard
+        open={customFieldsOpen}
+        onOpenChange={setCustomFieldsOpen}
         boardId={boardId}
       />
     </div>

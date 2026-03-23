@@ -31,7 +31,6 @@ import {
   CheckSquare,
   Activity,
   X,
-  ArrowUpRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -73,6 +72,7 @@ import { CardModalSidebar } from './card-modal-sidebar';
 import { CardModalGeneralTab } from './card-modal-general-tab';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { getGradientForBoard } from '@/components/tasks/shared/board-gradients';
+import { LuCreditCard } from 'react-icons/lu';
 import { storageFilesService } from '@/services/storage/files.service';
 import { attachmentsService, integrationsService } from '@/services/tasks';
 
@@ -201,6 +201,10 @@ export function CardModal({
   const allLabels = labelsData?.labels ?? [];
   const customFields: CustomField[] = fieldsData?.customFields ?? [];
   const card = cardData?.card;
+
+  // Parent card query (for subtask navigation)
+  const { data: parentCardData } = useCard(boardId, card?.parentCardId ?? '');
+  const parentCard = parentCardData?.card;
   const attachments: CardAttachment[] = attachmentsData?.attachments ?? [];
   const integrations: CardIntegration[] = integrationsData?.integrations ?? [];
   const cardMemberIds: string[] = (cardMembersData?.members ?? []).map(
@@ -993,21 +997,36 @@ export function CardModal({
                       />
                     </div>
                     {isEditMode && card?.parentCardId && (
-                      <button
-                        type="button"
-                        className="shrink-0 inline-flex items-center gap-1 text-[10px] text-primary hover:underline"
-                        onClick={() => {
-                          onOpenChange(false);
-                          setTimeout(() => {
-                            window.dispatchEvent(
-                              new CustomEvent('open-card', { detail: { cardId: card.parentCardId, boardId } })
-                            );
-                          }, 300);
-                        }}
-                      >
-                        <ArrowUpRight className="h-3 w-3" />
-                        Card pai
-                      </button>
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
+                        <span className="shrink-0">
+                          Este cartão é uma subtarefa de
+                        </span>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium text-white hover:opacity-80 transition-opacity max-w-[220px] shadow-sm cursor-pointer"
+                          style={{
+                            background: `linear-gradient(to right, ${gradient.from}, ${gradient.to})`,
+                          }}
+                          onClick={() => {
+                            onOpenChange(false);
+                            setTimeout(() => {
+                              window.dispatchEvent(
+                                new CustomEvent('open-card', {
+                                  detail: {
+                                    cardId: card.parentCardId,
+                                    boardId,
+                                  },
+                                })
+                              );
+                            }, 300);
+                          }}
+                        >
+                          <LuCreditCard className="h-3 w-3 shrink-0" />
+                          <span className="truncate">
+                            {parentCard?.title ?? 'Carregando...'}
+                          </span>
+                        </button>
+                      </div>
                     )}
                     <DialogHeader className="sr-only">
                       <DialogTitle>
@@ -1124,11 +1143,13 @@ export function CardModal({
                         <CardSubtasksTab
                           boardId={boardId}
                           cardId={cardId}
-                          onOpenSubtask={(subtaskId) => {
+                          onOpenSubtask={subtaskId => {
                             onOpenChange(false);
                             setTimeout(() => {
                               window.dispatchEvent(
-                                new CustomEvent('open-card', { detail: { cardId: subtaskId, boardId } })
+                                new CustomEvent('open-card', {
+                                  detail: { cardId: subtaskId, boardId },
+                                })
                               );
                             }, 300);
                           }}
