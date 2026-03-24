@@ -183,6 +183,20 @@ export function BinDetailSheet({
     [printActions]
   );
 
+  const handlePrintAllItems = useCallback(() => {
+    if (items.length === 0) return;
+    const inputs = items.map(item => ({
+      item: {
+        id: item.id,
+        fullCode: item.itemCode,
+        uniqueCode: item.itemCode,
+        currentQuantity: item.quantity,
+      } as never,
+    }));
+    printActions.addToQueue(inputs);
+    toast.success(`${items.length} ${items.length === 1 ? 'item adicionado' : 'itens adicionados'} à fila de impressão`);
+  }, [items, printActions]);
+
   // Item highlight with 10s auto-fade
   const [activeHighlightItemId, setActiveHighlightItemId] = useState<
     string | null
@@ -370,6 +384,17 @@ export function BinDetailSheet({
                       </span>
                     )}
                   </h4>
+                  {items.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-muted-foreground hover:text-violet-600"
+                      onClick={handlePrintAllItems}
+                    >
+                      <Printer className="h-3.5 w-3.5 mr-1.5" />
+                      Imprimir Todos
+                    </Button>
+                  )}
                 </div>
 
                 {items.length === 0 ? (
