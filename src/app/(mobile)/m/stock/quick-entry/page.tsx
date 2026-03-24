@@ -326,19 +326,10 @@ function MobileAttributeFields({
                   value={currentValue}
                   onChange={e => {
                     if (isNumber) {
-                      // Allow digits, comma, dot — up to 2 decimal places
-                      const raw = e.target.value.replace(/[^0-9.,]/g, '');
-                      onChange(key, raw);
+                      // Store raw string during editing (converted to number on submit)
+                      onChange(key, e.target.value.replace(/[^0-9.,]/g, ''));
                     } else {
                       onChange(key, e.target.value);
-                    }
-                  }}
-                  onBlur={() => {
-                    if (isNumber && currentValue) {
-                      const parsed = parseFloat(currentValue.replace(',', '.'));
-                      if (!isNaN(parsed)) {
-                        onChange(key, String(Math.round(parsed * 100) / 100));
-                      }
                     }
                   }}
                   placeholder={config.placeholder || ''}
@@ -444,16 +435,28 @@ export default function QuickEntryPage() {
       return;
     }
 
+    // Convert numeric attribute strings to actual numbers for the API
+    const parsedAttributes: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(formData.attributes)) {
+      const attrDef = itemAttributes[key];
+      if (attrDef?.type === 'number' && typeof value === 'string') {
+        const num = parseFloat(value.replace(',', '.'));
+        parsedAttributes[key] = isNaN(num) ? value : num;
+      } else {
+        parsedAttributes[key] = value;
+      }
+    }
+
     const data: RegisterItemEntryRequest = {
       variantId: selectedVariant.id,
       binId: selectedBin.id,
       quantity: parsedQuantity,
       movementType: 'PURCHASE',
-      attributes: formData.attributes,
+      attributes: parsedAttributes,
     };
 
     registerEntry.mutate(data);
-  }, [selectedVariant, selectedBin, parsedQuantity, formData.attributes, registerEntry]);
+  }, [selectedVariant, selectedBin, parsedQuantity, formData.attributes, itemAttributes, registerEntry]);
 
   const updateAttribute = useCallback((key: string, value: unknown) => {
     setFormData(prev => ({
