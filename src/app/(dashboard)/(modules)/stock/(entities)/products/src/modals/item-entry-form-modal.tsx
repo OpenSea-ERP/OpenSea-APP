@@ -7,6 +7,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import {
   InputGroup,
@@ -19,6 +27,12 @@ import {
   NavigationWizardDialog,
   type NavigationSection,
 } from '@/components/ui/navigation-wizard-dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -35,8 +49,9 @@ import {
 } from '@/components/ui/tooltip';
 import { sanitizeQuantityInput } from '@/helpers/formatters';
 import { useTemplate } from '@/hooks/stock/use-stock-other';
+import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
-import { itemsService } from '@/services/stock';
+import { itemsService, productsService } from '@/services/stock';
 import type {
   EntryMovementType,
   Product,
@@ -44,14 +59,17 @@ import type {
   TemplateAttribute,
   Variant,
 } from '@/types/stock';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CalendarDays,
+  Check,
+  ChevronsUpDown,
   DollarSign,
   Info,
   Loader2,
   Package,
   Plus,
+  Search,
   ShoppingCart,
   SlidersHorizontal,
   Undo2,
@@ -69,9 +87,13 @@ interface ItemEntryFormModalProps {
   variant: Variant | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Pre-fill bin when opened from bin drawer */
+  initialBinId?: string;
+  /** Extra query keys to invalidate on success */
+  extraInvalidateKeys?: string[][];
 }
 
-type SectionId = 'entry' | 'costs' | 'batch' | 'attributes';
+type SectionId = 'variant' | 'entry' | 'costs' | 'batch' | 'attributes';
 
 interface FormData {
   // Entry
@@ -134,13 +156,27 @@ const INITIAL_FORM: FormData = {
 // ---------------------------------------------------------------------------
 
 export function ItemEntryFormModal({
-  product,
-  variant,
+  product: productProp,
+  variant: variantProp,
   open,
   onOpenChange,
+  initialBinId,
+  extraInvalidateKeys,
 }: ItemEntryFormModalProps) {
   const queryClient = useQueryClient();
-  const [activeSection, setActiveSection] = useState<SectionId>('entry');
+
+  // When no variant is provided, user picks one via search
+  const needsVariantSearch = !variantProp;
+  const [pickedProduct, setPickedProduct] = useState<Product | null>(null);
+  const [pickedVariant, setPickedVariant] = useState<Variant | null>(null);
+
+  // Resolved product/variant — either from props or from search
+  const product = variantProp ? productProp : pickedProduct;
+  const variant = variantProp ?? pickedVariant;
+
+  const [activeSection, setActiveSection] = useState<SectionId>(
+    needsVariantSearch ? 'variant' : 'entry'
+  );
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
   const [sectionErrors, setSectionErrors] = useState<Record<string, boolean>>(
     {}
@@ -156,12 +192,14 @@ export function ItemEntryFormModal({
 
   useEffect(() => {
     if (open) {
-      setFormData(INITIAL_FORM);
-      setActiveSection('entry');
+      setFormData({ ...INITIAL_FORM, binId: initialBinId || '' });
+      setActiveSection(needsVariantSearch ? 'variant' : 'entry');
       setSectionErrors({});
       setFieldErrors({});
+      setPickedProduct(null);
+      setPickedVariant(null);
     }
-  }, [open]);
+  }, [open, initialBinId, needsVariantSearch]);
 
   // ---------------------------------------------------------------------------
   // Computed
@@ -206,6 +244,13 @@ export function ItemEntryFormModal({
 
   const sections: NavigationSection[] = useMemo(
     () => [
+      {
+        id: 'variant',
+        label: 'Variante',
+        icon: <Search className="w-4 h-4" />,
+        description: 'Selecionar variante',
+        hidden: !needsVariantSearch,
+      },
       {
         id: 'entry',
         label: 'Entrada',
@@ -252,6 +297,11 @@ export function ItemEntryFormModal({
       queryClient.invalidateQueries({
         queryKey: ['items', 'stats-by-variants', product?.id],
       });
+      if (extraInvalidateKeys) {
+        for (const key of extraInvalidateKeys) {
+          queryClient.invalidateQueries({ queryKey: key });
+        }
+      }
       toast.success('Item registrado com sucesso!');
       onOpenChange(false);
     },
@@ -270,6 +320,9 @@ export function ItemEntryFormModal({
     const errors: Record<string, string> = {};
     const secs: Record<string, boolean> = {};
 
+    if (needsVariantSearch && !variant) {
+      secs.variant = true;
+    }
     if (!formData.binId) {
       errors.binId = 'Localização é obrigatória';
       secs.entry = true;
@@ -289,7 +342,7 @@ export function ItemEntryFormModal({
       return false;
     }
     return true;
-  }, [formData.binId, parsedQuantity]);
+  }, [formData.binId, parsedQuantity, needsVariantSearch, variant]);
 
   // ---------------------------------------------------------------------------
   // Handlers
@@ -361,14 +414,18 @@ export function ItemEntryFormModal({
   // Render
   // ---------------------------------------------------------------------------
 
-  if (!product || !variant) return null;
+  if (!needsVariantSearch && (!product || !variant)) return null;
 
   return (
     <NavigationWizardDialog
       open={open}
       onOpenChange={handleClose}
       title="Registrar Entrada"
-      subtitle={`Adicionar item para ${variant.name}`}
+      subtitle={
+        variant
+          ? `Adicionar item para ${variant.name}`
+          : 'Selecione uma variante para continuar'
+      }
       sections={sections}
       activeSection={activeSection}
       onSectionChange={id => setActiveSection(id as SectionId)}
@@ -395,6 +452,20 @@ export function ItemEntryFormModal({
         </>
       }
     >
+      {activeSection === 'variant' && needsVariantSearch && (
+        <VariantSearchSection
+          selectedVariant={pickedVariant}
+          onSelect={(v, p) => {
+            setPickedVariant(v);
+            setPickedProduct(p);
+            setSectionErrors(prev => {
+              const next = { ...prev };
+              delete next.variant;
+              return next;
+            });
+          }}
+        />
+      )}
       {activeSection === 'entry' && (
         <EntrySection
           formData={formData}
@@ -884,5 +955,308 @@ function AttributesSection({
         )}
       </div>
     </TooltipProvider>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Variant Search Section (shown when no variant is pre-selected)
+// ---------------------------------------------------------------------------
+
+interface VariantSearchSectionProps {
+  selectedVariant: Variant | null;
+  onSelect: (variant: Variant, product: Product) => void;
+}
+
+interface VariantSearchOption {
+  id: string;
+  name: string;
+  reference: string | null;
+  colorHex: string | null;
+  secondaryColorHex: string | null;
+  pattern: string | null;
+  productId: string;
+  productName: string;
+  templateName: string | null;
+  fullLabel: string;
+}
+
+function getSearchPatternStyle(
+  colorHex: string | null,
+  secondaryColorHex: string | null,
+  pattern: string | null
+): React.CSSProperties {
+  const primary = colorHex || '#cbd5e1';
+  const secondary = secondaryColorHex || '';
+  const hasSecondary = !!secondary;
+  const sec = secondary || '#94a3b8';
+  switch (pattern) {
+    case 'SOLID':
+      if (hasSecondary)
+        return { background: `linear-gradient(135deg, ${primary} 50%, ${sec} 50%)` };
+      return { background: primary };
+    case 'STRIPED':
+      return { background: `repeating-linear-gradient(45deg, ${primary}, ${primary} 4px, ${sec} 4px, ${sec} 8px)` };
+    case 'GRADIENT':
+      return { background: `linear-gradient(135deg, ${primary}, ${sec})` };
+    case 'JACQUARD':
+      return { background: `repeating-conic-gradient(${primary} 0% 25%, ${sec} 0% 50%) 0 0 / 8px 8px` };
+    default:
+      return { background: primary };
+  }
+}
+
+async function fetchAllSearchPages<T>(
+  endpoint: string,
+  dataKey: string
+): Promise<T[]> {
+  const allItems: T[] = [];
+  let page = 1;
+  const limit = 100;
+  while (true) {
+    const response = await apiClient.get<Record<string, unknown>>(
+      `${endpoint}?page=${page}&limit=${limit}`
+    );
+    const items = response[dataKey] as T[] | undefined;
+    if (items && items.length > 0) allItems.push(...items);
+    const meta = response.meta as { pages: number } | undefined;
+    if (!meta || page >= meta.pages) break;
+    page++;
+  }
+  return allItems;
+}
+
+function VariantSearchSection({
+  selectedVariant,
+  onSelect,
+}: VariantSearchSectionProps) {
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
+
+  const { data: options, isLoading } = useQuery({
+    queryKey: ['item-entry', 'variant-search-options'],
+    queryFn: async (): Promise<VariantSearchOption[]> => {
+      const [variants, products] = await Promise.all([
+        fetchAllSearchPages<{
+          id: string;
+          name: string;
+          reference?: string;
+          productId: string;
+          colorHex?: string;
+          secondaryColorHex?: string;
+          pattern?: string;
+        }>('/v1/variants', 'variants'),
+        fetchAllSearchPages<{
+          id: string;
+          name: string;
+          templateId?: string;
+          template?: { id: string; name: string };
+        }>('/v1/products', 'products'),
+      ]);
+
+      const productMap = new Map(products.map(p => [p.id, p]));
+
+      return variants.map(v => {
+        const prod = productMap.get(v.productId);
+        const templateName = prod?.template?.name ?? null;
+        const productName = prod?.name ?? '';
+        const fullLabel = [templateName, productName, v.name]
+          .filter(Boolean)
+          .join(' · ');
+        return {
+          id: v.id,
+          name: v.name,
+          reference: v.reference || null,
+          colorHex: v.colorHex || null,
+          secondaryColorHex: v.secondaryColorHex || null,
+          pattern: v.pattern || null,
+          productId: v.productId,
+          productName,
+          templateName,
+          fullLabel,
+        };
+      });
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const handleSelect = useCallback(
+    async (option: VariantSearchOption) => {
+      setPopoverOpen(false);
+      setIsResolving(true);
+      try {
+        const productResponse = await productsService.getProduct(
+          option.productId
+        );
+        const product = productResponse.product;
+        const found = product.variants?.find(
+          v => v.id === option.id
+        );
+        const variant: Variant = found
+          ? { ...found, productId: option.productId, attributes: (found as Record<string, unknown>).attributes as Record<string, unknown> ?? {}, outOfLine: false }
+          : {
+              id: option.id,
+              name: option.name,
+              productId: option.productId,
+              price: 0,
+              attributes: {},
+              outOfLine: false,
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              colorHex: option.colorHex ?? undefined,
+              secondaryColorHex: option.secondaryColorHex,
+              pattern: option.pattern as Variant['pattern'],
+              reference: option.reference ?? undefined,
+            };
+
+        onSelect(variant, product);
+      } catch {
+        toast.error('Erro ao carregar dados do produto');
+      } finally {
+        setIsResolving(false);
+      }
+    },
+    [onSelect]
+  );
+
+  const hasColor = (o: VariantSearchOption) => !!(o.colorHex || o.pattern);
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">
+          Variante <span className="text-rose-500">*</span>
+        </Label>
+        <p className="text-xs text-muted-foreground">
+          Busque e selecione a variante para registrar a entrada.
+        </p>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={popoverOpen}
+              className="w-full justify-between h-auto min-h-[48px] px-3 py-2.5"
+            >
+              {selectedVariant ? (
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {(selectedVariant.colorHex || selectedVariant.pattern) ? (
+                    <div
+                      className="h-7 w-10 rounded-md shrink-0 border border-black/10"
+                      style={getSearchPatternStyle(
+                        selectedVariant.colorHex || null,
+                        selectedVariant.secondaryColorHex || null,
+                        selectedVariant.pattern || null
+                      )}
+                    />
+                  ) : (
+                    <div className="h-7 w-10 rounded-md shrink-0 bg-muted flex items-center justify-center">
+                      <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 text-left">
+                    <p className="text-sm font-medium truncate">
+                      {selectedVariant.name}
+                    </p>
+                    {selectedVariant.reference && (
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        Ref: {selectedVariant.reference}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">
+                  Buscar variante por nome, produto ou referência...
+                </span>
+              )}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-[--radix-popover-trigger-width] p-0"
+            align="start"
+          >
+            <Command>
+              <CommandInput placeholder="Buscar..." className="h-10" />
+              <CommandList>
+                <CommandEmpty>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2 py-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Carregando variantes...</span>
+                    </div>
+                  ) : (
+                    'Nenhuma variante encontrada.'
+                  )}
+                </CommandEmpty>
+                <CommandGroup>
+                  <ScrollArea className="max-h-[300px]">
+                    {(options ?? []).map(option => (
+                      <CommandItem
+                        key={option.id}
+                        value={`${option.fullLabel} ${option.reference || ''}`}
+                        onSelect={() => handleSelect(option)}
+                        className="cursor-pointer py-2.5 px-2"
+                      >
+                        <div className="flex items-center gap-2.5 w-full min-w-0">
+                          {hasColor(option) ? (
+                            <div
+                              className="h-7 w-10 rounded-md shrink-0 border border-black/10"
+                              style={getSearchPatternStyle(
+                                option.colorHex,
+                                option.secondaryColorHex,
+                                option.pattern
+                              )}
+                            />
+                          ) : (
+                            <div className="h-7 w-10 rounded-md shrink-0 bg-muted flex items-center justify-center">
+                              <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {option.fullLabel}
+                            </p>
+                            {option.reference && (
+                              <p className="text-[11px] text-muted-foreground truncate">
+                                Ref: {option.reference}
+                              </p>
+                            )}
+                          </div>
+                          {selectedVariant?.id === option.id && (
+                            <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </ScrollArea>
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {isResolving && (
+        <div className="flex items-center justify-center gap-2 py-6">
+          <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+          <span className="text-sm text-muted-foreground">
+            Carregando dados do produto...
+          </span>
+        </div>
+      )}
+
+      {selectedVariant && !isResolving && (
+        <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/5 p-3">
+          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+            Variante selecionada
+          </p>
+          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/60 mt-0.5">
+            {selectedVariant.name}
+            {selectedVariant.reference && ` · Ref: ${selectedVariant.reference}`}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
