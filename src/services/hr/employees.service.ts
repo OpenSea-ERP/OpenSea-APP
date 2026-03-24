@@ -29,7 +29,7 @@ export interface CreateEmployeeRequest {
   fullName: string;
   cpf: string;
   hireDate: string;
-  baseSalary: number;
+  baseSalary?: number;
   contractType: ContractType;
   workRegime: WorkRegime;
   weeklyHours: number;

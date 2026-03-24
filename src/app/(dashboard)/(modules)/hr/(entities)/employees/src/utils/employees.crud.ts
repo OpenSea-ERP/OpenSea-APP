@@ -22,7 +22,7 @@ export async function createEmployee(
     fullName: data.fullName ?? '',
     cpf: data.cpf ?? '',
     hireDate: data.hireDate ?? new Date().toISOString(),
-    baseSalary: data.baseSalary ?? 0,
+    baseSalary: data.baseSalary || undefined,
     contractType: data.contractType ?? 'CLT',
     workRegime: data.workRegime ?? 'FULL_TIME',
     weeklyHours: data.weeklyHours ?? 40,
