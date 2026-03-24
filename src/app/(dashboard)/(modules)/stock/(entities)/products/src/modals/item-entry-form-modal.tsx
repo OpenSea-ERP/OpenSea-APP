@@ -1,7 +1,7 @@
 /**
  * ItemEntryFormModal - Modal for registering item entries
- * Uses NavigationWizardDialog with 4 sections:
- * Entrada, Custos, Rastreabilidade (with uniqueCode), Atributos (conditional)
+ * Uses NavigationWizardDialog with sections:
+ * Variante (conditional), Entrada (+ template attributes), Custos, Rastreabilidade
  */
 
 'use client';
@@ -47,7 +47,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { sanitizeQuantityInput } from '@/helpers/formatters';
+import {
+  formatUnitAbbreviation,
+  sanitizeQuantityInput,
+} from '@/helpers/formatters';
 import { useTemplate } from '@/hooks/stock/use-stock-other';
 import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
@@ -69,6 +72,7 @@ import {
   Loader2,
   Package,
   Plus,
+  RotateCcw,
   Search,
   ShoppingCart,
   SlidersHorizontal,
@@ -93,7 +97,7 @@ interface ItemEntryFormModalProps {
   extraInvalidateKeys?: string[][];
 }
 
-type SectionId = 'variant' | 'entry' | 'costs' | 'batch' | 'attributes';
+type SectionId = 'variant' | 'entry' | 'costs' | 'batch';
 
 interface FormData {
   // Entry
@@ -218,13 +222,7 @@ export function ItemEntryFormModal({
   }, [formData.unitCost, parsedQuantity]);
 
   const unitOfMeasure = useMemo(() => {
-    const uom = template?.unitOfMeasure || 'UNITS';
-    const labels: Record<string, string> = {
-      METERS: 'm',
-      KILOGRAMS: 'kg',
-      UNITS: 'un',
-    };
-    return labels[uom] || 'un';
+    return formatUnitAbbreviation(template?.unitOfMeasure);
   }, [template]);
 
   // ---------------------------------------------------------------------------
@@ -255,7 +253,9 @@ export function ItemEntryFormModal({
         id: 'entry',
         label: 'Entrada',
         icon: <Package className="w-4 h-4" />,
-        description: 'Tipo, local, quantidade',
+        description: hasAttributes
+          ? 'Tipo, local, quantidade, atributos'
+          : 'Tipo, local, quantidade',
       },
       {
         id: 'costs',
@@ -269,39 +269,36 @@ export function ItemEntryFormModal({
         icon: <CalendarDays className="w-4 h-4" />,
         description: 'Lote, validade, NF',
       },
-      {
-        id: 'attributes',
-        label: 'Atributos',
-        icon: <SlidersHorizontal className="w-4 h-4" />,
-        description: 'Atributos do template',
-        hidden: !hasAttributes,
-      },
     ],
-    [hasAttributes]
+    [hasAttributes, needsVariantSearch]
   );
 
   // ---------------------------------------------------------------------------
   // Mutation
   // ---------------------------------------------------------------------------
 
+  const invalidateQueries = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: ['items', 'by-variant', variant?.id],
+    });
+    queryClient.invalidateQueries({ queryKey: ['items'] });
+    queryClient.invalidateQueries({ queryKey: ['variants'] });
+    queryClient.invalidateQueries({ queryKey: ['bins'] });
+    queryClient.invalidateQueries({
+      queryKey: ['items', 'stats-by-variants', product?.id],
+    });
+    if (extraInvalidateKeys) {
+      for (const key of extraInvalidateKeys) {
+        queryClient.invalidateQueries({ queryKey: key });
+      }
+    }
+  }, [queryClient, variant?.id, product?.id, extraInvalidateKeys]);
+
   const createItemMutation = useMutation({
     mutationFn: (data: RegisterItemEntryRequest) =>
       itemsService.registerEntry(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['items', 'by-variant', variant?.id],
-      });
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['variants'] });
-      queryClient.invalidateQueries({ queryKey: ['bins'] });
-      queryClient.invalidateQueries({
-        queryKey: ['items', 'stats-by-variants', product?.id],
-      });
-      if (extraInvalidateKeys) {
-        for (const key of extraInvalidateKeys) {
-          queryClient.invalidateQueries({ queryKey: key });
-        }
-      }
+      invalidateQueries();
       toast.success('Item registrado com sucesso!');
       onOpenChange(false);
     },
@@ -310,7 +307,32 @@ export function ItemEntryFormModal({
     },
   });
 
-  const isPending = createItemMutation.isPending;
+  // "Save and register another" mutation
+  const createAndContinueMutation = useMutation({
+    mutationFn: (data: RegisterItemEntryRequest) =>
+      itemsService.registerEntry(data),
+    onSuccess: () => {
+      invalidateQueries();
+      toast.success('Item registrado! Pronto para o próximo.');
+      // Reset only quantity-specific fields, keep selection & bin
+      setFormData(prev => ({
+        ...prev,
+        quantity: '1',
+        uniqueCode: '',
+        batchNumber: '',
+        notes: '',
+      }));
+      setActiveSection('entry');
+      setSectionErrors({});
+      setFieldErrors({});
+    },
+    onError: (error: Error) => {
+      toast.error(`Erro ao registrar entrada: ${error.message}`);
+    },
+  });
+
+  const isPending =
+    createItemMutation.isPending || createAndContinueMutation.isPending;
 
   // ---------------------------------------------------------------------------
   // Validation
@@ -382,9 +404,9 @@ export function ItemEntryFormModal({
     onOpenChange(false);
   }, [onOpenChange]);
 
-  const handleSubmit = useCallback(() => {
-    if (!variant?.id) return;
-    if (!validate()) return;
+  const buildRequestData = useCallback((): RegisterItemEntryRequest | null => {
+    if (!variant?.id) return null;
+    if (!validate()) return null;
 
     // Build notes: prepend invoice number if present
     let notes = formData.notes.trim() || undefined;
@@ -393,7 +415,7 @@ export function ItemEntryFormModal({
       notes = notes ? `${invoiceLine} | ${notes}` : invoiceLine;
     }
 
-    const createData: RegisterItemEntryRequest = {
+    return {
       variantId: variant.id,
       binId: formData.binId,
       quantity: parsedQuantity,
@@ -406,9 +428,19 @@ export function ItemEntryFormModal({
       expiryDate: formData.expiryDate || undefined,
       notes,
     };
+  }, [variant, formData, parsedQuantity, validate]);
 
-    createItemMutation.mutate(createData);
-  }, [variant, formData, parsedQuantity, validate, createItemMutation]);
+  const handleSubmit = useCallback(() => {
+    const data = buildRequestData();
+    if (!data) return;
+    createItemMutation.mutate(data);
+  }, [buildRequestData, createItemMutation]);
+
+  const handleSubmitAndContinue = useCallback(() => {
+    const data = buildRequestData();
+    if (!data) return;
+    createAndContinueMutation.mutate(data);
+  }, [buildRequestData, createAndContinueMutation]);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -432,12 +464,25 @@ export function ItemEntryFormModal({
       sectionErrors={sectionErrors}
       isPending={isPending}
       footer={
-        <>
+        <div className="flex items-center gap-2 w-full">
           <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cancelar
           </Button>
+          <div className="flex-1" />
+          <Button
+            variant="outline"
+            onClick={handleSubmitAndContinue}
+            disabled={isPending}
+          >
+            {createAndContinueMutation.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RotateCcw className="w-4 h-4 mr-2" />
+            )}
+            Salvar e Registrar Outro
+          </Button>
           <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending ? (
+            {createItemMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Registrando...
@@ -449,7 +494,7 @@ export function ItemEntryFormModal({
               </>
             )}
           </Button>
-        </>
+        </div>
       }
     >
       {activeSection === 'variant' && needsVariantSearch && (
@@ -470,9 +515,12 @@ export function ItemEntryFormModal({
         <EntrySection
           formData={formData}
           updateField={updateField}
+          updateAttribute={updateAttribute}
           unitOfMeasure={unitOfMeasure}
           isPending={isPending}
           fieldErrors={fieldErrors}
+          itemAttributes={itemAttributes}
+          hasAttributes={hasAttributes}
         />
       )}
       {activeSection === 'costs' && (
@@ -492,15 +540,6 @@ export function ItemEntryFormModal({
           isPending={isPending}
         />
       )}
-      {activeSection === 'attributes' && (
-        <AttributesSection
-          formData={formData}
-          itemAttributes={itemAttributes}
-          hasAttributes={hasAttributes}
-          updateAttribute={updateAttribute}
-          isPending={isPending}
-        />
-      )}
     </NavigationWizardDialog>
   );
 }
@@ -516,20 +555,26 @@ interface SectionProps {
 }
 
 // ---------------------------------------------------------------------------
-// Entry Section
+// Entry Section (now includes template attributes)
 // ---------------------------------------------------------------------------
 
 interface EntrySectionProps extends SectionProps {
   unitOfMeasure: string;
   fieldErrors: Record<string, string>;
+  itemAttributes: Record<string, TemplateAttribute>;
+  hasAttributes: boolean;
+  updateAttribute: (key: string, value: unknown) => void;
 }
 
 function EntrySection({
   formData,
   updateField,
+  updateAttribute,
   unitOfMeasure,
   isPending,
   fieldErrors,
+  itemAttributes,
+  hasAttributes,
 }: EntrySectionProps) {
   return (
     <div className="space-y-4">
@@ -628,7 +673,167 @@ function EntrySection({
           )}
         </div>
       </div>
+
+      {/* Template Attributes (inline) */}
+      {hasAttributes && (
+        <>
+          <div className="border-t border-border pt-4 mt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">
+                Atributos do Template
+              </span>
+            </div>
+          </div>
+          <AttributeFields
+            formData={formData}
+            itemAttributes={itemAttributes}
+            updateAttribute={updateAttribute}
+            isPending={isPending}
+          />
+        </>
+      )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Attribute Fields (inline component, used inside EntrySection)
+// ---------------------------------------------------------------------------
+
+interface AttributeFieldsProps {
+  formData: FormData;
+  itemAttributes: Record<string, TemplateAttribute>;
+  updateAttribute: (key: string, value: unknown) => void;
+  isPending: boolean;
+}
+
+function AttributeFields({
+  formData,
+  itemAttributes,
+  updateAttribute,
+  isPending,
+}: AttributeFieldsProps) {
+  return (
+    <TooltipProvider>
+      <div className="grid grid-cols-2 gap-4">
+        {Object.entries(itemAttributes).map(
+          ([key, config]: [string, TemplateAttribute]) => {
+            const rawValue = formData.attributes[key];
+            const currentValue = String(rawValue ?? '');
+            const isBooleanType =
+              config.type === 'boolean' ||
+              (config.type as string) === 'sim/nao';
+
+            return (
+              <div key={key} className="space-y-1.5">
+                {isBooleanType ? (
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`ief-attr-${key}`} className="text-sm">
+                        {config.label || key}
+                        {config.required && (
+                          <span className="text-rose-500"> *</span>
+                        )}
+                      </Label>
+                      {config.description && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{config.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                    <Switch
+                      id={`ief-attr-${key}`}
+                      checked={
+                        rawValue === true ||
+                        currentValue === 'true' ||
+                        currentValue === 'sim' ||
+                        currentValue === '1'
+                      }
+                      onCheckedChange={checked => updateAttribute(key, checked)}
+                      disabled={isPending}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`ief-attr-${key}`} className="text-sm">
+                        {config.label || key}
+                        {config.required && (
+                          <span className="text-rose-500"> *</span>
+                        )}
+                      </Label>
+                      {config.description && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{config.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+
+                    {config.type === 'select' ? (
+                      <Select
+                        value={currentValue}
+                        onValueChange={value => updateAttribute(key, value)}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger id={`ief-attr-${key}`}>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {config.options?.map((option: string) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : config.type === 'number' ? (
+                      <Input
+                        id={`ief-attr-${key}`}
+                        type="number"
+                        value={currentValue}
+                        onChange={e =>
+                          updateAttribute(key, parseFloat(e.target.value) || 0)
+                        }
+                        placeholder={config.placeholder || ''}
+                        disabled={isPending}
+                      />
+                    ) : config.type === 'date' ? (
+                      <Input
+                        id={`ief-attr-${key}`}
+                        type="date"
+                        value={currentValue}
+                        onChange={e => updateAttribute(key, e.target.value)}
+                        disabled={isPending}
+                      />
+                    ) : (
+                      <Input
+                        id={`ief-attr-${key}`}
+                        type="text"
+                        value={currentValue}
+                        onChange={e => updateAttribute(key, e.target.value)}
+                        placeholder={config.placeholder || ''}
+                        disabled={isPending}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          }
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -806,159 +1011,6 @@ function BatchSection({ formData, updateField, isPending }: SectionProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Attributes Section
-// ---------------------------------------------------------------------------
-
-interface AttributesSectionProps {
-  formData: FormData;
-  itemAttributes: Record<string, TemplateAttribute>;
-  hasAttributes: boolean;
-  updateAttribute: (key: string, value: unknown) => void;
-  isPending: boolean;
-}
-
-function AttributesSection({
-  formData,
-  itemAttributes,
-  hasAttributes,
-  updateAttribute,
-  isPending,
-}: AttributesSectionProps) {
-  if (!hasAttributes) {
-    return (
-      <div className="p-8 text-center border border-dashed rounded-lg">
-        <SlidersHorizontal className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-        <p className="text-sm text-muted-foreground">
-          Nenhum atributo de item definido no template
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <TooltipProvider>
-      <div className="grid grid-cols-2 gap-4">
-        {Object.entries(itemAttributes).map(
-          ([key, config]: [string, TemplateAttribute]) => {
-            const rawValue = formData.attributes[key];
-            const currentValue = String(rawValue ?? '');
-            const isBooleanType =
-              config.type === 'boolean' ||
-              (config.type as string) === 'sim/nao';
-
-            return (
-              <div key={key} className="space-y-1.5">
-                {isBooleanType ? (
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor={`ief-attr-${key}`} className="text-sm">
-                        {config.label || key}
-                        {config.required && (
-                          <span className="text-rose-500"> *</span>
-                        )}
-                      </Label>
-                      {config.description && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{config.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                    <Switch
-                      id={`ief-attr-${key}`}
-                      checked={
-                        rawValue === true ||
-                        currentValue === 'true' ||
-                        currentValue === 'sim' ||
-                        currentValue === '1'
-                      }
-                      onCheckedChange={checked => updateAttribute(key, checked)}
-                      disabled={isPending}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor={`ief-attr-${key}`} className="text-sm">
-                        {config.label || key}
-                        {config.required && (
-                          <span className="text-rose-500"> *</span>
-                        )}
-                      </Label>
-                      {config.description && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{config.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-
-                    {config.type === 'select' ? (
-                      <Select
-                        value={currentValue}
-                        onValueChange={value => updateAttribute(key, value)}
-                        disabled={isPending}
-                      >
-                        <SelectTrigger id={`ief-attr-${key}`}>
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {config.options?.map((option: string) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : config.type === 'number' ? (
-                      <Input
-                        id={`ief-attr-${key}`}
-                        type="number"
-                        value={currentValue}
-                        onChange={e =>
-                          updateAttribute(key, parseFloat(e.target.value) || 0)
-                        }
-                        placeholder={config.placeholder || ''}
-                        disabled={isPending}
-                      />
-                    ) : config.type === 'date' ? (
-                      <Input
-                        id={`ief-attr-${key}`}
-                        type="date"
-                        value={currentValue}
-                        onChange={e => updateAttribute(key, e.target.value)}
-                        disabled={isPending}
-                      />
-                    ) : (
-                      <Input
-                        id={`ief-attr-${key}`}
-                        type="text"
-                        value={currentValue}
-                        onChange={e => updateAttribute(key, e.target.value)}
-                        placeholder={config.placeholder || ''}
-                        disabled={isPending}
-                      />
-                    )}
-                  </>
-                )}
-              </div>
-            );
-          }
-        )}
-      </div>
-    </TooltipProvider>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Variant Search Section (shown when no variant is pre-selected)
 // ---------------------------------------------------------------------------
 
@@ -977,6 +1029,7 @@ interface VariantSearchOption {
   productId: string;
   productName: string;
   templateName: string | null;
+  manufacturerName: string | null;
   fullLabel: string;
 }
 
@@ -992,14 +1045,20 @@ function getSearchPatternStyle(
   switch (pattern) {
     case 'SOLID':
       if (hasSecondary)
-        return { background: `linear-gradient(135deg, ${primary} 50%, ${sec} 50%)` };
+        return {
+          background: `linear-gradient(135deg, ${primary} 50%, ${sec} 50%)`,
+        };
       return { background: primary };
     case 'STRIPED':
-      return { background: `repeating-linear-gradient(45deg, ${primary}, ${primary} 4px, ${sec} 4px, ${sec} 8px)` };
+      return {
+        background: `repeating-linear-gradient(45deg, ${primary}, ${primary} 4px, ${sec} 4px, ${sec} 8px)`,
+      };
     case 'GRADIENT':
       return { background: `linear-gradient(135deg, ${primary}, ${sec})` };
     case 'JACQUARD':
-      return { background: `repeating-conic-gradient(${primary} 0% 25%, ${sec} 0% 50%) 0 0 / 8px 8px` };
+      return {
+        background: `repeating-conic-gradient(${primary} 0% 25%, ${sec} 0% 50%) 0 0 / 8px 8px`,
+      };
     default:
       return { background: primary };
   }
@@ -1050,6 +1109,7 @@ function VariantSearchSection({
           name: string;
           templateId?: string;
           template?: { id: string; name: string };
+          manufacturer?: { id: string; name: string } | null;
         }>('/v1/products', 'products'),
       ]);
 
@@ -1059,6 +1119,7 @@ function VariantSearchSection({
         const prod = productMap.get(v.productId);
         const templateName = prod?.template?.name ?? null;
         const productName = prod?.name ?? '';
+        const manufacturerName = prod?.manufacturer?.name ?? null;
         const fullLabel = [templateName, productName, v.name]
           .filter(Boolean)
           .join(' · ');
@@ -1072,6 +1133,7 @@ function VariantSearchSection({
           productId: v.productId,
           productName,
           templateName,
+          manufacturerName,
           fullLabel,
         };
       });
@@ -1088,11 +1150,18 @@ function VariantSearchSection({
           option.productId
         );
         const product = productResponse.product;
-        const found = product.variants?.find(
-          v => v.id === option.id
-        );
+        const found = product.variants?.find(v => v.id === option.id);
         const variant: Variant = found
-          ? { ...found, productId: option.productId, attributes: (found as Record<string, unknown>).attributes as Record<string, unknown> ?? {}, outOfLine: false }
+          ? {
+              ...found,
+              productId: option.productId,
+              attributes:
+                ((found as Record<string, unknown>).attributes as Record<
+                  string,
+                  unknown
+                >) ?? {},
+              outOfLine: false,
+            }
           : {
               id: option.id,
               name: option.name,
@@ -1139,7 +1208,7 @@ function VariantSearchSection({
             >
               {selectedVariant ? (
                 <div className="flex items-center gap-2.5 min-w-0">
-                  {(selectedVariant.colorHex || selectedVariant.pattern) ? (
+                  {selectedVariant.colorHex || selectedVariant.pattern ? (
                     <div
                       className="h-7 w-10 rounded-md shrink-0 border border-black/10"
                       style={getSearchPatternStyle(
@@ -1173,7 +1242,7 @@ function VariantSearchSection({
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-[--radix-popover-trigger-width] p-0"
+            className="w-[--radix-popover-trigger-width] min-w-[480px] p-0"
             align="start"
           >
             <Command>
@@ -1183,7 +1252,9 @@ function VariantSearchSection({
                   {isLoading ? (
                     <div className="flex items-center justify-center gap-2 py-4">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Carregando variantes...</span>
+                      <span className="text-sm">
+                        Carregando variantes...
+                      </span>
                     </div>
                   ) : (
                     'Nenhuma variante encontrada.'
@@ -1194,7 +1265,7 @@ function VariantSearchSection({
                     {(options ?? []).map(option => (
                       <CommandItem
                         key={option.id}
-                        value={`${option.fullLabel} ${option.reference || ''}`}
+                        value={`${option.fullLabel} ${option.manufacturerName || ''} ${option.reference || ''}`}
                         onSelect={() => handleSelect(option)}
                         className="cursor-pointer py-2.5 px-2"
                       >
@@ -1217,11 +1288,22 @@ function VariantSearchSection({
                             <p className="text-sm font-medium truncate">
                               {option.fullLabel}
                             </p>
-                            {option.reference && (
-                              <p className="text-[11px] text-muted-foreground truncate">
-                                Ref: {option.reference}
-                              </p>
-                            )}
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {option.manufacturerName && (
+                                <span>{option.manufacturerName}</span>
+                              )}
+                              {option.manufacturerName &&
+                                option.reference &&
+                                ' · '}
+                              {option.reference && (
+                                <span className="font-mono">
+                                  Ref: {option.reference}
+                                </span>
+                              )}
+                              {!option.manufacturerName &&
+                                !option.reference &&
+                                '\u00A0'}
+                            </p>
                           </div>
                           {selectedVariant?.id === option.id && (
                             <Check className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -1253,7 +1335,8 @@ function VariantSearchSection({
           </p>
           <p className="text-xs text-emerald-600/80 dark:text-emerald-400/60 mt-0.5">
             {selectedVariant.name}
-            {selectedVariant.reference && ` · Ref: ${selectedVariant.reference}`}
+            {selectedVariant.reference &&
+              ` · Ref: ${selectedVariant.reference}`}
           </p>
         </div>
       )}
