@@ -295,7 +295,7 @@ function MobileAttributeFields({
                   value={currentValue}
                   onChange={e => onChange(key, e.target.value)}
                   disabled={disabled}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-200 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-base text-slate-200 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="">Selecione...</option>
                   {config.options?.map(opt => (
@@ -308,6 +308,9 @@ function MobileAttributeFields({
             );
           }
 
+          const isNumber = config.type === 'number';
+          const unit = config.unitOfMeasure || '';
+
           return (
             <div key={key} className="space-y-1.5">
               <label className="text-xs font-medium text-slate-400">
@@ -316,26 +319,41 @@ function MobileAttributeFields({
                   <span className="ml-1 text-rose-400">*</span>
                 )}
               </label>
-              <input
-                type={
-                  config.type === 'number'
-                    ? 'number'
-                    : config.type === 'date'
-                      ? 'date'
-                      : 'text'
-                }
-                value={currentValue}
-                onChange={e => {
-                  const val =
-                    config.type === 'number'
-                      ? parseFloat(e.target.value) || 0
-                      : e.target.value;
-                  onChange(key, val);
-                }}
-                placeholder={config.placeholder || ''}
-                disabled={disabled}
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              />
+              <div className="relative">
+                <input
+                  type={config.type === 'date' ? 'date' : 'text'}
+                  inputMode={isNumber ? 'decimal' : undefined}
+                  value={currentValue}
+                  onChange={e => {
+                    if (isNumber) {
+                      // Allow digits, comma, dot — up to 2 decimal places
+                      const raw = e.target.value.replace(/[^0-9.,]/g, '');
+                      onChange(key, raw);
+                    } else {
+                      onChange(key, e.target.value);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (isNumber && currentValue) {
+                      const parsed = parseFloat(currentValue.replace(',', '.'));
+                      if (!isNaN(parsed)) {
+                        onChange(key, String(Math.round(parsed * 100) / 100));
+                      }
+                    }
+                  }}
+                  placeholder={config.placeholder || ''}
+                  disabled={disabled}
+                  className={cn(
+                    'w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-base text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500',
+                    unit && 'pr-12'
+                  )}
+                />
+                {unit && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                    {unit}
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}

@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/auth-context';
 import { TenantProvider } from '@/contexts/tenant-context';
 import { QueryProvider } from '@/providers/query-provider';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 
@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   title: 'OpenSea App',
   description:
     'Modern Next.js application with authentication and API integration',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

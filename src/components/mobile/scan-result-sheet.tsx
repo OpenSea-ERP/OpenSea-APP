@@ -17,6 +17,7 @@ import {
   Package,
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
+import { cn } from '@/lib/utils';
 import { TransferFlow } from '@/components/mobile/transfer-flow';
 import type { LookupResult } from '@/services/stock/lookup.service';
 
@@ -156,7 +157,7 @@ export function ScanResultSheet({
       }}
       direction="bottom"
     >
-      <DrawerContent className={showTransfer ? 'h-[95vh]' : 'max-h-[85vh]'}>
+      <DrawerContent className={cn('bg-slate-900 border-slate-700', showTransfer ? 'h-[95vh]' : 'max-h-[85vh]')}>
         {showTransfer && isTransferable ? (
           <TransferFlow
             item={result}

@@ -11,6 +11,15 @@ import { cn } from '@/lib/utils';
 // Types
 // ============================================
 
+export type VariantPattern =
+  | 'SOLID'
+  | 'STRIPED'
+  | 'PLAID'
+  | 'PRINTED'
+  | 'GRADIENT'
+  | 'JACQUARD'
+  | null;
+
 export interface VariantOption {
   id: string;
   name: string;
@@ -21,6 +30,8 @@ export interface VariantOption {
   manufacturerName: string | null;
   reference: string | null;
   colorHex: string | null;
+  secondaryColorHex: string | null;
+  pattern: VariantPattern;
   sku: string | null;
   /** Template · Produto · Variante */
   fullLabel: string;
@@ -35,6 +46,91 @@ export interface MobileVariantSelectorProps {
   onChange: (v: VariantOption | null) => void;
   disabled?: boolean;
   placeholder?: string;
+}
+
+// ============================================
+// Color Swatch — shows primary + secondary + pattern
+// ============================================
+
+function ColorSwatch({
+  colorHex,
+  secondaryColorHex,
+  pattern,
+  size = 'md',
+}: {
+  colorHex: string | null;
+  secondaryColorHex?: string | null;
+  pattern?: VariantPattern;
+  size?: 'sm' | 'md';
+}) {
+  if (!colorHex) {
+    return (
+      <Package
+        className={cn(
+          'text-slate-400',
+          size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'
+        )}
+      />
+    );
+  }
+
+  const dim = size === 'sm' ? 'h-8 w-8' : 'h-9 w-9';
+  const secondary = secondaryColorHex || colorHex;
+  const pat = pattern || 'SOLID';
+
+  const bgStyle = (): React.CSSProperties => {
+    switch (pat) {
+      case 'STRIPED':
+        return {
+          background: `repeating-linear-gradient(
+            135deg,
+            ${colorHex},
+            ${colorHex} 3px,
+            ${secondary} 3px,
+            ${secondary} 6px
+          )`,
+        };
+      case 'PLAID':
+        return {
+          background: `
+            repeating-linear-gradient(0deg, ${secondary}40 0px, ${secondary}40 2px, transparent 2px, transparent 6px),
+            repeating-linear-gradient(90deg, ${secondary}40 0px, ${secondary}40 2px, transparent 2px, transparent 6px),
+            ${colorHex}`,
+        };
+      case 'GRADIENT':
+        return {
+          background: `linear-gradient(135deg, ${colorHex}, ${secondary})`,
+        };
+      case 'PRINTED':
+        return {
+          background: `
+            radial-gradient(circle at 25% 25%, ${secondary} 2px, transparent 2px),
+            radial-gradient(circle at 75% 75%, ${secondary} 2px, transparent 2px),
+            radial-gradient(circle at 50% 50%, ${secondary} 1.5px, transparent 1.5px),
+            ${colorHex}`,
+        };
+      case 'JACQUARD':
+        return {
+          background: `
+            repeating-conic-gradient(${colorHex} 0% 25%, ${secondary} 0% 50%) 50% / 8px 8px`,
+        };
+      case 'SOLID':
+      default:
+        if (secondaryColorHex && secondaryColorHex !== colorHex) {
+          return {
+            background: `linear-gradient(135deg, ${colorHex} 50%, ${secondaryColorHex} 50%)`,
+          };
+        }
+        return { backgroundColor: colorHex };
+    }
+  };
+
+  return (
+    <div
+      className={cn(dim, 'shrink-0 rounded-lg border border-white/15')}
+      style={bgStyle()}
+    />
+  );
 }
 
 // ============================================
@@ -75,6 +171,8 @@ export function useVariantOptions() {
           name: string;
           productId: string;
           colorHex?: string;
+          secondaryColorHex?: string;
+          pattern?: string;
           sku?: string;
           reference?: string;
         }>('/v1/variants', 'variants'),
@@ -101,10 +199,12 @@ export function useVariantOptions() {
           .filter(Boolean)
           .join(' · ');
 
-        const subtitleParts = [manufacturerName, reference ? `Ref: ${reference}` : null].filter(Boolean);
+        const subtitleParts = [
+          manufacturerName,
+          reference ? `Ref: ${reference}` : null,
+        ].filter(Boolean);
         const subtitle = subtitleParts.join(' · ');
 
-        // Build a single search string with all relevant fields
         const searchText = [
           templateName,
           productName,
@@ -127,6 +227,8 @@ export function useVariantOptions() {
           manufacturerName,
           reference,
           colorHex: v.colorHex || null,
+          secondaryColorHex: v.secondaryColorHex || null,
+          pattern: (v.pattern as VariantPattern) || null,
           sku: v.sku || null,
           fullLabel,
           subtitle,
@@ -144,12 +246,10 @@ export function useVariantOptions() {
 
 function matchesSearch(searchText: string, query: string): boolean {
   if (!query.trim()) return true;
-  // Split query into words: "cedrom laran" → ["cedrom", "laran"]
   const words = query
     .toLowerCase()
     .split(/\s+/)
     .filter(w => w.length > 0);
-  // Every word must match somewhere in the searchText
   return words.every(word => searchText.includes(word));
 }
 
@@ -189,26 +289,28 @@ export function MobileVariantSelector({
           disabled && 'opacity-50'
         )}
       >
-        <div
-          className={cn(
-            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-            value ? 'bg-indigo-500/20' : 'bg-slate-700/60'
-          )}
-        >
-          {value?.colorHex ? (
-            <div
-              className="h-4 w-4 rounded-full border border-white/20"
-              style={{ backgroundColor: value.colorHex }}
-            />
-          ) : (
+        {value?.colorHex ? (
+          <ColorSwatch
+            colorHex={value.colorHex}
+            secondaryColorHex={value.secondaryColorHex}
+            pattern={value.pattern}
+            size="md"
+          />
+        ) : (
+          <div
+            className={cn(
+              'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+              value ? 'bg-indigo-500/20' : 'bg-slate-700/60'
+            )}
+          >
             <Package
               className={cn(
                 'h-4 w-4',
                 value ? 'text-indigo-400' : 'text-slate-400'
               )}
             />
-          )}
-        </div>
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           {value ? (
             <>
@@ -269,7 +371,7 @@ export function MobileVariantSelector({
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nome, fabricante, referência..."
             autoFocus
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-slate-700 bg-slate-800 py-2.5 pl-10 pr-4 text-base text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
         {search.trim() && (
@@ -306,16 +408,12 @@ export function MobileVariantSelector({
                       : 'bg-slate-800/40'
                   )}
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-700/60">
-                    {opt.colorHex ? (
-                      <div
-                        className="h-3.5 w-3.5 rounded-full border border-white/20"
-                        style={{ backgroundColor: opt.colorHex }}
-                      />
-                    ) : (
-                      <Package className="h-3.5 w-3.5 text-slate-400" />
-                    )}
-                  </div>
+                  <ColorSwatch
+                    colorHex={opt.colorHex}
+                    secondaryColorHex={opt.secondaryColorHex}
+                    pattern={opt.pattern}
+                    size="sm"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-slate-200">
                       {opt.fullLabel}
