@@ -11,6 +11,10 @@ import type {
   FinanceAttachmentType,
   ParseBoletoRequest,
   ParseBoletoResult,
+  ParsePixRequest,
+  ParsePixResult,
+  BatchCreateRequest,
+  BatchCreateResponse,
 } from '@/types/finance';
 export interface FinanceEntriesResponse {
   entries: FinanceEntry[];
@@ -124,6 +128,20 @@ export const financeEntriesService = {
   async parseBoleto(data: ParseBoletoRequest): Promise<ParseBoletoResult> {
     return apiClient.post<ParseBoletoResult>(
       API_ENDPOINTS.FINANCE_DASHBOARD.PARSE_BOLETO,
+      data
+    );
+  },
+
+  async parsePix(data: ParsePixRequest): Promise<ParsePixResult> {
+    return apiClient.post<ParsePixResult>(
+      API_ENDPOINTS.FINANCE_DASHBOARD.PARSE_PIX,
+      data
+    );
+  },
+
+  async createBatch(data: BatchCreateRequest): Promise<BatchCreateResponse> {
+    return apiClient.post<BatchCreateResponse>(
+      API_ENDPOINTS.FINANCE_ENTRIES.CREATE_BATCH,
       data
     );
   },

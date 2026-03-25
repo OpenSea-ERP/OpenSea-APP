@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
+import type { OcrBatchResult } from '@/types/finance';
 
 // ============================================================================
 // TYPES
@@ -43,6 +44,15 @@ export const financeOcrService = {
     return apiClient.post<OcrExtractResult>(
       API_ENDPOINTS.FINANCE_ENTRIES.OCR_TEXT,
       { text }
+    );
+  },
+
+  async ocrUploadBatch(files: File[]): Promise<OcrBatchResult> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+    return apiClient.post<OcrBatchResult>(
+      API_ENDPOINTS.FINANCE_ENTRIES.OCR_UPLOAD_BATCH,
+      formData
     );
   },
 

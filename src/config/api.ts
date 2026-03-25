@@ -675,7 +675,9 @@ export const API_ENDPOINTS = {
       `/v1/finance/entries/${id}/attachments/${attachmentId}`,
     OCR_TEXT: '/v1/finance/entries/ocr',
     OCR_UPLOAD: '/v1/finance/entries/ocr/upload',
+    OCR_UPLOAD_BATCH: '/v1/finance/entries/ocr/upload-batch',
     LAST_SUPPLIER: '/v1/finance/entries/last-supplier',
+    CREATE_BATCH: '/v1/finance/entries/batch',
   },
   // Finance - Dashboard & Reports
   FINANCE_DASHBOARD: {
@@ -685,6 +687,7 @@ export const API_ENDPOINTS = {
     CASHFLOW: '/v1/finance/cashflow',
     CHECK_OVERDUE: '/v1/finance/check-overdue',
     PARSE_BOLETO: '/v1/finance/parse-boleto',
+    PARSE_PIX: '/v1/finance/parse-pix',
     EXPORT_ACCOUNTING: '/v1/finance/export/accounting',
     IMPORT_PAYROLL: (payrollId: string) =>
       `/v1/finance/import/payroll/${payrollId}`,

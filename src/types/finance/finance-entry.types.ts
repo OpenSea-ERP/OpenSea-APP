@@ -3,6 +3,7 @@ export type PayableSubType =
   | 'NOTA_FISCAL'
   | 'TRANSFERENCIA'
   | 'CARTAO'
+  | 'PIX'
   | 'OUTROS';
 
 export type FinanceEntryType = 'PAYABLE' | 'RECEIVABLE';
@@ -76,6 +77,10 @@ export interface FinanceEntry {
   parentEntryId?: string | null;
   boletoBarcode?: string | null;
   boletoDigitLine?: string | null;
+  beneficiaryName?: string | null;
+  beneficiaryCpfCnpj?: string | null;
+  pixKey?: string | null;
+  pixKeyType?: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'EVP' | null;
   isOverdue: boolean;
   tags: string[];
   payments?: FinanceEntryPayment[];
@@ -118,6 +123,10 @@ export interface CreateFinanceEntryData {
   totalInstallments?: number;
   boletoBarcode?: string;
   boletoDigitLine?: string;
+  beneficiaryName?: string;
+  beneficiaryCpfCnpj?: string;
+  pixKey?: string;
+  pixKeyType?: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'EVP';
   notes?: string;
   tags?: string[];
 }
@@ -283,5 +292,43 @@ export const PAYABLE_SUBTYPE_LABELS: Record<PayableSubType, string> = {
   NOTA_FISCAL: 'Nota Fiscal',
   TRANSFERENCIA: 'Transferência',
   CARTAO: 'Cartão',
+  PIX: 'Pix',
   OUTROS: 'Outros',
 };
+
+export interface ParsePixRequest {
+  code: string;
+}
+
+export interface ParsePixResult {
+  type: 'COPIA_COLA' | 'CHAVE';
+  pixKey: string;
+  pixKeyType: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'EVP';
+  merchantName?: string;
+  merchantCity?: string;
+  amount?: number;
+}
+
+export interface OcrBatchResult {
+  results: Array<{
+    filename: string;
+    extractedData: {
+      valor?: number;
+      vencimento?: string;
+      beneficiario?: string;
+      codigoBarras?: string;
+      linhaDigitavel?: string;
+    };
+    confidence: number;
+    error?: string;
+  }>;
+}
+
+export interface BatchCreateRequest {
+  entries: CreateFinanceEntryData[];
+}
+
+export interface BatchCreateResponse {
+  created: number;
+  entries: FinanceEntry[];
+}
