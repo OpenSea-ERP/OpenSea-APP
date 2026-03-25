@@ -6,23 +6,58 @@
  * Referência: FEBRABAN - Especificação Técnica de Boleto de Cobrança
  */
 
-// Base date for due date factor calculation
-const BASE_DATE = new Date(1997, 9, 7); // Oct 7, 1997
+// Cycle-reset constants for due date factor calculation
+const OLD_BASE = new Date(1997, 9, 7).getTime(); // Oct 7, 1997
+const NEW_BASE = new Date(2025, 1, 22).getTime(); // Feb 22, 2025
+const CYCLE_BOUNDARY = new Date(2025, 1, 22).getTime();
+const MS_PER_DAY = 86_400_000;
 
-// Bank code mapping (most common)
+// Bank code mapping (synced with backend — 45+ banks)
 const BANK_NAMES: Record<string, string> = {
   '001': 'Banco do Brasil',
+  '003': 'Banco da Amazônia',
+  '004': 'Banco do Nordeste',
+  '010': 'Credicoamo',
+  '021': 'Banestes',
   '033': 'Santander',
+  '036': 'Bradesco BBI',
+  '047': 'Banese',
+  '065': 'AndBank',
+  '070': 'BRB',
+  '077': 'Inter',
+  '082': 'Topázio',
+  '084': 'Uniprime',
+  '085': 'AILOS',
+  '097': 'CrediSIS',
   '104': 'Caixa Econômica',
+  '133': 'Cresol',
+  '136': 'Unicred',
+  '197': 'Stone',
+  '208': 'BTG Pactual',
+  '212': 'Original',
+  '218': 'BS2',
   '237': 'Bradesco',
+  '254': 'Paraná Banco',
+  '260': 'Nubank',
+  '280': 'Avista',
+  '290': 'PagSeguro',
+  '318': 'BMG',
+  '336': 'C6 Bank',
   '341': 'Itaú',
   '356': 'Banco Real',
+  '376': 'J.P. Morgan',
   '389': 'Mercantil do Brasil',
   '399': 'HSBC',
+  '403': 'Cora',
   '422': 'Safra',
   '453': 'Banco Rural',
+  '623': 'Pan',
   '633': 'Rendimento',
+  '637': 'Sofisa',
   '652': 'Itaú Unibanco',
+  '655': 'Neon',
+  '707': 'Daycoval',
+  '741': 'Ribeirão Preto',
   '745': 'Citibank',
   '756': 'Sicoob',
 };
@@ -57,19 +92,17 @@ function cleanDigits(input: string): string {
 function factorToDate(factor: number): string | null {
   if (factor === 0) return null;
 
-  // Calculate date from base
-  const date = new Date(BASE_DATE);
-  date.setDate(date.getDate() + factor);
+  const oldDate = OLD_BASE + factor * MS_PER_DAY;
 
-  // Sanity check: date should be reasonable (between 2000 and 2035)
-  const year = date.getFullYear();
-  if (year < 2000 || year > 2035) return null;
+  // Cycle reset: if factor >= 1000 but old-base date falls before boundary,
+  // the factor has wrapped — recalculate using new base (Feb 22, 2025).
+  if (oldDate < CYCLE_BOUNDARY && factor >= 1000) {
+    const newDate = new Date(NEW_BASE + (factor - 1000) * MS_PER_DAY);
+    return newDate.toISOString().split('T')[0];
+  }
 
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-
-  return `${yyyy}-${mm}-${dd}`;
+  const date = new Date(oldDate);
+  return date.toISOString().split('T')[0];
 }
 
 /**
