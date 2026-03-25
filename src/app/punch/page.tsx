@@ -2,21 +2,21 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { cn } from '@/lib/utils';
-import {
-  CheckCircle2,
-  Download,
-  LogIn,
-  LogOut,
-  RotateCcw,
-  Waves,
-} from 'lucide-react';
+import { LogIn, LogOut, Waves, WifiOff } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { punchApi, type PunchRequest } from './api/punch.api';
 import { usePunchClockIn, usePunchClockOut } from './api/mutations';
+import { GeofenceStatus } from './components/geofence-status';
+import { KioskEmployeeSelector } from './components/kiosk-employee-selector';
 import { LiveClock } from './components/live-clock';
 import { LocationDisplay } from './components/location-display';
+import { OfflineIndicator } from './components/offline-indicator';
+import { PunchReceipt } from './components/punch-receipt';
 import { SelfieCapture } from './components/selfie-capture';
+import { offlineQueue } from './utils/offline-queue';
 import type { TimeEntry } from '@/types/hr';
 
 type PunchType = 'CLOCK_IN' | 'CLOCK_OUT';
@@ -27,17 +27,123 @@ interface PunchResult {
   timestamp: Date;
 }
 
+interface KioskEmployee {
+  id: string;
+  name: string;
+  photoUrl?: string;
+}
+
 function PunchPageContent() {
   const searchParams = useSearchParams();
   const employeeId = searchParams.get('employeeId') ?? '';
   const employeeName = searchParams.get('name') ?? '';
+  const isKioskMode = searchParams.get('mode') === 'kiosk';
 
   const { user, isAuthenticated } = useAuth();
 
   // State
   const [selfieData, setSelfieData] = useState<string | null>(null);
   const [punchResult, setPunchResult] = useState<PunchResult | null>(null);
+  const [geofenceValid, setGeofenceValid] = useState<boolean | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [kioskEmployee, setKioskEmployee] = useState<KioskEmployee | null>(
+    null
+  );
   const locationRef = useRef<{ lat: number; lng: number } | null>(null);
+  const kioskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Online/offline detection
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    setPendingCount(offlineQueue.count);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Auto-sync when back online
+  useEffect(() => {
+    if (!isOnline) return;
+
+    const pending = offlineQueue.getAll();
+    if (pending.length === 0) return;
+
+    setSyncing(true);
+    let syncedCount = 0;
+
+    const syncNext = async () => {
+      const items = offlineQueue.getAll();
+      if (items.length === 0) {
+        setSyncing(false);
+        setPendingCount(0);
+        if (syncedCount > 0) {
+          toast.success(
+            `${syncedCount} registro(s) sincronizado(s) com sucesso.`
+          );
+        }
+        return;
+      }
+
+      const item = items[0];
+      try {
+        const request: PunchRequest = {
+          employeeId: item.employeeId,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          notes: item.photoData
+            ? 'Selfie capturada no registro (offline)'
+            : undefined,
+        };
+
+        if (item.type === 'CLOCK_IN') {
+          await punchApi.clockIn(request);
+        } else {
+          await punchApi.clockOut(request);
+        }
+
+        offlineQueue.remove(item.id);
+        syncedCount++;
+        setPendingCount(offlineQueue.count);
+        await syncNext();
+      } catch {
+        setSyncing(false);
+        toast.error('Erro ao sincronizar registros. Tentaremos novamente.');
+      }
+    };
+
+    syncNext();
+  }, [isOnline]);
+
+  // Kiosk auto-reset
+  useEffect(() => {
+    if (!isKioskMode || !punchResult) return;
+
+    kioskTimerRef.current = setTimeout(() => {
+      handleReset();
+    }, 10_000);
+
+    return () => {
+      if (kioskTimerRef.current) clearTimeout(kioskTimerRef.current);
+    };
+  }, [isKioskMode, punchResult]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch punch configuration
+  const { data: config } = useQuery({
+    queryKey: ['punch-config'],
+    queryFn: () => punchApi.getConfig(),
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Mutations
   const clockIn = usePunchClockIn();
@@ -45,11 +151,35 @@ function PunchPageContent() {
 
   const isLoading = clockIn.isPending || clockOut.isPending;
 
-  const resolvedEmployeeId = employeeId || user?.id || '';
+  // Resolve employee ID based on mode
+  const resolvedEmployeeId = isKioskMode
+    ? (kioskEmployee?.id ?? '')
+    : employeeId || user?.id || '';
+
+  const resolvedEmployeeName = isKioskMode
+    ? (kioskEmployee?.name ?? '')
+    : employeeName || user?.username || '';
+
+  // Feature flags from config (defaults: selfie required, gps optional, geofence off)
+  const selfieRequired = config?.selfieRequired ?? true;
+  const gpsRequired = config?.gpsRequired ?? false;
+  const geofenceEnabled = config?.geofenceEnabled ?? false;
 
   const handleLocationReady = useCallback((lat: number, lng: number) => {
     locationRef.current = { lat, lng };
   }, []);
+
+  const handleGeofenceValidation = useCallback((isValid: boolean) => {
+    setGeofenceValid(isValid);
+  }, []);
+
+  // Determine if punch buttons should be disabled
+  const canPunch =
+    !!resolvedEmployeeId &&
+    (!selfieRequired || !!selfieData) &&
+    (!gpsRequired || !!locationRef.current) &&
+    (!geofenceEnabled || geofenceValid === true) &&
+    !isLoading;
 
   const handlePunch = useCallback(
     async (type: PunchType) => {
@@ -58,13 +188,63 @@ function PunchPageContent() {
         return;
       }
 
-      if (!selfieData) {
+      if (selfieRequired && !selfieData) {
         toast.error('Capture sua foto antes de registrar o ponto.');
         return;
       }
 
-      const mutation = type === 'CLOCK_IN' ? clockIn : clockOut;
+      if (gpsRequired && !locationRef.current) {
+        toast.error('Localização GPS necessária para registrar o ponto.');
+        return;
+      }
+
+      if (geofenceEnabled && geofenceValid !== true) {
+        toast.error('Você precisa estar dentro da zona permitida.');
+        return;
+      }
+
       const label = type === 'CLOCK_IN' ? 'Entrada' : 'Saída';
+
+      // Offline mode: save to queue
+      if (!isOnline) {
+        const offlinePunch = {
+          id: crypto.randomUUID(),
+          employeeId: resolvedEmployeeId,
+          type,
+          timestamp: new Date().toISOString(),
+          latitude: locationRef.current?.lat,
+          longitude: locationRef.current?.lng,
+          photoData: selfieData ?? undefined,
+          createdAt: new Date().toISOString(),
+        };
+
+        offlineQueue.add(offlinePunch);
+        setPendingCount(offlineQueue.count);
+
+        toast.success(
+          `${label} salva offline. Será sincronizada quando houver conexão.`
+        );
+
+        // Show a simplified result for offline
+        setPunchResult({
+          entry: {
+            id: offlinePunch.id,
+            tenantId: '',
+            employeeId: resolvedEmployeeId,
+            entryType: type,
+            timestamp: offlinePunch.timestamp,
+            latitude: locationRef.current?.lat,
+            longitude: locationRef.current?.lng,
+            createdAt: offlinePunch.createdAt,
+          },
+          type,
+          timestamp: new Date(),
+        });
+        return;
+      }
+
+      // Online mode: send to API
+      const mutation = type === 'CLOCK_IN' ? clockIn : clockOut;
 
       try {
         const entry = await mutation.mutateAsync({
@@ -85,53 +265,27 @@ function PunchPageContent() {
         toast.error(`Erro ao registrar ${label.toLowerCase()}.`);
       }
     },
-    [resolvedEmployeeId, selfieData, clockIn, clockOut]
+    [
+      resolvedEmployeeId,
+      selfieRequired,
+      selfieData,
+      gpsRequired,
+      geofenceEnabled,
+      geofenceValid,
+      isOnline,
+      clockIn,
+      clockOut,
+    ]
   );
 
   const handleReset = useCallback(() => {
     setPunchResult(null);
     setSelfieData(null);
-  }, []);
-
-  const handleDownloadReceipt = useCallback(() => {
-    if (!punchResult) return;
-
-    const label = punchResult.type === 'CLOCK_IN' ? 'Entrada' : 'Saída';
-    const time = punchResult.timestamp.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-    const date = punchResult.timestamp.toLocaleDateString('pt-BR');
-
-    const content = [
-      '===================================',
-      '       COMPROVANTE DE PONTO        ',
-      '===================================',
-      '',
-      `Colaborador: ${employeeName || 'N/A'}`,
-      `Tipo: ${label}`,
-      `Data: ${date}`,
-      `Horário: ${time}`,
-      `ID do Registro: ${punchResult.entry.id}`,
-      '',
-      locationRef.current
-        ? `Localização: ${locationRef.current.lat.toFixed(6)}, ${locationRef.current.lng.toFixed(6)}`
-        : 'Localização: Não disponível',
-      '',
-      '===================================',
-      '        OpenSea Ponto Digital       ',
-      '===================================',
-    ].join('\n');
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `comprovante-ponto-${date.replace(/\//g, '-')}-${time.replace(/:/g, '')}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [punchResult, employeeName]);
+    setGeofenceValid(null);
+    if (isKioskMode) {
+      setKioskEmployee(null);
+    }
+  }, [isKioskMode]);
 
   // Not authenticated
   if (!isAuthenticated) {
@@ -146,8 +300,8 @@ function PunchPageContent() {
     );
   }
 
-  // No employee ID
-  if (!resolvedEmployeeId) {
+  // No employee ID (and not kiosk mode)
+  if (!isKioskMode && !resolvedEmployeeId) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
         <Waves className="size-12 text-violet-500 mb-4" />
@@ -167,145 +321,96 @@ function PunchPageContent() {
           <div className="flex size-9 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-500/20">
             <Waves className="size-5 text-violet-600 dark:text-violet-400" />
           </div>
-          <div>
-            <h1 className="text-base font-bold">OpenSea Ponto</h1>
-            {employeeName && (
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold">
+              OpenSea Ponto
+              {isKioskMode && (
+                <span className="ml-2 text-xs font-medium text-violet-500 dark:text-violet-400">
+                  Quiosque
+                </span>
+              )}
+            </h1>
+            {resolvedEmployeeName && (
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
-                {employeeName}
+                {resolvedEmployeeName}
               </p>
             )}
           </div>
+          {/* Offline badge */}
+          {!isOnline && (
+            <div className="flex items-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5">
+              <WifiOff className="size-3.5 text-slate-500" />
+              <span className="text-xs font-medium text-slate-500">
+                Offline
+              </span>
+            </div>
+          )}
+          {/* Pending sync badge */}
+          {pendingCount > 0 && isOnline && (
+            <div className="flex size-7 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/20">
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                {pendingCount}
+              </span>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Content */}
       <div className="mx-auto max-w-lg space-y-4 px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        {/* Offline indicator */}
+        <OfflineIndicator
+          isOnline={isOnline}
+          pendingCount={pendingCount}
+          syncing={syncing}
+        />
+
         {punchResult ? (
-          /* Success Result */
-          <div className="space-y-4">
-            <div
-              className={cn(
-                'rounded-2xl p-5 border',
-                'bg-emerald-50 dark:bg-emerald-950/30',
-                'border-emerald-200 dark:border-emerald-800'
-              )}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle2 className="size-7 text-emerald-500" />
-                <div>
-                  <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-200">
-                    Ponto Registrado!
-                  </h2>
-                  <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                    Registro #{punchResult.entry.id.slice(0, 8).toUpperCase()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-emerald-600/80 dark:text-emerald-400/80">
-                    Tipo
-                  </span>
-                  <span
-                    className={cn(
-                      'font-semibold',
-                      punchResult.type === 'CLOCK_IN'
-                        ? 'text-emerald-700 dark:text-emerald-300'
-                        : 'text-rose-700 dark:text-rose-300'
-                    )}
-                  >
-                    {punchResult.type === 'CLOCK_IN' ? 'Entrada' : 'Saída'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-emerald-600/80 dark:text-emerald-400/80">
-                    Horário
-                  </span>
-                  <span className="font-semibold tabular-nums text-emerald-800 dark:text-emerald-200">
-                    {punchResult.timestamp.toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-emerald-600/80 dark:text-emerald-400/80">
-                    Data
-                  </span>
-                  <span className="font-medium text-emerald-800 dark:text-emerald-200">
-                    {punchResult.timestamp.toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-                {locationRef.current && (
-                  <div className="flex justify-between">
-                    <span className="text-emerald-600/80 dark:text-emerald-400/80">
-                      Localização
-                    </span>
-                    <span className="font-mono text-xs text-emerald-700 dark:text-emerald-300 tabular-nums">
-                      {locationRef.current.lat.toFixed(4)},{' '}
-                      {locationRef.current.lng.toFixed(4)}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {selfieData && (
-                <div className="mt-4 rounded-xl overflow-hidden">
-                  <img
-                    src={selfieData}
-                    alt="Foto do registro"
-                    className="w-full h-32 object-cover"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleDownloadReceipt}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-2 rounded-2xl h-14',
-                  'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
-                  'text-slate-700 dark:text-slate-200 font-semibold text-sm',
-                  'active:scale-[0.98] transition-all'
-                )}
-              >
-                <Download className="size-4" />
-                Comprovante
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-2 rounded-2xl h-14',
-                  'bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm',
-                  'active:scale-[0.98] transition-all shadow-sm'
-                )}
-              >
-                <RotateCcw className="size-4" />
-                Novo Registro
-              </button>
-            </div>
-          </div>
+          /* Enhanced Receipt */
+          <PunchReceipt
+            entry={punchResult.entry}
+            type={punchResult.type}
+            timestamp={punchResult.timestamp}
+            employeeName={resolvedEmployeeName}
+            latitude={locationRef.current?.lat}
+            longitude={locationRef.current?.lng}
+            selfieData={selfieData}
+            onReset={handleReset}
+          />
         ) : (
           /* Punch Form */
           <div className="space-y-4">
-            {/* Selfie */}
-            <div className="rounded-2xl overflow-hidden bg-white dark:bg-slate-800 shadow-lg">
-              <SelfieCapture
-                onCapture={setSelfieData}
-                captured={selfieData ?? undefined}
-                onRetake={() => setSelfieData(null)}
-                disabled={isLoading}
+            {/* Kiosk: Employee Selector */}
+            {isKioskMode && (
+              <KioskEmployeeSelector
+                selectedEmployee={kioskEmployee}
+                onSelect={setKioskEmployee}
+                onClear={() => setKioskEmployee(null)}
               />
-            </div>
+            )}
+
+            {/* Selfie (conditionally shown) */}
+            {selfieRequired && (
+              <div className="rounded-2xl overflow-hidden bg-white dark:bg-slate-800 shadow-lg">
+                <SelfieCapture
+                  onCapture={setSelfieData}
+                  captured={selfieData ?? undefined}
+                  onRetake={() => setSelfieData(null)}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             {/* Location */}
             <LocationDisplay onLocationReady={handleLocationReady} />
+
+            {/* Geofence Status */}
+            <GeofenceStatus
+              latitude={locationRef.current?.lat ?? null}
+              longitude={locationRef.current?.lng ?? null}
+              enabled={geofenceEnabled}
+              onValidation={handleGeofenceValidation}
+            />
 
             {/* Clock */}
             <LiveClock />
@@ -315,7 +420,7 @@ function PunchPageContent() {
               <button
                 type="button"
                 onClick={() => handlePunch('CLOCK_IN')}
-                disabled={isLoading || !selfieData}
+                disabled={!canPunch}
                 className={cn(
                   'flex items-center justify-center gap-2 rounded-2xl h-16',
                   'bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base',
@@ -329,7 +434,7 @@ function PunchPageContent() {
               <button
                 type="button"
                 onClick={() => handlePunch('CLOCK_OUT')}
-                disabled={isLoading || !selfieData}
+                disabled={!canPunch}
                 className={cn(
                   'flex items-center justify-center gap-2 rounded-2xl h-16',
                   'bg-rose-500 hover:bg-rose-600 text-white font-bold text-base',
@@ -342,10 +447,28 @@ function PunchPageContent() {
               </button>
             </div>
 
-            {/* Helper text */}
-            {!selfieData && (
+            {/* Helper texts */}
+            {selfieRequired && !selfieData && (
               <p className="text-center text-xs text-slate-400 dark:text-slate-500">
                 Capture sua foto para habilitar o registro de ponto.
+              </p>
+            )}
+
+            {gpsRequired && !locationRef.current && (
+              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+                Aguardando localização GPS...
+              </p>
+            )}
+
+            {geofenceEnabled && geofenceValid === false && (
+              <p className="text-center text-xs text-rose-400 dark:text-rose-500">
+                Registro bloqueado: fora da zona permitida.
+              </p>
+            )}
+
+            {isKioskMode && !kioskEmployee && (
+              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+                Selecione um colaborador para registrar o ponto.
               </p>
             )}
 
