@@ -11,24 +11,20 @@ import { InfoField } from '@/components/shared/info-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { logger } from '@/lib/logger';
 import type { WorkSchedule } from '@/types/hr';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Calendar,
+  CalendarDays,
   Clock,
   Coffee,
   Edit,
   NotebookText,
   Timer,
-  Trash,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useMemo } from 'react';
 import {
-  deleteWorkSchedule,
-  formatDayRange,
   formatWeeklyHours,
   getDayLabel,
   getDaySchedule,
@@ -36,61 +32,59 @@ import {
   workSchedulesApi,
 } from '../src';
 
+type DayKey = (typeof WEEK_DAYS)[number];
+
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+function formatHoursMinutes(totalMinutes: number): string {
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
+}
+
 export default function WorkScheduleDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const scheduleId = params.id as string;
-
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // ============================================================================
-  // DATA FETCHING
-  // ============================================================================
 
   const { data: schedule, isLoading } = useQuery<WorkSchedule>({
     queryKey: ['work-schedules', scheduleId],
     queryFn: () => workSchedulesApi.get(scheduleId),
   });
 
-  // ============================================================================
-  // HANDLERS
-  // ============================================================================
+  // Calculate per-day hours
+  const dayData = useMemo(() => {
+    if (!schedule) return [];
+
+    return WEEK_DAYS.map(day => {
+      const { start, end } = getDaySchedule(schedule, day);
+      const isWorking = !!start && !!end;
+      let minutes = 0;
+      if (isWorking) {
+        const worked = timeToMinutes(end!) - timeToMinutes(start!);
+        minutes = Math.max(0, worked - schedule.breakDuration);
+      }
+      return {
+        day: day as DayKey,
+        label: getDayLabel(day),
+        start,
+        end,
+        isWorking,
+        minutes,
+      };
+    });
+  }, [schedule]);
 
   const handleEdit = () => {
     router.push(`/hr/work-schedules/${scheduleId}/edit`);
   };
 
-  const handleDelete = async () => {
-    if (!schedule) return;
 
-    if (
-      !confirm(`Tem certeza que deseja excluir a escala "${schedule.name}"?`)
-    ) {
-      return;
-    }
 
-    setIsDeleting(true);
-    try {
-      await deleteWorkSchedule(schedule.id);
-      await queryClient.invalidateQueries({ queryKey: ['work-schedules'] });
-      toast.success('Escala de trabalho excluída com sucesso!');
-      router.push('/hr/work-schedules');
-    } catch (error) {
-      logger.error(
-        'Erro ao excluir escala de trabalho',
-        error instanceof Error ? error : undefined
-      );
-      toast.error('Erro ao excluir escala de trabalho');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  // ============================================================================
-  // LOADING STATE
-  // ============================================================================
-
+  // Loading
   if (isLoading) {
     return (
       <PageLayout>
@@ -135,9 +129,7 @@ export default function WorkScheduleDetailPage() {
     );
   }
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
+  const workDaysCount = dayData.filter(d => d.isWorking).length;
 
   return (
     <PageLayout>
@@ -149,14 +141,6 @@ export default function WorkScheduleDetailPage() {
             { label: schedule.name },
           ]}
           buttons={[
-            {
-              id: 'delete',
-              title: 'Excluir',
-              icon: Trash,
-              onClick: handleDelete,
-              variant: 'outline',
-              disabled: isDeleting,
-            },
             {
               id: 'edit',
               title: 'Editar',
@@ -218,18 +202,22 @@ export default function WorkScheduleDetailPage() {
           </h3>
           <div className="grid md:grid-cols-3 gap-6">
             <InfoField
-              label="Nome"
-              value={schedule.name}
-              showCopyButton
-              copyTooltip="Copiar nome"
-            />
-            <InfoField
               label="Horas Semanais"
               value={formatWeeklyHours(schedule.weeklyHours)}
               badge={
                 <Badge variant="outline" className="gap-1">
                   <Timer className="h-3 w-3" />
                   {formatWeeklyHours(schedule.weeklyHours)}
+                </Badge>
+              }
+            />
+            <InfoField
+              label="Dias de Trabalho"
+              value={`${workDaysCount} dias`}
+              badge={
+                <Badge variant="outline" className="gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {workDaysCount} dias
                 </Badge>
               }
             />
@@ -244,62 +232,77 @@ export default function WorkScheduleDetailPage() {
               }
             />
           </div>
-          {schedule.description && (
-            <div className="mt-6">
-              <InfoField
-                label="Descrição"
-                value={schedule.description}
-                showCopyButton
-                copyTooltip="Copiar descrição"
-              />
-            </div>
-          )}
         </Card>
 
         {/* Jornada Semanal */}
-        <Card className="p-4 sm:p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
-          <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4">
-            <Clock className="h-5 w-5" />
-            Jornada Semanal
-          </h3>
-          <div className="space-y-2">
-            {WEEK_DAYS.map(day => {
-              const { start, end } = getDaySchedule(schedule, day);
-              const isWorking = !!start && !!end;
+        <Card className="bg-white/5 overflow-hidden py-2">
+          <div className="space-y-5 px-6 py-4">
+            {/* Section header with pills */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-3 flex-1">
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="h-5 w-5 text-foreground" />
+                  <div>
+                    <h3 className="text-base font-semibold">Jornada Semanal</h3>
+                    <p className="text-sm text-muted-foreground">Horários de trabalho por dia da semana</p>
+                  </div>
+                </div>
+                <div className="border-b border-border" />
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="rounded-lg bg-muted/60 px-3 h-[42px] flex flex-col items-center justify-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none mb-1">Intervalo</p>
+                  <p className="text-base font-semibold tabular-nums leading-none">{schedule.breakDuration}min</p>
+                </div>
+                <div className="rounded-lg bg-muted/60 px-3 h-[42px] flex flex-col items-center justify-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none mb-1">Dias</p>
+                  <p className="text-base font-semibold tabular-nums leading-none">{workDaysCount}</p>
+                </div>
+                <div className="rounded-lg bg-muted/60 px-3 h-[42px] flex flex-col items-center justify-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none mb-1">Horas/Sem.</p>
+                  <p className="text-base font-semibold tabular-nums leading-none">
+                    {formatWeeklyHours(schedule.weeklyHours)}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-              return (
+            {/* Day cards grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+              {dayData.map(({ day, label, start, end, isWorking, minutes }) => (
                 <div
                   key={day}
-                  className={`flex items-center gap-4 py-3 px-4 rounded-lg border ${
+                  className={`rounded-lg border p-3 text-center transition-colors ${
                     isWorking
-                      ? 'bg-background border-border'
-                      : 'bg-muted/50 border-transparent'
+                      ? 'bg-white border-border dark:bg-slate-800/60'
+                      : 'bg-muted/40 border-transparent'
                   }`}
                 >
-                  <span className="font-medium w-24 text-sm">
-                    {getDayLabel(day)}
+                  <span className="inline-flex items-center justify-center w-full h-7 rounded-md text-xs font-semibold mb-2 bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                    {label}
                   </span>
+
                   {isWorking ? (
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="font-mono">
-                        {start}
-                      </Badge>
-                      <span className="text-muted-foreground text-sm">até</span>
-                      <Badge variant="outline" className="font-mono">
-                        {end}
-                      </Badge>
-                    </div>
+                    <>
+                      <p className="text-lg font-bold tabular-nums leading-none mb-1">
+                        {formatHoursMinutes(minutes)}
+                      </p>
+                      <p className="text-[11px] tabular-nums text-muted-foreground">
+                        {start} – {end}
+                      </p>
+                    </>
                   ) : (
-                    <span className="text-sm text-muted-foreground italic">
+                    <p className="text-sm text-muted-foreground italic py-2">
                       Folga
-                    </span>
+                    </p>
                   )}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </Card>
       </PageBody>
+
     </PageLayout>
   );
 }

@@ -23,9 +23,9 @@ import {
 } from '@/core';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { WorkSchedule } from '@/types/hr';
-import { Clock, Coffee, Plus, Timer } from 'lucide-react';
+import { Clock, Coffee, Pencil, Plus, Timer, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { Suspense, useCallback, useMemo } from 'react';
+import { Suspense, useCallback, useMemo, useState } from 'react';
 import {
   createWorkSchedule,
   deleteWorkSchedule,
@@ -42,12 +42,15 @@ const CreateModal = dynamic(
     import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })),
   { ssr: false }
 );
-const EditModal = dynamic(
-  () => import('./src/modals/edit-modal').then(m => ({ default: m.EditModal })),
-  { ssr: false }
-);
 const ViewModal = dynamic(
   () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
+  { ssr: false }
+);
+const RenameModal = dynamic(
+  () =>
+    import('./src/modals/rename-modal').then(m => ({
+      default: m.RenameModal,
+    })),
   { ssr: false }
 );
 const DuplicateConfirmModal = dynamic(
@@ -105,6 +108,7 @@ function WorkSchedulesPageContent() {
     queryKey: ['work-schedules'],
     crud,
     viewRoute: id => `/hr/work-schedules/${id}`,
+    editRoute: id => `/hr/work-schedules/${id}/edit`,
     filterFn: (item, query) => {
       const q = query.toLowerCase();
       return Boolean(
@@ -151,6 +155,14 @@ function WorkSchedulesPageContent() {
   }
 
   // ============================================================================
+  // RENAME STATE
+  // ============================================================================
+
+  const [renameItem, setRenameItem] = useState<WorkSchedule | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+
+  // ============================================================================
   // HANDLERS
   // ============================================================================
 
@@ -162,6 +174,30 @@ function WorkSchedulesPageContent() {
     page.handlers.handleItemsEdit(ids);
   };
 
+  const handleContextRename = useCallback(
+    (ids: string[]) => {
+      const allItems = page.filteredItems || [];
+      const item = allItems.find(i => i.id === ids[0]) || null;
+      setRenameItem(item);
+      setRenameOpen(true);
+    },
+    [page.filteredItems]
+  );
+
+  const handleRenameSubmit = useCallback(
+    async (id: string, newName: string) => {
+      setIsRenaming(true);
+      try {
+        await crud.update(id, { name: newName });
+        setRenameOpen(false);
+        setRenameItem(null);
+      } finally {
+        setIsRenaming(false);
+      }
+    },
+    [crud]
+  );
+
   const handleContextDuplicate = (ids: string[]) => {
     page.handlers.handleItemsDuplicate(ids);
   };
@@ -170,6 +206,38 @@ function WorkSchedulesPageContent() {
     page.modals.setItemsToDelete(ids);
     page.modals.open('delete');
   };
+
+  // ============================================================================
+  // CONTEXT MENU ACTIONS
+  // ============================================================================
+
+  const contextActions = useMemo(
+    () => [
+      {
+        id: 'rename',
+        label: 'Renomear',
+        icon: Pencil,
+        onClick: handleContextRename,
+        hidden: (ids: string[]) => ids.length > 1,
+      },
+      {
+        id: 'duplicate',
+        label: 'Duplicar',
+        icon: Clock,
+        onClick: handleContextDuplicate,
+        separator: 'before' as const,
+      },
+      {
+        id: 'delete',
+        label: 'Excluir',
+        icon: Trash2,
+        onClick: handleContextDelete,
+        separator: 'before' as const,
+        variant: 'destructive' as const,
+      },
+    ],
+    [handleContextRename]
+  );
 
   // ============================================================================
   // RENDER FUNCTIONS
@@ -183,8 +251,7 @@ function WorkSchedulesPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={handleContextEdit}
-        onDuplicate={handleContextDuplicate}
-        onDelete={handleContextDelete}
+        actions={contextActions}
       >
         <EntityCard
           id={item.id}
@@ -231,8 +298,7 @@ function WorkSchedulesPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={handleContextEdit}
-        onDuplicate={handleContextDuplicate}
-        onDelete={handleContextDelete}
+        actions={contextActions}
       >
         <EntityCard
           id={item.id}
@@ -424,15 +490,16 @@ function WorkSchedulesPageContent() {
             }}
           />
 
-          {/* Edit Modal */}
-          <EditModal
-            isOpen={page.modals.isOpen('edit')}
-            onClose={() => page.modals.close('edit')}
-            workSchedule={page.modals.editingItem}
-            isLoading={crud.isUpdating}
-            onSubmit={async (id, data) => {
-              await crud.update(id, data);
+          {/* Rename Modal */}
+          <RenameModal
+            isOpen={renameOpen}
+            onClose={() => {
+              setRenameOpen(false);
+              setRenameItem(null);
             }}
+            workSchedule={renameItem}
+            isSubmitting={isRenaming}
+            onSubmit={handleRenameSubmit}
           />
 
           {/* Delete Confirmation */}

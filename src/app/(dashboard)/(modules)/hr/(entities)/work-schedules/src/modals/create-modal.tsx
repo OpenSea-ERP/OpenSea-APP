@@ -346,7 +346,11 @@ export function CreateModal({
                       className="scale-90"
                     />
 
-                    <span className="font-medium w-16 text-sm">
+                    <span className={`inline-flex items-center justify-center w-16 h-7 rounded-md text-xs font-semibold ${
+                      d.enabled
+                        ? 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                        : 'bg-slate-100/60 text-slate-400 dark:bg-slate-800/40 dark:text-slate-500'
+                    }`}>
                       {getDayLabel(day)}
                     </span>
 
