@@ -1,6 +1,11 @@
+import { apiClient } from '@/lib/api-client';
 import { timeControlService } from '@/services/hr';
 import type { ClockInOutRequest } from '@/services/hr/time-control.service';
-import type { TimeEntry } from '@/types/hr';
+import type {
+  TimeEntry,
+  PunchConfiguration,
+  GeofenceValidationResult,
+} from '@/types/hr';
 
 export interface PunchRequest {
   employeeId: string;
@@ -30,5 +35,19 @@ export const punchApi = {
     };
     const response = await timeControlService.clockOut(request);
     return response.timeEntry;
+  },
+
+  async getConfig(): Promise<PunchConfiguration> {
+    return apiClient.get<PunchConfiguration>('/v1/hr/punch-config');
+  },
+
+  async validateGeofence(
+    lat: number,
+    lng: number
+  ): Promise<GeofenceValidationResult> {
+    return apiClient.post<GeofenceValidationResult>(
+      '/v1/hr/geofence-zones/validate',
+      { latitude: lat, longitude: lng }
+    );
   },
 };

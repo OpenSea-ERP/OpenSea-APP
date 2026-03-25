@@ -10,3 +10,4 @@ export * from './absence.types';
 export * from './payroll.types';
 export * from './bonus.types';
 export * from './deduction.types';
+export * from './punch-config.types';
