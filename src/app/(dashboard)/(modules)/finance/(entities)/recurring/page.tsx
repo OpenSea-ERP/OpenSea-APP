@@ -193,9 +193,10 @@ function RecurringPageContent() {
   // ============================================================================
 
   const [wizardOpen, setWizardOpen] = useState(false);
-  const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [targetId, setTargetId] = useState<string | null>(null);
+  const [pinAction, setPinAction] = useState<{
+    type: 'delete' | 'cancel';
+    id: string;
+  } | null>(null);
 
   // ============================================================================
   // DATA: Infinite scroll + filter dropdown sources
@@ -327,42 +328,35 @@ function RecurringPageContent() {
 
   const handleCancelRequest = useCallback((ids: string[]) => {
     if (ids.length === 1) {
-      setTargetId(ids[0]);
-      setCancelModalOpen(true);
+      setPinAction({ type: 'cancel', id: ids[0] });
     }
   }, []);
-
-  const handleCancelConfirm = useCallback(async () => {
-    if (!targetId) return;
-    try {
-      await cancelMutation.mutateAsync(targetId);
-      toast.success('Recorrência cancelada com sucesso.');
-      setCancelModalOpen(false);
-      setTargetId(null);
-    } catch {
-      toast.error('Erro ao cancelar recorrência.');
-    }
-  }, [targetId, cancelMutation]);
 
   const handleDeleteRequest = useCallback((ids: string[]) => {
     if (ids.length === 1) {
-      setTargetId(ids[0]);
-      setDeleteModalOpen(true);
+      setPinAction({ type: 'delete', id: ids[0] });
     }
   }, []);
 
-  const handleDeleteConfirm = useCallback(async () => {
-    // Recurring configs use "cancel" as destructive action (no hard delete)
-    if (!targetId) return;
+  const handlePinConfirm = useCallback(async () => {
+    if (!pinAction) return;
+    const isDelete = pinAction.type === 'delete';
     try {
-      await cancelMutation.mutateAsync(targetId);
-      toast.success('Recorrência excluída com sucesso.');
-      setDeleteModalOpen(false);
-      setTargetId(null);
+      await cancelMutation.mutateAsync(pinAction.id);
+      toast.success(
+        isDelete
+          ? 'Recorrência excluída com sucesso.'
+          : 'Recorrência cancelada com sucesso.'
+      );
+      setPinAction(null);
     } catch {
-      toast.error('Erro ao excluir recorrência.');
+      toast.error(
+        isDelete
+          ? 'Erro ao excluir recorrência.'
+          : 'Erro ao cancelar recorrência.'
+      );
     }
-  }, [targetId, cancelMutation]);
+  }, [pinAction, cancelMutation]);
 
   // ============================================================================
   // RENDER FUNCTIONS
@@ -741,28 +735,21 @@ function RecurringPageContent() {
             }}
           />
 
-          {/* Cancel PIN Confirmation Modal */}
+          {/* PIN Confirmation Modal (cancel / delete) */}
           <VerifyActionPinModal
-            isOpen={cancelModalOpen}
-            onClose={() => {
-              setCancelModalOpen(false);
-              setTargetId(null);
-            }}
-            onSuccess={handleCancelConfirm}
-            title="Confirmar Cancelamento"
-            description="Digite seu PIN de Ação para confirmar o cancelamento desta recorrência. Esta ação não pode ser desfeita."
-          />
-
-          {/* Delete PIN Confirmation Modal */}
-          <VerifyActionPinModal
-            isOpen={deleteModalOpen}
-            onClose={() => {
-              setDeleteModalOpen(false);
-              setTargetId(null);
-            }}
-            onSuccess={handleDeleteConfirm}
-            title="Confirmar Exclusão"
-            description="Digite seu PIN de Ação para excluir esta recorrência. Esta ação não pode ser desfeita."
+            isOpen={!!pinAction}
+            onClose={() => setPinAction(null)}
+            onSuccess={handlePinConfirm}
+            title={
+              pinAction?.type === 'delete'
+                ? 'Excluir Recorrência'
+                : 'Cancelar Recorrência'
+            }
+            description={
+              pinAction?.type === 'delete'
+                ? 'Digite seu PIN de Ação para excluir esta recorrência. Esta ação não pode ser desfeita.'
+                : 'Digite seu PIN de Ação para confirmar o cancelamento desta recorrência. Esta ação não pode ser desfeita.'
+            }
           />
         </PageBody>
       </PageLayout>

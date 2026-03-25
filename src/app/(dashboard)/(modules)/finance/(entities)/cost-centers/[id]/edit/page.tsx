@@ -1,10 +1,11 @@
 /**
  * Edit Cost Center Page
- * Follows category edit page pattern: PageLayout > PageActionBar (Delete/Save) > Identity Card > Form
+ * Follows pattern: PageLayout > PageActionBar (Delete + Save) > Identity Card > Section Cards
  */
 
 'use client';
 
+import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
@@ -12,9 +13,8 @@ import {
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
+import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,10 +33,49 @@ import {
   useUpdateCostCenter,
 } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
-import { Building2, Save, Trash, X } from 'lucide-react';
+import { logger } from '@/lib/logger';
+import {
+  DollarSign,
+  Loader2,
+  Save,
+  Settings,
+  Target,
+  Trash2,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { use, useEffect, useRef, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+// =============================================================================
+// SECTION HEADER
+// =============================================================================
+
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ElementType;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Icon className="h-5 w-5 text-foreground" />
+        <div>
+          <h3 className="text-base font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        </div>
+      </div>
+      <div className="border-b border-border" />
+    </div>
+  );
+}
+
+// =============================================================================
+// PAGE
+// =============================================================================
 
 export default function EditCostCenterPage({
   params,
@@ -45,14 +84,24 @@ export default function EditCostCenterPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+
+  // ==========================================================================
+  // DATA FETCHING
+  // ==========================================================================
+
   const { data, isLoading } = useCostCenter(id);
   const updateMutation = useUpdateCostCenter();
   const deleteMutation = useDeleteCostCenter();
-  const costCenter = data?.costCenter;
-  const formRef = useRef<HTMLFormElement>(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const { hasPermission } = usePermissions();
   const canDelete = hasPermission(PermissionCodes.FINANCE.COST_CENTERS.REMOVE);
+  const costCenter = data?.costCenter;
+
+  // ==========================================================================
+  // STATE
+  // ==========================================================================
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -62,6 +111,10 @@ export default function EditCostCenterPage({
     annualBudget: '',
     isActive: true,
   });
+
+  // ==========================================================================
+  // EFFECTS
+  // ==========================================================================
 
   useEffect(() => {
     if (costCenter) {
@@ -82,11 +135,105 @@ export default function EditCostCenterPage({
     }
   }, [costCenter]);
 
-  const handleDeleteConfirm = async () => {
-    await deleteMutation.mutateAsync(id);
-    toast.success('Centro de custo excluído com sucesso.');
-    router.push('/finance/cost-centers');
+  // ==========================================================================
+  // HANDLERS
+  // ==========================================================================
+
+  const handleSubmit = async () => {
+    if (!formData.name.trim()) {
+      toast.error('O nome é obrigatório.');
+      return;
+    }
+    if (!formData.code.trim()) {
+      toast.error('O código é obrigatório.');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await updateMutation.mutateAsync({
+        id,
+        data: {
+          name: formData.name,
+          code: formData.code,
+          isActive: formData.isActive,
+          description: formData.description || undefined,
+          monthlyBudget: formData.monthlyBudget
+            ? parseFloat(formData.monthlyBudget)
+            : undefined,
+          annualBudget: formData.annualBudget
+            ? parseFloat(formData.annualBudget)
+            : undefined,
+        },
+      });
+      toast.success('Centro de custo atualizado com sucesso!');
+      router.push(`/finance/cost-centers/${id}`);
+    } catch (err) {
+      logger.error(
+        'Erro ao atualizar centro de custo',
+        err instanceof Error ? err : undefined
+      );
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error('Erro ao atualizar centro de custo', {
+        description: message,
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Centro de custo excluído com sucesso.');
+      router.push('/finance/cost-centers');
+    } catch (err) {
+      logger.error(
+        'Erro ao excluir centro de custo',
+        err instanceof Error ? err : undefined
+      );
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error('Erro ao excluir centro de custo', { description: message });
+    }
+  };
+
+  // ==========================================================================
+  // ACTION BUTTONS
+  // ==========================================================================
+
+  const actionButtons: HeaderButton[] = [
+    {
+      id: 'cancel',
+      title: 'Cancelar',
+      onClick: () => router.push(`/finance/cost-centers/${id}`),
+      variant: 'ghost',
+    },
+    ...(canDelete
+      ? [
+          {
+            id: 'delete',
+            title: 'Excluir',
+            icon: Trash2,
+            onClick: () => setDeleteModalOpen(true),
+            variant: 'default' as const,
+            className:
+              'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+          },
+        ]
+      : []),
+    {
+      id: 'save',
+      title: isSaving ? 'Salvando...' : 'Salvar Alterações',
+      icon: isSaving ? Loader2 : Save,
+      onClick: handleSubmit,
+      variant: 'default',
+      disabled: isSaving,
+    },
+  ];
+
+  // ==========================================================================
+  // BREADCRUMBS
+  // ==========================================================================
 
   const breadcrumbItems = [
     { label: 'Financeiro', href: '/finance' },
@@ -101,6 +248,10 @@ export default function EditCostCenterPage({
         ]
       : [{ label: 'Editar' }]),
   ];
+
+  // ==========================================================================
+  // LOADING / ERROR
+  // ==========================================================================
 
   if (isLoading) {
     return (
@@ -122,79 +273,23 @@ export default function EditCostCenterPage({
           <PageActionBar breadcrumbItems={breadcrumbItems} />
         </PageHeader>
         <PageBody>
-          <Card className="bg-white/5 p-12 text-center">
-            <Building2 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-2xl font-semibold mb-2">
-              Centro de custo não encontrado
-            </h2>
-            <Button onClick={() => router.push('/finance/cost-centers')}>
-              Voltar para Centros de Custo
-            </Button>
-          </Card>
+          <GridError
+            type="not-found"
+            title="Centro de custo não encontrado"
+            message="O centro de custo solicitado não foi encontrado."
+            action={{
+              label: 'Voltar para Centros de Custo',
+              onClick: () => router.push('/finance/cost-centers'),
+            }}
+          />
         </PageBody>
       </PageLayout>
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await updateMutation.mutateAsync({
-        id,
-        data: {
-          name: formData.name,
-          code: formData.code,
-          isActive: formData.isActive,
-          description: formData.description || undefined,
-          monthlyBudget: formData.monthlyBudget
-            ? parseFloat(formData.monthlyBudget)
-            : undefined,
-          annualBudget: formData.annualBudget
-            ? parseFloat(formData.annualBudget)
-            : undefined,
-        },
-      });
-      toast.success('Centro de custo atualizado com sucesso!');
-      router.push(`/finance/cost-centers/${id}`);
-    } catch {
-      toast.error('Erro ao atualizar centro de custo.');
-    }
-  };
-
-  const actionButtons = [
-    ...(canDelete
-      ? [
-          {
-            id: 'delete',
-            title: 'Excluir',
-            icon: Trash,
-            onClick: () => setDeleteModalOpen(true),
-            variant: 'outline' as const,
-            className: 'text-rose-600 hover:text-rose-700',
-          },
-        ]
-      : []),
-    {
-      id: 'cancel',
-      title: 'Cancelar',
-      icon: X,
-      onClick: () => router.push(`/finance/cost-centers/${id}`),
-      variant: 'outline' as const,
-    },
-    {
-      id: 'save',
-      title: 'Salvar',
-      icon: Save,
-      onClick: () => {
-        if (formRef.current) {
-          formRef.current.dispatchEvent(
-            new Event('submit', { cancelable: true, bubbles: true })
-          );
-        }
-      },
-      disabled: updateMutation.isPending,
-    },
-  ];
+  // ==========================================================================
+  // RENDER
+  // ==========================================================================
 
   return (
     <PageLayout>
@@ -203,136 +298,189 @@ export default function EditCostCenterPage({
           breadcrumbItems={breadcrumbItems}
           buttons={actionButtons}
         />
-
-        {/* Identity Card */}
-        <Card className="bg-white/5 p-5">
-          <div className="flex items-start gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br from-purple-500 to-pink-600 shrink-0">
-              <Building2 className="h-7 w-7 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold tracking-tight">
-                {costCenter.name}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Código: {costCenter.code}
-              </p>
-            </div>
-            <Badge variant="secondary">Editando</Badge>
-          </div>
-        </Card>
       </PageHeader>
 
       <PageBody>
-        <Card className="p-4 sm:p-6 w-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-            {/* Row 1: Nome + Código */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">
-                  Nome <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  required
-                  value={formData.name}
-                  onChange={e =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Nome do centro de custo"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="code">
-                  Código <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="code"
-                  required
-                  value={formData.code}
-                  onChange={e =>
-                    setFormData({ ...formData, code: e.target.value })
-                  }
-                  placeholder="Código do centro de custo"
-                />
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-purple-500 to-pink-600 shadow-lg">
+              <Target className="h-7 w-7 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-muted-foreground">
+                Editando centro de custo
+              </p>
+              <h1 className="text-xl font-bold truncate">{costCenter.name}</h1>
+            </div>
+            <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
+              <div className="text-right">
+                <p className="text-xs font-semibold">Código</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {costCenter.code}
+                </p>
               </div>
             </div>
+          </div>
+        </Card>
 
-            {/* Row 2: Status + Orçamento Mensal + Orçamento Anual */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.isActive ? 'active' : 'inactive'}
-                  onValueChange={v =>
-                    setFormData({ ...formData, isActive: v === 'active' })
-                  }
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="inactive">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="monthlyBudget">Orçamento Mensal</Label>
-                <Input
-                  id="monthlyBudget"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.monthlyBudget}
-                  onChange={e =>
-                    setFormData({ ...formData, monthlyBudget: e.target.value })
-                  }
-                  placeholder="0,00"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="annualBudget">Orçamento Anual</Label>
-                <Input
-                  id="annualBudget"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.annualBudget}
-                  onChange={e =>
-                    setFormData({ ...formData, annualBudget: e.target.value })
-                  }
-                  placeholder="0,00"
-                />
-              </div>
-            </div>
-
-            {/* Row 3: Descrição */}
-            <div className="grid gap-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={e =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Descrição opcional do centro de custo"
-                rows={3}
+        {/* Section 1: Identificação */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={Target}
+                title="Identificação"
+                subtitle="Nome e código do centro de custo"
               />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">
+                      Nome <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={e =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      placeholder="Nome do centro de custo"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="code">
+                      Código <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="code"
+                      value={formData.code}
+                      onChange={e =>
+                        setFormData({ ...formData, code: e.target.value })
+                      }
+                      placeholder="Código do centro de custo"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-          </form>
+          </div>
+        </Card>
+
+        {/* Section 2: Orçamento */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={DollarSign}
+                title="Orçamento"
+                subtitle="Limites orçamentários mensal e anual"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="monthlyBudget">Orçamento Mensal (R$)</Label>
+                    <Input
+                      id="monthlyBudget"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.monthlyBudget}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          monthlyBudget: e.target.value,
+                        })
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="annualBudget">Orçamento Anual (R$)</Label>
+                    <Input
+                      id="annualBudget"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.annualBudget}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          annualBudget: e.target.value,
+                        })
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Section 3: Configurações */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={Settings}
+                title="Configurações"
+                subtitle="Status e descrição do centro de custo"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={formData.isActive ? 'active' : 'inactive'}
+                      onValueChange={v =>
+                        setFormData({
+                          ...formData,
+                          isActive: v === 'active',
+                        })
+                      }
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Ativo</SelectItem>
+                        <SelectItem value="inactive">Inativo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        description: e.target.value,
+                      })
+                    }
+                    placeholder="Descrição opcional do centro de custo"
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </Card>
       </PageBody>
 
+      {/* Delete PIN Modal */}
       <VerifyActionPinModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Centro de Custo"
-        description={`Digite seu PIN de ação para excluir "${costCenter.name}".`}
+        description={`Digite seu PIN de ação para excluir o centro de custo "${costCenter.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

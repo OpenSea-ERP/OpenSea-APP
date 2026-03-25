@@ -1,6 +1,6 @@
 /**
- * OpenSea OS - Cost Centers Page
- * Listagem de centros de custo seguindo o padrao do projeto
+ * OpenSea OS - Centros de Custo (Cost Centers)
+ * Listagem com infinite scroll e filtros server-side
  */
 
 'use client';
@@ -18,6 +18,8 @@ import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { LinkCompanyModal } from '@/components/modals/link-company-modal';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
   CoreProvider,
   EntityCard,
@@ -26,25 +28,39 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import type { EntityConfig } from '@/core/types';
-import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
+import { useDebounce } from '@/hooks/use-debounce';
+import { usePermissions } from '@/hooks/use-permissions';
 import {
-  useCostCenters,
+  useCostCentersInfinite,
   useCreateCostCenter,
   useDeleteCostCenter,
   useUpdateCostCenter,
-} from '@/hooks/finance';
-import { usePermissions } from '@/hooks/use-permissions';
+  type CostCentersFilters,
+} from '@/hooks/finance/use-cost-centers';
+import { useCostCenters } from '@/hooks/finance';
+import { cn } from '@/lib/utils';
 import type { CostCenter } from '@/types/finance';
 import {
   Building2,
   Calendar,
+  CircleDot,
+  DollarSign,
+  GitBranch,
   Landmark,
   Link2Off,
+  Loader2,
   Plus,
   Trash2,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import { CreateCostCenterWizard } from './src';
 
@@ -82,6 +98,15 @@ const costCentersConfig: EntityConfig<CostCenter> = {
 };
 
 // =============================================================================
+// CONSTANTS
+// =============================================================================
+
+const STATUS_OPTIONS = [
+  { id: 'active', label: 'Ativo' },
+  { id: 'inactive', label: 'Inativo' },
+];
+
+// =============================================================================
 // HELPERS
 // =============================================================================
 
@@ -92,6 +117,12 @@ const formatCurrency = (value: number | null | undefined) => {
     currency: 'BRL',
   }).format(value);
 };
+
+function getStatusColor(isActive: boolean): string {
+  return isActive
+    ? 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
+    : 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300';
+}
 
 /**
  * Compute next auto-generated code from existing cost centers
@@ -110,38 +141,66 @@ function computeNextCode(costCenters: CostCenter[]): string {
 }
 
 // =============================================================================
+// TYPES
+// =============================================================================
+
+type ActionButtonWithPermission = HeaderButton & {
+  permission?: string;
+};
+
+// =============================================================================
 // PAGE COMPONENT
 // =============================================================================
 
 export default function CostCentersPage() {
-  const router = useRouter();
-  const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
+  return (
+    <Suspense
+      fallback={<GridLoading count={9} layout="grid" size="md" gap="gap-4" />}
+    >
+      <CostCentersPageContent />
+    </Suspense>
+  );
+}
 
-  // Permissions
+function CostCentersPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { hasPermission } = usePermissions();
+
+  // ============================================================================
+  // PERMISSION FLAGS
+  // ============================================================================
+
   const canView = hasPermission(FINANCE_PERMISSIONS.COST_CENTERS.ACCESS);
   const canCreate = hasPermission(FINANCE_PERMISSIONS.COST_CENTERS.REGISTER);
   const canEdit = hasPermission(FINANCE_PERMISSIONS.COST_CENTERS.MODIFY);
   const canDelete = hasPermission(FINANCE_PERMISSIONS.COST_CENTERS.REMOVE);
 
   // ============================================================================
-  // DATA
+  // FILTER STATE (synced with URL params)
   // ============================================================================
 
-  const { data, isLoading, error, refetch } = useCostCenters();
-  const createMutation = useCreateCostCenter();
-  const updateMutation = useUpdateCostCenter();
-  const deleteMutation = useDeleteCostCenter();
+  const statusIds = useMemo(() => {
+    const raw = searchParams.get('status');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
 
-  const costCenters = data?.costCenters ?? [];
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // Sorting state (server-side)
+  const [sortBy, setSortBy] = useState<
+    'name' | 'code' | 'createdAt' | 'monthlyBudget' | 'annualBudget'
+  >('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // ============================================================================
   // STATE
   // ============================================================================
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [isDeletePinOpen, setIsDeletePinOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
 
   // Link company modal state
   const [linkTarget, setLinkTarget] = useState<CostCenter | null>(null);
@@ -149,30 +208,131 @@ export default function CostCentersPage() {
   const [isLinkOpen, setIsLinkOpen] = useState(false);
 
   // ============================================================================
-  // COMPUTED
+  // DATA: Infinite scroll + filter dropdown sources
   // ============================================================================
 
-  const nextCode = useMemo(() => computeNextCode(costCenters), [costCenters]);
+  const isActiveFilter = useMemo(() => {
+    if (statusIds.length === 1) {
+      return statusIds[0] === 'active' ? true : false;
+    }
+    return undefined;
+  }, [statusIds]);
 
-  const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return costCenters;
-    const q = searchQuery.toLowerCase();
-    return costCenters.filter(cc => {
-      const name = cc.name?.toLowerCase() ?? '';
-      const code = cc.code?.toLowerCase() ?? '';
-      const companyName = cc.companyName?.toLowerCase() ?? '';
-      return name.includes(q) || code.includes(q) || companyName.includes(q);
-    });
-  }, [costCenters, searchQuery]);
+  const filters: CostCentersFilters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      isActive: isActiveFilter,
+      sortBy,
+      sortOrder,
+    }),
+    [debouncedSearch, isActiveFilter, sortBy, sortOrder]
+  );
 
-  const initialIds = useMemo(
-    () => filteredItems.map(i => i.id),
-    [filteredItems]
+  const {
+    costCenters,
+    total,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useCostCentersInfinite(filters);
+
+  // Fetch all cost centers for the wizard (nextCode calculation + parent dropdown)
+  const { data: allCostCentersData } = useCostCenters();
+  const allCostCenters = allCostCentersData?.costCenters ?? [];
+  const nextCode = useMemo(
+    () => computeNextCode(allCostCenters),
+    [allCostCenters]
+  );
+
+  // Mutations
+  const createMutation = useCreateCostCenter();
+  const updateMutation = useUpdateCostCenter();
+  const deleteMutation = useDeleteCostCenter();
+
+  // ============================================================================
+  // INFINITE SCROLL SENTINEL
+  // ============================================================================
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      observerEntries => {
+        if (
+          observerEntries[0].isIntersecting &&
+          hasNextPage &&
+          !isFetchingNextPage
+        ) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // ============================================================================
+  // URL FILTER HELPERS
+  // ============================================================================
+
+  const buildFilterUrl = useCallback(
+    (params: { status?: string[] }) => {
+      const parts: string[] = [];
+      const sts = params.status !== undefined ? params.status : statusIds;
+      if (sts.length > 0) parts.push(`status=${sts.join(',')}`);
+      return parts.length > 0
+        ? `/finance/cost-centers?${parts.join('&')}`
+        : '/finance/cost-centers';
+    },
+    [statusIds]
+  );
+
+  const setStatusFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ status: ids })),
+    [router, buildFilterUrl]
   );
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
+
+  const handleContextView = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/cost-centers/${ids[0]}`);
+    }
+  };
+
+  const handleContextEdit = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/cost-centers/${ids[0]}/edit`);
+    }
+  };
+
+  const handleContextDelete = (ids: string[]) => {
+    setItemsToDelete(ids);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = useCallback(async () => {
+    for (const id of itemsToDelete) {
+      await deleteMutation.mutateAsync(id);
+    }
+    setDeleteModalOpen(false);
+    setItemsToDelete([]);
+    toast.success(
+      itemsToDelete.length === 1
+        ? 'Centro de custo excluído com sucesso!'
+        : `${itemsToDelete.length} centros de custo excluídos!`
+    );
+  }, [itemsToDelete, deleteMutation]);
 
   const handleCreate = useCallback(
     async (data: Parameters<typeof createMutation.mutateAsync>[0]) => {
@@ -188,44 +348,6 @@ export default function CostCentersPage() {
     },
     [createMutation]
   );
-
-  const handleView = useCallback(
-    (ids: string[]) => {
-      if (ids.length > 0) {
-        router.push(`/finance/cost-centers/${ids[0]}`);
-      }
-    },
-    [router]
-  );
-
-  const handleEdit = useCallback(
-    (ids: string[]) => {
-      if (ids.length > 0) {
-        router.push(`/finance/cost-centers/${ids[0]}`);
-      }
-    },
-    [router]
-  );
-
-  const handleDeleteRequest = useCallback((ids: string[]) => {
-    if (ids.length > 0) {
-      setDeleteTarget(ids[0]);
-      setIsDeletePinOpen(true);
-    }
-  }, []);
-
-  const handleDeleteConfirm = useCallback(async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteMutation.mutateAsync(deleteTarget);
-      toast.success('Centro de custo excluído com sucesso!');
-      setDeleteTarget(null);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Erro ao excluir centro de custo';
-      toast.error(message);
-    }
-  }, [deleteTarget, deleteMutation]);
 
   const handleLinkCompany = useCallback(
     (ids: string[]) => {
@@ -280,15 +402,17 @@ export default function CostCentersPage() {
   );
 
   // ============================================================================
-  // CONTEXT MENU ACTIONS
+  // RENDER FUNCTIONS
   // ============================================================================
 
-  const contextActions: ContextMenuAction[] = useMemo(() => {
-    const actions: ContextMenuAction[] = [];
+  const renderGridCard = (item: CostCenter, isSelected: boolean) => {
+    const monthly = formatCurrency(item.monthlyBudget);
+    const annual = formatCurrency(item.annualBudget);
 
-    // Custom group: Link/Unlink company
+    const contextActions: ContextMenuAction[] = [];
+
     if (canEdit) {
-      actions.push({
+      contextActions.push({
         id: 'link-company',
         label: 'Vincular Empresa',
         icon: Building2,
@@ -300,7 +424,7 @@ export default function CostCentersPage() {
         },
       });
 
-      actions.push({
+      contextActions.push({
         id: 'unlink-company',
         label: 'Desvincular Empresa',
         icon: Link2Off,
@@ -313,35 +437,22 @@ export default function CostCentersPage() {
       });
     }
 
-    // Destructive group: Delete
     if (canDelete) {
-      actions.push({
+      contextActions.push({
         id: 'delete',
         label: 'Excluir',
         icon: Trash2,
-        onClick: handleDeleteRequest,
+        onClick: handleContextDelete,
         variant: 'destructive',
         separator: 'before',
       });
     }
 
-    return actions;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canEdit, canDelete, costCenters]);
-
-  // ============================================================================
-  // RENDER FUNCTIONS
-  // ============================================================================
-
-  const renderGridCard = (item: CostCenter, isSelected: boolean) => {
-    const monthly = formatCurrency(item.monthlyBudget);
-    const annual = formatCurrency(item.annualBudget);
-
     return (
       <EntityContextMenu
         itemId={item.id}
-        onView={canView ? handleView : undefined}
-        onEdit={canEdit ? handleEdit : undefined}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
         actions={contextActions}
       >
         <EntityCard
@@ -354,7 +465,8 @@ export default function CostCentersPage() {
           badges={[
             {
               label: item.isActive ? 'Ativo' : 'Inativo',
-              variant: item.isActive ? 'default' : 'secondary',
+              variant: 'outline' as const,
+              color: getStatusColor(item.isActive),
             },
             ...(item.companyName
               ? [
@@ -362,6 +474,19 @@ export default function CostCentersPage() {
                     label: item.companyName,
                     variant: 'outline' as const,
                     icon: Building2,
+                    color:
+                      'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
+                  },
+                ]
+              : []),
+            ...(item.parentName
+              ? [
+                  {
+                    label: item.parentName,
+                    variant: 'outline' as const,
+                    icon: GitBranch,
+                    color:
+                      'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
                   },
                 ]
               : []),
@@ -370,8 +495,18 @@ export default function CostCentersPage() {
             <div className="flex flex-col gap-1 text-xs text-muted-foreground">
               {(monthly || annual) && (
                 <div className="flex items-center gap-3">
-                  {monthly && <span>Mensal: {monthly}</span>}
-                  {annual && <span>Anual: {annual}</span>}
+                  {monthly && (
+                    <span className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      Mensal: {monthly}
+                    </span>
+                  )}
+                  {annual && (
+                    <span className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      Anual: {annual}
+                    </span>
+                  )}
                 </div>
               )}
               {item.createdAt && (
@@ -397,92 +532,181 @@ export default function CostCentersPage() {
     const monthly = formatCurrency(item.monthlyBudget);
     const annual = formatCurrency(item.annualBudget);
 
+    const listBadges: {
+      label: string;
+      variant: 'outline';
+      icon?: typeof Building2;
+      color: string;
+    }[] = [
+      {
+        label: item.isActive ? 'Ativo' : 'Inativo',
+        variant: 'outline',
+        color: getStatusColor(item.isActive),
+      },
+      ...(item.companyName
+        ? [
+            {
+              label: item.companyName,
+              variant: 'outline' as const,
+              icon: Building2,
+              color:
+                'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
+            },
+          ]
+        : []),
+      ...(item.parentName
+        ? [
+            {
+              label: item.parentName,
+              variant: 'outline' as const,
+              icon: GitBranch,
+              color:
+                'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+            },
+          ]
+        : []),
+    ];
+
+    const contextActions: ContextMenuAction[] = [];
+
+    if (canEdit) {
+      contextActions.push({
+        id: 'link-company',
+        label: 'Vincular Empresa',
+        icon: Building2,
+        onClick: handleLinkCompany,
+        separator: 'before',
+        hidden: ids => {
+          const cc = costCenters.find(c => c.id === ids[0]);
+          return !!cc?.companyId;
+        },
+      });
+
+      contextActions.push({
+        id: 'unlink-company',
+        label: 'Desvincular Empresa',
+        icon: Link2Off,
+        onClick: handleUnlinkCompany,
+        separator: 'before',
+        hidden: ids => {
+          const cc = costCenters.find(c => c.id === ids[0]);
+          return !cc?.companyId;
+        },
+      });
+    }
+
+    if (canDelete) {
+      contextActions.push({
+        id: 'delete',
+        label: 'Excluir',
+        icon: Trash2,
+        onClick: handleContextDelete,
+        variant: 'destructive',
+        separator: 'before',
+      });
+    }
+
     return (
       <EntityContextMenu
         itemId={item.id}
-        onView={canView ? handleView : undefined}
-        onEdit={canEdit ? handleEdit : undefined}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
         actions={contextActions}
       >
         <EntityCard
           id={item.id}
           variant="list"
-          title={item.name}
-          subtitle={item.code}
-          icon={Landmark}
-          iconBgColor="bg-linear-to-br from-teal-500 to-emerald-600"
-          badges={[
-            {
-              label: item.isActive ? 'Ativo' : 'Inativo',
-              variant: item.isActive ? 'default' : 'secondary',
-            },
-            ...(item.companyName
-              ? [
-                  {
-                    label: item.companyName,
-                    variant: 'outline' as const,
-                    icon: Building2,
-                  },
-                ]
-              : []),
-          ]}
+          title={
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-gray-900 dark:text-white truncate">
+                {item.name}
+              </span>
+              <span className="text-xs text-muted-foreground shrink-0 font-mono">
+                {item.code}
+              </span>
+            </span>
+          }
           metadata={
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              {monthly && <span>Mensal: {monthly}</span>}
-              {annual && <span>Anual: {annual}</span>}
-              {item.createdAt && (
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {new Date(item.createdAt).toLocaleDateString('pt-BR')}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {listBadges.map((badge, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0',
+                    badge.color
+                  )}
+                >
+                  {badge.icon && <badge.icon className="w-3 h-3" />}
+                  {badge.label}
                 </span>
-              )}
+              ))}
             </div>
           }
+          icon={Landmark}
+          iconBgColor="bg-linear-to-br from-teal-500 to-emerald-600"
           isSelected={isSelected}
           showSelection={false}
           clickable={false}
           createdAt={item.createdAt}
           updatedAt={item.updatedAt}
-        />
+          showStatusBadges={false}
+        >
+          {/* Right zone: budgets */}
+          <div className="flex flex-col items-end gap-0.5">
+            {monthly && (
+              <span className="text-sm font-semibold font-mono text-gray-900 dark:text-white">
+                {monthly}
+              </span>
+            )}
+            {annual && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                {annual}/ano
+              </span>
+            )}
+          </div>
+        </EntityCard>
       </EntityContextMenu>
     );
   };
 
   // ============================================================================
-  // HEADER BUTTONS
+  // COMPUTED VALUES
+  // ============================================================================
+
+  const initialIds = useMemo(() => costCenters.map(e => e.id), [costCenters]);
+
+  // ============================================================================
+  // HEADER BUTTONS CONFIGURATION (permission-aware)
   // ============================================================================
 
   const handleOpenCreate = useCallback(() => {
     setIsCreateOpen(true);
   }, []);
 
-  const actionButtons: HeaderButton[] = useMemo(
-    () =>
-      canCreate
-        ? [
-            {
-              id: 'create-cost-center',
-              title: 'Novo Centro de Custo',
-              icon: Plus,
-              onClick: handleOpenCreate,
-              variant: 'default',
-            },
-          ]
-        : [],
-    [canCreate, handleOpenCreate]
+  const actionButtons = useMemo<ActionButtonWithPermission[]>(
+    () => [
+      {
+        id: 'create-cost-center',
+        title: 'Novo Centro de Custo',
+        icon: Plus,
+        onClick: handleOpenCreate,
+        variant: 'default',
+        permission: FINANCE_PERMISSIONS.COST_CENTERS.REGISTER,
+      },
+    ],
+    [handleOpenCreate]
   );
 
-  // ============================================================================
-  // LOADING STATE
-  // ============================================================================
-
-  if (isLoadingPermissions) {
-    return (
-      <PageLayout>
-        <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
-      </PageLayout>
-    );
-  }
+  const visibleActionButtons = useMemo<HeaderButton[]>(
+    () =>
+      actionButtons
+        .filter(button =>
+          button.permission ? hasPermission(button.permission) : true
+        )
+        .map(({ permission, ...button }) => button),
+    [actionButtons, hasPermission]
+  );
 
   // ============================================================================
   // RENDER
@@ -502,7 +726,7 @@ export default function CostCentersPage() {
               { label: 'Financeiro', href: '/finance' },
               { label: 'Centros de Custo', href: '/finance/cost-centers' },
             ]}
-            buttons={actionButtons}
+            buttons={visibleActionButtons}
           />
 
           <Header
@@ -514,9 +738,9 @@ export default function CostCentersPage() {
         <PageBody>
           {/* Search Bar */}
           <SearchBar
-            value={searchQuery}
             placeholder={costCentersConfig.display.labels.searchPlaceholder}
-            onSearch={value => setSearchQuery(value)}
+            value={searchQuery}
+            onSearch={setSearchQuery}
             onClear={() => setSearchQuery('')}
             showClear={true}
             size="md"
@@ -538,20 +762,64 @@ export default function CostCentersPage() {
               }}
             />
           ) : (
-            <EntityGrid
-              config={costCentersConfig}
-              items={filteredItems}
-              renderGridItem={renderGridCard}
-              renderListItem={renderListCard}
-              isLoading={isLoading}
-              isSearching={!!searchQuery}
-              onItemDoubleClick={item =>
-                canView && router.push(`/finance/cost-centers/${item.id}`)
-              }
-              showSorting={true}
-              defaultSortField="name"
-              defaultSortDirection="asc"
-            />
+            <>
+              <EntityGrid
+                config={costCentersConfig}
+                items={costCenters}
+                showItemCount={false}
+                toolbarStart={
+                  <>
+                    <FilterDropdown
+                      label="Status"
+                      icon={CircleDot}
+                      options={STATUS_OPTIONS}
+                      selected={statusIds}
+                      onSelectionChange={setStatusFilter}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar status..."
+                      emptyText="Nenhum status encontrado."
+                    />
+                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                      {total}{' '}
+                      {total === 1 ? 'centro de custo' : 'centros de custo'}
+                      {costCenters.length < total &&
+                        ` (${costCenters.length} carregados)`}
+                    </p>
+                  </>
+                }
+                renderGridItem={renderGridCard}
+                renderListItem={renderListCard}
+                isLoading={isLoading}
+                isSearching={!!debouncedSearch}
+                onItemDoubleClick={item =>
+                  canView && router.push(`/finance/cost-centers/${item.id}`)
+                }
+                showSorting={true}
+                defaultSortField="name"
+                defaultSortDirection="asc"
+                onSortChange={(field, direction) => {
+                  if (field !== 'custom') {
+                    setSortBy(
+                      field as
+                        | 'name'
+                        | 'code'
+                        | 'createdAt'
+                        | 'monthlyBudget'
+                        | 'annualBudget'
+                    );
+                    setSortOrder(direction);
+                  }
+                }}
+              />
+
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
           )}
 
           {/* Create Wizard */}
@@ -561,7 +829,7 @@ export default function CostCentersPage() {
             onSubmit={handleCreate}
             isSubmitting={createMutation.isPending}
             nextCode={nextCode}
-            costCenters={costCenters}
+            costCenters={allCostCenters}
           />
 
           {/* Link Company Modal */}
@@ -578,17 +846,19 @@ export default function CostCentersPage() {
             isLoading={updateMutation.isPending}
           />
 
-          {/* Delete PIN Verification */}
+          {/* Delete PIN Confirmation Modal */}
           <VerifyActionPinModal
-            isOpen={isDeletePinOpen}
+            isOpen={deleteModalOpen}
             onClose={() => {
-              setIsDeletePinOpen(false);
-              setDeleteTarget(null);
+              setDeleteModalOpen(false);
+              setItemsToDelete([]);
             }}
             onSuccess={handleDeleteConfirm}
-            title={'Confirmar Exclus\u00E3o'}
+            title="Confirmar Exclusão"
             description={
-              'Digite seu PIN de a\u00E7\u00E3o para excluir este centro de custo. Esta a\u00E7\u00E3o n\u00E3o pode ser desfeita.'
+              itemsToDelete.length === 1
+                ? 'Digite seu PIN de Ação para confirmar a exclusão deste centro de custo. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de Ação para excluir ${itemsToDelete.length} centros de custo. Esta ação não pode ser desfeita.`
             }
           />
         </PageBody>

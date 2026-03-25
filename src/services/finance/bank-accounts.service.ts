@@ -28,6 +28,8 @@ export const bankAccountsService = {
     if (params?.companyId) query.append('companyId', params.companyId);
     if (params?.accountType) query.append('accountType', params.accountType);
     if (params?.status) query.append('status', params.status);
+    if (params?.sortBy) query.append('sortBy', params.sortBy);
+    if (params?.sortOrder) query.append('sortOrder', params.sortOrder);
 
     return apiClient.get<BankAccountsResponse>(
       `${API_ENDPOINTS.BANK_ACCOUNTS.LIST}?${query.toString()}`

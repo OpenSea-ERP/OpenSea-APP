@@ -1,5 +1,6 @@
 /**
- * Loan Detail Page - Rebuilt with amortization table, deviation alerts, and renegotiation suggestion.
+ * Loan Detail Page - Rebuilt with identity card, breadcrumbs, amortization table,
+ * deviation alerts, and renegotiation suggestion.
  */
 
 'use client';
@@ -9,7 +10,6 @@ import {
   DeviationAlert,
   RenegotiationSuggestion,
 } from '@/components/finance/loans/deviation-alert';
-import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -19,7 +19,7 @@ import {
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -36,14 +36,16 @@ import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useDeleteLoan, useLoan, usePayLoanInstallment } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
 import { calculatePrice, calculateSAC } from '@/lib/finance/amortization';
+import { cn } from '@/lib/utils';
 import type { LoanInstallment, LoanStatus } from '@/types/finance';
 import { LOAN_STATUS_LABELS, LOAN_TYPE_LABELS } from '@/types/finance';
 import {
-  ArrowLeft,
   Banknote,
-  Building2,
   Calendar,
   CreditCard,
+  DollarSign,
+  Info,
+  Landmark,
   Percent,
   Trash2,
 } from 'lucide-react';
@@ -89,6 +91,27 @@ function getStatusVariant(
 }
 
 // =============================================================================
+// SUB-COMPONENTS
+// =============================================================================
+
+function InfoRow({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div className="flex justify-between items-start gap-4">
+      <span className="text-sm text-muted-foreground shrink-0">{label}</span>
+      <span className={cn('text-sm text-right', className)}>{value}</span>
+    </div>
+  );
+}
+
+// =============================================================================
 // LOADING SKELETON
 // =============================================================================
 
@@ -96,7 +119,13 @@ function DetailSkeleton() {
   return (
     <PageLayout>
       <PageHeader>
-        <div className="h-10" />
+        <PageActionBar
+          breadcrumbItems={[
+            { label: 'Financeiro', href: '/finance' },
+            { label: 'Empréstimos', href: '/finance/loans' },
+            { label: 'Carregando...' },
+          ]}
+        />
       </PageHeader>
       <PageBody>
         <Card className="p-6">
@@ -108,17 +137,21 @@ function DetailSkeleton() {
             </div>
           </div>
         </Card>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4">
-              <Skeleton className="h-4 w-24 mb-2" />
-              <Skeleton className="h-8 w-32" />
+            <Card key={i} className="p-6">
+              <Skeleton className="h-5 w-32 mb-4" />
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
             </Card>
           ))}
         </div>
         <Card className="p-6">
-          <Skeleton className="h-6 w-48 mb-4" />
-          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-5 w-48 mb-4" />
+          <Skeleton className="h-32 w-full" />
         </Card>
       </PageBody>
     </PageLayout>
@@ -226,6 +259,7 @@ export default function LoanDetailPage({
   const deleteLoan = useDeleteLoan();
 
   const canDelete = hasPermission(FINANCE_PERMISSIONS.LOANS.REMOVE);
+  const canEdit = hasPermission(FINANCE_PERMISSIONS.LOANS.MODIFY);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [paymentInstallment, setPaymentInstallment] =
@@ -240,9 +274,6 @@ export default function LoanDetailPage({
 
     const monthlyRate = loan.interestRate / 100 / 12;
 
-    // Determine amortization system based on loan type/interestType
-    // Use Price by default (same as backend calculation)
-    // SAC when interestType is 'SAC'
     if (loan.interestType === 'SAC') {
       return calculateSAC(
         loan.principalAmount,
@@ -309,6 +340,48 @@ export default function LoanDetailPage({
     );
   }
 
+  // Build action buttons for PageActionBar
+  const actionBarButtons = [
+    ...(loan.status === 'ACTIVE' && loan.installments?.some(i => i.status !== 'PAID')
+      ? [
+          {
+            id: 'register-payment',
+            title: 'Registrar Pagamento',
+            icon: DollarSign,
+            onClick: () => {
+              const nextUnpaid = loan.installments
+                ?.filter(i => i.status !== 'PAID')
+                .sort((a, b) => a.installmentNumber - b.installmentNumber)[0];
+              if (nextUnpaid) handlePayInstallment(nextUnpaid);
+            },
+            variant: 'default' as const,
+          },
+        ]
+      : []),
+    ...(canEdit
+      ? [
+          {
+            id: 'edit-loan',
+            title: 'Editar',
+            icon: Info,
+            onClick: () => router.push(`/finance/loans/${id}/edit`),
+            variant: 'outline' as const,
+          },
+        ]
+      : []),
+    ...(canDelete
+      ? [
+          {
+            id: 'delete-loan',
+            title: 'Excluir',
+            icon: Trash2,
+            onClick: () => setDeleteModalOpen(true),
+            variant: 'destructive' as const,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <PageLayout>
       <PageHeader>
@@ -318,52 +391,46 @@ export default function LoanDetailPage({
             { label: 'Empréstimos', href: '/finance/loans' },
             { label: loan.name },
           ]}
-          buttons={[
-            ...(canDelete
-              ? [
-                  {
-                    id: 'delete-loan',
-                    title: 'Excluir',
-                    icon: Trash2,
-                    onClick: () => setDeleteModalOpen(true),
-                    variant: 'destructive' as const,
-                  },
-                ]
-              : []),
-          ]}
+          buttons={actionBarButtons}
         />
-
-        <div className="flex items-center gap-4">
-          <Link href="/finance/loans">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Voltar
-            </Button>
-          </Link>
-        </div>
       </PageHeader>
 
       <PageBody>
-        {/* Loan Header Card */}
+        {/* Identity Card */}
         <Card className="p-4 sm:p-6">
           <div className="flex gap-4 sm:gap-6 items-center">
-            <div className="flex items-center justify-center h-12 w-12 md:h-16 md:w-16 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 shrink-0">
-              <Building2 className="h-6 w-6 md:h-8 md:w-8 text-white" />
+            <div className="flex items-center justify-center h-12 w-12 md:h-16 md:w-16 rounded-lg bg-linear-to-br from-amber-500 to-orange-600 shrink-0">
+              <Landmark className="h-6 w-6 md:h-8 md:w-8 text-white" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-xl sm:text-3xl font-bold tracking-tight">
-                  {loan.name}
-                </h1>
+            <div className="flex justify-between flex-1 gap-4 flex-row items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-lg sm:text-3xl font-bold tracking-tight">
+                    {loan.name}
+                  </h1>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  {loan.contractNumber && (
+                    <span className="font-mono text-sm text-muted-foreground">
+                      Contrato: {loan.contractNumber}
+                    </span>
+                  )}
+                  {loan.contractNumber && (
+                    <span className="text-muted-foreground">|</span>
+                  )}
+                  <span className="text-sm text-muted-foreground">
+                    Criado em {formatDate(loan.createdAt)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
                 <Badge variant={getStatusVariant(loan.status)}>
                   {LOAN_STATUS_LABELS[loan.status]}
                 </Badge>
+                <Badge variant="outline">
+                  {LOAN_TYPE_LABELS[loan.type]}
+                </Badge>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {LOAN_TYPE_LABELS[loan.type]}
-                {loan.contractNumber && ` | Contrato: ${loan.contractNumber}`}
-                {loan.bankAccountName && ` | ${loan.bankAccountName}`}
-              </p>
             </div>
           </div>
 
@@ -435,6 +502,69 @@ export default function LoanDetailPage({
           </Card>
         </div>
 
+        {/* Info Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card 1: Dados Gerais */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                Dados Gerais
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow label="Tipo" value={LOAN_TYPE_LABELS[loan.type]} />
+              {loan.contractNumber && (
+                <InfoRow label="Contrato" value={loan.contractNumber} />
+              )}
+              <InfoRow
+                label="Sistema de Amortização"
+                value={
+                  loan.interestType === 'SAC'
+                    ? 'SAC (Amortização Constante)'
+                    : 'Tabela Price (Parcela Fixa)'
+                }
+              />
+              {loan.costCenterName && (
+                <InfoRow label="Centro de Custo" value={loan.costCenterName} />
+              )}
+              {loan.bankAccountName && (
+                <InfoRow label="Conta Bancária" value={loan.bankAccountName} />
+              )}
+              {loan.notes && (
+                <InfoRow label="Observações" value={loan.notes} />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Datas */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Datas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <InfoRow label="Início" value={formatDate(loan.startDate)} />
+              {loan.endDate && (
+                <InfoRow label="Término" value={formatDate(loan.endDate)} />
+              )}
+              {loan.installmentDay && (
+                <InfoRow
+                  label="Dia de Vencimento"
+                  value={`Dia ${loan.installmentDay}`}
+                />
+              )}
+              <InfoRow
+                label="Total de Parcelas"
+                value={`${loan.paidInstallments} de ${loan.totalInstallments} pagas`}
+              />
+              <InfoRow label="Criado em" value={formatDate(loan.createdAt)} />
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Deviation Alert (EMPR-04/06) */}
         {loan.installments && loan.installments.length > 0 && (
           <DeviationAlert
@@ -457,93 +587,58 @@ export default function LoanDetailPage({
 
         {/* Installment Actions - Register Payment */}
         {loan.installments && loan.installments.length > 0 && (
-          <Card className="p-4 sm:p-6">
-            <h2 className="text-lg font-semibold mb-4">Parcelas Pendentes</h2>
-            <div className="space-y-2">
-              {loan.installments
-                .filter(inst => inst.status !== 'PAID')
-                .sort((a, b) => a.installmentNumber - b.installmentNumber)
-                .slice(0, 5)
-                .map(inst => (
-                  <div
-                    key={inst.id}
-                    className="flex items-center justify-between p-3 rounded-lg border"
-                  >
-                    <div>
-                      <p className="font-medium">
-                        Parcela {inst.installmentNumber}/
-                        {loan.totalInstallments}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Vencimento: {formatDate(inst.dueDate)} |{' '}
-                        {formatCurrency(inst.totalAmount)}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant={
-                        inst.status === 'OVERDUE' ? 'destructive' : 'default'
-                      }
-                      onClick={() => handlePayInstallment(inst)}
-                    >
-                      Registrar Pagamento
-                    </Button>
-                  </div>
-                ))}
-            </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Parcelas Pendentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loan.installments.filter(inst => inst.status !== 'PAID').length >
+              0 ? (
+                <div className="space-y-2">
+                  {loan.installments
+                    .filter(inst => inst.status !== 'PAID')
+                    .sort((a, b) => a.installmentNumber - b.installmentNumber)
+                    .slice(0, 5)
+                    .map(inst => (
+                      <div
+                        key={inst.id}
+                        className="flex items-center justify-between p-3 rounded-lg border"
+                      >
+                        <div>
+                          <p className="font-medium">
+                            Parcela {inst.installmentNumber}/
+                            {loan.totalInstallments}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Vencimento: {formatDate(inst.dueDate)} |{' '}
+                            {formatCurrency(inst.totalAmount)}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={
+                            inst.status === 'OVERDUE'
+                              ? 'destructive'
+                              : 'default'
+                          }
+                          onClick={() => handlePayInstallment(inst)}
+                        >
+                          Registrar Pagamento
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  Todas as parcelas foram pagas.
+                </p>
+              )}
+            </CardContent>
           </Card>
         )}
-
-        {/* Details Card */}
-        <Card className="p-4 sm:p-6">
-          <h2 className="text-lg font-semibold mb-4">Detalhes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Tipo</p>
-              <p className="font-medium">{LOAN_TYPE_LABELS[loan.type]}</p>
-            </div>
-            {loan.contractNumber && (
-              <div>
-                <p className="text-sm text-muted-foreground">Contrato</p>
-                <p className="font-medium font-mono">{loan.contractNumber}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Sistema de Amortização
-              </p>
-              <p className="font-medium">
-                {loan.interestType === 'SAC'
-                  ? 'SAC (Amortização Constante)'
-                  : 'Tabela Price (Parcela Fixa)'}
-              </p>
-            </div>
-            {loan.costCenterName && (
-              <div>
-                <p className="text-sm text-muted-foreground">Centro de Custo</p>
-                <p className="font-medium">{loan.costCenterName}</p>
-              </div>
-            )}
-            {loan.bankAccountName && (
-              <div>
-                <p className="text-sm text-muted-foreground">Conta Bancária</p>
-                <p className="font-medium">{loan.bankAccountName}</p>
-              </div>
-            )}
-            {loan.endDate && (
-              <div>
-                <p className="text-sm text-muted-foreground">Data de Término</p>
-                <p className="font-medium">{formatDate(loan.endDate)}</p>
-              </div>
-            )}
-          </div>
-          {loan.notes && (
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-muted-foreground mb-1">Observações</p>
-              <p className="text-sm">{loan.notes}</p>
-            </div>
-          )}
-        </Card>
       </PageBody>
 
       {/* Payment Modal */}

@@ -60,6 +60,8 @@ export interface BankAccountsQuery {
   companyId?: string;
   accountType?: BankAccountType;
   status?: BankAccountStatus;
+  sortBy?: 'name' | 'bankName' | 'currentBalance' | 'createdAt' | 'status';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export const BANK_ACCOUNT_TYPE_LABELS: Record<BankAccountType, string> = {

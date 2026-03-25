@@ -1,3 +1,8 @@
+/**
+ * OpenSea OS - Contas Bancárias (Bank Accounts)
+ * Listagem com infinite scroll e filtros server-side
+ */
+
 'use client';
 
 import { GridError } from '@/components/handlers/grid-error';
@@ -10,30 +15,80 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
+import type { HeaderButton } from '@/components/layout/types/header.types';
 import { LinkCompanyModal } from '@/components/modals/link-company-modal';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
-import { EntityCard, EntityContextMenu, EntityGrid } from '@/core';
+import {
+  CoreProvider,
+  EntityCard,
+  EntityContextMenu,
+  EntityGrid,
+} from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import type { EntityConfig } from '@/core/types';
+import { useDebounce } from '@/hooks/use-debounce';
+import { usePermissions } from '@/hooks/use-permissions';
 import {
-  useBankAccounts,
-  useCreateBankAccount,
+  useBankAccountsInfinite,
   useDeleteBankAccount,
   useUpdateBankAccount,
-} from '@/hooks/finance';
-import { usePermissions } from '@/hooks/use-permissions';
-import type { BankAccount } from '@/types/finance';
+  useCreateBankAccount,
+  type BankAccountsFilters,
+} from '@/hooks/finance/use-bank-accounts';
+import { cn } from '@/lib/utils';
+import type {
+  BankAccount,
+  BankAccountStatus,
+  BankAccountType,
+} from '@/types/finance';
 import {
   BANK_ACCOUNT_STATUS_LABELS,
   BANK_ACCOUNT_TYPE_LABELS,
 } from '@/types/finance';
-import { Building2, Landmark, Link2, Plus, Unlink } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import {
+  Building2,
+  DollarSign,
+  Landmark,
+  Link2,
+  Loader2,
+  Plus,
+  Trash2,
+  Unlink,
+} from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 
 import { CreateBankAccountWizard } from './src';
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+const STATUS_OPTIONS = [
+  { id: 'ACTIVE', label: 'Ativa' },
+  { id: 'INACTIVE', label: 'Inativa' },
+  { id: 'CLOSED', label: 'Encerrada' },
+];
+
+const TYPE_OPTIONS = [
+  { id: 'CHECKING', label: 'Conta Corrente' },
+  { id: 'SAVINGS', label: 'Poupança' },
+  { id: 'SALARY', label: 'Conta Salário' },
+  { id: 'PAYMENT', label: 'Conta Pagamento' },
+  { id: 'INVESTMENT', label: 'Investimento' },
+  { id: 'DIGITAL', label: 'Conta Digital' },
+  { id: 'OTHER', label: 'Outro' },
+];
 
 // =============================================================================
 // ENTITY CONFIG
@@ -74,102 +129,231 @@ const bankAccountsConfig: EntityConfig<BankAccount> = {
 // HELPERS
 // =============================================================================
 
-function getStatusBadgeConfig(status: string) {
-  switch (status) {
-    case 'ACTIVE':
-      return {
-        variant: 'default' as const,
-        color:
-          'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
-      };
-    case 'INACTIVE':
-      return {
-        variant: 'secondary' as const,
-        color:
-          'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20',
-      };
-    case 'CLOSED':
-      return {
-        variant: 'destructive' as const,
-        color:
-          'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/20',
-      };
-    default:
-      return { variant: 'secondary' as const, color: '' };
-  }
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
 }
 
-function getTypeBadgeColor() {
-  return 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/20';
+function getStatusColor(status: BankAccountStatus): string {
+  const colors: Record<BankAccountStatus, string> = {
+    ACTIVE:
+      'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    INACTIVE:
+      'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+    CLOSED:
+      'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300',
+  };
+  return colors[status] ?? colors.ACTIVE;
+}
+
+function getTypeBadgeColor(): string {
+  return 'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300';
 }
 
 // =============================================================================
-// PAGE COMPONENT
+// TYPES
+// =============================================================================
+
+type ActionButtonWithPermission = HeaderButton & {
+  permission?: string;
+};
+
+// =============================================================================
+// COMPONENT
 // =============================================================================
 
 export default function BankAccountsPage() {
+  return (
+    <Suspense
+      fallback={<GridLoading count={9} layout="list" size="md" gap="gap-4" />}
+    >
+      <BankAccountsPageContent />
+    </Suspense>
+  );
+}
+
+function BankAccountsPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { hasPermission } = usePermissions();
 
-  // Permissions
+  // ============================================================================
+  // PERMISSION FLAGS
+  // ============================================================================
+
   const canView = hasPermission(FINANCE_PERMISSIONS.BANK_ACCOUNTS.ACCESS);
   const canCreate = hasPermission(FINANCE_PERMISSIONS.BANK_ACCOUNTS.REGISTER);
   const canEdit = hasPermission(FINANCE_PERMISSIONS.BANK_ACCOUNTS.MODIFY);
   const canDelete = hasPermission(FINANCE_PERMISSIONS.BANK_ACCOUNTS.REMOVE);
 
   // ============================================================================
-  // DATA
+  // FILTER STATE (synced with URL params)
   // ============================================================================
 
-  const { data, isLoading, error, refetch } = useBankAccounts();
-  const createMutation = useCreateBankAccount();
-  const updateMutation = useUpdateBankAccount();
-  const deleteMutation = useDeleteBankAccount();
+  const statusIds = useMemo(() => {
+    const raw = searchParams.get('status');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
 
-  const bankAccounts = data?.bankAccounts;
+  const typeIds = useMemo(() => {
+    const raw = searchParams.get('type');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // Sorting state (server-side)
+  const [sortBy, setSortBy] = useState<
+    'name' | 'bankName' | 'currentBalance' | 'createdAt' | 'status'
+  >('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // ============================================================================
   // STATE
   // ============================================================================
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<BankAccount | null>(null);
-  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [linkTarget, setLinkTarget] = useState<BankAccount | null>(null);
   const [linkMode, setLinkMode] = useState<'link' | 'unlink'>('link');
 
   // ============================================================================
-  // FILTERED DATA
+  // DATA: Infinite scroll + mutations
   // ============================================================================
 
-  const filteredAccounts = useMemo(() => {
-    if (!bankAccounts) return [];
-    if (!searchQuery.trim()) return bankAccounts;
+  const filters: BankAccountsFilters = useMemo(
+    () => ({
+      search: debouncedSearch || undefined,
+      status: statusIds.length === 1 ? (statusIds[0] as BankAccountStatus) : undefined,
+      accountType: typeIds.length === 1 ? (typeIds[0] as BankAccountType) : undefined,
+      sortBy,
+      sortOrder,
+    }),
+    [debouncedSearch, statusIds, typeIds, sortBy, sortOrder]
+  );
 
-    const q = searchQuery.toLowerCase();
-    return bankAccounts.filter(account => {
-      const name = account.name?.toLowerCase() ?? '';
-      const bankName = account.bankName?.toLowerCase() ?? '';
-      const agency = account.agency?.toLowerCase() ?? '';
-      const accountNumber = account.accountNumber?.toLowerCase() ?? '';
-      return (
-        name.includes(q) ||
-        bankName.includes(q) ||
-        agency.includes(q) ||
-        accountNumber.includes(q)
-      );
-    });
-  }, [bankAccounts, searchQuery]);
+  const {
+    bankAccounts,
+    total,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useBankAccountsInfinite(filters);
+
+  const createMutation = useCreateBankAccount();
+  const updateMutation = useUpdateBankAccount();
+  const deleteMutation = useDeleteBankAccount();
+
+  // ============================================================================
+  // INFINITE SCROLL SENTINEL
+  // ============================================================================
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      observerEntries => {
+        if (
+          observerEntries[0].isIntersecting &&
+          hasNextPage &&
+          !isFetchingNextPage
+        ) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // ============================================================================
+  // URL FILTER HELPERS
+  // ============================================================================
+
+  const buildFilterUrl = useCallback(
+    (params: { status?: string[]; type?: string[] }) => {
+      const parts: string[] = [];
+      const sts = params.status !== undefined ? params.status : statusIds;
+      const typ = params.type !== undefined ? params.type : typeIds;
+      if (sts.length > 0) parts.push(`status=${sts.join(',')}`);
+      if (typ.length > 0) parts.push(`type=${typ.join(',')}`);
+      return parts.length > 0
+        ? `/finance/bank-accounts?${parts.join('&')}`
+        : '/finance/bank-accounts';
+    },
+    [statusIds, typeIds]
+  );
+
+  const setStatusFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ status: ids })),
+    [router, buildFilterUrl]
+  );
+
+  const setTypeFilter = useCallback(
+    (ids: string[]) => router.push(buildFilterUrl({ type: ids })),
+    [router, buildFilterUrl]
+  );
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
 
-  const handleSearch = useCallback((value: string) => {
-    setSearchQuery(value);
-  }, []);
+  const handleContextView = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/bank-accounts/${ids[0]}`);
+    }
+  };
+
+  const handleContextEdit = (ids: string[]) => {
+    if (ids.length === 1) {
+      router.push(`/finance/bank-accounts/${ids[0]}/edit`);
+    }
+  };
+
+  const handleContextDelete = (ids: string[]) => {
+    setItemsToDelete(ids);
+    setDeleteModalOpen(true);
+  };
+
+  const handleLinkCompany = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 1) {
+        const account = bankAccounts.find(a => a.id === ids[0]);
+        if (account) {
+          setLinkTarget(account);
+          setLinkMode(account.companyId ? 'unlink' : 'link');
+          setLinkModalOpen(true);
+        }
+      }
+    },
+    [bankAccounts]
+  );
+
+  const handleDeleteConfirm = useCallback(async () => {
+    for (const id of itemsToDelete) {
+      await deleteMutation.mutateAsync(id);
+    }
+    setDeleteModalOpen(false);
+    setItemsToDelete([]);
+    toast.success(
+      itemsToDelete.length === 1
+        ? 'Conta bancária excluída com sucesso!'
+        : `${itemsToDelete.length} contas bancárias excluídas!`
+    );
+  }, [itemsToDelete, deleteMutation]);
 
   const handleCreate = useCallback(
     async (data: Parameters<typeof createMutation.mutateAsync>[0]) => {
@@ -184,68 +368,10 @@ export default function BankAccountsPage() {
     [createMutation]
   );
 
-  const handleView = useCallback(
-    (ids: string[]) => {
-      if (ids.length === 1) {
-        router.push(`/finance/bank-accounts/${ids[0]}`);
-      }
-    },
-    [router]
-  );
-
-  const handleEdit = useCallback(
-    (ids: string[]) => {
-      if (ids.length === 1) {
-        router.push(`/finance/bank-accounts/${ids[0]}`);
-      }
-    },
-    [router]
-  );
-
-  const handleDeleteRequest = useCallback(
-    (ids: string[]) => {
-      if (ids.length === 1) {
-        const account = bankAccounts?.find(a => a.id === ids[0]);
-        if (account) {
-          setDeleteTarget(account);
-          setPinModalOpen(true);
-        }
-      }
-    },
-    [bankAccounts]
-  );
-
-  const handleDeleteConfirmed = useCallback(async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.id);
-      toast.success(`Conta "${deleteTarget.name}" excluída com sucesso.`);
-      setDeleteTarget(null);
-    } catch {
-      toast.error('Erro ao excluir conta bancária.');
-    }
-  }, [deleteTarget, deleteMutation]);
-
-  const handleLinkCompany = useCallback(
-    (ids: string[]) => {
-      if (ids.length === 1) {
-        const account = bankAccounts?.find(a => a.id === ids[0]);
-        if (account) {
-          setLinkTarget(account);
-          setLinkMode(account.companyId ? 'unlink' : 'link');
-          setLinkModalOpen(true);
-        }
-      }
-    },
-    [bankAccounts]
-  );
-
   const handleLinkConfirm = useCallback(
     async (companyId: string | null) => {
       if (!linkTarget) return;
       try {
-        // companyId is excluded from UpdateBankAccountData type but the
-        // backend PATCH endpoint accepts it, so we use a type assertion.
         await updateMutation.mutateAsync({
           id: linkTarget.id,
           data: { companyId } as Parameters<
@@ -270,343 +396,430 @@ export default function BankAccountsPage() {
   // RENDER FUNCTIONS
   // ============================================================================
 
-  const renderGridCard = useCallback(
-    (item: BankAccount, isSelected: boolean) => {
-      const statusBadge = getStatusBadgeConfig(item.status);
-      const typeBadgeColor = getTypeBadgeColor();
-      const hasCompany = !!item.companyId;
+  const renderGridCard = (item: BankAccount, isSelected: boolean) => {
+    const hasCompany = !!item.companyId;
 
-      const customActions: ContextMenuAction[] = [];
+    const customActions: ContextMenuAction[] = [];
 
-      if (canEdit) {
-        customActions.push({
-          id: hasCompany ? 'unlink-company' : 'link-company',
-          label: hasCompany ? 'Desvincular Empresa' : 'Vincular Empresa',
-          icon: hasCompany ? Unlink : Link2,
-          onClick: handleLinkCompany,
-          separator: 'before',
-        });
-      }
+    if (canEdit) {
+      customActions.push({
+        id: hasCompany ? 'unlink-company' : 'link-company',
+        label: hasCompany ? 'Desvincular Empresa' : 'Vincular Empresa',
+        icon: hasCompany ? Unlink : Link2,
+        onClick: handleLinkCompany,
+        separator: 'before',
+      });
+    }
 
-      if (canDelete) {
-        customActions.push({
-          id: 'delete',
-          label: 'Excluir',
-          icon: undefined,
-          onClick: handleDeleteRequest,
-          variant: 'destructive',
-          separator: 'before',
-        });
-      }
+    if (canDelete) {
+      customActions.push({
+        id: 'delete',
+        label: 'Excluir',
+        icon: Trash2,
+        onClick: handleContextDelete,
+        variant: 'destructive',
+        separator: 'before',
+      });
+    }
 
-      return (
-        <EntityContextMenu
-          itemId={item.id}
-          onView={canView ? handleView : undefined}
-          onEdit={canEdit ? handleEdit : undefined}
-          actions={customActions}
-        >
-          <EntityCard
-            id={item.id}
-            variant="grid"
-            title={item.name}
-            subtitle={
-              item.bankName
-                ? `${item.bankCode} - ${item.bankName}`
-                : item.bankCode
-            }
-            icon={Landmark}
-            iconBgStyle={{
-              background: `linear-gradient(135deg, ${item.color || '#3b82f6'}, ${item.color || '#3b82f6'}dd)`,
-            }}
-            badges={[
-              {
-                label:
-                  BANK_ACCOUNT_TYPE_LABELS[item.accountType] ??
-                  item.accountType,
-                variant: 'outline',
-                color: typeBadgeColor,
-              },
-              {
-                label: BANK_ACCOUNT_STATUS_LABELS[item.status] ?? item.status,
-                variant: statusBadge.variant,
-                color: statusBadge.color,
-              },
-              ...(item.isDefault
-                ? [
-                    {
-                      label: 'Padrão',
-                      variant: 'outline' as const,
-                      color:
-                        'bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-500/20',
-                    },
-                  ]
-                : []),
-            ]}
-            metadata={
-              <div className="flex flex-col gap-1 text-xs">
-                <div className="flex items-center gap-4">
-                  <span className="font-mono">
-                    Ag: {item.agency}
-                    {item.agencyDigit ? `-${item.agencyDigit}` : ''}
-                  </span>
-                  <span className="font-mono">
-                    Cc: {item.accountNumber}
-                    {item.accountDigit ? `-${item.accountDigit}` : ''}
-                  </span>
-                </div>
-                {item.companyName && (
-                  <span className="flex items-center gap-1 text-muted-foreground">
-                    <Building2 className="h-3 w-3" />
-                    {item.companyName}
-                  </span>
-                )}
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
+        actions={customActions}
+      >
+        <EntityCard
+          id={item.id}
+          variant="grid"
+          title={item.name}
+          subtitle={
+            item.bankName
+              ? `${item.bankCode} - ${item.bankName}`
+              : item.bankCode
+          }
+          icon={Landmark}
+          iconBgStyle={{
+            background: `linear-gradient(135deg, ${item.color || '#3b82f6'}, ${item.color || '#3b82f6'}dd)`,
+          }}
+          badges={[
+            {
+              label:
+                BANK_ACCOUNT_TYPE_LABELS[item.accountType] ??
+                item.accountType,
+              variant: 'outline',
+              color: getTypeBadgeColor(),
+            },
+            {
+              label: BANK_ACCOUNT_STATUS_LABELS[item.status] ?? item.status,
+              variant: 'outline',
+              color: getStatusColor(item.status),
+            },
+            ...(item.isDefault
+              ? [
+                  {
+                    label: 'Padrão',
+                    variant: 'outline' as const,
+                    color:
+                      'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
+                  },
+                ]
+              : []),
+          ]}
+          footer={{
+            type: 'single',
+            button: {
+              icon: DollarSign,
+              label: formatCurrency(item.currentBalance),
+              onClick: () => {},
+              color: 'secondary',
+            },
+          }}
+          metadata={
+            <div className="flex flex-col gap-1 text-xs">
+              <div className="flex items-center gap-4">
+                <span className="font-mono">
+                  Ag: {item.agency}
+                  {item.agencyDigit ? `-${item.agencyDigit}` : ''}
+                </span>
+                <span className="font-mono">
+                  Cc: {item.accountNumber}
+                  {item.accountDigit ? `-${item.accountDigit}` : ''}
+                </span>
               </div>
-            }
-            isSelected={isSelected}
-            showSelection={false}
-            clickable={false}
-            createdAt={item.createdAt}
-            updatedAt={item.updatedAt}
-            showStatusBadges={true}
-          />
-        </EntityContextMenu>
-      );
-    },
-    [
-      canView,
-      canEdit,
-      canDelete,
-      handleView,
-      handleEdit,
-      handleDeleteRequest,
-      handleLinkCompany,
-    ]
-  );
+              {item.companyName && (
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Building2 className="h-3 w-3" />
+                  {item.companyName}
+                </span>
+              )}
+            </div>
+          }
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={false}
+        />
+      </EntityContextMenu>
+    );
+  };
 
-  const renderListCard = useCallback(
-    (item: BankAccount, isSelected: boolean) => {
-      const statusBadge = getStatusBadgeConfig(item.status);
-      const typeBadgeColor = getTypeBadgeColor();
-      const hasCompany = !!item.companyId;
+  const renderListCard = (item: BankAccount, isSelected: boolean) => {
+    const hasCompany = !!item.companyId;
 
-      const customActions: ContextMenuAction[] = [];
+    const customActions: ContextMenuAction[] = [];
 
-      if (canEdit) {
-        customActions.push({
-          id: hasCompany ? 'unlink-company' : 'link-company',
-          label: hasCompany ? 'Desvincular Empresa' : 'Vincular Empresa',
-          icon: hasCompany ? Unlink : Link2,
-          onClick: handleLinkCompany,
-          separator: 'before',
-        });
-      }
+    if (canEdit) {
+      customActions.push({
+        id: hasCompany ? 'unlink-company' : 'link-company',
+        label: hasCompany ? 'Desvincular Empresa' : 'Vincular Empresa',
+        icon: hasCompany ? Unlink : Link2,
+        onClick: handleLinkCompany,
+        separator: 'before',
+      });
+    }
 
-      if (canDelete) {
-        customActions.push({
-          id: 'delete',
-          label: 'Excluir',
-          icon: undefined,
-          onClick: handleDeleteRequest,
-          variant: 'destructive',
-          separator: 'before',
-        });
-      }
+    if (canDelete) {
+      customActions.push({
+        id: 'delete',
+        label: 'Excluir',
+        icon: Trash2,
+        onClick: handleContextDelete,
+        variant: 'destructive',
+        separator: 'before',
+      });
+    }
 
-      return (
-        <EntityContextMenu
-          itemId={item.id}
-          onView={canView ? handleView : undefined}
-          onEdit={canEdit ? handleEdit : undefined}
-          actions={customActions}
-        >
-          <EntityCard
-            id={item.id}
-            variant="list"
-            title={item.name}
-            subtitle={
-              item.bankName
-                ? `${item.bankCode} - ${item.bankName}`
-                : item.bankCode
-            }
-            icon={Landmark}
-            iconBgStyle={{
-              background: `linear-gradient(135deg, ${item.color || '#3b82f6'}, ${item.color || '#3b82f6'}dd)`,
-            }}
-            badges={[
-              {
-                label:
-                  BANK_ACCOUNT_TYPE_LABELS[item.accountType] ??
-                  item.accountType,
-                variant: 'outline',
-                color: typeBadgeColor,
-              },
-              {
-                label: BANK_ACCOUNT_STATUS_LABELS[item.status] ?? item.status,
-                variant: statusBadge.variant,
-                color: statusBadge.color,
-              },
-              ...(item.isDefault
-                ? [
-                    {
-                      label: 'Padrão',
-                      variant: 'outline' as const,
-                      color:
-                        'bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-500/20',
-                    },
-                  ]
-                : []),
-            ]}
-            metadata={
-              <span className="font-mono text-xs">
+    const listBadges: {
+      label: string;
+      variant: 'outline';
+      color: string;
+    }[] = [
+      {
+        label:
+          BANK_ACCOUNT_TYPE_LABELS[item.accountType] ?? item.accountType,
+        variant: 'outline',
+        color: getTypeBadgeColor(),
+      },
+      {
+        label: BANK_ACCOUNT_STATUS_LABELS[item.status] ?? item.status,
+        variant: 'outline',
+        color: getStatusColor(item.status),
+      },
+      ...(item.isDefault
+        ? [
+            {
+              label: 'Padrão',
+              variant: 'outline' as const,
+              color:
+                'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
+            },
+          ]
+        : []),
+    ];
+
+    return (
+      <EntityContextMenu
+        itemId={item.id}
+        onView={canView ? handleContextView : undefined}
+        onEdit={canEdit ? handleContextEdit : undefined}
+        actions={customActions}
+      >
+        <EntityCard
+          id={item.id}
+          variant="list"
+          title={item.name}
+          icon={Landmark}
+          iconBgStyle={{
+            background: `linear-gradient(135deg, ${item.color || '#3b82f6'}, ${item.color || '#3b82f6'}dd)`,
+          }}
+          metadata={
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {listBadges.map((badge, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border shrink-0',
+                    badge.color
+                  )}
+                >
+                  {badge.label}
+                </span>
+              ))}
+              <span className="font-mono text-xs text-muted-foreground ml-1">
                 Ag: {item.agency}
                 {item.agencyDigit ? `-${item.agencyDigit}` : ''} | Cc:{' '}
                 {item.accountNumber}
                 {item.accountDigit ? `-${item.accountDigit}` : ''}
                 {item.companyName ? ` | ${item.companyName}` : ''}
               </span>
-            }
-            isSelected={isSelected}
-            showSelection={false}
-            clickable={false}
-            createdAt={item.createdAt}
-            updatedAt={item.updatedAt}
-            showStatusBadges={true}
-          />
-        </EntityContextMenu>
-      );
-    },
-    [
-      canView,
-      canEdit,
-      canDelete,
-      handleView,
-      handleEdit,
-      handleDeleteRequest,
-      handleLinkCompany,
-    ]
-  );
+            </div>
+          }
+          isSelected={isSelected}
+          showSelection={false}
+          clickable={false}
+          createdAt={item.createdAt}
+          updatedAt={item.updatedAt}
+          showStatusBadges={false}
+        >
+          {/* Right zone: balance */}
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-sm font-semibold font-mono text-gray-900 dark:text-white">
+              {formatCurrency(item.currentBalance)}
+            </span>
+            {item.bankName && (
+              <span className="text-xs text-muted-foreground">
+                {item.bankName}
+              </span>
+            )}
+          </div>
+        </EntityCard>
+      </EntityContextMenu>
+    );
+  };
 
   // ============================================================================
-  // HEADER BUTTONS
+  // COMPUTED VALUES
   // ============================================================================
 
-  const actionButtons = useMemo(() => {
-    const buttons = [];
+  const initialIds = useMemo(() => bankAccounts.map(a => a.id), [bankAccounts]);
 
-    if (canCreate) {
-      buttons.push({
+  // ============================================================================
+  // HEADER BUTTONS CONFIGURATION (permission-aware)
+  // ============================================================================
+
+  const handleCreateClick = useCallback(() => {
+    setCreateModalOpen(true);
+  }, []);
+
+  const actionButtons = useMemo<ActionButtonWithPermission[]>(
+    () => [
+      {
         id: 'create-bank-account',
         title: 'Nova Conta Bancária',
         icon: Plus,
-        onClick: () => setCreateModalOpen(true),
-        variant: 'default' as const,
-      });
-    }
+        onClick: handleCreateClick,
+        variant: 'default',
+        permission: FINANCE_PERMISSIONS.BANK_ACCOUNTS.REGISTER,
+      },
+    ],
+    [handleCreateClick]
+  );
 
-    return buttons;
-  }, [canCreate]);
+  const visibleActionButtons = useMemo<HeaderButton[]>(
+    () =>
+      actionButtons
+        .filter(button =>
+          button.permission ? hasPermission(button.permission) : true
+        )
+        .map(({ permission, ...button }) => button),
+    [actionButtons, hasPermission]
+  );
 
   // ============================================================================
   // RENDER
   // ============================================================================
 
   return (
-    <PageLayout>
-      <PageHeader>
-        <PageActionBar
-          breadcrumbItems={[
-            { label: 'Financeiro', href: '/finance' },
-            { label: 'Contas Bancárias', href: '/finance/bank-accounts' },
-          ]}
-          buttons={actionButtons}
-        />
-
-        <Header
-          title="Contas Bancárias"
-          description="Gerencie as contas bancárias da empresa"
-        />
-      </PageHeader>
-
-      <PageBody>
-        {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          placeholder={bankAccountsConfig.display.labels.searchPlaceholder}
-          onSearch={handleSearch}
-          onClear={() => handleSearch('')}
-          showClear={true}
-          size="md"
-        />
-
-        {/* Grid */}
-        {isLoading ? (
-          <GridLoading count={6} layout="grid" size="md" gap="gap-4" />
-        ) : error ? (
-          <GridError
-            type="server"
-            title="Erro ao carregar contas bancárias"
-            message="Ocorreu um erro ao tentar carregar as contas bancárias. Por favor, tente novamente."
-            action={{
-              label: 'Tentar Novamente',
-              onClick: () => {
-                refetch();
-              },
-            }}
+    <CoreProvider
+      selection={{
+        namespace: 'bank-accounts',
+        initialIds,
+      }}
+    >
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar
+            breadcrumbItems={[
+              { label: 'Financeiro', href: '/finance' },
+              { label: 'Contas Bancárias', href: '/finance/bank-accounts' },
+            ]}
+            buttons={visibleActionButtons}
           />
-        ) : (
-          <EntityGrid
-            config={bankAccountsConfig}
-            items={filteredAccounts}
-            renderGridItem={renderGridCard}
-            renderListItem={renderListCard}
-            isLoading={isLoading}
-            isSearching={!!searchQuery}
-            onItemDoubleClick={item => {
-              if (canView) {
-                router.push(`/finance/bank-accounts/${item.id}`);
-              }
-            }}
-            showSorting={true}
-            defaultSortField="name"
-            defaultSortDirection="asc"
+
+          <Header
+            title="Contas Bancárias"
+            description="Gerencie as contas bancárias da empresa"
           />
-        )}
+        </PageHeader>
 
-        {/* Create Wizard */}
-        <CreateBankAccountWizard
-          open={createModalOpen}
-          onOpenChange={setCreateModalOpen}
-          onSubmit={handleCreate}
-          isSubmitting={createMutation.isPending}
-        />
+        <PageBody>
+          {/* Search Bar */}
+          <SearchBar
+            placeholder={bankAccountsConfig.display.labels.searchPlaceholder}
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            showClear={true}
+            size="md"
+          />
 
-        {/* Delete Confirmation via PIN */}
-        <VerifyActionPinModal
-          isOpen={pinModalOpen}
-          onClose={() => {
-            setPinModalOpen(false);
-            setDeleteTarget(null);
-          }}
-          onSuccess={handleDeleteConfirmed}
-          title="Confirmar Exclusão"
-          description={`Digite seu PIN de ação para excluir a conta "${deleteTarget?.name ?? ''}". Esta ação não pode ser desfeita.`}
-        />
+          {/* Grid */}
+          {isLoading ? (
+            <GridLoading count={9} layout="list" size="md" gap="gap-4" />
+          ) : error ? (
+            <GridError
+              type="server"
+              title="Erro ao carregar contas bancárias"
+              message="Ocorreu um erro ao tentar carregar as contas bancárias. Por favor, tente novamente."
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
+            />
+          ) : (
+            <>
+              <EntityGrid
+                config={bankAccountsConfig}
+                items={bankAccounts}
+                showItemCount={false}
+                toolbarStart={
+                  <>
+                    <FilterDropdown
+                      label="Status"
+                      icon={Landmark}
+                      options={STATUS_OPTIONS}
+                      selected={statusIds}
+                      onSelectionChange={setStatusFilter}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar status..."
+                      emptyText="Nenhum status encontrado."
+                    />
+                    <FilterDropdown
+                      label="Tipo"
+                      icon={Building2}
+                      options={TYPE_OPTIONS}
+                      selected={typeIds}
+                      onSelectionChange={setTypeFilter}
+                      activeColor="cyan"
+                      searchPlaceholder="Buscar tipo..."
+                      emptyText="Nenhum tipo encontrado."
+                    />
+                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                      {total} {total === 1 ? 'conta' : 'contas'}
+                      {bankAccounts.length < total &&
+                        ` (${bankAccounts.length} carregadas)`}
+                    </p>
+                  </>
+                }
+                renderGridItem={renderGridCard}
+                renderListItem={renderListCard}
+                isLoading={isLoading}
+                isSearching={!!debouncedSearch}
+                onItemDoubleClick={item =>
+                  router.push(`/finance/bank-accounts/${item.id}`)
+                }
+                showSorting={true}
+                defaultSortField="name"
+                defaultSortDirection="asc"
+                onSortChange={(field, direction) => {
+                  if (field !== 'custom') {
+                    setSortBy(
+                      field as
+                        | 'name'
+                        | 'bankName'
+                        | 'currentBalance'
+                        | 'createdAt'
+                        | 'status'
+                    );
+                    setSortOrder(direction);
+                  }
+                }}
+              />
 
-        {/* Link/Unlink Company Modal */}
-        <LinkCompanyModal
-          isOpen={linkModalOpen}
-          onClose={() => {
-            setLinkModalOpen(false);
-            setLinkTarget(null);
-          }}
-          onConfirm={handleLinkConfirm}
-          currentCompanyId={linkTarget?.companyId}
-          currentCompanyName={linkTarget?.companyName}
-          mode={linkMode}
-          isLoading={updateMutation.isPending}
-        />
-      </PageBody>
-    </PageLayout>
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Create Wizard */}
+          <CreateBankAccountWizard
+            open={createModalOpen}
+            onOpenChange={setCreateModalOpen}
+            onSubmit={handleCreate}
+            isSubmitting={createMutation.isPending}
+          />
+
+          {/* Delete PIN Confirmation Modal */}
+          <VerifyActionPinModal
+            isOpen={deleteModalOpen}
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setItemsToDelete([]);
+            }}
+            onSuccess={handleDeleteConfirm}
+            title="Confirmar Exclusão"
+            description={
+              itemsToDelete.length === 1
+                ? 'Digite seu PIN de Ação para confirmar a exclusão desta conta bancária. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de Ação para excluir ${itemsToDelete.length} contas bancárias. Esta ação não pode ser desfeita.`
+            }
+          />
+
+          {/* Link/Unlink Company Modal */}
+          <LinkCompanyModal
+            isOpen={linkModalOpen}
+            onClose={() => {
+              setLinkModalOpen(false);
+              setLinkTarget(null);
+            }}
+            onConfirm={handleLinkConfirm}
+            currentCompanyId={linkTarget?.companyId}
+            currentCompanyName={linkTarget?.companyName}
+            mode={linkMode}
+            isLoading={updateMutation.isPending}
+          />
+        </PageBody>
+      </PageLayout>
+    </CoreProvider>
   );
 }

@@ -36,4 +36,6 @@ export interface CostCentersQuery {
   companyId?: string;
   isActive?: boolean;
   includeDeleted?: boolean;
+  sortBy?: 'name' | 'code' | 'createdAt' | 'monthlyBudget' | 'annualBudget';
+  sortOrder?: 'asc' | 'desc';
 }

@@ -51,6 +51,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -107,7 +108,7 @@ function InfoRow({
   return (
     <div className="flex justify-between items-start gap-4">
       <span className="text-sm text-muted-foreground shrink-0">{label}</span>
-      <span className={`text-sm text-right ${className ?? ''}`}>{value}</span>
+      <span className={cn('text-sm text-right', className)}>{value}</span>
     </div>
   );
 }
@@ -245,9 +246,7 @@ export default function ContractDetailPage({
         title: 'Excluir',
         icon: Trash2,
         onClick: () => setDeleteModalOpen(true),
-        variant: 'default',
-        className:
-          'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+        variant: 'destructive',
       });
     }
 

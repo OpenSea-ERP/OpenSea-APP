@@ -6,11 +6,15 @@ import type {
   CreateCostCenterData,
   UpdateCostCenterData,
 } from '@/types/finance';
-import type { PaginationMeta } from '@/types/pagination';
 
 export interface CostCentersResponse {
   costCenters: CostCenter[];
-  meta: PaginationMeta;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }
 
 export interface CostCenterResponse {
@@ -30,6 +34,8 @@ export const costCentersService = {
       query.append('isActive', String(params.isActive));
     if (params?.includeDeleted)
       query.append('includeDeleted', String(params.includeDeleted));
+    if (params?.sortBy) query.append('sortBy', params.sortBy);
+    if (params?.sortOrder) query.append('sortOrder', params.sortOrder);
 
     return apiClient.get<CostCentersResponse>(
       `${API_ENDPOINTS.COST_CENTERS.LIST}?${query.toString()}`
