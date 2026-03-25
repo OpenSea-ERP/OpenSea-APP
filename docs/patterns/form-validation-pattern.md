@@ -83,13 +83,13 @@ const form = useForm({
 </form.Field>
 ```
 
-**Exibição de erro de formulário (nível global):**
+**Exibição de erro de formulário (nível global — apenas em páginas auth):**
 
 ```tsx
 {
   error && (
-    <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
-      <p className="text-sm text-red-600 dark:text-red-400 text-center">
+    <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
+      <p className="text-sm text-rose-600 dark:text-rose-400 text-center">
         {error}
       </p>
     </div>
@@ -611,50 +611,47 @@ const handleCnpjChange = async (value: string) => {
 
 ---
 
-### 11. Exibição de erros por campo
+### 11. Exibição de erros por campo (NOVO PADRAO — FormErrorIcon)
 
-**Com react-hook-form + shadcn/ui Form:**
-
-```tsx
-// FormMessage exibe automaticamente o erro do campo do react-hook-form
-<FormItem>
-  <FormLabel>Quantidade</FormLabel>
-  <FormControl>
-    <Input type="number" {...field} />
-  </FormControl>
-  <FormMessage /> {/* ex.: "Quantidade mínima é 1" */}
-</FormItem>
-```
-
-**Com EntityForm (DynamicFormField legado):**
+**Padrao atual (desde 2026-03-25) — FormErrorIcon com tooltip:**
 
 ```tsx
-// src/components/shared/forms/dynamic-form-field.tsx
-{
-  error && <p className="text-sm text-destructive">{error}</p>;
-}
+// Erro aparece como icone com tooltip — NUNCA empurra layout
+<div className="space-y-2">
+  <Label htmlFor="email">Email</Label>
+  <div className="relative">
+    <Input
+      id="email"
+      aria-invalid={!!form.formState.errors.email}
+      {...form.register('email')}
+    />
+    {form.formState.errors.email && (
+      <FormErrorIcon message={form.formState.errors.email.message ?? ''} />
+    )}
+  </div>
+</div>
 ```
+
+**Com EntityForm generico:**
+O `FormFieldWrapper` ja foi atualizado para usar `FormErrorIcon` automaticamente. Campos com `error` prop recebem o icone com tooltip.
 
 **Indicação visual de campo obrigatório:**
 
 ```tsx
-// Asterisco vermelho após o label
+// Asterisco rose após o label
 <Label htmlFor="name">
-  Nome da Variante <span className="text-red-500">*</span>
+  Nome da Variante <span className="text-[rgb(var(--color-destructive))]">*</span>
 </Label>
 ```
 
-**Erro de formulário (banner global):**
+**Erro de formulário (banner global — APENAS em páginas auth):**
 
 ```tsx
 {
-  /* Usado em formulários manuais, como VariantForm */
-}
-{
   error && (
-    <div className="flex gap-3 p-4 rounded-lg bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-900">
-      <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
-      <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+    <div className="flex gap-3 p-4 rounded-lg bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900">
+      <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
+      <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
     </div>
   );
 }
@@ -765,6 +762,16 @@ try {
 
 | Arquivo                                                                                                  | Descrição                                                                                                   |
 | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `src/components/ui/form-error-icon.tsx`                                                                  | **ERROR HANDLING** — Icone ⚠ com tooltip rose no campo (zero layout impact)                                 |
+| `src/components/ui/section-error-badge.tsx`                                                              | **ERROR HANDLING** — Badge de contagem de erros na secao                                                    |
+| `src/components/ui/form-error-report-modal.tsx`                                                          | **ERROR HANDLING** — Modal relatorio com lista clicavel de erros                                            |
+| `src/components/ui/password-strength-checklist.tsx`                                                      | **ERROR HANDLING** — Checklist de criterios de senha em tempo real                                          |
+| `src/hooks/use-form-error-handler.ts`                                                                    | **ERROR HANDLING** — Hook que mapeia erro API → campo do form (4 niveis de fallback)                        |
+| `src/hooks/use-uniqueness-check.ts`                                                                      | **ERROR HANDLING** — Hook de validacao de unicidade on blur com debounce                                    |
+| `src/hooks/use-go-to-field.ts`                                                                           | **ERROR HANDLING** — Hook de scroll + highlight ao clicar no relatorio                                      |
+| `src/lib/i18n/index.ts`                                                                                  | **I18N** — Engine de traducao com `t()` function e interpolacao                                             |
+| `src/lib/i18n/locales/pt-BR.ts`                                                                         | **I18N** — Todas as mensagens de erro em portugues formal                                                   |
+| `src/app/(dashboard)/(modules)/admin/(entities)/users/src/modals/create-modal.tsx`                       | **REFERENCIA** — Implementacao canonica do novo error handling                                              |
 | `src/core/forms/components/entity-form.tsx`                                                              | EntityForm genérico (principal — react-hook-form interno)                                                   |
 | `src/core/forms/components/entity-form-field.tsx`                                                        | Despacho de tipo de campo → componente especializado                                                        |
 | `src/core/forms/components/entity-form-validation.ts`                                                    | validateRequiredFields, showValidationErrors, buildDefaultValues                                            |
@@ -793,6 +800,175 @@ try {
 ---
 
 ## Rules
+
+### OBRIGATORIO: Error Handling System (desde 2026-03-25)
+
+Todo formulario novo DEVE seguir este sistema de error handling. Nao usar toast para erros de campo. Nao usar mensagens inline que empurram layout.
+
+#### Arquitetura de 3 camadas
+
+| Camada | Componente | O que mostra | Quando |
+|--------|-----------|-------------|--------|
+| **Campo** | `FormErrorIcon` | Borda rose (`aria-invalid`) + icone ⚠ no canto direito + tooltip com mensagem | Erros vinculados a um campo |
+| **Secao** | `SectionErrorBadge` | Badge rose com contagem de erros no header da secao | Quando ha erros em campos daquela secao |
+| **Toast** | Sonner (redesenhado) | Notificacao solida com degrade | APENAS erros sem campo: rede, servidor, auth, permissao |
+
+#### Quando validar
+
+- **Submit** → validacao completa (primeira vez) via `mode: 'onSubmit'`
+- **Revalidacao** → `reValidateMode: 'onChange'` (campo corrigido limpa erro em tempo real)
+- **Campos unicos** → On blur com debounce (300ms) via `useUniquenessCheck`: CNPJ, CPF, nome, SKU, email, username
+- **Senha** → `PasswordStrengthChecklist` em tempo real (on change)
+
+#### Exemplo completo: formulario com react-hook-form + zod + error handling
+
+```tsx
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PasswordStrengthChecklist, isPasswordStrong } from '@/components/ui/password-strength-checklist';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
+import { t } from '@/lib/i18n';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+// 1. Schema Zod com mensagens i18n
+const schema = z.object({
+  name: z.string().min(2, t('validation.minLength', { field: 'Nome', min: 2 })),
+  email: z.string().email(t('validation.email')),
+  password: z.string().min(8, t('validation.minLength', { field: 'Senha', min: 8 })),
+});
+type FormData = z.infer<typeof schema>;
+
+// 2. useForm com onSubmit + reValidateMode onChange
+const form = useForm<FormData>({
+  resolver: zodResolver(schema),
+  mode: 'onSubmit',
+  reValidateMode: 'onChange',
+  defaultValues: { name: '', email: '', password: '' },
+});
+
+// 3. useFormErrorHandler para mapear erros da API para campos
+const { handleError } = useFormErrorHandler({
+  form,
+  fieldMap: {
+    'Email already exists': 'email',     // fallback se backend nao enviar field
+    'Name already exists': 'name',
+  },
+});
+
+// 4. Password watch para checklist em tempo real
+const password = form.watch('password');
+
+// 5. Submit handler
+const onSubmit = async (data: FormData) => {
+  if (!isPasswordStrong(data.password)) {
+    form.setError('password', { type: 'manual', message: t('auth.passwordNotStrong') });
+    return;
+  }
+  try {
+    await createEntity(data);
+  } catch (error) {
+    handleError(error);  // mapeia para campos ou faz toast
+  }
+};
+
+// 6. JSX — campo com FormErrorIcon (NUNCA mensagem inline)
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <div className="space-y-2">
+    <Label htmlFor="email">Email</Label>
+    <div className="relative">
+      <Input
+        id="email"
+        type="email"
+        placeholder="joao@exemplo.com"
+        aria-invalid={!!form.formState.errors.email}
+        {...form.register('email')}
+      />
+      {form.formState.errors.email && (
+        <FormErrorIcon message={form.formState.errors.email.message ?? ''} />
+      )}
+    </div>
+  </div>
+
+  {/* Campo de senha com PasswordStrengthChecklist */}
+  <div className="space-y-2">
+    <Label htmlFor="password">Senha</Label>
+    <div className="relative">
+      <Input
+        id="password"
+        type="password"
+        aria-invalid={!!form.formState.errors.password}
+        {...form.register('password')}
+      />
+      {form.formState.errors.password && (
+        <FormErrorIcon message={form.formState.errors.password.message ?? ''} />
+      )}
+    </div>
+    <PasswordStrengthChecklist password={password} />
+  </div>
+</form>
+```
+
+#### Exemplo: validacao de unicidade on blur
+
+```tsx
+import { useUniquenessCheck } from '@/hooks/use-uniqueness-check';
+
+const { onBlur: checkEmail } = useUniquenessCheck({
+  form,
+  field: 'email',
+  fieldLabel: 'E-mail',
+  checkFn: async (value) => {
+    const res = await usersService.checkEmail(value);
+    return res.available; // true = disponivel, false = ja em uso
+  },
+});
+
+<Input
+  {...form.register('email')}
+  onBlur={(e) => {
+    form.register('email').onBlur(e); // react-hook-form onBlur
+    checkEmail();                      // uniqueness check
+  }}
+/>
+```
+
+#### Regras de error handling
+
+1. **NUNCA usar toast para erros de campo** — toast so para erros sem campo (rede, servidor, auth)
+2. **NUNCA usar mensagem inline abaixo do campo** — usa `FormErrorIcon` (tooltip) para nao empurrar layout
+3. **SEMPRE usar `aria-invalid`** no Input quando ha erro — ativa borda rose via CSS
+4. **SEMPRE usar `useFormErrorHandler`** no `onError` de mutations — mapeia erros da API para campos
+5. **SEMPRE usar `PasswordStrengthChecklist`** em campos de senha (criar usuario, registro, reset password)
+6. **SEMPRE usar `t()` do i18n** para mensagens de erro — nunca hardcoded (prepara para internacionalizacao)
+7. **Campos unicos** (CNPJ, CPF, email, username, nome) devem usar `useUniquenessCheck` on blur
+8. **Error banners** em paginas auth usam `rose` (nao red): `bg-rose-500/10 border-rose-500/30 text-rose-600`
+
+#### Componentes disponiveis
+
+| Componente | Arquivo | Funcao |
+|-----------|---------|--------|
+| `FormErrorIcon` | `src/components/ui/form-error-icon.tsx` | Icone ⚠ com tooltip no campo |
+| `SectionErrorBadge` | `src/components/ui/section-error-badge.tsx` | Badge de contagem de erros na secao |
+| `FormErrorReportModal` | `src/components/ui/form-error-report-modal.tsx` | Modal com lista clicavel de todos os erros |
+| `PasswordStrengthChecklist` | `src/components/ui/password-strength-checklist.tsx` | Checklist de criterios de senha em tempo real |
+| `useFormErrorHandler` | `src/hooks/use-form-error-handler.ts` | Mapeia erro API → campo do form |
+| `useUniquenessCheck` | `src/hooks/use-uniqueness-check.ts` | Validacao de unicidade on blur com debounce |
+| `useGoToField` | `src/hooks/use-go-to-field.ts` | Scroll + highlight ao clicar no relatorio |
+| `t()` | `src/lib/i18n/index.ts` | Traducao com interpolacao: `t('validation.required', { field: 'Nome' })` |
+
+#### Referencia de implementacao
+
+O modal `CreateModal` de users e a referencia canonica:
+`src/app/(dashboard)/(modules)/admin/(entities)/users/src/modals/create-modal.tsx`
+
+---
 
 ### Quando usar cada abordagem
 
