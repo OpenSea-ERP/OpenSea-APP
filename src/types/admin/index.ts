@@ -1,3 +1,4 @@
+export * from './api-usage.types';
 export * from './catalog.types';
 export * from './dashboard.types';
 export * from './monitoring.types';

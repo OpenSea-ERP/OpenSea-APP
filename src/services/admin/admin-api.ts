@@ -2,6 +2,7 @@ import { API_ENDPOINTS } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
 import type {
   AiUsageReport,
+  ApiUsageReport,
   CentralUser,
   IntegrationStatusReport,
   RevenueMetrics,
@@ -499,6 +500,14 @@ export const adminApi = {
       API_ENDPOINTS.ADMIN.MONITORING.AI_USAGE
     );
     return response as AiUsageReport;
+  },
+
+  getApiUsageReport: async (period?: string) => {
+    const params = period ? `?period=${period}` : '';
+    const response = await apiClient.get<unknown>(
+      `${API_ENDPOINTS.ADMIN.MONITORING.API_USAGE}${params}`
+    );
+    return response as ApiUsageReport;
   },
 
   getRevenueMetrics: async () => {

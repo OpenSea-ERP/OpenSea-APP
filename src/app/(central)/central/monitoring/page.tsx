@@ -440,6 +440,47 @@ export default function MonitoringDashboardPage() {
         </div>
       </CentralCard>
 
+      {/* API Consumption link */}
+      <CentralCard
+        hover
+        className="p-5 cursor-pointer"
+        onClick={() => router.push('/central/monitoring/api-consumption')}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="flex items-center justify-center w-9 h-9 rounded-lg"
+              style={{
+                backgroundColor: 'rgba(16,185,129,0.1)',
+                color: '#10b981',
+              }}
+            >
+              <Activity className="h-4 w-4" />
+            </div>
+            <div>
+              <p
+                className="text-sm font-semibold"
+                style={{ color: 'var(--central-text-primary)' }}
+              >
+                Consumo de APIs
+              </p>
+              <p
+                className="text-xs"
+                style={{ color: 'var(--central-text-secondary)' }}
+              >
+                Consumo e custos de todas as APIs externas por tenant
+              </p>
+            </div>
+          </div>
+          <span
+            className="text-xs font-medium"
+            style={{ color: 'var(--central-accent)' }}
+          >
+            Ver relatório
+          </span>
+        </div>
+      </CentralCard>
+
       {/* Support Metrics */}
       <CentralCard className="p-5">
         <div className="flex items-center justify-between mb-4">

@@ -33,6 +33,8 @@ export const adminKeys = {
   integrationStatus: () =>
     [...adminKeys.all, 'monitoring', 'integrations'] as const,
   aiUsage: () => [...adminKeys.all, 'monitoring', 'ai-usage'] as const,
+  apiUsage: (period?: string) =>
+    [...adminKeys.all, 'monitoring', 'api-usage', period] as const,
   revenueMetrics: () => [...adminKeys.all, 'monitoring', 'revenue'] as const,
   // Team
   centralUsers: (role?: string) => [...adminKeys.all, 'team', role] as const,
@@ -485,6 +487,14 @@ export function useAiUsageReport() {
   return useQuery({
     queryKey: adminKeys.aiUsage(),
     queryFn: () => adminApi.getAiUsageReport(),
+    retry: 1,
+  });
+}
+
+export function useApiUsageReport(period?: string) {
+  return useQuery({
+    queryKey: adminKeys.apiUsage(period),
+    queryFn: () => adminApi.getApiUsageReport(period),
     retry: 1,
   });
 }
