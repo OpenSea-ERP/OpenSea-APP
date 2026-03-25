@@ -31,6 +31,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { InlineBankAccountForm } from './inline-bank-account-form';
 import { InlineCategoryForm } from './inline-category-form';
 import { InlineCreateModal } from './inline-create-modal';
+import { InlineCostCenterForm } from './inline-cost-center-form';
 import { InlineSupplierForm } from './inline-supplier-form';
 import { PayableBatchTable } from './payable-batch-table';
 import type { PayableWizardData } from './payable-wizard-modal';
@@ -60,8 +61,8 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-4 py-2.5 px-3">
-      <div className="w-[140px] shrink-0">
+    <div className="flex items-start gap-4 py-1.5">
+      <div className="w-[130px] shrink-0 pt-1.5">
         <span className="text-sm text-muted-foreground">
           {label}
           {required && <span className="text-rose-500 ml-0.5">*</span>}
@@ -79,11 +80,11 @@ function Row({
 
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 py-2 px-3">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+    <div className="flex items-center gap-3 pt-3 pb-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
         {label}
       </span>
-      <div className="flex-1 border-b border-border/50" />
+      <div className="flex-1 border-b border-border/40" />
     </div>
   );
 }
@@ -109,6 +110,7 @@ export function PayableStepDetails({
 function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
   const [showSupplierCreate, setShowSupplierCreate] = useState(false);
   const [showCategoryCreate, setShowCategoryCreate] = useState(false);
+  const [showCostCenterCreate, setShowCostCenterCreate] = useState(false);
   const [showBankAccountCreate, setShowBankAccountCreate] = useState(false);
   const [tagInput, setTagInput] = useState('');
 
@@ -226,8 +228,8 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="overflow-y-auto max-h-[420px]">
-      <div className="rounded-xl border border-border overflow-hidden divide-y divide-border/50">
+    <div className="space-y-1">
+      <div>
         {/* ============================================================= */}
         {/* IDENTIFICAÇÃO                                                  */}
         {/* ============================================================= */}
@@ -326,24 +328,35 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
         </Row>
 
         <Row label="Centro de Custo">
-          <Select
-            value={data.costCenterId}
-            onValueChange={(val) => {
-              const cc = costCenters.find((c) => c.id === val);
-              onChange({ costCenterId: val, costCenterName: cc?.name ?? '' });
-            }}
-          >
-            <SelectTrigger className="h-8">
-              <SelectValue placeholder="Opcional" />
-            </SelectTrigger>
-            <SelectContent>
-              {costCenters.map((cc) => (
-                <SelectItem key={cc.id} value={cc.id}>
-                  {cc.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-1.5">
+            <Select
+              value={data.costCenterId}
+              onValueChange={(val) => {
+                const cc = costCenters.find((c) => c.id === val);
+                onChange({ costCenterId: val, costCenterName: cc?.name ?? '' });
+              }}
+            >
+              <SelectTrigger className="flex-1 h-8">
+                <SelectValue placeholder="Opcional" />
+              </SelectTrigger>
+              <SelectContent>
+                {costCenters.map((cc) => (
+                  <SelectItem key={cc.id} value={cc.id}>
+                    {cc.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setShowCostCenterCreate(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </Row>
 
         {/* ============================================================= */}
@@ -566,6 +579,23 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
             });
           }}
           onCancel={() => setShowCategoryCreate(false)}
+        />
+      </InlineCreateModal>
+
+      <InlineCreateModal
+        open={showCostCenterCreate}
+        onOpenChange={setShowCostCenterCreate}
+        title="Novo Centro de Custo"
+      >
+        <InlineCostCenterForm
+          onCreated={(costCenter) => {
+            setShowCostCenterCreate(false);
+            onChange({
+              costCenterId: costCenter.id,
+              costCenterName: costCenter.name,
+            });
+          }}
+          onCancel={() => setShowCostCenterCreate(false)}
         />
       </InlineCreateModal>
 
