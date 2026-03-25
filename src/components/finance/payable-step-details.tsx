@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Popover,
   PopoverContent,
@@ -27,18 +26,7 @@ import { useLastSupplierEntry } from '@/hooks/finance/use-ocr';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  Barcode,
-  CalendarIcon,
-  DollarSign,
-  FileText,
-  Landmark,
-  Lightbulb,
-  Plus,
-  Tag,
-  X,
-  Zap,
-} from 'lucide-react';
+import { CalendarIcon, Plus, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { InlineBankAccountForm } from './inline-bank-account-form';
 import { InlineCategoryForm } from './inline-category-form';
@@ -57,41 +45,48 @@ interface PayableStepDetailsProps {
 }
 
 // =============================================================================
-// SECTION HEADER (matches finance edit page pattern)
+// PROPERTY ROW — label left, field right
 // =============================================================================
 
-function SectionHeader({
-  icon: Icon,
-  title,
-  subtitle,
+function Row({
+  label,
+  required,
+  hint,
+  children,
 }: {
-  icon: React.ElementType;
-  title: string;
-  subtitle: string;
+  label: string;
+  required?: boolean;
+  hint?: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2.5">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-        <div>
-          <h3 className="text-sm font-semibold">{title}</h3>
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
-        </div>
+    <div className="flex items-center gap-4 py-2.5 px-3">
+      <div className="w-[140px] shrink-0">
+        <span className="text-sm text-muted-foreground">
+          {label}
+          {required && <span className="text-rose-500 ml-0.5">*</span>}
+        </span>
+        {hint && <div className="mt-0.5">{hint}</div>}
       </div>
-      <div className="border-b border-border" />
+      <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
 }
 
 // =============================================================================
-// HELPERS
+// SECTION DIVIDER — small header between groups
 // =============================================================================
 
-const formatCurrency = (value: number): string =>
-  new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 py-2 px-3">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+        {label}
+      </span>
+      <div className="flex-1 border-b border-border/50" />
+    </div>
+  );
+}
 
 // =============================================================================
 // MAIN COMPONENT
@@ -101,17 +96,14 @@ export function PayableStepDetails({
   data,
   onChange,
 }: PayableStepDetailsProps) {
-  const isBatchMode = data.batchEntries.length >= 2;
-
-  if (isBatchMode) {
+  if (data.batchEntries.length >= 2) {
     return <PayableBatchTable data={data} onChange={onChange} />;
   }
-
   return <SingleEntryForm data={data} onChange={onChange} />;
 }
 
 // =============================================================================
-// SINGLE ENTRY FORM (Layout A)
+// SINGLE ENTRY FORM — table-style property rows
 // =============================================================================
 
 function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
@@ -120,7 +112,7 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
   const [showBankAccountCreate, setShowBankAccountCreate] = useState(false);
   const [tagInput, setTagInput] = useState('');
 
-  // Track pre-filled fields from Step 1
+  // Pre-filled tracking
   const [preFilledFields] = useState<Set<string>>(() => {
     const fields = new Set<string>();
     if (data.beneficiaryName) fields.add('beneficiaryName');
@@ -194,7 +186,6 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
     onChange,
   ]);
 
-  // Default issue date
   useEffect(() => {
     if (!data.issueDate) {
       onChange({ issueDate: new Date().toISOString().split('T')[0] });
@@ -202,7 +193,7 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------------------------------------------------------------------------
-  // Tag helpers
+  // Tags
   // ---------------------------------------------------------------------------
 
   const addTag = useCallback(() => {
@@ -222,337 +213,228 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  const pfClass = (field: string) =>
+  const pf = (field: string) =>
     preFilledFields.has(field) ? 'border-violet-500/30' : '';
-
-  const isBoleto = data.paymentType === 'BOLETO';
-  const isPix = data.paymentType === 'PIX';
 
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="space-y-5 overflow-y-auto max-h-[420px] pr-1">
-      {/* ================================================================== */}
-      {/* EXTRACTION SUMMARY CARD                                            */}
-      {/* ================================================================== */}
-      {(data.bankName || data.beneficiaryName || data.expectedAmount > 0) && (
-        <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-3.5">
-          <div className="flex items-center gap-2.5 mb-2.5">
-            <div
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg',
-                isBoleto
-                  ? 'bg-violet-500/15 text-violet-500'
-                  : 'bg-emerald-500/15 text-emerald-500',
-              )}
+    <div className="overflow-y-auto max-h-[420px]">
+      <div className="rounded-xl border border-border overflow-hidden divide-y divide-border/50">
+        {/* ============================================================= */}
+        {/* IDENTIFICAÇÃO                                                  */}
+        {/* ============================================================= */}
+        <SectionDivider label="Identificação" />
+
+        <Row label="Descrição" required>
+          <Input
+            value={data.description}
+            onChange={(e) => onChange({ description: e.target.value })}
+            placeholder="Descrição do lançamento"
+            className="h-8"
+          />
+        </Row>
+
+        <Row label="Beneficiário">
+          <Input
+            value={data.beneficiaryName}
+            onChange={(e) => onChange({ beneficiaryName: e.target.value })}
+            placeholder="Nome do beneficiário"
+            className={cn('h-8', pf('beneficiaryName'))}
+          />
+        </Row>
+
+        <Row
+          label="Fornecedor"
+          hint={
+            supplierSuggestion?.categoryId &&
+            data.categoryId === supplierSuggestion.categoryId ? (
+              <span className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                Sugestão aplicada
+              </span>
+            ) : null
+          }
+        >
+          <div className="flex items-center gap-1.5">
+            <Select
+              value={data.supplierId}
+              onValueChange={(val) => {
+                const s = suppliers.find((s) => s.id === val);
+                onChange({ supplierId: val, supplierName: s?.name ?? '' });
+              }}
             >
-              {isBoleto ? (
-                <Barcode className="h-4 w-4" />
-              ) : (
-                <Zap className="h-4 w-4" />
-              )}
-            </div>
-            <div>
-              <p className="text-xs font-semibold">
-                Dados extraídos automaticamente
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {isBoleto ? 'Via código de barras' : 'Via código Pix'}
-                {data.bankName && ` · ${data.bankName}`}
-              </p>
-            </div>
+              <SelectTrigger className="flex-1 h-8">
+                <SelectValue placeholder="Selecionar..." />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setShowSupplierCreate(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
           </div>
-          <div className="flex items-center gap-4 text-xs">
-            {data.expectedAmount > 0 && (
-              <span className="font-semibold text-violet-600 dark:text-violet-400">
-                {formatCurrency(data.expectedAmount)}
-              </span>
-            )}
-            {data.dueDate && (
-              <span className="text-muted-foreground">
-                Venc.{' '}
-                {format(parseISO(data.dueDate), 'dd/MM/yyyy', {
-                  locale: ptBR,
-                })}
-              </span>
-            )}
-            {data.beneficiaryName && (
-              <span className="text-muted-foreground truncate">
-                {data.beneficiaryName}
-              </span>
-            )}
+        </Row>
+
+        <Row label="Categoria" required>
+          <div className="flex items-center gap-1.5">
+            <Select
+              value={data.categoryId}
+              onValueChange={(val) => {
+                const c = categories.find((c) => c.id === val);
+                onChange({ categoryId: val, categoryName: c?.name ?? '' });
+              }}
+            >
+              <SelectTrigger className="flex-1 h-8">
+                <SelectValue placeholder="Selecionar..." />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setShowCategoryCreate(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
           </div>
-        </div>
-      )}
+        </Row>
 
-      {/* ================================================================== */}
-      {/* SECTION 1: IDENTIFICAÇÃO                                           */}
-      {/* ================================================================== */}
-      <div className="space-y-3">
-        <SectionHeader
-          icon={FileText}
-          title="Identificação"
-          subtitle="Dados básicos da conta a pagar"
-        />
-        <div className="rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60 space-y-3">
-          {/* Row: Descrição (full width) */}
-          <div className="grid gap-1.5">
-            <Label htmlFor="step2-description">
-              Descrição <span className="text-rose-500">*</span>
-            </Label>
-            <Input
-              id="step2-description"
-              value={data.description}
-              onChange={(e) => onChange({ description: e.target.value })}
-              placeholder="Descrição do lançamento"
-            />
-          </div>
+        <Row label="Centro de Custo">
+          <Select
+            value={data.costCenterId}
+            onValueChange={(val) => {
+              const cc = costCenters.find((c) => c.id === val);
+              onChange({ costCenterId: val, costCenterName: cc?.name ?? '' });
+            }}
+          >
+            <SelectTrigger className="h-8">
+              <SelectValue placeholder="Opcional" />
+            </SelectTrigger>
+            <SelectContent>
+              {costCenters.map((cc) => (
+                <SelectItem key={cc.id} value={cc.id}>
+                  {cc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Row>
 
-          {/* Row: Beneficiário + Fornecedor */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="step2-beneficiary">Beneficiário</Label>
-              <Input
-                id="step2-beneficiary"
-                value={data.beneficiaryName}
-                onChange={(e) =>
-                  onChange({ beneficiaryName: e.target.value })
-                }
-                placeholder="Nome do beneficiário"
-                className={pfClass('beneficiaryName')}
-              />
-            </div>
+        {/* ============================================================= */}
+        {/* VALORES                                                        */}
+        {/* ============================================================= */}
+        <SectionDivider label="Valores" />
 
-            <div className="grid gap-1.5">
-              <div className="flex items-center gap-2">
-                <Label>Fornecedor</Label>
-                {supplierSuggestion?.categoryId &&
-                  data.categoryId === supplierSuggestion.categoryId && (
-                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
-                      <Lightbulb className="h-3 w-3" />
-                      Sugestão
-                    </span>
-                  )}
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Select
-                  value={data.supplierId}
-                  onValueChange={(val) => {
-                    const s = suppliers.find((s) => s.id === val);
-                    onChange({
-                      supplierId: val,
-                      supplierName: s?.name ?? '',
-                    });
-                  }}
-                >
-                  <SelectTrigger className="flex-1 h-9">
-                    <SelectValue placeholder="Selecionar..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {suppliers.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 shrink-0"
-                  onClick={() => setShowSupplierCreate(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+        <Row label="Valor (R$)" required>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={data.expectedAmount || ''}
+            onChange={(e) =>
+              onChange({ expectedAmount: parseFloat(e.target.value) || 0 })
+            }
+            placeholder="0,00"
+            className={cn('h-8', pf('expectedAmount'))}
+          />
+        </Row>
 
-          {/* Row: Categoria + Centro de Custo */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <Label>
-                Categoria <span className="text-rose-500">*</span>
-              </Label>
-              <div className="flex items-center gap-1.5">
-                <Select
-                  value={data.categoryId}
-                  onValueChange={(val) => {
-                    const c = categories.find((c) => c.id === val);
-                    onChange({
-                      categoryId: val,
-                      categoryName: c?.name ?? '',
-                    });
-                  }}
-                >
-                  <SelectTrigger className="flex-1 h-9">
-                    <SelectValue placeholder="Selecionar..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 shrink-0"
-                  onClick={() => setShowCategoryCreate(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+        <Row label="Juros (R$)">
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={data.interest || ''}
+            onChange={(e) =>
+              onChange({ interest: parseFloat(e.target.value) || 0 })
+            }
+            placeholder="0,00"
+            className="h-8"
+          />
+        </Row>
 
-            <div className="grid gap-1.5">
-              <Label>Centro de Custo</Label>
-              <Select
-                value={data.costCenterId}
-                onValueChange={(val) => {
-                  const cc = costCenters.find((c) => c.id === val);
-                  onChange({
-                    costCenterId: val,
-                    costCenterName: cc?.name ?? '',
-                  });
-                }}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Opcional" />
-                </SelectTrigger>
-                <SelectContent>
-                  {costCenters.map((cc) => (
-                    <SelectItem key={cc.id} value={cc.id}>
-                      {cc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-      </div>
+        <Row label="Multa (R$)">
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={data.penalty || ''}
+            onChange={(e) =>
+              onChange({ penalty: parseFloat(e.target.value) || 0 })
+            }
+            placeholder="0,00"
+            className="h-8"
+          />
+        </Row>
 
-      {/* ================================================================== */}
-      {/* SECTION 2: VALORES E DATAS                                         */}
-      {/* ================================================================== */}
-      <div className="space-y-3">
-        <SectionHeader
-          icon={DollarSign}
-          title="Valores e Datas"
-          subtitle="Montantes, vencimento e encargos"
-        />
-        <div className="rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60 space-y-3">
-          {/* Row: Valor + Vencimento + Emissão */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="step2-amount">
-                Valor (R$) <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                id="step2-amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={data.expectedAmount || ''}
-                onChange={(e) =>
-                  onChange({
-                    expectedAmount: parseFloat(e.target.value) || 0,
-                  })
-                }
-                placeholder="0,00"
-                className={pfClass('expectedAmount')}
-              />
-            </div>
+        <Row label="Desconto (R$)">
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={data.discount || ''}
+            onChange={(e) =>
+              onChange({ discount: parseFloat(e.target.value) || 0 })
+            }
+            placeholder="0,00"
+            className="h-8"
+          />
+        </Row>
 
-            <DatePicker
-              label="Vencimento"
-              required
-              value={data.dueDate}
-              onChange={(d) => onChange({ dueDate: d })}
-              className={pfClass('dueDate')}
-            />
+        {/* ============================================================= */}
+        {/* DATAS                                                          */}
+        {/* ============================================================= */}
+        <SectionDivider label="Datas" />
 
-            <DatePicker
-              label="Data de Emissão"
-              value={data.issueDate}
-              onChange={(d) => onChange({ issueDate: d })}
-            />
-          </div>
+        <Row label="Vencimento" required>
+          <InlineDatePicker
+            value={data.dueDate}
+            onChange={(d) => onChange({ dueDate: d })}
+            className={pf('dueDate')}
+          />
+        </Row>
 
-          {/* Row: Juros + Multa + Desconto */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="step2-interest">Juros (R$)</Label>
-              <Input
-                id="step2-interest"
-                type="number"
-                step="0.01"
-                min="0"
-                value={data.interest || ''}
-                onChange={(e) =>
-                  onChange({ interest: parseFloat(e.target.value) || 0 })
-                }
-                placeholder="0,00"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="step2-penalty">Multa (R$)</Label>
-              <Input
-                id="step2-penalty"
-                type="number"
-                step="0.01"
-                min="0"
-                value={data.penalty || ''}
-                onChange={(e) =>
-                  onChange({ penalty: parseFloat(e.target.value) || 0 })
-                }
-                placeholder="0,00"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="step2-discount">Desconto (R$)</Label>
-              <Input
-                id="step2-discount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={data.discount || ''}
-                onChange={(e) =>
-                  onChange({ discount: parseFloat(e.target.value) || 0 })
-                }
-                placeholder="0,00"
-              />
-            </div>
-          </div>
+        <Row label="Emissão">
+          <InlineDatePicker
+            value={data.issueDate}
+            onChange={(d) => onChange({ issueDate: d })}
+          />
+        </Row>
 
-          {/* Competência (optional, same row) */}
-          <div className="grid grid-cols-3 gap-3">
-            <DatePicker
-              label="Competência"
-              value={data.competenceDate}
-              onChange={(d) => onChange({ competenceDate: d })}
-            />
-          </div>
-        </div>
-      </div>
+        <Row label="Competência">
+          <InlineDatePicker
+            value={data.competenceDate}
+            onChange={(d) => onChange({ competenceDate: d })}
+          />
+        </Row>
 
-      {/* ================================================================== */}
-      {/* SECTION 3: CONTA BANCÁRIA                                          */}
-      {/* ================================================================== */}
-      <div className="space-y-3">
-        <SectionHeader
-          icon={Landmark}
-          title="Conta Bancária"
-          subtitle="Conta de pagamento associada"
-        />
-        <div className="rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60">
+        {/* ============================================================= */}
+        {/* PAGAMENTO                                                      */}
+        {/* ============================================================= */}
+        <SectionDivider label="Pagamento" />
+
+        <Row label="Conta Bancária">
           <div className="flex items-center gap-1.5">
             <Select
               value={data.bankAccountId}
@@ -564,8 +446,8 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
                 });
               }}
             >
-              <SelectTrigger className="flex-1 h-9">
-                <SelectValue placeholder="Selecionar conta (opcional)" />
+              <SelectTrigger className="flex-1 h-8">
+                <SelectValue placeholder="Opcional" />
               </SelectTrigger>
               <SelectContent>
                 {bankAccounts.map((ba) => (
@@ -579,28 +461,21 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
               type="button"
               variant="outline"
               size="icon"
-              className="h-9 w-9 shrink-0"
+              className="h-8 w-8 shrink-0"
               onClick={() => setShowBankAccountCreate(true)}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5" />
             </Button>
           </div>
-        </div>
-      </div>
+        </Row>
 
-      {/* ================================================================== */}
-      {/* SECTION 4: OBSERVAÇÕES E TAGS                                      */}
-      {/* ================================================================== */}
-      <div className="space-y-3">
-        <SectionHeader
-          icon={Tag}
-          title="Observações e Tags"
-          subtitle="Notas adicionais e categorização"
-        />
-        <div className="rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60 space-y-3">
-          {/* Tags */}
-          <div className="grid gap-1.5">
-            <Label>Tags</Label>
+        {/* ============================================================= */}
+        {/* EXTRAS                                                         */}
+        {/* ============================================================= */}
+        <SectionDivider label="Extras" />
+
+        <Row label="Tags">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
               <Input
                 value={tagInput}
@@ -611,25 +486,25 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
                     addTag();
                   }
                 }}
-                placeholder="Adicionar tag e pressionar Enter"
-                className="h-9"
+                placeholder="Digitar e pressionar Enter"
+                className="h-8"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9 shrink-0"
+                className="h-8 shrink-0 text-xs"
                 onClick={addTag}
               >
                 Adicionar
               </Button>
             </div>
             {data.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-1">
+              <div className="flex flex-wrap gap-1">
                 {data.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded text-xs font-medium"
+                    className="inline-flex items-center gap-1 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded text-[11px] font-medium"
                   >
                     {tag}
                     <button
@@ -637,31 +512,27 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
                       onClick={() => removeTag(tag)}
                       className="text-violet-400 hover:text-violet-600 dark:hover:text-violet-200"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-2.5 w-2.5" />
                     </button>
                   </span>
                 ))}
               </div>
             )}
           </div>
+        </Row>
 
-          {/* Observações */}
-          <div className="grid gap-1.5">
-            <Label htmlFor="step2-notes">Observações</Label>
-            <Textarea
-              id="step2-notes"
-              value={data.notes}
-              onChange={(e) => onChange({ notes: e.target.value })}
-              placeholder="Observações adicionais (opcional)"
-              rows={2}
-            />
-          </div>
-        </div>
+        <Row label="Observações">
+          <Textarea
+            value={data.notes}
+            onChange={(e) => onChange({ notes: e.target.value })}
+            placeholder="Opcional"
+            rows={2}
+            className="text-sm"
+          />
+        </Row>
       </div>
 
-      {/* ================================================================== */}
-      {/* INLINE CREATE MODALS                                               */}
-      {/* ================================================================== */}
+      {/* Inline Create Modals */}
       <InlineCreateModal
         open={showSupplierCreate}
         onOpenChange={setShowSupplierCreate}
@@ -670,10 +541,7 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
         <InlineSupplierForm
           onCreated={(supplier) => {
             setShowSupplierCreate(false);
-            onChange({
-              supplierId: supplier.id,
-              supplierName: supplier.name,
-            });
+            onChange({ supplierId: supplier.id, supplierName: supplier.name });
           }}
           onCancel={() => setShowSupplierCreate(false)}
         />
@@ -717,57 +585,47 @@ function SingleEntryForm({ data, onChange }: PayableStepDetailsProps) {
 }
 
 // =============================================================================
-// DATE PICKER HELPER
+// INLINE DATE PICKER — compact for table rows
 // =============================================================================
 
-function DatePicker({
-  label,
+function InlineDatePicker({
   value,
   onChange,
-  required = false,
   className,
 }: {
-  label: string;
   value: string;
   onChange: (date: string) => void;
-  required?: boolean;
   className?: string;
 }) {
   const dateValue = value ? parseISO(value) : undefined;
 
   return (
-    <div className="grid gap-1.5">
-      <Label>
-        {label}
-        {required && <span className="text-rose-500 ml-0.5">*</span>}
-      </Label>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              'w-full justify-start text-left font-normal h-9',
-              !dateValue && 'text-muted-foreground',
-              className,
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateValue
-              ? format(dateValue, 'dd/MM/yyyy', { locale: ptBR })
-              : 'Selecionar'}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={dateValue}
-            onSelect={(date) => {
-              if (date) onChange(format(date, 'yyyy-MM-dd'));
-            }}
-            locale={ptBR}
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            'w-full justify-start text-left font-normal h-8',
+            !dateValue && 'text-muted-foreground',
+            className,
+          )}
+        >
+          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+          {dateValue
+            ? format(dateValue, 'dd/MM/yyyy', { locale: ptBR })
+            : 'Selecionar'}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={dateValue}
+          onSelect={(date) => {
+            if (date) onChange(format(date, 'yyyy-MM-dd'));
+          }}
+          locale={ptBR}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
