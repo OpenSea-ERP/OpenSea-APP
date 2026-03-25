@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  PasswordStrengthChecklist,
+  isPasswordStrong,
+} from '@/components/ui/password-strength-checklist';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuth } from '@/contexts/auth-context';
 import { translateError } from '@/lib/error-messages';
@@ -53,8 +57,8 @@ export default function RegisterPage() {
         return;
       }
 
-      if (value.password.length < 6) {
-        setError('A senha deve ter pelo menos 6 caracteres');
+      if (!isPasswordStrong(value.password)) {
+        setError('A senha não atende aos requisitos de segurança');
         return;
       }
 
@@ -115,8 +119,8 @@ export default function RegisterPage() {
               >
                 {/* Error message */}
                 {error && (
-                  <div className="p-4 rounded-2xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <p className="text-sm text-red-600 dark:text-red-400 text-center">
+                  <div className="p-4 rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 border border-rose-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <p className="text-sm text-rose-600 dark:text-rose-400 text-center">
                       {error}
                     </p>
                   </div>
@@ -203,6 +207,7 @@ export default function RegisterPage() {
                           className="pl-12"
                         />
                       </div>
+                      <PasswordStrengthChecklist password={field.state.value} />
                     </div>
                   )}
                 </form.Field>

@@ -10,6 +10,10 @@ import { useResetPassword, useSendPasswordReset } from '@/hooks/use-auth';
 import { logger } from '@/lib/logger';
 import { useForm } from '@tanstack/react-form';
 import {
+  PasswordStrengthChecklist,
+  isPasswordStrong,
+} from '@/components/ui/password-strength-checklist';
+import {
   CheckCircle2,
   ChevronLeft,
   Lock,
@@ -59,8 +63,8 @@ function ForgotPasswordForm() {
             setError('As senhas não coincidem');
             return;
           }
-          if (value.password.length < 6) {
-            setError('A senha deve ter pelo menos 6 caracteres');
+          if (!isPasswordStrong(value.password)) {
+            setError('A senha não atende aos requisitos de segurança');
             return;
           }
 
@@ -187,8 +191,8 @@ function ForgotPasswordForm() {
                 >
                   {/* Error message */}
                   {error && (
-                    <div className="p-4 rounded-2xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <p className="text-sm text-red-600 dark:text-red-400 text-center">
+                    <div className="p-4 rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 border border-rose-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <p className="text-sm text-rose-600 dark:text-rose-400 text-center">
                         {error}
                       </p>
                     </div>
@@ -320,6 +324,9 @@ function ForgotPasswordForm() {
                                 className="pl-12"
                               />
                             </div>
+                            <PasswordStrengthChecklist
+                              password={field.state.value}
+                            />
                           </div>
                         )}
                       </form.Field>

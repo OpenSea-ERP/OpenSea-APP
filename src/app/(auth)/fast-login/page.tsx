@@ -217,8 +217,8 @@ export default function FastLoginPage() {
 
         {/* Error banner */}
         {error && (
-          <div className="mb-8 px-6 py-3 rounded-full bg-red-500/10 dark:bg-red-500/15 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-300">
-            <p className="text-sm text-red-600 dark:text-red-400 text-center">
+          <div className="mb-8 px-6 py-3 rounded-full bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/30 animate-in fade-in slide-in-from-top-2 duration-300">
+            <p className="text-sm text-rose-600 dark:text-rose-400 text-center">
               {error}
             </p>
           </div>

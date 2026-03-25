@@ -114,8 +114,8 @@ export default function SetupPinsPage() {
             <Card className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
               <CardContent className="p-6 sm:p-8">
                 {error && (
-                  <div className="p-4 rounded-2xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-200 mb-6">
-                    <p className="text-sm text-red-600 dark:text-red-400 text-center">
+                  <div className="p-4 rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 border border-rose-500/30 animate-in fade-in slide-in-from-top-2 duration-200 mb-6">
+                    <p className="text-sm text-rose-600 dark:text-rose-400 text-center">
                       {error}
                     </p>
                   </div>

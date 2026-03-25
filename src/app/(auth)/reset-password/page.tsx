@@ -9,6 +9,10 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useResetPassword } from '@/hooks/use-auth';
 import { logger } from '@/lib/logger';
 import { useForm } from '@tanstack/react-form';
+import {
+  PasswordStrengthChecklist,
+  isPasswordStrong,
+} from '@/components/ui/password-strength-checklist';
 import { AlertCircle, CheckCircle2, ChevronLeft, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -52,8 +56,8 @@ function ResetPasswordForm() {
         return;
       }
 
-      if (value.password.length < 6) {
-        setError('A senha deve ter pelo menos 6 caracteres');
+      if (!isPasswordStrong(value.password)) {
+        setError('A senha não atende aos requisitos de segurança');
         return;
       }
 
@@ -110,7 +114,7 @@ function ResetPasswordForm() {
               {forced && step === 'reset' && (
                 <div className="mb-6 p-4 rounded-2xl bg-red-50/80 dark:bg-red-950/30 border border-red-200/60 dark:border-red-900/50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="flex gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                    <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-red-900 dark:text-red-100">
                         Ação Obrigatória
@@ -166,8 +170,8 @@ function ResetPasswordForm() {
                 >
                   {/* Error message */}
                   {error && (
-                    <div className="p-4 rounded-2xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <p className="text-sm text-red-600 dark:text-red-400 text-center">
+                    <div className="p-4 rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 border border-rose-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <p className="text-sm text-rose-600 dark:text-rose-400 text-center">
                         {error}
                       </p>
                     </div>
@@ -185,14 +189,14 @@ function ResetPasswordForm() {
                           onChange={e => field.handleChange(e.target.value)}
                           onBlur={field.handleBlur}
                           autoFocus
-                          minLength={6}
+                          minLength={8}
                           iconLeft={
                             <Lock className="w-5 h-5 text-gray-500 dark:text-white/40" />
                           }
                         />
-                        <p className="text-xs text-gray-500 dark:text-white/50">
-                          Mínimo de 6 caracteres
-                        </p>
+                        <PasswordStrengthChecklist
+                          password={field.state.value}
+                        />
                       </div>
                     )}
                   </form.Field>

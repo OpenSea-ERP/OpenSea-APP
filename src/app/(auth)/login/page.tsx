@@ -123,8 +123,8 @@ export default function LoginPage() {
               >
                 {/* Error message */}
                 {error && (
-                  <div className="p-4 rounded-2xl bg-red-500/10 dark:bg-red-500/20 border border-red-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <p className="text-sm text-red-600 dark:text-red-400 text-center">
+                  <div className="p-4 rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 border border-rose-500/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <p className="text-sm text-rose-600 dark:text-rose-400 text-center">
                       {error}
                     </p>
                   </div>
