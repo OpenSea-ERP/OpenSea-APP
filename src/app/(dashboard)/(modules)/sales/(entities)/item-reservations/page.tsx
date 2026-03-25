@@ -565,7 +565,7 @@ function ItemReservationsPageContent() {
                       options={statusOptions}
                       selected={statusFilter}
                       onSelectionChange={setStatusFilter}
-                      activeColor="teal"
+                      activeColor="cyan"
                       searchPlaceholder="Buscar status..."
                       emptyText="Nenhum status encontrado."
                     />

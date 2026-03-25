@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BaixaModal } from '@/components/finance/baixa-modal';
+import { CustomerScoreBadge } from '@/components/finance/customer-score-badge';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { useDeleteFinanceEntry, useFinanceEntry } from '@/hooks/finance';
 import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
@@ -341,6 +342,7 @@ export default function ReceivableDetailPage({
                     <span className="text-sm text-muted-foreground">
                       {entry.customerName}
                     </span>
+                    <CustomerScoreBadge customerName={entry.customerName} />
                   </>
                 )}
               </div>

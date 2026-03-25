@@ -13,6 +13,7 @@ import {
   Grid3X3,
   Landmark,
   LayoutDashboard,
+  PieChart,
   RefreshCw,
   Target,
   TrendingUp,
@@ -94,6 +95,13 @@ const navItems: NavItem[] = [
     iconColor: 'text-violet-500',
   },
   {
+    id: 'reconciliation',
+    label: 'Conciliação Bancária',
+    icon: RefreshCw,
+    href: '/finance/reconciliation',
+    iconColor: 'text-teal-500',
+  },
+  {
     id: 'contracts',
     label: 'Contratos',
     icon: FileText,
@@ -134,6 +142,20 @@ const navItems: NavItem[] = [
     icon: FileSpreadsheet,
     href: '/finance/reports/export',
     iconColor: 'text-teal-500',
+  },
+  {
+    id: 'budget',
+    label: 'Orçamento',
+    icon: PieChart,
+    href: '/finance/reports/budget',
+    iconColor: 'text-violet-500',
+  },
+  {
+    id: 'escalations',
+    label: 'Régua de Cobrança',
+    icon: AlertTriangle,
+    href: '/finance/escalations',
+    iconColor: 'text-rose-500',
   },
 ];
 

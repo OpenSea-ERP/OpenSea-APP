@@ -8,6 +8,7 @@ import { useCreateRecurringConfig } from '@/hooks/finance/use-recurring';
 import type {
   CreateRecurringConfigRequest,
   FinanceEntryType,
+  IndexationType,
   RecurrenceUnit,
 } from '@/types/finance';
 import { CheckCircle, FileText, Repeat } from 'lucide-react';
@@ -32,6 +33,11 @@ export interface RecurringWizardData {
   totalOccurrences: number;
   startDate: string;
   endDate: string;
+  // Step 1 — Ajuste Automático
+  indexationType: IndexationType;
+  fixedAdjustmentRate: number;
+  adjustmentMonth: number;
+  adjustBusinessDays: boolean;
   // Step 2 — Detalhes
   description: string;
   supplierId: string;
@@ -58,6 +64,10 @@ const INITIAL_DATA: RecurringWizardData = {
   totalOccurrences: 0,
   startDate: new Date().toISOString().split('T')[0],
   endDate: '',
+  indexationType: 'NONE',
+  fixedAdjustmentRate: 0,
+  adjustmentMonth: 1,
+  adjustBusinessDays: true,
   description: '',
   supplierId: '',
   supplierName: '',
@@ -175,6 +185,13 @@ export function RecurringWizard({
     if (wizardData.penaltyRate > 0)
       payload.penaltyRate = wizardData.penaltyRate;
     if (wizardData.notes) payload.notes = wizardData.notes;
+    if (wizardData.indexationType !== 'NONE')
+      payload.indexationType = wizardData.indexationType;
+    if (wizardData.indexationType === 'FIXED_RATE' && wizardData.fixedAdjustmentRate > 0)
+      payload.fixedAdjustmentRate = wizardData.fixedAdjustmentRate;
+    if (wizardData.indexationType !== 'NONE' && wizardData.adjustmentMonth > 0)
+      payload.adjustmentMonth = wizardData.adjustmentMonth;
+    payload.adjustBusinessDays = wizardData.adjustBusinessDays;
 
     try {
       await createMutation.mutateAsync(payload);

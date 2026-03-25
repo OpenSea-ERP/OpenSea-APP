@@ -8,11 +8,28 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import type { FinanceEntryType, RecurrenceUnit } from '@/types/finance';
+import type { FinanceEntryType, IndexationType, RecurrenceUnit } from '@/types/finance';
+import { INDEXATION_TYPE_LABELS, MONTH_LABELS } from '@/types/finance';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowDownLeft, ArrowUpRight, CalendarIcon } from 'lucide-react';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CalendarIcon,
+  ChevronDown,
+  ChevronRight,
+  Sliders,
+} from 'lucide-react';
+import { useState } from 'react';
 import type { RecurringWizardData } from './recurring-wizard';
 
 // =============================================================================
@@ -129,6 +146,8 @@ export function RecurringStepConfig({
   data,
   onChange,
 }: RecurringStepConfigProps) {
+  const [adjustmentOpen, setAdjustmentOpen] = useState(false);
+
   return (
     <div className="space-y-1">
       {/* ================================================================= */}
@@ -282,6 +301,117 @@ export function RecurringStepConfig({
             placeholder="Opcional"
           />
         </div>
+      </div>
+
+      {/* ================================================================= */}
+      {/* AJUSTE AUTOMÁTICO (collapsible)                                    */}
+      {/* ================================================================= */}
+      <div className="pt-2">
+        <button
+          type="button"
+          onClick={() => setAdjustmentOpen(!adjustmentOpen)}
+          className="flex items-center gap-2 w-full pt-3 pb-1"
+        >
+          <Sliders className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Ajuste Automático
+          </span>
+          <div className="flex-1 border-b border-border/40" />
+          {adjustmentOpen ? (
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/60" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60" />
+          )}
+        </button>
+
+        {adjustmentOpen && (
+          <div className="space-y-3 py-2">
+            {/* Indexação */}
+            <div className="space-y-1">
+              <span className="text-sm text-muted-foreground">Indexação</span>
+              <Select
+                value={data.indexationType ?? 'NONE'}
+                onValueChange={(v) =>
+                  onChange({ indexationType: v as IndexationType })
+                }
+              >
+                <SelectTrigger className="h-8 w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(INDEXATION_TYPE_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Taxa fixa */}
+            {data.indexationType === 'FIXED_RATE' && (
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">
+                  Taxa anual (%)
+                </span>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  value={data.fixedAdjustmentRate || ''}
+                  onChange={(e) =>
+                    onChange({
+                      fixedAdjustmentRate: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className="h-8 w-28"
+                  placeholder="Ex: 5.5"
+                />
+              </div>
+            )}
+
+            {/* Mês de reajuste */}
+            {data.indexationType !== 'NONE' && (
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">
+                  Mês de Reajuste
+                </span>
+                <Select
+                  value={String(data.adjustmentMonth ?? 1)}
+                  onValueChange={(v) =>
+                    onChange({ adjustmentMonth: parseInt(v) })
+                  }
+                >
+                  <SelectTrigger className="h-8 w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(MONTH_LABELS).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Feriados */}
+            <div className="flex items-center gap-2.5 py-1">
+              <Switch
+                checked={data.adjustBusinessDays ?? true}
+                onCheckedChange={(v) => onChange({ adjustBusinessDays: v })}
+                id="adjust-bdays"
+              />
+              <label
+                htmlFor="adjust-bdays"
+                className="text-sm text-muted-foreground cursor-pointer"
+              >
+                Ajustar vencimento para dia útil
+              </label>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

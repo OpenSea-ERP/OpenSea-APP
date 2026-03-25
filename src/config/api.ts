@@ -747,6 +747,43 @@ export const API_ENDPOINTS = {
     RESUME: (id: string) => `/v1/finance/recurring/${id}/resume`,
     CANCEL: (id: string) => `/v1/finance/recurring/${id}/cancel`,
   },
+  // Finance - Budget
+  FINANCE_BUDGET: {
+    REPORT: '/v1/finance/budget/report',
+    CONFIG: '/v1/finance/budget/config',
+    SAVE: '/v1/finance/budget',
+  },
+  // Finance - Escalation
+  FINANCE_ESCALATION: {
+    LIST: '/v1/finance/escalations',
+    GET: (id: string) => `/v1/finance/escalations/${id}`,
+    CREATE: '/v1/finance/escalations',
+    UPDATE: (id: string) => `/v1/finance/escalations/${id}`,
+    DELETE: (id: string) => `/v1/finance/escalations/${id}`,
+    DUPLICATE: (id: string) => `/v1/finance/escalations/${id}/duplicate`,
+    TOGGLE_ACTIVE: (id: string) =>
+      `/v1/finance/escalations/${id}/toggle-active`,
+  },
+  // Finance - Customer Score
+  FINANCE_CUSTOMER_SCORE: {
+    GET: '/v1/finance/customer-score',
+  },
+  // Finance - Reconciliation (OFX)
+  RECONCILIATION: {
+    LIST: '/v1/finance/reconciliation',
+    GET: (id: string) => `/v1/finance/reconciliation/${id}`,
+    IMPORT: '/v1/finance/reconciliation/import',
+    MATCH_ITEM: (id: string, itemId: string) =>
+      `/v1/finance/reconciliation/${id}/items/${itemId}/match`,
+    IGNORE_ITEM: (id: string, itemId: string) =>
+      `/v1/finance/reconciliation/${id}/items/${itemId}/ignore`,
+    CREATE_ENTRY: (id: string, itemId: string) =>
+      `/v1/finance/reconciliation/${id}/items/${itemId}/create-entry`,
+    SUGGESTIONS: (id: string, itemId: string) =>
+      `/v1/finance/reconciliation/${id}/items/${itemId}/suggestions`,
+    COMPLETE: (id: string) => `/v1/finance/reconciliation/${id}/complete`,
+    CANCEL: (id: string) => `/v1/finance/reconciliation/${id}/cancel`,
+  },
   // Storage - Folders
   STORAGE: {
     FOLDERS: {
@@ -1099,6 +1136,9 @@ export const API_ENDPOINTS = {
     DASHBOARDS: {
       LIST: '/v1/sales/analytics/dashboards',
       CREATE: '/v1/sales/analytics/dashboards',
+      GET: (id: string) => `/v1/sales/analytics/dashboards/${id}`,
+      UPDATE: (id: string) => `/v1/sales/analytics/dashboards/${id}`,
+      DELETE: (id: string) => `/v1/sales/analytics/dashboards/${id}`,
     },
     REPORTS: {
       LIST: '/v1/sales/analytics/reports',

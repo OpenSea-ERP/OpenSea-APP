@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { CustomerScoreBadge } from '@/components/finance/customer-score-badge';
 import { Input } from '@/components/ui/input';
 import {
   Popover,
@@ -232,6 +233,9 @@ export function ReceivableStepDetails({
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>
+            {data.customerName && (
+              <CustomerScoreBadge customerName={data.customerName} />
+            )}
           </div>
         </Row>
 

@@ -557,7 +557,7 @@ export default function NotificationPreferencesPage() {
             message="Nao foi possivel carregar suas preferencias de notificacao."
             action={{
               label: 'Tentar novamente',
-              onClick: () => refetch(),
+              onClick: () => { refetch(); },
             }}
           />
         ) : (
