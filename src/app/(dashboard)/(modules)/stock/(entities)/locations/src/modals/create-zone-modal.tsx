@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
+import { translateError } from '@/lib/error-messages';
 import { useCreateZone } from '../api/zones.queries';
 
 // ============================================
@@ -37,6 +39,7 @@ export function CreateZoneModal({
 }: CreateZoneModalProps) {
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const createZone = useCreateZone();
 
   const handleCodeChange = useCallback((value: string) => {
@@ -51,6 +54,7 @@ export function CreateZoneModal({
   const handleClose = useCallback(() => {
     setCode('');
     setName('');
+    setFieldErrors({});
     onOpenChange(false);
   }, [onOpenChange]);
 
@@ -68,8 +72,13 @@ export function CreateZoneModal({
       toast.success('Zona criada com sucesso!');
       onSuccess?.();
       handleClose();
-    } catch {
-      toast.error('Erro ao criar zona. Tente novamente.');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('code already exists') || msg.includes('zone with this code')) {
+        setFieldErrors({ code: translateError(msg) });
+      } else {
+        toast.error(translateError(msg));
+      }
     }
   }, [code, name, warehouseId, createZone, onSuccess, handleClose]);
 
@@ -108,14 +117,21 @@ export function CreateZoneModal({
               <Label htmlFor="zone-code">
                 Código <span className="text-rose-500">*</span>
               </Label>
-              <Input
-                id="zone-code"
-                value={code}
-                onChange={e => handleCodeChange(e.target.value)}
-                placeholder="Ex: EST"
-                maxLength={5}
-                className="uppercase font-mono"
-              />
+              <div className="relative">
+                <Input
+                  id="zone-code"
+                  value={code}
+                  onChange={e => {
+                    handleCodeChange(e.target.value);
+                    if (fieldErrors.code) setFieldErrors(prev => ({ ...prev, code: '' }));
+                  }}
+                  placeholder="Ex: EST"
+                  maxLength={5}
+                  className="uppercase font-mono"
+                  aria-invalid={!!fieldErrors.code}
+                />
+                {fieldErrors.code && <FormErrorIcon message={fieldErrors.code} />}
+              </div>
               <p className="text-[11px] text-muted-foreground">
                 2 a 5 caracteres (letras e números)
               </p>
@@ -153,6 +169,7 @@ export function CreateZoneModal({
       name,
       warehouseName,
       isValid,
+      fieldErrors,
       handleCodeChange,
       handleClose,
       handleCreate,
