@@ -4,7 +4,6 @@ import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
 import { SearchBar } from '@/components/layout/search-bar';
-import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
@@ -13,17 +12,9 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   CoreProvider,
   EntityCard,
@@ -32,12 +23,15 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
+import { employeesService } from '@/services/hr/employees.service';
 import { exportToCSV } from '@/lib/csv-export';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { VacationPeriod, VacationStatus } from '@/types/hr';
 import {
   Ban,
+  Calendar,
   CalendarDays,
+  CircleCheck,
   DollarSign,
   Download,
   ExternalLink,
@@ -48,6 +42,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import {
   vacationsConfig,
@@ -86,6 +81,11 @@ const ViewModal = dynamic(
 );
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
+
+const YEAR_OPTIONS = Array.from({ length: 10 }, (_, i) => {
+  const year = new Date().getFullYear() - 5 + i;
+  return { value: String(year), label: String(year) };
+});
 
 const VACATION_STATUS_OPTIONS: { value: VacationStatus; label: string }[] = [
   { value: 'PENDING', label: 'Pendente' },
@@ -148,6 +148,21 @@ export default function VacationsPage() {
     [vacations]
   );
   const { getName } = useEmployeeMap(employeeIds);
+
+  // Employees for filter dropdown
+  const { data: employeesData } = useQuery({
+    queryKey: ['employees', 'filter-list'],
+    queryFn: () => employeesService.listEmployees({ perPage: 200 }),
+  });
+
+  const employeeOptions = useMemo(
+    () =>
+      (employeesData?.employees ?? []).map(e => ({
+        value: e.id,
+        label: e.fullName,
+      })),
+    [employeesData]
+  );
 
   // ============================================================================
   // STATE
@@ -497,18 +512,6 @@ export default function VacationsPage() {
   }, [canCreate, handleOpenCreate, handleExport]);
 
   // ============================================================================
-  // FILTERS UI
-  // ============================================================================
-
-  const hasActiveFilters = filterEmployeeId || filterStatus || filterYear;
-
-  const clearFilters = useCallback(() => {
-    setFilterEmployeeId('');
-    setFilterStatus('');
-    setFilterYear('');
-  }, []);
-
-  // ============================================================================
   // LOADING
   // ============================================================================
 
@@ -547,6 +550,7 @@ export default function VacationsPage() {
         </PageHeader>
 
         <PageBody>
+          {/* Search Bar */}
           <SearchBar
             value={searchQuery}
             placeholder="Buscar férias..."
@@ -556,55 +560,7 @@ export default function VacationsPage() {
             size="md"
           />
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-64">
-              <EmployeeSelector
-                value={filterEmployeeId}
-                onChange={id => setFilterEmployeeId(id)}
-                placeholder="Filtrar por funcionário..."
-              />
-            </div>
-
-            <Select
-              value={filterStatus}
-              onValueChange={v =>
-                setFilterStatus(v === 'ALL' ? '' : (v as VacationStatus))
-              }
-            >
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Status</SelectItem>
-                {VACATION_STATUS_OPTIONS.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Input
-              type="number"
-              placeholder="Ano"
-              value={filterYear}
-              onChange={e => setFilterYear(e.target.value)}
-              className="w-28"
-              min={2020}
-              max={2099}
-            />
-
-            {hasActiveFilters && (
-              <Badge
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={clearFilters}
-              >
-                Limpar filtros
-              </Badge>
-            )}
-          </div>
-
+          {/* Grid */}
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
           ) : error ? (
@@ -623,10 +579,40 @@ export default function VacationsPage() {
             <EntityGrid
               config={vacationsConfig}
               items={vacations}
+              toolbarStart={
+                <>
+                  <FilterDropdown
+                    label="Funcionário"
+                    icon={User}
+                    options={employeeOptions}
+                    value={filterEmployeeId}
+                    onChange={v => setFilterEmployeeId(v)}
+                    activeColor="violet"
+                    searchPlaceholder="Buscar funcionário..."
+                    emptyText="Nenhum funcionário encontrado."
+                  />
+                  <FilterDropdown
+                    label="Status"
+                    icon={CircleCheck}
+                    options={VACATION_STATUS_OPTIONS}
+                    value={filterStatus}
+                    onChange={v => setFilterStatus(v as VacationStatus | '')}
+                    activeColor="emerald"
+                  />
+                  <FilterDropdown
+                    label="Ano"
+                    icon={Calendar}
+                    options={YEAR_OPTIONS}
+                    value={filterYear}
+                    onChange={v => setFilterYear(v)}
+                    activeColor="blue"
+                  />
+                </>
+              }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}
-              isSearching={false}
+              isSearching={!!searchQuery}
               onItemDoubleClick={item => {
                 if (canView) {
                   setSelectedVacation(item);

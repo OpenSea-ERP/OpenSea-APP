@@ -3,7 +3,6 @@
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
-import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -12,7 +11,7 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { Badge } from '@/components/ui/badge';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import {
   CoreProvider,
   EntityCard,
@@ -21,28 +20,24 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
-import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { exportToCSV } from '@/lib/csv-export';
+import { employeesService } from '@/services/hr/employees.service';
 import type { Deduction } from '@/types/hr';
 import {
   Calendar,
+  CircleCheck,
   Download,
   ExternalLink,
   Eye,
+  FileText,
   MinusCircle,
   Plus,
   Trash2,
   User,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
@@ -94,24 +89,14 @@ export default function DeductionsPage() {
   const [filterIsRecurring, setFilterIsRecurring] = useState<
     boolean | undefined
   >(undefined);
-  const [filterStartDate, setFilterStartDate] = useState('');
-  const [filterEndDate, setFilterEndDate] = useState('');
 
   const queryParams = useMemo<DeductionFilters>(() => {
     const params: DeductionFilters = {};
     if (filterEmployeeId) params.employeeId = filterEmployeeId;
     if (filterIsApplied !== undefined) params.isApplied = filterIsApplied;
     if (filterIsRecurring !== undefined) params.isRecurring = filterIsRecurring;
-    if (filterStartDate) params.startDate = filterStartDate;
-    if (filterEndDate) params.endDate = filterEndDate;
     return params;
-  }, [
-    filterEmployeeId,
-    filterIsApplied,
-    filterIsRecurring,
-    filterStartDate,
-    filterEndDate,
-  ]);
+  }, [filterEmployeeId, filterIsApplied, filterIsRecurring]);
 
   // ============================================================================
   // DATA
@@ -128,6 +113,38 @@ export default function DeductionsPage() {
     [deductions]
   );
   const { getName } = useEmployeeMap(employeeIds);
+
+  // Employee options for filter dropdown
+  const { data: employeesData } = useQuery({
+    queryKey: ['employees', 'filter-options'],
+    queryFn: () => employeesService.listEmployees({ perPage: 200, status: 'ACTIVE' }),
+    staleTime: 60_000,
+  });
+
+  const employeeOptions = useMemo(
+    () =>
+      (employeesData?.employees ?? []).map(e => ({
+        id: e.id,
+        label: e.fullName,
+      })),
+    [employeesData]
+  );
+
+  const statusOptions = useMemo(
+    () => [
+      { value: 'true', label: 'Aplicada' },
+      { value: 'false', label: 'Pendente' },
+    ],
+    []
+  );
+
+  const typeOptions = useMemo(
+    () => [
+      { value: 'true', label: 'Recorrente' },
+      { value: 'false', label: 'Avulsa' },
+    ],
+    []
+  );
 
   // ============================================================================
   // STATE
@@ -164,12 +181,8 @@ export default function DeductionsPage() {
 
   const handleCreate = useCallback(
     async (data: Parameters<typeof createMutation.mutateAsync>[0]) => {
-      try {
-        await createMutation.mutateAsync(data);
-        setIsCreateOpen(false);
-      } catch {
-        // Toast handled by mutation
-      }
+      await createMutation.mutateAsync(data);
+      setIsCreateOpen(false);
     },
     [createMutation]
   );
@@ -430,25 +443,6 @@ export default function DeductionsPage() {
   }, [canCreate, handleOpenCreate, handleExport]);
 
   // ============================================================================
-  // FILTERS UI
-  // ============================================================================
-
-  const hasActiveFilters =
-    filterEmployeeId ||
-    filterIsApplied !== undefined ||
-    filterIsRecurring !== undefined ||
-    filterStartDate ||
-    filterEndDate;
-
-  const clearFilters = useCallback(() => {
-    setFilterEmployeeId('');
-    setFilterIsApplied(undefined);
-    setFilterIsRecurring(undefined);
-    setFilterStartDate('');
-    setFilterEndDate('');
-  }, []);
-
-  // ============================================================================
   // LOADING STATE
   // ============================================================================
 
@@ -498,78 +492,6 @@ export default function DeductionsPage() {
             size="md"
           />
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-64">
-              <EmployeeSelector
-                value={filterEmployeeId}
-                onChange={id => setFilterEmployeeId(id)}
-                placeholder="Filtrar por funcionário..."
-              />
-            </div>
-
-            <Select
-              value={
-                filterIsApplied === undefined
-                  ? 'ALL'
-                  : filterIsApplied
-                    ? 'true'
-                    : 'false'
-              }
-              onValueChange={v =>
-                setFilterIsApplied(v === 'ALL' ? undefined : v === 'true')
-              }
-            >
-              <SelectTrigger className="w-full sm:w-44">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Status</SelectItem>
-                <SelectItem value="true">Aplicada</SelectItem>
-                <SelectItem value="false">Pendente</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={
-                filterIsRecurring === undefined
-                  ? 'ALL'
-                  : filterIsRecurring
-                    ? 'true'
-                    : 'false'
-              }
-              onValueChange={v =>
-                setFilterIsRecurring(v === 'ALL' ? undefined : v === 'true')
-              }
-            >
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Tipos</SelectItem>
-                <SelectItem value="true">Recorrente</SelectItem>
-                <SelectItem value="false">Avulsa</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <DateRangeFilter
-              startDate={filterStartDate}
-              endDate={filterEndDate}
-              onStartDateChange={setFilterStartDate}
-              onEndDateChange={setFilterEndDate}
-            />
-
-            {hasActiveFilters && (
-              <Badge
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={clearFilters}
-              >
-                Limpar filtros
-              </Badge>
-            )}
-          </div>
-
           {/* Grid */}
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
@@ -589,6 +511,60 @@ export default function DeductionsPage() {
             <EntityGrid
               config={deductionsConfig}
               items={filteredItems}
+              toolbarStart={
+                <>
+                  <FilterDropdown
+                    label="Funcionário"
+                    icon={User}
+                    options={employeeOptions}
+                    value={filterEmployeeId}
+                    onChange={v => setFilterEmployeeId(v)}
+                    activeColor="violet"
+                    searchPlaceholder="Buscar funcionário..."
+                    emptyText="Nenhum funcionário encontrado."
+                  />
+                  <FilterDropdown
+                    label="Status"
+                    icon={CircleCheck}
+                    options={statusOptions}
+                    value={
+                      filterIsApplied === undefined
+                        ? ''
+                        : filterIsApplied
+                          ? 'true'
+                          : 'false'
+                    }
+                    onChange={v =>
+                      setFilterIsApplied(
+                        v === '' ? undefined : v === 'true'
+                      )
+                    }
+                    activeColor="emerald"
+                  />
+                  <FilterDropdown
+                    label="Tipo"
+                    icon={FileText}
+                    options={typeOptions}
+                    value={
+                      filterIsRecurring === undefined
+                        ? ''
+                        : filterIsRecurring
+                          ? 'true'
+                          : 'false'
+                    }
+                    onChange={v =>
+                      setFilterIsRecurring(
+                        v === '' ? undefined : v === 'true'
+                      )
+                    }
+                    activeColor="cyan"
+                  />
+                  <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    {filteredItems.length}{' '}
+                    {filteredItems.length === 1 ? 'dedução' : 'deduções'}
+                  </p>
+                </>
+              }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}
@@ -610,7 +586,6 @@ export default function DeductionsPage() {
             isOpen={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
             onSubmit={handleCreate}
-            isSubmitting={createMutation.isPending}
           />
 
           {/* View Modal */}

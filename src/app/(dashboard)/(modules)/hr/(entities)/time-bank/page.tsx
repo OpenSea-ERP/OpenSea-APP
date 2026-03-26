@@ -3,7 +3,6 @@
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
-import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import { SearchBar } from '@/components/layout/search-bar';
 import {
@@ -12,8 +11,7 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import {
   CoreProvider,
   EntityCard,
@@ -25,6 +23,7 @@ import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { exportToCSV } from '@/lib/csv-export';
 import type { TimeBank } from '@/types/hr';
 import {
+  Calendar,
   Download,
   ExternalLink,
   Eye,
@@ -32,6 +31,7 @@ import {
   Minus,
   Plus,
   SlidersHorizontal,
+  User,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -345,15 +345,30 @@ function TimeBankPageContent() {
   );
 
   // ============================================================================
-  // FILTERS UI
+  // FILTER OPTIONS
   // ============================================================================
 
-  const hasActiveFilters = filterEmployeeId || filterYear;
+  const employeeOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const tb of timeBanks) {
+      if (!seen.has(tb.employeeId)) {
+        seen.set(tb.employeeId, getName(tb.employeeId));
+      }
+    }
+    return Array.from(seen.entries()).map(([id, label]) => ({ id, label }));
+  }, [timeBanks, getName]);
 
-  const clearFilters = useCallback(() => {
-    setFilterEmployeeId('');
-    setFilterYear('');
-  }, []);
+  const yearOptions = useMemo(() => {
+    const years = new Set<number>();
+    for (const tb of timeBanks) {
+      years.add(tb.year);
+    }
+    const currentYear = new Date().getFullYear();
+    years.add(currentYear);
+    return Array.from(years)
+      .sort((a, b) => b - a)
+      .map(y => ({ id: String(y), label: String(y) }));
+  }, [timeBanks]);
 
   // ============================================================================
   // RENDER
@@ -391,36 +406,6 @@ function TimeBankPageContent() {
             size="md"
           />
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-64">
-              <EmployeeSelector
-                value={filterEmployeeId}
-                onChange={id => setFilterEmployeeId(id)}
-                placeholder="Filtrar por funcionário..."
-              />
-            </div>
-
-            <Input
-              type="number"
-              min={2020}
-              max={2100}
-              placeholder={String(new Date().getFullYear())}
-              value={filterYear}
-              onChange={e => setFilterYear(e.target.value)}
-              className="w-28"
-            />
-
-            {hasActiveFilters && (
-              <Badge
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={clearFilters}
-              >
-                Limpar filtros
-              </Badge>
-            )}
-          </div>
-
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
           ) : error ? (
@@ -439,6 +424,30 @@ function TimeBankPageContent() {
             <EntityGrid
               config={timeBankConfig}
               items={filteredItems}
+              toolbarStart={
+                <>
+                  <FilterDropdown
+                    label="Funcionário"
+                    icon={User}
+                    options={employeeOptions}
+                    value={filterEmployeeId}
+                    onChange={v => setFilterEmployeeId(v)}
+                    activeColor="violet"
+                    searchPlaceholder="Buscar funcionário..."
+                    emptyText="Nenhum funcionário encontrado."
+                  />
+                  <FilterDropdown
+                    label="Ano"
+                    icon={Calendar}
+                    options={yearOptions}
+                    value={filterYear}
+                    onChange={v => setFilterYear(v)}
+                    activeColor="cyan"
+                    searchPlaceholder="Buscar ano..."
+                    emptyText="Nenhum ano encontrado."
+                  />
+                </>
+              }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}

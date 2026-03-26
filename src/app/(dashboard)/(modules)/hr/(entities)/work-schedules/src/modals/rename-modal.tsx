@@ -6,11 +6,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { translateError } from '@/lib/error-messages';
 import type { WorkSchedule } from '@/types/hr';
 import { Clock, Loader2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface RenameModalProps {
   isOpen: boolean;
@@ -28,10 +31,12 @@ export function RenameModal({
   onSubmit,
 }: RenameModalProps) {
   const [name, setName] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (workSchedule) {
       setName(workSchedule.name || '');
+      setFieldErrors({});
     }
   }, [workSchedule]);
 
@@ -41,8 +46,17 @@ export function RenameModal({
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) return;
-    await onSubmit(workSchedule.id, trimmed);
-    onClose();
+    try {
+      await onSubmit(workSchedule.id, trimmed);
+      onClose();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('name already') || msg.includes('already exists') || msg.includes('nome')) {
+        setFieldErrors(prev => ({ ...prev, name: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   };
 
   return (
@@ -65,14 +79,21 @@ export function RenameModal({
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="ws-rename">Nome da Escala</Label>
-            <Input
-              id="ws-rename"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Digite o nome da escala"
-              autoFocus
-              maxLength={255}
-            />
+            <div className="relative">
+              <Input
+                id="ws-rename"
+                value={name}
+                onChange={e => {
+                  setName(e.target.value);
+                  if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
+                }}
+                placeholder="Digite o nome da escala"
+                autoFocus
+                maxLength={255}
+                aria-invalid={!!fieldErrors.name}
+              />
+              <FormErrorIcon message={fieldErrors.name} />
+            </div>
           </div>
 
           <DialogFooter className="gap-2">

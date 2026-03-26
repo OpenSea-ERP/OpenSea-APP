@@ -9,10 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { translateError } from '@/lib/error-messages';
 import { Scale } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AdjustModalProps {
   isOpen: boolean;
@@ -34,17 +37,30 @@ export function AdjustModal({
   const [employeeId, setEmployeeId] = useState('');
   const [newBalance, setNewBalance] = useState('');
   const [year, setYear] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({
-      employeeId,
-      newBalance: Number(newBalance),
-      year: year ? Number(year) : undefined,
-    });
-    setEmployeeId('');
-    setNewBalance('');
-    setYear('');
+    try {
+      await onSubmit({
+        employeeId,
+        newBalance: Number(newBalance),
+        year: year ? Number(year) : undefined,
+      });
+      setEmployeeId('');
+      setNewBalance('');
+      setYear('');
+      setFieldErrors({});
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('employee') || msg.includes('funcionário')) {
+        setFieldErrors(prev => ({ ...prev, employeeId: translateError(msg) }));
+      } else if (msg.includes('balance') || msg.includes('saldo')) {
+        setFieldErrors(prev => ({ ...prev, newBalance: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   };
 
   return (
@@ -69,15 +85,22 @@ export function AdjustModal({
           </div>
           <div className="space-y-1">
             <Label htmlFor="adjust-balance">Novo Saldo (horas)</Label>
-            <Input
-              id="adjust-balance"
-              type="number"
-              step="0.5"
-              placeholder="Ex: 16"
-              value={newBalance}
-              onChange={e => setNewBalance(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="adjust-balance"
+                type="number"
+                step="0.5"
+                placeholder="Ex: 16"
+                value={newBalance}
+                onChange={e => {
+                  setNewBalance(e.target.value);
+                  if (fieldErrors.newBalance) setFieldErrors(prev => ({ ...prev, newBalance: '' }));
+                }}
+                required
+                aria-invalid={!!fieldErrors.newBalance}
+              />
+              <FormErrorIcon message={fieldErrors.newBalance} />
+            </div>
           </div>
           <div className="space-y-1">
             <Label htmlFor="adjust-year">Ano (opcional)</Label>

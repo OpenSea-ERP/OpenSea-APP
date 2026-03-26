@@ -3,7 +3,6 @@
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
-import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -12,7 +11,7 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { Badge } from '@/components/ui/badge';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import {
   CoreProvider,
   EntityCard,
@@ -23,20 +22,16 @@ import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { exportToCSV } from '@/lib/csv-export';
 import { usePermissions } from '@/hooks/use-permissions';
 import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
+import { employeesService } from '@/services/hr/employees.service';
 import type { MedicalExam } from '@/types/hr';
 import {
   Calendar,
+  CircleCheck,
   Download,
   ExternalLink,
   Eye,
+  FileText,
   Plus,
   Stethoscope,
   Trash2,
@@ -45,6 +40,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import {
   medicalExamsConfig,
@@ -130,6 +126,21 @@ export default function MedicalExamsPage() {
   const employeeIds = useMemo(() => exams.map(e => e.employeeId), [exams]);
   const { getName } = useEmployeeMap(employeeIds);
 
+  // Employees for filter dropdown
+  const { data: employeesData } = useQuery({
+    queryKey: ['employees', 'filter-list'],
+    queryFn: () => employeesService.listEmployees({ perPage: 200 }),
+  });
+
+  const employeeOptions = useMemo(
+    () =>
+      (employeesData?.employees ?? []).map(e => ({
+        value: e.id,
+        label: e.fullName,
+      })),
+    [employeesData]
+  );
+
   // ============================================================================
   // STATE
   // ============================================================================
@@ -165,12 +176,8 @@ export default function MedicalExamsPage() {
 
   const handleCreate = useCallback(
     async (data: Parameters<typeof createMutation.mutateAsync>[0]) => {
-      try {
-        await createMutation.mutateAsync(data);
-        setIsCreateOpen(false);
-      } catch {
-        // Toast handled by mutation
-      }
+      await createMutation.mutateAsync(data);
+      setIsCreateOpen(false);
     },
     [createMutation]
   );
@@ -400,21 +407,6 @@ export default function MedicalExamsPage() {
   }, [canCreate, handleOpenCreate, handleExport]);
 
   // ============================================================================
-  // FILTERS UI
-  // ============================================================================
-
-  const hasActiveFilters =
-    filterEmployeeId || filterType || filterResult || filterStartDate || filterEndDate;
-
-  const clearFilters = useCallback(() => {
-    setFilterEmployeeId('');
-    setFilterType('');
-    setFilterResult('');
-    setFilterStartDate('');
-    setFilterEndDate('');
-  }, []);
-
-  // ============================================================================
   // LOADING STATE
   // ============================================================================
 
@@ -464,68 +456,6 @@ export default function MedicalExamsPage() {
             size="md"
           />
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-64">
-              <EmployeeSelector
-                value={filterEmployeeId}
-                onChange={id => setFilterEmployeeId(id)}
-                placeholder="Filtrar por funcionário..."
-              />
-            </div>
-
-            <Select
-              value={filterType || 'ALL'}
-              onValueChange={v => setFilterType(v === 'ALL' ? '' : v)}
-            >
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Tipo de Exame" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Tipos</SelectItem>
-                {EXAM_TYPE_OPTIONS.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filterResult || 'ALL'}
-              onValueChange={v => setFilterResult(v === 'ALL' ? '' : v)}
-            >
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Resultado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Resultados</SelectItem>
-                {EXAM_RESULT_OPTIONS.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <DateRangeFilter
-              startDate={filterStartDate}
-              endDate={filterEndDate}
-              onStartDateChange={setFilterStartDate}
-              onEndDateChange={setFilterEndDate}
-            />
-
-            {hasActiveFilters && (
-              <Badge
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={clearFilters}
-              >
-                Limpar filtros
-              </Badge>
-            )}
-          </div>
-
           {/* Grid */}
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
@@ -545,6 +475,42 @@ export default function MedicalExamsPage() {
             <EntityGrid
               config={medicalExamsConfig}
               items={filteredItems}
+              toolbarStart={
+                <>
+                  <FilterDropdown
+                    label="Funcionário"
+                    icon={User}
+                    options={employeeOptions}
+                    value={filterEmployeeId}
+                    onChange={v => setFilterEmployeeId(v)}
+                    activeColor="violet"
+                    searchPlaceholder="Buscar funcionário..."
+                    emptyText="Nenhum funcionário encontrado."
+                  />
+                  <FilterDropdown
+                    label="Tipo"
+                    icon={FileText}
+                    options={EXAM_TYPE_OPTIONS}
+                    value={filterType}
+                    onChange={v => setFilterType(v)}
+                    activeColor="cyan"
+                  />
+                  <FilterDropdown
+                    label="Resultado"
+                    icon={CircleCheck}
+                    options={EXAM_RESULT_OPTIONS}
+                    value={filterResult}
+                    onChange={v => setFilterResult(v)}
+                    activeColor="emerald"
+                  />
+                  <DateRangeFilter
+                    startDate={filterStartDate}
+                    endDate={filterEndDate}
+                    onStartDateChange={setFilterStartDate}
+                    onEndDateChange={setFilterEndDate}
+                  />
+                </>
+              }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}
@@ -566,7 +532,6 @@ export default function MedicalExamsPage() {
             isOpen={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
             onSubmit={handleCreate}
-            isSubmitting={createMutation.isPending}
           />
 
           {/* View Modal */}

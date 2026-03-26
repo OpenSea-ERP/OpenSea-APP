@@ -3,6 +3,7 @@
 import { companiesApi } from '@/app/(dashboard)/(modules)/admin/(entities)/companies/src';
 import { departmentsApi } from '@/app/(dashboard)/(modules)/hr/(entities)/departments/src';
 import { Button } from '@/components/ui/button';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,6 +11,7 @@ import {
   StepWizardDialog,
   type WizardStep,
 } from '@/components/ui/step-wizard-dialog';
+import { translateError } from '@/lib/error-messages';
 import type { Company, Department, Position } from '@/types/hr';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -21,6 +23,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface CreateModalProps {
   isOpen: boolean;
@@ -40,6 +43,7 @@ export function CreateModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Fetch departments
   const { data: departmentsData, isLoading: isLoadingDepartments } = useQuery<
@@ -105,12 +109,23 @@ export function CreateModal({
 
   const handleSubmit = async () => {
     if (name && code) {
-      await onSubmit({
-        name,
-        code,
-        departmentId: departmentId || null,
-      });
-      handleClose();
+      try {
+        await onSubmit({
+          name,
+          code,
+          departmentId: departmentId || null,
+        });
+        handleClose();
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        if (msg.includes('name already') || msg.includes('already exists') || msg.includes('nome')) {
+          setFieldErrors(prev => ({ ...prev, name: translateError(msg) }));
+        } else if (msg.includes('code') || msg.includes('código')) {
+          setFieldErrors(prev => ({ ...prev, code: translateError(msg) }));
+        } else {
+          toast.error(translateError(msg));
+        }
+      }
     }
   };
 
@@ -120,6 +135,7 @@ export function CreateModal({
     setSearchQuery('');
     setName('');
     setCode('');
+    setFieldErrors({});
     onClose();
   };
 
@@ -227,27 +243,41 @@ export function CreateModal({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  Nome do Cargo <span className="text-red-500">*</span>
+                  Nome do Cargo <span className="text-rose-500">*</span>
                 </Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Ex: Gerente de Vendas, Analista de TI"
-                  autoFocus
-                />
+                <div className="relative">
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={e => {
+                      setName(e.target.value);
+                      if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
+                    }}
+                    placeholder="Ex: Gerente de Vendas, Analista de TI"
+                    autoFocus
+                    aria-invalid={!!fieldErrors.name}
+                  />
+                  <FormErrorIcon message={fieldErrors.name || ''} />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="code">
-                  Código <span className="text-red-500">*</span>
+                  Código <span className="text-rose-500">*</span>
                 </Label>
-                <Input
-                  id="code"
-                  value={code}
-                  onChange={e => setCode(e.target.value)}
-                  placeholder="Ex: GER-VEN, ANA-TI"
-                />
+                <div className="relative">
+                  <Input
+                    id="code"
+                    value={code}
+                    onChange={e => {
+                      setCode(e.target.value);
+                      if (fieldErrors.code) setFieldErrors(prev => ({ ...prev, code: '' }));
+                    }}
+                    placeholder="Ex: GER-VEN, ANA-TI"
+                    aria-invalid={!!fieldErrors.code}
+                  />
+                  <FormErrorIcon message={fieldErrors.code || ''} />
+                </div>
               </div>
             </div>
           </div>

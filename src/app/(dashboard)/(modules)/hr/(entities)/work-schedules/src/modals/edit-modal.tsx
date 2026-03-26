@@ -8,13 +8,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { translateError } from '@/lib/error-messages';
 import type { WorkSchedule, UpdateWorkScheduleData } from '@/types/hr';
 import { Clock, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { WEEK_DAYS, getDayLabel } from '../utils';
 
 interface EditModalProps {
@@ -47,6 +50,7 @@ export function EditModal({
   const [days, setDays] = useState<Record<DayKey, DaySchedule>>(
     {} as Record<DayKey, DaySchedule>
   );
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [lastId, setLastId] = useState<string | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
@@ -116,7 +120,16 @@ export function EditModal({
       }
     }
 
-    await onSubmit(workSchedule.id, data);
+    try {
+      await onSubmit(workSchedule.id, data);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('name already') || msg.includes('already exists') || msg.includes('nome')) {
+        setFieldErrors(prev => ({ ...prev, name: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   }
 
   if (!workSchedule) return null;
@@ -140,15 +153,22 @@ export function EditModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="ws-edit-name">
-                Nome <span className="text-red-500">*</span>
+                Nome <span className="text-rose-500">*</span>
               </Label>
-              <Input
-                id="ws-edit-name"
-                ref={nameRef}
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Ex: Comercial, Administrativo"
-              />
+              <div className="relative">
+                <Input
+                  id="ws-edit-name"
+                  ref={nameRef}
+                  value={name}
+                  onChange={e => {
+                    setName(e.target.value);
+                    if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
+                  }}
+                  placeholder="Ex: Comercial, Administrativo"
+                  aria-invalid={!!fieldErrors.name}
+                />
+                <FormErrorIcon message={fieldErrors.name} />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="ws-edit-break">Intervalo (minutos)</Label>

@@ -5,6 +5,7 @@ import {
   type WizardStep,
 } from '@/components/ui/step-wizard-dialog';
 import { EmployeeSelector } from '@/components/shared/employee-selector';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { translateError } from '@/lib/error-messages';
 import type {
   CreateTerminationData,
   TerminationType,
@@ -30,6 +32,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 import {
   getTerminationTypeLabel,
   getNoticeTypeLabel,
@@ -65,6 +68,8 @@ export function CreateModal({
   // Step 1 state
   const [employeeId, setEmployeeId] = useState('');
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   // Step 2 state
   const [type, setType] = useState<TerminationType | ''>('');
   const [terminationDate, setTerminationDate] = useState('');
@@ -76,6 +81,7 @@ export function CreateModal({
 
   const resetForm = useCallback(() => {
     setEmployeeId('');
+    setFieldErrors({});
     setType('');
     setTerminationDate(new Date().toISOString().split('T')[0]);
     setLastWorkDay('');
@@ -92,7 +98,7 @@ export function CreateModal({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!employeeId || !type || !terminationDate || !lastWorkDay || !noticeType || !paymentDeadline) return;
 
     const data: CreateTerminationData = {
@@ -106,7 +112,18 @@ export function CreateModal({
       notes: notes.trim() || undefined,
     };
 
-    onSubmit(data);
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('employee') || msg.includes('funcionário')) {
+        setFieldErrors(prev => ({ ...prev, employee: translateError(msg) }));
+      } else if (msg.includes('already') || msg.includes('já existe')) {
+        setFieldErrors(prev => ({ ...prev, employee: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   };
 
   // ============================================================================
@@ -125,11 +142,17 @@ export function CreateModal({
             <Label className="text-xs">
               Funcionário <span className="text-rose-500">*</span>
             </Label>
-            <EmployeeSelector
-              value={employeeId}
-              onChange={id => setEmployeeId(id)}
-              placeholder="Selecionar funcionário para rescisão..."
-            />
+            <div className="relative">
+              <EmployeeSelector
+                value={employeeId}
+                onChange={id => {
+                  setEmployeeId(id);
+                  if (fieldErrors.employee) setFieldErrors(prev => ({ ...prev, employee: '' }));
+                }}
+                placeholder="Selecionar funcionário para rescisão..."
+              />
+              <FormErrorIcon message={fieldErrors.employee || ''} />
+            </div>
           </div>
           <Card className="p-4 bg-rose-50/50 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/20">
             <div className="flex gap-3">
@@ -286,7 +309,7 @@ export function CreateModal({
       icon: Check,
       content: (
         <div className="space-y-4 p-1">
-          <Card className="p-4 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
+          <Card className="p-4 bg-white/95 dark:bg-white/5 border-border">
             <h4 className="text-sm font-semibold mb-3 uppercase text-muted-foreground">
               Resumo da Rescisão
             </h4>

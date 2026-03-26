@@ -3,7 +3,6 @@
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
-import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -12,29 +11,23 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import {
   CoreProvider,
   EntityCard,
   EntityContextMenu,
   EntityGrid,
 } from '@/core';
-import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
 import { exportToCSV } from '@/lib/csv-export';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { usePermissions } from '@/hooks/use-permissions';
+import { employeesService } from '@/services/hr/employees.service';
 import type { Overtime } from '@/types/hr';
 import {
   Check,
+  CircleCheck,
   Clock,
   Coffee,
   Download,
@@ -45,6 +38,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -92,18 +86,14 @@ export default function OvertimePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterEmployeeId, setFilterEmployeeId] = useState('');
   const [filterApproved, setFilterApproved] = useState('');
-  const [filterStartDate, setFilterStartDate] = useState('');
-  const [filterEndDate, setFilterEndDate] = useState('');
 
   const queryParams = useMemo(() => {
     const params: Record<string, unknown> = { perPage: 100 };
     if (filterEmployeeId) params.employeeId = filterEmployeeId;
     if (filterApproved === 'true') params.approved = true;
     else if (filterApproved === 'false') params.approved = false;
-    if (filterStartDate) params.startDate = filterStartDate;
-    if (filterEndDate) params.endDate = filterEndDate;
     return params;
-  }, [filterEmployeeId, filterApproved, filterStartDate, filterEndDate]);
+  }, [filterEmployeeId, filterApproved]);
 
   // ============================================================================
   // DATA
@@ -127,6 +117,31 @@ export default function OvertimePage() {
     [overtimeList]
   );
   const { getName } = useEmployeeMap(employeeIds);
+
+  // Employee options for filter dropdown
+  const { data: employeesData } = useQuery({
+    queryKey: ['employees', 'filter-options'],
+    queryFn: () => employeesService.listEmployees({ perPage: 200, status: 'ACTIVE' }),
+    staleTime: 60_000,
+  });
+
+  const employeeOptions = useMemo(
+    () =>
+      (employeesData?.employees ?? []).map(e => ({
+        id: e.id,
+        label: e.fullName,
+      })),
+    [employeesData]
+  );
+
+  const approvalOptions = useMemo(
+    () => [
+      { value: 'pending', label: 'Pendente' },
+      { value: 'true', label: 'Aprovada' },
+      { value: 'false', label: 'Rejeitada' },
+    ],
+    []
+  );
 
   // ============================================================================
   // STATE
@@ -409,20 +424,6 @@ export default function OvertimePage() {
   }, [canCreate, handleOpenCreate, handleExport]);
 
   // ============================================================================
-  // FILTERS UI
-  // ============================================================================
-
-  const hasActiveFilters =
-    filterEmployeeId || filterApproved || filterStartDate || filterEndDate;
-
-  const clearFilters = useCallback(() => {
-    setFilterEmployeeId('');
-    setFilterApproved('');
-    setFilterStartDate('');
-    setFilterEndDate('');
-  }, []);
-
-  // ============================================================================
   // LOADING
   // ============================================================================
 
@@ -470,48 +471,6 @@ export default function OvertimePage() {
             size="md"
           />
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-64">
-              <EmployeeSelector
-                value={filterEmployeeId}
-                onChange={id => setFilterEmployeeId(id)}
-                placeholder="Filtrar por funcionário..."
-              />
-            </div>
-
-            <Select
-              value={filterApproved}
-              onValueChange={v => setFilterApproved(v === 'ALL' ? '' : v)}
-            >
-              <SelectTrigger className="w-full sm:w-44">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="true">Aprovada</SelectItem>
-                <SelectItem value="false">Rejeitada</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <DateRangeFilter
-              startDate={filterStartDate}
-              endDate={filterEndDate}
-              onStartDateChange={setFilterStartDate}
-              onEndDateChange={setFilterEndDate}
-            />
-
-            {hasActiveFilters && (
-              <Badge
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={clearFilters}
-              >
-                Limpar filtros
-              </Badge>
-            )}
-          </div>
-
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
           ) : error ? (
@@ -530,6 +489,32 @@ export default function OvertimePage() {
             <EntityGrid
               config={overtimeConfig}
               items={filteredItems}
+              toolbarStart={
+                <>
+                  <FilterDropdown
+                    label="Funcionário"
+                    icon={User}
+                    options={employeeOptions}
+                    value={filterEmployeeId}
+                    onChange={v => setFilterEmployeeId(v)}
+                    activeColor="violet"
+                    searchPlaceholder="Buscar funcionário..."
+                    emptyText="Nenhum funcionário encontrado."
+                  />
+                  <FilterDropdown
+                    label="Status"
+                    icon={CircleCheck}
+                    options={approvalOptions}
+                    value={filterApproved}
+                    onChange={v => setFilterApproved(v)}
+                    activeColor="emerald"
+                  />
+                  <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    {filteredItems.length}{' '}
+                    {filteredItems.length === 1 ? 'hora extra' : 'horas extras'}
+                  </p>
+                </>
+              }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}
@@ -549,8 +534,9 @@ export default function OvertimePage() {
           <CreateModal
             isOpen={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
-            onSubmit={data => createMutation.mutate(data)}
-            isSubmitting={createMutation.isPending}
+            onSubmit={async data => {
+              await createMutation.mutateAsync(data);
+            }}
           />
 
           <ApproveModal

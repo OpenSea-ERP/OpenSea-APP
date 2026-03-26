@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -11,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { translateError } from '@/lib/error-messages';
 import type { CreatePayrollData } from '@/types/hr';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Check, Loader2, Receipt, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const MONTHS = [
   { value: '1', label: 'Janeiro' },
@@ -48,11 +51,13 @@ export function CreateModal({
   const [referenceYear, setReferenceYear] = useState(
     String(new Date().getFullYear())
   );
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (isOpen) {
       setReferenceMonth('');
       setReferenceYear(String(new Date().getFullYear()));
+      setFieldErrors({});
     }
   }, [isOpen]);
 
@@ -61,7 +66,7 @@ export function CreateModal({
     !isNaN(parsedYear) && parsedYear >= 2000 && parsedYear <= 2100;
   const canSubmit = referenceMonth && isYearValid;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return;
 
     const data: CreatePayrollData = {
@@ -69,7 +74,16 @@ export function CreateModal({
       referenceYear: parsedYear,
     };
 
-    onSubmit(data);
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('already') || msg.includes('exists') || msg.includes('já existe')) {
+        setFieldErrors(prev => ({ ...prev, referenceMonth: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   };
 
   const handleClose = () => {
@@ -146,16 +160,23 @@ export function CreateModal({
               {/* Ano de referência */}
               <div className="space-y-2">
                 <Label htmlFor="payroll-year">Ano de Referência *</Label>
-                <Input
-                  id="payroll-year"
-                  type="number"
-                  min={2000}
-                  max={2100}
-                  value={referenceYear}
-                  onChange={e => setReferenceYear(e.target.value)}
-                  placeholder="Ex.: 2026"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="payroll-year"
+                    type="number"
+                    min={2000}
+                    max={2100}
+                    value={referenceYear}
+                    onChange={e => {
+                      setReferenceYear(e.target.value);
+                      if (fieldErrors.referenceYear) setFieldErrors(prev => ({ ...prev, referenceYear: '' }));
+                    }}
+                    placeholder="Ex.: 2026"
+                    required
+                    aria-invalid={!!fieldErrors.referenceYear}
+                  />
+                  <FormErrorIcon message={fieldErrors.referenceYear} />
+                </div>
               </div>
             </div>
           </div>

@@ -1,44 +1,54 @@
+/**
+ * OpenSea OS - Create Overtime Wizard (HR)
+ * Modal de criação de solicitação de hora extra
+ */
+
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { EmployeeSelector } from '@/components/shared/employee-selector';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  StepWizardDialog,
+  type WizardStep,
+} from '@/components/ui/step-wizard-dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { translateError } from '@/lib/error-messages';
 import type { CreateOvertimeData } from '@/types/hr';
-import { Clock, Loader2, Check, X } from 'lucide-react';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { useEffect, useState } from 'react';
+import { Clock, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface CreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateOvertimeData) => void;
-  isSubmitting: boolean;
+  onSubmit: (data: CreateOvertimeData) => Promise<void>;
 }
 
 export function CreateModal({
   isOpen,
   onClose,
   onSubmit,
-  isSubmitting,
 }: CreateModalProps) {
   const [employeeId, setEmployeeId] = useState('');
   const [date, setDate] = useState('');
   const [hours, setHours] = useState('');
   const [reason, setReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
       setEmployeeId('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate('');
       setHours('');
       setReason('');
+      setIsSubmitting(false);
+      setFieldErrors({});
+    } else {
+      setDate(new Date().toISOString().split('T')[0]);
     }
   }, [isOpen]);
 
@@ -48,153 +58,175 @@ export function CreateModal({
 
   const canSubmit = employeeId.trim() && date && isHoursValid && isReasonValid;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!canSubmit) return;
-
-    onSubmit({
-      employeeId: employeeId.trim(),
-      date,
-      hours: parsedHours,
-      reason: reason.trim(),
-    });
-  };
-
-  const handleClose = () => {
-    if (!isSubmitting) {
-      onClose();
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        employeeId: employeeId.trim(),
+        date,
+        hours: parsedHours,
+        reason: reason.trim(),
+      });
+      setEmployeeId('');
+      setDate('');
+      setHours('');
+      setReason('');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('already') || msg.includes('exists')) {
+        setFieldErrors(prev => ({ ...prev, date: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={val => {
-        if (!val) handleClose();
-      }}
-    >
-      <DialogContent
-        showCloseButton={false}
-        className="sm:max-w-[800px] max-w-[800px] h-[490px] p-0 gap-0 overflow-hidden flex flex-row"
-      >
-        <VisuallyHidden>
-          <DialogTitle>Solicitar Hora Extra</DialogTitle>
-        </VisuallyHidden>
-
-        {/* Left icon column */}
-        <div className="w-[200px] shrink-0 bg-slate-50 dark:bg-white/5 flex items-center justify-center border-r border-border/50">
-          <Clock className="h-16 w-16 text-amber-400" strokeWidth={1.2} />
-        </div>
-
-        {/* Right content column */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-5 pb-3">
-            <div>
-              <h2 className="text-lg font-semibold leading-none">
-                Solicitar Hora Extra
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Registre horas extras realizadas pelo funcionário.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Fechar</span>
-            </button>
-          </div>
-
-          {/* Body */}
-          <form
-            id="create-overtime-form"
-            onSubmit={handleSubmit}
-            className="flex-1 overflow-y-auto px-6 py-2 space-y-4"
-          >
+  const steps: WizardStep[] = useMemo(
+    () => [
+      {
+        title: 'Solicitar Hora Extra',
+        description: 'Registre horas extras realizadas pelo funcionário.',
+        icon: (
+          <Clock className="h-16 w-16 text-amber-400 opacity-50" strokeWidth={1.2} />
+        ),
+        isValid: !!canSubmit,
+        content: (
+          <div className="space-y-4 py-2">
             {/* Funcionário */}
             <div className="space-y-2">
-              <Label>Funcionário *</Label>
-              <EmployeeSelector
-                value={employeeId}
-                onChange={id => setEmployeeId(id)}
-                placeholder="Selecionar funcionário..."
-              />
+              <Label>
+                Funcionário{' '}
+                <span className="text-[rgb(var(--color-destructive))]">*</span>
+              </Label>
+              <div className="relative">
+                <EmployeeSelector
+                  value={employeeId}
+                  onChange={id => {
+                    setEmployeeId(id);
+                    if (fieldErrors.employeeId)
+                      setFieldErrors(prev => ({ ...prev, employeeId: '' }));
+                  }}
+                  placeholder="Selecionar funcionário..."
+                />
+                <FormErrorIcon message={fieldErrors.employeeId} />
+              </div>
             </div>
 
             {/* Data e Horas */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ot-date">Data *</Label>
-                <Input
-                  id="ot-date"
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  required
-                />
+                <Label htmlFor="ot-date">
+                  Data{' '}
+                  <span className="text-[rgb(var(--color-destructive))]">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="ot-date"
+                    type="date"
+                    value={date}
+                    aria-invalid={!!fieldErrors.date}
+                    onChange={e => {
+                      setDate(e.target.value);
+                      if (fieldErrors.date)
+                        setFieldErrors(prev => ({ ...prev, date: '' }));
+                    }}
+                    className="h-11"
+                  />
+                  <FormErrorIcon message={fieldErrors.date} />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ot-hours">Horas *</Label>
-                <Input
-                  id="ot-hours"
-                  type="number"
-                  step="0.5"
-                  min="0.5"
-                  value={hours}
-                  onChange={e => setHours(e.target.value)}
-                  placeholder="Ex.: 2"
-                  required
-                />
+                <Label htmlFor="ot-hours">
+                  Horas{' '}
+                  <span className="text-[rgb(var(--color-destructive))]">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="ot-hours"
+                    type="number"
+                    step="0.5"
+                    min="0.5"
+                    value={hours}
+                    aria-invalid={!!fieldErrors.hours}
+                    onChange={e => {
+                      setHours(e.target.value);
+                      if (fieldErrors.hours)
+                        setFieldErrors(prev => ({ ...prev, hours: '' }));
+                    }}
+                    placeholder="Ex.: 2"
+                    className="h-11"
+                  />
+                  <FormErrorIcon message={fieldErrors.hours} />
+                </div>
               </div>
             </div>
 
             {/* Motivo */}
             <div className="space-y-2">
-              <Label htmlFor="ot-reason">Motivo *</Label>
-              <Textarea
-                id="ot-reason"
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                placeholder="Descreva o motivo da hora extra (mínimo 10 caracteres)"
-                rows={3}
-                required
-              />
+              <Label htmlFor="ot-reason">
+                Motivo{' '}
+                <span className="text-[rgb(var(--color-destructive))]">*</span>
+              </Label>
+              <div className="relative">
+                <Textarea
+                  id="ot-reason"
+                  value={reason}
+                  aria-invalid={!!fieldErrors.reason}
+                  onChange={e => {
+                    setReason(e.target.value);
+                    if (fieldErrors.reason)
+                      setFieldErrors(prev => ({ ...prev, reason: '' }));
+                  }}
+                  placeholder="Descreva o motivo da hora extra (mínimo 10 caracteres)"
+                  rows={3}
+                />
+                <FormErrorIcon message={fieldErrors.reason} />
+              </div>
               {reason.trim().length > 0 && !isReasonValid && (
                 <p className="text-xs text-destructive">
                   O motivo deve ter no mínimo 10 caracteres.
                 </p>
               )}
             </div>
-          </form>
-
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border/50">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
+          </div>
+        ),
+        footer: (
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
             <Button
-              type="submit"
-              form="create-overtime-form"
+              type="button"
+              onClick={handleSubmit}
               disabled={isSubmitting || !canSubmit}
             >
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Solicitando...
+                </>
               ) : (
-                <Check className="h-4 w-4 mr-2" />
+                'Solicitar Hora Extra'
               )}
-              Solicitar Hora Extra
             </Button>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        ),
+      },
+    ],
+    [employeeId, date, hours, reason, isSubmitting, canSubmit, isReasonValid, onClose, fieldErrors]
+  );
+
+  return (
+    <StepWizardDialog
+      open={isOpen}
+      onOpenChange={open => !open && onClose()}
+      steps={steps}
+      currentStep={1}
+      onStepChange={() => {}}
+      onClose={onClose}
+    />
   );
 }

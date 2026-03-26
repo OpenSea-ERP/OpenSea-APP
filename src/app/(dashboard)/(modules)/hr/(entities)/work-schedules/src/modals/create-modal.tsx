@@ -2,14 +2,17 @@
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { TimePicker } from '@/components/ui/time-picker';
+import { translateError } from '@/lib/error-messages';
 import type { CreateWorkScheduleData } from '@/types/hr';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { CalendarDays, Check, Clock, Loader2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { WEEK_DAYS, getDayLabel } from '../utils';
 
 // =============================================================================
@@ -100,6 +103,7 @@ export function CreateModal({
   const [days, setDays] = useState<Record<DayKey, DaySchedule>>(getDefaultDays);
   const [replicateMonday, setReplicateMonday] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const nameRef = useRef<HTMLInputElement>(null);
 
   // Reset on open
@@ -110,6 +114,7 @@ export function CreateModal({
       setDays(getDefaultDays());
       setReplicateMonday(true);
       setIsSubmitting(false);
+      setFieldErrors({});
       setTimeout(() => nameRef.current?.focus(), 150);
     }
   }, [isOpen]);
@@ -220,6 +225,13 @@ export function CreateModal({
 
       await onSubmit(data);
       onClose();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('name already') || msg.includes('already exists') || msg.includes('nome')) {
+        setFieldErrors(prev => ({ ...prev, name: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -286,14 +298,21 @@ export function CreateModal({
                 <Label htmlFor="ws-name" className="text-xs">
                   Nome <span className="text-rose-500">*</span>
                 </Label>
-                <Input
-                  id="ws-name"
-                  ref={nameRef}
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Ex: Comercial, Administrativo"
-                  className="h-9"
-                />
+                <div className="relative">
+                  <Input
+                    id="ws-name"
+                    ref={nameRef}
+                    value={name}
+                    onChange={e => {
+                      setName(e.target.value);
+                      if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
+                    }}
+                    placeholder="Ex: Comercial, Administrativo"
+                    className="h-9"
+                    aria-invalid={!!fieldErrors.name}
+                  />
+                  <FormErrorIcon message={fieldErrors.name} />
+                </div>
               </div>
 
               <div className="space-y-1.5">

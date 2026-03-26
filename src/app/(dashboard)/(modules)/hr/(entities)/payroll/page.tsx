@@ -9,17 +9,10 @@ import {
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
+import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import {
   CoreProvider,
   EntityCard,
@@ -33,9 +26,11 @@ import type { Payroll, PayrollStatus } from '@/types/hr';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import {
   Ban,
+  Calendar,
   Calculator,
   CalendarDays,
   Check,
+  CircleCheck,
   DollarSign,
   Download,
   ExternalLink,
@@ -96,6 +91,11 @@ const STATUS_OPTIONS: { value: PayrollStatus; label: string }[] = [
   { value: 'CANCELLED', label: 'Cancelada' },
 ];
 
+const YEAR_OPTIONS = Array.from({ length: 10 }, (_, i) => {
+  const year = new Date().getFullYear() - 5 + i;
+  return { value: String(year), label: String(year) };
+});
+
 export default function PayrollPage() {
   const router = useRouter();
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
@@ -109,6 +109,7 @@ export default function PayrollPage() {
   // FILTERS
   // ============================================================================
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -468,18 +469,6 @@ export default function PayrollPage() {
   }, [canCreate, handleOpenCreate, handleExport]);
 
   // ============================================================================
-  // FILTERS UI
-  // ============================================================================
-
-  const hasActiveFilters = filterMonth || filterYear || filterStatus;
-
-  const clearFilters = useCallback(() => {
-    setFilterMonth('');
-    setFilterYear('');
-    setFilterStatus('');
-  }, []);
-
-  // ============================================================================
   // LOADING
   // ============================================================================
 
@@ -518,54 +507,17 @@ export default function PayrollPage() {
         </PageHeader>
 
         <PageBody>
-          <div className="flex flex-wrap items-center gap-3">
-            <Select value={filterMonth} onValueChange={setFilterMonth}>
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="Mês" />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map(m => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Search Bar */}
+          <SearchBar
+            value={searchQuery}
+            placeholder={payrollConfig.display.labels.searchPlaceholder}
+            onSearch={value => setSearchQuery(value)}
+            onClear={() => setSearchQuery('')}
+            showClear={true}
+            size="md"
+          />
 
-            <Input
-              type="number"
-              placeholder="Ano"
-              value={filterYear}
-              onChange={e => setFilterYear(e.target.value)}
-              className="w-[100px]"
-              min={2000}
-              max={2100}
-            />
-
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map(s => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {hasActiveFilters && (
-              <Badge
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={clearFilters}
-              >
-                Limpar filtros
-              </Badge>
-            )}
-          </div>
-
+          {/* Grid */}
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
           ) : error ? (
@@ -584,10 +536,38 @@ export default function PayrollPage() {
             <EntityGrid
               config={payrollConfig}
               items={payrolls}
+              toolbarStart={
+                <>
+                  <FilterDropdown
+                    label="Mês"
+                    icon={Calendar}
+                    options={MONTHS}
+                    value={filterMonth}
+                    onChange={v => setFilterMonth(v)}
+                    activeColor="blue"
+                  />
+                  <FilterDropdown
+                    label="Ano"
+                    icon={CalendarDays}
+                    options={YEAR_OPTIONS}
+                    value={filterYear}
+                    onChange={v => setFilterYear(v)}
+                    activeColor="violet"
+                  />
+                  <FilterDropdown
+                    label="Status"
+                    icon={CircleCheck}
+                    options={STATUS_OPTIONS}
+                    value={filterStatus}
+                    onChange={v => setFilterStatus(v)}
+                    activeColor="emerald"
+                  />
+                </>
+              }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}
-              isSearching={false}
+              isSearching={!!searchQuery}
               onItemDoubleClick={item => {
                 if (canView) {
                   setViewTarget(item);

@@ -3,7 +3,6 @@
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
-import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -12,7 +11,7 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { Badge } from '@/components/ui/badge';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import {
   CoreProvider,
   EntityCard,
@@ -22,18 +21,13 @@ import {
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { exportToCSV } from '@/lib/csv-export';
 import { usePermissions } from '@/hooks/use-permissions';
-import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
+import { employeesService } from '@/services/hr/employees.service';
 import type { Bonus } from '@/types/hr';
+import { useQuery } from '@tanstack/react-query';
 import {
   Calendar,
+  CircleCheck,
   Download,
   ExternalLink,
   Eye,
@@ -115,6 +109,30 @@ export default function BonusesPage() {
   const employeeIds = useMemo(() => bonuses.map(b => b.employeeId), [bonuses]);
   const { getName } = useEmployeeMap(employeeIds);
 
+  const { data: employeesData } = useQuery({
+    queryKey: ['employees', 'filter-options'],
+    queryFn: () =>
+      employeesService.listEmployees({ perPage: 100, status: 'ACTIVE' }),
+    staleTime: 60_000,
+  });
+
+  const employeeOptions = useMemo(
+    () =>
+      (employeesData?.employees ?? []).map(e => ({
+        value: e.id,
+        label: e.fullName,
+      })),
+    [employeesData]
+  );
+
+  const paidStatusOptions = useMemo(
+    () => [
+      { value: 'true', label: 'Paga' },
+      { value: 'false', label: 'Pendente' },
+    ],
+    []
+  );
+
   // ============================================================================
   // STATE
   // ============================================================================
@@ -150,12 +168,8 @@ export default function BonusesPage() {
 
   const handleCreate = useCallback(
     async (data: Parameters<typeof createMutation.mutateAsync>[0]) => {
-      try {
-        await createMutation.mutateAsync(data);
-        setIsCreateOpen(false);
-      } catch {
-        // Toast handled by mutation
-      }
+      await createMutation.mutateAsync(data);
+      setIsCreateOpen(false);
     },
     [createMutation]
   );
@@ -394,21 +408,8 @@ export default function BonusesPage() {
   }, [canCreate, handleOpenCreate, handleExport]);
 
   // ============================================================================
-  // FILTERS UI
+  // FILTERS UI (unused date filters kept for query params)
   // ============================================================================
-
-  const hasActiveFilters =
-    filterEmployeeId ||
-    filterIsPaid !== undefined ||
-    filterStartDate ||
-    filterEndDate;
-
-  const clearFilters = useCallback(() => {
-    setFilterEmployeeId('');
-    setFilterIsPaid(undefined);
-    setFilterStartDate('');
-    setFilterEndDate('');
-  }, []);
 
   // ============================================================================
   // LOADING STATE
@@ -460,56 +461,6 @@ export default function BonusesPage() {
             size="md"
           />
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-64">
-              <EmployeeSelector
-                value={filterEmployeeId}
-                onChange={id => setFilterEmployeeId(id)}
-                placeholder="Filtrar por funcionário..."
-              />
-            </div>
-
-            <Select
-              value={
-                filterIsPaid === undefined
-                  ? 'ALL'
-                  : filterIsPaid
-                    ? 'true'
-                    : 'false'
-              }
-              onValueChange={v =>
-                setFilterIsPaid(v === 'ALL' ? undefined : v === 'true')
-              }
-            >
-              <SelectTrigger className="w-full sm:w-44">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Status</SelectItem>
-                <SelectItem value="true">Paga</SelectItem>
-                <SelectItem value="false">Pendente</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <DateRangeFilter
-              startDate={filterStartDate}
-              endDate={filterEndDate}
-              onStartDateChange={setFilterStartDate}
-              onEndDateChange={setFilterEndDate}
-            />
-
-            {hasActiveFilters && (
-              <Badge
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={clearFilters}
-              >
-                Limpar filtros
-              </Badge>
-            )}
-          </div>
-
           {/* Grid */}
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
@@ -529,6 +480,36 @@ export default function BonusesPage() {
             <EntityGrid
               config={bonusesConfig}
               items={filteredItems}
+              toolbarStart={
+                <>
+                  <FilterDropdown
+                    label="Funcionário"
+                    icon={User}
+                    options={employeeOptions}
+                    value={filterEmployeeId}
+                    onChange={v => setFilterEmployeeId(v)}
+                    activeColor="violet"
+                    searchPlaceholder="Buscar funcionário..."
+                    emptyText="Nenhum funcionário encontrado."
+                  />
+                  <FilterDropdown
+                    label="Status"
+                    icon={CircleCheck}
+                    options={paidStatusOptions}
+                    value={
+                      filterIsPaid === undefined
+                        ? ''
+                        : filterIsPaid
+                          ? 'true'
+                          : 'false'
+                    }
+                    onChange={v =>
+                      setFilterIsPaid(v === '' ? undefined : v === 'true')
+                    }
+                    activeColor="emerald"
+                  />
+                </>
+              }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}
@@ -550,7 +531,6 @@ export default function BonusesPage() {
             isOpen={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
             onSubmit={handleCreate}
-            isSubmitting={createMutation.isPending}
           />
 
           {/* View Modal */}

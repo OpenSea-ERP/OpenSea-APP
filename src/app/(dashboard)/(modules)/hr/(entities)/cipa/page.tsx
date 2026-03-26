@@ -132,12 +132,8 @@ export default function CipaPage() {
 
   const handleCreate = useCallback(
     async (data: Parameters<typeof createMutation.mutateAsync>[0]) => {
-      try {
-        await createMutation.mutateAsync(data);
-        setIsCreateOpen(false);
-      } catch {
-        // Toast handled by mutation
-      }
+      await createMutation.mutateAsync(data);
+      setIsCreateOpen(false);
     },
     [createMutation]
   );
@@ -450,7 +446,6 @@ export default function CipaPage() {
             isOpen={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
             onSubmit={handleCreate}
-            isSubmitting={createMutation.isPending}
           />
 
           {/* Delete Confirmation */}

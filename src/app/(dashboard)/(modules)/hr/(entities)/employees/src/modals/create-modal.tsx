@@ -3,8 +3,8 @@
 import { companiesApi } from '@/app/(dashboard)/(modules)/admin/(entities)/companies/src';
 import { departmentsApi } from '@/app/(dashboard)/(modules)/hr/(entities)/departments/src';
 import { positionsApi } from '@/app/(dashboard)/(modules)/hr/(entities)/positions/src';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,12 +13,12 @@ import {
   type WizardStep,
 } from '@/components/ui/step-wizard-dialog';
 import { Switch } from '@/components/ui/switch';
+import { translateError } from '@/lib/error-messages';
 import { listPermissionGroups } from '@/services/rbac/rbac.service';
 import type { Company, Department, Employee, Position } from '@/types/hr';
 import type { PermissionGroup } from '@/types/rbac';
 import { useQuery } from '@tanstack/react-query';
 import {
-  AlertCircle,
   ArrowRight,
   Briefcase,
   Building2,
@@ -31,6 +31,7 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useEffect, useMemo, useState } from 'react';
 
 interface CreateModalProps {
@@ -256,23 +257,34 @@ export function CreateModal({
     if (fullName && cpf) {
       const cleanCpf = cpf.replace(/\D/g, '');
 
-      await onSubmit({
-        fullName,
-        companyId: selectedCompany?.id || selectedDepartment?.companyId || null,
-        departmentId: selectedDepartment?.id || null,
-        positionId: positionId || null,
-        registrationNumber: `EMP${Date.now()}`,
-        cpf: cleanCpf,
-        hireDate: new Date().toISOString(),
-        contractType: 'CLT',
-        workRegime: 'FULL_TIME',
-        weeklyHours: 40,
-        createUser,
-        permissionGroupId: createUser ? defaultPermissionGroupId : undefined,
-        userEmail: createUser ? userEmail : undefined,
-        userPassword: createUser ? userPassword : undefined,
-      });
-      handleClose();
+      try {
+        await onSubmit({
+          fullName,
+          companyId: selectedCompany?.id || selectedDepartment?.companyId || null,
+          departmentId: selectedDepartment?.id || null,
+          positionId: positionId || null,
+          registrationNumber: `EMP${Date.now()}`,
+          cpf: cleanCpf,
+          hireDate: new Date().toISOString(),
+          contractType: 'CLT',
+          workRegime: 'FULL_TIME',
+          weeklyHours: 40,
+          createUser,
+          permissionGroupId: createUser ? defaultPermissionGroupId : undefined,
+          userEmail: createUser ? userEmail : undefined,
+          userPassword: createUser ? userPassword : undefined,
+        });
+        handleClose();
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        if (msg.includes('CPF') || msg.includes('cpf')) {
+          setCpfError(translateError(msg));
+        } else if (msg.includes('email') || msg.includes('Email')) {
+          setEmailError(translateError(msg));
+        } else {
+          toast.error(translateError(msg));
+        }
+      }
     }
   };
 
@@ -410,7 +422,7 @@ export function CreateModal({
 
             <div className="space-y-2">
               <Label htmlFor="fullName">
-                Nome Completo <span className="text-red-500">*</span>
+                Nome Completo <span className="text-rose-500">*</span>
               </Label>
               <Input
                 id="fullName"
@@ -423,35 +435,28 @@ export function CreateModal({
 
             <div className="space-y-2">
               <Label htmlFor="cpf">
-                CPF <span className="text-red-500">*</span>
+                CPF <span className="text-rose-500">*</span>
               </Label>
-              <Input
-                id="cpf"
-                value={cpf}
-                onChange={e => {
-                  const value = e.target.value.replace(/\D/g, '');
-                  if (value.length <= 11) {
-                    const formatted = value
-                      .replace(/(\d{3})(\d)/, '$1.$2')
-                      .replace(/(\d{3})(\d)/, '$1.$2')
-                      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                    setCpf(formatted);
-                  }
-                }}
-                placeholder="000.000.000-00"
-                maxLength={14}
-                className={
-                  cpfError ? 'border-red-500 focus-visible:ring-red-500' : ''
-                }
-              />
-              {cpfError && (
-                <Alert variant="destructive" className="py-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-sm">
-                    {cpfError}
-                  </AlertDescription>
-                </Alert>
-              )}
+              <div className="relative">
+                <Input
+                  id="cpf"
+                  value={cpf}
+                  onChange={e => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 11) {
+                      const formatted = value
+                        .replace(/(\d{3})(\d)/, '$1.$2')
+                        .replace(/(\d{3})(\d)/, '$1.$2')
+                        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                      setCpf(formatted);
+                    }
+                  }}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                  aria-invalid={!!cpfError}
+                />
+                <FormErrorIcon message={cpfError} />
+              </div>
             </div>
 
             <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -494,7 +499,7 @@ export function CreateModal({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="userEmail">
-                Email <span className="text-red-500">*</span>
+                Email <span className="text-rose-500">*</span>
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -505,26 +510,16 @@ export function CreateModal({
                   onChange={e => setUserEmail(e.target.value)}
                   placeholder="email@exemplo.com"
                   autoFocus
-                  className={`pl-10 ${
-                    emailError
-                      ? 'border-red-500 focus-visible:ring-red-500'
-                      : ''
-                  }`}
+                  className="pl-10"
+                  aria-invalid={!!emailError}
                 />
+                <FormErrorIcon message={emailError} />
               </div>
-              {emailError && (
-                <Alert variant="destructive" className="py-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-sm">
-                    {emailError}
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="userPassword">
-                Senha Temporária <span className="text-red-500">*</span>
+                Senha Temporária <span className="text-rose-500">*</span>
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -534,17 +529,14 @@ export function CreateModal({
                   value={userPassword}
                   onChange={e => setUserPassword(e.target.value)}
                   placeholder="Mínimo 6 caracteres"
-                  className={`pl-10 pr-10 ${
-                    passwordError
-                      ? 'border-red-500 focus-visible:ring-red-500'
-                      : ''
-                  }`}
+                  className="pl-10 pr-10"
+                  aria-invalid={!!passwordError}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                  className={`absolute top-1/2 -translate-y-1/2 h-7 w-7 p-0 ${passwordError ? 'right-8' : 'right-1'}`}
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
@@ -554,15 +546,8 @@ export function CreateModal({
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </Button>
+                <FormErrorIcon message={passwordError} className="right-1" />
               </div>
-              {passwordError && (
-                <Alert variant="destructive" className="py-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-sm">
-                    {passwordError}
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
           </div>
         ),

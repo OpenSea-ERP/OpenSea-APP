@@ -4,7 +4,6 @@ import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
 import { SearchBar } from '@/components/layout/search-bar';
-import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
@@ -13,16 +12,8 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import type { HeaderButton } from '@/components/layout/types/header.types';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DateRangeFilter } from '@/app/(dashboard)/(modules)/admin/overview/audit-logs/src/components/date-range-filter';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import {
   CoreProvider,
   EntityCard,
@@ -33,15 +24,19 @@ import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { useEmployeeMap } from '@/hooks/use-employee-map';
 import { exportToCSV } from '@/lib/csv-export';
 import { usePermissions } from '@/hooks/use-permissions';
+import { employeesService } from '@/services/hr/employees.service';
 import type { Absence, AbsenceType, AbsenceStatus } from '@/types/hr';
+import { useQuery } from '@tanstack/react-query';
 import {
   Ban,
   Calendar,
   Check,
+  CircleCheck,
   Clock,
   Download,
   ExternalLink,
   Eye,
+  FileText,
   Plus,
   User,
   UserX,
@@ -164,6 +159,32 @@ export default function AbsencesPage() {
     [absences]
   );
   const { getName } = useEmployeeMap(employeeIds);
+
+  const { data: employeesData } = useQuery({
+    queryKey: ['employees', 'filter-options'],
+    queryFn: () =>
+      employeesService.listEmployees({ perPage: 100, status: 'ACTIVE' }),
+    staleTime: 60_000,
+  });
+
+  const employeeOptions = useMemo(
+    () =>
+      (employeesData?.employees ?? []).map(e => ({
+        value: e.id,
+        label: e.fullName,
+      })),
+    [employeesData]
+  );
+
+  const typeOptions = useMemo(
+    () => ABSENCE_TYPE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label })),
+    []
+  );
+
+  const statusOptions = useMemo(
+    () => ABSENCE_STATUS_OPTIONS.map(opt => ({ value: opt.value, label: opt.label })),
+    []
+  );
 
   // ============================================================================
   // STATE
@@ -508,23 +529,8 @@ export default function AbsencesPage() {
   }, [canCreate, handleOpenCreate, handleExport]);
 
   // ============================================================================
-  // FILTERS UI
+  // FILTERS UI (unused date filters kept for query params)
   // ============================================================================
-
-  const hasActiveFilters =
-    filterEmployeeId ||
-    filterType ||
-    filterStatus ||
-    filterStartDate ||
-    filterEndDate;
-
-  const clearFilters = useCallback(() => {
-    setFilterEmployeeId('');
-    setFilterType('');
-    setFilterStatus('');
-    setFilterStartDate('');
-    setFilterEndDate('');
-  }, []);
 
   // ============================================================================
   // LOADING
@@ -574,71 +580,6 @@ export default function AbsencesPage() {
             size="md"
           />
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-full sm:w-64">
-              <EmployeeSelector
-                value={filterEmployeeId}
-                onChange={id => setFilterEmployeeId(id)}
-                placeholder="Filtrar por funcionário..."
-              />
-            </div>
-
-            <Select
-              value={filterType}
-              onValueChange={v =>
-                setFilterType(v === 'ALL' ? '' : (v as AbsenceType))
-              }
-            >
-              <SelectTrigger className="w-full sm:w-52">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Tipos</SelectItem>
-                {ABSENCE_TYPE_OPTIONS.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filterStatus}
-              onValueChange={v =>
-                setFilterStatus(v === 'ALL' ? '' : (v as AbsenceStatus))
-              }
-            >
-              <SelectTrigger className="w-full sm:w-44">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Status</SelectItem>
-                {ABSENCE_STATUS_OPTIONS.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <DateRangeFilter
-              startDate={filterStartDate}
-              endDate={filterEndDate}
-              onStartDateChange={setFilterStartDate}
-              onEndDateChange={setFilterEndDate}
-            />
-
-            {hasActiveFilters && (
-              <Badge
-                variant="secondary"
-                className="cursor-pointer hover:bg-destructive/10"
-                onClick={clearFilters}
-              >
-                Limpar filtros
-              </Badge>
-            )}
-          </div>
-
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
           ) : error ? (
@@ -657,6 +598,36 @@ export default function AbsencesPage() {
             <EntityGrid
               config={absencesConfig}
               items={absences}
+              toolbarStart={
+                <>
+                  <FilterDropdown
+                    label="Funcionário"
+                    icon={User}
+                    options={employeeOptions}
+                    value={filterEmployeeId}
+                    onChange={v => setFilterEmployeeId(v)}
+                    activeColor="violet"
+                    searchPlaceholder="Buscar funcionário..."
+                    emptyText="Nenhum funcionário encontrado."
+                  />
+                  <FilterDropdown
+                    label="Tipo"
+                    icon={FileText}
+                    options={typeOptions}
+                    value={filterType}
+                    onChange={v => setFilterType(v as AbsenceType | '')}
+                    activeColor="emerald"
+                  />
+                  <FilterDropdown
+                    label="Status"
+                    icon={CircleCheck}
+                    options={statusOptions}
+                    value={filterStatus}
+                    onChange={v => setFilterStatus(v as AbsenceStatus | '')}
+                    activeColor="cyan"
+                  />
+                </>
+              }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}

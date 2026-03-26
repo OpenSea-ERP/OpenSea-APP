@@ -2,6 +2,7 @@
 
 import { companiesApi } from '@/app/(dashboard)/(modules)/admin/(entities)/companies/src/api';
 import { Card } from '@/components/ui/card';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/step-wizard-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { translateError } from '@/lib/error-messages';
 import type { Company, Department } from '@/types/hr';
 import { useQuery } from '@tanstack/react-query';
 import { formatCNPJ } from '@/helpers/formatters';
@@ -22,6 +24,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface CreateModalProps {
   isOpen: boolean;
@@ -42,6 +45,7 @@ export function CreateModal({
   const [departmentName, setDepartmentName] = useState('');
   const [departmentCode, setDepartmentCode] = useState('');
   const [departmentDescription, setDepartmentDescription] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [wasOpen, setWasOpen] = useState(false);
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -55,6 +59,7 @@ export function CreateModal({
     setDepartmentName('');
     setDepartmentCode('');
     setDepartmentDescription('');
+    setFieldErrors({});
   }
   if (!isOpen && wasOpen) {
     setWasOpen(false);
@@ -109,15 +114,26 @@ export function CreateModal({
   const handleSubmit = async () => {
     if (!selectedCompany || !departmentName || !departmentCode) return;
 
-    await onSubmit({
-      name: departmentName,
-      code: departmentCode,
-      description: departmentDescription || undefined,
-      companyId: selectedCompany.id,
-      isActive: true,
-    });
+    try {
+      await onSubmit({
+        name: departmentName,
+        code: departmentCode,
+        description: departmentDescription || undefined,
+        companyId: selectedCompany.id,
+        isActive: true,
+      });
 
-    handleClose();
+      handleClose();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('name already') || msg.includes('already exists') || msg.includes('nome')) {
+        setFieldErrors(prev => ({ ...prev, name: translateError(msg) }));
+      } else if (msg.includes('code') || msg.includes('código')) {
+        setFieldErrors(prev => ({ ...prev, code: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   };
 
   const handleClose = () => {
@@ -222,26 +238,42 @@ export function CreateModal({
 
             <div className="grid grid-cols-[1fr_20%] gap-3">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome do Departamento *</Label>
-                <Input
-                  ref={nameInputRef}
-                  id="name"
-                  placeholder="Ex: Recursos Humanos"
-                  value={departmentName}
-                  onChange={e => setDepartmentName(e.target.value)}
-                />
+                <Label htmlFor="name">
+                  Nome do Departamento <span className="text-rose-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    ref={nameInputRef}
+                    id="name"
+                    placeholder="Ex: Recursos Humanos"
+                    value={departmentName}
+                    onChange={e => {
+                      setDepartmentName(e.target.value);
+                      if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
+                    }}
+                    aria-invalid={!!fieldErrors.name}
+                  />
+                  <FormErrorIcon message={fieldErrors.name || ''} />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="code">Código *</Label>
-                <Input
-                  id="code"
-                  placeholder="Ex: RH"
-                  value={departmentCode}
-                  onChange={e =>
-                    setDepartmentCode(e.target.value.toUpperCase())
-                  }
-                />
+                <Label htmlFor="code">
+                  Código <span className="text-rose-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="code"
+                    placeholder="Ex: RH"
+                    value={departmentCode}
+                    onChange={e => {
+                      setDepartmentCode(e.target.value.toUpperCase());
+                      if (fieldErrors.code) setFieldErrors(prev => ({ ...prev, code: '' }));
+                    }}
+                    aria-invalid={!!fieldErrors.code}
+                  />
+                  <FormErrorIcon message={fieldErrors.code || ''} />
+                </div>
               </div>
             </div>
 

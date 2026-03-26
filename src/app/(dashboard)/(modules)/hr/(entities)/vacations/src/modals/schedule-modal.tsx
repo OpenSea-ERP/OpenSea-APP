@@ -15,9 +15,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { translateError } from '@/lib/error-messages';
 import { CalendarDays } from 'lucide-react';
+import { toast } from 'sonner';
 import type { ScheduleVacationData } from '@/types/hr';
 
 interface ScheduleModalProps {
@@ -38,20 +41,31 @@ export function ScheduleModal({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [days, setDays] = useState(30);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function resetForm() {
     setStartDate('');
     setEndDate('');
     setDays(30);
+    setFieldErrors({});
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!vacationId || !startDate || !endDate || days <= 0) return;
 
-    onSchedule(vacationId, { startDate, endDate, days });
-    resetForm();
+    try {
+      await onSchedule(vacationId, { startDate, endDate, days });
+      resetForm();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('date') || msg.includes('overlap') || msg.includes('data')) {
+        setFieldErrors(prev => ({ ...prev, startDate: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   }
 
   const isValid = startDate && endDate && days > 0;
@@ -80,13 +94,20 @@ export function ScheduleModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="schedule-start-date">Data Início</Label>
-              <Input
-                id="schedule-start-date"
-                type="date"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="schedule-start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={e => {
+                    setStartDate(e.target.value);
+                    if (fieldErrors.startDate) setFieldErrors(prev => ({ ...prev, startDate: '' }));
+                  }}
+                  required
+                  aria-invalid={!!fieldErrors.startDate}
+                />
+                <FormErrorIcon message={fieldErrors.startDate} />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="schedule-end-date">Data Fim</Label>

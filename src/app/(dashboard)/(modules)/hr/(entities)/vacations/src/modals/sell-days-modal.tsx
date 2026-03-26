@@ -15,9 +15,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { translateError } from '@/lib/error-messages';
 import { DollarSign } from 'lucide-react';
+import { toast } from 'sonner';
 import type { SellVacationDaysData } from '@/types/hr';
 
 interface SellDaysModalProps {
@@ -36,18 +39,29 @@ export function SellDaysModal({
   isSubmitting,
 }: SellDaysModalProps) {
   const [daysToSell, setDaysToSell] = useState(10);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function resetForm() {
     setDaysToSell(10);
+    setFieldErrors({});
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!vacationId || daysToSell <= 0) return;
 
-    onSell(vacationId, { daysToSell });
-    resetForm();
+    try {
+      await onSell(vacationId, { daysToSell });
+      resetForm();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('days') || msg.includes('dias') || msg.includes('exceed')) {
+        setFieldErrors(prev => ({ ...prev, daysToSell: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   }
 
   const isValid = daysToSell > 0;
@@ -80,15 +94,22 @@ export function SellDaysModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="sell-days">Dias para Vender</Label>
-            <Input
-              id="sell-days"
-              type="number"
-              min={1}
-              max={10}
-              value={daysToSell}
-              onChange={e => setDaysToSell(Number(e.target.value))}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="sell-days"
+                type="number"
+                min={1}
+                max={10}
+                value={daysToSell}
+                onChange={e => {
+                  setDaysToSell(Number(e.target.value));
+                  if (fieldErrors.daysToSell) setFieldErrors(prev => ({ ...prev, daysToSell: '' }));
+                }}
+                required
+                aria-invalid={!!fieldErrors.daysToSell}
+              />
+              <FormErrorIcon message={fieldErrors.daysToSell} />
+            </div>
           </div>
 
           <DialogFooter>

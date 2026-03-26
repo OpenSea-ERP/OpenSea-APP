@@ -9,10 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { EmployeeSelector } from '@/components/shared/employee-selector';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { translateError } from '@/lib/error-messages';
 import { TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface CreditModalProps {
   isOpen: boolean;
@@ -34,17 +37,28 @@ export function CreditModal({
   const [employeeId, setEmployeeId] = useState('');
   const [hours, setHours] = useState('');
   const [year, setYear] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({
-      employeeId,
-      hours: Number(hours),
-      year: year ? Number(year) : undefined,
-    });
-    setEmployeeId('');
-    setHours('');
-    setYear('');
+    try {
+      await onSubmit({
+        employeeId,
+        hours: Number(hours),
+        year: year ? Number(year) : undefined,
+      });
+      setEmployeeId('');
+      setHours('');
+      setYear('');
+      setFieldErrors({});
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('hours') || msg.includes('horas')) {
+        setFieldErrors(prev => ({ ...prev, hours: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    }
   };
 
   return (
@@ -69,16 +83,23 @@ export function CreditModal({
           </div>
           <div className="space-y-1">
             <Label htmlFor="credit-hours">Horas</Label>
-            <Input
-              id="credit-hours"
-              type="number"
-              min="0.5"
-              step="0.5"
-              placeholder="Ex: 8"
-              value={hours}
-              onChange={e => setHours(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="credit-hours"
+                type="number"
+                min="0.5"
+                step="0.5"
+                placeholder="Ex: 8"
+                value={hours}
+                onChange={e => {
+                  setHours(e.target.value);
+                  if (fieldErrors.hours) setFieldErrors(prev => ({ ...prev, hours: '' }));
+                }}
+                required
+                aria-invalid={!!fieldErrors.hours}
+              />
+              <FormErrorIcon message={fieldErrors.hours} />
+            </div>
           </div>
           <div className="space-y-1">
             <Label htmlFor="credit-year">Ano (opcional)</Label>

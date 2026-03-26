@@ -1,9 +1,18 @@
+/**
+ * OpenSea OS - Create CIPA Mandate Wizard
+ * Modal de criacao rapida de mandato CIPA
+ */
+
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  StepWizardDialog,
+  type WizardStep,
+} from '@/components/ui/step-wizard-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -12,16 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { translateError } from '@/lib/error-messages';
 import type { CreateCipaMandateData, CipaMandateStatus } from '@/types/hr';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { Check, Loader2, Shield, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Loader2, Shield } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 interface CreateMandateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateCipaMandateData) => void;
-  isSubmitting: boolean;
+  onSubmit: (data: CreateCipaMandateData) => Promise<void>;
 }
 
 const STATUS_OPTIONS: { value: CipaMandateStatus; label: string }[] = [
@@ -34,7 +43,6 @@ export function CreateMandateModal({
   isOpen,
   onClose,
   onSubmit,
-  isSubmitting,
 }: CreateMandateModalProps) {
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -42,199 +50,194 @@ export function CreateMandateModal({
   const [status, setStatus] = useState<CipaMandateStatus>('DRAFT');
   const [electionDate, setElectionDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
       setName('');
       setStartDate(new Date().toISOString().split('T')[0]);
       setEndDate('');
       setStatus('DRAFT');
       setElectionDate('');
       setNotes('');
+      setIsSubmitting(false);
+      setFieldErrors({});
     }
   }, [isOpen]);
 
   const canSubmit = name.trim() && startDate && endDate;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!canSubmit) return;
-
-    const data: CreateCipaMandateData = {
-      name: name.trim(),
-      startDate,
-      endDate,
-      status,
-      electionDate: electionDate || undefined,
-      notes: notes.trim() || undefined,
-    };
-
-    onSubmit(data);
+    setIsSubmitting(true);
+    try {
+      const data: CreateCipaMandateData = {
+        name: name.trim(),
+        startDate,
+        endDate,
+        status,
+        electionDate: electionDate || undefined,
+        notes: notes.trim() || undefined,
+      };
+      await onSubmit(data);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('already') || msg.includes('exists')) {
+        setFieldErrors(prev => ({ ...prev, name: translateError(msg) }));
+      } else {
+        toast.error(translateError(msg));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleClose = () => {
-    if (!isSubmitting) onClose();
-  };
-
-  return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={open => {
-        if (!open) handleClose();
-      }}
-    >
-      <DialogContent
-        showCloseButton={false}
-        className="sm:max-w-[800px] max-w-[800px] h-[480px] p-0 gap-0 overflow-hidden flex flex-row"
-      >
-        <VisuallyHidden>
-          <DialogTitle>Novo Mandato CIPA</DialogTitle>
-        </VisuallyHidden>
-
-        {/* Left icon column */}
-        <div className="w-[200px] shrink-0 bg-slate-50 dark:bg-white/5 flex items-center justify-center border-r border-border/50">
-          <Shield
-            className="h-16 w-16 text-amber-400"
-            strokeWidth={1.2}
-          />
-        </div>
-
-        {/* Right content column */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-5 pb-3">
-            <div>
-              <h2 className="text-lg font-semibold leading-none">
-                Novo Mandato CIPA
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Cadastre um novo mandato da Comissão Interna de Prevenção de Acidentes.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Fechar</span>
-            </button>
-          </div>
-
-          {/* Body */}
-          <form
-            onSubmit={handleSubmit}
-            className="flex-1 flex flex-col min-h-0"
-          >
-            <div
-              className="flex-1 overflow-y-auto px-6 py-2 space-y-4"
-              onWheel={e => e.stopPropagation()}
-            >
-              {/* Nome + Status */}
-              <div className="flex items-end gap-3">
-                <div className="flex-1 space-y-1.5">
-                  <Label htmlFor="mandate-name" className="text-xs">
-                    Nome do Mandato <span className="text-rose-500">*</span>
-                  </Label>
+  const steps: WizardStep[] = useMemo(
+    () => [
+      {
+        title: 'Novo Mandato CIPA',
+        description: 'Cadastre um novo mandato da Comissao Interna de Prevencao de Acidentes.',
+        icon: (
+          <Shield className="h-16 w-16 text-amber-400 opacity-50" />
+        ),
+        isValid: !!canSubmit,
+        content: (
+          <div className="space-y-4 py-2">
+            {/* Nome + Status */}
+            <div className="flex items-end gap-3">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="mandate-name" className="text-xs">
+                  Nome do Mandato <span className="text-rose-500">*</span>
+                </Label>
+                <div className="relative">
                   <Input
                     id="mandate-name"
                     value={name}
-                    onChange={e => setName(e.target.value)}
+                    aria-invalid={!!fieldErrors.name}
+                    onChange={e => {
+                      setName(e.target.value);
+                      if (fieldErrors.name)
+                        setFieldErrors(prev => ({ ...prev, name: '' }));
+                    }}
                     placeholder="Ex: CIPA 2026/2027"
                     className="h-9"
+                    autoFocus
                   />
-                </div>
-                <div className="w-40 space-y-1.5">
-                  <Label className="text-xs">Status</Label>
-                  <Select
-                    value={status}
-                    onValueChange={v => setStatus(v as CipaMandateStatus)}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormErrorIcon message={fieldErrors.name} />
                 </div>
               </div>
-
-              {/* Período */}
-              <div className="flex items-end gap-3">
-                <div className="flex-1 space-y-1.5">
-                  <Label htmlFor="start-date" className="text-xs">
-                    Data de Início <span className="text-rose-500">*</span>
-                  </Label>
-                  <Input
-                    id="start-date"
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                    className="h-9"
-                  />
-                </div>
-                <div className="flex-1 space-y-1.5">
-                  <Label htmlFor="end-date" className="text-xs">
-                    Data de Término <span className="text-rose-500">*</span>
-                  </Label>
-                  <Input
-                    id="end-date"
-                    type="date"
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    className="h-9"
-                  />
-                </div>
+              <div className="w-40 space-y-1.5">
+                <Label className="text-xs">Status</Label>
+                <Select
+                  value={status}
+                  onValueChange={v => setStatus(v as CipaMandateStatus)}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
 
-              {/* Data da Eleição */}
-              <div className="w-1/2 space-y-1.5">
-                <Label htmlFor="election-date" className="text-xs">
-                  Data da Eleição
+            {/* Periodo */}
+            <div className="flex items-end gap-3">
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="start-date" className="text-xs">
+                  Data de Inicio <span className="text-rose-500">*</span>
                 </Label>
                 <Input
-                  id="election-date"
+                  id="start-date"
                   type="date"
-                  value={electionDate}
-                  onChange={e => setElectionDate(e.target.value)}
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
                   className="h-9"
                 />
               </div>
-
-              {/* Observações */}
-              <div className="space-y-1.5">
-                <Label htmlFor="mandate-notes" className="text-xs">
-                  Observações
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="end-date" className="text-xs">
+                  Data de Termino <span className="text-rose-500">*</span>
                 </Label>
-                <Textarea
-                  id="mandate-notes"
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  placeholder="Informações adicionais sobre o mandato..."
-                  rows={2}
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="h-9"
                 />
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-end px-6 py-4 border-t border-border/50">
-              <Button type="submit" disabled={isSubmitting || !canSubmit}>
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Check className="h-4 w-4 mr-2" />
-                )}
-                Criar Mandato
-              </Button>
+            {/* Data da Eleicao */}
+            <div className="w-1/2 space-y-1.5">
+              <Label htmlFor="election-date" className="text-xs">
+                Data da Eleicao
+              </Label>
+              <Input
+                id="election-date"
+                type="date"
+                value={electionDate}
+                onChange={e => setElectionDate(e.target.value)}
+                className="h-9"
+              />
             </div>
-          </form>
-        </div>
-      </DialogContent>
-    </Dialog>
+
+            {/* Observacoes */}
+            <div className="space-y-1.5">
+              <Label htmlFor="mandate-notes" className="text-xs">
+                Observacoes
+              </Label>
+              <Textarea
+                id="mandate-notes"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Informacoes adicionais sobre o mandato..."
+                rows={2}
+              />
+            </div>
+          </div>
+        ),
+        footer: (
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !canSubmit}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Criando...
+                </>
+              ) : (
+                'Criar Mandato'
+              )}
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [name, startDate, endDate, status, electionDate, notes, isSubmitting, canSubmit, onClose, fieldErrors]
+  );
+
+  return (
+    <StepWizardDialog
+      open={isOpen}
+      onOpenChange={open => !open && onClose()}
+      steps={steps}
+      currentStep={1}
+      onStepChange={() => {}}
+      onClose={onClose}
+    />
   );
 }

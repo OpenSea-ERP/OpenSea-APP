@@ -118,6 +118,7 @@ export default function CipaMandateDetailPage() {
   const handleAddMember = useCallback(
     async (data: Parameters<typeof addMemberMutation.mutateAsync>[0]) => {
       await addMemberMutation.mutateAsync(data);
+      setIsMemberModalOpen(false);
     },
     [addMemberMutation]
   );
@@ -374,7 +375,6 @@ export default function CipaMandateDetailPage() {
         isOpen={isMemberModalOpen}
         onClose={() => setIsMemberModalOpen(false)}
         onSubmit={handleAddMember}
-        isSubmitting={addMemberMutation.isPending}
       />
 
       {/* Delete Mandate PIN Modal */}
