@@ -283,6 +283,18 @@ export const HR_PERMISSIONS = {
     UPDATE: HR_CODES.EMPLOYEES.ADMIN,
     MANAGE: HR_CODES.EMPLOYEES.ADMIN,
   },
+
+  /**
+   * Permissões do eSocial
+   * Mapped to employees admin since it requires elevated access
+   */
+  ESOCIAL: {
+    LIST: HR_CODES.EMPLOYEES.ACCESS,
+    VIEW: HR_CODES.EMPLOYEES.ACCESS,
+    APPROVE: HR_CODES.EMPLOYEES.ADMIN,
+    TRANSMIT: HR_CODES.EMPLOYEES.ADMIN,
+    MANAGE: HR_CODES.EMPLOYEES.ADMIN,
+  },
 } as const;
 
 /* ===========================================
