@@ -24,6 +24,7 @@ import {
   useCreateActivity,
 } from '@/hooks/sales/use-activities';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
+import { CommentsSection } from '@/components/sales/comments-section';
 import { cn, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -574,6 +575,9 @@ function DealDetailContent() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Comments */}
+      <CommentsSection entityType="deal" entityId={dealId} defaultCollapsed />
 
       {/* Delete Modal */}
       <VerifyActionPinModal

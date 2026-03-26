@@ -22,6 +22,7 @@ import {
 } from '@/hooks/sales/use-orders';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { AiContextPanel } from '@/components/sales/ai-context-panel';
+import { CommentsSection } from '@/components/sales/comments-section';
 import {
   CheckCircle,
   FileText,
@@ -405,6 +406,9 @@ export default function OrderDetailPage() {
 
         {/* AI Insights */}
         <AiContextPanel entityType="order" entityId={orderId} />
+
+        {/* Comments */}
+        <CommentsSection entityType="order" entityId={orderId} defaultCollapsed />
 
         <VerifyActionPinModal
           isOpen={deleteModalOpen}

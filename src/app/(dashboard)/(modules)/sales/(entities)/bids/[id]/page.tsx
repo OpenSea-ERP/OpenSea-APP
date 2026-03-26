@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CommentsSection } from '@/components/sales/comments-section';
 import { useBid, useBidItems, useBidHistory } from '@/hooks/sales/use-bids';
 import { BID_STATUS_LABELS, BID_MODALITY_LABELS } from '@/types/sales';
 import {
@@ -330,6 +331,9 @@ export default function BidDetailPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Comments */}
+        <CommentsSection entityType="bid" entityId={bidId} defaultCollapsed />
       </PageBody>
     </PageLayout>
   );

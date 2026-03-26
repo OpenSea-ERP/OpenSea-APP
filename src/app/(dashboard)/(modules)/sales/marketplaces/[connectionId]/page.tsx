@@ -14,12 +14,19 @@ import { Card } from '@/components/ui/card';
 import {
   useMarketplaceConnection,
   useMarketplaceReconciliation,
+  useSyncProducts,
+  useSyncInventory,
+  useImportOrders,
 } from '@/hooks/sales/use-marketplaces';
+import { toast } from 'sonner';
 import {
   ArrowLeft,
   Box,
   DollarSign,
+  Download,
   ListOrdered,
+  Loader2,
+  Package,
   Pencil,
   ShoppingBag,
   Wifi,
@@ -75,6 +82,37 @@ export default function ConnectionDetailPage() {
     error,
   } = useMarketplaceConnection(connectionId);
   const { data: reconciliation } = useMarketplaceReconciliation(connectionId);
+
+  const syncProducts = useSyncProducts();
+  const syncInventory = useSyncInventory();
+  const importOrders = useImportOrders();
+
+  function handleSyncProducts() {
+    syncProducts.mutate(
+      { connectionId, productIds: [] },
+      {
+        onSuccess: () => toast.success('Sincronizacao de produtos iniciada'),
+        onError: () => toast.error('Erro ao sincronizar produtos'),
+      }
+    );
+  }
+
+  function handleSyncInventory() {
+    syncInventory.mutate(connectionId, {
+      onSuccess: () => toast.success('Sincronizacao de estoque iniciada'),
+      onError: () => toast.error('Erro ao sincronizar estoque'),
+    });
+  }
+
+  function handleImportOrders() {
+    importOrders.mutate(
+      { connectionId },
+      {
+        onSuccess: () => toast.success('Importacao de pedidos iniciada'),
+        onError: () => toast.error('Erro ao importar pedidos'),
+      }
+    );
+  }
 
   if (isLoading) {
     return (
@@ -136,6 +174,48 @@ export default function ConnectionDetailPage() {
             >
               <ArrowLeft className="mr-1 h-4 w-4" />
               Voltar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-2.5"
+              onClick={handleSyncProducts}
+              disabled={syncProducts.isPending}
+            >
+              {syncProducts.isPending ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-1 h-4 w-4" />
+              )}
+              Sincronizar Produtos
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-2.5"
+              onClick={handleSyncInventory}
+              disabled={syncInventory.isPending}
+            >
+              {syncInventory.isPending ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <Package className="mr-1 h-4 w-4" />
+              )}
+              Sincronizar Estoque
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-2.5"
+              onClick={handleImportOrders}
+              disabled={importOrders.isPending}
+            >
+              {importOrders.isPending ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-1 h-4 w-4" />
+              )}
+              Importar Pedidos
             </Button>
             <Button
               size="sm"
