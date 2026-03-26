@@ -6,6 +6,7 @@ import type {
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 
@@ -13,7 +14,16 @@ const PC_KEYS = {
   all: ['payment-conditions'] as const,
   list: (filters?: Record<string, unknown>) =>
     ['payment-conditions', 'list', filters] as const,
+  detail: (id: string) => ['payment-conditions', id] as const,
 } as const;
+
+export function usePaymentCondition(id: string) {
+  return useQuery({
+    queryKey: PC_KEYS.detail(id),
+    queryFn: () => paymentConditionsService.getById(id),
+    enabled: !!id,
+  });
+}
 
 export function usePaymentConditionsInfinite(
   filters?: { search?: string; type?: string; isActive?: boolean },

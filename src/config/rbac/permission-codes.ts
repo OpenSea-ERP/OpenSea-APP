@@ -179,7 +179,9 @@ export const FINANCE_PERMISSIONS = {
     'access',
     'register',
     'modify',
-    'remove'
+    'remove',
+    'admin',
+    'import'
   ),
   SUPPLIERS: perm(
     'finance',
@@ -448,6 +450,14 @@ export const SALES_PERMISSIONS = {
     'activate'
   ),
   COMBOS: salesPerm('combos', 'access', 'register', 'remove', 'admin'),
+  PAYMENT_CONDITIONS: salesPerm(
+    'payment-conditions',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
   STORE_CREDITS: salesPerm(
     'store-credits',
     'access',

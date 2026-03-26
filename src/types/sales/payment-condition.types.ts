@@ -51,10 +51,40 @@ export interface CreatePaymentConditionRequest {
 export interface UpdatePaymentConditionRequest {
   name?: string;
   description?: string;
+  type?: PaymentConditionType;
   installments?: number;
+  firstDueDays?: number;
+  intervalDays?: number;
+  downPaymentPercent?: number | null;
+  interestRate?: number | null;
+  interestType?: InterestType;
+  penaltyRate?: number | null;
+  discountCash?: number | null;
+  applicableTo?: PaymentConditionApplicable;
+  minOrderValue?: number | null;
+  maxOrderValue?: number | null;
   isActive?: boolean;
   isDefault?: boolean;
 }
+
+export const PAYMENT_CONDITION_TYPE_LABELS: Record<PaymentConditionType, string> = {
+  CASH: 'A Vista',
+  INSTALLMENT: 'Parcelado',
+  CUSTOM: 'Personalizado',
+  CREDIT_LIMIT: 'Limite de Credito',
+};
+
+export const INTEREST_TYPE_LABELS: Record<InterestType, string> = {
+  SIMPLE: 'Simples',
+  COMPOUND: 'Composto',
+};
+
+export const PAYMENT_CONDITION_APPLICABLE_LABELS: Record<PaymentConditionApplicable, string> = {
+  ALL: 'Todos',
+  RETAIL: 'Varejo',
+  WHOLESALE: 'Atacado',
+  BID: 'Licitacao',
+};
 
 export interface PaymentConditionsResponse {
   data: PaymentConditionDTO[];

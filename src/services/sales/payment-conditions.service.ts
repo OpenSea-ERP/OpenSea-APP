@@ -30,6 +30,14 @@ export const paymentConditionsService = {
     return apiClient.get<PaymentConditionsResponse>(url);
   },
 
+  async getById(
+    id: string
+  ): Promise<{ paymentCondition: PaymentConditionDTO }> {
+    return apiClient.get<{ paymentCondition: PaymentConditionDTO }>(
+      API_ENDPOINTS.PAYMENT_CONDITIONS.GET_BY_ID(id)
+    );
+  },
+
   async create(
     data: CreatePaymentConditionRequest
   ): Promise<{ paymentCondition: PaymentConditionDTO }> {

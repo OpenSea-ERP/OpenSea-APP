@@ -18,11 +18,12 @@ import { SearchBar } from '@/components/layout/search-bar';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { usePermissions } from '@/hooks/use-permissions';
-import { useReturnsInfinite, useDeleteReturn } from '@/hooks/sales/use-returns';
+import { useReturnsInfinite, useCreateReturn, useDeleteReturn } from '@/hooks/sales/use-returns';
 import type {
   OrderReturnDTO,
   ReturnStatus,
   ReturnReason,
+  CreateReturnRequest,
 } from '@/types/sales';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ import {
   Eye,
   Filter,
   Package,
+  Plus,
   RotateCcw,
   Trash2,
   XCircle,
@@ -41,6 +43,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { CreateReturnWizard } from './src/components/create-return-wizard';
 
 // =============================================================================
 // LABELS
@@ -140,6 +143,9 @@ function ReturnsPageContent() {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [createWizardOpen, setCreateWizardOpen] = useState(false);
+
+  const canCreate = hasPermission(SALES_PERMISSIONS.RETURNS.REGISTER);
 
   const {
     data,
@@ -155,6 +161,7 @@ function ReturnsPageContent() {
   });
 
   const deleteMutation = useDeleteReturn();
+  const createMutation = useCreateReturn();
 
   const returns = useMemo(
     () => data?.pages.flatMap(p => p.data) ?? [],
@@ -233,6 +240,14 @@ function ReturnsPageContent() {
       currency: 'BRL',
     }).format(value);
 
+  const handleCreateSubmit = useCallback(
+    async (data: CreateReturnRequest) => {
+      await createMutation.mutateAsync(data);
+      toast.success('Devolucao criada com sucesso!');
+    },
+    [createMutation]
+  );
+
   const canDelete = hasPermission(SALES_PERMISSIONS.RETURNS.ADMIN);
 
   return (
@@ -243,6 +258,19 @@ function ReturnsPageContent() {
             { label: 'Vendas', href: '/sales' },
             { label: 'Devolucoes', href: '/sales/returns' },
           ]}
+          buttons={
+            canCreate
+              ? [
+                  {
+                    id: 'create-return',
+                    title: 'Nova Devolucao',
+                    icon: Plus,
+                    onClick: () => setCreateWizardOpen(true),
+                    variant: 'default',
+                  },
+                ]
+              : []
+          }
         />
         <Header
           title="Devolucoes"
@@ -396,6 +424,13 @@ function ReturnsPageContent() {
           onSuccess={handleDeleteConfirm}
           title="Confirmar Exclusao"
           description="Digite seu PIN de acao para excluir esta devolucao. Esta acao nao pode ser desfeita."
+        />
+
+        <CreateReturnWizard
+          open={createWizardOpen}
+          onOpenChange={setCreateWizardOpen}
+          onSubmit={handleCreateSubmit}
+          isSubmitting={createMutation.isPending}
         />
       </PageBody>
     </PageLayout>

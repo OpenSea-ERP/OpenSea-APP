@@ -27,9 +27,10 @@ import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-moda
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   useItemReservations,
+  useCreateItemReservation,
   useReleaseItemReservation,
 } from '@/hooks/sales/use-sales-other';
-import type { ItemReservation, ItemReservationStatus } from '@/types/sales';
+import type { ItemReservation, ItemReservationStatus, CreateItemReservationRequest } from '@/types/sales';
 import { ITEM_RESERVATION_STATUS_LABELS } from '@/types/sales';
 import {
   AlertCircle,
@@ -38,6 +39,7 @@ import {
   Clock,
   Hash,
   Package,
+  Plus,
   ShoppingCart,
   Trash2,
   XCircle,
@@ -54,6 +56,7 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
+import { CreateItemReservationWizard } from './src/components/create-item-reservation-wizard';
 
 // ============================================================================
 // STATUS STYLES
@@ -130,6 +133,9 @@ function ItemReservationsPageContent() {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+  const [createWizardOpen, setCreateWizardOpen] = useState(false);
+
+  const canCreate = hasPermission(itemReservationsConfig.permissions.create);
 
   // ============================================================================
   // DATA
@@ -143,6 +149,7 @@ function ItemReservationsPageContent() {
   } = useItemReservations();
 
   const releaseMutation = useReleaseItemReservation();
+  const createMutation = useCreateItemReservation();
 
   const reservationsRaw = reservationsData?.reservations;
 
@@ -266,6 +273,14 @@ function ItemReservationsPageContent() {
         : `${itemsToDelete.length} reservas canceladas!`
     );
   }, [itemsToDelete, releaseMutation]);
+
+  const handleCreateSubmit = useCallback(
+    async (data: CreateItemReservationRequest) => {
+      await createMutation.mutateAsync(data);
+      toast.success('Reserva criada com sucesso!');
+    },
+    [createMutation]
+  );
 
   // ============================================================================
   // HELPERS
@@ -514,7 +529,19 @@ function ItemReservationsPageContent() {
                 href: '/sales/item-reservations',
               },
             ]}
-            buttons={[]}
+            buttons={
+              canCreate
+                ? [
+                    {
+                      id: 'create-reservation',
+                      title: 'Nova Reserva',
+                      icon: Plus,
+                      onClick: () => setCreateWizardOpen(true),
+                      variant: 'default',
+                    },
+                  ]
+                : []
+            }
           />
 
           <Header
@@ -611,6 +638,13 @@ function ItemReservationsPageContent() {
                 ? 'Digite seu PIN de acao para cancelar esta reserva. Esta acao nao pode ser desfeita.'
                 : `Digite seu PIN de acao para cancelar ${itemsToDelete.length} reservas. Esta acao nao pode ser desfeita.`
             }
+          />
+
+          <CreateItemReservationWizard
+            open={createWizardOpen}
+            onOpenChange={setCreateWizardOpen}
+            onSubmit={handleCreateSubmit}
+            isSubmitting={createMutation.isPending}
           />
         </PageBody>
       </PageLayout>

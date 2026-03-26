@@ -20,10 +20,11 @@ import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-moda
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   useCustomerPricesInfinite,
+  useCreateCustomerPrice,
   useDeleteCustomerPrice,
 } from '@/hooks/sales/use-customer-prices';
 import { useCustomersInfinite } from '@/hooks/sales/use-customers';
-import type { CustomerPrice } from '@/types/sales';
+import type { CustomerPrice, CreateCustomerPriceRequest } from '@/types/sales';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -31,12 +32,14 @@ import {
   BadgeDollarSign,
   Calendar,
   DollarSign,
+  Plus,
   Trash2,
   User,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { CreateCustomerPriceWizard } from './src/components/create-customer-price-wizard';
 
 export default function CustomerPricesPage() {
   return (
@@ -67,6 +70,9 @@ function CustomerPricesPageContent() {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+  const [createWizardOpen, setCreateWizardOpen] = useState(false);
+
+  const canCreate = hasPermission(SALES_PERMISSIONS.CUSTOMER_PRICES.REGISTER);
 
   // ============================================================================
   // DATA
@@ -85,6 +91,7 @@ function CustomerPricesPageContent() {
   });
 
   const deleteMutation = useDeleteCustomerPrice();
+  const createMutation = useCreateCustomerPrice();
 
   // Load customers for filter dropdown and name resolution
   const { customers: allCustomers } = useCustomersInfinite();
@@ -221,6 +228,14 @@ function CustomerPricesPageContent() {
     );
   }, [itemsToDelete, deleteMutation]);
 
+  const handleCreateSubmit = useCallback(
+    async (data: CreateCustomerPriceRequest) => {
+      await createMutation.mutateAsync(data);
+      toast.success('Preco por cliente criado com sucesso!');
+    },
+    [createMutation]
+  );
+
   // ============================================================================
   // HELPERS
   // ============================================================================
@@ -274,7 +289,19 @@ function CustomerPricesPageContent() {
             { label: 'Vendas', href: '/sales' },
             { label: 'Precos por Cliente', href: '/sales/customer-prices' },
           ]}
-          buttons={[]}
+          buttons={
+            canCreate
+              ? [
+                  {
+                    id: 'create-customer-price',
+                    title: 'Novo Preco',
+                    icon: Plus,
+                    onClick: () => setCreateWizardOpen(true),
+                    variant: 'default',
+                  },
+                ]
+              : []
+          }
         />
         <Header
           title="Precos por Cliente"
@@ -453,6 +480,13 @@ function CustomerPricesPageContent() {
               ? 'Digite seu PIN de acao para excluir este preco. Esta acao nao pode ser desfeita.'
               : `Digite seu PIN de acao para excluir ${itemsToDelete.length} precos. Esta acao nao pode ser desfeita.`
           }
+        />
+
+        <CreateCustomerPriceWizard
+          open={createWizardOpen}
+          onOpenChange={setCreateWizardOpen}
+          onSubmit={handleCreateSubmit}
+          isSubmitting={createMutation.isPending}
         />
       </PageBody>
     </PageLayout>

@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { CurrencyInput } from '@/components/finance/currency-input';
 import {
   useBankAccounts,
   useCostCenters,
@@ -55,6 +56,7 @@ export default function NewPayablePage() {
     recurrenceType: 'SINGLE',
     notes: '',
     tags: [] as string[],
+    currency: 'BRL',
   });
 
   const [tagInput, setTagInput] = useState('');
@@ -82,6 +84,7 @@ export default function NewPayablePage() {
           | 'INSTALLMENT',
         notes: formData.notes || undefined,
         tags: formData.tags.length > 0 ? formData.tags : undefined,
+        currency: formData.currency !== 'BRL' ? formData.currency : undefined,
       });
       router.push('/finance/payable');
     } catch {
@@ -211,7 +214,7 @@ export default function NewPayablePage() {
             </div>
 
             <div>
-              <Label htmlFor="expectedAmount">Valor Esperado (R$) *</Label>
+              <Label htmlFor="expectedAmount">Valor Esperado *</Label>
               <Input
                 id="expectedAmount"
                 type="number"
@@ -224,6 +227,15 @@ export default function NewPayablePage() {
                     expectedAmount: parseFloat(e.target.value) || 0,
                   })
                 }
+              />
+            </div>
+
+            <div>
+              <Label>Moeda</Label>
+              <CurrencyInput
+                value={formData.currency}
+                onChange={(currency) => setFormData({ ...formData, currency })}
+                amount={formData.expectedAmount}
               />
             </div>
 

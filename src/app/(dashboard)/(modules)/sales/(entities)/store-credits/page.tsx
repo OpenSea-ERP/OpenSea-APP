@@ -20,9 +20,10 @@ import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-moda
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   useStoreCreditsInfinite,
+  useCreateStoreCredit,
   useDeleteStoreCredit,
 } from '@/hooks/sales/use-store-credits';
-import type { StoreCreditDTO } from '@/types/sales';
+import type { StoreCreditDTO, CreateStoreCreditRequest } from '@/types/sales';
 import { STORE_CREDIT_SOURCE_LABELS } from '@/types/sales';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { CreateStoreCreditWizard } from './src/components/create-store-credit-wizard';
 
 export default function StoreCreditsPage() {
   return (
@@ -60,6 +62,7 @@ function StoreCreditsPageContent() {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+  const [createWizardOpen, setCreateWizardOpen] = useState(false);
 
   const {
     storeCredits,
@@ -77,6 +80,7 @@ function StoreCreditsPageContent() {
   });
 
   const deleteMutation = useDeleteStoreCredit();
+  const createMutation = useCreateStoreCredit();
 
   // Infinite scroll — refs prevent observer teardown/re-creation loop
   const hasNextPageRef = useRef(hasNextPage);
@@ -143,6 +147,14 @@ function StoreCreditsPageContent() {
         : `${itemsToDelete.length} creditos de loja excluidos!`
     );
   }, [itemsToDelete, deleteMutation]);
+
+  const handleCreateSubmit = useCallback(
+    async (data: CreateStoreCreditRequest) => {
+      await createMutation.mutateAsync(data);
+      toast.success('Credito de loja criado com sucesso!');
+    },
+    [createMutation]
+  );
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', {
@@ -219,10 +231,7 @@ function StoreCreditsPageContent() {
                     id: 'create-store-credit',
                     title: 'Novo Credito',
                     icon: Plus,
-                    onClick: () => {
-                      // TODO: Create wizard
-                      toast.info('Funcionalidade em desenvolvimento');
-                    },
+                    onClick: () => setCreateWizardOpen(true),
                     variant: 'default',
                   },
                 ]
@@ -424,6 +433,13 @@ function StoreCreditsPageContent() {
               ? 'Digite seu PIN de acao para excluir este credito de loja. Esta acao nao pode ser desfeita.'
               : `Digite seu PIN de acao para excluir ${itemsToDelete.length} creditos de loja. Esta acao nao pode ser desfeita.`
           }
+        />
+
+        <CreateStoreCreditWizard
+          open={createWizardOpen}
+          onOpenChange={setCreateWizardOpen}
+          onSubmit={handleCreateSubmit}
+          isSubmitting={createMutation.isPending}
         />
       </PageBody>
     </PageLayout>
