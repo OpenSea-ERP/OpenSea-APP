@@ -7,6 +7,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import {
   InputGroup,
@@ -34,6 +35,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useTemplate } from '@/hooks/stock/use-stock-other';
+import { translateError } from '@/lib/error-messages';
 import { cn } from '@/lib/utils';
 import { variantsService } from '@/services/stock';
 import type {
@@ -292,8 +294,26 @@ export function VariantFormModal({
       toast.success('Variante criada com sucesso!');
       onOpenChange(false);
     },
-    onError: (error: Error) => {
-      toast.error(`Erro ao criar variante: ${error.message}`);
+    onError: (error) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('SKU already exists')) {
+        setFieldErrors(prev => ({ ...prev, sku: translateError(msg) }));
+        setActiveSection('basic');
+      } else if (msg.includes('Price cannot be negative')) {
+        setFieldErrors(prev => ({ ...prev, definedSalePrice: translateError(msg) }));
+        setActiveSection('pricing');
+      } else if (msg.includes('Min stock cannot be greater')) {
+        setFieldErrors(prev => ({ ...prev, minStock: translateError(msg) }));
+        setActiveSection('stock');
+      } else if (msg.includes('Color hex must be')) {
+        setFieldErrors(prev => ({ ...prev, colorHex: translateError(msg) }));
+        setActiveSection('appearance');
+      } else if (msg.includes('Name is required')) {
+        setFieldErrors(prev => ({ ...prev, name: translateError(msg) }));
+        setActiveSection('basic');
+      } else {
+        toast.error(translateError(msg));
+      }
     },
   });
 
@@ -305,8 +325,26 @@ export function VariantFormModal({
       toast.success('Variante atualizada com sucesso!');
       onOpenChange(false);
     },
-    onError: (error: Error) => {
-      toast.error(`Erro ao atualizar variante: ${error.message}`);
+    onError: (error) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('SKU already exists')) {
+        setFieldErrors(prev => ({ ...prev, sku: translateError(msg) }));
+        setActiveSection('basic');
+      } else if (msg.includes('Price cannot be negative')) {
+        setFieldErrors(prev => ({ ...prev, definedSalePrice: translateError(msg) }));
+        setActiveSection('pricing');
+      } else if (msg.includes('Min stock cannot be greater')) {
+        setFieldErrors(prev => ({ ...prev, minStock: translateError(msg) }));
+        setActiveSection('stock');
+      } else if (msg.includes('Color hex must be')) {
+        setFieldErrors(prev => ({ ...prev, colorHex: translateError(msg) }));
+        setActiveSection('appearance');
+      } else if (msg.includes('Name is required')) {
+        setFieldErrors(prev => ({ ...prev, name: translateError(msg) }));
+        setActiveSection('basic');
+      } else {
+        toast.error(translateError(msg));
+      }
     },
   });
 
@@ -551,30 +589,40 @@ function BasicSection({
           <Label htmlFor="vfm-name">
             Nome da Variante <span className="text-rose-500">*</span>
           </Label>
-          <Input
-            id="vfm-name"
-            placeholder="Ex: Azul P, 100ml, etc."
-            value={formData.name}
-            onChange={e => updateField('name', e.target.value)}
-            autoFocus={!isEditMode}
-            disabled={isPending}
-            className={cn(fieldErrors.name && 'border-rose-500')}
-          />
-          {fieldErrors.name && (
-            <p className="text-xs text-rose-500">{fieldErrors.name}</p>
-          )}
+          <div className="relative">
+            <Input
+              id="vfm-name"
+              placeholder="Ex: Azul P, 100ml, etc."
+              value={formData.name}
+              onChange={e => updateField('name', e.target.value)}
+              autoFocus={!isEditMode}
+              disabled={isPending}
+              aria-invalid={!!fieldErrors.name}
+              className={cn(fieldErrors.name && 'border-rose-500')}
+            />
+            {fieldErrors.name && (
+              <FormErrorIcon message={fieldErrors.name} />
+            )}
+          </div>
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="vfm-sku">SKU</Label>
-          <Input
-            id="vfm-sku"
-            placeholder="Código SKU"
-            value={formData.sku}
-            onChange={e => updateField('sku', e.target.value)}
-            maxLength={64}
-            disabled={isPending}
-          />
+          <div className="relative">
+            <Input
+              id="vfm-sku"
+              placeholder="Código SKU"
+              value={formData.sku}
+              onChange={e => updateField('sku', e.target.value)}
+              maxLength={64}
+              disabled={isPending}
+              aria-invalid={!!fieldErrors.sku}
+              className={cn(fieldErrors.sku && 'border-rose-500')}
+            />
+            {fieldErrors.sku && (
+              <FormErrorIcon message={fieldErrors.sku} />
+            )}
+          </div>
         </div>
       </div>
 
