@@ -142,3 +142,63 @@ export function useCancelAbsence(options?: {
     },
   });
 }
+
+/* ===========================================
+   UPDATE ABSENCE
+   =========================================== */
+
+export function useUpdateAbsence() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateAbsenceRequest;
+    }): Promise<Absence> => {
+      const response = await absencesApi.update(id, data);
+      return response.absence;
+    },
+
+    onSuccess: (absence) => {
+      queryClient.invalidateQueries({ queryKey: absenceKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: absenceKeys.detail(absence.id),
+      });
+    },
+
+    onError: (error: Error) => {
+      toast.error(translateError(error));
+    },
+  });
+}
+
+/* ===========================================
+   DELETE ABSENCE
+   =========================================== */
+
+export function useDeleteAbsence(options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await absencesApi.delete(id);
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: absenceKeys.lists() });
+      toast.success('Ausência excluída com sucesso!');
+      options?.onSuccess?.();
+    },
+
+    onError: (error: Error) => {
+      toast.error(translateError(error));
+      options?.onError?.(error);
+    },
+  });
+}

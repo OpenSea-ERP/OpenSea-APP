@@ -12,6 +12,7 @@ import type {
   CompleteVacationData,
   SellVacationDaysData,
 } from '@/types/hr';
+import type { UpdateVacationPeriodRequest } from '@/services/hr/vacations.service';
 import { toast } from 'sonner';
 import { translateError } from '@/lib/errors';
 import { vacationsApi } from './vacations.api';
