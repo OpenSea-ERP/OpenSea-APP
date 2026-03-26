@@ -14,6 +14,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CountrySelect, getCountryName } from '@/components/ui/country-select';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/step-wizard-dialog';
 import { formatCEP, formatPhone } from '@/helpers/formatters';
 import { logger } from '@/lib/logger';
+import { translateError } from '@/lib/error-messages';
 import { brasilApiService } from '@/services/brasilapi.service';
 import type { BrasilAPICompanyData } from '@/types/brasilapi';
 import type { Manufacturer } from '@/types/stock';
@@ -193,10 +195,12 @@ function StepManualForm({
   countryCode,
   cnpj,
   cnpjDuplicate,
+  nameError,
   onNameChange,
   onLegalNameChange,
   onCountryCodeChange,
   onCnpjChange,
+  onNameErrorChange,
   isSubmitting,
 }: {
   name: string;
@@ -204,10 +208,12 @@ function StepManualForm({
   countryCode: string;
   cnpj: string;
   cnpjDuplicate: string | null;
+  nameError: string;
   onNameChange: (v: string) => void;
   onLegalNameChange: (v: string) => void;
   onCountryCodeChange: (v: string) => void;
   onCnpjChange: (v: string) => void;
+  onNameErrorChange: (v: string) => void;
   isSubmitting: boolean;
 }) {
   const isBrasil = countryCode === 'BR';
@@ -218,14 +224,21 @@ function StepManualForm({
         <Label htmlFor="m-name" className="text-xs">
           Nome Fantasia <span className="text-rose-500">*</span>
         </Label>
-        <Input
-          id="m-name"
-          value={name}
-          onChange={e => onNameChange(e.target.value)}
-          placeholder="Ex: Metalúrgica São Paulo"
-          autoFocus
-          disabled={isSubmitting}
-        />
+        <div className="relative">
+          <Input
+            id="m-name"
+            value={name}
+            onChange={e => {
+              if (nameError) onNameErrorChange('');
+              onNameChange(e.target.value);
+            }}
+            placeholder="Ex: Metalúrgica São Paulo"
+            autoFocus
+            disabled={isSubmitting}
+            aria-invalid={!!nameError}
+          />
+          {nameError && <FormErrorIcon message={nameError} />}
+        </div>
       </div>
 
       <div className="space-y-1.5">
@@ -313,6 +326,7 @@ export function CreateManufacturerWizard({
   const [manualLegalName, setManualLegalName] = useState('');
   const [manualCountryCode, setManualCountryCode] = useState('BR');
   const [manualCnpj, setManualCnpj] = useState('');
+  const [nameError, setNameError] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -420,6 +434,7 @@ export function CreateManufacturerWizard({
     if (cleanCnpj.length === 14 && cnpjValidation !== 'duplicate') {
       setManualCnpj(cnpj);
     }
+    setNameError('');
     setFlow('manual');
     setCurrentStep(2);
   };
@@ -428,6 +443,7 @@ export function CreateManufacturerWizard({
     setFlow('cnpj');
     setCurrentStep(1);
     setCnpjFetchError(null);
+    setNameError('');
   };
 
   // -------------------------------------------------------------------------
@@ -453,6 +469,14 @@ export function CreateManufacturerWizard({
       });
       handleClose();
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (
+        msg.includes('name already exists') ||
+        msg.includes('Manufacturer with this name')
+      ) {
+        setNameError(translateError(msg));
+        return;
+      }
       logger.error(
         'Error creating manufacturer',
         error instanceof Error ? error : undefined
@@ -509,6 +533,7 @@ export function CreateManufacturerWizard({
     setManualLegalName('');
     setManualCountryCode('BR');
     setManualCnpj('');
+    setNameError('');
     setIsSubmitting(false);
     onOpenChange(false);
   };
@@ -607,10 +632,12 @@ export function CreateManufacturerWizard({
         countryCode={manualCountryCode}
         cnpj={manualCnpj}
         cnpjDuplicate={manualCnpjDuplicate}
+        nameError={nameError}
         onNameChange={setManualName}
         onLegalNameChange={setManualLegalName}
         onCountryCodeChange={setManualCountryCode}
         onCnpjChange={setManualCnpj}
+        onNameErrorChange={setNameError}
         isSubmitting={isSubmitting}
       />
     ),
@@ -619,7 +646,7 @@ export function CreateManufacturerWizard({
       <Button
         type="button"
         onClick={handleSubmitManual}
-        disabled={isSubmitting || !manualName.trim() || !!manualCnpjDuplicate}
+        disabled={isSubmitting || !manualName.trim() || !!manualCnpjDuplicate || !!nameError}
       >
         {isSubmitting ? (
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
