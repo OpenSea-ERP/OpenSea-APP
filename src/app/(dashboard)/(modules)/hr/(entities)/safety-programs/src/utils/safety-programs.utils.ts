@@ -8,10 +8,14 @@ export function formatDate(date: string | Date | undefined): string {
 }
 
 export const PROGRAM_TYPE_LABELS: Record<string, string> = {
+  PPRA: 'PPRA',
   PCMSO: 'PCMSO',
   PGR: 'PGR',
   LTCAT: 'LTCAT',
-  PPRA: 'PPRA',
+  PPP: 'PPP',
+  PCMAT: 'PCMAT',
+  SIPAT: 'SIPAT',
+  OTHER: 'Outro',
 };
 
 export const PROGRAM_STATUS_LABELS: Record<string, string> = {

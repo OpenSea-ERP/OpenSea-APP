@@ -1,5 +1,5 @@
 import { safetyProgramsService } from '@/services/hr/safety-programs.service';
-import type { SafetyProgram, CreateSafetyProgramData } from '@/types/hr';
+import type { SafetyProgram, CreateSafetyProgramData, UpdateSafetyProgramData } from '@/types/hr';
 
 export interface SafetyProgramsApiResponse {
   safetyPrograms: SafetyProgram[];
@@ -36,6 +36,11 @@ export const safetyProgramsApi = {
 
   async create(data: CreateSafetyProgramData): Promise<SafetyProgram> {
     const { safetyProgram } = await safetyProgramsService.create(data);
+    return safetyProgram;
+  },
+
+  async update(id: string, data: UpdateSafetyProgramData): Promise<SafetyProgram> {
+    const { safetyProgram } = await safetyProgramsService.update(id, data);
     return safetyProgram;
   },
 

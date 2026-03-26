@@ -2,6 +2,7 @@ import { medicalExamsService } from '@/services/hr/medical-exams.service';
 import type {
   MedicalExam,
   CreateMedicalExamData,
+  UpdateMedicalExamData,
 } from '@/types/hr';
 import type { ListMedicalExamsParams } from '@/services/hr/medical-exams.service';
 
@@ -35,6 +36,11 @@ export const medicalExamsApi = {
 
   async create(data: CreateMedicalExamData): Promise<MedicalExam> {
     const { medicalExam } = await medicalExamsService.create(data);
+    return medicalExam;
+  },
+
+  async update(id: string, data: UpdateMedicalExamData): Promise<MedicalExam> {
+    const { medicalExam } = await medicalExamsService.update(id, data);
     return medicalExam;
   },
 

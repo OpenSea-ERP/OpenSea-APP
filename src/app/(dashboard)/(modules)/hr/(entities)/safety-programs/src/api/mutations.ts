@@ -7,6 +7,7 @@ import { safetyProgramsService } from '@/services/hr/safety-programs.service';
 import type {
   SafetyProgram,
   CreateSafetyProgramData,
+  UpdateSafetyProgramData,
   WorkplaceRisk,
   CreateWorkplaceRiskData,
   UpdateWorkplaceRiskData,
@@ -44,6 +45,52 @@ export function useCreateSafetyProgram(options: CreateSafetyProgramOptions = {})
       queryClient.invalidateQueries({ queryKey: safetyProgramKeys.lists() });
       if (showSuccessToast) {
         toast.success('Programa de segurança criado com sucesso!');
+      }
+      onSuccess?.(program);
+    },
+    onError: (error: Error) => {
+      if (showErrorToast) toast.error(translateError(error));
+      onError?.(error);
+    },
+  });
+}
+
+/* ===========================================
+   UPDATE PROGRAM
+   =========================================== */
+
+export interface UpdateSafetyProgramOptions {
+  onSuccess?: (program: SafetyProgram) => void;
+  onError?: (error: Error) => void;
+  showSuccessToast?: boolean;
+  showErrorToast?: boolean;
+}
+
+export function useUpdateSafetyProgram(options: UpdateSafetyProgramOptions = {}) {
+  const queryClient = useQueryClient();
+  const {
+    onSuccess,
+    onError,
+    showSuccessToast = true,
+    showErrorToast = true,
+  } = options;
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateSafetyProgramData;
+    }): Promise<SafetyProgram> => {
+      const response = await safetyProgramsService.update(id, data);
+      return response.safetyProgram;
+    },
+    onSuccess: (program, { id }) => {
+      queryClient.invalidateQueries({ queryKey: safetyProgramKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: safetyProgramKeys.detail(id) });
+      if (showSuccessToast) {
+        toast.success('Programa de segurança atualizado com sucesso!');
       }
       onSuccess?.(program);
     },

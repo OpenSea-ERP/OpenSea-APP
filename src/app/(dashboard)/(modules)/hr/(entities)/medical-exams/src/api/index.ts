@@ -15,8 +15,10 @@ export {
 // Mutations
 export {
   useCreateMedicalExam,
+  useUpdateMedicalExam,
   useDeleteMedicalExam,
   type CreateMedicalExamOptions,
+  type UpdateMedicalExamOptions,
   type DeleteMedicalExamOptions,
 } from './mutations';
 

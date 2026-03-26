@@ -15,11 +15,13 @@ export {
 // Mutations
 export {
   useCreateSafetyProgram,
+  useUpdateSafetyProgram,
   useDeleteSafetyProgram,
   useCreateWorkplaceRisk,
   useUpdateWorkplaceRisk,
   useDeleteWorkplaceRisk,
   type CreateSafetyProgramOptions,
+  type UpdateSafetyProgramOptions,
   type DeleteSafetyProgramOptions,
 } from './mutations';
 

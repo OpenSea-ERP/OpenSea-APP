@@ -4,7 +4,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { medicalExamsService } from '@/services/hr/medical-exams.service';
-import type { MedicalExam, CreateMedicalExamData } from '@/types/hr';
+import type { MedicalExam, CreateMedicalExamData, UpdateMedicalExamData } from '@/types/hr';
 import { toast } from 'sonner';
 import { translateError } from '@/lib/errors';
 import { medicalExamKeys } from './keys';
@@ -38,6 +38,52 @@ export function useCreateMedicalExam(options: CreateMedicalExamOptions = {}) {
       queryClient.invalidateQueries({ queryKey: medicalExamKeys.lists() });
       if (showSuccessToast) {
         toast.success('Exame médico registrado com sucesso!');
+      }
+      onSuccess?.(exam);
+    },
+    onError: (error: Error) => {
+      if (showErrorToast) toast.error(translateError(error));
+      onError?.(error);
+    },
+  });
+}
+
+/* ===========================================
+   UPDATE
+   =========================================== */
+
+export interface UpdateMedicalExamOptions {
+  onSuccess?: (exam: MedicalExam) => void;
+  onError?: (error: Error) => void;
+  showSuccessToast?: boolean;
+  showErrorToast?: boolean;
+}
+
+export function useUpdateMedicalExam(options: UpdateMedicalExamOptions = {}) {
+  const queryClient = useQueryClient();
+  const {
+    onSuccess,
+    onError,
+    showSuccessToast = true,
+    showErrorToast = true,
+  } = options;
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateMedicalExamData;
+    }): Promise<MedicalExam> => {
+      const response = await medicalExamsService.update(id, data);
+      return response.medicalExam;
+    },
+    onSuccess: (exam, { id }) => {
+      queryClient.invalidateQueries({ queryKey: medicalExamKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: medicalExamKeys.detail(id) });
+      if (showSuccessToast) {
+        toast.success('Exame médico atualizado com sucesso!');
       }
       onSuccess?.(exam);
     },
