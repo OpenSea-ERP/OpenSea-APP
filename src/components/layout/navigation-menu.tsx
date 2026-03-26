@@ -190,7 +190,7 @@ export function NavigationMenu({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed inset-4 z-70 flex items-start justify-center pt-20"
+            className="fixed inset-2 sm:inset-4 z-70 flex items-start justify-center pt-4 sm:pt-20"
             onClick={handleClose}
           >
             <div
@@ -198,8 +198,8 @@ export function NavigationMenu({
               onClick={e => e.stopPropagation()}
             >
               {/* Header with Search */}
-              <div className="p-8 pb-6 border-b border-gray-200/50 dark:border-white/10">
-                <div className="flex items-center justify-between mb-6">
+              <div className="p-4 sm:p-8 pb-4 sm:pb-6 border-b border-gray-200/50 dark:border-white/10">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <div className="flex items-center gap-3">
                     {menuHistory.length > 0 && (
                       <Button
@@ -212,7 +212,7 @@ export function NavigationMenu({
                         <ArrowLeft className="w-5 h-5" />
                       </Button>
                     )}
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                       {menuHistory.length > 0 ? 'Menu' : 'Aplicações'}
                     </h2>
                   </div>
@@ -225,13 +225,13 @@ export function NavigationMenu({
                     placeholder="Buscar aplicações..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="pl-12 h-14 text-lg bg-white/50 dark:bg-white/5 border-gray-200/50 dark:border-white/10 rounded-2xl"
+                    className="pl-12 h-11 sm:h-14 text-base sm:text-lg bg-white/50 dark:bg-white/5 border-gray-200/50 dark:border-white/10 rounded-2xl"
                   />
                 </div>
               </div>
 
               {/* Menu Grid */}
-              <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="p-3 sm:p-6 max-h-[60vh] overflow-y-auto">
                 {filteredMenu.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
@@ -253,7 +253,7 @@ export function NavigationMenu({
                           key={item.id}
                           onClick={() => handleMenuItemClick(item)}
                           disabled={isDisabled}
-                          className={`group relative aspect-square rounded-2xl border p-6 flex flex-col items-center justify-center gap-3 transition-colors duration-150 ${styles.button}`}
+                          className={`group relative aspect-square rounded-2xl border p-3 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-colors duration-150 ${styles.button}`}
                         >
                           {/* Badge */}
                           {item.badge && (
@@ -266,7 +266,7 @@ export function NavigationMenu({
 
                           {/* Icon */}
                           <div
-                            className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg ${styles.icon}`}
+                            className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg ${styles.icon}`}
                           >
                             {renderIcon(item.icon)}
                           </div>

@@ -112,7 +112,7 @@ export default function DashboardLayout({
             <main
               id="main-content"
               tabIndex={-1}
-              className="pt-28 pb-12 outline-none"
+              className="pt-24 sm:pt-28 pb-8 sm:pb-12 outline-none"
             >
               <div
                 className={`mx-auto transition-[max-width,padding] duration-[1000ms] ease-linear ${

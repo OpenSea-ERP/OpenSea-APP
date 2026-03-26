@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
+  ArrowLeft,
   Camera,
   Check,
   CheckCheck,
@@ -362,6 +363,7 @@ function ChatThread({
   isFetchingNextPage,
   onSend,
   isSending,
+  onBack,
 }: {
   contact: MessagingContactDTO;
   messages: MessagingMessageDTO[];
@@ -371,6 +373,7 @@ function ChatThread({
   isFetchingNextPage: boolean;
   onSend: (text: string) => void;
   isSending: boolean;
+  onBack?: () => void;
 }) {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -440,6 +443,16 @@ function ChatThread({
     <div className="flex flex-col h-full">
       {/* Contact header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b shrink-0">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="md:hidden shrink-0 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Voltar para contatos"
+          >
+            <ArrowLeft className="size-5" />
+          </button>
+        )}
         <Avatar className="size-9">
           {contact.avatarUrl && <AvatarImage src={contact.avatarUrl} />}
           <AvatarFallback className="text-xs font-medium bg-slate-200 dark:bg-slate-700">
@@ -541,6 +554,20 @@ export default function MessagingPage() {
   const [channelFilter, setChannelFilter] = useState<MessagingChannel | null>(
     null
   );
+
+  // On mobile, track whether we're viewing the contact list or the chat
+  const [mobileShowChat, setMobileShowChat] = useState(false);
+
+  // When a contact is selected on mobile, show the chat
+  const handleSelectContact = useCallback((contactId: string) => {
+    setSelectedContactId(contactId);
+    setMobileShowChat(true);
+  }, []);
+
+  // Back to contact list on mobile
+  const handleMobileBack = useCallback(() => {
+    setMobileShowChat(false);
+  }, []);
 
   // Data hooks
   const { data: accountsData } = useMessagingAccounts();
@@ -696,7 +723,12 @@ export default function MessagingPage() {
         <Card className="bg-white dark:bg-white/5 border-gray-200/80 dark:border-white/10 shadow-sm dark:shadow-none p-0 overflow-hidden flex-1 min-h-0 flex flex-col">
           <div className="flex flex-1 min-h-0">
             {/* ═══ Left Panel: Contact List ═══ */}
-            <div className="w-[350px] shrink-0 border-r flex flex-col min-h-0">
+            <div
+              className={cn(
+                'w-full md:w-[350px] shrink-0 md:border-r flex flex-col min-h-0',
+                mobileShowChat ? 'hidden md:flex' : 'flex'
+              )}
+            >
               {/* Search */}
               <div className="px-3 pt-3 pb-2 space-y-2 shrink-0">
                 <div className="relative">
@@ -744,7 +776,7 @@ export default function MessagingPage() {
                         key={contact.id}
                         contact={contact}
                         isSelected={contact.id === selectedContactId}
-                        onClick={() => setSelectedContactId(contact.id)}
+                        onClick={() => handleSelectContact(contact.id)}
                       />
                     ))}
 
@@ -762,7 +794,12 @@ export default function MessagingPage() {
             </div>
 
             {/* ═══ Right Panel: Chat Thread ═══ */}
-            <div className="flex-1 min-w-0 flex flex-col">
+            <div
+              className={cn(
+                'flex-1 min-w-0 flex flex-col',
+                mobileShowChat ? 'flex' : 'hidden md:flex'
+              )}
+            >
               {selectedContact ? (
                 <ChatThread
                   contact={selectedContact}
@@ -773,6 +810,7 @@ export default function MessagingPage() {
                   isFetchingNextPage={messagesIsFetchingNextPage}
                   onSend={handleSend}
                   isSending={sendMutation.isPending}
+                  onBack={handleMobileBack}
                 />
               ) : (
                 <EmptyConversationState />

@@ -20,3 +20,4 @@ export * from './use-bids';
 export * from './use-customer-prices';
 export * from './use-store-credits';
 export * from './use-marketplaces';
+export * from './use-sales-dashboard';

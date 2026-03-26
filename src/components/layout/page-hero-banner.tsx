@@ -52,7 +52,7 @@ export function PageHeroBanner({
 }: PageHeroBannerProps) {
   return (
     <div>
-      <Card className="relative overflow-hidden p-8 md:p-12 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
+      <Card className="relative overflow-hidden p-4 sm:p-8 md:p-12 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full opacity-80 -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/10 rounded-full opacity-80 translate-y-1/2 -translate-x-1/2" />
 
@@ -61,12 +61,12 @@ export function PageHeroBanner({
             <div className={`p-3 rounded-xl bg-linear-to-br ${iconGradient}`}>
               <Icon className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
               {title}
             </h1>
           </div>
 
-          <p className="text-lg text-gray-600 dark:text-white/60 mb-6">
+          <p className="text-sm sm:text-lg text-gray-600 dark:text-white/60 mb-4 sm:mb-6">
             {description}
           </p>
 
