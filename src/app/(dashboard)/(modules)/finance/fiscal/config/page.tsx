@@ -1,6 +1,6 @@
 /**
  * Fiscal Configuration Page
- * Configuracao do modulo fiscal: provedor, regime tributario, numeracao, certificado digital
+ * Configuração do módulo fiscal: provedor, regime tributário, numeração, certificado digital
  */
 
 'use client';
@@ -30,12 +30,14 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
   useFiscalConfig,
   useUpdateFiscalConfig,
   useUploadCertificate,
 } from '@/hooks/finance';
+import { translateError } from '@/lib/error-messages';
 import { usePermissions } from '@/hooks/use-permissions';
 import type {
   FiscalProviderType,
@@ -45,6 +47,7 @@ import type {
 } from '@/types/fiscal';
 import { FISCAL_PROVIDER_LABELS, TAX_REGIME_LABELS } from '@/types/fiscal';
 import {
+  AlertTriangle,
   ChevronDown,
   Cloud,
   FileKey,
@@ -56,7 +59,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 // =============================================================================
@@ -110,6 +113,98 @@ function CollapsibleSection({
 }
 
 // =============================================================================
+// CERTIFICATE INFO COMPONENT
+// =============================================================================
+
+function CertificateInfo({ config }: { config: Record<string, unknown> }) {
+  const cert = config.certificate as
+    | {
+        serialNumber?: string;
+        subject?: string;
+        validFrom?: string;
+        validUntil?: string;
+      }
+    | undefined;
+
+  const daysUntilExpiry = useMemo(() => {
+    if (!cert?.validUntil) return null;
+    const now = new Date();
+    const expiry = new Date(cert.validUntil);
+    return Math.ceil(
+      (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+  }, [cert?.validUntil]);
+
+  const isExpired = daysUntilExpiry !== null && daysUntilExpiry <= 0;
+  const isWarning =
+    daysUntilExpiry !== null && daysUntilExpiry > 0 && daysUntilExpiry < 30;
+  const isCritical =
+    daysUntilExpiry !== null && daysUntilExpiry > 0 && daysUntilExpiry < 7;
+
+  return (
+    <div className="p-4 rounded-lg border bg-muted/40">
+      <div className="flex items-center gap-2 mb-3">
+        <FileKey className="h-4 w-4 text-emerald-500" />
+        <span className="font-medium text-sm">Certificado Ativo</span>
+        {isExpired ? (
+          <Badge variant="destructive">Expirado</Badge>
+        ) : (
+          <Badge variant="success">Válido</Badge>
+        )}
+        {!isExpired && isCritical && (
+          <Badge className="bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300 border-rose-200 dark:border-rose-500/20">
+            Expira em {daysUntilExpiry} dia{daysUntilExpiry !== 1 ? 's' : ''}
+          </Badge>
+        )}
+        {!isExpired && isWarning && !isCritical && (
+          <Badge className="bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300 border-amber-200 dark:border-amber-500/20">
+            Expira em {daysUntilExpiry} dias
+          </Badge>
+        )}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+        <div>
+          <span className="text-muted-foreground">ID: </span>
+          <span className="font-mono text-xs">
+            {config.certificateId as string}
+          </span>
+        </div>
+        {cert?.serialNumber && (
+          <div>
+            <span className="text-muted-foreground">Número de Série: </span>
+            <span className="font-mono text-xs">{cert.serialNumber}</span>
+          </div>
+        )}
+        {cert?.subject && (
+          <div>
+            <span className="text-muted-foreground">Emitente: </span>
+            <span className="text-xs">{cert.subject}</span>
+          </div>
+        )}
+        {cert?.validFrom && (
+          <div>
+            <span className="text-muted-foreground">Válido Desde: </span>
+            <span className="text-xs">
+              {new Date(cert.validFrom).toLocaleDateString('pt-BR')}
+            </span>
+          </div>
+        )}
+        {cert?.validUntil && (
+          <div>
+            <span className="text-muted-foreground">Válido Até: </span>
+            <span
+              className={`text-xs ${isExpired ? 'text-rose-600 dark:text-rose-400 font-medium' : isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-amber-600 dark:text-amber-400' : ''}`}
+            >
+              {new Date(cert.validUntil).toLocaleDateString('pt-BR')}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // LOADING SKELETON
 // =============================================================================
 
@@ -121,12 +216,12 @@ function ConfigSkeleton() {
           breadcrumbItems={[
             { label: 'Financeiro', href: '/finance' },
             { label: 'Documentos Fiscais', href: '/finance/fiscal' },
-            { label: 'Configuracoes' },
+            { label: 'Configurações' },
           ]}
         />
       </PageHeader>
       <PageBody>
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <Card key={i} className="p-6">
             <Skeleton className="h-5 w-48 mb-4" />
             <div className="space-y-4">
@@ -165,6 +260,13 @@ export default function FiscalConfigPage() {
   const [lastNfeNumber, setLastNfeNumber] = useState(0);
   const [lastNfceNumber, setLastNfceNumber] = useState(0);
   const [nfceEnabled, setNfceEnabled] = useState(false);
+  const [nfceCscId, setNfceCscId] = useState('');
+  const [nfceCscToken, setNfceCscToken] = useState('');
+  const [apiSecret, setApiSecret] = useState('');
+
+  // Contingência
+  const [contingencyMode, setContingencyMode] = useState(false);
+  const [contingencyReason, setContingencyReason] = useState('');
 
   // Certificate
   const [certPassword, setCertPassword] = useState('');
@@ -184,6 +286,8 @@ export default function FiscalConfigPage() {
       setLastNfeNumber(config.lastNfeNumber);
       setLastNfceNumber(config.lastNfceNumber);
       setNfceEnabled(config.nfceEnabled);
+      setNfceCscId(config.nfceCscId ?? '');
+      setNfceCscToken(config.nfceCscToken ?? '');
     }
   }, [config]);
 
@@ -197,23 +301,35 @@ export default function FiscalConfigPage() {
       defaultSeries,
       nfceEnabled,
       ...(apiKey ? { apiKey } : {}),
+      ...(apiSecret ? { apiSecret } : {}),
+      ...(nfceCscId ? { nfceCscId } : {}),
+      ...(nfceCscToken ? { nfceCscToken } : {}),
     };
 
     try {
       await updateConfig.mutateAsync(payload);
-      toast.success('Configuracoes fiscais salvas com sucesso.');
-    } catch {
-      toast.error('Erro ao salvar configuracoes fiscais.');
+      toast.success('Configurações fiscais salvas com sucesso.');
+    } catch (error) {
+      toast.error(
+        translateError(
+          error instanceof Error
+            ? error.message
+            : 'Erro ao salvar configurações fiscais.'
+        )
+      );
     }
   }, [
     provider,
     environment,
     apiKey,
+    apiSecret,
     taxRegime,
     defaultCfop,
     defaultNaturezaOperacao,
     defaultSeries,
     nfceEnabled,
+    nfceCscId,
+    nfceCscToken,
     updateConfig,
   ]);
 
@@ -233,8 +349,14 @@ export default function FiscalConfigPage() {
       toast.success('Certificado digital enviado com sucesso.');
       setCertPassword('');
       if (fileInputRef.current) fileInputRef.current.value = '';
-    } catch {
-      toast.error('Erro ao enviar certificado digital.');
+    } catch (error) {
+      toast.error(
+        translateError(
+          error instanceof Error
+            ? error.message
+            : 'Erro ao enviar certificado digital.'
+        )
+      );
     }
   }, [certPassword, uploadCertificate]);
 
@@ -248,14 +370,14 @@ export default function FiscalConfigPage() {
             breadcrumbItems={[
               { label: 'Financeiro', href: '/finance' },
               { label: 'Documentos Fiscais', href: '/finance/fiscal' },
-              { label: 'Configuracoes' },
+              { label: 'Configurações' },
             ]}
           />
         </PageHeader>
         <PageBody>
           <Card className="p-12 text-center">
             <p className="text-muted-foreground text-lg">
-              Voce nao tem permissao para acessar as configuracoes fiscais.
+              Você não tem permissão para acessar as configurações fiscais.
             </p>
             <Button
               variant="outline"
@@ -277,7 +399,7 @@ export default function FiscalConfigPage() {
           breadcrumbItems={[
             { label: 'Financeiro', href: '/finance' },
             { label: 'Documentos Fiscais', href: '/finance/fiscal' },
-            { label: 'Configuracoes' },
+            { label: 'Configurações' },
           ]}
           buttons={[
             {
@@ -293,11 +415,11 @@ export default function FiscalConfigPage() {
       </PageHeader>
 
       <PageBody>
-        {/* Section 1: Provedor de Emissao */}
+        {/* Section 1: Provedor de Emissão */}
         <CollapsibleSection
           icon={Cloud}
-          title="Provedor de Emissao"
-          subtitle="Configure o provedor de emissao de notas fiscais e ambiente"
+          title="Provedor de Emissão"
+          subtitle="Configure o provedor de emissão de notas fiscais e ambiente"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -331,6 +453,16 @@ export default function FiscalConfigPage() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label>Chave Secreta da API</Label>
+              <Input
+                type="password"
+                placeholder="Insira a chave secreta da API"
+                value={apiSecret}
+                onChange={e => setApiSecret(e.target.value)}
+              />
+            </div>
+
             <div className="space-y-2 md:col-span-2">
               <Label>Ambiente</Label>
               <div className="flex items-center gap-4">
@@ -342,7 +474,7 @@ export default function FiscalConfigPage() {
                   }`}
                   onClick={() => setEnvironment('HOMOLOGATION')}
                 >
-                  <p className="font-medium text-sm">Homologacao</p>
+                  <p className="font-medium text-sm">Homologação</p>
                   <p className="text-xs text-muted-foreground">
                     Ambiente de testes (SEFAZ)
                   </p>
@@ -355,9 +487,9 @@ export default function FiscalConfigPage() {
                   }`}
                   onClick={() => setEnvironment('PRODUCTION')}
                 >
-                  <p className="font-medium text-sm">Producao</p>
+                  <p className="font-medium text-sm">Produção</p>
                   <p className="text-xs text-muted-foreground">
-                    Ambiente real de emissao
+                    Ambiente real de emissão
                   </p>
                 </div>
               </div>
@@ -365,15 +497,15 @@ export default function FiscalConfigPage() {
           </div>
         </CollapsibleSection>
 
-        {/* Section 2: Regime Tributario */}
+        {/* Section 2: Regime Tributário */}
         <CollapsibleSection
           icon={Landmark}
-          title="Regime Tributario"
-          subtitle="Defina o regime tributario e padroes fiscais da empresa"
+          title="Regime Tributário"
+          subtitle="Defina o regime tributário e padrões fiscais da empresa"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Regime Tributario</Label>
+              <Label>Regime Tributário</Label>
               <Select
                 value={taxRegime}
                 onValueChange={v => setTaxRegime(v as TaxRegime)}
@@ -392,7 +524,7 @@ export default function FiscalConfigPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>CFOP Padrao</Label>
+              <Label>CFOP Padrão</Label>
               <Input
                 placeholder="Ex: 5102"
                 value={defaultCfop}
@@ -401,7 +533,7 @@ export default function FiscalConfigPage() {
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label>Natureza da Operacao Padrao</Label>
+              <Label>Natureza da Operação Padrão</Label>
               <Input
                 placeholder="Ex: Venda de Mercadoria"
                 value={defaultNaturezaOperacao}
@@ -411,15 +543,15 @@ export default function FiscalConfigPage() {
           </div>
         </CollapsibleSection>
 
-        {/* Section 3: Numeracao */}
+        {/* Section 3: Numeração */}
         <CollapsibleSection
           icon={Hash}
-          title="Numeracao"
-          subtitle="Configure serie e numeracao de NF-e e NFC-e"
+          title="Numeração"
+          subtitle="Configure série e numeração de NF-e e NFC-e"
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Serie Padrao</Label>
+              <Label>Série Padrão</Label>
               <Input
                 type="number"
                 min={1}
@@ -429,7 +561,7 @@ export default function FiscalConfigPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Ultimo Numero NF-e</Label>
+              <Label>Último Número NF-e</Label>
               <Input
                 type="number"
                 min={0}
@@ -439,7 +571,7 @@ export default function FiscalConfigPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Ultimo Numero NFC-e</Label>
+              <Label>Último Número NFC-e</Label>
               <Input
                 type="number"
                 min={0}
@@ -460,10 +592,45 @@ export default function FiscalConfigPage() {
                   Habilitar NFC-e
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Permite a emissao de Notas Fiscais ao Consumidor Eletronica
+                  Permite a emissão de Notas Fiscais ao Consumidor Eletrônica
                 </p>
               </div>
             </div>
+
+            {nfceEnabled && (
+              <>
+                <div className="md:col-span-3 mt-2">
+                  <div className="p-4 rounded-lg border bg-sky-50/50 dark:bg-sky-500/5 border-sky-200 dark:border-sky-500/20">
+                    <p className="text-sm text-sky-700 dark:text-sky-300 mb-3">
+                      O CSC (Código de Segurança do Contribuinte) é obrigatório
+                      para a emissão de NFC-e. Solicite junto à SEFAZ do seu
+                      estado.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>
+                          Código de Segurança do Contribuinte (CSC) - ID
+                        </Label>
+                        <Input
+                          placeholder="Ex: 000001"
+                          value={nfceCscId}
+                          onChange={e => setNfceCscId(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Token CSC</Label>
+                        <Input
+                          type="password"
+                          placeholder="Token fornecido pela SEFAZ"
+                          value={nfceCscToken}
+                          onChange={e => setNfceCscToken(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </CollapsibleSection>
 
@@ -471,27 +638,11 @@ export default function FiscalConfigPage() {
         <CollapsibleSection
           icon={Shield}
           title="Certificado Digital"
-          subtitle="Envie e gerencie o certificado digital A1 para emissao de notas"
+          subtitle="Envie e gerencie o certificado digital A1 para emissão de notas"
         >
           <div className="space-y-6">
             {/* Current certificate info */}
-            {config?.certificateId && (
-              <div className="p-4 rounded-lg border bg-muted/40">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileKey className="h-4 w-4 text-emerald-500" />
-                  <span className="font-medium text-sm">Certificado Ativo</span>
-                  <Badge variant="success">Valido</Badge>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">ID: </span>
-                    <span className="font-mono text-xs">
-                      {config.certificateId}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
+            {config?.certificateId && <CertificateInfo config={config} />}
 
             {/* Upload new certificate */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -528,6 +679,62 @@ export default function FiscalConfigPage() {
               )}
               Enviar Certificado
             </Button>
+          </div>
+        </CollapsibleSection>
+
+        {/* Section 5: Contingência */}
+        <CollapsibleSection
+          icon={AlertTriangle}
+          title="Modo Contingência"
+          subtitle="Ative o modo de contingência quando a SEFAZ estiver indisponível"
+          defaultOpen={false}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 rounded-lg border">
+              <Switch
+                checked={contingencyMode}
+                onCheckedChange={setContingencyMode}
+                id="contingency-mode"
+              />
+              <div>
+                <Label htmlFor="contingency-mode" className="cursor-pointer">
+                  Ativar Modo Contingência
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  As notas serão emitidas em modo offline e transmitidas quando
+                  a SEFAZ voltar
+                </p>
+              </div>
+            </div>
+
+            {contingencyMode && (
+              <div className="space-y-3">
+                <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                      Atenção
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    O modo contingência deve ser utilizado apenas quando a SEFAZ
+                    estiver indisponível. As notas emitidas em contingência
+                    precisam ser transmitidas assim que o serviço for
+                    restabelecido.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Motivo da Contingência *</Label>
+                  <Textarea
+                    placeholder="Descreva o motivo da ativação do modo contingência (ex: SEFAZ indisponível desde 14:00)"
+                    value={contingencyReason}
+                    onChange={e => setContingencyReason(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </CollapsibleSection>
       </PageBody>

@@ -31,7 +31,12 @@ export interface FiscalConfigDTO {
   defaultNaturezaOperacao?: string;
   taxRegime: TaxRegime;
   nfceEnabled: boolean;
+  nfceCscId?: string;
+  nfceCscToken?: string;
+  contingencyMode: boolean;
+  contingencyReason?: string;
   certificateId?: string;
+  certificate?: FiscalCertificateDTO;
   createdAt: string;
   updatedAt: string;
 }
@@ -166,6 +171,11 @@ export interface UpdateFiscalConfigData {
   taxRegime?: TaxRegime;
   nfceEnabled?: boolean;
   apiKey?: string;
+  apiSecret?: string;
+  nfceCscId?: string;
+  nfceCscToken?: string;
+  contingencyMode?: boolean;
+  contingencyReason?: string;
 }
 
 // ============================================================================
