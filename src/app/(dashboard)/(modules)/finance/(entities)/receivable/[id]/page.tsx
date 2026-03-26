@@ -440,9 +440,7 @@ export default function ReceivableDetailPage({
               variant="outline"
               size="sm"
               className="gap-2 text-teal-600 border-teal-200 hover:bg-teal-50 dark:text-teal-400 dark:border-teal-800 dark:hover:bg-teal-500/10"
-              onClick={() => {
-                /* TODO: navigate to fiscal document detail */
-              }}
+              onClick={() => router.push(`/finance/fiscal/${entry.fiscalDocumentId}`)}
             >
               <FileCheck className="h-4 w-4" />
               Ver NF-e
