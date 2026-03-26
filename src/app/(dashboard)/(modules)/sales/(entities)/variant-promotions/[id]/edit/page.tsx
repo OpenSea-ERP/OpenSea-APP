@@ -35,8 +35,9 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { logger } from '@/lib/logger';
-import type { DiscountType, VariantPromotion } from '@/types/sales';
-import { DISCOUNT_TYPE_LABELS } from '@/types/sales';
+import type { VariantPromotion } from '@/types/sales';
+import type { DiscountType } from '@/types/sales/promotion.types';
+import { DISCOUNT_TYPE_LABELS } from '@/types/sales/promotion.types';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Calendar,
@@ -159,7 +160,9 @@ export default function EditVariantPromotionPage() {
     }
 
     if (!discountValue || Number(discountValue) <= 0) {
-      toast.error('O valor do desconto e obrigatorio e deve ser maior que zero');
+      toast.error(
+        'O valor do desconto e obrigatorio e deve ser maior que zero'
+      );
       return;
     }
 
@@ -317,9 +320,7 @@ export default function EditVariantPromotionPage() {
               <Tag className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground">
-                Editando promocao
-              </p>
+              <p className="text-sm text-muted-foreground">Editando promocao</p>
               <h1 className="text-xl font-bold truncate">{promotion.name}</h1>
             </div>
             <div className="hidden sm:flex items-center gap-3 shrink-0">

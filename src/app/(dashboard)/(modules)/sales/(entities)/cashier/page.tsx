@@ -128,7 +128,7 @@ function CashierPageContent() {
 
   const sessions = useMemo(() => {
     return (infiniteData?.pages.flatMap(p => p.sessions) ??
-      []) as CashierSession[];
+      []) as unknown as CashierSession[];
   }, [infiniteData]);
 
   const total = sessions.length;
@@ -485,6 +485,16 @@ function CashierPageContent() {
           ) : (
             <>
               <EntityGrid
+                config={{
+                  display: {
+                    labels: { singular: 'sessão', plural: 'sessões' },
+                    titleField: 'id' as const,
+                  },
+                  name: 'cashier-session',
+                  api: { baseUrl: '' },
+                  routes: { list: '/sales/cashier' },
+                  permissions: { view: '', create: '', delete: '' },
+                }}
                 items={sessions}
                 showItemCount={false}
                 toolbarStart={
@@ -495,7 +505,7 @@ function CashierPageContent() {
                       options={statusOptions}
                       selected={statusFilter}
                       onSelectionChange={setStatusFilterUrl}
-                      activeColor="teal"
+                      activeColor="cyan"
                       searchPlaceholder="Buscar status..."
                       emptyText="Nenhum status encontrado."
                     />

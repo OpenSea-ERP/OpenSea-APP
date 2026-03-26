@@ -34,7 +34,7 @@ import {
 import type {
   RetentionConfig,
   RetentionSummary,
-  TaxRegime,
+  PisCofinsRegime,
   TaxType,
 } from '@/types/finance';
 import { Calculator, CheckCircle2, Loader2 } from 'lucide-react';
@@ -97,7 +97,7 @@ export function TaxRetentionPanel({
   const [applyCOFINS, setApplyCOFINS] = useState(false);
   const [applyCSLL, setApplyCSLL] = useState(false);
   const [issRate, setIssRate] = useState('5');
-  const [taxRegime, setTaxRegime] = useState<TaxRegime>('CUMULATIVO');
+  const [taxRegime, setTaxRegime] = useState<PisCofinsRegime>('CUMULATIVO');
 
   const existingRetentions = retentionsData?.retentions ?? [];
   const hasRetentions = existingRetentions.length > 0;
@@ -113,7 +113,16 @@ export function TaxRetentionPanel({
       issRate: applyISS ? Number(issRate) / 100 : undefined,
       taxRegime: applyPIS || applyCOFINS ? taxRegime : undefined,
     };
-  }, [applyIRRF, applyISS, applyINSS, applyPIS, applyCOFINS, applyCSLL, issRate, taxRegime]);
+  }, [
+    applyIRRF,
+    applyISS,
+    applyINSS,
+    applyPIS,
+    applyCOFINS,
+    applyCSLL,
+    issRate,
+    taxRegime,
+  ]);
 
   const hasAnySelected =
     applyIRRF || applyISS || applyINSS || applyPIS || applyCOFINS || applyCSLL;
@@ -181,7 +190,7 @@ export function TaxRetentionPanel({
                     <Checkbox
                       id="irrf"
                       checked={applyIRRF}
-                      onCheckedChange={(v) => setApplyIRRF(!!v)}
+                      onCheckedChange={v => setApplyIRRF(!!v)}
                     />
                     <Label htmlFor="irrf" className="text-sm">
                       IRRF — Imposto de Renda
@@ -193,7 +202,7 @@ export function TaxRetentionPanel({
                       <Checkbox
                         id="iss"
                         checked={applyISS}
-                        onCheckedChange={(v) => setApplyISS(!!v)}
+                        onCheckedChange={v => setApplyISS(!!v)}
                       />
                       <Label htmlFor="iss" className="text-sm">
                         ISS — Imposto Sobre Serviços
@@ -214,7 +223,7 @@ export function TaxRetentionPanel({
                           max="5"
                           step="0.1"
                           value={issRate}
-                          onChange={(e) => setIssRate(e.target.value)}
+                          onChange={e => setIssRate(e.target.value)}
                           className="h-8 w-24 mt-1"
                         />
                       </div>
@@ -225,7 +234,7 @@ export function TaxRetentionPanel({
                     <Checkbox
                       id="inss"
                       checked={applyINSS}
-                      onCheckedChange={(v) => setApplyINSS(!!v)}
+                      onCheckedChange={v => setApplyINSS(!!v)}
                     />
                     <Label htmlFor="inss" className="text-sm">
                       INSS — Previdência Social
@@ -236,7 +245,7 @@ export function TaxRetentionPanel({
                     <Checkbox
                       id="pis"
                       checked={applyPIS}
-                      onCheckedChange={(v) => setApplyPIS(!!v)}
+                      onCheckedChange={v => setApplyPIS(!!v)}
                     />
                     <Label htmlFor="pis" className="text-sm">
                       PIS
@@ -247,7 +256,7 @@ export function TaxRetentionPanel({
                     <Checkbox
                       id="cofins"
                       checked={applyCOFINS}
-                      onCheckedChange={(v) => setApplyCOFINS(!!v)}
+                      onCheckedChange={v => setApplyCOFINS(!!v)}
                     />
                     <Label htmlFor="cofins" className="text-sm">
                       COFINS
@@ -258,7 +267,7 @@ export function TaxRetentionPanel({
                     <Checkbox
                       id="csll"
                       checked={applyCSLL}
-                      onCheckedChange={(v) => setApplyCSLL(!!v)}
+                      onCheckedChange={v => setApplyCSLL(!!v)}
                     />
                     <Label htmlFor="csll" className="text-sm">
                       CSLL
@@ -274,7 +283,7 @@ export function TaxRetentionPanel({
                     </Label>
                     <Select
                       value={taxRegime}
-                      onValueChange={(v) => setTaxRegime(v as TaxRegime)}
+                      onValueChange={v => setTaxRegime(v as PisCofinsRegime)}
                     >
                       <SelectTrigger className="h-8">
                         <SelectValue />
@@ -296,12 +305,9 @@ export function TaxRetentionPanel({
                       Prévia do cálculo
                     </p>
                     {preview.retentions
-                      .filter((r) => r.amount > 0)
+                      .filter(r => r.amount > 0)
                       .map((r, i) => (
-                        <div
-                          key={i}
-                          className="flex justify-between text-sm"
-                        >
+                        <div key={i} className="flex justify-between text-sm">
                           <span>{TAX_TYPE_LABELS[r.taxType]}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-mono">
                             -{formatCurrency(r.amount)}
@@ -330,9 +336,7 @@ export function TaxRetentionPanel({
                     size="sm"
                     className="flex-1 gap-1"
                     onClick={handleCalculate}
-                    disabled={
-                      !hasAnySelected || calculateMutation.isPending
-                    }
+                    disabled={!hasAnySelected || calculateMutation.isPending}
                   >
                     {calculateMutation.isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -376,7 +380,7 @@ export function TaxRetentionPanel({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {existingRetentions.map((retention) => (
+                {existingRetentions.map(retention => (
                   <TableRow key={retention.id}>
                     <TableCell className="text-sm font-medium">
                       {TAX_TYPE_LABELS[retention.taxType as TaxType] ??
@@ -419,7 +423,7 @@ export function TaxRetentionPanel({
                 <span>Valor Líquido</span>
                 <span className="font-mono text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(
-                    grossAmount - (retentionsData?.totalRetained ?? 0),
+                    grossAmount - (retentionsData?.totalRetained ?? 0)
                   )}
                 </span>
               </div>

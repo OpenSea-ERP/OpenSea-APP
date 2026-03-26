@@ -78,7 +78,7 @@ export function ProductSearch({
     status: 'ACTIVE',
   });
 
-  const products = data?.data ?? [];
+  const products = data?.products ?? [];
 
   const handleAdd = useCallback(
     (product: Product) => {

@@ -60,7 +60,10 @@ type ActionButtonWithPermission = HeaderButton & {
   permission?: string;
 };
 
-const CHANNEL_ICONS: Record<MessageChannel, React.ElementType> = {
+const CHANNEL_ICONS: Record<
+  MessageChannel,
+  React.ComponentType<{ className?: string }>
+> = {
   EMAIL: Mail,
   WHATSAPP: MessageCircle,
   SMS: Smartphone,
@@ -148,7 +151,7 @@ function MessageTemplatesPageContent() {
 
   const templates = useMemo(() => {
     return (infiniteData?.pages.flatMap(p => p.messageTemplates) ??
-      []) as MessageTemplate[];
+      []) as unknown as MessageTemplate[];
   }, [infiniteData]);
 
   const total = templates.length;
@@ -311,7 +314,7 @@ function MessageTemplatesPageContent() {
     const listBadges: {
       label: string;
       variant: 'outline';
-      icon?: typeof Send;
+      icon?: React.ComponentType<{ className?: string }>;
       color: string;
     }[] = [
       {
@@ -491,6 +494,16 @@ function MessageTemplatesPageContent() {
           ) : (
             <>
               <EntityGrid
+                config={{
+                  display: {
+                    labels: { singular: 'modelo', plural: 'modelos' },
+                    titleField: 'id' as const,
+                  },
+                  name: 'msg-template',
+                  api: { baseUrl: '' },
+                  routes: { list: '/sales/msg-templates' },
+                  permissions: { view: '', create: '', delete: '' },
+                }}
                 items={templates}
                 showItemCount={false}
                 toolbarStart={
@@ -501,7 +514,7 @@ function MessageTemplatesPageContent() {
                       options={channelOptions}
                       selected={channelFilter}
                       onSelectionChange={setChannelFilterUrl}
-                      activeColor="sky"
+                      activeColor="blue"
                       searchPlaceholder="Buscar canal..."
                       emptyText="Nenhum canal encontrado."
                     />

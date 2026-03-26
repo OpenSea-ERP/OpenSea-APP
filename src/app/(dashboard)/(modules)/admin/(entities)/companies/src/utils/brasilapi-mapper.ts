@@ -9,7 +9,7 @@ import type {
   CreateCompanyData,
   CreateCompanyFiscalSettingsData,
   CreateCompanyStakeholderData,
-  TaxRegime,
+  CompanyTaxRegime,
 } from '@/types/hr';
 
 export interface ImportedCompanyData {
@@ -116,7 +116,9 @@ export function mapBrasilAPIToCompanyData(
  * Mapeia regime tributário da BrasilAPI para o formato da nossa API
  * Valores válidos: "SIMPLES" | "LUCRO_PRESUMIDO" | "LUCRO_REAL" | "IMUNE_ISENTA" | "OUTROS"
  */
-function getTaxRegimeFromBrasilData(data: BrasilAPICompanyData): TaxRegime {
+function getTaxRegimeFromBrasilData(
+  data: BrasilAPICompanyData
+): CompanyTaxRegime {
   if (!data.regime_tributario || data.regime_tributario.length === 0) {
     return 'OUTROS';
   }

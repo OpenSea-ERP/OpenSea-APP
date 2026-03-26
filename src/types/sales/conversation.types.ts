@@ -42,7 +42,7 @@ export interface CreateConversationRequest {
   initialMessage?: string;
 }
 
-export interface SendMessageRequest {
+export interface SendConversationMessageRequest {
   content: string;
 }
 

@@ -4,7 +4,7 @@
 
 export type TaxType = 'IRRF' | 'ISS' | 'INSS' | 'PIS' | 'COFINS' | 'CSLL';
 
-export type TaxRegime = 'CUMULATIVO' | 'NAO_CUMULATIVO';
+export type PisCofinsRegime = 'CUMULATIVO' | 'NAO_CUMULATIVO';
 
 export interface RetentionConfig {
   applyIRRF?: boolean;
@@ -14,7 +14,7 @@ export interface RetentionConfig {
   applyCOFINS?: boolean;
   applyCSLL?: boolean;
   issRate?: number;
-  taxRegime?: TaxRegime;
+  taxRegime?: PisCofinsRegime;
 }
 
 export interface TaxResult {
@@ -68,7 +68,7 @@ export const TAX_TYPE_LABELS: Record<TaxType, string> = {
   CSLL: 'CSLL',
 };
 
-export const TAX_REGIME_LABELS: Record<TaxRegime, string> = {
+export const PIS_COFINS_REGIME_LABELS: Record<PisCofinsRegime, string> = {
   CUMULATIVO: 'Cumulativo',
   NAO_CUMULATIVO: 'Não-Cumulativo',
 };

@@ -70,8 +70,7 @@ type ActionButtonWithPermission = HeaderButton & {
 const STATUS_COLORS: Record<ProposalStatus, string> = {
   DRAFT:
     'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
-  SENT:
-    'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+  SENT: 'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
   UNDER_REVIEW:
     'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
   APPROVED:
@@ -154,7 +153,8 @@ function ProposalsPageContent() {
   const deleteMutation = useDeleteProposal();
 
   const proposals = useMemo(() => {
-    return (data?.pages.flatMap(p => p.proposals) ?? []) as Proposal[];
+    return (data?.pages.flatMap(p => p.proposals) ??
+      []) as unknown as Proposal[];
   }, [data]);
 
   const total = data?.pages[0]?.meta.total ?? 0;
@@ -550,9 +550,7 @@ function ProposalsPageContent() {
                 defaultSortDirection="desc"
                 onSortChange={(field, direction) => {
                   if (field !== 'custom') {
-                    setSortBy(
-                      field as 'title' | 'createdAt' | 'updatedAt'
-                    );
+                    setSortBy(field as 'title' | 'createdAt' | 'updatedAt');
                     setSortOrder(direction);
                   }
                 }}

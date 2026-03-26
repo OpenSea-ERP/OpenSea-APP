@@ -5,7 +5,15 @@ export * from './deal.types';
 export * from './activity.types';
 export * from './order.types';
 export * from './comment.types';
-export * from './promotion.types';
+export {
+  type VariantPromotion,
+  type CreateVariantPromotionRequest,
+  type UpdateVariantPromotionRequest,
+  type VariantPromotionsResponse,
+  type VariantPromotionResponse,
+  type DiscountType as PromotionDiscountType,
+  DISCOUNT_TYPE_LABELS as PROMOTION_DISCOUNT_TYPE_LABELS,
+} from './promotion.types';
 export * from './reservation.types';
 export * from './notification.types';
 export * from './catalog.types';

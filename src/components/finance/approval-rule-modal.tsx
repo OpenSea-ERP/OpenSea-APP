@@ -11,6 +11,7 @@ import {
   NavigationWizardDialog,
   type NavigationSection,
 } from '@/components/ui/navigation-wizard-dialog';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -92,6 +93,7 @@ export function ApprovalRuleModal({
 }: ApprovalRuleModalProps) {
   const isEditing = !!ruleId;
   const [form, setForm] = useState<FormState>(defaultForm);
+  const [activeSection, setActiveSection] = useState('basic');
   const [supplierInput, setSupplierInput] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -212,239 +214,254 @@ export function ApprovalRuleModal({
     {
       id: 'basic',
       label: 'Dados Básicos',
-      icon: Settings2,
-      content: (
-        <div className="space-y-5">
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="rule-name">Nome da Regra</Label>
-            <div className="relative">
-              <Input
-                id="rule-name"
-                value={form.name}
-                onChange={e => {
-                  setForm(f => ({ ...f, name: e.target.value }));
-                  if (fieldErrors.name)
-                    setFieldErrors(prev => ({ ...prev, name: '' }));
-                }}
-                placeholder="Ex: Pagamentos pequenos até R$ 500"
-                maxLength={128}
-                aria-invalid={!!fieldErrors.name}
-              />
-              <FormErrorIcon message={fieldErrors.name} />
-            </div>
-          </div>
-
-          {/* Action */}
-          <div className="space-y-2">
-            <Label>Ação</Label>
-            <Select
-              value={form.action}
-              onValueChange={v =>
-                setForm(f => ({
-                  ...f,
-                  action: v as FinanceApprovalAction,
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(['AUTO_PAY', 'AUTO_APPROVE', 'FLAG_REVIEW'] as const).map(
-                  action => {
-                    const colors = APPROVAL_ACTION_COLORS[action];
-                    return (
-                      <SelectItem key={action} value={action}>
-                        <span className={cn(colors.text)}>
-                          {APPROVAL_ACTION_LABELS[action]}
-                        </span>
-                      </SelectItem>
-                    );
-                  }
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Priority */}
-          <div className="space-y-2">
-            <Label htmlFor="rule-priority">Prioridade</Label>
-            <Input
-              id="rule-priority"
-              type="number"
-              min={0}
-              value={form.priority}
-              onChange={e =>
-                setForm(f => ({
-                  ...f,
-                  priority: parseInt(e.target.value) || 0,
-                }))
-              }
-              placeholder="0"
-            />
-            <p className="text-xs text-muted-foreground">
-              Maior valor = avaliada primeiro
-            </p>
-          </div>
-
-          {/* Max Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="rule-max-amount">Valor Máximo (R$)</Label>
-            <Input
-              id="rule-max-amount"
-              type="number"
-              min={0}
-              step="0.01"
-              value={form.maxAmount}
-              onChange={e =>
-                setForm(f => ({ ...f, maxAmount: e.target.value }))
-              }
-              placeholder="Sem limite"
-            />
-            <p className="text-xs text-muted-foreground">
-              Lançamentos com valor até este limite serão avaliados
-            </p>
-          </div>
-
-          {/* Active */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="rule-active">Ativa</Label>
-            <Switch
-              id="rule-active"
-              checked={form.isActive}
-              onCheckedChange={checked =>
-                setForm(f => ({ ...f, isActive: checked }))
-              }
-            />
-          </div>
-        </div>
-      ),
+      icon: <Settings2 className="h-4 w-4" />,
     },
     {
       id: 'conditions',
       label: 'Condições',
-      icon: Filter,
-      content: (
-        <div className="space-y-5">
-          {/* Entry Type */}
-          <div className="space-y-2">
-            <Label>Tipo de Lançamento</Label>
-            <Select
-              value={form.entryType || '_all'}
-              onValueChange={v =>
-                setForm(f => ({
-                  ...f,
-                  entryType:
-                    v === '_all' ? '' : (v as 'PAYABLE' | 'RECEIVABLE'),
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">Todos</SelectItem>
-                <SelectItem value="PAYABLE">Somente A Pagar</SelectItem>
-                <SelectItem value="RECEIVABLE">Somente A Receber</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Categories Multi-Select */}
-          <div className="space-y-2">
-            <Label>Categorias (opcional)</Label>
-            <div className="border rounded-lg p-3 max-h-40 overflow-auto space-y-1">
-              {categories.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  Nenhuma categoria encontrada
-                </p>
-              ) : (
-                categories.map(cat => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    className={cn(
-                      'w-full text-left px-3 py-1.5 rounded text-sm transition-colors',
-                      form.categoryIds.includes(cat.id)
-                        ? 'bg-violet-50 text-violet-700 dark:bg-violet-500/8 dark:text-violet-300'
-                        : 'hover:bg-muted/50'
-                    )}
-                    onClick={() => handleToggleCategory(cat.id)}
-                  >
-                    {cat.name}
-                  </button>
-                ))
-              )}
-            </div>
-            {form.categoryIds.length > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {form.categoryIds.length} categoria(s) selecionada(s)
-              </p>
-            )}
-          </div>
-
-          {/* Supplier Names Tags */}
-          <div className="space-y-2">
-            <Label>Fornecedores (opcional)</Label>
-            <div className="flex gap-2">
-              <Input
-                value={supplierInput}
-                onChange={e => setSupplierInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddSupplier();
-                  }
-                }}
-                placeholder="Digite e pressione Enter"
-              />
-            </div>
-            {form.supplierNames.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {form.supplierNames.map(name => (
-                  <Badge
-                    key={name}
-                    variant="outline"
-                    className="text-xs gap-1 bg-slate-50 dark:bg-slate-800"
-                  >
-                    {name}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSupplier(name)}
-                      className="ml-0.5 hover:text-rose-500"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Min Recurrence */}
-          <div className="space-y-2">
-            <Label htmlFor="rule-min-recurrence">
-              Recorrência mínima do fornecedor
-            </Label>
-            <Input
-              id="rule-min-recurrence"
-              type="number"
-              min={0}
-              value={form.minRecurrence}
-              onChange={e =>
-                setForm(f => ({ ...f, minRecurrence: e.target.value }))
-              }
-              placeholder="Sem mínimo"
-            />
-            <p className="text-xs text-muted-foreground">
-              Fornecedor deve ter pelo menos X lançamentos anteriores
-            </p>
-          </div>
-        </div>
-      ),
+      icon: <Filter className="h-4 w-4" />,
     },
   ];
+
+  const basicContent = (
+    <div className="space-y-5">
+      {/* Name */}
+      <div className="space-y-2">
+        <Label htmlFor="rule-name">Nome da Regra</Label>
+        <div className="relative">
+          <Input
+            id="rule-name"
+            value={form.name}
+            onChange={e => {
+              setForm(f => ({ ...f, name: e.target.value }));
+              if (fieldErrors.name)
+                setFieldErrors(prev => ({ ...prev, name: '' }));
+            }}
+            placeholder="Ex: Pagamentos pequenos até R$ 500"
+            maxLength={128}
+            aria-invalid={!!fieldErrors.name}
+          />
+          <FormErrorIcon message={fieldErrors.name} />
+        </div>
+      </div>
+
+      {/* Action */}
+      <div className="space-y-2">
+        <Label>Ação</Label>
+        <Select
+          value={form.action}
+          onValueChange={v =>
+            setForm(f => ({
+              ...f,
+              action: v as FinanceApprovalAction,
+            }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(['AUTO_PAY', 'AUTO_APPROVE', 'FLAG_REVIEW'] as const).map(
+              action => {
+                const colors = APPROVAL_ACTION_COLORS[action];
+                return (
+                  <SelectItem key={action} value={action}>
+                    <span className={cn(colors.text)}>
+                      {APPROVAL_ACTION_LABELS[action]}
+                    </span>
+                  </SelectItem>
+                );
+              }
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Priority */}
+      <div className="space-y-2">
+        <Label htmlFor="rule-priority">Prioridade</Label>
+        <Input
+          id="rule-priority"
+          type="number"
+          min={0}
+          value={form.priority}
+          onChange={e =>
+            setForm(f => ({
+              ...f,
+              priority: parseInt(e.target.value) || 0,
+            }))
+          }
+          placeholder="0"
+        />
+        <p className="text-xs text-muted-foreground">
+          Maior valor = avaliada primeiro
+        </p>
+      </div>
+
+      {/* Max Amount */}
+      <div className="space-y-2">
+        <Label htmlFor="rule-max-amount">Valor Máximo (R$)</Label>
+        <Input
+          id="rule-max-amount"
+          type="number"
+          min={0}
+          step="0.01"
+          value={form.maxAmount}
+          onChange={e => setForm(f => ({ ...f, maxAmount: e.target.value }))}
+          placeholder="Sem limite"
+        />
+        <p className="text-xs text-muted-foreground">
+          Lançamentos com valor até este limite serão avaliados
+        </p>
+      </div>
+
+      {/* Active */}
+      <div className="flex items-center justify-between">
+        <Label htmlFor="rule-active">Ativa</Label>
+        <Switch
+          id="rule-active"
+          checked={form.isActive}
+          onCheckedChange={checked =>
+            setForm(f => ({ ...f, isActive: checked }))
+          }
+        />
+      </div>
+    </div>
+  );
+
+  const conditionsContent = (
+    <div className="space-y-5">
+      {/* Entry Type */}
+      <div className="space-y-2">
+        <Label>Tipo de Lançamento</Label>
+        <Select
+          value={form.entryType || '_all'}
+          onValueChange={v =>
+            setForm(f => ({
+              ...f,
+              entryType: v === '_all' ? '' : (v as 'PAYABLE' | 'RECEIVABLE'),
+            }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">Todos</SelectItem>
+            <SelectItem value="PAYABLE">Somente A Pagar</SelectItem>
+            <SelectItem value="RECEIVABLE">Somente A Receber</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Categories Multi-Select */}
+      <div className="space-y-2">
+        <Label>Categorias (opcional)</Label>
+        <div className="border rounded-lg p-3 max-h-40 overflow-auto space-y-1">
+          {categories.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Nenhuma categoria encontrada
+            </p>
+          ) : (
+            categories.map(cat => (
+              <button
+                key={cat.id}
+                type="button"
+                className={cn(
+                  'w-full text-left px-3 py-1.5 rounded text-sm transition-colors',
+                  form.categoryIds.includes(cat.id)
+                    ? 'bg-violet-50 text-violet-700 dark:bg-violet-500/8 dark:text-violet-300'
+                    : 'hover:bg-muted/50'
+                )}
+                onClick={() => handleToggleCategory(cat.id)}
+              >
+                {cat.name}
+              </button>
+            ))
+          )}
+        </div>
+        {form.categoryIds.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {form.categoryIds.length} categoria(s) selecionada(s)
+          </p>
+        )}
+      </div>
+
+      {/* Supplier Names Tags */}
+      <div className="space-y-2">
+        <Label>Fornecedores (opcional)</Label>
+        <div className="flex gap-2">
+          <Input
+            value={supplierInput}
+            onChange={e => setSupplierInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddSupplier();
+              }
+            }}
+            placeholder="Digite e pressione Enter"
+          />
+        </div>
+        {form.supplierNames.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {form.supplierNames.map(name => (
+              <Badge
+                key={name}
+                variant="outline"
+                className="text-xs gap-1 bg-slate-50 dark:bg-slate-800"
+              >
+                {name}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSupplier(name)}
+                  className="ml-0.5 hover:text-rose-500"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Min Recurrence */}
+      <div className="space-y-2">
+        <Label htmlFor="rule-min-recurrence">
+          Recorrência mínima do fornecedor
+        </Label>
+        <Input
+          id="rule-min-recurrence"
+          type="number"
+          min={0}
+          value={form.minRecurrence}
+          onChange={e =>
+            setForm(f => ({ ...f, minRecurrence: e.target.value }))
+          }
+          placeholder="Sem mínimo"
+        />
+        <p className="text-xs text-muted-foreground">
+          Fornecedor deve ter pelo menos X lançamentos anteriores
+        </p>
+      </div>
+    </div>
+  );
+
+  const saveLabel = isEditing ? 'Salvar Alterações' : 'Criar Regra';
+
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" onClick={() => onOpenChange(false)}>
+        Cancelar
+      </Button>
+      <Button onClick={handleSave} disabled={isSubmitting}>
+        {isSubmitting ? (
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        ) : null}
+        {saveLabel}
+      </Button>
+    </div>
+  );
 
   if (loadingRule && isEditing) {
     return (
@@ -456,17 +473,17 @@ export function ApprovalRuleModal({
           {
             id: 'loading',
             label: 'Carregando',
-            icon: Loader2,
-            content: (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ),
+            icon: <Loader2 className="h-4 w-4" />,
           },
         ]}
-        onSave={() => {}}
-        isSaving={false}
-      />
+        activeSection="loading"
+        onSectionChange={() => {}}
+        footer={null}
+      >
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </NavigationWizardDialog>
     );
   }
 
@@ -478,9 +495,11 @@ export function ApprovalRuleModal({
         isEditing ? 'Editar Regra de Aprovação' : 'Nova Regra de Aprovação'
       }
       sections={sections}
-      onSave={handleSave}
-      isSaving={isSubmitting}
-      saveLabel={isEditing ? 'Salvar Alterações' : 'Criar Regra'}
-    />
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      footer={footer}
+    >
+      {activeSection === 'basic' ? basicContent : conditionsContent}
+    </NavigationWizardDialog>
   );
 }

@@ -38,6 +38,6 @@ export interface CreatePixChargeRequest {
   expirationSeconds?: number;
 }
 
-export interface CreatePixChargeResponse {
+export interface CashierCreatePixChargeResponse {
   charge: PixChargeDTO;
 }

@@ -56,7 +56,7 @@ interface RecipientForm {
 }
 
 interface ValidationErrors {
-  recipient: Record<string, string>;
+  recipient: Record<string, string | undefined>;
   items: Record<string, Record<string, string>>;
 }
 

@@ -15,20 +15,18 @@ import type {
 
 class AccountantService {
   async list(): Promise<AccountantAccessesResponse> {
-    const response = await apiClient.get<AccountantAccessesResponse>(
-      API_ENDPOINTS.ACCOUNTANT.LIST,
+    return apiClient.get<AccountantAccessesResponse>(
+      API_ENDPOINTS.ACCOUNTANT.LIST
     );
-    return response.data;
   }
 
   async invite(
-    data: InviteAccountantRequest,
+    data: InviteAccountantRequest
   ): Promise<InviteAccountantResponse> {
-    const response = await apiClient.post<InviteAccountantResponse>(
+    return apiClient.post<InviteAccountantResponse>(
       API_ENDPOINTS.ACCOUNTANT.INVITE,
-      data,
+      data
     );
-    return response.data;
   }
 
   async revoke(id: string): Promise<void> {
@@ -43,8 +41,7 @@ export const accountantService = new AccountantService();
 // ============================================================================
 
 function createPortalClient(accessToken: string) {
-  const baseURL =
-    process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
+  const baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333';
 
   return {
     async get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
@@ -69,7 +66,7 @@ function createPortalClient(accessToken: string) {
 
     async getBlob(
       url: string,
-      params?: Record<string, unknown>,
+      params?: Record<string, unknown>
     ): Promise<Blob> {
       const queryString = params
         ? '?' +
@@ -99,26 +96,23 @@ export class AccountantPortalService {
     this.client = createPortalClient(accessToken);
   }
 
-  async getData(
-    year: number,
-    month: number,
-  ): Promise<AccountantPortalData> {
+  async getData(year: number, month: number): Promise<AccountantPortalData> {
     return this.client.get<AccountantPortalData>(
       API_ENDPOINTS.ACCOUNTANT_PORTAL.DATA,
-      { year, month },
+      { year, month }
     );
   }
 
   async getCategories(): Promise<{ categories: AccountantDataCategory[] }> {
     return this.client.get<{ categories: AccountantDataCategory[] }>(
-      API_ENDPOINTS.ACCOUNTANT_PORTAL.CATEGORIES,
+      API_ENDPOINTS.ACCOUNTANT_PORTAL.CATEGORIES
     );
   }
 
   async getDre(year: number): Promise<AccountantDreReport> {
     return this.client.get<AccountantDreReport>(
       API_ENDPOINTS.ACCOUNTANT_PORTAL.DRE,
-      { year },
+      { year }
     );
   }
 
@@ -130,7 +124,7 @@ export class AccountantPortalService {
   }): Promise<Blob> {
     return this.client.getBlob(
       API_ENDPOINTS.ACCOUNTANT_PORTAL.EXPORT_SPED,
-      params,
+      params
     );
   }
 }

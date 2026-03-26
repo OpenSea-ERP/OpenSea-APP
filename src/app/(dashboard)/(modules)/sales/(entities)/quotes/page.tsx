@@ -71,8 +71,7 @@ type ActionButtonWithPermission = HeaderButton & {
 const STATUS_COLORS: Record<QuoteStatus, string> = {
   DRAFT:
     'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
-  SENT:
-    'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+  SENT: 'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
   ACCEPTED:
     'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
   REJECTED:
@@ -153,7 +152,7 @@ function QuotesPageContent() {
   const deleteMutation = useDeleteQuote();
 
   const quotes = useMemo(() => {
-    return (data?.pages.flatMap(p => p.quotes) ?? []) as Quote[];
+    return (data?.pages.flatMap(p => p.quotes) ?? []) as unknown as Quote[];
   }, [data]);
 
   const total = data?.pages[0]?.meta.total ?? 0;
@@ -528,7 +527,7 @@ function QuotesPageContent() {
                       options={statusOptions}
                       selected={statusFilter}
                       onSelectionChange={setStatusFilter}
-                      activeColor="sky"
+                      activeColor="blue"
                       searchPlaceholder="Buscar status..."
                       emptyText="Nenhum status encontrado."
                     />
@@ -549,9 +548,7 @@ function QuotesPageContent() {
                 defaultSortDirection="desc"
                 onSortChange={(field, direction) => {
                   if (field !== 'custom') {
-                    setSortBy(
-                      field as 'title' | 'createdAt' | 'updatedAt'
-                    );
+                    setSortBy(field as 'title' | 'createdAt' | 'updatedAt');
                     setSortOrder(direction);
                   }
                 }}

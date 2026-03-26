@@ -22,7 +22,7 @@ import {
   useVariantPromotion,
   useDeleteVariantPromotion,
 } from '@/hooks/sales/use-sales-other';
-import { DISCOUNT_TYPE_LABELS } from '@/types/sales';
+import { DISCOUNT_TYPE_LABELS } from '@/types/sales/promotion.types';
 import type { VariantPromotion } from '@/types/sales';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
@@ -51,7 +51,12 @@ export default function VariantPromotionDetailPage() {
   // DATA
   // ============================================================================
 
-  const { data: promotionData, isLoading, error, refetch } = useVariantPromotion(promotionId);
+  const {
+    data: promotionData,
+    isLoading,
+    error,
+    refetch,
+  } = useVariantPromotion(promotionId);
   const deleteMutation = useDeleteVariantPromotion();
 
   const promotion = promotionData?.promotion;
@@ -138,7 +143,10 @@ export default function VariantPromotionDetailPage() {
           <PageActionBar
             breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
-              { label: 'Promocoes de Variantes', href: '/sales/variant-promotions' },
+              {
+                label: 'Promocoes de Variantes',
+                href: '/sales/variant-promotions',
+              },
               { label: 'Carregando...' },
             ]}
           />
@@ -157,7 +165,10 @@ export default function VariantPromotionDetailPage() {
           <PageActionBar
             breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
-              { label: 'Promocoes de Variantes', href: '/sales/variant-promotions' },
+              {
+                label: 'Promocoes de Variantes',
+                href: '/sales/variant-promotions',
+              },
               { label: 'Erro' },
             ]}
           />
@@ -191,7 +202,10 @@ export default function VariantPromotionDetailPage() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
-            { label: 'Promocoes de Variantes', href: '/sales/variant-promotions' },
+            {
+              label: 'Promocoes de Variantes',
+              href: '/sales/variant-promotions',
+            },
             { label: promotion.name },
           ]}
           buttons={[
@@ -213,7 +227,9 @@ export default function VariantPromotionDetailPage() {
                     title: 'Editar',
                     icon: Edit,
                     onClick: () =>
-                      router.push(`/sales/variant-promotions/${promotionId}/edit`),
+                      router.push(
+                        `/sales/variant-promotions/${promotionId}/edit`
+                      ),
                     variant: 'default' as const,
                   },
                 ]

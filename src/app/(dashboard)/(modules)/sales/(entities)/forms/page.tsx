@@ -115,7 +115,8 @@ function FormsPageContent() {
   const deleteMutation = useDeleteForm();
 
   const forms = useMemo(() => {
-    return (infiniteData?.pages.flatMap(p => p.forms) ?? []) as Form[];
+    return (infiniteData?.pages.flatMap(p => p.forms) ??
+      []) as unknown as Form[];
   }, [infiniteData]);
 
   const total = forms.length;
@@ -475,6 +476,16 @@ function FormsPageContent() {
           ) : (
             <>
               <EntityGrid
+                config={{
+                  display: {
+                    labels: { singular: 'formulário', plural: 'formulários' },
+                    titleField: 'id' as const,
+                  },
+                  name: 'form',
+                  api: { baseUrl: '' },
+                  routes: { list: '/sales/forms' },
+                  permissions: { view: '', create: '', delete: '' },
+                }}
                 items={forms}
                 showItemCount={false}
                 toolbarStart={

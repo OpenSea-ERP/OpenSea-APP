@@ -200,7 +200,7 @@ export function EmitNfceWizard({
       };
 
       const result = await emitMutation.mutateAsync(data);
-      setEmissionResult(result.fiscalDocument);
+      setEmissionResult(result.document);
       toast.success('NFC-e emitida com sucesso!');
       onSuccess?.();
     } catch (err) {

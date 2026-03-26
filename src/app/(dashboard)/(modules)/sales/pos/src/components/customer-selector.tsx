@@ -48,7 +48,7 @@ export function CustomerSelector({
     enabled: !!debouncedSearch && isSearching,
   });
 
-  const customers = data?.data ?? [];
+  const customers = data?.customers ?? [];
 
   const handleSelect = useCallback(
     (customer: {

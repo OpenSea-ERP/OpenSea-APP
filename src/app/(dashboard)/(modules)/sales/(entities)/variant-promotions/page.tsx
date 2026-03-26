@@ -24,18 +24,11 @@ import {
   useDeleteVariantPromotion,
 } from '@/hooks/sales/use-sales-other';
 import type { VariantPromotion } from '@/types/sales';
-import { DISCOUNT_TYPE_LABELS } from '@/types/sales';
+import { DISCOUNT_TYPE_LABELS } from '@/types/sales/promotion.types';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
-import {
-  CalendarDays,
-  Percent,
-  Plus,
-  Tag,
-  Trash2,
-  Zap,
-} from 'lucide-react';
+import { CalendarDays, Percent, Plus, Tag, Trash2, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -84,7 +77,12 @@ function VariantPromotionsPageContent() {
   // DATA
   // ============================================================================
 
-  const { data: promotionsData, isLoading, error, refetch } = useVariantPromotions();
+  const {
+    data: promotionsData,
+    isLoading,
+    error,
+    refetch,
+  } = useVariantPromotions();
   const createMutation = useCreateVariantPromotion();
   const deleteMutation = useDeleteVariantPromotion();
 
@@ -234,7 +232,10 @@ function VariantPromotionsPageContent() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
-            { label: 'Promocoes de Variantes', href: '/sales/variant-promotions' },
+            {
+              label: 'Promocoes de Variantes',
+              href: '/sales/variant-promotions',
+            },
           ]}
           buttons={
             canCreate
@@ -317,14 +318,16 @@ function VariantPromotionsPageContent() {
                   Nenhuma promocao encontrada
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {debouncedSearch || statusFilter.length > 0 || discountTypeFilter.length > 0
+                  {debouncedSearch ||
+                  statusFilter.length > 0 ||
+                  discountTypeFilter.length > 0
                     ? 'Tente ajustar os filtros de busca.'
                     : 'Crie a primeira promocao para comecar.'}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {promotions.map((promotion) => {
+                {promotions.map(promotion => {
                   const status = getStatusInfo(promotion);
                   return (
                     <div

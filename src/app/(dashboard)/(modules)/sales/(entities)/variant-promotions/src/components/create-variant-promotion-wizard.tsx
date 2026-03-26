@@ -8,10 +8,8 @@ import {
   type WizardStep,
 } from '@/components/ui/step-wizard-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import type {
-  CreateVariantPromotionRequest,
-  DiscountType,
-} from '@/types/sales';
+import type { CreateVariantPromotionRequest } from '@/types/sales';
+import type { DiscountType } from '@/types/sales/promotion.types';
 import { CalendarDays, Check, Loader2, Percent } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -86,17 +84,14 @@ function StepPromotionInfo({
 
       <div className="space-y-2">
         <Label>
-          Valor do Desconto *{' '}
-          {discountType === 'PERCENTAGE' ? '(%)' : '(R$)'}
+          Valor do Desconto * {discountType === 'PERCENTAGE' ? '(%)' : '(R$)'}
         </Label>
         <Input
           type="number"
           min="0"
           step={discountType === 'PERCENTAGE' ? '1' : '0.01'}
           max={discountType === 'PERCENTAGE' ? '100' : undefined}
-          placeholder={
-            discountType === 'PERCENTAGE' ? 'Ex: 15' : 'Ex: 25.00'
-          }
+          placeholder={discountType === 'PERCENTAGE' ? 'Ex: 15' : 'Ex: 25.00'}
           value={discountValue}
           onChange={e => onDiscountValueChange(e.target.value)}
         />
@@ -274,9 +269,7 @@ export function CreateVariantPromotionWizard({
     {
       title: 'Informações da Promoção',
       description: 'Defina o nome, variante e tipo de desconto.',
-      icon: (
-        <Percent className="h-16 w-16 text-violet-400" strokeWidth={1.2} />
-      ),
+      icon: <Percent className="h-16 w-16 text-violet-400" strokeWidth={1.2} />,
       content: (
         <StepPromotionInfo
           name={name}

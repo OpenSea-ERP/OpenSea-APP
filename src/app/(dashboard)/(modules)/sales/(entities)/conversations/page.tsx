@@ -116,7 +116,7 @@ function ConversationsPageContent() {
 
   const conversations = useMemo(() => {
     return (infiniteData?.pages.flatMap(p => p.conversations) ??
-      []) as Conversation[];
+      []) as unknown as Conversation[];
   }, [infiniteData]);
 
   const total = conversations.length;
@@ -472,6 +472,16 @@ function ConversationsPageContent() {
           ) : (
             <>
               <EntityGrid
+                config={{
+                  display: {
+                    labels: { singular: 'conversa', plural: 'conversas' },
+                    titleField: 'id' as const,
+                  },
+                  name: 'conversation',
+                  api: { baseUrl: '' },
+                  routes: { list: '/sales/conversations' },
+                  permissions: { view: '', create: '', delete: '' },
+                }}
                 items={conversations}
                 showItemCount={false}
                 toolbarStart={
@@ -482,7 +492,7 @@ function ConversationsPageContent() {
                       options={statusOptions}
                       selected={statusFilter}
                       onSelectionChange={setStatusFilterUrl}
-                      activeColor="sky"
+                      activeColor="blue"
                       searchPlaceholder="Buscar status..."
                       emptyText="Nenhum status encontrado."
                     />

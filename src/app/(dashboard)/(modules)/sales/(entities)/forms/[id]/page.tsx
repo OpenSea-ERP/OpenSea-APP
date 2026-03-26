@@ -70,7 +70,8 @@ export default function FormDetailPage() {
   const { data: submissionsData } = useFormSubmissions(formId);
 
   const form = formData?.form as Form | undefined;
-  const submissions = (submissionsData?.submissions ?? []) as FormSubmission[];
+  const submissions = (submissionsData?.submissions ??
+    []) as unknown as FormSubmission[];
 
   // ============================================================================
   // ACTION BUTTONS

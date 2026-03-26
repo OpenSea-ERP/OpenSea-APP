@@ -642,7 +642,11 @@ export default function FiscalConfigPage() {
         >
           <div className="space-y-6">
             {/* Current certificate info */}
-            {config?.certificateId && <CertificateInfo config={config} />}
+            {config?.certificateId && (
+              <CertificateInfo
+                config={config as unknown as Record<string, unknown>}
+              />
+            )}
 
             {/* Upload new certificate */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

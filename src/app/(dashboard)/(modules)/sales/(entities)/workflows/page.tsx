@@ -119,7 +119,8 @@ function WorkflowsPageContent() {
   const deleteMutation = useDeleteWorkflow();
 
   const allWorkflows = useMemo(() => {
-    return (infiniteData?.pages.flatMap(p => p.workflows) ?? []) as Workflow[];
+    return (infiniteData?.pages.flatMap(p => p.workflows) ??
+      []) as unknown as Workflow[];
   }, [infiniteData]);
 
   // Client-side filtering
@@ -556,7 +557,9 @@ function WorkflowsPageContent() {
             open={createOpen}
             onOpenChange={setCreateOpen}
             onSubmit={async data => {
-              await createMutation.mutateAsync(data);
+              await createMutation.mutateAsync(
+                data as unknown as Record<string, unknown>
+              );
               toast.success('Workflow criado com sucesso!');
             }}
             isSubmitting={createMutation.isPending}

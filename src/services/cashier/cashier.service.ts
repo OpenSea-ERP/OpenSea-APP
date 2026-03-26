@@ -1,16 +1,19 @@
 import { apiClient } from '@/lib/api-client';
 import type {
   CreatePixChargeRequest,
-  CreatePixChargeResponse,
+  CashierCreatePixChargeResponse,
   PixChargesQuery,
   PixChargesResponse,
 } from '@/types/cashier';
 
 export const cashierService = {
   async createPixCharge(
-    body: CreatePixChargeRequest,
-  ): Promise<CreatePixChargeResponse> {
-    return apiClient.post<CreatePixChargeResponse>('/v1/cashier/pix', body);
+    body: CreatePixChargeRequest
+  ): Promise<CashierCreatePixChargeResponse> {
+    return apiClient.post<CashierCreatePixChargeResponse>(
+      '/v1/cashier/pix',
+      body
+    );
   },
 
   async listPixCharges(params?: PixChargesQuery): Promise<PixChargesResponse> {

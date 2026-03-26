@@ -123,9 +123,7 @@ function DiscountRulesPageContent() {
   // ============================================================================
 
   const isActiveParam =
-    activeFilter.length === 1
-      ? activeFilter[0] === 'true'
-      : undefined;
+    activeFilter.length === 1 ? activeFilter[0] === 'true' : undefined;
 
   const {
     data,
@@ -147,7 +145,8 @@ function DiscountRulesPageContent() {
   const deleteMutation = useDeleteDiscountRule();
 
   const discountRules = useMemo(() => {
-    return (data?.pages.flatMap(p => p.discountRules) ?? []) as DiscountRule[];
+    return (data?.pages.flatMap(p => p.discountRules) ??
+      []) as unknown as DiscountRule[];
   }, [data]);
 
   const total = data?.pages[0]?.meta.total ?? 0;
@@ -350,7 +349,9 @@ function DiscountRulesPageContent() {
       {
         label: typeLabel,
         variant: 'outline' as const,
-        icon: (item.type === 'PERCENTAGE' ? Percent : DollarSign) as typeof Percent,
+        icon: (item.type === 'PERCENTAGE'
+          ? Percent
+          : DollarSign) as typeof Percent,
         color:
           item.type === 'PERCENTAGE'
             ? 'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300'
@@ -575,9 +576,7 @@ function DiscountRulesPageContent() {
                 defaultSortDirection="desc"
                 onSortChange={(field, direction) => {
                   if (field !== 'custom') {
-                    setSortBy(
-                      field as 'name' | 'createdAt' | 'updatedAt'
-                    );
+                    setSortBy(field as 'name' | 'createdAt' | 'updatedAt');
                     setSortOrder(direction);
                   }
                 }}

@@ -140,10 +140,6 @@ export const errorMessages: Record<string, string> = {
   'Invalid amount': 'Valor inválido',
   'Amount must be greater than zero': 'O valor deve ser maior que zero',
   'Due date must be in the future': 'A data de vencimento deve ser futura',
-  'Start date must be before end date':
-    'Data inicial deve ser anterior à data final',
-  'End date must be after start date':
-    'Data final deve ser posterior à data inicial',
   'Invalid PIX key': 'Chave PIX inválida',
   'Invalid bank code': 'Código do banco inválido',
   'Allocation percentages must total 100':
@@ -194,8 +190,6 @@ export const errorMessages: Record<string, string> = {
   'Goal not found': 'Meta não encontrada',
   'Goal name already exists': 'Já existe uma meta com este nome',
   'Invalid date range': 'Intervalo de datas inválido',
-  'End date must be after start date':
-    'Data final deve ser posterior à data inicial',
   'Quantity must be greater than zero': 'A quantidade deve ser maior que zero',
 };
 

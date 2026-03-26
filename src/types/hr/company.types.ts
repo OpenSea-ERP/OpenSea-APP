@@ -10,10 +10,10 @@ import type { Employee } from './employee.types';
 export type CompanyStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 /**
- * TaxRegime
+ * CompanyTaxRegime
  * Regimes tributários suportados
  */
-export type TaxRegime =
+export type CompanyTaxRegime =
   | 'SIMPLES'
   | 'LUCRO_PRESUMIDO'
   | 'LUCRO_REAL'
@@ -32,7 +32,7 @@ export interface Company {
   stateRegistration?: string | null;
   municipalRegistration?: string | null;
   legalNature?: string | null;
-  taxRegime?: TaxRegime | null;
+  taxRegime?: CompanyTaxRegime | null;
   taxRegimeDetail?: string | null;
   activityStartDate?: string | null;
   status: CompanyStatus;
@@ -64,7 +64,7 @@ export interface CreateCompanyData {
   stateRegistration?: string | null;
   municipalRegistration?: string | null;
   legalNature?: string | null;
-  taxRegime?: TaxRegime;
+  taxRegime?: CompanyTaxRegime;
   taxRegimeDetail?: string | null;
   activityStartDate?: string | null;
   status?: CompanyStatus;
@@ -85,7 +85,7 @@ export interface UpdateCompanyData {
   stateRegistration?: string | null;
   municipalRegistration?: string | null;
   legalNature?: string | null;
-  taxRegime?: TaxRegime;
+  taxRegime?: CompanyTaxRegime;
   taxRegimeDetail?: string | null;
   activityStartDate?: string | null;
   status?: CompanyStatus;
