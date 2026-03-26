@@ -387,7 +387,7 @@ function FiscalPageContent() {
       setCorrectionModalOpen(false);
       setCorrectionTarget(null);
       setCorrectionText('');
-      toast.success('Carta de correcao emitida com sucesso.');
+      toast.success('Carta de correção emitida com sucesso.');
     } catch {
       toast.error('Erro ao emitir carta de correcao.');
     }
@@ -418,7 +418,7 @@ function FiscalPageContent() {
             ? [
                 {
                   id: 'correction-letter',
-                  label: 'Carta de Correcao',
+                  label: 'Carta de Correção',
                   icon: PenLine,
                   onClick: handleCorrectionLetter,
                 },
@@ -527,7 +527,7 @@ function FiscalPageContent() {
             ? [
                 {
                   id: 'correction-letter',
-                  label: 'Carta de Correcao',
+                  label: 'Carta de Correção',
                   icon: PenLine,
                   onClick: handleCorrectionLetter,
                 },
@@ -617,7 +617,7 @@ function FiscalPageContent() {
     () => [
       {
         id: 'config',
-        title: 'Configuracoes',
+        title: 'Configurações',
         icon: Settings,
         onClick: () => router.push('/finance/fiscal/config'),
         variant: 'outline',
@@ -890,17 +890,17 @@ function FiscalPageContent() {
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Carta de Correcao</DialogTitle>
+                <DialogTitle>Carta de Correção</DialogTitle>
                 <DialogDescription>
-                  Informe o texto de correcao para o documento fiscal.
+                  Informe o texto de correção para o documento fiscal.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div>
-                  <Label htmlFor="correction-text">Texto de Correcao</Label>
+                  <Label htmlFor="correction-text">Texto de Correção</Label>
                   <Textarea
                     id="correction-text"
-                    placeholder="Descreva a correcao a ser feita..."
+                    placeholder="Descreva a correção a ser feita..."
                     value={correctionText}
                     onChange={e => setCorrectionText(e.target.value)}
                     rows={4}
@@ -926,7 +926,7 @@ function FiscalPageContent() {
                 >
                   {correctionMutation.isPending
                     ? 'Enviando...'
-                    : 'Emitir Carta de Correcao'}
+                    : 'Emitir Carta de Correção'}
                 </Button>
               </DialogFooter>
             </DialogContent>

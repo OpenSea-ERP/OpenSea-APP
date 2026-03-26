@@ -229,7 +229,7 @@ export default function FiscalDocumentDetailPage({
       });
       setCorrectionOpen(false);
       setCorrectionText('');
-      toast.success('Carta de correcao emitida com sucesso.');
+      toast.success('Carta de correção emitida com sucesso.');
     } catch {
       toast.error('Erro ao emitir carta de correcao.');
     }
@@ -283,7 +283,7 @@ export default function FiscalDocumentDetailPage({
       ? [
           {
             id: 'correction-letter',
-            title: 'Carta de Correcao',
+            title: 'Carta de Correção',
             icon: PenLine,
             onClick: () => {
               setCorrectionText('');
@@ -442,16 +442,16 @@ export default function FiscalDocumentDetailPage({
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <FileText className="h-4 w-4" />
-                    Informacoes da Nota
+                    Informações da Nota
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <InfoRow
-                    label="Natureza da Operacao"
+                    label="Natureza da Operação"
                     value={document.naturezaOperacao ?? '-'}
                   />
                   <InfoRow
-                    label="Serie / Numero"
+                    label="Série / Número"
                     value={`${document.series} / ${document.number}`}
                   />
                   <InfoRow
@@ -691,7 +691,7 @@ export default function FiscalDocumentDetailPage({
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground text-center py-6">
-                        Informacoes de impostos nao disponiveis.
+                        Informações de impostos não disponíveis.
                       </p>
                     )}
                   </div>
@@ -830,17 +830,17 @@ export default function FiscalDocumentDetailPage({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Carta de Correcao</DialogTitle>
+            <DialogTitle>Carta de Correção</DialogTitle>
             <DialogDescription>
-              Informe o texto de correcao. Esta carta sera enviada a SEFAZ.
+              Informe o texto de correção. Esta carta sera enviada a SEFAZ.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="correction-text">Texto de Correcao</Label>
+              <Label htmlFor="correction-text">Texto de Correção</Label>
               <Textarea
                 id="correction-text"
-                placeholder="Descreva a correcao a ser feita..."
+                placeholder="Descreva a correção a ser feita..."
                 value={correctionText}
                 onChange={e => setCorrectionText(e.target.value)}
                 rows={4}
@@ -863,7 +863,7 @@ export default function FiscalDocumentDetailPage({
             >
               {correctionMutation.isPending
                 ? 'Enviando...'
-                : 'Emitir Carta de Correcao'}
+                : 'Emitir Carta de Correção'}
             </Button>
           </DialogFooter>
         </DialogContent>

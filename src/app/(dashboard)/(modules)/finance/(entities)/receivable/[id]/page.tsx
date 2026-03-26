@@ -629,7 +629,7 @@ export default function ReceivableDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <InfoRow label="Emissao" value={formatDate(entry.issueDate)} />
+            <InfoRow label="Emissão" value={formatDate(entry.issueDate)} />
             <InfoRow
               label="Vencimento"
               value={formatDate(entry.dueDate)}
