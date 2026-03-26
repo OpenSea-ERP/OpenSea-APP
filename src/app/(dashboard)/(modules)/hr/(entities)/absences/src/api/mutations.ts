@@ -6,6 +6,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Absence, RequestSickLeaveData } from '@/types/hr';
+import type { UpdateAbsenceRequest } from '@/services/hr/absences.service';
 import { toast } from 'sonner';
 import { translateError } from '@/lib/errors';
 import { absencesApi } from './absences.api';

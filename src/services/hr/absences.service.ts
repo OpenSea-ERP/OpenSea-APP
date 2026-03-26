@@ -41,6 +41,14 @@ export interface ListAbsencesParams {
   perPage?: number;
 }
 
+export interface UpdateAbsenceRequest {
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  reason?: string;
+  notes?: string;
+}
+
 export const absencesService = {
   async requestVacation(
     data: RequestVacationAbsenceRequest
@@ -73,6 +81,17 @@ export const absencesService = {
 
   async cancel(id: string): Promise<AbsenceResponse> {
     return apiClient.patch<AbsenceResponse>(`/v1/hr/absences/${id}/cancel`, {});
+  },
+
+  async update(
+    id: string,
+    data: UpdateAbsenceRequest
+  ): Promise<AbsenceResponse> {
+    return apiClient.put<AbsenceResponse>(`/v1/hr/absences/${id}`, data);
+  },
+
+  async delete(id: string): Promise<void> {
+    return apiClient.delete<void>(`/v1/hr/absences/${id}`);
   },
 
   async get(id: string): Promise<AbsenceResponse> {

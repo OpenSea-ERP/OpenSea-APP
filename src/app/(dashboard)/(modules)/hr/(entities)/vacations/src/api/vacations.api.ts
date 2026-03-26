@@ -6,6 +6,7 @@
  */
 
 import { vacationsService } from '@/services/hr/vacations.service';
+import type { UpdateVacationPeriodRequest } from '@/services/hr/vacations.service';
 import type {
   CreateVacationPeriodData,
   ScheduleVacationData,
@@ -40,6 +41,11 @@ export const vacationsApi = {
     vacationsService.sellDays(id, data),
 
   cancelSchedule: (id: string) => vacationsService.cancelSchedule(id),
+
+  update: (id: string, data: UpdateVacationPeriodRequest) =>
+    vacationsService.update(id, data),
+
+  delete: (id: string) => vacationsService.delete(id),
 
   getVacationBalance: (employeeId: string) =>
     vacationsService.getVacationBalance(employeeId),

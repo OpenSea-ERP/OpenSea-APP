@@ -6,6 +6,7 @@
  */
 
 import { absencesService } from '@/services/hr/absences.service';
+import type { UpdateAbsenceRequest } from '@/services/hr/absences.service';
 import type { RequestSickLeaveData, RejectAbsenceData } from '@/types/hr';
 import type { AbsenceFilters } from './keys';
 
@@ -32,6 +33,11 @@ export const absencesApi = {
     absencesService.reject(id, data),
 
   cancel: (id: string) => absencesService.cancel(id),
+
+  update: (id: string, data: UpdateAbsenceRequest) =>
+    absencesService.update(id, data),
+
+  delete: (id: string) => absencesService.delete(id),
 };
 
 export default absencesApi;

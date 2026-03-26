@@ -61,6 +61,13 @@ export interface VacationBalanceResponse {
   }[];
 }
 
+export interface UpdateVacationPeriodRequest {
+  startDate?: string;
+  endDate?: string;
+  totalDays?: number;
+  notes?: string;
+}
+
 export const vacationsService = {
   async create(
     data: CreateVacationPeriodRequest
@@ -113,6 +120,20 @@ export const vacationsService = {
       `/v1/hr/vacation-periods/${id}/cancel-schedule`,
       {}
     );
+  },
+
+  async update(
+    id: string,
+    data: UpdateVacationPeriodRequest
+  ): Promise<VacationPeriodResponse> {
+    return apiClient.put<VacationPeriodResponse>(
+      `/v1/hr/vacation-periods/${id}`,
+      data
+    );
+  },
+
+  async delete(id: string): Promise<void> {
+    return apiClient.delete<void>(`/v1/hr/vacation-periods/${id}`);
   },
 
   async get(id: string): Promise<VacationPeriodResponse> {
