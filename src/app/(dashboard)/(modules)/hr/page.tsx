@@ -25,6 +25,7 @@ import {
   Coffee,
   FileUser,
   FileX2,
+  GitBranchPlus,
   Hourglass,
   MinusCircle,
   PalmtreeIcon,
@@ -32,6 +33,7 @@ import {
   SquareUserRound,
   Stethoscope,
   Timer,
+  UserCircle,
   UserRoundCog,
   UserX,
 } from 'lucide-react';
@@ -53,6 +55,21 @@ const sections: {
   title: string;
   cards: CardItem[];
 }[] = [
+  {
+    title: 'Autoatendimento',
+    cards: [
+      {
+        id: 'my-profile',
+        title: 'Meu Perfil',
+        description: 'Seus dados pessoais, ponto, férias e holerites',
+        icon: UserCircle,
+        href: '/hr/my-profile',
+        gradient: 'from-violet-500 to-violet-600',
+        hoverBg: 'hover:bg-violet-50 dark:hover:bg-violet-500/10',
+        // No permission required — self-service
+      },
+    ],
+  },
   {
     title: 'Cadastros',
     cards: [
@@ -88,6 +105,16 @@ const sections: {
         hoverBg: 'hover:bg-blue-50 dark:hover:bg-blue-500/10',
         permission: HR_PERMISSIONS.EMPLOYEES.LIST,
         countKey: 'employees',
+      },
+      {
+        id: 'org-chart',
+        title: 'Organograma',
+        description: 'Estrutura hierárquica visual da organização',
+        icon: GitBranchPlus,
+        href: '/hr/departments/org-chart',
+        gradient: 'from-purple-500 to-purple-600',
+        hoverBg: 'hover:bg-purple-50 dark:hover:bg-purple-500/10',
+        permission: HR_PERMISSIONS.DEPARTMENTS.LIST,
       },
     ],
   },
@@ -234,6 +261,17 @@ const heroBannerButtons: (CardItem & { label: string })[] = [
     gradient: 'from-indigo-500 to-blue-600',
     hoverBg: 'hover:bg-indigo-50 dark:hover:bg-indigo-500/10',
     permission: HR_PERMISSIONS.EMPLOYEES.LIST,
+  },
+  {
+    id: 'my-profile',
+    title: 'Meu Perfil',
+    label: 'Meu Perfil',
+    description: 'Seus dados, ponto e férias',
+    icon: UserCircle,
+    href: '/hr/my-profile',
+    gradient: 'from-violet-500 to-violet-600',
+    hoverBg: 'hover:bg-violet-50 dark:hover:bg-violet-500/10',
+    // No permission required
   },
 ];
 
