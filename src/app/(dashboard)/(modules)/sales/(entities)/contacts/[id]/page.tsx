@@ -42,6 +42,7 @@ import {
   Video,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 // ============================================================================
 // INFO ROW COMPONENT
@@ -289,7 +290,17 @@ export default function ContactDetailPage() {
           <button
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50 dark:bg-slate-800/60 dark:hover:bg-slate-800"
             onClick={() => {
-              /* placeholder */
+              const phone = contact.whatsapp || contact.phone;
+              if (phone) {
+                const cleaned = phone.replace(/\D/g, '');
+                window.open(
+                  `https://wa.me/${cleaned}`,
+                  '_blank',
+                  'noopener,noreferrer'
+                );
+              } else {
+                toast.info('Nenhum número de telefone ou WhatsApp cadastrado.');
+              }
             }}
           >
             <MessageCircle className="h-4 w-4 text-emerald-600" />
@@ -298,7 +309,11 @@ export default function ContactDetailPage() {
           <button
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50 dark:bg-slate-800/60 dark:hover:bg-slate-800"
             onClick={() => {
-              /* placeholder */
+              if (contact.email) {
+                window.open(`mailto:${contact.email}`, '_self');
+              } else {
+                toast.info('Nenhum e-mail cadastrado para este contato.');
+              }
             }}
           >
             <Mail className="h-4 w-4 text-blue-600" />
@@ -307,11 +322,13 @@ export default function ContactDetailPage() {
           <button
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50 dark:bg-slate-800/60 dark:hover:bg-slate-800"
             onClick={() => {
-              /* placeholder */
+              toast.info(
+                'O agendamento de reuniões estará disponível em breve.'
+              );
             }}
           >
             <Video className="h-4 w-4 text-violet-600" />
-            Agendar Reuniao
+            Agendar Reunião
           </button>
         </div>
 

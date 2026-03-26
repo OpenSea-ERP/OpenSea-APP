@@ -15,7 +15,11 @@ import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { useReportsInfinite } from '@/hooks/sales/use-analytics';
 import type { AnalyticsReport } from '@/types/sales';
 import { FileText, Plus, Clock, Calendar } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { useCreateReport } from '@/hooks/sales/use-analytics';
+import { CreateReportWizard } from './src/components/create-report-wizard';
 
 const TYPE_LABELS: Record<string, string> = {
   SALES_SUMMARY: 'Resumo de Vendas',
@@ -54,7 +58,10 @@ const TYPE_FILTER_OPTIONS = [
 ];
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [typeFilter, setTypeFilter] = useState('');
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const createMutation = useCreateReport();
 
   const filters = useMemo(() => {
     const f: Record<string, string> = {};
@@ -79,7 +86,7 @@ export default function ReportsPage() {
             { label: 'Relatórios' },
           ]}
         >
-          <Button size="sm" className="h-9 px-2.5">
+          <Button size="sm" className="h-9 px-2.5" onClick={() => setWizardOpen(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Novo Relatório
           </Button>
@@ -114,7 +121,10 @@ export default function ReportsPage() {
               {reports.map((report: AnalyticsReport) => (
                 <Card
                   key={report.id}
-                  className="bg-white dark:bg-slate-800/60 border border-border hover:border-primary/20 transition-colors"
+                  className="bg-white dark:bg-slate-800/60 border border-border hover:border-primary/20 transition-colors cursor-pointer"
+                  onClick={() =>
+                    router.push(`/sales/analytics/reports/${report.id}`)
+                  }
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -172,6 +182,16 @@ export default function ReportsPage() {
             </div>
           )}
         </div>
+
+        <CreateReportWizard
+          open={wizardOpen}
+          onOpenChange={setWizardOpen}
+          onSubmit={async data => {
+            await createMutation.mutateAsync(data);
+            toast.success('Relatório criado com sucesso!');
+          }}
+          isSubmitting={createMutation.isPending}
+        />
       </PageBody>
     </PageLayout>
   );
