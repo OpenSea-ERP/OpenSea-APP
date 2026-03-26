@@ -4,6 +4,7 @@ import type {
   FinanceDashboard,
   CashflowResponse,
   ForecastResponse,
+  AnomalyReport,
 } from '@/types/finance';
 
 export const financeAnalyticsService = {
@@ -47,6 +48,13 @@ export const financeAnalyticsService = {
 
     return apiClient.get<ForecastResponse>(
       `${API_ENDPOINTS.FINANCE_DASHBOARD.FORECAST}?${query.toString()}`
+    );
+  },
+
+  async getAnomalies(months = 6): Promise<AnomalyReport> {
+    const query = new URLSearchParams({ months: String(months) });
+    return apiClient.get<AnomalyReport>(
+      `${API_ENDPOINTS.FINANCE_DASHBOARD.ANOMALIES}?${query.toString()}`
     );
   },
 };

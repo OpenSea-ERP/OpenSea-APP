@@ -51,6 +51,37 @@ export interface FinanceOverview {
   costCenters: number;
 }
 
+// ─── Anomaly Detection ───────────────────────────────────────────────
+
+export type AnomalyType =
+  | 'EXPENSE_SPIKE'
+  | 'PRICE_INCREASE'
+  | 'UNUSUAL_FREQUENCY'
+  | 'NEW_HIGH_VALUE';
+
+export type AnomalySeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface Anomaly {
+  type: AnomalyType;
+  severity: AnomalySeverity;
+  entryId?: string;
+  categoryName?: string;
+  supplierName?: string;
+  currentValue: number;
+  expectedValue: number;
+  deviationPercent: number;
+  description: string;
+}
+
+export interface AnomalyReport {
+  anomalies: Anomaly[];
+  analyzedPeriod: { from: string; to: string };
+  totalEntriesAnalyzed: number;
+  categoriesAnalyzed: number;
+}
+
+// ─── Cashflow ────────────────────────────────────────────────────────
+
 export interface CashflowData {
   period: string;
   inflow: number;

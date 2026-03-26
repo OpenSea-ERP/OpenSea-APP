@@ -6,6 +6,7 @@ import type {
   CashflowResponse,
   ForecastQuery,
   ForecastResponse,
+  PredictiveCashflowReport,
 } from '@/types/finance';
 
 export const financeDashboardService = {
@@ -54,6 +55,15 @@ export const financeDashboardService = {
 
     return apiClient.get<CashflowResponse>(
       `${API_ENDPOINTS.FINANCE_DASHBOARD.CASHFLOW}?${query.toString()}`
+    );
+  },
+
+  async getPredictiveCashflow(
+    months: number = 3,
+  ): Promise<PredictiveCashflowReport> {
+    const query = new URLSearchParams({ months: String(months) });
+    return apiClient.get<PredictiveCashflowReport>(
+      `${API_ENDPOINTS.FINANCE_DASHBOARD.PREDICTIVE_CASHFLOW}?${query.toString()}`,
     );
   },
 

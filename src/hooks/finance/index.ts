@@ -25,3 +25,5 @@ export * from './use-boleto';
 export * from './use-pix-operations';
 export * from './use-emit-nfe-from-entry';
 export * from './use-tax-retentions';
+export * from './use-anomalies';
+export * from './use-approval-rules';

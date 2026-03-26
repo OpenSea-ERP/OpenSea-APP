@@ -712,6 +712,8 @@ export const API_ENDPOINTS = {
     CHECK_OVERDUE: '/v1/finance/check-overdue',
     PARSE_BOLETO: '/v1/finance/parse-boleto',
     PARSE_PIX: '/v1/finance/parse-pix',
+    ANOMALIES: '/v1/finance/analytics/anomalies',
+    PREDICTIVE_CASHFLOW: '/v1/finance/analytics/predictive-cashflow',
     EXPORT_ACCOUNTING: '/v1/finance/export/accounting',
     IMPORT_PAYROLL: (payrollId: string) =>
       `/v1/finance/import/payroll/${payrollId}`,
@@ -773,6 +775,16 @@ export const API_ENDPOINTS = {
     DUPLICATE: (id: string) => `/v1/finance/escalations/${id}/duplicate`,
     TOGGLE_ACTIVE: (id: string) =>
       `/v1/finance/escalations/${id}/toggle-active`,
+  },
+  // Finance - Approval Rules
+  FINANCE_APPROVAL_RULES: {
+    LIST: '/v1/finance/approval-rules',
+    GET: (id: string) => `/v1/finance/approval-rules/${id}`,
+    CREATE: '/v1/finance/approval-rules',
+    UPDATE: (id: string) => `/v1/finance/approval-rules/${id}`,
+    DELETE: (id: string) => `/v1/finance/approval-rules/${id}`,
+    EVALUATE: (entryId: string) =>
+      `/v1/finance/approval-rules/evaluate/${entryId}`,
   },
   // Finance - Customer Score
   FINANCE_CUSTOMER_SCORE: {

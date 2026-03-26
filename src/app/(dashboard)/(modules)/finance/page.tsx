@@ -8,6 +8,7 @@
 
 import { QuickEntryModal } from '@/components/finance/quick-entry-modal';
 import {
+  AnomalyAlerts,
   CashPositionBanner,
   FinanceKPICards,
   OverdueHeatmap,
@@ -55,6 +56,9 @@ export default function FinanceCommandCenter() {
 
       {/* Row 2: KPI Cards */}
       <FinanceKPICards />
+
+      {/* Row 2.5: Anomaly Alerts */}
+      <AnomalyAlerts />
 
       {/* Row 3: Obligations + Overdue Heatmap */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

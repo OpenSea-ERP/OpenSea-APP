@@ -16,6 +16,7 @@ import {
   PieChart,
   RefreshCw,
   Settings,
+  ShieldCheck,
   Target,
   TrendingUp,
   Users,
@@ -131,6 +132,13 @@ const navItems: NavItem[] = [
     iconColor: 'text-sky-500',
   },
   {
+    id: 'forecast',
+    label: 'Previsão',
+    icon: TrendingUp,
+    href: '/finance/reports/forecast',
+    iconColor: 'text-violet-500',
+  },
+  {
     id: 'reports',
     label: 'Relatórios',
     icon: FileText,
@@ -157,6 +165,13 @@ const navItems: NavItem[] = [
     icon: AlertTriangle,
     href: '/finance/escalations',
     iconColor: 'text-rose-500',
+  },
+  {
+    id: 'approval-rules',
+    label: 'Regras de Aprovação',
+    icon: ShieldCheck,
+    href: '/finance/approval-rules',
+    iconColor: 'text-emerald-500',
   },
   {
     id: 'settings',

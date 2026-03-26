@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo } from 'react';
 
 function formatCurrency(value: number): string {
@@ -150,6 +151,14 @@ export function CashPositionBanner() {
                   </span>
                 </>
               )}
+
+              <Link
+                href="/finance/reports/forecast"
+                className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400 hover:underline font-medium"
+              >
+                <TrendingUp className="h-3.5 w-3.5" />
+                Ver Previsão
+              </Link>
             </div>
           </div>
 
