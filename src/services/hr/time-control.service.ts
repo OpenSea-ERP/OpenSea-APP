@@ -80,6 +80,12 @@ export const timeControlService = {
     );
   },
 
+  async getTimeEntry(id: string): Promise<TimeEntryResponse> {
+    return apiClient.get<TimeEntryResponse>(
+      `/v1/hr/time-control/entries/${id}`
+    );
+  },
+
   async listTimeEntries(
     params?: ListTimeEntriesParams
   ): Promise<TimeEntriesResponse> {
