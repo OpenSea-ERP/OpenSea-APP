@@ -30,6 +30,7 @@ import { TaxRetentionPanel } from '@/components/finance/tax-retention-panel';
 import { PixChargeModal } from '@/components/finance/pix-charge-modal';
 import { CustomerScoreBadge } from '@/components/finance/customer-score-badge';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { SupplierSummaryDrawer } from '@/components/finance/supplier-summary-drawer';
 import {
   useDeleteFinanceEntry,
   useFinanceEntry,
@@ -172,7 +173,8 @@ export default function ReceivableDetailPage({
 
   // PIX charge state
   const [pixChargeModalOpen, setPixChargeModalOpen] = useState(false);
-  const [pixChargeResult, setPixChargeResult] = useState<CreatePixChargeResponse | null>(null);
+  const [pixChargeResult, setPixChargeResult] =
+    useState<CreatePixChargeResponse | null>(null);
   const createPixChargeMutation = useCreatePixCharge();
 
   // NF-e emission state
@@ -180,6 +182,9 @@ export default function ReceivableDetailPage({
 
   // Delete state
   const [pinModalOpen, setPinModalOpen] = useState(false);
+
+  // Customer summary drawer state
+  const [customerDrawerOpen, setCustomerDrawerOpen] = useState(false);
 
   // Attachment upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -440,7 +445,9 @@ export default function ReceivableDetailPage({
               variant="outline"
               size="sm"
               className="gap-2 text-teal-600 border-teal-200 hover:bg-teal-50 dark:text-teal-400 dark:border-teal-800 dark:hover:bg-teal-500/10"
-              onClick={() => router.push(`/finance/fiscal/${entry.fiscalDocumentId}`)}
+              onClick={() =>
+                router.push(`/finance/fiscal/${entry.fiscalDocumentId}`)
+              }
             >
               <FileCheck className="h-4 w-4" />
               Ver NF-e
@@ -483,9 +490,13 @@ export default function ReceivableDetailPage({
                 {entry.customerName && (
                   <>
                     <span className="text-muted-foreground">|</span>
-                    <span className="text-sm text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={() => setCustomerDrawerOpen(true)}
+                      className="text-sm text-primary hover:underline cursor-pointer"
+                    >
                       {entry.customerName}
-                    </span>
+                    </button>
                     <CustomerScoreBadge customerName={entry.customerName} />
                   </>
                 )}
@@ -520,7 +531,18 @@ export default function ReceivableDetailPage({
           <CardContent className="space-y-3">
             <InfoRow label="Tipo" value="A Receber" />
             {entry.customerName && (
-              <InfoRow label="Cliente" value={entry.customerName} />
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-sm text-muted-foreground shrink-0">
+                  Cliente
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCustomerDrawerOpen(true)}
+                  className="text-sm text-primary hover:underline cursor-pointer text-right"
+                >
+                  {entry.customerName}
+                </button>
+              </div>
             )}
             {entry.categoryName && (
               <InfoRow label="Categoria" value={entry.categoryName} />
@@ -733,10 +755,7 @@ export default function ReceivableDetailPage({
       )}
 
       {/* Tax Retentions */}
-      <TaxRetentionPanel
-        entryId={id}
-        grossAmount={entry.expectedAmount}
-      />
+      <TaxRetentionPanel entryId={id} grossAmount={entry.expectedAmount} />
 
       {/* Payment History */}
       <Card>
@@ -994,7 +1013,7 @@ export default function ReceivableDetailPage({
               <Input
                 id="boleto-cpf-cnpj"
                 value={boletoCustomerCpfCnpj}
-                onChange={(e) => setBoletoCustomerCpfCnpj(e.target.value)}
+                onChange={e => setBoletoCustomerCpfCnpj(e.target.value)}
                 placeholder="000.000.000-00 ou 00.000.000/0001-00"
               />
             </div>
@@ -1050,6 +1069,17 @@ export default function ReceivableDetailPage({
         pixCharge={pixChargeResult}
         entryDescription={entry.description}
       />
+
+      {/* Customer Summary Drawer */}
+      {entry.customerName && (
+        <SupplierSummaryDrawer
+          open={customerDrawerOpen}
+          onOpenChange={setCustomerDrawerOpen}
+          customerName={entry.customerName}
+          customerId={entry.customerId ?? undefined}
+          entityType="customer"
+        />
+      )}
     </div>
   );
 }

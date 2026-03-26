@@ -28,6 +28,10 @@ import type {
   PayViaPixResponse,
   EmitNfeFromEntryData,
   EmitNfeFromEntryResponse,
+  CheckDuplicateData,
+  CheckDuplicateResponse,
+  SupplierSummaryParams,
+  SupplierSummaryResponse,
 } from '@/types/finance';
 export interface FinanceEntriesResponse {
   entries: FinanceEntry[];
@@ -238,6 +242,28 @@ export const financeEntriesService = {
     return apiClient.post<EmitNfeFromEntryResponse>(
       API_ENDPOINTS.FINANCE_ENTRIES.EMIT_NFE(entryId),
       data
+    );
+  },
+
+  async checkDuplicate(
+    data: CheckDuplicateData
+  ): Promise<CheckDuplicateResponse> {
+    return apiClient.post<CheckDuplicateResponse>(
+      API_ENDPOINTS.FINANCE_ENTRIES.CHECK_DUPLICATE,
+      data
+    );
+  },
+
+  async getSupplierSummary(
+    params: SupplierSummaryParams
+  ): Promise<SupplierSummaryResponse> {
+    const query = new URLSearchParams();
+    if (params.supplierName) query.append('supplierName', params.supplierName);
+    if (params.supplierId) query.append('supplierId', params.supplierId);
+    if (params.customerName) query.append('customerName', params.customerName);
+    if (params.customerId) query.append('customerId', params.customerId);
+    return apiClient.get<SupplierSummaryResponse>(
+      `${API_ENDPOINTS.FINANCE_ENTRIES.SUPPLIER_SUMMARY}?${query.toString()}`
     );
   },
 };

@@ -24,8 +24,9 @@ import {
   useFinanceCustomers,
 } from '@/hooks/finance';
 import { FormErrorIcon } from '@/components/ui/form-error-icon';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { format, parseISO } from 'date-fns';
+import { addDays, addWeeks, addMonths, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, Plus, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -371,6 +372,102 @@ export function ReceivableStepDetails({
         </Row>
 
         {/* ============================================================= */}
+        {/* PARCELAMENTO                                                   */}
+        {/* ============================================================= */}
+        <SectionDivider label="Parcelamento" />
+
+        <Row label="Parcelar">
+          <Switch
+            checked={data.installmentEnabled}
+            onCheckedChange={checked =>
+              onChange({ installmentEnabled: checked })
+            }
+          />
+        </Row>
+
+        {data.installmentEnabled && (
+          <>
+            <Row label="Parcelas" required>
+              <Select
+                value={String(data.totalInstallments)}
+                onValueChange={val =>
+                  onChange({ totalInstallments: parseInt(val, 10) })
+                }
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24, 36, 48].map(
+                    n => (
+                      <SelectItem key={n} value={String(n)}>
+                        {n}x
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </Row>
+
+            <Row label="Frequência" required>
+              <Select
+                value={data.recurrenceUnit}
+                onValueChange={val =>
+                  onChange({
+                    recurrenceUnit: val as 'MONTHLY' | 'BIWEEKLY' | 'WEEKLY',
+                  })
+                }
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MONTHLY">Mensal</SelectItem>
+                  <SelectItem value="BIWEEKLY">Quinzenal</SelectItem>
+                  <SelectItem value="WEEKLY">Semanal</SelectItem>
+                </SelectContent>
+              </Select>
+            </Row>
+
+            {data.expectedAmount > 0 && (
+              <Row label="Resumo">
+                <div className="rounded-lg bg-violet-50 dark:bg-violet-500/8 border border-violet-200 dark:border-violet-500/20 p-3 space-y-1">
+                  <p className="text-sm font-medium text-violet-700 dark:text-violet-300">
+                    {data.totalInstallments}x de{' '}
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(data.expectedAmount / data.totalInstallments)}
+                  </p>
+                  {data.dueDate && (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        Primeira parcela:{' '}
+                        {format(parseISO(data.dueDate), 'dd/MM/yyyy', {
+                          locale: ptBR,
+                        })}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Última parcela:{' '}
+                        {format(
+                          computeLastInstallmentDate(
+                            data.dueDate,
+                            data.totalInstallments,
+                            data.recurrenceUnit
+                          ),
+                          'dd/MM/yyyy',
+                          { locale: ptBR }
+                        )}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </Row>
+            )}
+          </>
+        )}
+
+        {/* ============================================================= */}
         {/* PAGAMENTO                                                      */}
         {/* ============================================================= */}
         <SectionDivider label="Pagamento" />
@@ -572,6 +669,29 @@ export function ReceivableStepDetails({
       </InlineCreateModal>
     </div>
   );
+}
+
+// =============================================================================
+// INSTALLMENT DATE HELPER
+// =============================================================================
+
+function computeLastInstallmentDate(
+  dueDateStr: string,
+  totalInstallments: number,
+  unit: 'MONTHLY' | 'BIWEEKLY' | 'WEEKLY'
+): Date {
+  const base = parseISO(dueDateStr);
+  const periods = totalInstallments - 1;
+  switch (unit) {
+    case 'MONTHLY':
+      return addMonths(base, periods);
+    case 'BIWEEKLY':
+      return addDays(base, periods * 14);
+    case 'WEEKLY':
+      return addWeeks(base, periods);
+    default:
+      return addMonths(base, periods);
+  }
 }
 
 // =============================================================================

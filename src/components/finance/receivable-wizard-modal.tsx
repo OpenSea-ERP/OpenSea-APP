@@ -46,6 +46,10 @@ export interface ReceivableWizardData {
   tags: string[];
   notes: string;
   currency: string;
+  // Installment
+  installmentEnabled: boolean;
+  totalInstallments: number;
+  recurrenceUnit: 'MONTHLY' | 'BIWEEKLY' | 'WEEKLY';
 }
 
 const INITIAL_DATA: ReceivableWizardData = {
@@ -71,6 +75,9 @@ const INITIAL_DATA: ReceivableWizardData = {
   tags: [],
   notes: '',
   currency: 'BRL',
+  installmentEnabled: false,
+  totalInstallments: 2,
+  recurrenceUnit: 'MONTHLY',
 };
 
 // ============================================================================
@@ -161,6 +168,15 @@ export function ReceivableWizardModal({
         tags: wizardData.tags.length > 0 ? wizardData.tags : undefined,
         currency:
           wizardData.currency !== 'BRL' ? wizardData.currency : undefined,
+        // Installment fields
+        ...(wizardData.installmentEnabled
+          ? {
+              recurrenceType: 'INSTALLMENT' as const,
+              totalInstallments: wizardData.totalInstallments,
+              recurrenceUnit: wizardData.recurrenceUnit,
+              recurrenceInterval: 1,
+            }
+          : {}),
       };
 
       await createMutation.mutateAsync(payload);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
   type DateRange,
 } from '@/components/finance/analytics/period-selector';
 import { DREInteractiveTable } from '@/components/finance/reports/dre-interactive-table';
+import { DreEntryDrawer } from '@/components/finance/reports/dre-entry-drawer';
 import { BalanceSheet } from '@/components/finance/reports/balance-sheet';
 import { ExportMenu } from '@/components/finance/reports/export-menu';
 import { useInteractiveDRE } from '@/hooks/finance/use-reports';
@@ -81,6 +82,24 @@ export default function FinanceReportsPage() {
   const router = useRouter();
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultRange);
   const [activeReport, setActiveReport] = useState<ActiveReport>(null);
+  const [drillDown, setDrillDown] = useState<{
+    open: boolean;
+    categoryId: string;
+    categoryName: string;
+    totalAmount: number;
+  }>({ open: false, categoryId: '', categoryName: '', totalAmount: 0 });
+
+  const handleDrillDown = useCallback(
+    (categoryId: string, categoryName: string, amount: number) => {
+      setDrillDown({
+        open: true,
+        categoryId,
+        categoryName,
+        totalAmount: amount,
+      });
+    },
+    []
+  );
 
   const { data: dreData, isLoading: dreLoading } = useInteractiveDRE({
     startDate: dateRange.startDate,
@@ -170,6 +189,7 @@ export default function FinanceReportsPage() {
           previousNetResult={dreData?.previousNetResult}
           variationPercent={dreData?.variationPercent}
           isLoading={dreLoading}
+          onDrillDown={handleDrillDown}
         />
       )}
 
@@ -238,6 +258,16 @@ export default function FinanceReportsPage() {
           </CardContent>
         </Card>
       )}
+
+      <DreEntryDrawer
+        open={drillDown.open}
+        onOpenChange={open => setDrillDown(prev => ({ ...prev, open }))}
+        categoryId={drillDown.categoryId}
+        categoryName={drillDown.categoryName}
+        startDate={dateRange.startDate}
+        endDate={dateRange.endDate}
+        totalAmount={drillDown.totalAmount}
+      />
     </div>
   );
 }

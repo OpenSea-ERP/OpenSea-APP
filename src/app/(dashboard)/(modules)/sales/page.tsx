@@ -21,7 +21,10 @@ import { useSalesDashboard } from '@/hooks/sales/use-sales-dashboard';
 import {
   BarChart3,
   ClipboardList,
+  GitBranch,
+  Handshake,
   ShoppingCart,
+  Users,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -43,6 +46,30 @@ const heroBannerButtons = [
     href: '/sales/orders',
     gradient: 'from-blue-500 to-blue-600',
     permission: SALES_PERMISSIONS.ORDERS.ACCESS,
+  },
+  {
+    id: 'contacts',
+    label: 'Contatos',
+    icon: Users,
+    href: '/sales/contacts',
+    gradient: 'from-teal-500 to-teal-600',
+    permission: SALES_PERMISSIONS.CONTACTS.ACCESS,
+  },
+  {
+    id: 'pipelines',
+    label: 'Pipeline',
+    icon: GitBranch,
+    href: '/sales/pipelines',
+    gradient: 'from-violet-500 to-violet-600',
+    permission: SALES_PERMISSIONS.PIPELINES.ACCESS,
+  },
+  {
+    id: 'deals',
+    label: 'Negócios',
+    icon: Handshake,
+    href: '/sales/deals',
+    gradient: 'from-emerald-500 to-emerald-600',
+    permission: SALES_PERMISSIONS.DEALS.ACCESS,
   },
 ];
 

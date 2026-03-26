@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useCheckDuplicate } from '@/hooks/finance/use-check-duplicate';
+import { DuplicateWarningBanner } from './duplicate-warning-banner';
 import type { ReceivableWizardData } from './receivable-wizard-modal';
 
 // =============================================================================
@@ -66,12 +69,37 @@ export function ReceivableStepConfirmation({
   onSubmit,
   isPending,
 }: ReceivableStepConfirmationProps) {
+  const {
+    mutate: checkDuplicate,
+    data: duplicateResult,
+    isPending: isCheckingDuplicates,
+  } = useCheckDuplicate();
+
+  // Check for duplicates when this step mounts
+  useEffect(() => {
+    if (data.expectedAmount > 0 && data.dueDate) {
+      checkDuplicate({
+        customerName: data.customerName || undefined,
+        expectedAmount: data.expectedAmount,
+        dueDate: data.dueDate,
+        description: data.description || undefined,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const totalDue =
     data.expectedAmount + data.interest + data.penalty - data.discount;
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+        {/* Duplicate detection banner */}
+        <DuplicateWarningBanner
+          duplicates={duplicateResult?.duplicates ?? []}
+          isLoading={isCheckingDuplicates}
+        />
+
         {/* Tipo */}
         <div className="rounded-xl border p-4">
           <h4 className="text-sm font-semibold mb-2">Tipo</h4>
@@ -127,6 +155,29 @@ export function ReceivableStepConfirmation({
             />
           </div>
         </div>
+
+        {/* Parcelamento */}
+        {data.installmentEnabled && (
+          <div className="rounded-xl border border-violet-200 dark:border-violet-500/20 bg-violet-50/50 dark:bg-violet-500/5 p-4">
+            <h4 className="text-sm font-semibold mb-3">Parcelamento</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <Field
+                label="Parcelas"
+                value={`${data.totalInstallments}x de ${formatCurrency(data.expectedAmount / data.totalInstallments)}`}
+              />
+              <Field
+                label="Frequência"
+                value={
+                  data.recurrenceUnit === 'MONTHLY'
+                    ? 'Mensal'
+                    : data.recurrenceUnit === 'BIWEEKLY'
+                      ? 'Quinzenal'
+                      : 'Semanal'
+                }
+              />
+            </div>
+          </div>
+        )}
 
         {/* Tags */}
         {data.tags.length > 0 && (

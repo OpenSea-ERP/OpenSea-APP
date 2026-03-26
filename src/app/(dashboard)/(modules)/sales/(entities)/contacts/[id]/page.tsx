@@ -14,34 +14,53 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import type { HeaderButton } from '@/components/layout/types/header.types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CreateActivityModal } from '@/components/sales/create-activity-modal';
 import { useContact } from '@/hooks/sales/use-contacts';
+import { useDealsInfinite } from '@/hooks/sales/use-deals';
+import { useTimeline } from '@/hooks/sales/use-timeline';
+import { useActivitiesInfinite } from '@/hooks/sales/use-activities';
 import { usePermissions } from '@/hooks/use-permissions';
 import { contactsConfig } from '@/config/entities/contacts.config';
-import type { Contact } from '@/types/sales';
+import { cn } from '@/lib/utils';
+import type { Contact, TimelineItem, Deal } from '@/types/sales';
 import {
   LIFECYCLE_STAGE_LABELS,
   LEAD_TEMPERATURE_LABELS,
   CONTACT_ROLE_LABELS,
+  DEAL_STATUS_LABELS,
 } from '@/types/sales';
 import {
   Briefcase,
   Building2,
   Calendar,
+  ChevronRight,
+  Clock,
+  DollarSign,
   Edit,
   Flame,
+  Handshake,
   Linkedin,
   Instagram,
   Mail,
   MessageCircle,
+  MessageSquare,
   Phone,
+  Plus,
   Snowflake,
   Sun,
+  Trophy,
   UserCircle,
   Video,
+  XCircle,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -112,6 +131,48 @@ function getTemperatureIcon(temp?: string) {
 // PAGE
 // ============================================================================
 
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+function formatCurrency(value?: number): string {
+  if (value === undefined || value === null) return 'Sem valor';
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+}
+
+const DEAL_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
+  OPEN: {
+    bg: 'bg-blue-50 dark:bg-blue-500/8',
+    text: 'text-blue-700 dark:text-blue-300',
+  },
+  WON: {
+    bg: 'bg-emerald-50 dark:bg-emerald-500/8',
+    text: 'text-emerald-700 dark:text-emerald-300',
+  },
+  LOST: {
+    bg: 'bg-rose-50 dark:bg-rose-500/8',
+    text: 'text-rose-700 dark:text-rose-300',
+  },
+  ARCHIVED: {
+    bg: 'bg-slate-100 dark:bg-slate-500/8',
+    text: 'text-slate-600 dark:text-slate-400',
+  },
+};
+
+const TIMELINE_ICONS: Record<string, React.ElementType> = {
+  ACTIVITY: Phone,
+  DEAL_CREATED: Plus,
+  DEAL_STAGE_CHANGED: ChevronRight,
+  DEAL_WON: Trophy,
+  DEAL_LOST: XCircle,
+  NOTE: MessageSquare,
+  EMAIL: Mail,
+  CONTACT_CREATED: UserCircle,
+};
+
 export default function ContactDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -125,6 +186,25 @@ export default function ContactDetailPage() {
   const { data: contactData, isLoading, error } = useContact(contactId);
 
   const contact = contactData?.contact as Contact | undefined;
+
+  // Deals linked to this contact's customer
+  const { deals, isLoading: dealsLoading } = useDealsInfinite({
+    customerId: contact?.customerId || undefined,
+  });
+
+  // Timeline for this contact
+  const { items: timelineItems, isLoading: timelineLoading } = useTimeline(
+    contactId,
+    'contact'
+  );
+
+  // Activities for this contact
+  const { activities, isLoading: activitiesLoading } = useActivitiesInfinite({
+    contactId,
+  });
+
+  // Activity create modal
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
 
   // ============================================================================
   // ACTION BUTTONS
@@ -424,17 +504,95 @@ export default function ContactDetailPage() {
           {/* TAB: Negociacoes */}
           <TabsContent value="deals" className="space-y-6">
             <Card className="bg-white/5 py-2 overflow-hidden">
-              <div className="px-6 py-4">
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Building2 className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                  <h3 className="text-base font-semibold text-muted-foreground">
-                    Negociacoes
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    O historico de negociacoes vinculadas a este contato estara
-                    disponivel em breve.
-                  </p>
+              <div className="px-6 py-4 space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Handshake className="h-5 w-5 text-foreground" />
+                    <div>
+                      <h3 className="text-base font-semibold">
+                        Negócios Vinculados
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Negócios do cliente vinculado a este contato
+                      </p>
+                    </div>
+                  </div>
+                  <div className="border-b border-border" />
                 </div>
+
+                {dealsLoading && (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                    ))}
+                  </div>
+                )}
+
+                {!dealsLoading && deals.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-8 gap-3">
+                    <div className="p-3 rounded-2xl bg-slate-100 dark:bg-white/5">
+                      <Handshake className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum negócio vinculado a este contato.
+                    </p>
+                  </div>
+                )}
+
+                {!dealsLoading && deals.length > 0 && (
+                  <div className="space-y-2">
+                    {deals.map((deal: Deal) => {
+                      const statusStyle =
+                        DEAL_STATUS_STYLES[deal.status] ??
+                        DEAL_STATUS_STYLES.OPEN;
+                      return (
+                        <Link
+                          key={deal.id}
+                          href={`/sales/deals/${deal.id}`}
+                          className="block"
+                        >
+                          <div className="flex items-center gap-4 p-3 rounded-lg border border-border bg-white dark:bg-slate-800/60 hover:shadow-md hover:border-violet-200 dark:hover:border-violet-500/30 transition-all cursor-pointer">
+                            <div className="p-2 rounded-lg bg-violet-500/10">
+                              <DollarSign className="h-4 w-4 text-violet-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium truncate">
+                                {deal.title}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                {deal.pipeline && (
+                                  <>
+                                    <span>{deal.pipeline.name}</span>
+                                    <ChevronRight className="h-3 w-3" />
+                                  </>
+                                )}
+                                {deal.stage && <span>{deal.stage.name}</span>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              {deal.value !== undefined &&
+                                deal.value !== null && (
+                                  <span className="text-sm font-semibold">
+                                    {formatCurrency(deal.value)}
+                                  </span>
+                                )}
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  'text-xs',
+                                  statusStyle.bg,
+                                  statusStyle.text
+                                )}
+                              >
+                                {DEAL_STATUS_LABELS[deal.status]}
+                              </Badge>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </Card>
           </TabsContent>
@@ -442,22 +600,113 @@ export default function ContactDetailPage() {
           {/* TAB: Timeline */}
           <TabsContent value="timeline" className="space-y-6">
             <Card className="bg-white/5 py-2 overflow-hidden">
-              <div className="px-6 py-4">
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Calendar className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                  <h3 className="text-base font-semibold text-muted-foreground">
-                    Timeline
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    A timeline de atividades e interacoes estara disponivel em
-                    breve.
-                  </p>
+              <div className="px-6 py-4 space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-foreground" />
+                      <div>
+                        <h3 className="text-base font-semibold">Timeline</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Atividades e eventos do contato
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => setActivityModalOpen(true)}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Nova Atividade
+                    </Button>
+                  </div>
+                  <div className="border-b border-border" />
                 </div>
+
+                {(timelineLoading || activitiesLoading) && (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                    ))}
+                  </div>
+                )}
+
+                {!timelineLoading &&
+                  !activitiesLoading &&
+                  timelineItems.length === 0 &&
+                  activities.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-8 gap-3">
+                      <div className="p-3 rounded-2xl bg-slate-100 dark:bg-white/5">
+                        <Clock className="h-8 w-8 text-slate-400" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum evento na timeline ainda.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setActivityModalOpen(true)}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Registrar Atividade
+                      </Button>
+                    </div>
+                  )}
+
+                {!timelineLoading &&
+                  !activitiesLoading &&
+                  timelineItems.length > 0 && (
+                    <div className="space-y-4">
+                      {timelineItems.map((item: TimelineItem) => {
+                        const Icon = TIMELINE_ICONS[item.type] || Clock;
+                        return (
+                          <div key={item.id} className="flex gap-3 items-start">
+                            <div className="p-1.5 rounded-lg bg-muted/50 shrink-0 mt-0.5">
+                              <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">
+                                {item.title}
+                              </p>
+                              {item.description && (
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                  {item.description}
+                                </p>
+                              )}
+                              <span className="text-xs text-muted-foreground mt-1 block">
+                                {new Date(item.createdAt).toLocaleDateString(
+                                  'pt-BR',
+                                  {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  }
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
               </div>
             </Card>
           </TabsContent>
         </Tabs>
       </PageBody>
+
+      {/* Create Activity Modal */}
+      <CreateActivityModal
+        open={activityModalOpen}
+        onOpenChange={setActivityModalOpen}
+        contactId={contactId}
+        customerId={contact?.customerId}
+      />
     </PageLayout>
   );
 }

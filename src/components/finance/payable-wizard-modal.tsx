@@ -73,6 +73,10 @@ export interface PayableWizardData {
   notes: string;
   // Batch entries (from multi-PDF upload)
   batchEntries: BatchEntry[];
+  // Installment
+  installmentEnabled: boolean;
+  totalInstallments: number;
+  recurrenceUnit: 'MONTHLY' | 'BIWEEKLY' | 'WEEKLY';
   // Uploaded files
   uploadedFiles: File[];
 }
@@ -106,6 +110,9 @@ const INITIAL_DATA: PayableWizardData = {
   discount: 0,
   tags: [],
   notes: '',
+  installmentEnabled: false,
+  totalInstallments: 2,
+  recurrenceUnit: 'MONTHLY',
   batchEntries: [],
   uploadedFiles: [],
 };
@@ -239,6 +246,15 @@ export function PayableWizardModal({
           pixKeyType: wizardData.pixKeyType || undefined,
           notes: wizardData.notes || undefined,
           tags: wizardData.tags.length > 0 ? wizardData.tags : undefined,
+          // Installment fields
+          ...(wizardData.installmentEnabled
+            ? {
+                recurrenceType: 'INSTALLMENT' as const,
+                totalInstallments: wizardData.totalInstallments,
+                recurrenceUnit: wizardData.recurrenceUnit,
+                recurrenceInterval: 1,
+              }
+            : {}),
         };
 
         const result = await createMutation.mutateAsync(payload);

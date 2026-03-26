@@ -21,7 +21,7 @@ interface DREInteractiveTableProps {
   previousNetResult?: number;
   variationPercent?: number;
   isLoading: boolean;
-  onDrillDown?: (categoryId: string, categoryName: string) => void;
+  onDrillDown?: (categoryId: string, categoryName: string, amount: number) => void;
 }
 
 function formatCurrency(value: number): string {
@@ -50,7 +50,7 @@ function DRERow({
   node: DRENode;
   expanded: RowState;
   toggleExpand: (id: string) => void;
-  onDrillDown?: (categoryId: string, categoryName: string) => void;
+  onDrillDown?: (categoryId: string, categoryName: string, amount: number) => void;
   isRevenue: boolean;
 }) {
   const hasChildren = node.children.length > 0;
@@ -78,7 +78,7 @@ function DRERow({
           if (hasChildren) {
             toggleExpand(node.categoryId);
           } else if (onDrillDown) {
-            onDrillDown(node.categoryId, node.categoryName);
+            onDrillDown(node.categoryId, node.categoryName, node.currentPeriod);
           }
         }}
       >

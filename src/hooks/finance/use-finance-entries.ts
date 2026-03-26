@@ -23,6 +23,8 @@ export interface FinanceEntriesFilters {
   search?: string;
   status?: string;
   categoryId?: string;
+  dueDateFrom?: string;
+  dueDateTo?: string;
   sortBy?:
     | 'createdAt'
     | 'dueDate'
@@ -62,9 +64,13 @@ export function useFinanceEntries(params?: FinanceEntriesQuery) {
 // Infinite scroll with server-side filters and sorting
 const ENTRIES_PAGE_SIZE = 20;
 
-export function useFinanceEntriesInfinite(filters?: FinanceEntriesFilters) {
+export function useFinanceEntriesInfinite(
+  filters?: FinanceEntriesFilters,
+  options?: { enabled?: boolean }
+) {
   const result = useInfiniteQuery({
     queryKey: QUERY_KEYS.FINANCE_ENTRIES_INFINITE(filters),
+    enabled: options?.enabled ?? true,
     queryFn: async ({ pageParam = 1 }) => {
       const response = await financeEntriesService.list({
         page: pageParam,
@@ -73,6 +79,8 @@ export function useFinanceEntriesInfinite(filters?: FinanceEntriesFilters) {
         search: filters?.search || undefined,
         status: (filters?.status as FinanceEntriesQuery['status']) || undefined,
         categoryId: filters?.categoryId || undefined,
+        dueDateFrom: filters?.dueDateFrom || undefined,
+        dueDateTo: filters?.dueDateTo || undefined,
         sortBy: filters?.sortBy || undefined,
         sortOrder: filters?.sortOrder || undefined,
       });

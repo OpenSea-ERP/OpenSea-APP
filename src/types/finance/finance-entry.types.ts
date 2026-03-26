@@ -467,3 +467,63 @@ export interface BulkCategorizeData {
   entryIds: string[];
   categoryId: string;
 }
+
+// Duplicate detection
+export interface CheckDuplicateData {
+  supplierName?: string;
+  customerName?: string;
+  expectedAmount: number;
+  dueDate: string;
+  description?: string;
+}
+
+export interface DuplicateMatch {
+  entryId: string;
+  description: string;
+  supplierName?: string | null;
+  customerName?: string | null;
+  expectedAmount: number;
+  dueDate: string;
+  score: number;
+  matchReasons: string[];
+}
+
+export interface CheckDuplicateResponse {
+  duplicates: DuplicateMatch[];
+}
+
+// Supplier/Customer Summary Dashboard
+export interface SupplierSummaryParams {
+  supplierName?: string;
+  supplierId?: string;
+  customerName?: string;
+  customerId?: string;
+}
+
+export interface MonthlyTrend {
+  month: string;
+  total: number;
+  count: number;
+}
+
+export interface RecentEntrySummary {
+  id: string;
+  description: string;
+  expectedAmount: number;
+  dueDate: string;
+  status: string;
+}
+
+export interface SupplierSummaryResponse {
+  summary: {
+    totalPaid: number;
+    totalPending: number;
+    totalOverdue: number;
+    entryCount: number;
+    avgAmount: number;
+    firstEntryDate: string | null;
+    lastEntryDate: string | null;
+    monthlyTrend: MonthlyTrend[];
+    recentEntries: RecentEntrySummary[];
+  };
+}

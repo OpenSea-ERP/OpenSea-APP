@@ -29,3 +29,5 @@ export * from './use-anomalies';
 export * from './use-approval-rules';
 export * from './use-accountant';
 export * from './use-exchange-rates';
+export * from './use-check-duplicate';
+export * from './use-supplier-summary';

@@ -28,6 +28,7 @@ import { PixPayConfirmModal } from '@/components/finance/pix-pay-modal';
 import { TaxRetentionPanel } from '@/components/finance/tax-retention-panel';
 import { ThreeWayMatchPanel } from '@/components/finance/three-way-match-panel';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { SupplierSummaryDrawer } from '@/components/finance/supplier-summary-drawer';
 import { useDeleteFinanceEntry, useFinanceEntry } from '@/hooks/finance';
 import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
 import { financeEntriesService } from '@/services/finance';
@@ -149,6 +150,9 @@ export default function PayableDetailPage({
 
   // Delete state
   const [pinModalOpen, setPinModalOpen] = useState(false);
+
+  // Supplier summary drawer state
+  const [supplierDrawerOpen, setSupplierDrawerOpen] = useState(false);
 
   // Attachment upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -356,9 +360,13 @@ export default function PayableDetailPage({
                 {entry.supplierName && (
                   <>
                     <span className="text-muted-foreground">|</span>
-                    <span className="text-sm text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={() => setSupplierDrawerOpen(true)}
+                      className="text-sm text-primary hover:underline cursor-pointer"
+                    >
                       {entry.supplierName}
-                    </span>
+                    </button>
                   </>
                 )}
               </div>
@@ -395,7 +403,18 @@ export default function PayableDetailPage({
               value={entry.type === 'PAYABLE' ? 'A Pagar' : 'A Receber'}
             />
             {entry.supplierName && (
-              <InfoRow label="Fornecedor" value={entry.supplierName} />
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-sm text-muted-foreground shrink-0">
+                  Fornecedor
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSupplierDrawerOpen(true)}
+                  className="text-sm text-primary hover:underline cursor-pointer text-right"
+                >
+                  {entry.supplierName}
+                </button>
+              </div>
             )}
             {entry.categoryName && (
               <InfoRow label="Categoria" value={entry.categoryName} />
@@ -609,10 +628,7 @@ export default function PayableDetailPage({
       <ThreeWayMatchPanel entryId={id} />
 
       {/* Tax Retentions */}
-      <TaxRetentionPanel
-        entryId={id}
-        grossAmount={entry.expectedAmount}
-      />
+      <TaxRetentionPanel entryId={id} grossAmount={entry.expectedAmount} />
 
       {/* Payment History */}
       <Card>
@@ -854,6 +870,17 @@ export default function PayableDetailPage({
         title="Confirmar Exclusão"
         description="Digite seu PIN de Ação para confirmar a exclusão desta conta a pagar."
       />
+
+      {/* Supplier Summary Drawer */}
+      {entry.supplierName && (
+        <SupplierSummaryDrawer
+          open={supplierDrawerOpen}
+          onOpenChange={setSupplierDrawerOpen}
+          supplierName={entry.supplierName}
+          supplierId={entry.supplierId ?? undefined}
+          entityType="supplier"
+        />
+      )}
     </div>
   );
 }

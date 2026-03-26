@@ -699,6 +699,8 @@ export const API_ENDPOINTS = {
     PAY_VIA_PIX: (id: string) => `/v1/finance/entries/${id}/pay-via-pix`,
     THREE_WAY_MATCH: (id: string) =>
       `/v1/finance/entries/${id}/three-way-match`,
+    CHECK_DUPLICATE: '/v1/finance/entries/check-duplicate',
+    SUPPLIER_SUMMARY: '/v1/finance/entries/supplier-summary',
   },
   // Finance - Exchange Rates
   EXCHANGE_RATES: {

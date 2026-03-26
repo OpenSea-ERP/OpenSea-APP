@@ -18,7 +18,12 @@ import {
 } from '@hello-pangea/dnd';
 import { cn, formatCurrency } from '@/lib/utils';
 import { usePipeline } from '@/hooks/sales/use-pipelines';
-import { useDealsInfinite, useChangeDealStage } from '@/hooks/sales/use-deals';
+import {
+  useDealsInfinite,
+  useChangeDealStage,
+  useCreateDeal,
+} from '@/hooks/sales/use-deals';
+import { CreateDealWizard } from '../../deals/src/components/create-deal-wizard';
 import { usePermissions } from '@/hooks/use-permissions';
 import { SALES_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { PageActionBar } from '@/components/layout/page-action-bar';
@@ -26,7 +31,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   GitBranch,
@@ -144,8 +148,10 @@ function PipelineKanbanContent() {
   );
 
   const changeDealStage = useChangeDealStage();
+  const createDealMutation = useCreateDeal();
 
   const [search, setSearch] = useState('');
+  const [createDealOpen, setCreateDealOpen] = useState(false);
 
   const pipeline = pipelineData?.pipeline;
 
@@ -315,9 +321,7 @@ function PipelineKanbanContent() {
                   title: 'Novo Negocio',
                   icon: Plus,
                   variant: 'default' as const,
-                  onClick: () => {
-                    toast.info('Criacao rapida de negocio em breve.');
-                  },
+                  onClick: () => setCreateDealOpen(true),
                 },
               ]
             : []),
@@ -444,6 +448,11 @@ function PipelineKanbanContent() {
                         onDealClick={deal =>
                           router.push(`/sales/deals/${deal.id}`)
                         }
+                        onAddDeal={
+                          canCreateDeals
+                            ? () => setCreateDealOpen(true)
+                            : undefined
+                        }
                       />
                     );
                   })}
@@ -454,6 +463,17 @@ function PipelineKanbanContent() {
           </Droppable>
         </DragDropContext>
       </div>
+
+      {/* Create Deal Wizard */}
+      <CreateDealWizard
+        open={createDealOpen}
+        onOpenChange={setCreateDealOpen}
+        onSubmit={async data => {
+          await createDealMutation.mutateAsync(data);
+          toast.success('Negócio criado com sucesso!');
+        }}
+        isSubmitting={createDealMutation.isPending}
+      />
     </div>
   );
 }
@@ -469,6 +489,7 @@ interface StageColumnProps {
   totalValue: number;
   isLoading: boolean;
   onDealClick: (deal: Deal) => void;
+  onAddDeal?: () => void;
 }
 
 function StageColumn({
@@ -478,6 +499,7 @@ function StageColumn({
   totalValue,
   isLoading,
   onDealClick,
+  onAddDeal,
 }: StageColumnProps) {
   const columnStyle = getStageColumnStyle(stage.type);
   const colColor = stage.color || '#8b5cf6';
@@ -555,6 +577,14 @@ function StageColumn({
               </div>
             )}
 
+            {!isLoading && deals.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Nenhum negócio nesta etapa
+                </p>
+              </div>
+            )}
+
             {deals.map((deal, index) => (
               <Draggable key={deal.id} draggableId={deal.id} index={index}>
                 {(cardProvided, cardSnapshot) => (
@@ -569,6 +599,18 @@ function StageColumn({
               </Draggable>
             ))}
             {dropProvided.placeholder}
+
+            {/* Add Deal button */}
+            {onAddDeal && (
+              <button
+                type="button"
+                onClick={onAddDeal}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/5 transition-colors border border-dashed border-gray-200 dark:border-white/10"
+              >
+                <Plus className="h-3 w-3" />
+                Adicionar Negócio
+              </button>
+            )}
           </div>
         )}
       </Droppable>
@@ -626,12 +668,21 @@ function DealCard({
         </p>
       )}
 
-      {/* Value */}
-      {deal.value !== undefined && deal.value !== null && deal.value > 0 && (
-        <div className="text-sm font-semibold text-slate-900 dark:text-white mb-2">
-          {formatCurrency(deal.value)}
-        </div>
-      )}
+      {/* Value + Probability */}
+      <div className="flex items-center gap-2 mb-2">
+        {deal.value !== undefined && deal.value !== null && deal.value > 0 && (
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            {formatCurrency(deal.value)}
+          </span>
+        )}
+        {deal.probability !== undefined &&
+          deal.probability !== null &&
+          deal.probability > 0 && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 shrink-0">
+              {deal.probability}%
+            </span>
+          )}
+      </div>
 
       {/* Footer: assignedTo + days in stage */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
