@@ -5,6 +5,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 import {
   AlertTriangle,
   ArrowDownCircle,
+  ArrowLeftRight,
   ArrowUpCircle,
   Building2,
   Calculator,
@@ -16,6 +17,7 @@ import {
   LayoutDashboard,
   Link2,
   PieChart,
+  Receipt,
   RefreshCw,
   Settings,
   ShieldCheck,
@@ -121,6 +123,20 @@ const navItems: NavItem[] = [
     iconColor: 'text-violet-500',
   },
   {
+    id: 'fiscal',
+    label: 'Documentos Fiscais',
+    icon: Receipt,
+    href: '/finance/fiscal',
+    iconColor: 'text-teal-500',
+  },
+  {
+    id: 'exchange-rates',
+    label: 'Câmbio',
+    icon: ArrowLeftRight,
+    href: '/finance/exchange-rates',
+    iconColor: 'text-teal-500',
+  },
+  {
     id: 'contracts',
     label: 'Contratos',
     icon: FileText,
@@ -210,7 +226,7 @@ export function QuickNavGrid() {
   const { hasPermission } = usePermissions();
 
   const visibleItems = navItems.filter(
-    (item) => !item.permission || hasPermission(item.permission)
+    item => !item.permission || hasPermission(item.permission)
   );
 
   return (
@@ -223,12 +239,10 @@ export function QuickNavGrid() {
       </CardHeader>
       <CardContent className="flex-1 overflow-auto">
         <div className="grid grid-cols-2 gap-2">
-          {visibleItems.map((item) => (
+          {visibleItems.map(item => (
             <Link key={item.id} href={item.href}>
               <div className="flex items-center gap-2.5 p-3 rounded-lg border hover:bg-muted/50 hover:border-violet-200 dark:hover:border-violet-800/50 transition-colors cursor-pointer">
-                <item.icon
-                  className={`h-4 w-4 shrink-0 ${item.iconColor}`}
-                />
+                <item.icon className={`h-4 w-4 shrink-0 ${item.iconColor}`} />
                 <span className="text-sm font-medium truncate">
                   {item.label}
                 </span>
