@@ -226,3 +226,63 @@ export function useCancelVacationSchedule(options?: {
     },
   });
 }
+
+/* ===========================================
+   UPDATE VACATION PERIOD
+   =========================================== */
+
+export function useUpdateVacation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateVacationPeriodRequest;
+    }): Promise<VacationPeriod> => {
+      const response = await vacationsApi.update(id, data);
+      return response.vacationPeriod;
+    },
+
+    onSuccess: (vacation) => {
+      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: vacationKeys.detail(vacation.id),
+      });
+    },
+
+    onError: (error: Error) => {
+      toast.error(translateError(error));
+    },
+  });
+}
+
+/* ===========================================
+   DELETE VACATION PERIOD
+   =========================================== */
+
+export function useDeleteVacation(options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await vacationsApi.delete(id);
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      toast.success('Período de férias excluído com sucesso!');
+      options?.onSuccess?.();
+    },
+
+    onError: (error: Error) => {
+      toast.error(translateError(error));
+      options?.onError?.(error);
+    },
+  });
+}

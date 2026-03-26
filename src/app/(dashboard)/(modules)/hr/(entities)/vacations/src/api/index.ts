@@ -33,6 +33,8 @@ export {
   useCompleteVacation,
   useSellVacationDays,
   useCancelVacationSchedule,
+  useUpdateVacation,
+  useDeleteVacation,
 } from './mutations';
 
 /* ===========================================

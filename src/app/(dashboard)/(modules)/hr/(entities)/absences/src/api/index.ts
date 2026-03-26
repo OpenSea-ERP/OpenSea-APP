@@ -27,6 +27,8 @@ export {
   useApproveAbsence,
   useRejectAbsence,
   useCancelAbsence,
+  useUpdateAbsence,
+  useDeleteAbsence,
 } from './mutations';
 
 /* ===========================================
