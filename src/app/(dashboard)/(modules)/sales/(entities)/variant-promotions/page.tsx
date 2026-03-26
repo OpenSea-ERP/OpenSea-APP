@@ -20,6 +20,7 @@ import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-moda
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   useVariantPromotions,
+  useCreateVariantPromotion,
   useDeleteVariantPromotion,
 } from '@/hooks/sales/use-sales-other';
 import type { VariantPromotion } from '@/types/sales';
@@ -38,6 +39,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { CreateVariantPromotionWizard } from './src/components/create-variant-promotion-wizard';
 
 // ============================================================================
 // PAGE WRAPPER
@@ -76,12 +78,14 @@ function VariantPromotionsPageContent() {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
+  const [createWizardOpen, setCreateWizardOpen] = useState(false);
 
   // ============================================================================
   // DATA
   // ============================================================================
 
   const { data: promotionsData, isLoading, error, refetch } = useVariantPromotions();
+  const createMutation = useCreateVariantPromotion();
   const deleteMutation = useDeleteVariantPromotion();
 
   const allPromotions = promotionsData?.promotions ?? [];
@@ -239,9 +243,7 @@ function VariantPromotionsPageContent() {
                     id: 'create-promotion',
                     title: 'Nova Promocao',
                     icon: Plus,
-                    onClick: () => {
-                      // TODO: Create wizard
-                    },
+                    onClick: () => setCreateWizardOpen(true),
                     variant: 'default',
                   },
                 ]
@@ -407,15 +409,25 @@ function VariantPromotionsPageContent() {
           </>
         )}
 
+        <CreateVariantPromotionWizard
+          open={createWizardOpen}
+          onOpenChange={setCreateWizardOpen}
+          onSubmit={async data => {
+            await createMutation.mutateAsync(data);
+            toast.success('Promoção criada com sucesso!');
+          }}
+          isSubmitting={createMutation.isPending}
+        />
+
         <VerifyActionPinModal
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
+          title="Confirmar Exclusão"
           description={
             itemsToDelete.length === 1
-              ? 'Digite seu PIN de acao para excluir esta promocao. Esta acao nao pode ser desfeita.'
-              : `Digite seu PIN de acao para excluir ${itemsToDelete.length} promocoes. Esta acao nao pode ser desfeita.`
+              ? 'Digite seu PIN de ação para excluir esta promoção. Esta ação não pode ser desfeita.'
+              : `Digite seu PIN de ação para excluir ${itemsToDelete.length} promoções. Esta ação não pode ser desfeita.`
           }
         />
       </PageBody>
