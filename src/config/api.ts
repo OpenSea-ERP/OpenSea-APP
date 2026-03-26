@@ -1453,6 +1453,41 @@ export const API_ENDPOINTS = {
       MOVEMENT: '/v1/sales/cashier/cash/movement',
     },
   },
+  // Sales - Blueprints (Modelos de Processo)
+  BLUEPRINTS: {
+    LIST: '/v1/sales/blueprints',
+    GET: (id: string) => `/v1/sales/blueprints/${id}`,
+    CREATE: '/v1/sales/blueprints',
+    UPDATE: (id: string) => `/v1/sales/blueprints/${id}`,
+    DELETE: (id: string) => `/v1/sales/blueprints/${id}`,
+  },
+  // Sales - Integrations (Central de Integrações)
+  SALES_INTEGRATIONS: {
+    LIST: '/v1/sales/integrations',
+    GET: (id: string) => `/v1/sales/integrations/${id}`,
+    CONNECT: (id: string) => `/v1/sales/integrations/${id}/connect`,
+    DISCONNECT: (id: string) => `/v1/sales/integrations/${id}/disconnect`,
+    SYNC: (id: string) => `/v1/sales/integrations/${id}/sync`,
+  },
+  // Sales - Landing Pages (Páginas de Captura)
+  LANDING_PAGES: {
+    LIST: '/v1/sales/landing-pages',
+    GET: (id: string) => `/v1/sales/landing-pages/${id}`,
+    CREATE: '/v1/sales/landing-pages',
+    UPDATE: (id: string) => `/v1/sales/landing-pages/${id}`,
+    DELETE: (id: string) => `/v1/sales/landing-pages/${id}`,
+    PUBLISH: (id: string) => `/v1/sales/landing-pages/${id}/publish`,
+    UNPUBLISH: (id: string) => `/v1/sales/landing-pages/${id}/unpublish`,
+  },
+  // Sales - Chatbot Config
+  CHATBOT: {
+    GET_CONFIG: '/v1/sales/chatbot/config',
+    UPDATE_CONFIG: '/v1/sales/chatbot/config',
+  },
+  // Sales - AI Predictions
+  PREDICTIONS: {
+    DEAL: (dealId: string) => `/v1/sales/predictions/deals/${dealId}`,
+  },
   // Health
   HEALTH: '/health',
 } as const;
