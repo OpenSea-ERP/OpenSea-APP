@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -17,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 interface QuickCreateFormProps {
   onBack: () => void;
   onSubmit: (data: { name: string; unitOfMeasure: UnitOfMeasure }) => void;
+  error?: string;
 }
 
 const UOM_ENTRIES = Object.entries(UNIT_OF_MEASURE_LABELS) as [
@@ -24,9 +26,10 @@ const UOM_ENTRIES = Object.entries(UNIT_OF_MEASURE_LABELS) as [
   string,
 ][];
 
-export function QuickCreateForm({ onBack, onSubmit }: QuickCreateFormProps) {
+export function QuickCreateForm({ onBack, onSubmit, error }: QuickCreateFormProps) {
   const [name, setName] = useState('');
   const [unitOfMeasure, setUnitOfMeasure] = useState<UnitOfMeasure>('UNITS');
+  const nameError = error && (error.includes('name already exists') || error.includes('Template with this name')) ? error : '';
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,17 +60,21 @@ export function QuickCreateForm({ onBack, onSubmit }: QuickCreateFormProps) {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="template-name">
-            Nome do Template <span className="text-red-500">*</span>
+            Nome do Template <span className="text-[rgb(var(--color-destructive))]">*</span>
           </Label>
-          <Input
-            id="template-name"
-            ref={inputRef}
-            placeholder="Ex: Eletrônicos, Roupas, Alimentos..."
-            value={name}
-            onChange={e => setName(e.target.value)}
-            required
-            className="h-11"
-          />
+          <div className="relative">
+            <Input
+              id="template-name"
+              ref={inputRef}
+              placeholder="Ex: Eletrônicos, Roupas, Alimentos..."
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+              className="h-11"
+              aria-invalid={!!nameError}
+            />
+            {nameError && <FormErrorIcon message={nameError} />}
+          </div>
         </div>
 
         <div className="space-y-2">
