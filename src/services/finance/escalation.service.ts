@@ -5,6 +5,7 @@ import type {
   CustomerScoreResponse,
   EscalationListResponse,
   EscalationResponse,
+  EscalationTimelineResponse,
   UpdateEscalationRequest,
 } from '@/types/finance';
 

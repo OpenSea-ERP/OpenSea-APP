@@ -122,3 +122,41 @@ export const CUSTOMER_SCORE_LABELS: Record<CustomerScoreLevel, string> = {
   FAIR: 'Regular',
   POOR: 'Ruim',
 };
+
+// ============================================================================
+// Escalation Timeline Types
+// ============================================================================
+
+export type EscalationTimelineStepStatus =
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'PENDING'
+  | 'SCHEDULED';
+
+export interface EscalationTimelineStep {
+  stepNumber: number;
+  type: string;
+  status: EscalationTimelineStepStatus;
+  scheduledDate?: string;
+  executedDate?: string;
+  channel: string;
+  description: string;
+  messagePreview?: string;
+}
+
+export interface EscalationTimelineResponse {
+  entryId: string;
+  currentStep: number;
+  totalSteps: number;
+  steps: EscalationTimelineStep[];
+}
+
+export const TIMELINE_STATUS_LABELS: Record<
+  EscalationTimelineStepStatus,
+  string
+> = {
+  COMPLETED: 'Concluído',
+  FAILED: 'Falhou',
+  PENDING: 'Pendente',
+  SCHEDULED: 'Agendado',
+};

@@ -479,6 +479,32 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `/v1/content/${id}`,
     APPROVE: (id: string) => `/v1/content/${id}/approve`,
   },
+  // Sales - Cadence Sequences
+  CADENCES: {
+    LIST: '/v1/sales/cadences',
+    GET: (id: string) => `/v1/sales/cadences/${id}`,
+    CREATE: '/v1/sales/cadences',
+    UPDATE: (id: string) => `/v1/sales/cadences/${id}`,
+    DELETE: (id: string) => `/v1/sales/cadences/${id}`,
+  },
+  // Sales - Lead Scoring
+  LEAD_SCORING: {
+    LIST: '/v1/sales/lead-scoring/rules',
+    GET: (id: string) => `/v1/sales/lead-scoring/rules/${id}`,
+    CREATE: '/v1/sales/lead-scoring/rules',
+    UPDATE: (id: string) => `/v1/sales/lead-scoring/rules/${id}`,
+    DELETE: (id: string) => `/v1/sales/lead-scoring/rules/${id}`,
+    CUSTOMER_SCORE: (customerId: string) =>
+      `/v1/sales/lead-scoring/customers/${customerId}/score`,
+  },
+  // Sales - Lead Routing
+  LEAD_ROUTING: {
+    LIST: '/v1/sales/lead-routing/rules',
+    GET: (id: string) => `/v1/sales/lead-routing/rules/${id}`,
+    CREATE: '/v1/sales/lead-routing/rules',
+    UPDATE: (id: string) => `/v1/sales/lead-routing/rules/${id}`,
+    DELETE: (id: string) => `/v1/sales/lead-routing/rules/${id}`,
+  },
   // Email
   EMAIL: {
     ACCOUNTS: {
@@ -784,6 +810,7 @@ export const API_ENDPOINTS = {
     DUPLICATE: (id: string) => `/v1/finance/escalations/${id}/duplicate`,
     TOGGLE_ACTIVE: (id: string) =>
       `/v1/finance/escalations/${id}/toggle-active`,
+    TIMELINE: '/v1/finance/escalations/timeline',
   },
   // Finance - Approval Rules
   FINANCE_APPROVAL_RULES: {

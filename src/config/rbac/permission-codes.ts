@@ -428,6 +428,9 @@ export const SALES_PERMISSIONS = {
   FORMS: salesPerm('forms', 'access', 'admin'),
   PROPOSALS: salesPerm('proposals', 'access', 'register', 'send', 'admin'),
   MSG_TEMPLATES: salesPerm('msg-templates', 'access', 'admin'),
+  BLUEPRINTS: salesPerm('blueprints', 'access', 'admin'),
+  LANDING_PAGES: salesPerm('landing-pages', 'access', 'admin'),
+  CHATBOT: salesPerm('chatbot', 'access', 'admin'),
 
   // --- Preços ---
   PRICE_TABLES: salesPerm(
@@ -680,6 +683,36 @@ export const SALES_PERMISSIONS = {
     'remove'
   ),
   ANALYTICS_RANKINGS: perm('sales', 'analytics-rankings', 'access'),
+
+  // --- Cadências ---
+  CADENCES: salesPerm(
+    'cadences',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
+
+  // --- Lead Scoring ---
+  LEAD_SCORING: salesPerm(
+    'lead-scoring',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
+
+  // --- Lead Routing ---
+  LEAD_ROUTING: salesPerm(
+    'lead-routing',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
 } as const;
 
 // =============================================================================
