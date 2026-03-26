@@ -692,6 +692,9 @@ export const API_ENDPOINTS = {
     BULK_CANCEL: '/v1/finance/entries/bulk/cancel',
     BULK_DELETE: '/v1/finance/entries/bulk/delete',
     BULK_CATEGORIZE: '/v1/finance/entries/bulk/categorize',
+    CREATE_BOLETO: (id: string) => `/v1/finance/entries/${id}/boleto`,
+    CREATE_PIX_CHARGE: (id: string) => `/v1/finance/entries/${id}/pix-charge`,
+    PAY_VIA_PIX: (id: string) => `/v1/finance/entries/${id}/pay-via-pix`,
   },
   // Finance - Dashboard & Reports
   FINANCE_DASHBOARD: {

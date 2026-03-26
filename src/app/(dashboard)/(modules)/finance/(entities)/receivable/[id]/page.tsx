@@ -24,11 +24,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BaixaModal } from '@/components/finance/baixa-modal';
+import { BoletoModal } from '@/components/finance/boleto-modal';
+import { PixChargeModal } from '@/components/finance/pix-charge-modal';
 import { CustomerScoreBadge } from '@/components/finance/customer-score-badge';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import { useDeleteFinanceEntry, useFinanceEntry } from '@/hooks/finance';
+import {
+  useDeleteFinanceEntry,
+  useFinanceEntry,
+  useCreateBoleto,
+  useCreatePixCharge,
+} from '@/hooks/finance';
 import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
 import { financeEntriesService } from '@/services/finance';
+import type { BoletoResult, CreatePixChargeResponse } from '@/types/finance';
 import type {
   FinanceAttachmentType,
   FinanceEntryStatus,
@@ -40,6 +48,16 @@ import {
   RECURRENCE_UNIT_LABELS,
 } from '@/types/finance';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
   ArrowLeft,
   Calendar,
   CreditCard,
@@ -50,6 +68,7 @@ import {
   Layers,
   Loader2,
   Paperclip,
+  QrCode,
   Trash2,
   Upload,
 } from 'lucide-react';
@@ -141,6 +160,18 @@ export default function ReceivableDetailPage({
   // Baixa modal state
   const [baixaOpen, setBaixaOpen] = useState(false);
 
+  // Boleto state
+  const [boletoConfirmOpen, setBoletoConfirmOpen] = useState(false);
+  const [boletoModalOpen, setBoletoModalOpen] = useState(false);
+  const [boletoCustomerCpfCnpj, setBoletoCustomerCpfCnpj] = useState('');
+  const [boletoResult, setBoletoResult] = useState<BoletoResult | null>(null);
+  const createBoletoMutation = useCreateBoleto();
+
+  // PIX charge state
+  const [pixChargeModalOpen, setPixChargeModalOpen] = useState(false);
+  const [pixChargeResult, setPixChargeResult] = useState<CreatePixChargeResponse | null>(null);
+  const createPixChargeMutation = useCreatePixCharge();
+
   // Delete state
   const [pinModalOpen, setPinModalOpen] = useState(false);
 
@@ -204,6 +235,64 @@ export default function ReceivableDetailPage({
     },
     [handleUploadAttachment]
   );
+
+  const handleBoletoClick = useCallback(() => {
+    if (entry?.boletoChargeId) {
+      // Entry already has a boleto — show it
+      setBoletoResult({
+        chargeId: entry.boletoChargeId,
+        barcodeNumber: entry.boletoBarcodeNumber || '',
+        digitableLine: entry.boletoDigitableLine || '',
+        pdfUrl: entry.boletoPdfUrl || '',
+        dueDate: entry.dueDate,
+        amount: Math.round(entry.totalDue * 100),
+      });
+      setBoletoModalOpen(true);
+    } else {
+      // Pre-fill CPF/CNPJ if available from entry
+      setBoletoCustomerCpfCnpj(entry?.beneficiaryCpfCnpj || '');
+      setBoletoConfirmOpen(true);
+    }
+  }, [entry]);
+
+  const handleBoletoGenerate = useCallback(async () => {
+    if (!boletoCustomerCpfCnpj.replace(/\D/g, '').length) {
+      toast.error('Informe o CPF ou CNPJ do cliente.');
+      return;
+    }
+
+    try {
+      const result = await createBoletoMutation.mutateAsync({
+        entryId: id,
+        data: { customerCpfCnpj: boletoCustomerCpfCnpj },
+      });
+      setBoletoConfirmOpen(false);
+      setBoletoResult(result.boleto);
+      setBoletoModalOpen(true);
+      toast.success('Boleto gerado com sucesso!');
+      refetch();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Erro ao gerar boleto.';
+      toast.error(message);
+    }
+  }, [id, boletoCustomerCpfCnpj, createBoletoMutation, refetch]);
+
+  const handlePixChargeClick = useCallback(async () => {
+    try {
+      const result = await createPixChargeMutation.mutateAsync({
+        entryId: id,
+      });
+      setPixChargeResult(result);
+      setPixChargeModalOpen(true);
+      toast.success('Cobrança PIX gerada com sucesso!');
+      refetch();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Erro ao gerar cobrança PIX.';
+      toast.error(message);
+    }
+  }, [id, createPixChargeMutation, refetch]);
 
   // --------------------------------------------------------------------------
   // Loading / Not Found
@@ -300,6 +389,33 @@ export default function ReceivableDetailPage({
             >
               <DollarSign className="h-4 w-4" />
               Registrar Recebimento
+            </Button>
+          )}
+          {(canReceive || entry.boletoChargeId) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sky-600 border-sky-200 hover:bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:hover:bg-sky-500/10"
+              onClick={handleBoletoClick}
+            >
+              <FileText className="h-4 w-4" />
+              {entry.boletoChargeId ? 'Ver Boleto' : 'Gerar Boleto'}
+            </Button>
+          )}
+          {canReceive && !entry.pixChargeId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-800 dark:hover:bg-violet-500/10"
+              onClick={handlePixChargeClick}
+              disabled={createPixChargeMutation.isPending}
+            >
+              {createPixChargeMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <QrCode className="h-4 w-4" />
+              )}
+              Gerar Cobrança PIX
             </Button>
           )}
           <Link href={`/finance/receivable/${id}/edit`}>
@@ -803,6 +919,78 @@ export default function ReceivableDetailPage({
         onSuccess={handleDeleteConfirmed}
         title="Confirmar Exclusão"
         description="Digite seu PIN de Ação para confirmar a exclusão desta conta a receber."
+      />
+
+      {/* Boleto Confirmation Dialog */}
+      <Dialog open={boletoConfirmOpen} onOpenChange={setBoletoConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gerar Boleto</DialogTitle>
+            <DialogDescription>
+              Informe o CPF ou CNPJ do cliente para gerar o boleto registrado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="boleto-cpf-cnpj">CPF/CNPJ do Cliente</Label>
+              <Input
+                id="boleto-cpf-cnpj"
+                value={boletoCustomerCpfCnpj}
+                onChange={(e) => setBoletoCustomerCpfCnpj(e.target.value)}
+                placeholder="000.000.000-00 ou 00.000.000/0001-00"
+              />
+            </div>
+            {entry.customerName && (
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Cliente:</span>{' '}
+                {entry.customerName}
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium">Valor:</span>{' '}
+              {formatCurrency(entry.totalDue)}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium">Vencimento:</span>{' '}
+              {formatDate(entry.dueDate)}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBoletoConfirmOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleBoletoGenerate}
+              disabled={createBoletoMutation.isPending}
+              className="gap-2"
+            >
+              {createBoletoMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+              Gerar Boleto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Boleto Result Modal */}
+      <BoletoModal
+        open={boletoModalOpen}
+        onOpenChange={setBoletoModalOpen}
+        boleto={boletoResult}
+        customerName={entry.customerName}
+        entryDescription={entry.description}
+      />
+
+      {/* PIX Charge Modal */}
+      <PixChargeModal
+        open={pixChargeModalOpen}
+        onOpenChange={setPixChargeModalOpen}
+        pixCharge={pixChargeResult}
+        entryDescription={entry.description}
       />
     </div>
   );

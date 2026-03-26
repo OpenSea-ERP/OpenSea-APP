@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BaixaModal } from '@/components/finance/baixa-modal';
+import { PixPayConfirmModal } from '@/components/finance/pix-pay-modal';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { useDeleteFinanceEntry, useFinanceEntry } from '@/hooks/finance';
 import { useFinanceCategories } from '@/hooks/finance/use-finance-categories';
@@ -49,6 +50,7 @@ import {
   Layers,
   Loader2,
   Paperclip,
+  Send,
   Trash2,
   Upload,
 } from 'lucide-react';
@@ -139,6 +141,9 @@ export default function PayableDetailPage({
 
   // Baixa modal state
   const [baixaOpen, setBaixaOpen] = useState(false);
+
+  // PIX pay modal state
+  const [pixPayOpen, setPixPayOpen] = useState(false);
 
   // Delete state
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -299,6 +304,17 @@ export default function PayableDetailPage({
             >
               <DollarSign className="h-4 w-4" />
               Registrar Pagamento
+            </Button>
+          )}
+          {canPay && entry.pixKey && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-500/10"
+              onClick={() => setPixPayOpen(true)}
+            >
+              <Send className="h-4 w-4" />
+              Pagar via PIX
             </Button>
           )}
           <Link href={`/finance/payable/${id}/edit`}>
@@ -792,6 +808,16 @@ export default function PayableDetailPage({
           entry={entry}
           categoryInterestRate={categoryRates.interestRate}
           categoryPenaltyRate={categoryRates.penaltyRate}
+        />
+      )}
+
+      {/* PIX Pay Confirmation Modal */}
+      {canPay && entry.pixKey && (
+        <PixPayConfirmModal
+          open={pixPayOpen}
+          onOpenChange={setPixPayOpen}
+          entry={entry}
+          onSuccess={() => refetch()}
         />
       )}
 

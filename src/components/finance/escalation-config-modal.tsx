@@ -25,6 +25,8 @@ import {
 import {
   ArrowDown,
   ArrowUp,
+  Eye,
+  EyeOff,
   FileText,
   Layers,
   Loader2,
@@ -37,6 +39,7 @@ import {
   useUpdateEscalation,
   useEscalation,
 } from '@/hooks/finance/use-escalations';
+import { useMessagingAccounts } from '@/hooks/messaging/use-messaging';
 import type {
   EscalationChannel,
   EscalationStep,
@@ -47,6 +50,7 @@ import {
   ESCALATION_TEMPLATE_LABELS,
 } from '@/types/finance';
 import { cn } from '@/lib/utils';
+import { MessagePreview } from './message-preview';
 
 // ============================================================================
 // TYPES
@@ -66,6 +70,7 @@ interface StepFormData {
   daysOverdue: number;
   channel: EscalationChannel;
   templateType: EscalationTemplateType;
+  subject: string;
   message: string;
 }
 
@@ -81,6 +86,7 @@ const DEFAULT_STEP: () => StepFormData = () => ({
   daysOverdue: 1,
   channel: 'EMAIL',
   templateType: 'FRIENDLY_REMINDER',
+  subject: '',
   message: '',
 });
 
@@ -106,6 +112,19 @@ export function EscalationConfigModal({
     {}
   );
 
+  // Preview state — tracks which step tempId has preview open
+  const [previewStepId, setPreviewStepId] = useState<string | null>(null);
+
+  // Fetch messaging accounts for WhatsApp channel dropdown
+  const { data: messagingAccountsData } = useMessagingAccounts();
+  const whatsAppAccounts = useMemo(
+    () =>
+      (messagingAccountsData?.accounts ?? []).filter(
+        (a) => a.channel === 'WHATSAPP',
+      ),
+    [messagingAccountsData],
+  );
+
   // Fetch existing data for edit
   const { data: existingData } = useEscalation(escalationId ?? '');
 
@@ -121,6 +140,7 @@ export function EscalationConfigModal({
           daysOverdue: s.daysOverdue,
           channel: s.channel,
           templateType: s.templateType,
+          subject: '',
           message: s.message,
         }))
       );
@@ -136,6 +156,7 @@ export function EscalationConfigModal({
       setIsActive(true);
       setSteps([DEFAULT_STEP()]);
       setSectionErrors({});
+      setPreviewStepId(null);
     }
   }, [open, isEditing]);
 
@@ -146,6 +167,7 @@ export function EscalationConfigModal({
 
   const removeStep = useCallback((tempId: string) => {
     setSteps((prev) => prev.filter((s) => s.tempId !== tempId));
+    setPreviewStepId((prev) => (prev === tempId ? null : prev));
   }, []);
 
   const updateStep = useCallback(
@@ -167,6 +189,10 @@ export function EscalationConfigModal({
       [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
       return next;
     });
+  }, []);
+
+  const togglePreview = useCallback((tempId: string) => {
+    setPreviewStepId((prev) => (prev === tempId ? null : tempId));
   }, []);
 
   // Mutations
@@ -447,6 +473,54 @@ export function EscalationConfigModal({
                 </div>
               </div>
 
+              {/* WhatsApp account selector */}
+              {step.channel === 'WHATSAPP' && whatsAppAccounts.length > 0 && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Conta WhatsApp</Label>
+                  <Select disabled={isPending}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Conta padrão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {whatsAppAccounts.map((acc) => (
+                        <SelectItem key={acc.id} value={acc.id}>
+                          {acc.name}
+                          {acc.phoneNumber
+                            ? ` (${acc.phoneNumber})`
+                            : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Conta utilizada para envio automático via WhatsApp
+                  </p>
+                </div>
+              )}
+
+              {/* Email — info about default account */}
+              {step.channel === 'EMAIL' && (
+                <p className="text-[11px] text-muted-foreground">
+                  Será utilizada a conta de e-mail padrão do tenant para envio
+                </p>
+              )}
+
+              {/* Subject line for EMAIL and SYSTEM_ALERT */}
+              {(step.channel === 'EMAIL' || step.channel === 'SYSTEM_ALERT') && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Assunto</Label>
+                  <Input
+                    value={step.subject}
+                    onChange={(e) =>
+                      updateStep(step.tempId, 'subject', e.target.value)
+                    }
+                    placeholder="Ex: Cobrança: {entryCode}"
+                    className="h-8 text-sm"
+                    disabled={isPending}
+                  />
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <Label className="text-xs">Mensagem</Label>
                 <Textarea
@@ -459,7 +533,45 @@ export function EscalationConfigModal({
                   className="text-sm resize-none"
                   disabled={isPending}
                 />
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-muted-foreground">
+                    Use: {'{customerName}'}, {'{amount}'}, {'{dueDate}'},{' '}
+                    {'{daysPastDue}'}, {'{entryCode}'}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'h-7 text-xs gap-1.5',
+                      previewStepId === step.tempId && 'text-primary',
+                    )}
+                    onClick={() => togglePreview(step.tempId)}
+                    disabled={!step.message.trim()}
+                  >
+                    {previewStepId === step.tempId ? (
+                      <>
+                        <EyeOff className="h-3 w-3" />
+                        Ocultar
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-3 w-3" />
+                        Pré-visualizar
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
+
+              {/* Inline Preview */}
+              {previewStepId === step.tempId && step.message.trim() && (
+                <MessagePreview
+                  message={step.message}
+                  subject={step.subject}
+                  channel={step.channel}
+                  onClose={() => setPreviewStepId(null)}
+                />
+              )}
             </div>
           ))}
 

@@ -20,6 +20,12 @@ import type {
   BulkCancelData,
   BulkDeleteData,
   BulkCategorizeData,
+  CreateBoletoData,
+  CreateBoletoResponse,
+  CreatePixChargeData,
+  CreatePixChargeResponse,
+  PayViaPixData,
+  PayViaPixResponse,
 } from '@/types/finance';
 export interface FinanceEntriesResponse {
   entries: FinanceEntry[];
@@ -190,6 +196,36 @@ export const financeEntriesService = {
     return apiClient.post<{ attachment: FinanceAttachment }>(
       API_ENDPOINTS.FINANCE_ENTRIES.UPLOAD_ATTACHMENT(entryId),
       formData
+    );
+  },
+
+  async createBoleto(
+    entryId: string,
+    data: CreateBoletoData
+  ): Promise<CreateBoletoResponse> {
+    return apiClient.post<CreateBoletoResponse>(
+      API_ENDPOINTS.FINANCE_ENTRIES.CREATE_BOLETO(entryId),
+      data
+    );
+  },
+
+  async createPixCharge(
+    entryId: string,
+    data?: CreatePixChargeData
+  ): Promise<CreatePixChargeResponse> {
+    return apiClient.post<CreatePixChargeResponse>(
+      API_ENDPOINTS.FINANCE_ENTRIES.CREATE_PIX_CHARGE(entryId),
+      data || {}
+    );
+  },
+
+  async payViaPix(
+    entryId: string,
+    data?: PayViaPixData
+  ): Promise<PayViaPixResponse> {
+    return apiClient.post<PayViaPixResponse>(
+      API_ENDPOINTS.FINANCE_ENTRIES.PAY_VIA_PIX(entryId),
+      data || {}
     );
   },
 };

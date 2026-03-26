@@ -77,10 +77,15 @@ export interface FinanceEntry {
   parentEntryId?: string | null;
   boletoBarcode?: string | null;
   boletoDigitLine?: string | null;
+  boletoChargeId?: number | null;
+  boletoBarcodeNumber?: string | null;
+  boletoDigitableLine?: string | null;
+  boletoPdfUrl?: string | null;
   beneficiaryName?: string | null;
   beneficiaryCpfCnpj?: string | null;
   pixKey?: string | null;
   pixKeyType?: 'CPF' | 'CNPJ' | 'EMAIL' | 'PHONE' | 'EVP' | null;
+  pixChargeId?: string | null;
   isOverdue: boolean;
   tags: string[];
   payments?: FinanceEntryPayment[];
@@ -205,6 +210,70 @@ export interface ParseBoletoResult {
   amount: number;
   boletoBarcode: string;
   boletoDigitLine: string;
+}
+
+// Boleto generation (Efi)
+export interface CreateBoletoData {
+  customerCpfCnpj: string;
+  instructions?: string[];
+}
+
+export interface BoletoResult {
+  chargeId: number;
+  barcodeNumber: string;
+  digitableLine: string;
+  pdfUrl: string;
+  dueDate: string;
+  amount: number;
+}
+
+export interface CreateBoletoResponse {
+  entry: FinanceEntry;
+  boleto: BoletoResult;
+}
+
+// PIX charge generation
+export interface CreatePixChargeData {
+  expirationSeconds?: number;
+  payerCpfCnpj?: string;
+  payerName?: string;
+}
+
+export interface CreatePixChargeResponse {
+  entry: {
+    id: string;
+    code: string;
+    description: string;
+    pixChargeId?: string | null;
+  };
+  txId: string;
+  pixCopiaECola: string;
+  qrCodeUrl: string;
+  expiresAt: string;
+  amount: number;
+}
+
+// PIX payment
+export interface PayViaPixData {
+  bankAccountId?: string;
+  reference?: string;
+  notes?: string;
+}
+
+export interface PayViaPixResponse {
+  entry: {
+    id: string;
+    code: string;
+    description: string;
+    status: string;
+  };
+  payment: {
+    id: string;
+    amount: number;
+    paidAt: string;
+    method: string | null;
+    reference?: string | null;
+  };
 }
 
 export interface ForecastQuery {

@@ -331,37 +331,70 @@ export default function ComboDetailPage() {
               <div className="border-b border-border" />
             </div>
 
-            <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-sky-500 mt-0.5 shrink-0" />
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">
-                    Itens configurados via edicao
-                  </p>
+            {(combo.minItems != null || combo.maxItems != null) && (
+              <div className="flex flex-wrap gap-3">
+                {combo.minItems != null && (
+                  <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300">
+                    <Hash className="h-3 w-3" />
+                    Mínimo: {combo.minItems} {combo.minItems === 1 ? 'item' : 'itens'}
+                  </div>
+                )}
+                {combo.maxItems != null && (
+                  <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300">
+                    <Hash className="h-3 w-3" />
+                    Máximo: {combo.maxItems} {combo.maxItems === 1 ? 'item' : 'itens'}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {(combo as any).items?.length > 0 ? (
+              <div className="w-full rounded-xl border border-border bg-white dark:bg-slate-800/60 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/30">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Produto</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">SKU</th>
+                      <th className="text-center px-4 py-3 font-medium text-muted-foreground">Qtd</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Preço Unit.</th>
+                      <th className="text-center px-4 py-3 font-medium text-muted-foreground">Obrigatório</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {(combo as any).items.map((item: any, idx: number) => (
+                      <tr key={item.id || idx} className="border-b border-border last:border-0">
+                        <td className="px-4 py-3 font-medium">{item.variant?.name || 'Produto removido'}</td>
+                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{item.variant?.sku || '-'}</td>
+                        <td className="px-4 py-3 text-center">{item.quantity}</td>
+                        <td className="px-4 py-3 text-right">
+                          {item.variant?.price != null
+                            ? `R$ ${Number(item.variant.price).toFixed(2)}`
+                            : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {item.isRequired ? (
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300">Sim</span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-500/8 dark:text-slate-400">Não</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-sky-500 mt-0.5 shrink-0" />
                   <p className="text-sm text-muted-foreground">
-                    Os itens vinculados a este combo podem ser gerenciados na pagina de edicao.
-                    Acesse o botao &quot;Editar Combo&quot; acima para adicionar, remover ou
-                    alterar os produtos e categorias do combo.
+                    Nenhum item adicionado a este combo. Use o botão &quot;Editar Combo&quot; para adicionar produtos.
                   </p>
-                  {(combo.minItems != null || combo.maxItems != null) && (
-                    <div className="flex flex-wrap gap-3 pt-2">
-                      {combo.minItems != null && (
-                        <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300">
-                          <Hash className="h-3 w-3" />
-                          Minimo: {combo.minItems} {combo.minItems === 1 ? 'item' : 'itens'}
-                        </div>
-                      )}
-                      {combo.maxItems != null && (
-                        <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300">
-                          <Hash className="h-3 w-3" />
-                          Maximo: {combo.maxItems} {combo.maxItems === 1 ? 'item' : 'itens'}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </Card>
       </PageBody>
