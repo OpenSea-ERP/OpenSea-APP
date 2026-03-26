@@ -53,6 +53,7 @@ import {
 } from '@/helpers/formatters';
 import { useTemplate } from '@/hooks/stock/use-stock-other';
 import { apiClient } from '@/lib/api-client';
+import { translateError } from '@/lib/error-messages';
 import { cn } from '@/lib/utils';
 import { itemsService, productsService } from '@/services/stock';
 import type {
@@ -303,7 +304,7 @@ export function ItemEntryFormModal({
       onOpenChange(false);
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao registrar entrada: ${error.message}`);
+      toast.error(translateError(error instanceof Error ? error.message : 'Erro ao registrar entrada'));
     },
   });
 
@@ -327,7 +328,7 @@ export function ItemEntryFormModal({
       setFieldErrors({});
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao registrar entrada: ${error.message}`);
+      toast.error(translateError(error instanceof Error ? error.message : 'Erro ao registrar entrada'));
     },
   });
 
@@ -1176,8 +1177,8 @@ function VariantSearchSection({
             };
 
         onSelect(variant, product);
-      } catch {
-        toast.error('Erro ao carregar dados do produto');
+      } catch (err) {
+        toast.error(translateError(err instanceof Error ? err.message : 'Erro ao carregar dados do produto'));
       } finally {
         setIsResolving(false);
       }
