@@ -166,7 +166,8 @@ export default function MedicalExamDetailPage() {
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {getName(exam.employeeId)} · {exam.doctorName} ({exam.doctorCrm})
+                {getName(exam.employeeId)} · {exam.doctorName} ({exam.doctorCrm}
+                )
               </p>
             </div>
             <div className="flex flex-col gap-2 shrink-0 text-sm">
@@ -243,20 +244,7 @@ export default function MedicalExamDetailPage() {
               }
             />
             {exam.documentUrl && (
-              <InfoField
-                label="Documento"
-                value={
-                  <a
-                    href={exam.documentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline flex items-center gap-1"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Ver documento
-                  </a>
-                }
-              />
+              <InfoField label="Documento" value={exam.documentUrl} />
             )}
           </div>
         </Card>

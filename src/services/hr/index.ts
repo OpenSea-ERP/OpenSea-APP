@@ -14,7 +14,10 @@ export * from './dependants.service';
 export * from './medical-exams.service';
 export * from './terminations.service';
 export * from './safety-programs.service';
-export * from './workplace-risks.service';
+export {
+  workplaceRisksService,
+  type ListWorkplaceRisksParams,
+} from './workplace-risks.service';
 export * from './cipa.service';
 export * from './hr-config.service';
 export * from './esocial.service';

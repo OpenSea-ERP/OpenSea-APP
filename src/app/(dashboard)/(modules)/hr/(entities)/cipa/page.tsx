@@ -436,7 +436,7 @@ export default function CipaPage() {
                 }
               }}
               showSorting={true}
-              defaultSortField="startDate"
+              defaultSortField="createdAt"
               defaultSortDirection="desc"
             />
           )}

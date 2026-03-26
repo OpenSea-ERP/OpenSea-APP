@@ -62,8 +62,7 @@ const CreateModal = dynamic(
   { ssr: false }
 );
 const ViewModal = dynamic(
-  () =>
-    import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
+  () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
   { ssr: false }
 );
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
@@ -111,7 +110,13 @@ export default function MedicalExamsPage() {
     if (filterStartDate) params.startDate = filterStartDate;
     if (filterEndDate) params.endDate = filterEndDate;
     return params;
-  }, [filterEmployeeId, filterType, filterResult, filterStartDate, filterEndDate]);
+  }, [
+    filterEmployeeId,
+    filterType,
+    filterResult,
+    filterStartDate,
+    filterEndDate,
+  ]);
 
   // ============================================================================
   // DATA
@@ -522,7 +527,7 @@ export default function MedicalExamsPage() {
                 }
               }}
               showSorting={true}
-              defaultSortField="examDate"
+              defaultSortField="createdAt"
               defaultSortDirection="desc"
             />
           )}

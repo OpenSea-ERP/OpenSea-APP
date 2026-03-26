@@ -103,7 +103,8 @@ export default function SafetyProgramsPage() {
   // DATA
   // ============================================================================
 
-  const { data, isLoading, error, refetch } = useListSafetyPrograms(queryParams);
+  const { data, isLoading, error, refetch } =
+    useListSafetyPrograms(queryParams);
   const createMutation = useCreateSafetyProgram();
   const deleteMutation = useDeleteSafetyProgram();
 
@@ -210,7 +211,8 @@ export default function SafetyProgramsPage() {
         onView={
           canView
             ? (ids: string[]) => {
-                if (ids.length > 0) router.push(`/hr/safety-programs/${ids[0]}`);
+                if (ids.length > 0)
+                  router.push(`/hr/safety-programs/${ids[0]}`);
               }
             : undefined
         }
@@ -259,7 +261,8 @@ export default function SafetyProgramsPage() {
         onView={
           canView
             ? (ids: string[]) => {
-                if (ids.length > 0) router.push(`/hr/safety-programs/${ids[0]}`);
+                if (ids.length > 0)
+                  router.push(`/hr/safety-programs/${ids[0]}`);
               }
             : undefined
         }
@@ -460,7 +463,7 @@ export default function SafetyProgramsPage() {
                 }
               }}
               showSorting={true}
-              defaultSortField="validFrom"
+              defaultSortField="createdAt"
               defaultSortDirection="desc"
             />
           )}

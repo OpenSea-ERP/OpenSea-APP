@@ -19,6 +19,11 @@ export const geofenceZonesService = {
     return apiClient.get<GeofenceZonesResponse>('/v1/hr/geofence-zones');
   },
 
+  // GET /v1/hr/geofence-zones/:id
+  async getGeofenceZone(id: string): Promise<GeofenceZoneResponse> {
+    return apiClient.get<GeofenceZoneResponse>(`/v1/hr/geofence-zones/${id}`);
+  },
+
   // POST /v1/hr/geofence-zones
   async createGeofenceZone(
     data: CreateGeofenceZoneData

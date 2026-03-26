@@ -100,7 +100,13 @@ export default function TerminationsPage() {
     if (filterStartDate) params.startDate = filterStartDate;
     if (filterEndDate) params.endDate = filterEndDate;
     return params;
-  }, [filterEmployeeId, filterType, filterStatus, filterStartDate, filterEndDate]);
+  }, [
+    filterEmployeeId,
+    filterType,
+    filterStatus,
+    filterStartDate,
+    filterEndDate,
+  ]);
 
   // ============================================================================
   // DATA
@@ -484,11 +490,13 @@ export default function TerminationsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Todos os Tipos</SelectItem>
-                {Object.entries(TERMINATION_TYPE_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
+                {Object.entries(TERMINATION_TYPE_LABELS).map(
+                  ([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
 
@@ -558,7 +566,7 @@ export default function TerminationsPage() {
                 }
               }}
               showSorting={true}
-              defaultSortField="terminationDate"
+              defaultSortField="createdAt"
               defaultSortDirection="desc"
             />
           )}

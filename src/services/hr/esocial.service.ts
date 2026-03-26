@@ -42,8 +42,15 @@ export const esocialService = {
     eventType?: string;
     search?: string;
   }): Promise<ListEsocialEventsResponse> {
+    const stringParams: Record<string, string> = {};
+    if (params.page !== undefined) stringParams.page = String(params.page);
+    if (params.perPage !== undefined)
+      stringParams.perPage = String(params.perPage);
+    if (params.status) stringParams.status = params.status;
+    if (params.eventType) stringParams.eventType = params.eventType;
+    if (params.search) stringParams.search = params.search;
     return apiClient.get<ListEsocialEventsResponse>('/v1/esocial/events', {
-      params,
+      params: stringParams,
     });
   },
 
@@ -75,8 +82,13 @@ export const esocialService = {
     perPage?: number;
     status?: string;
   }): Promise<ListEsocialBatchesResponse> {
+    const stringParams: Record<string, string> = {};
+    if (params.page !== undefined) stringParams.page = String(params.page);
+    if (params.perPage !== undefined)
+      stringParams.perPage = String(params.perPage);
+    if (params.status) stringParams.status = params.status;
     return apiClient.get<ListEsocialBatchesResponse>('/v1/esocial/batches', {
-      params,
+      params: stringParams,
     });
   },
 

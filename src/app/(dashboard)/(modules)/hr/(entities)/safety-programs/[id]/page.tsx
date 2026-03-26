@@ -58,7 +58,8 @@ export default function SafetyProgramDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
   const [editingRisk, setEditingRisk] = useState<WorkplaceRisk | null>(null);
-  const [deleteRiskTarget, setDeleteRiskTarget] = useState<WorkplaceRisk | null>(null);
+  const [deleteRiskTarget, setDeleteRiskTarget] =
+    useState<WorkplaceRisk | null>(null);
 
   // ============================================================================
   // DATA FETCHING
@@ -225,7 +226,8 @@ export default function SafetyProgramDetailPage() {
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {getProgramTypeLabel(program.type)} · {program.responsibleName} ({program.responsibleRegistration})
+                {getProgramTypeLabel(program.type)} · {program.responsibleName}{' '}
+                ({program.responsibleRegistration})
               </p>
             </div>
             <div className="flex flex-col gap-2 shrink-0 text-sm">
@@ -292,20 +294,7 @@ export default function SafetyProgramDetailPage() {
               copyTooltip="Copiar registro"
             />
             {program.documentUrl && (
-              <InfoField
-                label="Documento"
-                value={
-                  <a
-                    href={program.documentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline flex items-center gap-1"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Ver documento
-                  </a>
-                }
-              />
+              <InfoField label="Documento" value={program.documentUrl} />
             )}
           </div>
         </Card>
@@ -412,7 +401,10 @@ export default function SafetyProgramDetailPage() {
             Metadados
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
-            <InfoField label="Criado em" value={formatDate(program.createdAt)} />
+            <InfoField
+              label="Criado em"
+              value={formatDate(program.createdAt)}
+            />
             <InfoField
               label="Atualizado em"
               value={formatDate(program.updatedAt)}
@@ -429,7 +421,9 @@ export default function SafetyProgramDetailPage() {
           setEditingRisk(null);
         }}
         onSubmit={handleRiskSubmit}
-        isSubmitting={createRiskMutation.isPending || updateRiskMutation.isPending}
+        isSubmitting={
+          createRiskMutation.isPending || updateRiskMutation.isPending
+        }
         risk={editingRisk}
       />
 

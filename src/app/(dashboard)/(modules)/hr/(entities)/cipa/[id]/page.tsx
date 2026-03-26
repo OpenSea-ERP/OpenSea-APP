@@ -54,7 +54,8 @@ export default function CipaMandateDetailPage() {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
-  const [deleteMemberTarget, setDeleteMemberTarget] = useState<CipaMember | null>(null);
+  const [deleteMemberTarget, setDeleteMemberTarget] =
+    useState<CipaMember | null>(null);
 
   // ============================================================================
   // DATA FETCHING
@@ -76,10 +77,7 @@ export default function CipaMandateDetailPage() {
   const members = membersData ?? [];
 
   // Employee name resolution
-  const employeeIds = useMemo(
-    () => members.map(m => m.employeeId),
-    [members]
-  );
+  const employeeIds = useMemo(() => members.map(m => m.employeeId), [members]);
   const { getName } = useEmployeeMap(employeeIds);
 
   // ============================================================================
@@ -218,7 +216,8 @@ export default function CipaMandateDetailPage() {
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {formatDate(mandate.startDate)} — {formatDate(mandate.endDate)}
-                {mandate.electionDate && ` · Eleição: ${formatDate(mandate.electionDate)}`}
+                {mandate.electionDate &&
+                  ` · Eleição: ${formatDate(mandate.electionDate)}`}
               </p>
             </div>
             <div className="flex flex-col gap-2 shrink-0 text-sm">
@@ -316,7 +315,9 @@ export default function CipaMandateDetailPage() {
                 >
                   {/* Stability indicator */}
                   {member.isStable && (
-                    <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" title="Estabilidade provisória" />
+                    <span title="Estabilidade provisória">
+                      <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                    </span>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -361,7 +362,10 @@ export default function CipaMandateDetailPage() {
             Metadados
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
-            <InfoField label="Criado em" value={formatDate(mandate.createdAt)} />
+            <InfoField
+              label="Criado em"
+              value={formatDate(mandate.createdAt)}
+            />
             <InfoField
               label="Atualizado em"
               value={formatDate(mandate.updatedAt)}

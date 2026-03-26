@@ -24,13 +24,7 @@ import type {
   TerminationType,
   NoticeType,
 } from '@/types/hr';
-import {
-  Check,
-  ClipboardList,
-  FileX2,
-  Loader2,
-  UserCheck,
-} from 'lucide-react';
+import { Check, ClipboardList, FileX2, Loader2, UserCheck } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -79,6 +73,8 @@ export function CreateModal({
   const [paymentDeadline, setPaymentDeadline] = useState('');
   const [notes, setNotes] = useState('');
 
+  const [currentStep, setCurrentStep] = useState(1);
+
   const resetForm = useCallback(() => {
     setEmployeeId('');
     setFieldErrors({});
@@ -89,6 +85,7 @@ export function CreateModal({
     setNoticeDays('30');
     setPaymentDeadline('');
     setNotes('');
+    setCurrentStep(1);
   }, []);
 
   const handleClose = () => {
@@ -99,7 +96,15 @@ export function CreateModal({
   };
 
   const handleSubmit = async () => {
-    if (!employeeId || !type || !terminationDate || !lastWorkDay || !noticeType || !paymentDeadline) return;
+    if (
+      !employeeId ||
+      !type ||
+      !terminationDate ||
+      !lastWorkDay ||
+      !noticeType ||
+      !paymentDeadline
+    )
+      return;
 
     const data: CreateTerminationData = {
       employeeId: employeeId.trim(),
@@ -132,10 +137,9 @@ export function CreateModal({
 
   const steps: WizardStep[] = [
     {
-      id: 'employee',
       title: 'Funcionário',
       description: 'Selecione o funcionário',
-      icon: UserCheck,
+      icon: <UserCheck className="h-6 w-6" />,
       content: (
         <div className="space-y-4 p-1">
           <div className="space-y-1.5">
@@ -147,7 +151,8 @@ export function CreateModal({
                 value={employeeId}
                 onChange={id => {
                   setEmployeeId(id);
-                  if (fieldErrors.employee) setFieldErrors(prev => ({ ...prev, employee: '' }));
+                  if (fieldErrors.employee)
+                    setFieldErrors(prev => ({ ...prev, employee: '' }));
                 }}
                 placeholder="Selecionar funcionário para rescisão..."
               />
@@ -162,8 +167,9 @@ export function CreateModal({
                   Atenção
                 </p>
                 <p className="text-xs text-rose-600/80 dark:text-rose-400/80 mt-1">
-                  A rescisão do contrato de trabalho é uma ação irreversível. Certifique-se
-                  de selecionar o funcionário correto antes de prosseguir.
+                  A rescisão do contrato de trabalho é uma ação irreversível.
+                  Certifique-se de selecionar o funcionário correto antes de
+                  prosseguir.
                 </p>
               </div>
             </div>
@@ -173,10 +179,9 @@ export function CreateModal({
       isValid: !!employeeId,
     },
     {
-      id: 'details',
       title: 'Dados da Rescisão',
       description: 'Tipo, datas e aviso prévio',
-      icon: ClipboardList,
+      icon: <ClipboardList className="h-6 w-6" />,
       content: (
         <div className="space-y-4 p-1">
           {/* Tipo + Aviso Prévio */}
@@ -303,10 +308,9 @@ export function CreateModal({
         !!paymentDeadline,
     },
     {
-      id: 'review',
       title: 'Revisão',
       description: 'Confirme os dados',
-      icon: Check,
+      icon: <Check className="h-6 w-6" />,
       content: (
         <div className="space-y-4 p-1">
           <Card className="p-4 bg-white/95 dark:bg-white/5 border-border">
@@ -323,7 +327,8 @@ export function CreateModal({
               <div>
                 <span className="text-muted-foreground">Aviso Prévio:</span>
                 <p className="font-medium">
-                  {noticeType ? getNoticeTypeLabel(noticeType) : '-'} ({noticeDays} dias)
+                  {noticeType ? getNoticeTypeLabel(noticeType) : '-'} (
+                  {noticeDays} dias)
                 </p>
               </div>
               <div>
@@ -365,8 +370,8 @@ export function CreateModal({
 
           <Card className="p-4 bg-amber-50/50 dark:bg-amber-500/5 border-amber-200 dark:border-amber-500/20">
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              Após confirmar, as verbas rescisórias poderão ser calculadas na página de detalhes
-              da rescisão.
+              Após confirmar, as verbas rescisórias poderão ser calculadas na
+              página de detalhes da rescisão.
             </p>
           </Card>
         </div>
@@ -374,10 +379,7 @@ export function CreateModal({
       isValid: true,
       footer: (
         <div className="flex items-center justify-end gap-2">
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : (
@@ -396,11 +398,10 @@ export function CreateModal({
       onOpenChange={open => {
         if (!open) handleClose();
       }}
-      title="Nova Rescisão"
-      description="Registre uma nova rescisão de contrato de trabalho."
       steps={steps}
-      onComplete={handleSubmit}
-      onCancel={handleClose}
+      currentStep={currentStep}
+      onStepChange={setCurrentStep}
+      onClose={handleClose}
     />
   );
 }

@@ -109,6 +109,7 @@ function GeofenceZonesPageContent() {
       const zones = await geofenceZonesApi.list();
       return zones;
     },
+    getFn: (id: string) => geofenceZonesApi.get(id),
     createFn: createGeofenceZone,
     updateFn: updateGeofenceZone,
     deleteFn: deleteGeofenceZone,
@@ -272,12 +273,12 @@ function GeofenceZonesPageContent() {
             left: {
               icon: Radius,
               label: formatRadius(item.radiusMeters),
-              color: 'teal',
+              color: 'emerald',
             },
             right: {
               icon: Navigation,
               label: `${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`,
-              color: 'teal',
+              color: 'emerald',
             },
           }}
           isSelected={isSelected}
@@ -340,12 +341,12 @@ function GeofenceZonesPageContent() {
             left: {
               icon: Radius,
               label: formatRadius(item.radiusMeters),
-              color: 'teal',
+              color: 'emerald',
             },
             right: {
               icon: Navigation,
               label: `${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`,
-              color: 'teal',
+              color: 'emerald',
             },
           }}
           isSelected={isSelected}
@@ -472,7 +473,7 @@ function GeofenceZonesPageContent() {
                   ]}
                   selected={statusFilter}
                   onSelectionChange={setStatusFilter}
-                  activeColor="teal"
+                  activeColor="emerald"
                   searchPlaceholder="Filtrar status..."
                   emptyText="Nenhum status disponível."
                 />
