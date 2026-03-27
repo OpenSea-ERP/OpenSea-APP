@@ -12,6 +12,7 @@ import {
   AnomalyAlerts,
   CashPositionBanner,
   FinanceKPICards,
+  HealthScoreWidget,
   OverdueHeatmap,
   PaymentTimingWidget,
   QuickNavGrid,
@@ -52,6 +53,9 @@ export default function FinanceCommandCenter() {
           },
         ]}
       />
+
+      {/* Row 0: Financial Health Score */}
+      <HealthScoreWidget />
 
       {/* Row 1: Cash Position Banner */}
       <CashPositionBanner />
