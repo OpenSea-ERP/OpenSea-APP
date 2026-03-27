@@ -34,7 +34,18 @@ export interface User {
 // Auth Requests
 export interface LoginCredentials {
   email: string;
+  identifier?: string;
   password: string;
+}
+
+export interface MagicLinkRequestResponse {
+  message: string;
+}
+
+export interface AuthMethodsResponse {
+  methods: string[];
+  magicLinkEnabled: boolean;
+  defaultMethod: string | null;
 }
 
 export interface RegisterData {

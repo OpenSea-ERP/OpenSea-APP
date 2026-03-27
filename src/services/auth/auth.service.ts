@@ -1,9 +1,11 @@
 import { API_ENDPOINTS, authConfig } from '@/config/api';
 import { apiClient } from '@/lib/api-client';
 import type {
+  AuthMethodsResponse,
   AuthResponse,
   LoginCredentials,
   LoginWithPinCredentials,
+  MagicLinkRequestResponse,
   MessageResponse,
   RegisterData,
   RegisterResponse,
@@ -12,10 +14,28 @@ import type {
 } from '@/types/auth';
 
 export const authService = {
-  // POST /v1/auth/login/password
+  // POST /v1/auth/login/unified — supports email, CPF, matrícula, username
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    const identifier = credentials.identifier || credentials.email;
     const response = await apiClient.post<AuthResponse>(
-      API_ENDPOINTS.AUTH.LOGIN,
+      API_ENDPOINTS.AUTH.LOGIN_UNIFIED,
+      { identifier, password: credentials.password }
+    );
+
+    if (response.token) {
+      this.setToken(response.token);
+      if (response.refreshToken) {
+        this.setRefreshToken(response.refreshToken);
+      }
+    }
+
+    return response;
+  },
+
+  // POST /v1/auth/login/unified — explicit unified method
+  async loginUnified(credentials: { identifier: string; password: string }): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>(
+      API_ENDPOINTS.AUTH.LOGIN_UNIFIED,
       credentials
     );
 
@@ -27,6 +47,39 @@ export const authService = {
     }
 
     return response;
+  },
+
+  // POST /v1/auth/magic-link/request
+  async requestMagicLink(identifier: string): Promise<MagicLinkRequestResponse> {
+    return apiClient.post<MagicLinkRequestResponse>(
+      API_ENDPOINTS.AUTH.MAGIC_LINK_REQUEST,
+      { identifier }
+    );
+  },
+
+  // POST /v1/auth/magic-link/verify
+  async verifyMagicLink(token: string): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>(
+      API_ENDPOINTS.AUTH.MAGIC_LINK_VERIFY,
+      { token }
+    );
+
+    if (response.token) {
+      this.setToken(response.token);
+      if (response.refreshToken) {
+        this.setRefreshToken(response.refreshToken);
+      }
+    }
+
+    return response;
+  },
+
+  // GET /v1/auth/methods
+  async getAuthMethods(tenantSlug?: string): Promise<AuthMethodsResponse> {
+    const params = tenantSlug ? `?tenantSlug=${tenantSlug}` : '';
+    return apiClient.get<AuthMethodsResponse>(
+      `${API_ENDPOINTS.AUTH.AUTH_METHODS}${params}`
+    );
   },
 
   // POST /v1/auth/login/pin

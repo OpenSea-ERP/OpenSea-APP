@@ -17,10 +17,14 @@ export const API_ENDPOINTS = {
   // Auth
   AUTH: {
     LOGIN: '/v1/auth/login/password',
+    LOGIN_UNIFIED: '/v1/auth/login/unified',
     LOGIN_PIN: '/v1/auth/login/pin',
     REGISTER: '/v1/auth/register/password',
     SEND_PASSWORD_RESET: '/v1/auth/send/password',
     RESET_PASSWORD: '/v1/auth/reset/password',
+    MAGIC_LINK_REQUEST: '/v1/auth/magic-link/request',
+    MAGIC_LINK_VERIFY: '/v1/auth/magic-link/verify',
+    AUTH_METHODS: '/v1/auth/methods',
   },
   // Auth - Force Password Reset
   FORCE_PASSWORD_RESET: {
