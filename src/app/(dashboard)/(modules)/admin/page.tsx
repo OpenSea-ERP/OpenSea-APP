@@ -15,7 +15,7 @@ import { usersService } from '@/services/auth/users.service';
 import { listPermissionGroups } from '@/services/rbac/rbac.service';
 import { companiesService } from '@/services/admin/companies.service';
 
-import { Building2, History, Settings, Shield } from 'lucide-react';
+import { Building2, History, KeyRound, Settings, Shield } from 'lucide-react';
 import { PiUserDuotone, PiUsersThreeDuotone } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
 
@@ -97,6 +97,17 @@ const heroBannerButtons: (CardItem & { label: string })[] = [
     gradient: 'from-amber-500 to-amber-600',
     hoverBg: 'hover:bg-amber-50 dark:hover:bg-amber-500/10',
     permission: ADMIN_PERMISSIONS.AUDIT.ACCESS,
+  },
+  {
+    id: 'auth-settings',
+    title: 'Autenticação',
+    label: 'Autenticação',
+    description: 'Configurações de métodos de login e autenticação',
+    icon: KeyRound,
+    href: '/admin/settings/auth',
+    gradient: 'from-violet-500 to-purple-600',
+    hoverBg: 'hover:bg-violet-50 dark:hover:bg-violet-500/10',
+    permission: ADMIN_PERMISSIONS.USERS.ADMIN,
   },
 ];
 
