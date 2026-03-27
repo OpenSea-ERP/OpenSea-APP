@@ -49,9 +49,17 @@ import {
   User,
   UserCircle,
   Users,
+  FileCheck,
+  Megaphone,
+  Sparkles,
+  ClipboardCheck,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+
+import { RequestsTab, AnnouncementsTab, KudosTab, OnboardingTab } from './_portal';
+import { portalService } from '@/services/hr';
+import type { OnboardingChecklist } from '@/types/hr';
 
 // ============================================================================
 // HELPER UTILITIES
@@ -377,6 +385,22 @@ export default function MyProfilePage() {
     enabled: !!employee?.id && activeTab === 'dependants',
   });
 
+  // Onboarding checklist (check if exists)
+  const { data: onboardingData } = useQuery<OnboardingChecklist | null>({
+    queryKey: ['my-onboarding-check', employee?.id],
+    queryFn: async () => {
+      try {
+        const response = await portalService.getMyOnboarding();
+        return response.onboarding;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!employee?.id,
+  });
+
+  const hasOnboarding = !!onboardingData && onboardingData.items?.length > 0 && onboardingData.progress < 100;
+
   // ============================================================================
   // TODAY'S PUNCHES
   // ============================================================================
@@ -504,27 +528,45 @@ export default function MyProfilePage() {
 
       <PageBody>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-4 p-2 h-12">
-            <TabsTrigger value="summary" className="gap-2">
+          <TabsList className="flex flex-wrap w-full mb-4 p-2 h-auto gap-1">
+            <TabsTrigger value="summary" className="gap-2 flex-1 min-w-[100px]">
               <User className="h-4 w-4 hidden sm:inline" />
               <span>Resumo</span>
             </TabsTrigger>
-            <TabsTrigger value="time" className="gap-2">
+            <TabsTrigger value="time" className="gap-2 flex-1 min-w-[100px]">
               <Timer className="h-4 w-4 hidden sm:inline" />
               <span>Ponto</span>
             </TabsTrigger>
-            <TabsTrigger value="vacations" className="gap-2">
+            <TabsTrigger value="vacations" className="gap-2 flex-1 min-w-[100px]">
               <PalmtreeIcon className="h-4 w-4 hidden sm:inline" />
-              <span>Férias</span>
+              <span>Ferias</span>
             </TabsTrigger>
-            <TabsTrigger value="payslips" className="gap-2">
+            <TabsTrigger value="payslips" className="gap-2 flex-1 min-w-[100px]">
               <FileText className="h-4 w-4 hidden sm:inline" />
               <span>Holerites</span>
             </TabsTrigger>
-            <TabsTrigger value="dependants" className="gap-2">
+            <TabsTrigger value="dependants" className="gap-2 flex-1 min-w-[100px]">
               <Users className="h-4 w-4 hidden sm:inline" />
               <span>Dependentes</span>
             </TabsTrigger>
+            <TabsTrigger value="requests" className="gap-2 flex-1 min-w-[100px]">
+              <FileCheck className="h-4 w-4 hidden sm:inline" />
+              <span>Solicitacoes</span>
+            </TabsTrigger>
+            <TabsTrigger value="announcements" className="gap-2 flex-1 min-w-[100px]">
+              <Megaphone className="h-4 w-4 hidden sm:inline" />
+              <span>Comunicados</span>
+            </TabsTrigger>
+            <TabsTrigger value="kudos" className="gap-2 flex-1 min-w-[100px]">
+              <Sparkles className="h-4 w-4 hidden sm:inline" />
+              <span>Reconhecimentos</span>
+            </TabsTrigger>
+            {hasOnboarding && (
+              <TabsTrigger value="onboarding" className="gap-2 flex-1 min-w-[100px]">
+                <ClipboardCheck className="h-4 w-4 hidden sm:inline" />
+                <span>Onboarding</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* ============================================================ */}
@@ -1097,6 +1139,36 @@ export default function MyProfilePage() {
               )}
             </Card>
           </TabsContent>
+
+          {/* ============================================================ */}
+          {/* TAB: Solicitacoes */}
+          {/* ============================================================ */}
+          <TabsContent value="requests" className="flex flex-col gap-6">
+            <RequestsTab />
+          </TabsContent>
+
+          {/* ============================================================ */}
+          {/* TAB: Comunicados */}
+          {/* ============================================================ */}
+          <TabsContent value="announcements" className="flex flex-col gap-6">
+            <AnnouncementsTab />
+          </TabsContent>
+
+          {/* ============================================================ */}
+          {/* TAB: Reconhecimentos */}
+          {/* ============================================================ */}
+          <TabsContent value="kudos" className="flex flex-col gap-6">
+            <KudosTab />
+          </TabsContent>
+
+          {/* ============================================================ */}
+          {/* TAB: Onboarding */}
+          {/* ============================================================ */}
+          {hasOnboarding && (
+            <TabsContent value="onboarding" className="flex flex-col gap-6">
+              <OnboardingTab />
+            </TabsContent>
+          )}
         </Tabs>
       </PageBody>
     </PageLayout>
