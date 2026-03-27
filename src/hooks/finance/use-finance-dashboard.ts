@@ -8,6 +8,7 @@ const QUERY_KEYS = {
   CASHFLOW: ['finance-cashflow'],
   PREDICTIVE_CASHFLOW: ['finance-predictive-cashflow'],
   CASHFLOW_ACCURACY: ['finance-cashflow-accuracy'],
+  HEALTH_SCORE: ['finance-health-score'],
 } as const;
 
 export function useFinanceDashboard() {
@@ -52,7 +53,11 @@ export function useCashflowAccuracy(params: {
   enabled?: boolean;
 }) {
   return useQuery({
-    queryKey: [...QUERY_KEYS.CASHFLOW_ACCURACY, params.startDate, params.endDate],
+    queryKey: [
+      ...QUERY_KEYS.CASHFLOW_ACCURACY,
+      params.startDate,
+      params.endDate,
+    ],
     queryFn: () =>
       financeDashboardService.getCashflowAccuracy({
         startDate: params.startDate,
@@ -60,6 +65,14 @@ export function useCashflowAccuracy(params: {
       }),
     enabled: (params.enabled ?? true) && !!params.startDate && !!params.endDate,
     staleTime: 60 * 1000,
+  });
+}
+
+export function useFinancialHealthScore() {
+  return useQuery({
+    queryKey: QUERY_KEYS.HEALTH_SCORE,
+    queryFn: () => financeDashboardService.getHealthScore(),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 

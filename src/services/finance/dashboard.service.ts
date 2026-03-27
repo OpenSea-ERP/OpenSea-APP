@@ -5,6 +5,7 @@ import type {
   FinanceOverview,
   CashflowResponse,
   CashflowAccuracyResponse,
+  FinancialHealthScore,
   ForecastQuery,
   ForecastResponse,
   PredictiveCashflowReport,
@@ -60,11 +61,11 @@ export const financeDashboardService = {
   },
 
   async getPredictiveCashflow(
-    months: number = 3,
+    months: number = 3
   ): Promise<PredictiveCashflowReport> {
     const query = new URLSearchParams({ months: String(months) });
     return apiClient.get<PredictiveCashflowReport>(
-      `${API_ENDPOINTS.FINANCE_DASHBOARD.PREDICTIVE_CASHFLOW}?${query.toString()}`,
+      `${API_ENDPOINTS.FINANCE_DASHBOARD.PREDICTIVE_CASHFLOW}?${query.toString()}`
     );
   },
 
@@ -78,7 +79,13 @@ export const financeDashboardService = {
     });
 
     return apiClient.get<CashflowAccuracyResponse>(
-      `${API_ENDPOINTS.FINANCE_DASHBOARD.CASHFLOW_ACCURACY}?${query.toString()}`,
+      `${API_ENDPOINTS.FINANCE_DASHBOARD.CASHFLOW_ACCURACY}?${query.toString()}`
+    );
+  },
+
+  async getHealthScore(): Promise<FinancialHealthScore> {
+    return apiClient.get<FinancialHealthScore>(
+      API_ENDPOINTS.FINANCE_DASHBOARD.HEALTH_SCORE
     );
   },
 

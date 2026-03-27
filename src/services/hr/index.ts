@@ -22,3 +22,6 @@ export * from './cipa.service';
 export * from './hr-config.service';
 export * from './esocial.service';
 export * from './geofence-zones.service';
+export * from './admissions.service';
+export * from './benefits.service';
+export * from './portal.service';

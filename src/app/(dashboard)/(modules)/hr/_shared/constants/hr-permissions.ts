@@ -321,6 +321,19 @@ export const HR_PERMISSIONS = {
     TRANSMIT: HR_CODES.EMPLOYEES.ADMIN,
     MANAGE: HR_CODES.EMPLOYEES.ADMIN,
   },
+
+  /**
+   * Permissões de Benefícios (Benefits)
+   * Mapped to employees since no dedicated resource in new codes
+   */
+  BENEFITS: {
+    LIST: HR_CODES.EMPLOYEES.ACCESS,
+    VIEW: HR_CODES.EMPLOYEES.ACCESS,
+    CREATE: HR_CODES.EMPLOYEES.REGISTER,
+    UPDATE: HR_CODES.EMPLOYEES.MODIFY,
+    DELETE: HR_CODES.EMPLOYEES.REMOVE,
+    MANAGE: HR_CODES.EMPLOYEES.ADMIN,
+  },
 } as const;
 
 /* ===========================================
@@ -390,6 +403,9 @@ export type GeofenceZonePermission =
 export type HrConfigPermission =
   (typeof HR_PERMISSIONS.CONFIG)[keyof typeof HR_PERMISSIONS.CONFIG];
 
+export type BenefitPermission =
+  (typeof HR_PERMISSIONS.BENEFITS)[keyof typeof HR_PERMISSIONS.BENEFITS];
+
 export type HRPermission =
   | CompanyPermission
   | DepartmentPermission
@@ -411,7 +427,8 @@ export type HRPermission =
   | WorkplaceRiskPermission
   | CipaPermission
   | GeofenceZonePermission
-  | HrConfigPermission;
+  | HrConfigPermission
+  | BenefitPermission;
 
 /* ===========================================
    HELPER FUNCTIONS

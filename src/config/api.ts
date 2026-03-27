@@ -751,6 +751,7 @@ export const API_ENDPOINTS = {
     PAYMENT_TIMING: '/v1/finance/analytics/payment-timing',
     PREDICTIVE_CASHFLOW: '/v1/finance/analytics/predictive-cashflow',
     CASHFLOW_ACCURACY: '/v1/finance/dashboard/cashflow-accuracy',
+    HEALTH_SCORE: '/v1/finance/dashboard/health-score',
     EXPORT_ACCOUNTING: '/v1/finance/export/accounting',
     IMPORT_PAYROLL: (payrollId: string) =>
       `/v1/finance/import/payroll/${payrollId}`,

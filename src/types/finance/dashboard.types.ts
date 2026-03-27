@@ -96,6 +96,24 @@ export interface CashflowAccuracyResponse {
   periodCount: number;
 }
 
+// ─── Financial Health Score ──────────────────────────────────────────
+
+export type HealthTrend = 'UP' | 'DOWN' | 'STABLE';
+
+export interface HealthDimension {
+  name: string;
+  score: number;
+  maxScore: number;
+  details: string;
+}
+
+export interface FinancialHealthScore {
+  score: number;
+  dimensions: HealthDimension[];
+  tips: string[];
+  trend: HealthTrend;
+}
+
 // ─── Cashflow ────────────────────────────────────────────────────────
 
 export interface CashflowData {

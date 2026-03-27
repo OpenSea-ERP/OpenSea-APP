@@ -18,3 +18,6 @@ export * from './safety-program.types';
 export * from './cipa.types';
 export * from './hr-config.types';
 export * from './geofence-zone.types';
+export * from './admission.types';
+export * from './benefit.types';
+export * from './portal.types';
