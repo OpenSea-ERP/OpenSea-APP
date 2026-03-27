@@ -7,15 +7,16 @@ import { useAuth } from '@/contexts/auth-context';
 import { useMyEmployee } from '@/hooks/use-me';
 import { cn } from '@/lib/utils';
 
-import { Activity, Briefcase, ChevronRight, Shield, User } from 'lucide-react';
+import { Activity, Briefcase, ChevronRight, Link, Shield, User } from 'lucide-react';
 import { useState } from 'react';
 
 import { ActivityTab } from './_components/activity-tab';
+import { ConnectedAccountsTab } from './_components/connected-accounts-tab';
 import { EmployeeTab } from './_components/employee-tab';
 import { ProfileTab } from './_components/profile-tab';
 import { SecurityTab } from './_components/security-tab';
 
-type TabId = 'profile' | 'security' | 'employee' | 'activity';
+type TabId = 'profile' | 'security' | 'connected-accounts' | 'employee' | 'activity';
 
 interface TabItem {
   id: TabId;
@@ -37,6 +38,12 @@ const tabs: TabItem[] = [
     label: 'Segurança',
     icon: <Shield className="w-5 h-5" />,
     description: 'Senha e sessões',
+  },
+  {
+    id: 'connected-accounts',
+    label: 'Contas Conectadas',
+    icon: <Link className="w-5 h-5" />,
+    description: 'Métodos de login',
   },
   {
     id: 'employee',
@@ -137,6 +144,7 @@ export default function ProfilePage() {
         <div className="flex-1 min-w-0">
           {activeTab === 'profile' && <ProfileTab user={user} />}
           {activeTab === 'security' && <SecurityTab />}
+          {activeTab === 'connected-accounts' && <ConnectedAccountsTab />}
           {activeTab === 'employee' && hasEmployee && (
             <EmployeeTab
               employee={employeeData.employee}
