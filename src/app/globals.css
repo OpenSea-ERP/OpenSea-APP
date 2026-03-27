@@ -706,6 +706,12 @@
   --sidebar-border: hsl(220 13% 91%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
 
+  /* Background compatibility */
+  --color-background: rgb(var(--os-gray-50));
+
+  /* Foreground compatibility */
+  --color-foreground: rgb(var(--os-slate-800));
+
   /* Muted compatibility */
   --color-muted: rgb(var(--os-slate-100));
   --color-muted-foreground: rgb(var(--os-slate-600));
@@ -735,6 +741,12 @@
   --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
   --sidebar-border: hsl(240 3.7% 15.9%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+  /* Background compatibility */
+  --color-background: rgb(var(--os-slate-900));
+
+  /* Foreground compatibility */
+  --color-foreground: rgb(var(--os-slate-50));
 
   /* Muted compatibility */
   --color-muted: rgb(var(--os-slate-700));

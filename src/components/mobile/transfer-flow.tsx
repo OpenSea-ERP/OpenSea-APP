@@ -41,11 +41,65 @@ interface TransferFlowProps {
 
 function getItemName(item: LookupResult): string {
   const entity = item.entity;
+  const productName = entity.productName as string | undefined;
+  const variantName = entity.variantName as string | undefined;
+  const combined = [productName, variantName].filter(Boolean).join(' · ');
   return (
+    combined ||
     (entity.name as string) ||
     (entity.title as string) ||
     (entity.label as string) ||
     item.entityId
+  );
+}
+
+function getPatternStyle(
+  colorHex: string,
+  secondaryColorHex?: string,
+  pattern?: string
+): React.CSSProperties {
+  const secondary = secondaryColorHex || colorHex;
+  const p = pattern || 'SOLID';
+
+  switch (p) {
+    case 'STRIPED':
+      return { background: `repeating-linear-gradient(135deg, ${colorHex}, ${colorHex} 4px, ${secondary} 4px, ${secondary} 8px)` };
+    case 'PLAID':
+      return { background: `repeating-linear-gradient(0deg, ${secondary}40 0px, ${secondary}40 2px, transparent 2px, transparent 7px), repeating-linear-gradient(90deg, ${secondary}40 0px, ${secondary}40 2px, transparent 2px, transparent 7px), ${colorHex}` };
+    case 'GRADIENT':
+      return { background: `linear-gradient(135deg, ${colorHex}, ${secondary})` };
+    case 'PRINTED':
+      return { background: `radial-gradient(circle at 25% 25%, ${secondary} 2px, transparent 2px), radial-gradient(circle at 75% 75%, ${secondary} 2px, transparent 2px), ${colorHex}` };
+    case 'JACQUARD':
+      return { background: `repeating-conic-gradient(${colorHex} 0% 25%, ${secondary} 0% 50%) 50% / 10px 10px` };
+    default:
+      if (secondaryColorHex && secondaryColorHex !== colorHex) {
+        return { background: `linear-gradient(135deg, ${colorHex} 50%, ${secondaryColorHex} 50%)` };
+      }
+      return { backgroundColor: colorHex };
+  }
+}
+
+function ItemColorSwatch({ entity }: { entity: Record<string, unknown> }) {
+  const colorHex = entity.colorHex as string | undefined;
+
+  if (!colorHex) {
+    return (
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-700/60 text-slate-400">
+        <MapPin className="h-4 w-4" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="h-9 w-9 shrink-0 rounded-lg border border-white/15"
+      style={getPatternStyle(
+        colorHex,
+        entity.secondaryColorHex as string | undefined,
+        (entity.pattern as string | undefined) || 'SOLID'
+      )}
+    />
   );
 }
 
@@ -191,11 +245,11 @@ export function TransferFlow({ item, onClose, onSuccess }: TransferFlowProps) {
           </h2>
           <p className="text-xs text-slate-500">
             {step === 'scan-bin'
-              ? 'Escanear bin destino'
+              ? 'Alterando a localização de um item.'
               : 'Confirmar transferência'}
           </p>
         </div>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-slate-300">
           <ArrowRightLeft className="h-4 w-4" />
         </div>
       </div>
@@ -203,16 +257,13 @@ export function TransferFlow({ item, onClose, onSuccess }: TransferFlowProps) {
       {/* Item summary */}
       <div className="border-b border-slate-800 bg-slate-900/50 px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
-            <MapPin className="h-4 w-4" />
-          </div>
+          <ItemColorSwatch entity={item.entity} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-slate-200">
               {itemName}
             </p>
             <p className="truncate text-xs text-slate-500">
-              {itemCode && `${itemCode} · `}
-              {currentBin ? `Atual: ${currentBin}` : 'Sem localização'}
+              {currentBin || 'Sem localização'}
             </p>
           </div>
         </div>
@@ -326,22 +377,41 @@ export function TransferFlow({ item, onClose, onSuccess }: TransferFlowProps) {
                   <div className="space-y-1">
                     {filteredBins.map(bin => {
                       const isEmpty = bin.currentOccupancy === 0;
+                      const isCurrent = currentBin === bin.address;
                       return (
                         <button
                           key={bin.id}
-                          onClick={() => handleBinListSelect(bin)}
-                          className="flex w-full items-center gap-3 rounded-xl bg-slate-800/40 p-3 text-left transition-colors active:bg-slate-700/60"
+                          onClick={() => !isCurrent && handleBinListSelect(bin)}
+                          disabled={isCurrent}
+                          className={cn(
+                            'flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors',
+                            isCurrent
+                              ? 'bg-slate-800/40 border border-slate-700 opacity-60'
+                              : 'bg-slate-800/40 active:bg-slate-700/60'
+                          )}
                         >
                           <div
                             className={cn(
                               'h-2.5 w-2.5 shrink-0 rounded-full',
-                              isEmpty ? 'bg-emerald-500' : 'bg-amber-500'
+                              isCurrent
+                                ? 'bg-slate-500'
+                                : isEmpty
+                                  ? 'bg-emerald-500'
+                                  : 'bg-amber-500'
                             )}
                           />
-                          <span className="flex-1 truncate font-mono text-sm font-medium text-slate-200">
+                          <span className={cn(
+                            'truncate font-mono text-sm font-medium',
+                            isCurrent ? 'text-slate-400' : 'text-slate-200'
+                          )}>
                             {bin.address}
                           </span>
-                          <span className="shrink-0 text-xs tabular-nums text-slate-500">
+                          {isCurrent && (
+                            <span className="shrink-0 rounded-md bg-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                              Atual
+                            </span>
+                          )}
+                          <span className="ml-auto shrink-0 text-xs tabular-nums text-slate-500">
                             {bin.currentOccupancy}
                             {bin.capacity ? `/${bin.capacity}` : ''} itens
                           </span>

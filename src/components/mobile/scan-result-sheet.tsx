@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { Drawer, DrawerContent, DrawerFooter } from '@/components/ui/drawer';
+import { useState, useCallback } from 'react';
+import { Drawer, DrawerContent, DrawerFooter, DrawerTitle } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import {
   ArrowRightLeft,
   PackageMinus,
-  Package,
-  Loader2,
+  PackagePlus,
   MapPin,
-  Layers,
-  Hash,
-  CheckCircle2,
+  Tag,
+  Barcode,
+  Factory,
+  Copy,
 } from 'lucide-react';
-import { usePermissions } from '@/hooks/use-permissions';
+import { toast } from 'sonner';
+// TODO: re-add permission checks once mobile RBAC is stable
+// import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 import { TransferFlow } from '@/components/mobile/transfer-flow';
 import { ExitFlow } from '@/components/mobile/exit-flow';
@@ -22,80 +25,222 @@ import type { LookupResult } from '@/services/stock/lookup.service';
 // Helpers
 // ============================================
 
+/** Returns relative luminance (0–1) from a hex color to decide contrast */
+function luminance(hex: string): number {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16) / 255;
+  const g = parseInt(h.substring(2, 4), 16) / 255;
+  const b = parseInt(h.substring(4, 6), 16) / 255;
+  const toLinear = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
 function get(result: LookupResult, key: string): string | undefined {
   const value = result.entity[key];
   if (value == null) return undefined;
   return String(value);
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  AVAILABLE: 'Disponível',
-  RESERVED: 'Reservado',
-  IN_TRANSIT: 'Em Trânsito',
-  DAMAGED: 'Danificado',
-  EXPIRED: 'Expirado',
-  DISPOSED: 'Descartado',
-};
 
-const STATUS_COLORS: Record<string, string> = {
-  AVAILABLE: 'text-emerald-400 bg-emerald-500/10',
-  RESERVED: 'text-amber-400 bg-amber-500/10',
-  IN_TRANSIT: 'text-sky-400 bg-sky-500/10',
-  DAMAGED: 'text-rose-400 bg-rose-500/10',
-  EXPIRED: 'text-rose-400 bg-rose-500/10',
-  DISPOSED: 'text-slate-400 bg-slate-500/10',
+const UOM_ABBREV: Record<string, string> = {
+  UNITS: 'un',
+  METERS: 'm',
+  KILOGRAMS: 'kg',
+  GRAMS: 'g',
+  LITERS: 'L',
+  MILLILITERS: 'mL',
+  SQUARE_METERS: 'm²',
+  PAIRS: 'par',
+  BOXES: 'cx',
+  PACKS: 'pct',
 };
 
 // ============================================
-// Color Swatch (inline — same pattern as variant selector)
+// Pattern / Color helpers
 // ============================================
 
-function ColorSwatch({ result }: { result: LookupResult }) {
-  const colorHex = get(result, 'colorHex');
-  const secondaryColorHex = get(result, 'secondaryColorHex');
-  const pattern = get(result, 'pattern') || 'SOLID';
-
-  if (!colorHex) return null;
-
+function getPatternStyle(
+  colorHex: string,
+  secondaryColorHex?: string,
+  pattern?: string
+): React.CSSProperties {
   const secondary = secondaryColorHex || colorHex;
+  const p = pattern || 'SOLID';
 
-  const bgStyle = (): React.CSSProperties => {
-    switch (pattern) {
-      case 'STRIPED':
+  switch (p) {
+    case 'STRIPED':
+      return {
+        background: `repeating-linear-gradient(135deg, ${colorHex}, ${colorHex} 6px, ${secondary} 6px, ${secondary} 12px)`,
+      };
+    case 'PLAID':
+      return {
+        background: `repeating-linear-gradient(0deg, ${secondary}40 0px, ${secondary}40 3px, transparent 3px, transparent 10px), repeating-linear-gradient(90deg, ${secondary}40 0px, ${secondary}40 3px, transparent 3px, transparent 10px), ${colorHex}`,
+      };
+    case 'GRADIENT':
+      return {
+        background: `linear-gradient(135deg, ${colorHex}, ${secondary})`,
+      };
+    case 'PRINTED':
+      return {
+        background: `radial-gradient(circle at 20% 30%, ${secondary} 4px, transparent 4px), radial-gradient(circle at 70% 60%, ${secondary} 4px, transparent 4px), radial-gradient(circle at 45% 80%, ${secondary} 3px, transparent 3px), ${colorHex}`,
+      };
+    case 'JACQUARD':
+      return {
+        background: `repeating-conic-gradient(${colorHex} 0% 25%, ${secondary} 0% 50%) 50% / 14px 14px`,
+      };
+    default:
+      if (secondaryColorHex && secondaryColorHex !== colorHex) {
         return {
-          background: `repeating-linear-gradient(135deg, ${colorHex}, ${colorHex} 3px, ${secondary} 3px, ${secondary} 6px)`,
+          background: `linear-gradient(135deg, ${colorHex} 50%, ${secondaryColorHex} 50%)`,
         };
-      case 'PLAID':
-        return {
-          background: `repeating-linear-gradient(0deg, ${secondary}40 0px, ${secondary}40 2px, transparent 2px, transparent 6px), repeating-linear-gradient(90deg, ${secondary}40 0px, ${secondary}40 2px, transparent 2px, transparent 6px), ${colorHex}`,
-        };
-      case 'GRADIENT':
-        return {
-          background: `linear-gradient(135deg, ${colorHex}, ${secondary})`,
-        };
-      case 'PRINTED':
-        return {
-          background: `radial-gradient(circle at 25% 25%, ${secondary} 2px, transparent 2px), radial-gradient(circle at 75% 75%, ${secondary} 2px, transparent 2px), ${colorHex}`,
-        };
-      case 'JACQUARD':
-        return {
-          background: `repeating-conic-gradient(${colorHex} 0% 25%, ${secondary} 0% 50%) 50% / 8px 8px`,
-        };
-      default:
-        if (secondaryColorHex && secondaryColorHex !== colorHex) {
-          return {
-            background: `linear-gradient(135deg, ${colorHex} 50%, ${secondaryColorHex} 50%)`,
-          };
-        }
-        return { backgroundColor: colorHex };
-    }
+      }
+      return { backgroundColor: colorHex };
+  }
+}
+
+// ============================================
+// Hero Banner
+// ============================================
+
+interface HeroBannerProps {
+  result: LookupResult;
+  line1: string;
+  line2?: string;
+  quantityLabel?: string;
+}
+
+function HeroBanner({ result, line1, line2, quantityLabel }: HeroBannerProps) {
+  const colorHex = get(result, 'colorHex');
+  const hasColor = !!colorHex;
+
+  const bannerStyle: React.CSSProperties = hasColor
+    ? getPatternStyle(
+        colorHex!,
+        get(result, 'secondaryColorHex'),
+        get(result, 'pattern')
+      )
+    : {
+        background:
+          'linear-gradient(135deg, rgb(99 102 241 / 0.25), rgb(15 23 42))',
+      };
+
+  const isLight = hasColor && luminance(colorHex!) > 0.35;
+  const pattern = get(result, 'pattern') || 'SOLID';
+  const isBusyPattern = ['STRIPED', 'PLAID', 'JACQUARD'].includes(pattern);
+
+  const pillColor = isBusyPattern
+    ? (isLight ? 'bg-black/70' : 'bg-white/70')
+    : (isLight ? 'bg-black/40' : 'bg-white/40');
+  const bgPanel = isBusyPattern
+    ? 'bg-slate-900 border border-white/10'
+    : (isLight ? 'bg-black/40 backdrop-blur-sm' : 'bg-white/15 backdrop-blur-sm');
+  const shadow = '0 1px 4px rgb(0 0 0 / 0.6)';
+
+  return (
+    <div className="relative overflow-hidden rounded-t-lg border-b border-white/10" style={{ minHeight: 128 }}>
+      {/* Pattern/color layer */}
+      <div className="absolute inset-0" style={bannerStyle} />
+
+      {/* Custom drag handle pill */}
+      <div className={cn('relative mx-auto mt-4 h-1.5 w-12 rounded-full', pillColor)} />
+
+      {/* Content overlay */}
+      <div className="absolute inset-x-0 bottom-0 flex items-stretch gap-3 px-4 pb-3">
+        {/* Text panel */}
+        <div className={cn('flex min-w-0 flex-1 flex-col justify-center rounded-xl px-3 py-2', bgPanel)}>
+          <p
+            className="truncate text-lg font-bold text-white leading-tight"
+            style={{ textShadow: shadow }}
+          >
+            {line1}
+          </p>
+          {line2 && (
+            <p
+              className="mt-0.5 truncate text-sm font-medium text-slate-200"
+              style={{ textShadow: shadow }}
+            >
+              {line2}
+            </p>
+          )}
+        </div>
+
+        {/* Quantity badge */}
+        {quantityLabel && (
+          <div
+            className={cn(
+              'flex shrink-0 items-center justify-center rounded-xl px-3',
+              bgPanel
+            )}
+          >
+            <span
+              className="text-lg font-bold tabular-nums text-white"
+              style={{ textShadow: shadow }}
+            >
+              {quantityLabel}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// Detail Cell (for 2-column grid)
+// ============================================
+
+function DetailCell({
+  icon,
+  label,
+  value,
+  badge,
+  badgeColor,
+  copyable,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  badge?: boolean;
+  badgeColor?: { text: string; bg: string; dot: string };
+  copyable?: boolean;
+}) {
+  const handleCopy = () => {
+    if (!copyable) return;
+    navigator.clipboard.writeText(value).then(() => {
+      toast.success(`${label} copiado`);
+    });
   };
 
   return (
     <div
-      className="h-10 w-10 shrink-0 rounded-lg border border-white/15"
-      style={bgStyle()}
-    />
+      className={cn(
+        'flex items-start gap-2.5 rounded-xl bg-slate-800/50 px-3 py-2.5',
+        copyable && 'active:bg-slate-700/60 cursor-pointer'
+      )}
+      onClick={handleCopy}
+    >
+      <div className="mt-0.5 text-slate-500">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] text-slate-500">{label}</p>
+        {badge && badgeColor ? (
+          <span
+            className={cn(
+              'mt-0.5 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium',
+              badgeColor.bg,
+              badgeColor.text
+            )}
+          >
+            <span className={cn('h-1.5 w-1.5 rounded-full', badgeColor.dot)} />
+            {value}
+          </span>
+        ) : (
+          <p className="truncate text-sm font-medium text-slate-200">{value}</p>
+        )}
+      </div>
+      {copyable && (
+        <Copy className="mt-0.5 h-3 w-3 shrink-0 text-slate-600" />
+      )}
+    </div>
   );
 }
 
@@ -118,54 +263,13 @@ function ActionButton({
     <button
       onClick={onClick}
       className={cn(
-        'flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 py-3 text-sm font-medium active:bg-slate-700/80',
+        'flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/60 py-3 text-xs font-medium active:bg-slate-700/80',
         colorClass
       )}
     >
       {icon}
       {label}
     </button>
-  );
-}
-
-// ============================================
-// Detail Row
-// ============================================
-
-function DetailRow({
-  icon,
-  label,
-  value,
-  badge,
-  badgeClass,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  badge?: boolean;
-  badgeClass?: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 py-2">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-slate-500">
-        {icon}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] text-slate-500">{label}</p>
-        {badge ? (
-          <span
-            className={cn(
-              'inline-block rounded-md px-2 py-0.5 text-xs font-medium',
-              badgeClass
-            )}
-          >
-            {value}
-          </span>
-        ) : (
-          <p className="truncate text-sm font-medium text-slate-200">{value}</p>
-        )}
-      </div>
-    </div>
   );
 }
 
@@ -184,7 +288,6 @@ export function ScanResultSheet({
   onOpenChange,
   result,
 }: ScanResultSheetProps) {
-  const { hasPermission } = usePermissions();
   const [showTransfer, setShowTransfer] = useState(false);
   const [showExit, setShowExit] = useState(false);
 
@@ -201,29 +304,34 @@ export function ScanResultSheet({
 
   if (!result) return null;
 
-  const e = result.entity;
-  const productName = (e.productName as string) || '';
-  const variantName = (e.variantName as string) || '';
-  const name =
-    [productName, variantName].filter(Boolean).join(' · ') ||
-    (e.name as string) ||
-    result.entityId;
-  const manufacturerName = get(result, 'manufacturerName');
-  const reference = get(result, 'reference');
-  const subtitle = [manufacturerName, reference ? `Ref: ${reference}` : null]
-    .filter(Boolean)
-    .join(' · ');
-
+  // --- Extract fields ---
   const templateName = get(result, 'templateName');
+  const productName = get(result, 'productName');
+  const variantName = get(result, 'variantName');
+  const reference = get(result, 'reference');
+  const manufacturerName = get(result, 'manufacturerName');
+  const categoryName = get(result, 'categoryName');
+  const sku = get(result, 'sku');
   const binLabel = get(result, 'binLabel') || get(result, 'location');
   const quantity = get(result, 'quantity');
-  const unitOfMeasure = get(result, 'unitOfMeasure');
-  const status = get(result, 'status') || '';
-  const statusLabel = STATUS_LABELS[status] || status;
-  const statusColor = STATUS_COLORS[status] || 'text-slate-400 bg-slate-500/10';
+  const rawUom = result.entity.unitOfMeasure;
+  const unitOfMeasure =
+    typeof rawUom === 'string'
+      ? rawUom
+      : rawUom && typeof rawUom === 'object' && 'value' in rawUom
+        ? String((rawUom as Record<string, unknown>).value)
+        : '';
+  // --- Build banner lines (2 lines only) ---
+  const line1 = [templateName, productName].filter(Boolean).join(' · ') || result.entityId;
+  const line2Parts = [reference ? `Ref: ${reference}` : null, variantName].filter(Boolean);
+  const line2 = line2Parts.length ? line2Parts.join(' · ') : undefined;
 
-  const canTransfer = hasPermission('stock.movements.register');
-  const canExit = hasPermission('stock.movements.register');
+  // --- Quantity label ---
+  const uomAbbr = UOM_ABBREV[unitOfMeasure] || unitOfMeasure.toLowerCase().slice(0, 3);
+  const quantityLabel = quantity != null
+    ? `${quantity}${uomAbbr ? ` ${uomAbbr}` : ''}`
+    : undefined;
+
   const isItem = result.entityType === 'ITEM';
 
   const isSubFlow = showTransfer || showExit;
@@ -239,10 +347,13 @@ export function ScanResultSheet({
     >
       <DrawerContent
         className={cn(
-          'bg-slate-900 border-slate-700',
+          'bg-slate-900 border-slate-700 [&>div:first-child]:hidden',
           isSubFlow ? 'h-[95vh]' : 'max-h-[85vh]'
         )}
       >
+        <VisuallyHidden>
+          <DrawerTitle>Resultado da leitura</DrawerTitle>
+        </VisuallyHidden>
         {showTransfer && isItem ? (
           <TransferFlow
             item={result}
@@ -256,85 +367,69 @@ export function ScanResultSheet({
             onSuccess={handleSuccess}
           />
         ) : (
-          <>
-            {/* Header: icon + name + subtitle | color swatch */}
-            <div className="flex items-center gap-3 px-4 pt-6 pb-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
-                <Package className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-semibold text-slate-100">
-                  {name}
-                </p>
-                {subtitle && (
-                  <p className="truncate text-xs text-slate-500">{subtitle}</p>
-                )}
-              </div>
-              <ColorSwatch result={result} />
+          <div className="flex min-h-0 flex-1 flex-col">
+            {/* Hero banner — negative margin to extend behind hidden drag handle */}
+            <div className="-mt-6 shrink-0">
+              <HeroBanner
+                result={result}
+                line1={line1}
+                line2={line2}
+                quantityLabel={quantityLabel}
+              />
             </div>
 
-            {/* Details */}
-            <div className="space-y-0 px-4 pb-3">
-              {templateName && (
-                <DetailRow
-                  icon={<Layers className="h-3.5 w-3.5" />}
-                  label="Template"
-                  value={templateName}
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2">
+              {/* Details grid — 2 columns */}
+              <div className="grid grid-cols-2 gap-2">
+                <DetailCell
+                  icon={<Factory className="h-3.5 w-3.5" />}
+                  label="Fabricante"
+                  value={manufacturerName || '—'}
                 />
-              )}
-              {binLabel && (
-                <DetailRow
+                <DetailCell
+                  icon={<Tag className="h-3.5 w-3.5" />}
+                  label="Categoria"
+                  value={categoryName || 'Nenhuma'}
+                />
+                <DetailCell
+                  icon={<Barcode className="h-3.5 w-3.5" />}
+                  label="SKU"
+                  value={sku || '—'}
+                  copyable={!!sku}
+                />
+                <DetailCell
                   icon={<MapPin className="h-3.5 w-3.5" />}
                   label="Localização"
-                  value={binLabel}
+                  value={binLabel || '—'}
+                  copyable={!!binLabel}
                 />
-              )}
-              {quantity != null && (
-                <DetailRow
-                  icon={<Hash className="h-3.5 w-3.5" />}
-                  label="Quantidade"
-                  value={
-                    unitOfMeasure
-                      ? `${quantity} ${unitOfMeasure}`
-                      : String(quantity)
-                  }
-                />
-              )}
-              {status && (
-                <DetailRow
-                  icon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                  label="Status"
-                  value={statusLabel}
-                  badge
-                  badgeClass={statusColor}
-                />
-              )}
+              </div>
             </div>
 
-            {/* Action buttons — with safe area padding */}
-            {isItem && (
-              <DrawerFooter className="pb-[calc(1rem+env(safe-area-inset-bottom))]">
-                <div className="flex gap-2">
-                  {canTransfer && (
-                    <ActionButton
-                      icon={<ArrowRightLeft className="h-4 w-4" />}
-                      label="Transferir"
-                      colorClass="text-sky-400"
-                      onClick={() => setShowTransfer(true)}
-                    />
-                  )}
-                  {canExit && (
-                    <ActionButton
-                      icon={<PackageMinus className="h-4 w-4" />}
-                      label="Dar Baixa"
-                      colorClass="text-rose-400"
-                      onClick={() => setShowExit(true)}
-                    />
-                  )}
-                </div>
-              </DrawerFooter>
-            )}
-          </>
+            {/* Action buttons — always visible at bottom */}
+            <div className="shrink-0 border-t border-slate-800 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              <div className="flex gap-2">
+                <ActionButton
+                  icon={<ArrowRightLeft className="h-4 w-4" />}
+                  label="Transferir"
+                  colorClass="text-amber-400"
+                  onClick={() => setShowTransfer(true)}
+                />
+                <ActionButton
+                  icon={<PackageMinus className="h-4 w-4" />}
+                  label="Dar Baixa"
+                  colorClass="text-rose-400"
+                  onClick={() => setShowExit(true)}
+                />
+                <ActionButton
+                  icon={<PackagePlus className="h-4 w-4" />}
+                  label="Add Volume"
+                  colorClass="text-sky-400"
+                />
+              </div>
+            </div>
+          </div>
         )}
       </DrawerContent>
     </Drawer>

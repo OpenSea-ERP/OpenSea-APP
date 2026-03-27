@@ -110,15 +110,25 @@ function MobileBinSelector({
           )}
         </div>
         {value ? (
-          <button
+          <span
+            role="button"
+            tabIndex={0}
             onClick={e => {
               e.stopPropagation();
+              e.preventDefault();
               onChange(null);
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation();
+                e.preventDefault();
+                onChange(null);
+              }
             }}
             className="shrink-0 p-1 text-slate-500 active:text-slate-300"
           >
             <X className="h-4 w-4" />
-          </button>
+          </span>
         ) : (
           <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
         )}
