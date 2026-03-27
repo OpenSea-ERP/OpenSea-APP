@@ -14,16 +14,20 @@ import {
 } from '@/components/ui/step-wizard-dialog';
 import { Switch } from '@/components/ui/switch';
 import { translateError } from '@/lib/error-messages';
+import { authLinksService } from '@/services/auth/auth-links.service';
 import { listPermissionGroups } from '@/services/rbac/rbac.service';
 import type { Company, Department, Employee, Position } from '@/types/hr';
 import type { PermissionGroup } from '@/types/rbac';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
+  BadgeCheck,
   Briefcase,
   Building2,
+  CreditCard,
   Eye,
   EyeOff,
+  Info,
   Loader2,
   Lock,
   Mail,
@@ -99,6 +103,13 @@ export function CreateModal({
       const response = await positionsApi.list();
       return response.positions;
     },
+    enabled: isOpen,
+  });
+
+  // Fetch tenant auth config (to know which auth methods are enabled)
+  const { data: authConfig } = useQuery({
+    queryKey: ['tenant-auth-config'],
+    queryFn: () => authLinksService.getTenantAuthConfig(),
     enabled: isOpen,
   });
 
@@ -549,6 +560,58 @@ export function CreateModal({
                 <FormErrorIcon message={passwordError} className="right-1" />
               </div>
             </div>
+
+            {/* Auth Link Indicators */}
+            {(cpf && authConfig?.allowedMethods?.includes('CPF')) ||
+            authConfig?.allowedMethods?.includes('ENROLLMENT') ? (
+              <div className="rounded-lg border border-blue-200 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/5 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Info className="h-4 w-4 text-blue-500" />
+                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    Métodos de login adicionais
+                  </p>
+                </div>
+                <p className="text-xs text-blue-600/80 dark:text-blue-400/80">
+                  Os seguintes métodos de login serão habilitados
+                  automaticamente com base nos dados do funcionário:
+                </p>
+                <div className="space-y-2">
+                  {cpf &&
+                    cpf.replace(/\D/g, '').length === 11 &&
+                    authConfig?.allowedMethods?.includes('CPF') && (
+                      <div className="flex items-center gap-2.5 p-2.5 rounded-md bg-white/60 dark:bg-white/5 border border-blue-100 dark:border-blue-500/10">
+                        <div className="flex items-center justify-center h-7 w-7 rounded-md bg-emerald-50 dark:bg-emerald-500/8">
+                          <CreditCard className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            Login por CPF
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            O funcionário poderá acessar o sistema usando o CPF
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  {authConfig?.allowedMethods?.includes('ENROLLMENT') && (
+                    <div className="flex items-center gap-2.5 p-2.5 rounded-md bg-white/60 dark:bg-white/5 border border-blue-100 dark:border-blue-500/10">
+                      <div className="flex items-center justify-center h-7 w-7 rounded-md bg-violet-50 dark:bg-violet-500/8">
+                        <BadgeCheck className="h-3.5 w-3.5 text-violet-700 dark:text-violet-300" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">
+                          Login por Matrícula
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          O funcionário poderá acessar o sistema usando a
+                          matrícula
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
           </div>
         ),
         footer: (
