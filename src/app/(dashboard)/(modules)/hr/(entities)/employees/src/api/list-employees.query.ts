@@ -1,66 +1,65 @@
 /**
- * OpenSea OS - List Employees Query
+ * OpenSea OS - List Employees Query (Infinite Scroll)
  */
 
-import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { employeesService } from '@/services/hr/employees.service';
 import type { Employee } from '@/types/hr';
 import { employeeKeys, type EmployeeFilters } from './keys';
 
-export type ListEmployeesParams = EmployeeFilters;
+export type ListEmployeesParams = Omit<EmployeeFilters, 'page' | 'perPage'>;
 
-export interface ListEmployeesResponse {
-  employees: Employee[];
-  total: number;
-  page: number;
-  perPage: number;
-  hasMore: boolean;
-}
+const PAGE_SIZE = 20;
 
-export type ListEmployeesOptions = Omit<
-  UseQueryOptions<ListEmployeesResponse, Error>,
-  'queryKey' | 'queryFn'
->;
-
-export function useListEmployees(
-  params?: ListEmployeesParams,
-  options?: ListEmployeesOptions
-) {
-  return useQuery({
+export function useListEmployees(params?: ListEmployeesParams) {
+  const result = useInfiniteQuery({
     queryKey: employeeKeys.list(params),
 
-    queryFn: async (): Promise<ListEmployeesResponse> => {
+    queryFn: async ({ pageParam = 1 }) => {
       const response = await employeesService.listEmployees({
-        page: params?.page,
-        perPage: params?.perPage ?? 50,
-        search: params?.search,
-        status: params?.status,
-        departmentId: params?.departmentId,
-        positionId: params?.positionId,
-        supervisorId: params?.supervisorId,
-        companyId: params?.companyId,
+        page: pageParam,
+        perPage: PAGE_SIZE,
+        search: params?.search || undefined,
+        status: params?.status || undefined,
+        departmentId: params?.departmentId || undefined,
+        positionId: params?.positionId || undefined,
+        supervisorId: params?.supervisorId || undefined,
+        companyId: params?.companyId || undefined,
         includeDeleted: params?.includeDeleted ?? false,
       });
 
-      const employees = response.employees ?? [];
-      const page = params?.page ?? 1;
-      const perPage = params?.perPage ?? 50;
+      return response;
+    },
 
-      return {
-        employees: params?.includeDeleted
-          ? employees
-          : employees.filter(e => !e.deletedAt),
-        total: response.total ?? employees.length,
-        page,
-        perPage,
-        hasMore: employees.length >= perPage,
-      };
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage.page ?? 1;
+      const totalPages = lastPage.totalPages ?? 1;
+      if (currentPage < totalPages) {
+        return currentPage + 1;
+      }
+      return undefined;
     },
 
     staleTime: 5 * 60 * 1000,
-    placeholderData: previousData => previousData,
-    ...options,
   });
+
+  // Flatten pages into single array
+  const employees =
+    result.data?.pages.flatMap((p) => {
+      const items = p.employees ?? [];
+      return params?.includeDeleted
+        ? items
+        : items.filter((e: Employee) => !e.deletedAt);
+    }) ?? [];
+
+  const total = result.data?.pages[0]?.total ?? 0;
+
+  return {
+    ...result,
+    employees,
+    total,
+  };
 }
 
 export default useListEmployees;
