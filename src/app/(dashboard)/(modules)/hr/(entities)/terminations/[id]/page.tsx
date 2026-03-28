@@ -18,6 +18,7 @@ import {
   Calculator,
   Calendar,
   CheckCircle,
+  ClipboardList,
   Clock,
   DollarSign,
   Download,
@@ -119,7 +120,9 @@ export default function TerminationDetailPage() {
     if (!termination) return;
     setIsDownloadingPdf(true);
     try {
-      const { blob } = await terminationsService.downloadTrctPdf(termination.id);
+      const { blob } = await terminationsService.downloadTrctPdf(
+        termination.id
+      );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -286,7 +289,9 @@ export default function TerminationDetailPage() {
                 <h1 className="text-2xl font-bold tracking-tight">
                   {getTerminationTypeLabel(termination.type)}
                 </h1>
-                <Badge variant={getTerminationStatusVariant(termination.status)}>
+                <Badge
+                  variant={getTerminationStatusVariant(termination.status)}
+                >
                   {getTerminationStatusLabel(termination.status)}
                 </Badge>
               </div>
@@ -475,6 +480,30 @@ export default function TerminationDetailPage() {
             </p>
           </Card>
         )}
+
+        {/* Offboarding Checklist Link */}
+        <Card className="p-4 sm:p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
+          <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4">
+            <ClipboardList className="h-5 w-5" />
+            Checklist de Desligamento
+          </h3>
+          <p className="text-sm text-muted-foreground mb-3">
+            O checklist de offboarding é criado automaticamente ao registrar a
+            rescisão. Acompanhe as pendências de desligamento do colaborador.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              router.push(
+                `/hr/offboarding?employeeId=${termination.employeeId}`
+              )
+            }
+          >
+            <ClipboardList className="h-4 w-4 mr-1" />
+            Ver Checklist de Offboarding
+          </Button>
+        </Card>
 
         {/* Metadados */}
         <Card className="p-4 sm:p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">

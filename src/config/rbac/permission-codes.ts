@@ -322,6 +322,15 @@ export const HR_PERMISSIONS = {
     'admin',
     'onlyself'
   ),
+  WARNINGS: perm(
+    'hr',
+    'warnings',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
   PAYROLL: perm(
     'hr',
     'payroll',
@@ -341,6 +350,15 @@ export const HR_PERMISSIONS = {
   ONBOARDING: perm(
     'hr',
     'onboarding',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
+  OFFBOARDING: perm(
+    'hr',
+    'offboarding',
     'access',
     'register',
     'modify',

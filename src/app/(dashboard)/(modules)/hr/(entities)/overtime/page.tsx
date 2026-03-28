@@ -71,6 +71,7 @@ const ViewModal = dynamic(
 );
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
+import { BulkApproveDialog } from '../../_shared/components/bulk-approve-dialog';
 
 export default function OvertimePage() {
   const router = useRouter();
@@ -182,6 +183,13 @@ export default function OvertimePage() {
   const [selectedOvertime, setSelectedOvertime] = useState<Overtime | null>(
     null
   );
+  const [showBulkApprove, setShowBulkApprove] = useState(false);
+  const [bulkApproveIds, setBulkApproveIds] = useState<string[]>([]);
+  const [bulkApproveProgress, setBulkApproveProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const [isBulkApproving, setIsBulkApproving] = useState(false);
 
   // ============================================================================
   // COMPUTED
@@ -231,8 +239,8 @@ export default function OvertimePage() {
     [overtimeList]
   );
 
-  const handleBulkApprove = useCallback(
-    async (ids: string[]) => {
+  const handleBulkApproveOpen = useCallback(
+    (ids: string[]) => {
       const pendingIds = ids.filter(id => {
         const item = overtimeList.find(o => o.id === id);
         return item && item.approved === null;
@@ -241,20 +249,45 @@ export default function OvertimePage() {
         toast.info('Nenhuma hora extra pendente selecionada');
         return;
       }
-      try {
-        for (const id of pendingIds) {
-          await approveMutation.mutateAsync({
-            id,
-            data: { addToTimeBank: false },
-          });
-        }
-        toast.success(`${pendingIds.length} hora(s) extra(s) aprovada(s)`);
-      } catch {
-        // Toast handled by mutation
-      }
+      setBulkApproveIds(pendingIds);
+      setShowBulkApprove(true);
     },
-    [overtimeList, approveMutation]
+    [overtimeList]
   );
+
+  const handleBulkApproveConfirm = useCallback(async () => {
+    setIsBulkApproving(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < bulkApproveIds.length; i++) {
+      setBulkApproveProgress({ current: i + 1, total: bulkApproveIds.length });
+      try {
+        await approveMutation.mutateAsync({
+          id: bulkApproveIds[i],
+          data: { addToTimeBank: false },
+        });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setIsBulkApproving(false);
+    setBulkApproveProgress(null);
+    setShowBulkApprove(false);
+    setBulkApproveIds([]);
+
+    if (failCount === 0) {
+      toast.success(`${successCount} hora(s) extra(s) aprovada(s) com sucesso!`);
+    } else if (successCount > 0) {
+      toast.warning(
+        `${successCount} hora(s) extra(s) aprovada(s), ${failCount} falhou(aram).`
+      );
+    } else {
+      toast.error('Nenhuma hora extra foi aprovada. Verifique os erros.');
+    }
+  }, [bulkApproveIds, approveMutation]);
 
   const handleExport = useCallback(
     (ids: string[]) => {
@@ -604,7 +637,7 @@ export default function OvertimePage() {
                       id: 'bulk-approve',
                       label: 'Aprovar',
                       icon: Check,
-                      onClick: handleBulkApprove,
+                      onClick: handleBulkApproveOpen,
                       variant: 'default' as const,
                     },
                   ]
@@ -616,6 +649,21 @@ export default function OvertimePage() {
             handlers={{
               onExport: handleExport,
             }}
+          />
+
+          <BulkApproveDialog
+            isOpen={showBulkApprove}
+            onClose={() => {
+              if (!isBulkApproving) {
+                setShowBulkApprove(false);
+                setBulkApproveIds([]);
+              }
+            }}
+            count={bulkApproveIds.length}
+            entityLabel="hora(s) extra(s)"
+            onConfirm={handleBulkApproveConfirm}
+            isPending={isBulkApproving}
+            progress={bulkApproveProgress ?? undefined}
           />
         </PageBody>
       </PageLayout>

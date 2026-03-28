@@ -46,6 +46,8 @@ import { usePrintQueue } from '@/core/print-queue';
 import { storageFilesService } from '@/services/storage/files.service';
 import { usersService } from '@/services/auth';
 import { listPermissionGroups } from '@/services/rbac/rbac.service';
+import { usePermissions } from '@/hooks/use-permissions';
+import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { benefitsService } from '@/services/hr/benefits.service';
 import { absencesService } from '@/services/hr/absences.service';
 import { vacationsService } from '@/services/hr/vacations.service';
@@ -424,6 +426,14 @@ export default function EmployeeDetailPage() {
   }, [userPassword]);
 
   // ============================================================================
+  // PERMISSIONS
+  // ============================================================================
+
+  const { hasPermission } = usePermissions();
+  const canEdit = hasPermission(HR_PERMISSIONS.EMPLOYEES.UPDATE);
+  const canDelete = hasPermission(HR_PERMISSIONS.EMPLOYEES.DELETE);
+
+  // ============================================================================
   // HANDLERS
   // ============================================================================
 
@@ -791,27 +801,35 @@ export default function EmployeeDetailPage() {
             { label: employee.fullName },
           ]}
           buttons={[
-            {
-              id: 'delete',
-              title: 'Excluir',
-              icon: Trash,
-              onClick: handleDelete,
-              variant: 'outline',
-            },
+            ...(canDelete
+              ? [
+                  {
+                    id: 'delete',
+                    title: 'Excluir',
+                    icon: Trash,
+                    onClick: handleDelete,
+                    variant: 'outline' as const,
+                  },
+                ]
+              : []),
             {
               id: 'print',
               title: isInPrintQueue ? 'Na fila' : 'Imprimir Etiqueta',
               icon: Printer,
               onClick: handlePrint,
-              variant: 'outline',
+              variant: 'outline' as const,
               disabled: isInPrintQueue,
             },
-            {
-              id: 'edit',
-              title: 'Editar',
-              icon: Edit,
-              onClick: handleEdit,
-            },
+            ...(canEdit
+              ? [
+                  {
+                    id: 'edit',
+                    title: 'Editar',
+                    icon: Edit,
+                    onClick: handleEdit,
+                  },
+                ]
+              : []),
           ]}
         />
 

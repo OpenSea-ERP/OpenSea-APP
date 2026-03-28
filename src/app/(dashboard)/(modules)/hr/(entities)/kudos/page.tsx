@@ -87,21 +87,21 @@ const CATEGORY_CONFIG: Record<
     gradient: 'from-blue-500 to-blue-600',
   },
   INNOVATION: {
-    label: 'Inovacao',
+    label: 'Inovação',
     icon: Lightbulb,
     badgeClass:
       'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
     gradient: 'from-amber-500 to-amber-600',
   },
   LEADERSHIP: {
-    label: 'Lideranca',
+    label: 'Liderança',
     icon: Shield,
     badgeClass:
       'bg-purple-50 text-purple-700 dark:bg-purple-500/8 dark:text-purple-300',
     gradient: 'from-purple-500 to-purple-600',
   },
   EXCELLENCE: {
-    label: 'Excelencia',
+    label: 'Excelência',
     icon: Star,
     badgeClass:
       'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300',
@@ -118,9 +118,9 @@ const CATEGORY_CONFIG: Record<
 
 const CATEGORY_FILTER_OPTIONS = [
   { id: 'TEAMWORK', label: 'Trabalho em Equipe' },
-  { id: 'INNOVATION', label: 'Inovacao' },
-  { id: 'LEADERSHIP', label: 'Lideranca' },
-  { id: 'EXCELLENCE', label: 'Excelencia' },
+  { id: 'INNOVATION', label: 'Inovação' },
+  { id: 'LEADERSHIP', label: 'Liderança' },
+  { id: 'EXCELLENCE', label: 'Excelência' },
   { id: 'HELPFULNESS', label: 'Prestatividade' },
 ];
 
@@ -379,7 +379,7 @@ function KudosPageContent() {
 
         <Header
           title="Reconhecimento"
-          description="Reconheca e celebre as conquistas dos seus colegas de equipe"
+          description="Reconheça e celebre as conquistas dos seus colegas de equipe"
         />
       </PageHeader>
 
@@ -450,15 +450,15 @@ function KudosPageContent() {
               {activeTab === 'feed'
                 ? 'Nenhum reconhecimento no feed'
                 : activeTab === 'sent'
-                  ? 'Voce ainda nao enviou reconhecimentos'
-                  : 'Voce ainda nao recebeu reconhecimentos'}
+                  ? 'Você ainda não enviou reconhecimentos'
+                  : 'Você ainda não recebeu reconhecimentos'}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground/70">
               {activeTab === 'feed'
                 ? 'Seja o primeiro a reconhecer um colega!'
                 : activeTab === 'sent'
                   ? 'Envie um reconhecimento para um colega de trabalho.'
-                  : 'Continue fazendo um otimo trabalho!'}
+                  : 'Continue fazendo um ótimo trabalho!'}
             </p>
             {canSend && activeTab !== 'received' && (
               <button
@@ -621,9 +621,9 @@ function getRelativeTime(dateStr: string): string {
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMin < 1) return 'Agora mesmo';
-  if (diffMin < 60) return `${diffMin} min atras`;
-  if (diffHours < 24) return `${diffHours}h atras`;
-  if (diffDays < 7) return `${diffDays}d atras`;
+  if (diffMin < 60) return `${diffMin} min atrás`;
+  if (diffHours < 24) return `${diffHours}h atrás`;
+  if (diffDays < 7) return `${diffDays}d atrás`;
   return date.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'short',

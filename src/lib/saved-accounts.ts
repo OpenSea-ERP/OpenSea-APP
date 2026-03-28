@@ -49,7 +49,7 @@ export function saveAccount(account: Omit<SavedAccount, 'lastLoginAt'>): void {
   try {
     const accounts = getSavedAccounts();
     const existingIndex = accounts.findIndex(
-      a => a.identifier === account.identifier
+      a => a.id === account.id
     );
 
     const updatedAccount: SavedAccount = {
@@ -80,12 +80,12 @@ export function saveAccount(account: Omit<SavedAccount, 'lastLoginAt'>): void {
 /**
  * Remove uma conta salva
  */
-export function removeAccount(identifier: string): void {
+export function removeAccount(id: string): void {
   if (typeof window === 'undefined') return;
 
   try {
     const accounts = getSavedAccounts();
-    const filtered = accounts.filter(a => a.identifier !== identifier);
+    const filtered = accounts.filter(a => a.id !== id);
     localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(filtered));
   } catch (error) {
     logger.error(

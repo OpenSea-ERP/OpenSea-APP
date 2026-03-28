@@ -76,6 +76,7 @@ const ViewModal = dynamic(
 );
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
+import { BulkApproveDialog } from '../../_shared/components/bulk-approve-dialog';
 
 function formatDate(dateStr?: string | null): string {
   if (!dateStr) return '\u2014';
@@ -226,6 +227,13 @@ export default function AbsencesPage() {
   const [selectedAbsence, setSelectedAbsence] = useState<Absence | null>(null);
   const [showCancelPin, setShowCancelPin] = useState(false);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
+  const [showBulkApprove, setShowBulkApprove] = useState(false);
+  const [bulkApproveIds, setBulkApproveIds] = useState<string[]>([]);
+  const [bulkApproveProgress, setBulkApproveProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const [isBulkApproving, setIsBulkApproving] = useState(false);
 
   // ============================================================================
   // COMPUTED
@@ -237,8 +245,8 @@ export default function AbsencesPage() {
   // HANDLERS
   // ============================================================================
 
-  const handleBulkApprove = useCallback(
-    async (ids: string[]) => {
+  const handleBulkApproveOpen = useCallback(
+    (ids: string[]) => {
       const pendingIds = ids.filter(id => {
         const item = absences.find(a => a.id === id);
         return item && item.status === 'PENDING';
@@ -247,17 +255,42 @@ export default function AbsencesPage() {
         toast.info('Nenhuma ausência pendente selecionada');
         return;
       }
-      try {
-        for (const id of pendingIds) {
-          approveAbsence.mutate(id);
-        }
-        toast.success(`${pendingIds.length} ausência(s) aprovada(s)`);
-      } catch {
-        // Toast handled by mutation
-      }
+      setBulkApproveIds(pendingIds);
+      setShowBulkApprove(true);
     },
-    [absences, approveAbsence]
+    [absences]
   );
+
+  const handleBulkApproveConfirm = useCallback(async () => {
+    setIsBulkApproving(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < bulkApproveIds.length; i++) {
+      setBulkApproveProgress({ current: i + 1, total: bulkApproveIds.length });
+      try {
+        await approveAbsence.mutateAsync(bulkApproveIds[i]);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setIsBulkApproving(false);
+    setBulkApproveProgress(null);
+    setShowBulkApprove(false);
+    setBulkApproveIds([]);
+
+    if (failCount === 0) {
+      toast.success(`${successCount} ausência(s) aprovada(s) com sucesso!`);
+    } else if (successCount > 0) {
+      toast.warning(
+        `${successCount} ausência(s) aprovada(s), ${failCount} falhou(aram).`
+      );
+    } else {
+      toast.error('Nenhuma ausência foi aprovada. Verifique os erros.');
+    }
+  }, [bulkApproveIds, approveAbsence]);
 
   const handleExport = useCallback(
     (ids: string[]) => {
@@ -723,7 +756,7 @@ export default function AbsencesPage() {
                       id: 'bulk-approve',
                       label: 'Aprovar',
                       icon: Check,
-                      onClick: handleBulkApprove,
+                      onClick: handleBulkApproveOpen,
                       variant: 'default' as const,
                     },
                   ]
@@ -735,6 +768,21 @@ export default function AbsencesPage() {
             handlers={{
               onExport: handleExport,
             }}
+          />
+
+          <BulkApproveDialog
+            isOpen={showBulkApprove}
+            onClose={() => {
+              if (!isBulkApproving) {
+                setShowBulkApprove(false);
+                setBulkApproveIds([]);
+              }
+            }}
+            count={bulkApproveIds.length}
+            entityLabel="ausência(s)"
+            onConfirm={handleBulkApproveConfirm}
+            isPending={isBulkApproving}
+            progress={bulkApproveProgress ?? undefined}
           />
         </PageBody>
       </PageLayout>

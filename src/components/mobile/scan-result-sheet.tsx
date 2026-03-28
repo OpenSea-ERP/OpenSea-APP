@@ -12,6 +12,7 @@ import {
   Barcode,
   Factory,
   Copy,
+  FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 // TODO: re-add permission checks once mobile RBAC is stable
@@ -313,6 +314,13 @@ export function ScanResultSheet({
   const categoryName = get(result, 'categoryName');
   const sku = get(result, 'sku');
   const binLabel = get(result, 'binLabel') || get(result, 'location');
+  const customFields = (result.entity.customFields as Array<{
+    key: string;
+    label: string;
+    value: unknown;
+    type: string;
+    unitOfMeasure?: string;
+  }>) || [];
   const quantity = get(result, 'quantity');
   const rawUom = result.entity.unitOfMeasure;
   const unitOfMeasure =
@@ -404,6 +412,21 @@ export function ScanResultSheet({
                   value={binLabel || '—'}
                   copyable={!!binLabel}
                 />
+                {customFields.map(field => {
+                  const display = field.type === 'boolean'
+                    ? (field.value ? 'Sim' : 'Não')
+                    : field.unitOfMeasure
+                      ? `${field.value} ${field.unitOfMeasure}`
+                      : String(field.value);
+                  return (
+                    <DetailCell
+                      key={field.key}
+                      icon={<FileText className="h-3.5 w-3.5" />}
+                      label={field.label}
+                      value={display}
+                    />
+                  );
+                })}
               </div>
             </div>
 

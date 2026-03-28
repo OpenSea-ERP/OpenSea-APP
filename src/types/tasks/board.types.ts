@@ -31,6 +31,7 @@ export interface CreateBoardRequest {
   title: string;
   description?: string | null;
   type?: BoardType;
+  teamId?: string | null;
   visibility?: BoardVisibility;
   defaultView?: string;
   gradientId?: string | null;
@@ -49,6 +50,7 @@ export interface BoardsQuery {
   limit?: number;
   search?: string;
   type?: BoardType;
+  teamId?: string;
   visibility?: BoardVisibility;
   includeArchived?: boolean;
 }

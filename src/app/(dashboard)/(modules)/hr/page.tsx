@@ -16,6 +16,7 @@ import {
   employeesService,
   positionsService,
 } from '@/services/hr';
+import { teamsService } from '@/services/core/teams.service';
 
 import {
   AlertTriangle,
@@ -30,6 +31,7 @@ import {
   FileUser,
   FileX2,
   GitBranchPlus,
+  GraduationCap,
   Heart,
   Hourglass,
   MapPin,
@@ -47,6 +49,7 @@ import {
   UserPlus,
   UserRoundCog,
   UserX,
+  Users,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -162,6 +165,17 @@ const sections: {
         permission: HR_PERMISSIONS.POSITIONS.LIST,
         countKey: 'positions',
       },
+      {
+        id: 'teams',
+        title: 'Equipes',
+        description: 'Gerencie equipes e seus membros',
+        icon: Users,
+        href: '/hr/teams',
+        gradient: 'from-blue-500 to-cyan-600',
+        hoverBg: 'hover:bg-blue-50 dark:hover:bg-blue-500/10',
+        permission: HR_PERMISSIONS.TEAMS.LIST,
+        countKey: 'teams',
+      },
     ],
   },
   {
@@ -241,6 +255,21 @@ const sections: {
         gradient: 'from-rose-500 to-rose-600',
         hoverBg: 'hover:bg-rose-50 dark:hover:bg-rose-500/10',
         permission: HR_PERMISSIONS.EMPLOYEES.LIST,
+      },
+    ],
+  },
+  {
+    title: 'Gestão de Conduta',
+    cards: [
+      {
+        id: 'warnings',
+        title: 'Advertências',
+        description: 'Advertências disciplinares e suspensões',
+        icon: AlertTriangle,
+        href: '/hr/warnings',
+        gradient: 'from-amber-500 to-amber-600',
+        hoverBg: 'hover:bg-amber-50 dark:hover:bg-amber-500/10',
+        permission: HR_PERMISSIONS.WARNINGS.LIST,
       },
     ],
   },
@@ -327,6 +356,16 @@ const sections: {
         hoverBg: 'hover:bg-amber-50 dark:hover:bg-amber-500/10',
         permission: HR_PERMISSIONS.EMPLOYEES.LIST,
       },
+      {
+        id: 'trainings',
+        title: 'Treinamentos',
+        description: 'Programas de treinamento e desenvolvimento',
+        icon: GraduationCap,
+        href: '/hr/trainings',
+        gradient: 'from-indigo-500 to-indigo-600',
+        hoverBg: 'hover:bg-indigo-50 dark:hover:bg-indigo-500/10',
+        permission: HR_PERMISSIONS.EMPLOYEES.LIST,
+      },
     ],
   },
   {
@@ -386,6 +425,16 @@ const sections: {
         gradient: 'from-rose-500 to-rose-600',
         hoverBg: 'hover:bg-rose-50 dark:hover:bg-rose-500/10',
         permission: HR_PERMISSIONS.TERMINATIONS.LIST,
+      },
+      {
+        id: 'offboarding',
+        title: 'Offboarding',
+        description: 'Checklists de desligamento para colaboradores',
+        icon: UserX,
+        href: '/hr/offboarding',
+        gradient: 'from-rose-400 to-rose-500',
+        hoverBg: 'hover:bg-rose-50 dark:hover:bg-rose-500/10',
+        permission: HR_PERMISSIONS.OFFBOARDING.LIST,
       },
     ],
   },
@@ -456,11 +505,13 @@ export default function HRLandingPage() {
 
   useEffect(() => {
     async function fetchCounts() {
-      const [employees, departments, positions] = await Promise.allSettled([
-        employeesService.listEmployees({ page: 1, perPage: 1 }),
-        departmentsService.listDepartments({ page: 1, perPage: 1 }),
-        positionsService.listPositions({ page: 1, perPage: 1 }),
-      ]);
+      const [employees, departments, positions, teams] =
+        await Promise.allSettled([
+          employeesService.listEmployees({ page: 1, perPage: 1 }),
+          departmentsService.listDepartments({ page: 1, perPage: 1 }),
+          positionsService.listPositions({ page: 1, perPage: 1 }),
+          teamsService.listTeams({ page: 1, limit: 1 }),
+        ]);
 
       const extractCount = (
         result: PromiseSettledResult<unknown>,
@@ -485,6 +536,7 @@ export default function HRLandingPage() {
         employees: extractCount(employees, 'employees'),
         departments: extractCount(departments, 'departments'),
         positions: extractCount(positions, 'positions'),
+        teams: extractCount(teams, 'data'),
       });
       setCountsLoading(false);
     }

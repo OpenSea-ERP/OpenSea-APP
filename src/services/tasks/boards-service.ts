@@ -29,6 +29,7 @@ export const boardsService = {
     if (params?.limit) query.append('limit', String(params.limit));
     if (params?.search) query.append('search', params.search);
     if (params?.type) query.append('type', params.type);
+    if (params?.teamId) query.append('teamId', params.teamId);
     if (params?.visibility) query.append('visibility', params.visibility);
     if (params?.includeArchived !== undefined) {
       query.append('includeArchived', String(params.includeArchived));

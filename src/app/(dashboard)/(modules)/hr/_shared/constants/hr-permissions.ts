@@ -87,6 +87,18 @@ export const HR_PERMISSIONS = {
   },
 
   /**
+   * Permissões de Advertências (Warnings)
+   */
+  WARNINGS: {
+    LIST: HR_CODES.WARNINGS.ACCESS,
+    VIEW: HR_CODES.WARNINGS.ACCESS,
+    CREATE: HR_CODES.WARNINGS.REGISTER,
+    UPDATE: HR_CODES.WARNINGS.MODIFY,
+    DELETE: HR_CODES.WARNINGS.REMOVE,
+    MANAGE: HR_CODES.WARNINGS.ADMIN,
+  },
+
+  /**
    * Permissões de Férias (Vacations)
    */
   VACATIONS: {
@@ -262,6 +274,18 @@ export const HR_PERMISSIONS = {
   },
 
   /**
+   * Permissões de Offboarding (Offboarding Checklists)
+   */
+  OFFBOARDING: {
+    LIST: HR_CODES.OFFBOARDING.ACCESS,
+    VIEW: HR_CODES.OFFBOARDING.ACCESS,
+    CREATE: HR_CODES.OFFBOARDING.REGISTER,
+    UPDATE: HR_CODES.OFFBOARDING.MODIFY,
+    DELETE: HR_CODES.OFFBOARDING.REMOVE,
+    MANAGE: HR_CODES.OFFBOARDING.ADMIN,
+  },
+
+  /**
    * Permissões de Programas de Segurança (Safety Programs)
    * Mapped to employees since no dedicated resource in new codes
    */
@@ -322,6 +346,21 @@ export const HR_PERMISSIONS = {
     CREATE: HR_CODES.EMPLOYEE_REQUESTS.REGISTER,
     APPROVE: HR_CODES.EMPLOYEE_REQUESTS.ADMIN,
     MANAGE: HR_CODES.EMPLOYEE_REQUESTS.ADMIN,
+  },
+
+  /**
+   * Permissões de Equipes (Teams)
+   * Mapped to employees since teams are managed by HR managers
+   */
+  TEAMS: {
+    LIST: HR_CODES.EMPLOYEES.ACCESS,
+    VIEW: HR_CODES.EMPLOYEES.ACCESS,
+    CREATE: HR_CODES.EMPLOYEES.ADMIN,
+    UPDATE: HR_CODES.EMPLOYEES.ADMIN,
+    DELETE: HR_CODES.EMPLOYEES.ADMIN,
+    MANAGE: HR_CODES.EMPLOYEES.ADMIN,
+    ADD_MEMBERS: HR_CODES.EMPLOYEES.ADMIN,
+    REMOVE_MEMBERS: HR_CODES.EMPLOYEES.ADMIN,
   },
 
   /**
@@ -423,6 +462,9 @@ export type CipaPermission =
 export type GeofenceZonePermission =
   (typeof HR_PERMISSIONS.GEOFENCE_ZONES)[keyof typeof HR_PERMISSIONS.GEOFENCE_ZONES];
 
+export type TeamPermission =
+  (typeof HR_PERMISSIONS.TEAMS)[keyof typeof HR_PERMISSIONS.TEAMS];
+
 export type HrConfigPermission =
   (typeof HR_PERMISSIONS.CONFIG)[keyof typeof HR_PERMISSIONS.CONFIG];
 
@@ -432,10 +474,14 @@ export type BenefitPermission =
 export type OnboardingPermission =
   (typeof HR_PERMISSIONS.ONBOARDING)[keyof typeof HR_PERMISSIONS.ONBOARDING];
 
+export type OffboardingPermission =
+  (typeof HR_PERMISSIONS.OFFBOARDING)[keyof typeof HR_PERMISSIONS.OFFBOARDING];
+
 export type HRPermission =
   | CompanyPermission
   | DepartmentPermission
   | PositionPermission
+  | TeamPermission
   | EmployeePermission
   | AbsencePermission
   | VacationPermission

@@ -55,7 +55,7 @@ const CATEGORY_CONFIG: Record<
     color: 'text-blue-500',
   },
   INNOVATION: {
-    label: 'Inovacao',
+    label: 'Inovação',
     icon: Lightbulb,
     badgeClass:
       'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
@@ -63,7 +63,7 @@ const CATEGORY_CONFIG: Record<
     color: 'text-amber-500',
   },
   LEADERSHIP: {
-    label: 'Lideranca',
+    label: 'Liderança',
     icon: Shield,
     badgeClass:
       'bg-purple-50 text-purple-700 dark:bg-purple-500/8 dark:text-purple-300',
@@ -71,7 +71,7 @@ const CATEGORY_CONFIG: Record<
     color: 'text-purple-500',
   },
   EXCELLENCE: {
-    label: 'Excelencia',
+    label: 'Excelência',
     icon: Star,
     badgeClass:
       'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300',
@@ -237,7 +237,7 @@ export default function KudosDetailPage() {
                 {kudos.isPublic ? (
                   <span className="inline-flex items-center gap-1">
                     <Eye className="h-3.5 w-3.5" />
-                    Publico
+                    Público
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1">

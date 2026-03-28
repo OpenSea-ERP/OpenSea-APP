@@ -44,6 +44,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import {
   Suspense,
@@ -55,6 +56,7 @@ import {
 } from 'react';
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
+import { BulkApproveDialog } from '../../_shared/components/bulk-approve-dialog';
 import {
   requestsConfig,
   useListMyRequests,
@@ -225,6 +227,13 @@ function RequestsPageContent() {
   const [rejectRequestId, setRejectRequestId] = useState<string | null>(null);
   const [showCancelPin, setShowCancelPin] = useState(false);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
+  const [showBulkApprove, setShowBulkApprove] = useState(false);
+  const [bulkApproveIds, setBulkApproveIds] = useState<string[]>([]);
+  const [bulkApproveProgress, setBulkApproveProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const [isBulkApproving, setIsBulkApproving] = useState(false);
 
   // ============================================================================
   // COMPUTED
@@ -268,19 +277,54 @@ function RequestsPageContent() {
     setCancelTargetId(null);
   }, [cancelTargetId, cancelRequest]);
 
-  const handleBulkApprove = useCallback(
-    async (ids: string[]) => {
+  const handleBulkApproveOpen = useCallback(
+    (ids: string[]) => {
       const pendingIds = ids.filter((id) => {
         const item = filteredRequests.find((r) => r.id === id);
         return item && item.status === 'PENDING';
       });
-      if (pendingIds.length === 0) return;
-      for (const id of pendingIds) {
-        approveRequest.mutate(id);
+      if (pendingIds.length === 0) {
+        toast.info('Nenhuma solicitação pendente selecionada');
+        return;
       }
+      setBulkApproveIds(pendingIds);
+      setShowBulkApprove(true);
     },
-    [filteredRequests, approveRequest]
+    [filteredRequests]
   );
+
+  const handleBulkApproveConfirm = useCallback(async () => {
+    setIsBulkApproving(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < bulkApproveIds.length; i++) {
+      setBulkApproveProgress({ current: i + 1, total: bulkApproveIds.length });
+      try {
+        await approveRequest.mutateAsync(bulkApproveIds[i]);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setIsBulkApproving(false);
+    setBulkApproveProgress(null);
+    setShowBulkApprove(false);
+    setBulkApproveIds([]);
+
+    if (failCount === 0) {
+      toast.success(
+        `${successCount} solicitação(ões) aprovada(s) com sucesso!`
+      );
+    } else if (successCount > 0) {
+      toast.warning(
+        `${successCount} solicitação(ões) aprovada(s), ${failCount} falhou(aram).`
+      );
+    } else {
+      toast.error('Nenhuma solicitação foi aprovada. Verifique os erros.');
+    }
+  }, [bulkApproveIds, approveRequest]);
 
   // ============================================================================
   // CONTEXT MENU
@@ -696,7 +740,7 @@ function RequestsPageContent() {
                       id: 'bulk-approve',
                       label: 'Aprovar',
                       icon: Check,
-                      onClick: handleBulkApprove,
+                      onClick: handleBulkApproveOpen,
                       variant: 'default' as const,
                     },
                   ]
@@ -706,6 +750,21 @@ function RequestsPageContent() {
               export: false,
             }}
             handlers={{}}
+          />
+
+          <BulkApproveDialog
+            isOpen={showBulkApprove}
+            onClose={() => {
+              if (!isBulkApproving) {
+                setShowBulkApprove(false);
+                setBulkApproveIds([]);
+              }
+            }}
+            count={bulkApproveIds.length}
+            entityLabel="solicitação(ões)"
+            onConfirm={handleBulkApproveConfirm}
+            isPending={isBulkApproving}
+            progress={bulkApproveProgress ?? undefined}
           />
         </PageBody>
       </PageLayout>

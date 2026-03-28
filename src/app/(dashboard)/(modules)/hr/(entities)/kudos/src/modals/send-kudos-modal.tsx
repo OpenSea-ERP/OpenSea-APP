@@ -52,21 +52,21 @@ const CATEGORY_CONFIG: Record<
     gradient: 'from-blue-500 to-blue-600',
   },
   INNOVATION: {
-    label: 'Inovacao',
+    label: 'Inovação',
     description: 'Trouxe ideias criativas e soluções inovadoras',
     icon: Lightbulb,
     color: 'text-amber-500',
     gradient: 'from-amber-500 to-amber-600',
   },
   LEADERSHIP: {
-    label: 'Lideranca',
+    label: 'Liderança',
     description: 'Demonstrou habilidades de liderança excepcionais',
     icon: Shield,
     color: 'text-purple-500',
     gradient: 'from-purple-500 to-purple-600',
   },
   EXCELLENCE: {
-    label: 'Excelencia',
+    label: 'Excelência',
     description: 'Entregou resultados acima das expectativas',
     icon: Star,
     color: 'text-emerald-500',
@@ -211,7 +211,7 @@ export function SendKudosModal({
   const steps: WizardStep[] = useMemo(
     () => [
       {
-        title: 'Destinatario e Categoria',
+        title: 'Destinatário e Categoria',
         description: 'Escolha o colega e o tipo de reconhecimento',
         icon: <Award className="h-16 w-16 text-amber-500/60" />,
         isValid: !!toEmployeeId && !!category,
@@ -310,7 +310,7 @@ export function SendKudosModal({
         ),
       },
       {
-        title: 'Mensagem e Confirmacao',
+        title: 'Mensagem e Confirmação',
         description: 'Escreva a mensagem e revise antes de enviar',
         icon: <Award className="h-16 w-16 text-amber-500/60" />,
         isValid: !!message.trim() && !isSubmitting,
@@ -378,8 +378,8 @@ export function SendKudosModal({
                 onClick={() => setIsPublic(!isPublic)}
               >
                 {isPublic
-                  ? 'Visivel no feed publico'
-                  : 'Apenas para o destinatario'}
+                  ? 'Visível no feed público'
+                  : 'Apenas para o destinatário'}
               </Label>
             </div>
           </div>

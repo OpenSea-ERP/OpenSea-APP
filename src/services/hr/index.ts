@@ -39,3 +39,12 @@ export {
 } from './benefits.service';
 export * from './portal.service';
 export * from './onboarding.service';
+export {
+  trainingService,
+  type TrainingProgramsResponse,
+  type TrainingProgramResponse,
+  type TrainingEnrollmentsResponse,
+  type TrainingEnrollmentResponse,
+  type ListTrainingProgramsParams,
+  type ListTrainingEnrollmentsParams,
+} from './training.service';

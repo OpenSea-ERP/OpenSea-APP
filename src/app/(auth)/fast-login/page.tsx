@@ -75,13 +75,13 @@ export default function FastLoginPage() {
     setError('');
   };
 
-  const handleRemoveAccount = (e: React.MouseEvent, identifier: string) => {
+  const handleRemoveAccount = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    removeAccount(identifier);
+    removeAccount(id);
     const updated = getSavedAccounts();
     setSavedAccounts(updated);
 
-    if (selectedAccount?.identifier === identifier) {
+    if (selectedAccount?.id === id) {
       setSelectedAccount(null);
     }
 
@@ -247,7 +247,7 @@ export default function FastLoginPage() {
                     onClick={e =>
                       handleRemoveAccount(
                         e as React.MouseEvent,
-                        account.identifier
+                        account.id
                       )
                     }
                     onKeyDown={e => {
@@ -255,7 +255,7 @@ export default function FastLoginPage() {
                         e.preventDefault();
                         handleRemoveAccount(
                           e as unknown as React.MouseEvent,
-                          account.identifier
+                          account.id
                         );
                       }
                     }}

@@ -23,11 +23,14 @@ import { cn } from '@/lib/utils';
 interface BoardCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** When provided, creates a TEAM board linked to this team */
+  teamId?: string;
 }
 
 export function BoardCreateDialog({
   open,
   onOpenChange,
+  teamId,
 }: BoardCreateDialogProps) {
   const router = useRouter();
   const createBoard = useCreateBoard();
@@ -56,8 +59,9 @@ export function BoardCreateDialog({
       const result = await createBoard.mutateAsync({
         title: title.trim(),
         description: description.trim() || null,
-        type: 'PERSONAL',
-        visibility: 'PRIVATE',
+        type: teamId ? 'TEAM' : 'PERSONAL',
+        teamId: teamId ?? undefined,
+        visibility: teamId ? 'SHARED' : 'PRIVATE',
       });
 
       setGradientForBoard(result.board.id, selectedGradient);
