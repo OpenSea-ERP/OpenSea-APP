@@ -39,7 +39,7 @@ export function useCreateEmployee(options: CreateEmployeeOptions = {}) {
     },
 
     onSuccess: employee => {
-      queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 
       if (showSuccessToast) {
         toast.success(`Funcionário "${employee.fullName}" criado com sucesso!`);
@@ -86,7 +86,7 @@ export function useCreateEmployeeWithUser(
     },
 
     onSuccess: employee => {
-      queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 
       if (showSuccessToast) {
         toast.success(`Funcionário "${employee.fullName}" criado com usuário!`);
@@ -133,7 +133,7 @@ export function useUpdateEmployee(options: UpdateEmployeeOptions = {}) {
     },
 
     onSuccess: employee => {
-      queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: employeeKeys.all });
       queryClient.invalidateQueries({
         queryKey: employeeKeys.detail(employee.id),
       });
@@ -174,7 +174,7 @@ export function useDeleteEmployee(options: DeleteEmployeeOptions = {}) {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 
       if (showSuccessToast) {
         toast.success('Funcionário removido com sucesso!');

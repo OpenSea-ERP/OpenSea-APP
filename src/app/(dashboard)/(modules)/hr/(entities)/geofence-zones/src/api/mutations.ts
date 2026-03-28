@@ -24,7 +24,7 @@ export function useCreateGeofenceZone() {
       return geofenceZonesApi.create(data);
     },
     onSuccess: zone => {
-      queryClient.invalidateQueries({ queryKey: geofenceZoneKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: geofenceZoneKeys.all });
       toast.success(`Zona "${zone.name}" criada com sucesso!`);
     },
     onError: (error: Error) => {
@@ -50,7 +50,7 @@ export function useUpdateGeofenceZone() {
       return geofenceZonesApi.update(id, data);
     },
     onSuccess: (zone, { id }) => {
-      queryClient.invalidateQueries({ queryKey: geofenceZoneKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: geofenceZoneKeys.all });
       queryClient.invalidateQueries({ queryKey: geofenceZoneKeys.detail(id) });
       toast.success(`Zona "${zone.name}" atualizada com sucesso!`);
     },
@@ -72,7 +72,7 @@ export function useDeleteGeofenceZone() {
       await geofenceZonesApi.delete(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: geofenceZoneKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: geofenceZoneKeys.all });
       queryClient.removeQueries({ queryKey: geofenceZoneKeys.detail(id) });
       toast.success('Zona de geofencing excluída com sucesso!');
     },

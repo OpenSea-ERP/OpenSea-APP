@@ -39,7 +39,7 @@ export function useCreateWorkSchedule(options: CreateWorkScheduleOptions = {}) {
       return response.workSchedule;
     },
     onSuccess: workSchedule => {
-      queryClient.invalidateQueries({ queryKey: workScheduleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workScheduleKeys.all });
       if (showSuccessToast) {
         toast.success(`Escala "${workSchedule.name}" criada com sucesso!`);
       }
@@ -86,7 +86,7 @@ export function useUpdateWorkSchedule(options: UpdateWorkScheduleOptions = {}) {
       return response.workSchedule;
     },
     onSuccess: (workSchedule, { id }) => {
-      queryClient.invalidateQueries({ queryKey: workScheduleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workScheduleKeys.all });
       queryClient.invalidateQueries({
         queryKey: workScheduleKeys.detail(id),
       });
@@ -127,7 +127,7 @@ export function useDeleteWorkSchedule(options: DeleteWorkScheduleOptions = {}) {
       await workSchedulesService.deleteWorkSchedule(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: workScheduleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workScheduleKeys.all });
       queryClient.removeQueries({ queryKey: workScheduleKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Escala excluída com sucesso!');

@@ -39,7 +39,7 @@ export function useCreatePosition(options: CreatePositionOptions = {}) {
       return response.position;
     },
     onSuccess: position => {
-      queryClient.invalidateQueries({ queryKey: positionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: positionKeys.all });
       if (showSuccessToast) {
         toast.success(`Cargo "${position.name}" criado com sucesso!`);
       }
@@ -86,7 +86,7 @@ export function useUpdatePosition(options: UpdatePositionOptions = {}) {
       return response.position;
     },
     onSuccess: (position, { id }) => {
-      queryClient.invalidateQueries({ queryKey: positionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: positionKeys.all });
       queryClient.invalidateQueries({ queryKey: positionKeys.detail(id) });
       if (showSuccessToast) {
         toast.success(`Cargo "${position.name}" atualizado!`);
@@ -125,7 +125,7 @@ export function useDeletePosition(options: DeletePositionOptions = {}) {
       await positionsService.deletePosition(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: positionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: positionKeys.all });
       queryClient.removeQueries({ queryKey: positionKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Cargo excluído com sucesso!');

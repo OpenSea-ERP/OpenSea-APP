@@ -41,7 +41,7 @@ export function useCreateBenefitPlan(options: CreateBenefitPlanOptions = {}) {
       return response.benefitPlan;
     },
     onSuccess: plan => {
-      queryClient.invalidateQueries({ queryKey: benefitKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: benefitKeys.all });
       if (showSuccessToast) {
         toast.success(`Plano "${plan.name}" criado com sucesso!`);
       }
@@ -88,7 +88,7 @@ export function useUpdateBenefitPlan(options: UpdateBenefitPlanOptions = {}) {
       return response.benefitPlan;
     },
     onSuccess: (plan, { id }) => {
-      queryClient.invalidateQueries({ queryKey: benefitKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: benefitKeys.all });
       queryClient.invalidateQueries({ queryKey: benefitKeys.detail(id) });
       if (showSuccessToast) {
         toast.success(`Plano "${plan.name}" atualizado!`);
@@ -127,7 +127,7 @@ export function useDeleteBenefitPlan(options: DeleteBenefitPlanOptions = {}) {
       await benefitsService.deletePlan(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: benefitKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: benefitKeys.all });
       queryClient.removeQueries({ queryKey: benefitKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Plano excluído com sucesso!');
@@ -172,7 +172,7 @@ export function useEnrollEmployee(options: EnrollEmployeeOptions = {}) {
       queryClient.invalidateQueries({
         queryKey: benefitKeys.enrollments(),
       });
-      queryClient.invalidateQueries({ queryKey: benefitKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: benefitKeys.all });
       if (showSuccessToast) {
         toast.success('Funcionário inscrito com sucesso!');
       }
@@ -213,7 +213,7 @@ export function useCancelEnrollment(options: CancelEnrollmentOptions = {}) {
       queryClient.invalidateQueries({
         queryKey: benefitKeys.enrollments(),
       });
-      queryClient.invalidateQueries({ queryKey: benefitKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: benefitKeys.all });
       if (showSuccessToast) {
         toast.success('Inscrição cancelada com sucesso!');
       }

@@ -39,7 +39,7 @@ export function useCreateDepartment(options: CreateDepartmentOptions = {}) {
       return response.department;
     },
     onSuccess: department => {
-      queryClient.invalidateQueries({ queryKey: departmentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: departmentKeys.all });
       if (showSuccessToast) {
         toast.success(`Departamento "${department.name}" criado com sucesso!`);
       }
@@ -86,7 +86,7 @@ export function useUpdateDepartment(options: UpdateDepartmentOptions = {}) {
       return response.department;
     },
     onSuccess: (department, { id }) => {
-      queryClient.invalidateQueries({ queryKey: departmentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: departmentKeys.all });
       queryClient.invalidateQueries({ queryKey: departmentKeys.detail(id) });
       if (showSuccessToast) {
         toast.success(`Departamento "${department.name}" atualizado!`);
@@ -125,7 +125,7 @@ export function useDeleteDepartment(options: DeleteDepartmentOptions = {}) {
       await departmentsService.deleteDepartment(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: departmentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: departmentKeys.all });
       queryClient.removeQueries({ queryKey: departmentKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Departamento excluído com sucesso!');
