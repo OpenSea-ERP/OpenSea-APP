@@ -250,6 +250,18 @@ export const HR_PERMISSIONS = {
   },
 
   /**
+   * Permissões de Onboarding (Onboarding Checklists)
+   */
+  ONBOARDING: {
+    LIST: HR_CODES.ONBOARDING.ACCESS,
+    VIEW: HR_CODES.ONBOARDING.ACCESS,
+    CREATE: HR_CODES.ONBOARDING.REGISTER,
+    UPDATE: HR_CODES.ONBOARDING.MODIFY,
+    DELETE: HR_CODES.ONBOARDING.REMOVE,
+    MANAGE: HR_CODES.ONBOARDING.ADMIN,
+  },
+
+  /**
    * Permissões de Programas de Segurança (Safety Programs)
    * Mapped to employees since no dedicated resource in new codes
    */
@@ -299,6 +311,17 @@ export const HR_PERMISSIONS = {
     UPDATE: HR_CODES.TIME_CONTROL.REGISTER,
     DELETE: HR_CODES.TIME_CONTROL.REGISTER,
     MANAGE: HR_CODES.TIME_CONTROL.REGISTER,
+  },
+
+  /**
+   * Permissões de Solicitações do Colaborador (Employee Requests)
+   */
+  EMPLOYEE_REQUESTS: {
+    LIST: HR_CODES.EMPLOYEE_REQUESTS.ACCESS,
+    VIEW: HR_CODES.EMPLOYEE_REQUESTS.ACCESS,
+    CREATE: HR_CODES.EMPLOYEE_REQUESTS.REGISTER,
+    APPROVE: HR_CODES.EMPLOYEE_REQUESTS.ADMIN,
+    MANAGE: HR_CODES.EMPLOYEE_REQUESTS.ADMIN,
   },
 
   /**
@@ -405,6 +428,9 @@ export type HrConfigPermission =
 
 export type BenefitPermission =
   (typeof HR_PERMISSIONS.BENEFITS)[keyof typeof HR_PERMISSIONS.BENEFITS];
+
+export type OnboardingPermission =
+  (typeof HR_PERMISSIONS.ONBOARDING)[keyof typeof HR_PERMISSIONS.ONBOARDING];
 
 export type HRPermission =
   | CompanyPermission

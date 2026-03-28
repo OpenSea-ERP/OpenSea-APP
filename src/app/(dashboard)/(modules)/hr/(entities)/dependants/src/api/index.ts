@@ -19,9 +19,12 @@ export {
 // Mutations
 export {
   useCreateDependant,
+  useUpdateDependant,
   useDeleteDependant,
   type CreateDependantMutationData,
   type CreateDependantOptions,
+  type UpdateDependantMutationData,
+  type UpdateDependantOptions,
   type DeleteDependantMutationData,
   type DeleteDependantOptions,
 } from './mutations';

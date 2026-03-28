@@ -1,6 +1,6 @@
 /**
- * HR Request Detail Page
- * Detalhes da solicitação
+ * HR Employee Request Detail Page
+ * Detalhes da solicitacao do colaborador
  */
 
 'use client';
@@ -13,29 +13,19 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import { InfoField } from '@/components/shared/info-field';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
 import { usePermissions } from '@/hooks/use-permissions';
-import { portalService } from '@/services/hr';
-import type { EmployeeRequest, RequestType, RequestStatus } from '@/types/hr';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { RequestType } from '@/types/hr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import {
+  Ban,
   Calendar,
   Check,
-  CheckCircle2,
   ClipboardList,
   Clock,
   FileText,
@@ -43,24 +33,35 @@ import {
   PalmtreeIcon,
   Send,
   UserCog,
-  X,
   XCircle,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
-import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+import {
+  requestKeys,
+  requestsApi,
+  useApproveRequest,
+  useCancelRequest,
+} from '../src/api';
+import {
+  getRequestTypeLabel,
+  getRequestStatusLabel,
+  getRequestStatusVariant,
+  getRequestTypeGradient,
+} from '../src/utils';
+
+const RejectModal = dynamic(
+  () =>
+    import('../src/modals/reject-modal').then((m) => ({
+      default: m.RejectModal,
+    })),
+  { ssr: false }
+);
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
-  VACATION: 'Férias',
-  ABSENCE: 'Ausência',
-  ADVANCE: 'Adiantamento',
-  DATA_CHANGE: 'Alteração de Dados',
-  SUPPORT: 'Suporte',
-};
 
 const REQUEST_TYPE_ICONS: Record<RequestType, LucideIcon> = {
   VACATION: PalmtreeIcon,
@@ -70,25 +71,16 @@ const REQUEST_TYPE_ICONS: Record<RequestType, LucideIcon> = {
   SUPPORT: Send,
 };
 
-const REQUEST_TYPE_GRADIENTS: Record<RequestType, string> = {
-  VACATION: 'from-green-500 to-green-600',
-  ABSENCE: 'from-rose-500 to-rose-600',
-  ADVANCE: 'from-amber-500 to-amber-600',
-  DATA_CHANGE: 'from-blue-500 to-blue-600',
-  SUPPORT: 'from-violet-500 to-violet-600',
-};
-
-const STATUS_CONFIG: Record<
-  RequestStatus,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
-  }
-> = {
-  PENDING: { label: 'Pendente', variant: 'outline' },
-  APPROVED: { label: 'Aprovada', variant: 'default' },
-  REJECTED: { label: 'Rejeitada', variant: 'destructive' },
-  CANCELLED: { label: 'Cancelada', variant: 'secondary' },
+const DATA_FIELD_LABELS: Record<string, string> = {
+  startDate: 'Data Início',
+  endDate: 'Data Fim',
+  description: 'Descrição',
+  reason: 'Motivo',
+  amount: 'Valor (R$)',
+  field: 'Campo',
+  newValue: 'Novo Valor',
+  subject: 'Assunto',
+  message: 'Mensagem',
 };
 
 export default function RequestDetailPage() {
@@ -98,76 +90,54 @@ export default function RequestDetailPage() {
   const { hasPermission } = usePermissions();
   const requestId = params.id as string;
 
-  const canApprove = hasPermission(HR_PERMISSIONS.EMPLOYEES.MANAGE);
+  const canApprove = hasPermission(HR_PERMISSIONS.EMPLOYEE_REQUESTS.APPROVE);
 
-  const [actionTarget, setActionTarget] = useState<'approve' | 'reject' | null>(
-    null
-  );
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showCancelPin, setShowCancelPin] = useState(false);
 
   // ============================================================================
   // DATA FETCHING
   // ============================================================================
 
-  const { data: requestsData, isLoading } = useQuery({
-    queryKey: ['hr-pending-requests'],
+  const {
+    data: requestData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: requestKeys.detail(requestId),
     queryFn: async () => {
-      const response = await portalService.listPendingApprovals({
-        perPage: 100,
-      });
-      return response.requests;
+      const response = await requestsApi.get(requestId);
+      return response.employeeRequest;
     },
+    enabled: !!requestId,
   });
-
-  const request = requestsData?.find(
-    (r: EmployeeRequest) => r.id === requestId
-  );
 
   // ============================================================================
   // MUTATIONS
   // ============================================================================
 
-  const approveMutation = useMutation({
-    mutationFn: (id: string) => portalService.approveRequest(id),
+  const approveRequest = useApproveRequest({
     onSuccess: () => {
-      toast.success('Solicitação aprovada com sucesso');
-      queryClient.invalidateQueries({ queryKey: ['hr-pending-requests'] });
-      router.push('/hr/requests');
-    },
-    onError: () => {
-      toast.error('Erro ao aprovar solicitação');
-    },
-  });
-
-  const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      portalService.rejectRequest(id, reason),
-    onSuccess: () => {
-      toast.success('Solicitação rejeitada');
-      queryClient.invalidateQueries({ queryKey: ['hr-pending-requests'] });
-      router.push('/hr/requests');
-    },
-    onError: () => {
-      toast.error('Erro ao rejeitar solicitação');
-    },
-  });
-
-  const handleAction = useCallback(() => {
-    if (!actionTarget || !request) return;
-
-    if (actionTarget === 'approve') {
-      approveMutation.mutate(request.id);
-    } else {
-      if (!rejectionReason.trim()) {
-        toast.error('Informe o motivo da rejeição');
-        return;
-      }
-      rejectMutation.mutate({
-        id: request.id,
-        reason: rejectionReason.trim(),
+      queryClient.invalidateQueries({
+        queryKey: requestKeys.detail(requestId),
       });
-    }
-  }, [actionTarget, request, rejectionReason, approveMutation, rejectMutation]);
+    },
+  });
+
+  const cancelRequest = useCancelRequest({
+    onSuccess: () => {
+      router.push('/hr/requests');
+    },
+  });
+
+  const handleApprove = useCallback(() => {
+    approveRequest.mutate(requestId);
+  }, [approveRequest, requestId]);
+
+  const handleCancelConfirm = useCallback(() => {
+    cancelRequest.mutate(requestId);
+    setShowCancelPin(false);
+  }, [cancelRequest, requestId]);
 
   // ============================================================================
   // LOADING STATE
@@ -179,7 +149,7 @@ export default function RequestDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Solicitações', href: '/hr/requests' },
             ]}
           />
@@ -191,13 +161,13 @@ export default function RequestDetailPage() {
     );
   }
 
-  if (!request) {
+  if (error || !requestData) {
     return (
       <PageLayout>
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Solicitações', href: '/hr/requests' },
             ]}
           />
@@ -217,10 +187,12 @@ export default function RequestDetailPage() {
     );
   }
 
-  const typeLabel = REQUEST_TYPE_LABELS[request.type];
+  const request = requestData;
+  const typeLabel = getRequestTypeLabel(request.type);
+  const statusLabel = getRequestStatusLabel(request.status);
+  const statusVariant = getRequestStatusVariant(request.status);
   const TypeIcon = REQUEST_TYPE_ICONS[request.type];
-  const gradient = REQUEST_TYPE_GRADIENTS[request.type];
-  const statusConfig = STATUS_CONFIG[request.status];
+  const gradient = getRequestTypeGradient(request.type);
 
   // Render request data fields
   const dataEntries = Object.entries(request.data || {}).filter(
@@ -232,20 +204,32 @@ export default function RequestDetailPage() {
   // ============================================================================
 
   const actionButtons = [];
-  if (canApprove && request.status === 'PENDING') {
+
+  if (request.status === 'PENDING') {
+    // Cancel button for own requests
     actionButtons.push({
-      id: 'reject',
-      title: 'Rejeitar',
-      icon: X,
-      onClick: () => setActionTarget('reject'),
+      id: 'cancel',
+      title: 'Cancelar Solicitação',
+      icon: Ban,
+      onClick: () => setShowCancelPin(true),
       variant: 'outline' as const,
     });
-    actionButtons.push({
-      id: 'approve',
-      title: 'Aprovar',
-      icon: Check,
-      onClick: () => setActionTarget('approve'),
-    });
+
+    if (canApprove) {
+      actionButtons.push({
+        id: 'reject',
+        title: 'Rejeitar',
+        icon: XCircle,
+        onClick: () => setShowRejectModal(true),
+        variant: 'outline' as const,
+      });
+      actionButtons.push({
+        id: 'approve',
+        title: 'Aprovar',
+        icon: Check,
+        onClick: handleApprove,
+      });
+    }
   }
 
   // ============================================================================
@@ -257,7 +241,7 @@ export default function RequestDetailPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
+            { label: 'RH', href: '/hr' },
             { label: 'Solicitações', href: '/hr/requests' },
             { label: typeLabel },
           ]}
@@ -277,9 +261,7 @@ export default function RequestDetailPage() {
                 <h1 className="text-2xl font-bold tracking-tight">
                   {typeLabel}
                 </h1>
-                <Badge variant={statusConfig.variant}>
-                  {statusConfig.label}
-                </Badge>
+                <Badge variant={statusVariant}>{statusLabel}</Badge>
               </div>
               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                 {request.employee && (
@@ -313,7 +295,7 @@ export default function RequestDetailPage() {
       </PageHeader>
 
       <PageBody className="space-y-6">
-        {/* Detalhes */}
+        {/* Request Details */}
         <Card className="p-4 sm:p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
           <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4">
             <ClipboardList className="h-5 w-5" />
@@ -323,12 +305,8 @@ export default function RequestDetailPage() {
             <InfoField label="Tipo" value={typeLabel} />
             <InfoField
               label="Status"
-              value={statusConfig.label}
-              badge={
-                <Badge variant={statusConfig.variant}>
-                  {statusConfig.label}
-                </Badge>
-              }
+              value={statusLabel}
+              badge={<Badge variant={statusVariant}>{statusLabel}</Badge>}
             />
             {request.employee && (
               <InfoField
@@ -356,7 +334,22 @@ export default function RequestDetailPage() {
                 value={request.approverEmployee.fullName}
               />
             )}
+            {request.approvedAt && (
+              <InfoField
+                label="Data da Aprovacao"
+                value={new Date(request.approvedAt).toLocaleDateString(
+                  'pt-BR',
+                  {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                  }
+                )}
+              />
+            )}
           </div>
+
+          {/* Rejection reason */}
           {request.rejectionReason && (
             <div className="mt-4 p-4 rounded-lg border border-rose-200 dark:border-rose-500/20 bg-rose-50/50 dark:bg-rose-500/5">
               <p className="text-sm font-medium text-rose-700 dark:text-rose-300 mb-1">
@@ -369,7 +362,7 @@ export default function RequestDetailPage() {
           )}
         </Card>
 
-        {/* Dados da Solicitação */}
+        {/* Additional Data */}
         {dataEntries.length > 0 && (
           <Card className="p-4 sm:p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
             <h3 className="text-lg items-center flex uppercase font-semibold gap-2 mb-4">
@@ -382,8 +375,9 @@ export default function RequestDetailPage() {
                   key={key}
                   className="flex items-center justify-between p-3 rounded-lg border"
                 >
-                  <span className="text-sm font-medium capitalize">
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                  <span className="text-sm font-medium">
+                    {DATA_FIELD_LABELS[key] ||
+                      key.replace(/([A-Z])/g, ' $1').trim()}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     {String(value)}
@@ -395,75 +389,21 @@ export default function RequestDetailPage() {
         )}
       </PageBody>
 
-      {/* Approve/Reject Dialog */}
-      <Dialog
-        open={!!actionTarget}
-        onOpenChange={v => {
-          if (!v) {
-            setActionTarget(null);
-            setRejectionReason('');
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {actionTarget === 'approve'
-                ? 'Aprovar Solicitação'
-                : 'Rejeitar Solicitação'}
-            </DialogTitle>
-            <DialogDescription>
-              {actionTarget === 'approve'
-                ? `Confirma a aprovação da solicitação de ${typeLabel}?`
-                : 'Informe o motivo da rejeição.'}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        requestId={requestId}
+      />
 
-          {actionTarget === 'reject' && (
-            <div className="space-y-2 py-2">
-              <Label>Motivo da Rejeição</Label>
-              <Textarea
-                value={rejectionReason}
-                onChange={e => setRejectionReason(e.target.value)}
-                placeholder="Descreva o motivo da rejeição..."
-                rows={3}
-              />
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setActionTarget(null);
-                setRejectionReason('');
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant={actionTarget === 'approve' ? 'default' : 'destructive'}
-              onClick={handleAction}
-              disabled={approveMutation.isPending || rejectMutation.isPending}
-            >
-              {(approveMutation.isPending || rejectMutation.isPending) && (
-                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-              )}
-              {actionTarget === 'approve' ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                  Confirmar Aprovação
-                </>
-              ) : (
-                <>
-                  <XCircle className="h-4 w-4 mr-1.5" />
-                  Confirmar Rejeição
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Cancel PIN Modal */}
+      <VerifyActionPinModal
+        isOpen={showCancelPin}
+        onClose={() => setShowCancelPin(false)}
+        onSuccess={handleCancelConfirm}
+        title="Confirmar Cancelamento"
+        description="Digite seu PIN de ação para cancelar esta solicitação."
+      />
     </PageLayout>
   );
 }

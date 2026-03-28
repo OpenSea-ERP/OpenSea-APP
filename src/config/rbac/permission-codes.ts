@@ -331,6 +331,22 @@ export const HR_PERMISSIONS = {
     'print',
     'admin'
   ),
+  EMPLOYEE_REQUESTS: perm(
+    'hr',
+    'employee-requests',
+    'access',
+    'register',
+    'admin'
+  ),
+  ONBOARDING: perm(
+    'hr',
+    'onboarding',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
   TIME_CONTROL: perm(
     'hr',
     'time-control',

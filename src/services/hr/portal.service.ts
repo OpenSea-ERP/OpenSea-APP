@@ -194,7 +194,7 @@ export const portalService = {
   ): Promise<EmployeeRequestResponse> {
     return apiClient.post<EmployeeRequestResponse>(
       `/v1/hr/requests/${id}/reject`,
-      { reason }
+      { rejectionReason: reason }
     );
   },
 };

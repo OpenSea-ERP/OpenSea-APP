@@ -21,3 +21,4 @@ export * from './geofence-zone.types';
 export * from './admission.types';
 export * from './benefit.types';
 export * from './portal.types';
+export * from './onboarding.types';

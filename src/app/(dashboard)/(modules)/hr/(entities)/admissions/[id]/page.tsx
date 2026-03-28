@@ -22,6 +22,7 @@ import {
   Building2,
   Calendar,
   CheckCircle,
+  ClipboardList,
   Clock,
   ExternalLink,
   Eye,
@@ -289,6 +290,31 @@ export default function AdmissionDetailPage() {
                 >
                   <ExternalLink className="h-4 w-4 mr-1" />
                   Ver Funcionário
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Onboarding checklist link (if employee was created from approval) */}
+          {admission.employeeId && (
+            <Card className="p-4 bg-sky-50/50 dark:bg-sky-500/5 border-sky-200 dark:border-sky-500/20">
+              <div className="flex items-center gap-3">
+                <ClipboardList className="h-5 w-5 text-sky-500" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-sky-700 dark:text-sky-300">
+                    Checklist de Onboarding gerado automaticamente
+                  </p>
+                  <p className="text-xs text-sky-600/80 dark:text-sky-400/80">
+                    Acompanhe o progresso de integração do novo colaborador
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push('/hr/onboarding')}
+                >
+                  <ClipboardList className="h-4 w-4 mr-1" />
+                  Ver Onboarding
                 </Button>
               </div>
             </Card>

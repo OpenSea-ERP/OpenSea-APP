@@ -213,7 +213,7 @@ export default function BonusEditPage() {
       onClick: () => setDeleteModalOpen(true),
       variant: 'default' as const,
       className:
-        'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+        'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-slate-800 dark:text-white dark:hover:bg-rose-600',
     },
     {
       id: 'save',

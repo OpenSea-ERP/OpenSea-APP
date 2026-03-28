@@ -1,62 +1,50 @@
 /**
- * HR Requests Management Page (Manager View)
- * Gestão de solicitações dos colaboradores
+ * HR Employee Requests Page
+ * Solicitacoes dos colaboradores
  */
 
 'use client';
 
-import { GridLoading } from '@/components/handlers/grid-loading';
 import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
+import { SearchBar } from '@/components/layout/search-bar';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
-import { SearchBar } from '@/components/layout/search-bar';
+import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Button } from '@/components/ui/button';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   CoreProvider,
   EntityCard,
   EntityContextMenu,
   EntityGrid,
 } from '@/core';
-import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
-import { portalService } from '@/services/hr';
 import type { EmployeeRequest, RequestType, RequestStatus } from '@/types/hr';
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import {
+  Ban,
   Calendar,
   Check,
-  CheckCircle2,
+  CircleCheck,
   ClipboardList,
   FileText,
   Loader2,
   PalmtreeIcon,
+  Plus,
   Send,
   UserCog,
-  X,
   XCircle,
 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   Suspense,
   useCallback,
@@ -65,19 +53,40 @@ import {
   useRef,
   useState,
 } from 'react';
-import { toast } from 'sonner';
+import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
+import {
+  requestsConfig,
+  useListMyRequests,
+  useListPendingRequests,
+  useApproveRequest,
+  useCancelRequest,
+  getRequestTypeLabel,
+  getRequestStatusLabel,
+  getRequestStatusColor,
+  getRequestStatusVariant,
+  getRequestTypeColor,
+  getRequestTypeGradient,
+} from './src';
+
+const CreateRequestModal = dynamic(
+  () =>
+    import('./src/modals/create-modal').then((m) => ({
+      default: m.CreateRequestModal,
+    })),
+  { ssr: false }
+);
+const RejectModal = dynamic(
+  () =>
+    import('./src/modals/reject-modal').then((m) => ({
+      default: m.RejectModal,
+    })),
+  { ssr: false }
+);
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
-  VACATION: 'Férias',
-  ABSENCE: 'Ausência',
-  ADVANCE: 'Adiantamento',
-  DATA_CHANGE: 'Alteração de Dados',
-  SUPPORT: 'Suporte',
-};
 
 const REQUEST_TYPE_ICONS: Record<RequestType, LucideIcon> = {
   VACATION: PalmtreeIcon,
@@ -85,27 +94,6 @@ const REQUEST_TYPE_ICONS: Record<RequestType, LucideIcon> = {
   ADVANCE: FileText,
   DATA_CHANGE: UserCog,
   SUPPORT: Send,
-};
-
-const REQUEST_TYPE_GRADIENTS: Record<RequestType, string> = {
-  VACATION: 'from-green-500 to-green-600',
-  ABSENCE: 'from-rose-500 to-rose-600',
-  ADVANCE: 'from-amber-500 to-amber-600',
-  DATA_CHANGE: 'from-blue-500 to-blue-600',
-  SUPPORT: 'from-violet-500 to-violet-600',
-};
-
-const STATUS_CONFIG: Record<
-  RequestStatus,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
-  }
-> = {
-  PENDING: { label: 'Pendente', variant: 'outline' },
-  APPROVED: { label: 'Aprovada', variant: 'default' },
-  REJECTED: { label: 'Rejeitada', variant: 'destructive' },
-  CANCELLED: { label: 'Cancelada', variant: 'secondary' },
 };
 
 const TYPE_FILTER_OPTIONS = [
@@ -123,6 +111,10 @@ const STATUS_FILTER_OPTIONS = [
   { id: 'CANCELLED', label: 'Cancelada' },
 ];
 
+// ============================================================================
+// PAGE COMPONENT
+// ============================================================================
+
 export default function RequestsPage() {
   return (
     <Suspense
@@ -135,102 +127,71 @@ export default function RequestsPage() {
 
 function RequestsPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
-  const canApprove = hasPermission(HR_PERMISSIONS.EMPLOYEES.MANAGE);
+  const canView = hasPermission(HR_PERMISSIONS.EMPLOYEE_REQUESTS.VIEW);
+  const canCreate = hasPermission(HR_PERMISSIONS.EMPLOYEE_REQUESTS.CREATE);
+  const canApprove = hasPermission(HR_PERMISSIONS.EMPLOYEE_REQUESTS.APPROVE);
 
   // ============================================================================
-  // STATE
+  // FILTERS
   // ============================================================================
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [actionTarget, setActionTarget] = useState<{
-    request: EmployeeRequest;
-    action: 'approve' | 'reject';
-  } | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [filterType, setFilterType] = useState<RequestType | ''>('');
+  const [filterStatus, setFilterStatus] = useState<RequestStatus | ''>('');
+  const [viewMode, setViewMode] = useState<'my' | 'pending'>('my');
+
+  const queryParams = useMemo(() => {
+    const params: Record<string, unknown> = { perPage: 20 };
+    if (filterType) params.type = filterType;
+    if (filterStatus) params.status = filterStatus;
+    return params;
+  }, [filterType, filterStatus]);
 
   // ============================================================================
-  // URL-BASED FILTERS
+  // DATA
   // ============================================================================
 
-  const typeFilter = useMemo(() => {
-    const raw = searchParams.get('type');
-    return raw ? raw.split(',').filter(Boolean) : [];
-  }, [searchParams]);
-
-  const statusFilter = useMemo(() => {
-    const raw = searchParams.get('status');
-    return raw ? raw.split(',').filter(Boolean) : [];
-  }, [searchParams]);
-
-  const buildFilterUrl = useCallback(
-    (params: { type?: string[]; status?: string[] }) => {
-      const types = params.type !== undefined ? params.type : typeFilter;
-      const statuses =
-        params.status !== undefined ? params.status : statusFilter;
-      const parts: string[] = [];
-      if (types.length > 0) parts.push(`type=${types.join(',')}`);
-      if (statuses.length > 0) parts.push(`status=${statuses.join(',')}`);
-      return parts.length > 0
-        ? `/hr/requests?${parts.join('&')}`
-        : '/hr/requests';
-    },
-    [typeFilter, statusFilter]
+  const myRequestsQuery = useListMyRequests(
+    viewMode === 'my' ? queryParams : undefined
+  );
+  const pendingRequestsQuery = useListPendingRequests(
+    viewMode === 'pending' ? queryParams : undefined
   );
 
-  const setTypeFilter = useCallback(
-    (ids: string[]) => {
-      router.push(buildFilterUrl({ type: ids }));
-    },
-    [router, buildFilterUrl]
-  );
-
-  const setStatusFilter = useCallback(
-    (ids: string[]) => {
-      router.push(buildFilterUrl({ status: ids }));
-    },
-    [router, buildFilterUrl]
-  );
-
-  // ============================================================================
-  // DATA FETCHING
-  // ============================================================================
-
-  const PAGE_SIZE = 20;
+  const activeQuery =
+    viewMode === 'my' ? myRequestsQuery : pendingRequestsQuery;
 
   const {
-    data: infiniteData,
+    data,
     isLoading,
     error,
     refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['hr-pending-requests'],
-    queryFn: async ({ pageParam = 1 }) => {
-      const response = await portalService.listPendingApprovals({
-        page: pageParam,
-        perPage: PAGE_SIZE,
-      });
-      return response;
-    },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const currentPage = lastPage.meta?.page ?? 1;
-      const totalPages = lastPage.meta?.totalPages ?? 1;
-      if (currentPage < totalPages) {
-        return currentPage + 1;
-      }
-      return undefined;
-    },
-  });
+  } = activeQuery;
 
-  const requestsData =
-    infiniteData?.pages.flatMap(p => p.requests) ?? [];
+  const approveRequest = useApproveRequest();
+  const cancelRequest = useCancelRequest();
+
+  const requests = useMemo(
+    () => data?.pages.flatMap((p) => p.requests ?? []) ?? [],
+    [data]
+  );
+
+  // Client-side search filter
+  const filteredRequests = useMemo(() => {
+    if (!searchQuery) return requests;
+    const q = searchQuery.toLowerCase();
+    return requests.filter(
+      (item) =>
+        getRequestTypeLabel(item.type).toLowerCase().includes(q) ||
+        getRequestStatusLabel(item.status).toLowerCase().includes(q) ||
+        item.employee?.fullName?.toLowerCase().includes(q)
+    );
+  }, [requests, searchQuery]);
 
   // ============================================================================
   // INFINITE SCROLL SENTINEL
@@ -239,11 +200,11 @@ function RequestsPageContent() {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
     const observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
@@ -251,138 +212,144 @@ function RequestsPageContent() {
       { rootMargin: '300px' }
     );
 
-    observer.observe(el);
+    observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // ============================================================================
-  // MUTATIONS
+  // STATE
   // ============================================================================
 
-  const approveMutation = useMutation({
-    mutationFn: (id: string) => portalService.approveRequest(id),
-    onSuccess: () => {
-      toast.success('Solicitação aprovada com sucesso');
-      queryClient.invalidateQueries({ queryKey: ['hr-pending-requests'] });
-      setActionTarget(null);
-    },
-    onError: () => {
-      toast.error('Erro ao aprovar solicitação');
-    },
-  });
-
-  const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      portalService.rejectRequest(id, reason),
-    onSuccess: () => {
-      toast.success('Solicitação rejeitada');
-      queryClient.invalidateQueries({ queryKey: ['hr-pending-requests'] });
-      setActionTarget(null);
-      setRejectionReason('');
-    },
-    onError: () => {
-      toast.error('Erro ao rejeitar solicitação');
-    },
-  });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectRequestId, setRejectRequestId] = useState<string | null>(null);
+  const [showCancelPin, setShowCancelPin] = useState(false);
+  const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
 
   // ============================================================================
-  // FILTERED ITEMS
+  // COMPUTED
   // ============================================================================
 
-  const filteredItems = useMemo(() => {
-    let items = requestsData;
-
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      items = items.filter(
-        item =>
-          (item.employee?.fullName &&
-            item.employee.fullName.toLowerCase().includes(q)) ||
-          REQUEST_TYPE_LABELS[item.type]?.toLowerCase().includes(q) ||
-          STATUS_CONFIG[item.status]?.label.toLowerCase().includes(q)
-      );
-    }
-
-    if (typeFilter.length > 0) {
-      const set = new Set(typeFilter);
-      items = items.filter(item => set.has(item.type));
-    }
-
-    if (statusFilter.length > 0) {
-      const set = new Set(statusFilter);
-      items = items.filter(item => set.has(item.status));
-    }
-
-    return items;
-  }, [requestsData, searchQuery, typeFilter, statusFilter]);
+  const initialIds = useMemo(
+    () => filteredRequests.map((i) => i.id),
+    [filteredRequests]
+  );
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
 
-  const handleAction = useCallback(() => {
-    if (!actionTarget) return;
+  const handleOpenCreate = useCallback(() => {
+    setShowCreateModal(true);
+  }, []);
 
-    if (actionTarget.action === 'approve') {
-      approveMutation.mutate(actionTarget.request.id);
-    } else {
-      if (!rejectionReason.trim()) {
-        toast.error('Informe o motivo da rejeição');
-        return;
-      }
-      rejectMutation.mutate({
-        id: actionTarget.request.id,
-        reason: rejectionReason.trim(),
+  const handleApprove = useCallback(
+    (id: string) => {
+      approveRequest.mutate(id);
+    },
+    [approveRequest]
+  );
+
+  const handleReject = useCallback((id: string) => {
+    setRejectRequestId(id);
+    setShowRejectModal(true);
+  }, []);
+
+  const handleCancel = useCallback((id: string) => {
+    setCancelTargetId(id);
+    setShowCancelPin(true);
+  }, []);
+
+  const handleCancelConfirm = useCallback(() => {
+    if (cancelTargetId) {
+      cancelRequest.mutate(cancelTargetId);
+    }
+    setShowCancelPin(false);
+    setCancelTargetId(null);
+  }, [cancelTargetId, cancelRequest]);
+
+  const handleBulkApprove = useCallback(
+    async (ids: string[]) => {
+      const pendingIds = ids.filter((id) => {
+        const item = filteredRequests.find((r) => r.id === id);
+        return item && item.status === 'PENDING';
       });
-    }
-  }, [actionTarget, rejectionReason, approveMutation, rejectMutation]);
+      if (pendingIds.length === 0) return;
+      for (const id of pendingIds) {
+        approveRequest.mutate(id);
+      }
+    },
+    [filteredRequests, approveRequest]
+  );
 
-  const handleView = (ids: string[]) => {
-    if (ids.length === 1) {
-      router.push(`/hr/requests/${ids[0]}`);
-    }
-  };
+  // ============================================================================
+  // CONTEXT MENU
+  // ============================================================================
+
+  const getContextActions = useCallback(
+    (item: EmployeeRequest): ContextMenuAction[] => {
+      const actions: ContextMenuAction[] = [];
+
+      if (canApprove && item.status === 'PENDING') {
+        actions.push({
+          id: 'approve',
+          label: 'Aprovar',
+          icon: Check,
+          separator: 'before',
+          onClick: () => handleApprove(item.id),
+        });
+        actions.push({
+          id: 'reject',
+          label: 'Rejeitar',
+          icon: XCircle,
+          onClick: () => handleReject(item.id),
+          variant: 'destructive',
+        });
+      }
+
+      if (item.status === 'PENDING' && viewMode === 'my') {
+        actions.push({
+          id: 'cancel',
+          label: 'Cancelar',
+          icon: Ban,
+          separator: actions.length > 0 ? 'before' : undefined,
+          onClick: () => handleCancel(item.id),
+          variant: 'destructive',
+        });
+      }
+
+      return actions;
+    },
+    [canApprove, viewMode, handleApprove, handleReject, handleCancel]
+  );
 
   // ============================================================================
   // RENDER CARDS
   // ============================================================================
 
   const renderGridCard = (item: EmployeeRequest, isSelected: boolean) => {
-    const typeLabel = REQUEST_TYPE_LABELS[item.type];
+    const typeLabel = getRequestTypeLabel(item.type);
+    const statusLabel = getRequestStatusLabel(item.status);
     const TypeIcon = REQUEST_TYPE_ICONS[item.type];
-    const gradient = REQUEST_TYPE_GRADIENTS[item.type];
-    const statusConfig = STATUS_CONFIG[item.status];
+    const gradient = getRequestTypeGradient(item.type);
+    const statusVariant = getRequestStatusVariant(item.status);
 
     return (
       <EntityContextMenu
         itemId={item.id}
-        onView={handleView}
-        actions={[
-          ...(canApprove && item.status === 'PENDING'
-            ? [
-                {
-                  id: 'approve',
-                  label: 'Aprovar',
-                  icon: Check,
-                  onClick: () =>
-                    setActionTarget({ request: item, action: 'approve' }),
-                },
-                {
-                  id: 'reject',
-                  label: 'Rejeitar',
-                  icon: X,
-                  separator: 'before' as const,
-                  onClick: () =>
-                    setActionTarget({ request: item, action: 'reject' }),
-                },
-              ]
-            : []),
-        ]}
+        onView={
+          canView
+            ? (ids: string[]) => {
+                if (ids.length > 0) router.push(`/hr/requests/${ids[0]}`);
+              }
+            : undefined
+        }
+        actions={getContextActions(item)}
       >
         <EntityCard
           id={item.id}
           variant="grid"
-          title={item.employee?.fullName || 'Colaborador'}
+          title={item.employee?.fullName || typeLabel}
           subtitle={
             item.employee?.department
               ? `${typeLabel} - ${item.employee.department.name}`
@@ -394,70 +361,112 @@ function RequestsPageContent() {
             {
               label: typeLabel,
               variant: 'outline',
+              color: getRequestTypeColor(item.type),
             },
             {
-              label: statusConfig.label,
-              variant: statusConfig.variant,
+              label: statusLabel,
+              variant: statusVariant,
+              color: getRequestStatusColor(item.status),
             },
           ]}
-          footer={{
-            type: 'single',
-            button: {
-              icon: Calendar,
-              label: new Date(item.createdAt).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-              }),
-              color: 'blue',
-            },
-          }}
+          metadata={
+            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+              {item.employee && (
+                <div className="flex items-center gap-1.5">
+                  <ClipboardList className="h-3 w-3" />
+                  <span>{item.employee.fullName}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3 w-3" />
+                <span>
+                  {new Date(item.createdAt).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
+            </div>
+          }
           isSelected={isSelected}
-          showSelection={false}
-          clickable={false}
+          showSelection={true}
+          clickable
+          onClick={() => router.push(`/hr/requests/${item.id}`)}
           createdAt={item.createdAt}
-          showStatusBadges={false}
-        />
+          updatedAt={item.updatedAt}
+        >
+          {item.status === 'PENDING' && canApprove && (
+            <div
+              className="flex gap-2 pt-2 border-t"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 text-xs text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                onClick={() => handleApprove(item.id)}
+                disabled={approveRequest.isPending}
+              >
+                <Check className="h-3.5 w-3.5 mr-1" />
+                Aprovar
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10"
+                onClick={() => handleReject(item.id)}
+              >
+                <XCircle className="h-3.5 w-3.5 mr-1" />
+                Rejeitar
+              </Button>
+            </div>
+          )}
+          {item.status === 'PENDING' && viewMode === 'my' && !canApprove && (
+            <div
+              className="flex gap-2 pt-2 border-t"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 text-xs text-slate-500 hover:bg-slate-50"
+                onClick={() => handleCancel(item.id)}
+                disabled={cancelRequest.isPending}
+              >
+                <Ban className="h-3.5 w-3.5 mr-1" />
+                Cancelar
+              </Button>
+            </div>
+          )}
+        </EntityCard>
       </EntityContextMenu>
     );
   };
 
   const renderListCard = (item: EmployeeRequest, isSelected: boolean) => {
-    const typeLabel = REQUEST_TYPE_LABELS[item.type];
+    const typeLabel = getRequestTypeLabel(item.type);
+    const statusLabel = getRequestStatusLabel(item.status);
     const TypeIcon = REQUEST_TYPE_ICONS[item.type];
-    const gradient = REQUEST_TYPE_GRADIENTS[item.type];
-    const statusConfig = STATUS_CONFIG[item.status];
+    const gradient = getRequestTypeGradient(item.type);
+    const statusVariant = getRequestStatusVariant(item.status);
 
     return (
       <EntityContextMenu
         itemId={item.id}
-        onView={handleView}
-        actions={[
-          ...(canApprove && item.status === 'PENDING'
-            ? [
-                {
-                  id: 'approve',
-                  label: 'Aprovar',
-                  icon: Check,
-                  onClick: () =>
-                    setActionTarget({ request: item, action: 'approve' }),
-                },
-                {
-                  id: 'reject',
-                  label: 'Rejeitar',
-                  icon: X,
-                  separator: 'before' as const,
-                  onClick: () =>
-                    setActionTarget({ request: item, action: 'reject' }),
-                },
-              ]
-            : []),
-        ]}
+        onView={
+          canView
+            ? (ids: string[]) => {
+                if (ids.length > 0) router.push(`/hr/requests/${ids[0]}`);
+              }
+            : undefined
+        }
+        actions={getContextActions(item)}
       >
         <EntityCard
           id={item.id}
           variant="list"
-          title={item.employee?.fullName || 'Colaborador'}
+          title={item.employee?.fullName || typeLabel}
           subtitle={
             item.employee?.department
               ? `${typeLabel} - ${item.employee.department.name}`
@@ -469,42 +478,68 @@ function RequestsPageContent() {
             {
               label: typeLabel,
               variant: 'outline',
+              color: getRequestTypeColor(item.type),
             },
             {
-              label: statusConfig.label,
-              variant: statusConfig.variant,
+              label: statusLabel,
+              variant: statusVariant,
+              color: getRequestStatusColor(item.status),
             },
           ]}
-          footer={{
-            type: 'single',
-            button: {
-              icon: Calendar,
-              label: new Date(item.createdAt).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-              }),
-              color: 'blue',
-            },
-          }}
+          metadata={
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              {item.employee && (
+                <span className="flex items-center gap-1">
+                  <ClipboardList className="h-3 w-3" />
+                  {item.employee.fullName}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {new Date(item.createdAt).toLocaleDateString('pt-BR')}
+              </span>
+            </div>
+          }
           isSelected={isSelected}
-          showSelection={false}
-          clickable={false}
+          showSelection={true}
+          clickable
+          onClick={() => router.push(`/hr/requests/${item.id}`)}
           createdAt={item.createdAt}
-          showStatusBadges={false}
+          updatedAt={item.updatedAt}
         />
       </EntityContextMenu>
     );
   };
 
   // ============================================================================
-  // COMPUTED VALUES
+  // HEADER BUTTONS
   // ============================================================================
 
-  const initialIds = useMemo(
-    () => filteredItems.map(i => i.id),
-    [filteredItems]
-  );
+  const actionButtons: HeaderButton[] = useMemo(() => {
+    const buttons: HeaderButton[] = [];
+    if (canCreate) {
+      buttons.push({
+        id: 'create-request',
+        title: 'Nova Solicitação',
+        icon: Plus,
+        onClick: handleOpenCreate,
+        variant: 'default',
+      });
+    }
+    return buttons;
+  }, [canCreate, handleOpenCreate]);
+
+  // ============================================================================
+  // LOADING
+  // ============================================================================
+
+  if (isLoadingPermissions) {
+    return (
+      <PageLayout>
+        <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
+      </PageLayout>
+    );
+  }
 
   // ============================================================================
   // RENDER
@@ -524,8 +559,8 @@ function RequestsPageContent() {
               { label: 'RH', href: '/hr' },
               { label: 'Solicitações', href: '/hr/requests' },
             ]}
+            buttons={actionButtons}
           />
-
           <Header
             title="Solicitações"
             description="Gerencie solicitações dos colaboradores"
@@ -534,16 +569,16 @@ function RequestsPageContent() {
 
         <PageBody>
           <SearchBar
-            placeholder="Buscar solicitações..."
             value={searchQuery}
-            onSearch={value => setSearchQuery(value)}
+            placeholder="Buscar solicitações..."
+            onSearch={(value) => setSearchQuery(value)}
             onClear={() => setSearchQuery('')}
             showClear={true}
             size="md"
           />
 
           {isLoading ? (
-            <GridLoading count={6} layout="grid" size="md" gap="gap-4" />
+            <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
           ) : error ? (
             <GridError
               type="server"
@@ -558,73 +593,52 @@ function RequestsPageContent() {
             />
           ) : (
             <EntityGrid
-              config={{
-                name: 'Request',
-                namePlural: 'Requests',
-                slug: 'requests',
-                icon: ClipboardList,
-                api: {
-                  baseUrl: '/api/v1/hr/approvals',
-                  queryKey: 'hr-pending-requests',
-                  queryKeys: {
-                    list: ['hr-pending-requests'],
-                    detail: (id: string) => ['hr-pending-requests', id],
-                  },
-                  endpoints: {
-                    list: '/v1/hr/approvals/pending',
-                    get: '/v1/hr/approvals/:id',
-                  },
-                },
-                routes: {
-                  list: '/hr/requests',
-                  detail: '/hr/requests/:id',
-                },
-                permissions: {
-                  view: HR_PERMISSIONS.EMPLOYEES.MANAGE,
-                  create: HR_PERMISSIONS.EMPLOYEES.MANAGE,
-                  delete: HR_PERMISSIONS.EMPLOYEES.MANAGE,
-                },
-                display: {
-                  icon: ClipboardList,
-                  color: 'blue',
-                  gradient: 'from-blue-500 to-blue-600',
-                  titleField: 'type',
-                  labels: {
-                    singular: 'Solicitação',
-                    plural: 'Solicitações',
-                    emptyState: 'Nenhuma solicitação encontrada',
-                    searchPlaceholder: 'Buscar solicitações...',
-                  },
-                },
-                grid: {
-                  defaultView: 'grid',
-                  columns: { sm: 1, md: 2, lg: 3, xl: 4 },
-                  showViewToggle: true,
-                  enableDragSelection: false,
-                  selectable: false,
-                  searchableFields: ['type'],
-                  defaultSort: { field: 'createdAt', direction: 'desc' },
-                  pageSize: 20,
-                },
-              }}
-              items={filteredItems}
+              config={requestsConfig}
+              items={filteredRequests}
               toolbarStart={
                 <>
+                  {/* View mode toggle */}
+                  <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+                    <button
+                      type="button"
+                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                        viewMode === 'my'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      onClick={() => setViewMode('my')}
+                    >
+                      Minhas
+                    </button>
+                    {canApprove && (
+                      <button
+                        type="button"
+                        className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                          viewMode === 'pending'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                        onClick={() => setViewMode('pending')}
+                      >
+                        Pendentes
+                      </button>
+                    )}
+                  </div>
+
                   <FilterDropdown
                     label="Tipo"
                     icon={ClipboardList}
                     options={TYPE_FILTER_OPTIONS}
-                    selected={typeFilter}
-                    onSelectionChange={setTypeFilter}
+                    value={filterType}
+                    onChange={(v) => setFilterType(v as RequestType | '')}
                     activeColor="blue"
-                    searchPlaceholder="Buscar tipo..."
-                    emptyText="Nenhum tipo encontrado."
                   />
                   <FilterDropdown
                     label="Status"
+                    icon={CircleCheck}
                     options={STATUS_FILTER_OPTIONS}
-                    selected={statusFilter}
-                    onSelectionChange={setStatusFilter}
+                    value={filterStatus}
+                    onChange={(v) => setFilterStatus(v as RequestStatus | '')}
                     activeColor="emerald"
                   />
                 </>
@@ -633,15 +647,14 @@ function RequestsPageContent() {
               renderListItem={renderListCard}
               isLoading={isLoading}
               isSearching={!!searchQuery}
-              onItemClick={item => handleView([item.id])}
-              onItemDoubleClick={item => handleView([item.id])}
+              onItemClick={(item) => router.push(`/hr/requests/${item.id}`)}
+              onItemDoubleClick={(item) => router.push(`/hr/requests/${item.id}`)}
               showSorting={true}
               defaultSortField="createdAt"
               defaultSortDirection="desc"
             />
           )}
 
-          {/* Infinite scroll sentinel */}
           <div ref={sentinelRef} className="h-1" />
           {isFetchingNextPage && (
             <div className="flex justify-center py-4">
@@ -649,81 +662,51 @@ function RequestsPageContent() {
             </div>
           )}
 
-          {/* Approve/Reject Dialog */}
-          <Dialog
-            open={!!actionTarget}
-            onOpenChange={v => {
-              if (!v) {
-                setActionTarget(null);
-                setRejectionReason('');
-              }
+          <CreateRequestModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+          />
+
+          <RejectModal
+            isOpen={showRejectModal}
+            onClose={() => {
+              setShowRejectModal(false);
+              setRejectRequestId(null);
             }}
-          >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>
-                  {actionTarget?.action === 'approve'
-                    ? 'Aprovar Solicitação'
-                    : 'Rejeitar Solicitação'}
-                </DialogTitle>
-                <DialogDescription>
-                  {actionTarget?.action === 'approve'
-                    ? `Confirma a aprovação da solicitação de ${REQUEST_TYPE_LABELS[actionTarget?.request.type || 'SUPPORT']}?`
-                    : 'Informe o motivo da rejeição.'}
-                </DialogDescription>
-              </DialogHeader>
+            requestId={rejectRequestId}
+          />
 
-              {actionTarget?.action === 'reject' && (
-                <div className="space-y-2 py-2">
-                  <Label>Motivo da Rejeição</Label>
-                  <Textarea
-                    value={rejectionReason}
-                    onChange={e => setRejectionReason(e.target.value)}
-                    placeholder="Descreva o motivo da rejeição..."
-                    rows={3}
-                  />
-                </div>
-              )}
+          <VerifyActionPinModal
+            isOpen={showCancelPin}
+            onClose={() => {
+              setShowCancelPin(false);
+              setCancelTargetId(null);
+            }}
+            onSuccess={handleCancelConfirm}
+            title="Confirmar Cancelamento"
+            description="Digite seu PIN de ação para cancelar esta solicitação."
+          />
 
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setActionTarget(null);
-                    setRejectionReason('');
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant={
-                    actionTarget?.action === 'approve'
-                      ? 'default'
-                      : 'destructive'
-                  }
-                  onClick={handleAction}
-                  disabled={
-                    approveMutation.isPending || rejectMutation.isPending
-                  }
-                >
-                  {(approveMutation.isPending || rejectMutation.isPending) && (
-                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                  )}
-                  {actionTarget?.action === 'approve' ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                      Confirmar Aprovação
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-4 w-4 mr-1.5" />
-                      Confirmar Rejeição
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <HRSelectionToolbar
+            totalItems={filteredRequests.length}
+            actions={[
+              ...(canApprove
+                ? [
+                    {
+                      id: 'bulk-approve',
+                      label: 'Aprovar',
+                      icon: Check,
+                      onClick: handleBulkApprove,
+                      variant: 'default' as const,
+                    },
+                  ]
+                : []),
+            ]}
+            defaultActions={{
+              export: false,
+            }}
+            handlers={{}}
+          />
         </PageBody>
       </PageLayout>
     </CoreProvider>

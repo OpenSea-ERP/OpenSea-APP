@@ -38,3 +38,4 @@ export {
   type ListEnrollmentsParams,
 } from './benefits.service';
 export * from './portal.service';
+export * from './onboarding.service';

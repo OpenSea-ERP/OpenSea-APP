@@ -164,11 +164,15 @@ export interface OnboardingChecklist {
 // ============================================================================
 
 export interface EmployeeRequestResponse {
-  request: EmployeeRequest;
+  employeeRequest: EmployeeRequest;
+  /** @deprecated Alias for backward compatibility */
+  request?: EmployeeRequest;
 }
 
 export interface EmployeeRequestsResponse {
-  requests: EmployeeRequest[];
+  employeeRequests: EmployeeRequest[];
+  /** @deprecated Alias for backward compatibility */
+  requests?: EmployeeRequest[];
   meta: { total: number; page: number; perPage: number; totalPages: number };
 }
 
@@ -195,6 +199,8 @@ export interface OnboardingResponse {
 }
 
 export interface PendingApprovalsResponse {
-  requests: EmployeeRequest[];
+  employeeRequests: EmployeeRequest[];
+  /** @deprecated Alias for backward compatibility */
+  requests?: EmployeeRequest[];
   meta: { total: number; page: number; perPage: number; totalPages: number };
 }

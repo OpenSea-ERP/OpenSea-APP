@@ -19,6 +19,7 @@ import {
 
 import {
   AlertTriangle,
+  Award,
   BookUser,
   BarChart3,
   CalendarDays,
@@ -81,30 +82,8 @@ const sections: {
     ],
   },
   {
-    title: 'Cadastros',
+    title: 'Colaboradores',
     cards: [
-      {
-        id: 'departments',
-        title: 'Departamentos',
-        description: 'Estrutura organizacional e áreas',
-        icon: BookUser,
-        href: '/hr/departments',
-        gradient: 'from-emerald-500 to-emerald-600',
-        hoverBg: 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
-        permission: HR_PERMISSIONS.DEPARTMENTS.LIST,
-        countKey: 'departments',
-      },
-      {
-        id: 'positions',
-        title: 'Cargos e Funções',
-        description: 'Cadastro de cargos, salários e requisitos',
-        icon: FileUser,
-        href: '/hr/positions',
-        gradient: 'from-amber-500 to-amber-600',
-        hoverBg: 'hover:bg-amber-50 dark:hover:bg-amber-500/10',
-        permission: HR_PERMISSIONS.POSITIONS.LIST,
-        countKey: 'positions',
-      },
       {
         id: 'employees',
         title: 'Funcionários',
@@ -127,6 +106,16 @@ const sections: {
         permission: HR_PERMISSIONS.EMPLOYEES.CREATE,
       },
       {
+        id: 'onboarding',
+        title: 'Onboarding',
+        description: 'Checklists de integração para novos colaboradores',
+        icon: ClipboardList,
+        href: '/hr/onboarding',
+        gradient: 'from-teal-500 to-teal-600',
+        hoverBg: 'hover:bg-teal-50 dark:hover:bg-teal-500/10',
+        permission: HR_PERMISSIONS.ONBOARDING.LIST,
+      },
+      {
         id: 'dependants',
         title: 'Dependentes',
         description: 'Gerencie dependentes dos funcionários',
@@ -145,6 +134,33 @@ const sections: {
         gradient: 'from-purple-500 to-purple-600',
         hoverBg: 'hover:bg-purple-50 dark:hover:bg-purple-500/10',
         permission: HR_PERMISSIONS.DEPARTMENTS.LIST,
+      },
+    ],
+  },
+  {
+    title: 'Estrutura Organizacional',
+    cards: [
+      {
+        id: 'departments',
+        title: 'Departamentos',
+        description: 'Estrutura organizacional e áreas',
+        icon: BookUser,
+        href: '/hr/departments',
+        gradient: 'from-emerald-500 to-emerald-600',
+        hoverBg: 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
+        permission: HR_PERMISSIONS.DEPARTMENTS.LIST,
+        countKey: 'departments',
+      },
+      {
+        id: 'positions',
+        title: 'Cargos e Funções',
+        description: 'Cadastro de cargos, salários e requisitos',
+        icon: FileUser,
+        href: '/hr/positions',
+        gradient: 'from-amber-500 to-amber-600',
+        hoverBg: 'hover:bg-amber-50 dark:hover:bg-amber-500/10',
+        permission: HR_PERMISSIONS.POSITIONS.LIST,
+        countKey: 'positions',
       },
     ],
   },
@@ -229,7 +245,7 @@ const sections: {
     ],
   },
   {
-    title: 'Departamento Pessoal',
+    title: 'Folha de Pagamento',
     cards: [
       {
         id: 'payroll',
@@ -264,11 +280,11 @@ const sections: {
     ],
   },
   {
-    title: 'Benefícios e Portal',
+    title: 'Benefícios',
     cards: [
       {
         id: 'benefits',
-        title: 'Benefícios',
+        title: 'Planos de Benefícios',
         description: 'Planos de benefícios, inscrições e alocações',
         icon: Heart,
         href: '/hr/benefits',
@@ -276,6 +292,11 @@ const sections: {
         hoverBg: 'hover:bg-pink-50 dark:hover:bg-pink-500/10',
         permission: HR_PERMISSIONS.BENEFITS.LIST,
       },
+    ],
+  },
+  {
+    title: 'Comunicação e Portal',
+    cards: [
       {
         id: 'announcements',
         title: 'Comunicados',
@@ -295,6 +316,16 @@ const sections: {
         gradient: 'from-blue-500 to-blue-600',
         hoverBg: 'hover:bg-blue-50 dark:hover:bg-blue-500/10',
         permission: HR_PERMISSIONS.EMPLOYEES.MANAGE,
+      },
+      {
+        id: 'kudos',
+        title: 'Reconhecimento',
+        description: 'Reconheça e celebre conquistas dos colegas',
+        icon: Award,
+        href: '/hr/kudos',
+        gradient: 'from-amber-500 to-amber-600',
+        hoverBg: 'hover:bg-amber-50 dark:hover:bg-amber-500/10',
+        permission: HR_PERMISSIONS.EMPLOYEES.LIST,
       },
     ],
   },
@@ -344,7 +375,7 @@ const sections: {
     ],
   },
   {
-    title: 'Desligamento',
+    title: 'Ciclo de Vida',
     cards: [
       {
         id: 'terminations',

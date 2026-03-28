@@ -59,6 +59,60 @@ export function useCreateDependant(options: CreateDependantOptions = {}) {
 }
 
 /* ===========================================
+   UPDATE
+   =========================================== */
+
+export interface UpdateDependantMutationData {
+  employeeId: string;
+  dependantId: string;
+  data: import('@/types/hr').UpdateDependantData;
+}
+
+export interface UpdateDependantOptions {
+  onSuccess?: (dependant: EmployeeDependant) => void;
+  onError?: (error: Error) => void;
+  showSuccessToast?: boolean;
+  showErrorToast?: boolean;
+}
+
+export function useUpdateDependant(options: UpdateDependantOptions = {}) {
+  const queryClient = useQueryClient();
+  const {
+    onSuccess,
+    onError,
+    showSuccessToast = true,
+    showErrorToast = true,
+  } = options;
+
+  return useMutation({
+    mutationFn: async (
+      variables: UpdateDependantMutationData
+    ): Promise<EmployeeDependant> => {
+      const response = await dependantsService.update(
+        variables.employeeId,
+        variables.dependantId,
+        variables.data
+      );
+      return response.dependant;
+    },
+    onSuccess: (dependant, variables) => {
+      queryClient.invalidateQueries({ queryKey: dependantKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: dependantKeys.detail(variables.dependantId),
+      });
+      if (showSuccessToast) {
+        toast.success(`Dependente "${dependant.name}" atualizado com sucesso!`);
+      }
+      onSuccess?.(dependant);
+    },
+    onError: (error: Error) => {
+      if (showErrorToast) toast.error(translateError(error));
+      onError?.(error);
+    },
+  });
+}
+
+/* ===========================================
    DELETE
    =========================================== */
 

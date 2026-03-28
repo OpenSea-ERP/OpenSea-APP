@@ -1,5 +1,5 @@
 /**
- * OpenSea OS - Deduction Edit Page
+ * OpenSea OS - Geofence Zone Edit Page
  * Follows pattern: PageLayout > PageActionBar (Delete + Save) > Identity Card > Section Cards
  */
 
@@ -19,19 +19,17 @@ import { Card } from '@/components/ui/card';
 import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useEmployeeMap } from '@/hooks/use-employee-map';
-import { deductionsService } from '@/services/hr/deductions.service';
 import { translateError } from '@/lib/error-messages';
 import { logger } from '@/lib/logger';
-import type { Deduction } from '@/types/hr';
+import type { GeofenceZone } from '@/types/hr';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Loader2,
-  MinusCircle,
+  MapPin,
+  Navigation,
   NotebookText,
-  Receipt,
+  Radius,
   Save,
   Trash2,
 } from 'lucide-react';
@@ -39,10 +37,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
-  deductionKeys,
-  formatCurrency,
-  useDeleteDeduction,
-  useUpdateDeduction,
+  geofenceZonesApi,
+  geofenceZoneKeys,
+  formatDate,
+  formatRadius,
+  useUpdateGeofenceZone,
+  useDeleteGeofenceZone,
 } from '../../src';
 
 // =============================================================================
@@ -76,11 +76,11 @@ function SectionHeader({
 // PAGE
 // =============================================================================
 
-export default function DeductionEditPage() {
+export default function GeofenceZoneEditPage() {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const deductionId = params.id as string;
+  const zoneId = params.id as string;
 
   // ==========================================================================
   // STATE
@@ -92,108 +92,104 @@ export default function DeductionEditPage() {
 
   const [formData, setFormData] = useState({
     name: '',
-    amount: '',
-    reason: '',
-    date: '',
-    isRecurring: false,
-    installments: '',
+    latitude: '',
+    longitude: '',
+    radiusMeters: '',
+    address: '',
+    isActive: true,
   });
 
   // ==========================================================================
   // DATA FETCHING
   // ==========================================================================
 
-  const { data: deduction, isLoading } = useQuery<Deduction>({
-    queryKey: deductionKeys.detail(deductionId),
+  const { data: zone, isLoading } = useQuery<GeofenceZone | null>({
+    queryKey: geofenceZoneKeys.detail(zoneId),
     queryFn: async () => {
-      const response = await deductionsService.get(deductionId);
-      return response.deduction;
+      const zones = await geofenceZonesApi.list();
+      return zones.find(z => z.id === zoneId) ?? null;
     },
   });
-
-  const { getName } = useEmployeeMap(
-    deduction ? [deduction.employeeId] : []
-  );
 
   // ==========================================================================
   // MUTATIONS
   // ==========================================================================
 
-  const updateMutation = useUpdateDeduction();
-  const deleteMutation = useDeleteDeduction({
-    onSuccess: () => {
-      router.push('/hr/deductions');
-    },
-  });
+  const updateMutation = useUpdateGeofenceZone();
+  const deleteMutation = useDeleteGeofenceZone();
 
   // ==========================================================================
   // EFFECTS
   // ==========================================================================
 
   useEffect(() => {
-    if (deduction) {
+    if (zone) {
       setFormData({
-        name: deduction.name,
-        amount: String(deduction.amount),
-        reason: deduction.reason || '',
-        date: deduction.date ? deduction.date.slice(0, 10) : '',
-        isRecurring: deduction.isRecurring,
-        installments: deduction.installments
-          ? String(deduction.installments)
-          : '',
+        name: zone.name,
+        latitude: String(zone.latitude),
+        longitude: String(zone.longitude),
+        radiusMeters: String(zone.radiusMeters),
+        address: zone.address || '',
+        isActive: zone.isActive,
       });
     }
-  }, [deduction]);
+  }, [zone]);
 
   // ==========================================================================
   // HANDLERS
   // ==========================================================================
 
   const handleSubmit = async () => {
+    if (!zone) return;
+
     if (!formData.name.trim()) {
       setFieldErrors({ name: 'O nome é obrigatório.' });
       return;
     }
 
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      setFieldErrors({ amount: 'O valor deve ser maior que zero.' });
+    const latitude = parseFloat(formData.latitude);
+    if (isNaN(latitude) || latitude < -90 || latitude > 90) {
+      setFieldErrors({ latitude: 'Latitude inválida (entre -90 e 90).' });
       return;
     }
 
-    const installments = formData.installments
-      ? parseInt(formData.installments)
-      : null;
-    if (!formData.isRecurring && installments !== null && installments > 0) {
-      // installments only valid when not recurring (parcelado)
+    const longitude = parseFloat(formData.longitude);
+    if (isNaN(longitude) || longitude < -180 || longitude > 180) {
+      setFieldErrors({ longitude: 'Longitude inválida (entre -180 e 180).' });
+      return;
+    }
+
+    const radiusMeters = parseInt(formData.radiusMeters, 10);
+    if (isNaN(radiusMeters) || radiusMeters <= 0) {
+      setFieldErrors({ radiusMeters: 'O raio deve ser maior que zero.' });
+      return;
     }
 
     try {
       setIsSaving(true);
+      setFieldErrors({});
       await updateMutation.mutateAsync({
-        id: deductionId,
+        id: zoneId,
         data: {
           name: formData.name,
-          amount,
-          reason: formData.reason || undefined,
-          date: formData.date || undefined,
-          isRecurring: formData.isRecurring,
-          installments: !formData.isRecurring && installments
-            ? installments
-            : null,
+          latitude,
+          longitude,
+          radiusMeters,
+          address: formData.address || null,
+          isActive: formData.isActive,
         },
       });
       await queryClient.invalidateQueries({
-        queryKey: deductionKeys.lists(),
+        queryKey: geofenceZoneKeys.lists(),
       });
       await queryClient.invalidateQueries({
-        queryKey: deductionKeys.detail(deductionId),
+        queryKey: geofenceZoneKeys.detail(zoneId),
       });
-      toast.success('Dedução atualizada com sucesso!');
-      router.push(`/hr/deductions/${deductionId}`);
+      toast.success('Zona de geofencing atualizada com sucesso!');
+      router.push(`/hr/geofence-zones/${zoneId}`);
     } catch (err) {
       logger.error(
-        'Erro ao atualizar dedução',
+        'Failed to update geofence zone',
         err instanceof Error ? err : undefined
       );
       const msg = err instanceof Error ? err.message : String(err);
@@ -208,13 +204,14 @@ export default function DeductionEditPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deduction) return;
+    if (!zone) return;
     try {
-      await deleteMutation.mutateAsync(deduction.id);
+      await deleteMutation.mutateAsync(zone.id);
       setDeleteModalOpen(false);
+      router.push('/hr/geofence-zones');
     } catch (err) {
       logger.error(
-        'Erro ao excluir dedução',
+        'Failed to delete geofence zone',
         err instanceof Error ? err : undefined
       );
       toast.error(translateError(err));
@@ -229,7 +226,7 @@ export default function DeductionEditPage() {
     {
       id: 'cancel',
       title: 'Cancelar',
-      onClick: () => router.push(`/hr/deductions/${deductionId}`),
+      onClick: () => router.push(`/hr/geofence-zones/${zoneId}`),
       variant: 'ghost',
     },
     {
@@ -257,10 +254,10 @@ export default function DeductionEditPage() {
 
   const breadcrumbItems = [
     { label: 'RH', href: '/hr' },
-    { label: 'Descontos', href: '/hr/deductions' },
+    { label: 'Zonas de Geofencing', href: '/hr/geofence-zones' },
     {
-      label: deduction?.name || '...',
-      href: `/hr/deductions/${deductionId}`,
+      label: zone?.name || '...',
+      href: `/hr/geofence-zones/${zoneId}`,
     },
     { label: 'Editar' },
   ];
@@ -282,7 +279,7 @@ export default function DeductionEditPage() {
     );
   }
 
-  if (!deduction) {
+  if (!zone) {
     return (
       <PageLayout>
         <PageHeader>
@@ -291,11 +288,11 @@ export default function DeductionEditPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Dedução não encontrada"
-            message="A dedução solicitada não foi encontrada."
+            title="Zona de geofencing não encontrada"
+            message="A zona de geofencing solicitada não foi encontrada."
             action={{
-              label: 'Voltar para Descontos',
-              onClick: () => router.push('/hr/deductions'),
+              label: 'Voltar para Zonas de Geofencing',
+              onClick: () => router.push('/hr/geofence-zones'),
             }}
           />
         </PageBody>
@@ -320,30 +317,31 @@ export default function DeductionEditPage() {
         {/* Identity Card */}
         <Card className="bg-white/5 p-5">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-rose-500 to-rose-600 shadow-lg">
-              <Receipt className="h-7 w-7 text-white" />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-emerald-600 shadow-lg">
+              <MapPin className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-muted-foreground">
-                Editando desconto
+                Editando zona de geofencing
               </p>
-              <h1 className="text-xl font-bold truncate">{deduction.name}</h1>
+              <h1 className="text-xl font-bold truncate">{zone.name}</h1>
               <p className="text-sm text-muted-foreground">
-                {getName(deduction.employeeId)} ·{' '}
-                {formatCurrency(deduction.amount)}
+                {zone.isActive ? 'Ativa' : 'Inativa'} ·{' '}
+                {formatRadius(zone.radiusMeters)} ·{' '}
+                Criado em {formatDate(zone.createdAt)}
               </p>
             </div>
           </div>
         </Card>
 
-        {/* Section: Informações do Desconto */}
+        {/* Section: Dados da Zona */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={NotebookText}
-                title="Informações do Desconto"
-                subtitle="Dados principais da dedução"
+                title="Dados da Zona"
+                subtitle="Nome, endereço e status da zona"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -361,7 +359,7 @@ export default function DeductionEditPage() {
                           if (fieldErrors.name)
                             setFieldErrors(prev => ({ ...prev, name: '' }));
                         }}
-                        placeholder="Nome do desconto"
+                        placeholder="Nome da zona"
                         aria-invalid={!!fieldErrors.name}
                       />
                       {fieldErrors.name && (
@@ -370,112 +368,168 @@ export default function DeductionEditPage() {
                     </div>
                   </div>
 
-                  {/* Valor */}
+                  {/* Endereço */}
                   <div className="grid gap-2">
-                    <Label htmlFor="amount">
-                      Valor (R$) <span className="text-rose-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.amount}
-                        onChange={e => {
-                          setFormData({ ...formData, amount: e.target.value });
-                          if (fieldErrors.amount)
-                            setFieldErrors(prev => ({ ...prev, amount: '' }));
-                        }}
-                        placeholder="0,00"
-                        aria-invalid={!!fieldErrors.amount}
-                      />
-                      {fieldErrors.amount && (
-                        <FormErrorIcon message={fieldErrors.amount} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Data */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="date">Data</Label>
+                    <Label htmlFor="address">Endereço</Label>
                     <Input
-                      id="date"
-                      type="date"
-                      value={formData.date}
+                      id="address"
+                      value={formData.address}
                       onChange={e =>
-                        setFormData({ ...formData, date: e.target.value })
+                        setFormData({ ...formData, address: e.target.value })
                       }
+                      placeholder="Endereço da zona (opcional)"
                     />
                   </div>
                 </div>
 
-                {/* Motivo */}
-                <div className="grid gap-2">
-                  <Label htmlFor="reason">Motivo</Label>
-                  <Textarea
-                    id="reason"
-                    value={formData.reason}
+                {/* Status */}
+                <div className="flex items-center gap-3">
+                  <input
+                    id="isActive"
+                    type="checkbox"
+                    checked={formData.isActive}
                     onChange={e =>
-                      setFormData({ ...formData, reason: e.target.value })
-                    }
-                    placeholder="Descreva o motivo do desconto"
-                    rows={4}
-                  />
-                </div>
-
-                {/* Recorrente */}
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="isRecurring">Recorrente</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {formData.isRecurring
-                        ? 'Desconto aplicado todo mês'
-                        : 'Desconto único ou parcelado'}
-                    </p>
-                  </div>
-                  <Switch
-                    id="isRecurring"
-                    checked={formData.isRecurring}
-                    onCheckedChange={checked =>
                       setFormData({
                         ...formData,
-                        isRecurring: checked,
-                        installments: checked ? '' : formData.installments,
+                        isActive: e.target.checked,
                       })
                     }
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                   />
+                  <Label htmlFor="isActive" className="cursor-pointer">
+                    Zona ativa
+                  </Label>
                 </div>
+              </div>
+            </div>
+          </div>
+        </Card>
 
-                {/* Parcelas (only if not recurring) */}
-                {!formData.isRecurring && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="installments">
-                        Parcelas
-                      </Label>
+        {/* Section: Localização */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={Navigation}
+                title="Localização"
+                subtitle="Coordenadas geográficas da zona"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Latitude */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="latitude">
+                      Latitude <span className="text-rose-500">*</span>
+                    </Label>
+                    <div className="relative">
                       <Input
-                        id="installments"
+                        id="latitude"
                         type="number"
-                        min="1"
-                        step="1"
-                        value={formData.installments}
-                        onChange={e =>
+                        step="0.000001"
+                        min="-90"
+                        max="90"
+                        value={formData.latitude}
+                        onChange={e => {
                           setFormData({
                             ...formData,
-                            installments: e.target.value,
-                          })
-                        }
-                        placeholder="Número de parcelas (opcional)"
+                            latitude: e.target.value,
+                          });
+                          if (fieldErrors.latitude)
+                            setFieldErrors(prev => ({
+                              ...prev,
+                              latitude: '',
+                            }));
+                        }}
+                        placeholder="Ex: -23.550520"
+                        aria-invalid={!!fieldErrors.latitude}
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Deixe em branco para desconto único sem parcelamento.
-                      </p>
+                      {fieldErrors.latitude && (
+                        <FormErrorIcon message={fieldErrors.latitude} />
+                      )}
                     </div>
                   </div>
-                )}
+
+                  {/* Longitude */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="longitude">
+                      Longitude <span className="text-rose-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="longitude"
+                        type="number"
+                        step="0.000001"
+                        min="-180"
+                        max="180"
+                        value={formData.longitude}
+                        onChange={e => {
+                          setFormData({
+                            ...formData,
+                            longitude: e.target.value,
+                          });
+                          if (fieldErrors.longitude)
+                            setFieldErrors(prev => ({
+                              ...prev,
+                              longitude: '',
+                            }));
+                        }}
+                        placeholder="Ex: -46.633308"
+                        aria-invalid={!!fieldErrors.longitude}
+                      />
+                      {fieldErrors.longitude && (
+                        <FormErrorIcon message={fieldErrors.longitude} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Section: Área de Cobertura */}
+        <Card className="bg-white/5 py-2 overflow-hidden">
+          <div className="px-6 py-4 space-y-8">
+            <div className="space-y-5">
+              <SectionHeader
+                icon={Radius}
+                title="Área de Cobertura"
+                subtitle="Raio de abrangência da zona em metros"
+              />
+              <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Raio */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="radiusMeters">
+                      Raio (metros) <span className="text-rose-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="radiusMeters"
+                        type="number"
+                        step="1"
+                        min="1"
+                        value={formData.radiusMeters}
+                        onChange={e => {
+                          setFormData({
+                            ...formData,
+                            radiusMeters: e.target.value,
+                          });
+                          if (fieldErrors.radiusMeters)
+                            setFieldErrors(prev => ({
+                              ...prev,
+                              radiusMeters: '',
+                            }));
+                        }}
+                        placeholder="Ex: 200"
+                        aria-invalid={!!fieldErrors.radiusMeters}
+                      />
+                      {fieldErrors.radiusMeters && (
+                        <FormErrorIcon message={fieldErrors.radiusMeters} />
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -487,8 +541,8 @@ export default function DeductionEditPage() {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
-        title="Excluir Desconto"
-        description={`Digite seu PIN de ação para excluir o desconto "${deduction.name}". Esta ação não pode ser desfeita.`}
+        title="Excluir Zona de Geofencing"
+        description={`Digite seu PIN de ação para excluir a zona "${zone.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );
