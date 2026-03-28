@@ -39,7 +39,7 @@ export function useCreateOvertime(options: CreateOvertimeOptions = {}) {
       return response.overtime;
     },
     onSuccess: overtime => {
-      queryClient.invalidateQueries({ queryKey: overtimeKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: overtimeKeys.all });
       if (showSuccessToast) {
         toast.success('Hora extra registrada com sucesso!');
       }
@@ -84,7 +84,7 @@ export function useApproveOvertime(options: ApproveOvertimeOptions = {}) {
       return response.overtime;
     },
     onSuccess: overtime => {
-      queryClient.invalidateQueries({ queryKey: overtimeKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: overtimeKeys.all });
       if (showSuccessToast) {
         toast.success('Hora extra aprovada!');
       }

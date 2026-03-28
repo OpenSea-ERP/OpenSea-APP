@@ -42,7 +42,7 @@ export function useCreateWorkplaceRisk(
       return response.workplaceRisk;
     },
     onSuccess: risk => {
-      queryClient.invalidateQueries({ queryKey: workplaceRiskKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workplaceRiskKeys.all });
       if (showSuccessToast) {
         toast.success('Risco ocupacional criado com sucesso!');
       }
@@ -94,7 +94,7 @@ export function useUpdateWorkplaceRisk(
       return response.workplaceRisk;
     },
     onSuccess: risk => {
-      queryClient.invalidateQueries({ queryKey: workplaceRiskKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workplaceRiskKeys.all });
       if (showSuccessToast) {
         toast.success('Risco ocupacional atualizado com sucesso!');
       }
@@ -135,7 +135,7 @@ export function useDeleteWorkplaceRisk(
       await workplaceRisksService.delete(programId, riskId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: workplaceRiskKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workplaceRiskKeys.all });
       if (showSuccessToast) {
         toast.success('Risco ocupacional excluído com sucesso!');
       }
@@ -174,7 +174,7 @@ export function useDeleteWorkplaceRiskDynamic(
       await workplaceRisksService.delete(programId, riskId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: workplaceRiskKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workplaceRiskKeys.all });
       if (showSuccessToast) {
         toast.success('Risco ocupacional excluído com sucesso!');
       }

@@ -42,7 +42,7 @@ export function useCreateSafetyProgram(options: CreateSafetyProgramOptions = {})
       return response.safetyProgram;
     },
     onSuccess: program => {
-      queryClient.invalidateQueries({ queryKey: safetyProgramKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: safetyProgramKeys.all });
       if (showSuccessToast) {
         toast.success('Programa de segurança criado com sucesso!');
       }
@@ -87,7 +87,7 @@ export function useUpdateSafetyProgram(options: UpdateSafetyProgramOptions = {})
       return response.safetyProgram;
     },
     onSuccess: (program, { id }) => {
-      queryClient.invalidateQueries({ queryKey: safetyProgramKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: safetyProgramKeys.all });
       queryClient.invalidateQueries({ queryKey: safetyProgramKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Programa de segurança atualizado com sucesso!');
@@ -126,7 +126,7 @@ export function useDeleteSafetyProgram(options: DeleteSafetyProgramOptions = {})
       await safetyProgramsService.delete(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: safetyProgramKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: safetyProgramKeys.all });
       queryClient.removeQueries({ queryKey: safetyProgramKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Programa de segurança excluído com sucesso!');

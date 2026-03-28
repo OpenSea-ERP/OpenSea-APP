@@ -36,7 +36,7 @@ export function useCreateBonus(options: CreateBonusOptions = {}) {
       return response.bonus;
     },
     onSuccess: bonus => {
-      queryClient.invalidateQueries({ queryKey: bonusKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bonusKeys.all });
       if (showSuccessToast) {
         toast.success(`Bonificação "${bonus.name}" criada com sucesso!`);
       }
@@ -81,7 +81,7 @@ export function useUpdateBonus(options: UpdateBonusOptions = {}) {
       return response.bonus;
     },
     onSuccess: bonus => {
-      queryClient.invalidateQueries({ queryKey: bonusKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bonusKeys.all });
       queryClient.invalidateQueries({
         queryKey: bonusKeys.detail(bonus.id),
       });
@@ -122,7 +122,7 @@ export function useDeleteBonus(options: DeleteBonusOptions = {}) {
       await bonusesService.delete(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: bonusKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bonusKeys.all });
       queryClient.removeQueries({ queryKey: bonusKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Bonificação excluída com sucesso!');

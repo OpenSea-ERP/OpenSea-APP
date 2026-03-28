@@ -45,7 +45,7 @@ export function useCreateDependant(options: CreateDependantOptions = {}) {
       return response.dependant;
     },
     onSuccess: dependant => {
-      queryClient.invalidateQueries({ queryKey: dependantKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: dependantKeys.all });
       if (showSuccessToast) {
         toast.success(`Dependente "${dependant.name}" cadastrado com sucesso!`);
       }
@@ -88,7 +88,7 @@ export function useDeleteDependant(options: DeleteDependantOptions = {}) {
       await dependantsService.delete(data.employeeId, data.dependantId);
     },
     onSuccess: (_, data) => {
-      queryClient.invalidateQueries({ queryKey: dependantKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: dependantKeys.all });
       queryClient.removeQueries({
         queryKey: dependantKeys.detail(data.dependantId),
       });

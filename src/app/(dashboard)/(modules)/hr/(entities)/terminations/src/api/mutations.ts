@@ -35,7 +35,7 @@ export function useCreateTermination(options: CreateTerminationOptions = {}) {
       return response.termination;
     },
     onSuccess: termination => {
-      queryClient.invalidateQueries({ queryKey: terminationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: terminationKeys.all });
       if (showSuccessToast) {
         toast.success('Rescisão registrada com sucesso!');
       }
@@ -80,7 +80,7 @@ export function useUpdateTermination(options: UpdateTerminationOptions = {}) {
       return response.termination;
     },
     onSuccess: termination => {
-      queryClient.invalidateQueries({ queryKey: terminationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: terminationKeys.all });
       queryClient.invalidateQueries({
         queryKey: terminationKeys.detail(termination.id),
       });
@@ -121,7 +121,7 @@ export function useDeleteTermination(options: DeleteTerminationOptions = {}) {
       await terminationsService.delete(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: terminationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: terminationKeys.all });
       queryClient.removeQueries({ queryKey: terminationKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Rescisão excluída com sucesso!');
@@ -156,7 +156,7 @@ export function useCalculateTermination(
       return response.termination;
     },
     onSuccess: termination => {
-      queryClient.invalidateQueries({ queryKey: terminationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: terminationKeys.all });
       queryClient.invalidateQueries({
         queryKey: terminationKeys.detail(termination.id),
       });
@@ -189,7 +189,7 @@ export function useMarkTerminationAsPaid(options: MarkAsPaidOptions = {}) {
       return response.termination;
     },
     onSuccess: termination => {
-      queryClient.invalidateQueries({ queryKey: terminationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: terminationKeys.all });
       queryClient.invalidateQueries({
         queryKey: terminationKeys.detail(termination.id),
       });

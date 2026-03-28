@@ -35,7 +35,7 @@ export function useCreateMedicalExam(options: CreateMedicalExamOptions = {}) {
       return response.medicalExam;
     },
     onSuccess: exam => {
-      queryClient.invalidateQueries({ queryKey: medicalExamKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: medicalExamKeys.all });
       if (showSuccessToast) {
         toast.success('Exame médico registrado com sucesso!');
       }
@@ -80,7 +80,7 @@ export function useUpdateMedicalExam(options: UpdateMedicalExamOptions = {}) {
       return response.medicalExam;
     },
     onSuccess: (exam, { id }) => {
-      queryClient.invalidateQueries({ queryKey: medicalExamKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: medicalExamKeys.all });
       queryClient.invalidateQueries({ queryKey: medicalExamKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Exame médico atualizado com sucesso!');
@@ -119,7 +119,7 @@ export function useDeleteMedicalExam(options: DeleteMedicalExamOptions = {}) {
       await medicalExamsService.delete(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: medicalExamKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: medicalExamKeys.all });
       queryClient.removeQueries({ queryKey: medicalExamKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Exame médico excluído com sucesso!');

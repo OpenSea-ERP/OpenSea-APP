@@ -35,7 +35,7 @@ export function useCreatePayroll(options: CreatePayrollOptions = {}) {
       return response.payroll;
     },
     onSuccess: payroll => {
-      queryClient.invalidateQueries({ queryKey: payrollKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: payrollKeys.all });
       if (showSuccessToast) {
         toast.success('Folha de pagamento criada!');
       }
@@ -74,7 +74,7 @@ export function useCalculatePayroll(options: CalculatePayrollOptions = {}) {
       return response.payroll;
     },
     onSuccess: payroll => {
-      queryClient.invalidateQueries({ queryKey: payrollKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: payrollKeys.all });
       if (showSuccessToast) {
         toast.success('Folha calculada!');
       }
@@ -113,7 +113,7 @@ export function useApprovePayroll(options: ApprovePayrollOptions = {}) {
       return response.payroll;
     },
     onSuccess: payroll => {
-      queryClient.invalidateQueries({ queryKey: payrollKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: payrollKeys.all });
       if (showSuccessToast) {
         toast.success('Folha aprovada!');
       }
@@ -152,7 +152,7 @@ export function usePayPayroll(options: PayPayrollOptions = {}) {
       return response.payroll;
     },
     onSuccess: payroll => {
-      queryClient.invalidateQueries({ queryKey: payrollKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: payrollKeys.all });
       if (showSuccessToast) {
         toast.success('Pagamento realizado!');
       }
@@ -191,7 +191,7 @@ export function useCancelPayroll(options: CancelPayrollOptions = {}) {
       return response.payroll;
     },
     onSuccess: payroll => {
-      queryClient.invalidateQueries({ queryKey: payrollKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: payrollKeys.all });
       if (showSuccessToast) {
         toast.success('Folha cancelada!');
       }

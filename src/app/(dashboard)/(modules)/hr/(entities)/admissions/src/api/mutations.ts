@@ -39,7 +39,7 @@ export function useCreateAdmission(options: CreateAdmissionOptions = {}) {
       return response.admission;
     },
     onSuccess: admission => {
-      queryClient.invalidateQueries({ queryKey: admissionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: admissionKeys.all });
       if (showSuccessToast) {
         toast.success('Convite de admissão criado com sucesso!');
       }
@@ -84,7 +84,7 @@ export function useUpdateAdmission(options: UpdateAdmissionOptions = {}) {
       return response.admission;
     },
     onSuccess: admission => {
-      queryClient.invalidateQueries({ queryKey: admissionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: admissionKeys.all });
       queryClient.invalidateQueries({
         queryKey: admissionKeys.detail(admission.id),
       });
@@ -125,7 +125,7 @@ export function useCancelAdmission(options: CancelAdmissionOptions = {}) {
       await admissionsService.cancel(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: admissionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: admissionKeys.all });
       queryClient.removeQueries({ queryKey: admissionKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Convite de admissão cancelado.');
@@ -158,7 +158,7 @@ export function useApproveAdmission(options: ApproveAdmissionOptions = {}) {
       return response.admission;
     },
     onSuccess: admission => {
-      queryClient.invalidateQueries({ queryKey: admissionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: admissionKeys.all });
       queryClient.invalidateQueries({
         queryKey: admissionKeys.detail(admission.id),
       });
@@ -197,7 +197,7 @@ export function useRejectAdmission(options: RejectAdmissionOptions = {}) {
       return response.admission;
     },
     onSuccess: admission => {
-      queryClient.invalidateQueries({ queryKey: admissionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: admissionKeys.all });
       queryClient.invalidateQueries({
         queryKey: admissionKeys.detail(admission.id),
       });

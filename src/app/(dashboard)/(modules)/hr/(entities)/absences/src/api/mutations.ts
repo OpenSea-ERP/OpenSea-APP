@@ -29,7 +29,7 @@ export function useRequestSickLeave(options?: {
     },
 
     onSuccess: absence => {
-      queryClient.invalidateQueries({ queryKey: absenceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: absenceKeys.all });
       toast.success('Atestado registrado com sucesso!');
       options?.onSuccess?.(absence);
     },
@@ -58,7 +58,7 @@ export function useApproveAbsence(options?: {
     },
 
     onSuccess: absence => {
-      queryClient.invalidateQueries({ queryKey: absenceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: absenceKeys.all });
       queryClient.invalidateQueries({
         queryKey: absenceKeys.detail(absence.id),
       });
@@ -96,7 +96,7 @@ export function useRejectAbsence(options?: {
     },
 
     onSuccess: absence => {
-      queryClient.invalidateQueries({ queryKey: absenceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: absenceKeys.all });
       queryClient.invalidateQueries({
         queryKey: absenceKeys.detail(absence.id),
       });
@@ -128,7 +128,7 @@ export function useCancelAbsence(options?: {
     },
 
     onSuccess: absence => {
-      queryClient.invalidateQueries({ queryKey: absenceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: absenceKeys.all });
       queryClient.invalidateQueries({
         queryKey: absenceKeys.detail(absence.id),
       });
@@ -163,7 +163,7 @@ export function useUpdateAbsence() {
     },
 
     onSuccess: (absence) => {
-      queryClient.invalidateQueries({ queryKey: absenceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: absenceKeys.all });
       queryClient.invalidateQueries({
         queryKey: absenceKeys.detail(absence.id),
       });
@@ -191,7 +191,7 @@ export function useDeleteAbsence(options?: {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: absenceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: absenceKeys.all });
       toast.success('Ausência excluída com sucesso!');
       options?.onSuccess?.();
     },

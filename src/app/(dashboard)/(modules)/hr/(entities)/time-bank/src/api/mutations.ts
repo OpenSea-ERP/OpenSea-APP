@@ -39,7 +39,7 @@ export function useCreditTimeBank(options: CreditTimeBankOptions = {}) {
       return response.timeBank;
     },
     onSuccess: timeBank => {
-      queryClient.invalidateQueries({ queryKey: timeBankKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: timeBankKeys.all });
       if (showSuccessToast) {
         toast.success('Horas creditadas com sucesso!');
       }
@@ -78,7 +78,7 @@ export function useDebitTimeBank(options: DebitTimeBankOptions = {}) {
       return response.timeBank;
     },
     onSuccess: timeBank => {
-      queryClient.invalidateQueries({ queryKey: timeBankKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: timeBankKeys.all });
       if (showSuccessToast) {
         toast.success('Horas debitadas com sucesso!');
       }
@@ -117,7 +117,7 @@ export function useAdjustTimeBank(options: AdjustTimeBankOptions = {}) {
       return response.timeBank;
     },
     onSuccess: timeBank => {
-      queryClient.invalidateQueries({ queryKey: timeBankKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: timeBankKeys.all });
       if (showSuccessToast) {
         toast.success('Saldo ajustado com sucesso!');
       }

@@ -37,7 +37,7 @@ export function useCreateVacation(options?: {
     },
 
     onSuccess: vacation => {
-      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vacationKeys.all });
       toast.success('Período de férias criado!');
       options?.onSuccess?.(vacation);
     },
@@ -72,7 +72,7 @@ export function useScheduleVacation(options?: {
     },
 
     onSuccess: vacation => {
-      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vacationKeys.all });
       queryClient.invalidateQueries({
         queryKey: vacationKeys.detail(vacation.id),
       });
@@ -104,7 +104,7 @@ export function useStartVacation(options?: {
     },
 
     onSuccess: vacation => {
-      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vacationKeys.all });
       queryClient.invalidateQueries({
         queryKey: vacationKeys.detail(vacation.id),
       });
@@ -142,7 +142,7 @@ export function useCompleteVacation(options?: {
     },
 
     onSuccess: vacation => {
-      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vacationKeys.all });
       queryClient.invalidateQueries({
         queryKey: vacationKeys.detail(vacation.id),
       });
@@ -180,7 +180,7 @@ export function useSellVacationDays(options?: {
     },
 
     onSuccess: vacation => {
-      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vacationKeys.all });
       queryClient.invalidateQueries({
         queryKey: vacationKeys.detail(vacation.id),
       });
@@ -212,7 +212,7 @@ export function useCancelVacationSchedule(options?: {
     },
 
     onSuccess: vacation => {
-      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vacationKeys.all });
       queryClient.invalidateQueries({
         queryKey: vacationKeys.detail(vacation.id),
       });
@@ -247,7 +247,7 @@ export function useUpdateVacation() {
     },
 
     onSuccess: (vacation) => {
-      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vacationKeys.all });
       queryClient.invalidateQueries({
         queryKey: vacationKeys.detail(vacation.id),
       });
@@ -275,7 +275,7 @@ export function useDeleteVacation(options?: {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: vacationKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: vacationKeys.all });
       toast.success('Período de férias excluído com sucesso!');
       options?.onSuccess?.();
     },

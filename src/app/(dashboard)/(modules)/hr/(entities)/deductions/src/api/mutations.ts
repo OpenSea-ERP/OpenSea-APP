@@ -36,7 +36,7 @@ export function useCreateDeduction(options: CreateDeductionOptions = {}) {
       return response.deduction;
     },
     onSuccess: deduction => {
-      queryClient.invalidateQueries({ queryKey: deductionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: deductionKeys.all });
       if (showSuccessToast) {
         toast.success(`Dedução "${deduction.name}" criada com sucesso!`);
       }
@@ -81,7 +81,7 @@ export function useUpdateDeduction(options: UpdateDeductionOptions = {}) {
       return response.deduction;
     },
     onSuccess: deduction => {
-      queryClient.invalidateQueries({ queryKey: deductionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: deductionKeys.all });
       queryClient.invalidateQueries({
         queryKey: deductionKeys.detail(deduction.id),
       });
@@ -122,7 +122,7 @@ export function useDeleteDeduction(options: DeleteDeductionOptions = {}) {
       await deductionsService.delete(id);
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: deductionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: deductionKeys.all });
       queryClient.removeQueries({ queryKey: deductionKeys.detail(id) });
       if (showSuccessToast) {
         toast.success('Dedução excluída com sucesso!');
