@@ -165,7 +165,7 @@ function OffboardingPageContent() {
           {isLoading ? (
             <GridLoading />
           ) : error ? (
-            <GridError error={error} />
+            <GridError type="server" title="Erro ao carregar" message={error?.message} />
           ) : checklists.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <UserMinus className="h-12 w-12 mb-3 opacity-40" />

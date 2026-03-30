@@ -9,7 +9,7 @@ import type {
   KudosListResponse,
   KudosResponse,
   OnboardingResponse,
-  PendingApprovalsResponse,
+  HRPendingApprovalsResponse,
   SendKudosData,
   UpdateAnnouncementData,
 } from '@/types/hr';
@@ -172,8 +172,8 @@ export const portalService = {
 
   async listPendingApprovals(
     params?: ListPendingApprovalsParams
-  ): Promise<PendingApprovalsResponse> {
-    return apiClient.get<PendingApprovalsResponse>(
+  ): Promise<HRPendingApprovalsResponse> {
+    return apiClient.get<HRPendingApprovalsResponse>(
       `/v1/hr/requests/pending-approvals${buildQuery(params)}`
     );
   },

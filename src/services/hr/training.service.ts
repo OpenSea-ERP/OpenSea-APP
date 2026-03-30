@@ -59,6 +59,22 @@ export interface ListTrainingEnrollmentsParams {
 }
 
 // ============================================================================
+// HELPER
+// ============================================================================
+
+function buildQuery(params?: Record<string, unknown>): string {
+  if (!params) return '';
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') {
+      query.append(key, String(value));
+    }
+  }
+  const qs = query.toString();
+  return qs ? `?${qs}` : '';
+}
+
+// ============================================================================
 // SERVICE
 // ============================================================================
 
@@ -70,14 +86,13 @@ class TrainingService {
   async listPrograms(
     params?: ListTrainingProgramsParams
   ): Promise<TrainingProgramsResponse> {
-    const { data } = await apiClient.get<TrainingProgramsResponse>(
-      this.baseUrl,
-      { params }
+    const result = await apiClient.get<TrainingProgramsResponse>(
+      `${this.baseUrl}${buildQuery(params as Record<string, unknown>)}`
     );
-    const total = data.total;
+    const total = result.total;
     const perPage = params?.perPage ?? 20;
     return {
-      ...data,
+      ...result,
       page: params?.page ?? 1,
       limit: perPage,
       totalPages: Math.ceil(total / perPage),
@@ -85,31 +100,28 @@ class TrainingService {
   }
 
   async getProgram(id: string): Promise<TrainingProgramResponse> {
-    const { data } = await apiClient.get<TrainingProgramResponse>(
+    return apiClient.get<TrainingProgramResponse>(
       `${this.baseUrl}/${id}`
     );
-    return data;
   }
 
   async createProgram(
     programData: CreateTrainingProgramData
   ): Promise<TrainingProgramResponse> {
-    const { data } = await apiClient.post<TrainingProgramResponse>(
+    return apiClient.post<TrainingProgramResponse>(
       this.baseUrl,
       programData
     );
-    return data;
   }
 
   async updateProgram(
     id: string,
     programData: UpdateTrainingProgramData
   ): Promise<TrainingProgramResponse> {
-    const { data } = await apiClient.put<TrainingProgramResponse>(
+    return apiClient.put<TrainingProgramResponse>(
       `${this.baseUrl}/${id}`,
       programData
     );
-    return data;
   }
 
   async deleteProgram(id: string): Promise<void> {
@@ -120,14 +132,13 @@ class TrainingService {
   async listEnrollments(
     params?: ListTrainingEnrollmentsParams
   ): Promise<TrainingEnrollmentsResponse> {
-    const { data } = await apiClient.get<TrainingEnrollmentsResponse>(
-      this.enrollmentsUrl,
-      { params }
+    const result = await apiClient.get<TrainingEnrollmentsResponse>(
+      `${this.enrollmentsUrl}${buildQuery(params as Record<string, unknown>)}`
     );
-    const total = data.total;
+    const total = result.total;
     const perPage = params?.perPage ?? 20;
     return {
-      ...data,
+      ...result,
       page: params?.page ?? 1,
       limit: perPage,
       totalPages: Math.ceil(total / perPage),
@@ -137,22 +148,20 @@ class TrainingService {
   async enrollEmployee(
     enrollmentData: EnrollInTrainingData
   ): Promise<TrainingEnrollmentResponse> {
-    const { data } = await apiClient.post<TrainingEnrollmentResponse>(
+    return apiClient.post<TrainingEnrollmentResponse>(
       this.enrollmentsUrl,
       enrollmentData
     );
-    return data;
   }
 
   async completeEnrollment(
     enrollmentId: string,
     completionData: CompleteTrainingData
   ): Promise<TrainingEnrollmentResponse> {
-    const { data } = await apiClient.patch<TrainingEnrollmentResponse>(
+    return apiClient.patch<TrainingEnrollmentResponse>(
       `${this.enrollmentsUrl}/${enrollmentId}/complete`,
       completionData
     );
-    return data;
   }
 
   async cancelEnrollment(enrollmentId: string): Promise<void> {

@@ -153,6 +153,7 @@ export interface OnboardingChecklist {
   id: string;
   tenantId: string;
   employeeId: string;
+  title: string;
   items: OnboardingChecklistItem[];
   progress: number;
   createdAt: string;
@@ -198,9 +199,12 @@ export interface OnboardingResponse {
   onboarding: OnboardingChecklist;
 }
 
-export interface PendingApprovalsResponse {
+export interface HRPendingApprovalsResponse {
   employeeRequests: EmployeeRequest[];
   /** @deprecated Alias for backward compatibility */
   requests?: EmployeeRequest[];
   meta: { total: number; page: number; perPage: number; totalPages: number };
 }
+
+// Note: PendingApprovalsResponse is also defined in stock/item.types.ts
+// Use HRPendingApprovalsResponse to avoid barrel export conflict

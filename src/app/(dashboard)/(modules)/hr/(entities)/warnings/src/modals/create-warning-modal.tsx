@@ -19,7 +19,8 @@ import type {
   WarningSeverity,
 } from '@/types/hr';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, FileText, Loader2, Search, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { FileText, Loader2, Search, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useCreateWarning } from '../api';
@@ -56,7 +57,7 @@ const WARNING_TYPES: {
     value: 'TERMINATION_WARNING',
     label: 'Aviso de Desligamento',
     description: 'Último aviso antes de rescisão por justa causa',
-    color: 'border-red-500 bg-red-50 dark:bg-red-500/8',
+    color: 'border-rose-500 bg-rose-50 dark:bg-rose-500/8',
   },
 ];
 
@@ -101,6 +102,7 @@ export function CreateWarningModal({
   onClose,
 }: CreateWarningModalProps) {
   const createWarning = useCreateWarning();
+  const [step, setStep] = useState(1);
 
   // Step 1 state
   const [employeeId, setEmployeeId] = useState('');
@@ -151,6 +153,7 @@ export function CreateWarningModal({
   const selectedIssuer = employees.find(e => e.id === issuedBy);
 
   const resetForm = () => {
+    setStep(1);
     setEmployeeId('');
     setIssuedBy('');
     setWarningType('');
@@ -208,7 +211,7 @@ export function CreateWarningModal({
 
   const steps: WizardStep[] = [
     {
-      id: 'employee-type',
+      icon: <User className="h-16 w-16 text-violet-500 dark:text-violet-400" />,
       title: 'Funcionário e Tipo',
       description: 'Selecione o funcionário, emissor, tipo e gravidade',
       isValid: !!employeeId && !!issuedBy && !!warningType && !!severity,
@@ -374,10 +377,11 @@ export function CreateWarningModal({
       ),
     },
     {
-      id: 'details',
+      icon: <FileText className="h-16 w-16 text-violet-500 dark:text-violet-400" />,
       title: 'Detalhes',
       description: 'Informe o motivo, data e detalhes do incidente',
       isValid: !!reason && reason.length >= 10 && !!incidentDate,
+      onBack: () => setStep(1),
       content: (
         <div className="space-y-4">
           <div className="space-y-2">
@@ -447,6 +451,26 @@ export function CreateWarningModal({
           )}
         </div>
       ),
+      footer: (
+        <div className="flex justify-end gap-2 p-4 border-t border-border/50">
+          <Button variant="ghost" onClick={handleClose} disabled={createWarning.isPending}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!reason || reason.length < 10 || !incidentDate || createWarning.isPending}
+          >
+            {createWarning.isPending ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Registrando...
+              </span>
+            ) : (
+              'Registrar Advertência'
+            )}
+          </Button>
+        </div>
+      ),
     },
   ];
 
@@ -456,23 +480,11 @@ export function CreateWarningModal({
       onOpenChange={open => {
         if (!open) handleClose();
       }}
-      title="Registrar Advertência"
-      description="Registre uma nova advertência disciplinar"
-      icon={AlertTriangle}
-      iconGradient="from-amber-500 to-amber-600"
       steps={steps}
-      onComplete={handleSubmit}
-      completeLabel={
-        createWarning.isPending ? (
-          <span className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Registrando...
-          </span>
-        ) : (
-          'Registrar Advertência'
-        )
-      }
-      isCompleting={createWarning.isPending}
+      currentStep={step}
+      onStepChange={setStep}
+      onClose={handleClose}
+      heightClass="h-[540px]"
     />
   );
 }

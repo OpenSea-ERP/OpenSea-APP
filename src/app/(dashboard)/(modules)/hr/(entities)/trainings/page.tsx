@@ -352,7 +352,7 @@ function TrainingsPageContent() {
             }))}
             selected={formatFilter}
             onSelectionChange={setFormatFilter}
-            activeColor="sky"
+            activeColor="cyan"
           />
           <FilterDropdown
             label="Obrigatoriedade"

@@ -198,7 +198,7 @@ function DelegationsPageContent() {
       const response = await employeesService.listEmployees({
         status: 'ACTIVE',
         page: 1,
-        limit: 200,
+        perPage: 200,
       });
       return response.employees;
     },

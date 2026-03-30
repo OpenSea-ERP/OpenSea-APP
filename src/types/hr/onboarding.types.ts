@@ -1,25 +1,11 @@
 // ============================================================================
 // Onboarding Types
+// Re-export base types from portal.types to avoid duplicates
 // ============================================================================
 
-export interface OnboardingChecklistItem {
-  id: string;
-  title: string;
-  description?: string;
-  completed: boolean;
-  completedAt?: string | null;
-}
+import type { OnboardingChecklist } from './portal.types';
 
-export interface OnboardingChecklist {
-  id: string;
-  tenantId: string;
-  employeeId: string;
-  title: string;
-  items: OnboardingChecklistItem[];
-  progress: number;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { OnboardingChecklist, OnboardingChecklistItem } from './portal.types';
 
 export type OnboardingStatus = 'IN_PROGRESS' | 'COMPLETED';
 

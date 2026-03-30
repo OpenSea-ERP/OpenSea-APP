@@ -514,7 +514,7 @@ export default function WarningsPage() {
               message="Ocorreu um erro ao tentar carregar as advertências. Por favor, tente novamente."
               action={{
                 label: 'Tentar Novamente',
-                onClick: () => refetch(),
+                onClick: () => { refetch(); },
               }}
             />
           ) : (
@@ -539,7 +539,7 @@ export default function WarningsPage() {
                     options={WARNING_TYPE_OPTIONS}
                     value={filterType}
                     onChange={v => setFilterType(v as WarningType | '')}
-                    activeColor="amber"
+                    activeColor="violet"
                   />
                   <FilterDropdown
                     label="Gravidade"
@@ -547,7 +547,7 @@ export default function WarningsPage() {
                     options={WARNING_SEVERITY_OPTIONS}
                     value={filterSeverity}
                     onChange={v => setFilterSeverity(v as WarningSeverity | '')}
-                    activeColor="orange"
+                    activeColor="emerald"
                   />
                   <FilterDropdown
                     label="Status"
@@ -569,7 +569,7 @@ export default function WarningsPage() {
                 }
               }}
               showSorting={true}
-              defaultSortField="incidentDate"
+              defaultSortField="createdAt"
               defaultSortDirection="desc"
             />
           )}
