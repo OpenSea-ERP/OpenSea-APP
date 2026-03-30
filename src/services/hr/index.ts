@@ -48,3 +48,6 @@ export {
   type ListTrainingProgramsParams,
   type ListTrainingEnrollmentsParams,
 } from './training.service';
+export * from './warnings.service';
+export * from './offboarding.service';
+export * from './enterprises.service';

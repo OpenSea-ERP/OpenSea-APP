@@ -235,7 +235,7 @@ export function CreateRequestModal({
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="start-date">Data Inicio</Label>
+                <Label htmlFor="start-date">Data Início</Label>
                 <Input
                   id="start-date"
                   type="date"
@@ -311,7 +311,7 @@ export function CreateRequestModal({
                 id="field"
                 value={fieldToChange}
                 onChange={(e) => setFieldToChange(e.target.value)}
-                placeholder="Ex: Endereco, Telefone, Conta Bancaria..."
+                placeholder="Ex: Endereço, Telefone, Conta Bancária..."
               />
             </div>
             <div className="space-y-2">

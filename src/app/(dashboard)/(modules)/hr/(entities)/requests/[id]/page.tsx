@@ -336,7 +336,7 @@ export default function RequestDetailPage() {
             )}
             {request.approvedAt && (
               <InfoField
-                label="Data da Aprovacao"
+                label="Data da Aprovação"
                 value={new Date(request.approvedAt).toLocaleDateString(
                   'pt-BR',
                   {

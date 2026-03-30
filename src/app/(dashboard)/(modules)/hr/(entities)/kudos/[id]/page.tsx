@@ -129,7 +129,7 @@ export default function KudosDetailPage() {
         const found = receivedRes.value.kudos.find(k => k.id === kudosId);
         if (found) return found;
       }
-      throw new Error('Reconhecimento nao encontrado');
+      throw new Error('Reconhecimento não encontrado');
     },
     enabled: !!kudosId,
     staleTime: 60 * 1000,
@@ -169,8 +169,8 @@ export default function KudosDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Reconhecimento nao encontrado"
-            message="O reconhecimento solicitado nao foi encontrado ou voce nao tem permissao para visualiza-lo."
+            title="Reconhecimento não encontrado"
+            message="O reconhecimento solicitado não foi encontrado ou você não tem permissão para visualizá-lo."
             action={{
               label: 'Voltar ao Feed',
               onClick: () => window.history.back(),

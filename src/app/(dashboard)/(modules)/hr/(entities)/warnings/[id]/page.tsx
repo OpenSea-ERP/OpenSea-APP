@@ -44,6 +44,9 @@ import {
   getWarningTypeColor,
   getWarningSeverityColor,
   getWarningStatusColor,
+  getWarningTypeBadgeClass,
+  getWarningSeverityBadgeClass,
+  getWarningStatusBadgeClass,
 } from '../src/utils';
 import { HR_PERMISSIONS } from '../../../_shared/constants/hr-permissions';
 import dynamic from 'next/dynamic';
@@ -230,19 +233,19 @@ export default function WarningDetailPage() {
               <div className="flex flex-wrap gap-2 mt-2">
                 <Badge
                   variant="outline"
-                  className={`border-${getWarningTypeColor(warning.type)}-500 text-${getWarningTypeColor(warning.type)}-700 dark:text-${getWarningTypeColor(warning.type)}-300`}
+                  className={getWarningTypeBadgeClass(warning.type)}
                 >
                   {getWarningTypeLabel(warning.type)}
                 </Badge>
                 <Badge
                   variant="outline"
-                  className={`border-${getWarningSeverityColor(warning.severity)}-500 text-${getWarningSeverityColor(warning.severity)}-700 dark:text-${getWarningSeverityColor(warning.severity)}-300`}
+                  className={getWarningSeverityBadgeClass(warning.severity)}
                 >
                   {getWarningSeverityLabel(warning.severity)}
                 </Badge>
                 <Badge
                   variant="outline"
-                  className={`border-${getWarningStatusColor(warning.status)}-500 text-${getWarningStatusColor(warning.status)}-700 dark:text-${getWarningStatusColor(warning.status)}-300`}
+                  className={getWarningStatusBadgeClass(warning.status)}
                 >
                   {getWarningStatusLabel(warning.status)}
                 </Badge>

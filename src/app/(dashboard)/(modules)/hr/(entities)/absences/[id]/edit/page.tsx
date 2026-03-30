@@ -216,7 +216,7 @@ export default function AbsenceEditPage() {
       router.push(`/hr/absences/${absenceId}`);
     } catch (err) {
       logger.error(
-        'Failed to update absence',
+        'Erro ao atualizar ausência',
         err instanceof Error ? err : undefined
       );
       const msg = err instanceof Error ? err.message : String(err);
@@ -233,7 +233,7 @@ export default function AbsenceEditPage() {
       setDeleteModalOpen(false);
     } catch (err) {
       logger.error(
-        'Failed to delete absence',
+        'Erro ao excluir ausência',
         err instanceof Error ? err : undefined
       );
       toast.error(translateError(err));

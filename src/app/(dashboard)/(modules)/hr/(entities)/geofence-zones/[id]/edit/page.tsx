@@ -189,7 +189,7 @@ export default function GeofenceZoneEditPage() {
       router.push(`/hr/geofence-zones/${zoneId}`);
     } catch (err) {
       logger.error(
-        'Failed to update geofence zone',
+        'Erro ao atualizar zona de geofencing',
         err instanceof Error ? err : undefined
       );
       const msg = err instanceof Error ? err.message : String(err);
@@ -211,7 +211,7 @@ export default function GeofenceZoneEditPage() {
       router.push('/hr/geofence-zones');
     } catch (err) {
       logger.error(
-        'Failed to delete geofence zone',
+        'Erro ao excluir zona de geofencing',
         err instanceof Error ? err : undefined
       );
       toast.error(translateError(err));

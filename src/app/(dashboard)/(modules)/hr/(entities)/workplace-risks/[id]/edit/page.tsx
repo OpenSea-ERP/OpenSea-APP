@@ -235,7 +235,7 @@ export default function WorkplaceRiskEditPage() {
       router.push(`/hr/workplace-risks/${riskId}`);
     } catch (err) {
       logger.error(
-        'Failed to update workplace risk',
+        'Erro ao atualizar risco ocupacional',
         err instanceof Error ? err : undefined
       );
       const msg = err instanceof Error ? err.message : String(err);
@@ -259,7 +259,7 @@ export default function WorkplaceRiskEditPage() {
       setDeleteModalOpen(false);
     } catch (err) {
       logger.error(
-        'Failed to delete workplace risk',
+        'Erro ao excluir risco ocupacional',
         err instanceof Error ? err : undefined
       );
       toast.error(translateError(err));

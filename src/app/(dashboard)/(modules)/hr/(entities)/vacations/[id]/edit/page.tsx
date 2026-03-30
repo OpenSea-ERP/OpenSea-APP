@@ -207,7 +207,7 @@ export default function VacationEditPage() {
       router.push(`/hr/vacations/${vacationId}`);
     } catch (err) {
       logger.error(
-        'Failed to update vacation period',
+        'Erro ao atualizar período de férias',
         err instanceof Error ? err : undefined
       );
       const msg = err instanceof Error ? err.message : String(err);
@@ -224,7 +224,7 @@ export default function VacationEditPage() {
       setDeleteModalOpen(false);
     } catch (err) {
       logger.error(
-        'Failed to delete vacation period',
+        'Erro ao excluir período de férias',
         err instanceof Error ? err : undefined
       );
       toast.error(translateError(err));

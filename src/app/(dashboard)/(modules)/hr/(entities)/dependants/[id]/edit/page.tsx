@@ -230,7 +230,7 @@ export default function DependantEditPage() {
       router.push(`/hr/dependants/${dependantId}`);
     } catch (err) {
       logger.error(
-        'Failed to update dependant',
+        'Erro ao atualizar dependente',
         err instanceof Error ? err : undefined
       );
       const msg = err instanceof Error ? err.message : String(err);
@@ -250,7 +250,7 @@ export default function DependantEditPage() {
       setDeleteModalOpen(false);
     } catch (err) {
       logger.error(
-        'Failed to delete dependant',
+        'Erro ao excluir dependente',
         err instanceof Error ? err : undefined
       );
       toast.error(translateError(err));
