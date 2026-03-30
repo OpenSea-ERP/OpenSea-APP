@@ -9,6 +9,11 @@ const QUERY_KEYS = {
   PREDICTIVE_CASHFLOW: ['finance-predictive-cashflow'],
   CASHFLOW_ACCURACY: ['finance-cashflow-accuracy'],
   HEALTH_SCORE: ['finance-health-score'],
+  BALANCE_SHEET: ['finance-balance-sheet'],
+  QUICK_ACTIONS: ['finance-quick-actions'],
+  CASHFLOW_ALERTS: ['finance-cashflow-alerts'],
+  CATEGORY_SUGGESTION: ['finance-category-suggestion'],
+  RECURRING_PREVIEW: ['finance-recurring-preview'],
 } as const;
 
 export function useFinanceDashboard() {
@@ -73,6 +78,61 @@ export function useFinancialHealthScore() {
     queryKey: QUERY_KEYS.HEALTH_SCORE,
     queryFn: () => financeDashboardService.getHealthScore(),
     staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
+
+export function useBalanceSheet(params: {
+  startDate: string;
+  endDate: string;
+}) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.BALANCE_SHEET, params],
+    queryFn: () => financeDashboardService.getBalanceSheet(params),
+    enabled: !!params.startDate && !!params.endDate,
+  });
+}
+
+export function useQuickActions() {
+  return useQuery({
+    queryKey: QUERY_KEYS.QUICK_ACTIONS,
+    queryFn: () => financeDashboardService.getQuickActions(),
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useCashflowAlerts() {
+  return useQuery({
+    queryKey: QUERY_KEYS.CASHFLOW_ALERTS,
+    queryFn: () => financeDashboardService.getCashflowAlerts(),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useCategorySuggestion(
+  supplierName: string,
+  description?: string
+) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.CATEGORY_SUGGESTION, supplierName, description],
+    queryFn: () =>
+      financeDashboardService.suggestCategory(supplierName, description),
+    enabled: !!supplierName && supplierName.length >= 3,
+    staleTime: 30_000,
+  });
+}
+
+export function useRecurringPreview(params: {
+  startDate: string;
+  frequency: string;
+  interval?: number;
+  count?: number;
+  adjustBusinessDays?: boolean;
+}) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.RECURRING_PREVIEW, params],
+    queryFn: () => financeDashboardService.previewRecurringDates(params),
+    enabled: !!params.startDate && !!params.frequency,
+    staleTime: 30_000,
   });
 }
 

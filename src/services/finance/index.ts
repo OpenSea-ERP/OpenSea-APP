@@ -1,3 +1,4 @@
+export * from './chart-of-accounts.service';
 export * from './cost-centers.service';
 export * from './bank-accounts.service';
 export * from './finance-categories.service';
@@ -23,3 +24,4 @@ export * from './accountant.service';
 export * from './exchange-rates.service';
 export * from './finance-query.service';
 export * from './customer-portal.service';
+export * from './compliance.service';

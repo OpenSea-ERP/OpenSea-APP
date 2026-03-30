@@ -1,11 +1,14 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useRecurringPreview } from '@/hooks/finance';
 import { FREQUENCY_LABELS } from '@/types/finance';
 import type { RecurrenceUnit } from '@/types/finance';
 import { addDays, addMonths, addWeeks, addYears, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Loader2 } from 'lucide-react';
+import { CalendarCheck, Loader2 } from 'lucide-react';
 import type { RecurringWizardData } from './recurring-wizard';
 
 // =============================================================================
@@ -101,41 +104,50 @@ export function RecurringStepConfirmation({
   data,
 }: RecurringStepConfirmationProps) {
   const isPayable = data.type === 'PAYABLE';
-  const nextDates = computeNextDates(
+
+  // Local fallback dates (used if server preview fails)
+  const localDates = computeNextDates(
     data.startDate,
     data.frequencyUnit,
     data.frequencyInterval,
     3
   );
 
+  // Server-side preview with holiday/weekend detection
+  const { data: serverPreview, isLoading: previewLoading } =
+    useRecurringPreview({
+      startDate: data.startDate,
+      frequency: data.frequencyUnit,
+      interval: data.frequencyInterval,
+      count: 12,
+      adjustBusinessDays: data.adjustBusinessDays,
+    });
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto pr-1 space-y-4">
-        {/* Configuração */}
+        {/* Configuracao */}
         <div className="rounded-xl border p-4">
-          <h4 className="text-sm font-semibold mb-3">Configuração</h4>
+          <h4 className="text-sm font-semibold mb-3">Configuracao</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Tipo" value={isPayable ? 'A Pagar' : 'A Receber'} />
             <Field
-              label="Tipo"
-              value={isPayable ? 'A Pagar' : 'A Receber'}
-            />
-            <Field
-              label="Frequência"
+              label="Frequencia"
               value={getFrequencyDescription(
                 data.frequencyUnit,
                 data.frequencyInterval
               )}
             />
             <Field
-              label="Total de ocorrências"
+              label="Total de ocorrencias"
               value={
                 data.totalOccurrences > 0
-                  ? `${data.totalOccurrences} ocorrências`
+                  ? `${data.totalOccurrences} ocorrencias`
                   : 'Infinita'
               }
             />
             <Field
-              label="Período"
+              label="Periodo"
               value={`${formatDate(data.startDate)}${data.endDate ? ` \u2014 ${formatDate(data.endDate)}` : ' \u2014 Indefinido'}`}
             />
           </div>
@@ -145,7 +157,7 @@ export function RecurringStepConfirmation({
         <div className="rounded-xl border p-4">
           <h4 className="text-sm font-semibold mb-3">Detalhes</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Descrição" value={data.description} />
+            <Field label="Descricao" value={data.description} />
             <Field
               label={isPayable ? 'Fornecedor' : 'Cliente'}
               value={isPayable ? data.supplierName : data.customerName}
@@ -155,10 +167,10 @@ export function RecurringStepConfirmation({
               label="Valor Esperado"
               value={formatCurrency(data.expectedAmount)}
             />
-            <Field label="Conta Bancária" value={data.bankAccountName} />
+            <Field label="Conta Bancaria" value={data.bankAccountName} />
             <Field label="Centro de Custo" value={data.costCenterName} />
             {data.interestRate > 0 && (
-              <Field label="Juros" value={`${data.interestRate}% ao mês`} />
+              <Field label="Juros" value={`${data.interestRate}% ao mes`} />
             )}
             {data.penaltyRate > 0 && (
               <Field label="Multa" value={`${data.penaltyRate}%`} />
@@ -186,45 +198,115 @@ export function RecurringStepConfirmation({
         {/* Notes */}
         {data.notes && (
           <div className="rounded-xl border p-4">
-            <h4 className="text-sm font-semibold mb-2">Observações</h4>
+            <h4 className="text-sm font-semibold mb-2">Observacoes</h4>
             <p className="text-sm text-muted-foreground whitespace-pre-line">
               {data.notes}
             </p>
           </div>
         )}
 
-        {/* Preview: Next 3 entries */}
+        {/* Preview: Server-side dates with holiday/weekend info */}
         <div className="rounded-xl border p-4">
-          <h4 className="text-sm font-semibold mb-3">
-            Próximos 3 lançamentos
+          <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <CalendarCheck className="h-4 w-4 text-violet-500" />
+            Previsao de lancamentos
           </h4>
-          <div className="space-y-2">
-            {nextDates.map((date, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-muted/50"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground font-medium w-5">
-                    #{i + 1}
-                  </span>
-                  <span className="text-sm">
-                    {format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+
+          {previewLoading && (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full rounded-lg" />
+              ))}
+            </div>
+          )}
+
+          {serverPreview && serverPreview.dates.length > 0 && (
+            <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+              {serverPreview.dates.map((d, i) => {
+                const displayDate = d.adjustedDate || d.date;
+                const [y, m, day] = displayDate.split('-');
+                const formattedDate = `${day}/${m}/${y}`;
+
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-muted/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground font-medium w-5">
+                        #{i + 1}
+                      </span>
+                      <span className="text-sm">{formattedDate}</span>
+                      <div className="flex items-center gap-1.5">
+                        {d.isHoliday && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300 border-0"
+                          >
+                            {d.holidayName || 'Feriado'}
+                          </Badge>
+                        )}
+                        {d.isWeekend && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0 bg-slate-50 dark:bg-slate-500/8 text-slate-600 dark:text-slate-400 border-0"
+                          >
+                            Fim de semana
+                          </Badge>
+                        )}
+                        {d.adjustedDate && (
+                          <span className="text-[10px] text-muted-foreground italic">
+                            Ajustado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={`text-sm font-medium tabular-nums ${
+                        isPayable
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : 'text-emerald-600 dark:text-emerald-400'
+                      }`}
+                    >
+                      {isPayable ? '- ' : '+ '}
+                      {formatCurrency(data.expectedAmount)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Fallback to local dates if server preview unavailable */}
+          {!previewLoading && !serverPreview && (
+            <div className="space-y-2">
+              {localDates.map((date, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-muted/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground font-medium w-5">
+                      #{i + 1}
+                    </span>
+                    <span className="text-sm">
+                      {format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </span>
+                  </div>
+                  <span
+                    className={`text-sm font-medium tabular-nums ${
+                      isPayable
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-emerald-600 dark:text-emerald-400'
+                    }`}
+                  >
+                    {isPayable ? '- ' : '+ '}
+                    {formatCurrency(data.expectedAmount)}
                   </span>
                 </div>
-                <span
-                  className={`text-sm font-medium tabular-nums ${
-                    isPayable
-                      ? 'text-rose-600 dark:text-rose-400'
-                      : 'text-emerald-600 dark:text-emerald-400'
-                  }`}
-                >
-                  {isPayable ? '- ' : '+ '}
-                  {formatCurrency(data.expectedAmount)}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

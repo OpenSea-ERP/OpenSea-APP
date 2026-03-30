@@ -157,6 +157,14 @@ export const STOCK_PERMISSIONS = {
 // =============================================================================
 
 export const FINANCE_PERMISSIONS = {
+  CHART_OF_ACCOUNTS: perm(
+    'finance',
+    'chart-of-accounts',
+    'access',
+    'register',
+    'modify',
+    'remove'
+  ),
   CATEGORIES: perm(
     'finance',
     'categories',
@@ -356,13 +364,7 @@ export const HR_PERMISSIONS = {
     'register',
     'admin'
   ),
-  DELEGATIONS: perm(
-    'hr',
-    'delegations',
-    'access',
-    'register',
-    'remove'
-  ),
+  DELEGATIONS: perm('hr', 'delegations', 'access', 'register', 'remove'),
   ONBOARDING: perm(
     'hr',
     'onboarding',
@@ -398,15 +400,7 @@ export const HR_PERMISSIONS = {
     'remove',
     'admin'
   ),
-  PPE: perm(
-    'hr',
-    'ppe',
-    'access',
-    'register',
-    'modify',
-    'remove',
-    'admin'
-  ),
+  PPE: perm('hr', 'ppe', 'access', 'register', 'modify', 'remove', 'admin'),
 } as const;
 
 // =============================================================================

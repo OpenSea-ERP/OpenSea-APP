@@ -134,3 +134,92 @@ export interface CashflowResponse {
     closingBalance: number;
   };
 }
+
+// ─── Balance Sheet ──────────────────────────────────────────────────
+
+export interface BalanceSheetAccount {
+  name: string;
+  value: number;
+  children?: BalanceSheetAccount[];
+}
+
+export interface BalanceSheetSection {
+  title: string;
+  accounts: BalanceSheetAccount[];
+  subtotal: number;
+}
+
+export interface BalanceSheetResponse {
+  assets: {
+    current: BalanceSheetSection;
+    nonCurrent: BalanceSheetSection;
+    total: number;
+  };
+  liabilities: {
+    current: BalanceSheetSection;
+    nonCurrent: BalanceSheetSection;
+    total: number;
+  };
+  equity: {
+    accounts: BalanceSheetAccount[];
+    total: number;
+  };
+  isBalanced: boolean;
+  difference: number;
+  generatedAt: string;
+}
+
+// ─── Quick Actions ──────────────────────────────────────────────────
+
+export type QuickActionType =
+  | 'OVERDUE_PAYMENT'
+  | 'UPCOMING_DUE'
+  | 'PENDING_APPROVAL'
+  | 'UNRECONCILED';
+
+export type QuickActionUrgency = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface QuickAction {
+  type: QuickActionType;
+  title: string;
+  count: number;
+  totalAmount: number;
+  urgency: QuickActionUrgency;
+  actionUrl: string;
+}
+
+// ─── Cashflow Alerts ────────────────────────────────────────────────
+
+export type CashflowAlertSeverity = 'CRITICAL' | 'WARNING' | 'INFO';
+
+export interface CashflowAlert {
+  id: string;
+  severity: CashflowAlertSeverity;
+  message: string;
+  projectedDate: string;
+  projectedBalance: number;
+}
+
+// ─── Category Suggestion ────────────────────────────────────────────
+
+export interface CategorySuggestion {
+  categoryId: string;
+  categoryName: string;
+  confidence: number;
+  reason?: string;
+}
+
+// ─── Recurring Date Preview ─────────────────────────────────────────
+
+export interface RecurringPreviewDate {
+  date: string;
+  adjustedDate?: string;
+  isHoliday: boolean;
+  isWeekend: boolean;
+  holidayName?: string;
+}
+
+export interface RecurringDatePreview {
+  dates: RecurringPreviewDate[];
+  totalCount: number;
+}

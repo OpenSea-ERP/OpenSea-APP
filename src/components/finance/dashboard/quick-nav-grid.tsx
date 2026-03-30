@@ -186,6 +186,13 @@ const navItems: NavItem[] = [
     iconColor: 'text-teal-500',
   },
   {
+    id: 'balance-sheet',
+    label: 'Balanço Patrimonial',
+    icon: FileSpreadsheet,
+    href: '/finance/reports/balance-sheet',
+    iconColor: 'text-emerald-500',
+  },
+  {
     id: 'budget',
     label: 'Orçamento',
     icon: PieChart,
@@ -212,6 +219,13 @@ const navItems: NavItem[] = [
     icon: ShieldCheck,
     href: '/finance/approval-rules',
     iconColor: 'text-emerald-500',
+  },
+  {
+    id: 'compliance',
+    label: 'Compliance Fiscal',
+    icon: ShieldCheck,
+    href: '/finance/compliance',
+    iconColor: 'text-indigo-500',
   },
   {
     id: 'settings',

@@ -18,6 +18,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import {
   useBankAccounts,
+  useCategorySuggestion,
   useCostCenters,
   useFinanceCategories,
   useFinanceSuppliers,
@@ -28,7 +29,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { addDays, addWeeks, addMonths, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Plus, X } from 'lucide-react';
+import { CalendarIcon, Plus, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { InlineBankAccountForm } from './inline-bank-account-form';
 import { InlineCategoryForm } from './inline-category-form';
@@ -158,6 +159,16 @@ function SingleEntryForm({
 
   const { data: bankAccountsData } = useBankAccounts();
   const bankAccounts = bankAccountsData?.bankAccounts ?? [];
+
+  // ---------------------------------------------------------------------------
+  // AI category suggestion
+  // ---------------------------------------------------------------------------
+
+  const { data: aiSuggestion } = useCategorySuggestion(
+    data.supplierName,
+    data.description
+  );
+  const topSuggestion = aiSuggestion?.suggestions?.[0];
 
   // ---------------------------------------------------------------------------
   // Supplier pattern learning
@@ -312,34 +323,79 @@ function SingleEntryForm({
         </Row>
 
         <Row label="Categoria" required>
-          <div className="flex items-center gap-1.5">
-            <Select
-              value={data.categoryId}
-              onValueChange={val => {
-                const c = categories.find(c => c.id === val);
-                onChange({ categoryId: val, categoryName: c?.name ?? '' });
-              }}
-            >
-              <SelectTrigger className="flex-1 h-8">
-                <SelectValue placeholder="Selecionar..." />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => setShowCategoryCreate(true)}
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Select
+                value={data.categoryId}
+                onValueChange={val => {
+                  const c = categories.find(c => c.id === val);
+                  onChange({ categoryId: val, categoryName: c?.name ?? '' });
+                }}
+              >
+                <SelectTrigger className="flex-1 h-8">
+                  <SelectValue placeholder="Selecionar..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(c => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => setShowCategoryCreate(true)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            {topSuggestion &&
+              topSuggestion.confidence >= 70 &&
+              data.categoryId !== topSuggestion.categoryId && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      categoryId: topSuggestion.categoryId,
+                      categoryName: topSuggestion.categoryName,
+                    })
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium
+                    bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300
+                    border border-violet-600/25 dark:border-violet-500/20 hover:bg-violet-100
+                    dark:hover:bg-violet-500/15 transition-colors"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Sugestao Atlas: {topSuggestion.categoryName} (
+                  {topSuggestion.confidence}%)
+                </button>
+              )}
+            {topSuggestion &&
+              topSuggestion.confidence < 70 &&
+              topSuggestion.confidence >= 30 &&
+              data.categoryId !== topSuggestion.categoryId && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      categoryId: topSuggestion.categoryId,
+                      categoryName: topSuggestion.categoryName,
+                    })
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium
+                    bg-slate-50 dark:bg-slate-500/8 text-slate-500 dark:text-slate-400
+                    border border-slate-300/50 dark:border-slate-500/20 hover:bg-slate-100
+                    dark:hover:bg-slate-500/15 transition-colors"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Sugestao Atlas: {topSuggestion.categoryName} (
+                  {topSuggestion.confidence}%)
+                </button>
+              )}
           </div>
         </Row>
 

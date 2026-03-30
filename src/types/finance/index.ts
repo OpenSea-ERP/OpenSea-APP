@@ -1,3 +1,4 @@
+export * from './chart-of-account.types';
 export * from './cost-center.types';
 export * from './bank-account.types';
 export * from './finance-category.types';
@@ -19,3 +20,4 @@ export * from './payment-link.types';
 export * from './payment-timing.types';
 export * from './accountant.types';
 export * from './customer-portal.types';
+export * from './compliance.types';

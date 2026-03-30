@@ -1,3 +1,4 @@
+export * from './use-chart-of-accounts';
 export * from './use-cost-centers';
 export * from './use-bank-accounts';
 export * from './use-finance-categories';
@@ -32,3 +33,4 @@ export * from './use-exchange-rates';
 export * from './use-check-duplicate';
 export * from './use-supplier-summary';
 export * from './use-finance-query';
+export * from './use-compliance';

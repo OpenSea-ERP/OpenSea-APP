@@ -11,10 +11,12 @@ import { QuickEntryModal } from '@/components/finance/quick-entry-modal';
 import {
   AnomalyAlerts,
   CashPositionBanner,
+  CashflowAlertsBanner,
   FinanceKPICards,
   HealthScoreWidget,
   OverdueHeatmap,
   PaymentTimingWidget,
+  QuickActionsWidget,
   QuickNavGrid,
   RecentActivityFeed,
   WeeklyObligations,
@@ -54,7 +56,10 @@ export default function FinanceCommandCenter() {
         ]}
       />
 
-      {/* Row 0: Financial Health Score */}
+      {/* Row 0: Cashflow Alerts Banner (above everything) */}
+      <CashflowAlertsBanner />
+
+      {/* Row 0.5: Financial Health Score */}
       <HealthScoreWidget />
 
       {/* Row 1: Cash Position Banner */}
@@ -65,6 +70,9 @@ export default function FinanceCommandCenter() {
 
       {/* Row 2.5: Anomaly Alerts */}
       <AnomalyAlerts />
+
+      {/* Row 2.7: Quick Actions */}
+      <QuickActionsWidget />
 
       {/* Row 3: Obligations + Overdue Heatmap */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

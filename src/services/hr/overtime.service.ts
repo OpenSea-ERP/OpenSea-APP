@@ -52,6 +52,30 @@ export const overtimeService = {
     return apiClient.get<OvertimeResponse>(`/v1/hr/overtime/${overtimeId}`);
   },
 
+  async update(
+    overtimeId: string,
+    data: Partial<CreateOvertimeRequest>
+  ): Promise<OvertimeResponse> {
+    return apiClient.put<OvertimeResponse>(
+      `/v1/hr/overtime/${overtimeId}`,
+      data
+    );
+  },
+
+  async delete(overtimeId: string): Promise<void> {
+    await apiClient.delete(`/v1/hr/overtime/${overtimeId}`);
+  },
+
+  async reject(
+    overtimeId: string,
+    data?: { reason?: string }
+  ): Promise<OvertimeResponse> {
+    return apiClient.post<OvertimeResponse>(
+      `/v1/hr/overtime/${overtimeId}/reject`,
+      data ?? {}
+    );
+  },
+
   async list(params?: ListOvertimeParams): Promise<OvertimeListResponse> {
     const query = new URLSearchParams();
     if (params?.employeeId) query.append('employeeId', params.employeeId);

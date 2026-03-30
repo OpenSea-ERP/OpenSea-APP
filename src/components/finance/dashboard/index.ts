@@ -7,3 +7,5 @@ export { QuickNavGrid } from './quick-nav-grid';
 export { AnomalyAlerts } from './anomaly-alerts';
 export { PaymentTimingWidget } from './payment-timing-widget';
 export { HealthScoreWidget } from './health-score-widget';
+export { QuickActionsWidget } from './quick-actions-widget';
+export { CashflowAlertsBanner } from './cashflow-alerts-banner';

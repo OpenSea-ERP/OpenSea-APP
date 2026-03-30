@@ -20,8 +20,12 @@ export {
 export {
   useCreateOvertime,
   useApproveOvertime,
+  useUpdateOvertime,
+  useDeleteOvertime,
   type CreateOvertimeOptions,
   type ApproveOvertimeOptions,
+  type UpdateOvertimeOptions,
+  type DeleteOvertimeOptions,
 } from './mutations';
 
 // Legacy API

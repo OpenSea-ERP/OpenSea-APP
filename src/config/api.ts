@@ -678,6 +678,14 @@ export const API_ENDPOINTS = {
       MARK_PAID: (id: string) => `/v1/admin/billing/${id}/paid`,
     },
   },
+  // Finance - Chart of Accounts
+  CHART_OF_ACCOUNTS: {
+    LIST: '/v1/finance/chart-of-accounts',
+    GET: (id: string) => `/v1/finance/chart-of-accounts/${id}`,
+    CREATE: '/v1/finance/chart-of-accounts',
+    UPDATE: (id: string) => `/v1/finance/chart-of-accounts/${id}`,
+    DELETE: (id: string) => `/v1/finance/chart-of-accounts/${id}`,
+  },
   // Finance - Cost Centers
   COST_CENTERS: {
     LIST: '/v1/finance/cost-centers',
@@ -761,6 +769,11 @@ export const API_ENDPOINTS = {
     DRE_CONSOLIDATED: '/v1/finance/dashboard/dre-consolidated',
     IMPORT_PAYROLL: (payrollId: string) =>
       `/v1/finance/import/payroll/${payrollId}`,
+    BALANCE_SHEET: '/v1/finance/dashboard/balance-sheet',
+    QUICK_ACTIONS: '/v1/finance/dashboard/quick-actions',
+    CASHFLOW_ALERTS: '/v1/finance/alerts/cashflow',
+    SUGGEST_CATEGORY: '/v1/finance/entries/suggest-category',
+    RECURRING_PREVIEW_DATES: '/v1/finance/recurring/preview-dates',
   },
   // Finance - Loans
   LOANS: {
@@ -894,6 +907,15 @@ export const API_ENDPOINTS = {
     CATEGORIES: '/v1/accountant/categories',
     EXPORT_SPED: '/v1/accountant/export/sped',
     DRE: '/v1/accountant/reports/dre',
+  },
+  // Finance - Compliance
+  FINANCE_COMPLIANCE: {
+    SIMPLES_NACIONAL: '/v1/finance/compliance/simples-nacional',
+    TAX_CALENDAR: '/v1/finance/compliance/tax-calendar',
+    GENERATE_DARFS: '/v1/finance/compliance/tax-obligations/generate',
+    PAY_OBLIGATION: (id: string) =>
+      `/v1/finance/compliance/tax-obligations/${id}/pay`,
+    EXPORT_SPED_ECD: '/v1/finance/export/sped-ecd',
   },
   // Finance - Customer Portal (admin endpoints)
   CUSTOMER_PORTAL: {
