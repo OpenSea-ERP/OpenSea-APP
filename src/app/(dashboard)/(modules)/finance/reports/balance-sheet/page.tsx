@@ -116,7 +116,7 @@ function SectionCard({
             </div>
             {/* Accounts */}
             <div className="divide-y divide-border/30">
-              {section.accounts.map(acc => (
+              {(section.accounts ?? []).map(acc => (
                 <AccountRow key={acc.name} account={acc} />
               ))}
             </div>
@@ -164,17 +164,17 @@ function EquityCard({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <Scale className="h-4 w-4 text-violet-500" />
-          Patrimonio Liquido
+          Patrimônio Líquido
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border/30">
-          {accounts.map(acc => (
+          {(accounts ?? []).map(acc => (
             <AccountRow key={acc.name} account={acc} />
           ))}
         </div>
         <div className="flex items-center justify-between px-4 py-3 border-t-2 border-border">
-          <span className="text-sm font-bold">Total Patrimonio Liquido</span>
+          <span className="text-sm font-bold">Total Patrimônio Líquido</span>
           <span
             className={cn(
               'font-mono font-bold tabular-nums text-lg',
@@ -286,15 +286,15 @@ export default function BalanceSheetPage() {
       <PageActionBar
         breadcrumbItems={[
           { label: 'Financeiro', href: '/finance' },
-          { label: 'Relatorios', href: '/finance/reports' },
-          { label: 'Balanco Patrimonial' },
+          { label: 'Relatórios', href: '/finance/reports' },
+          { label: 'Balanço Patrimonial' },
         ]}
         hasPermission={hasPermission}
       />
 
       {/* Date Range Selector */}
       <div className="flex flex-wrap items-center gap-3">
-        <DatePicker label="Inicio" value={startDate} onChange={setStartDate} />
+        <DatePicker label="Início" value={startDate} onChange={setStartDate} />
         <DatePicker label="Fim" value={endDate} onChange={setEndDate} />
       </div>
 
@@ -324,9 +324,9 @@ export default function BalanceSheetPage() {
                 title="Ativo"
                 icon={Building2}
                 iconColor="text-emerald-500"
-                section={data.assets.current}
+                section={data.assets?.current}
                 totalLabel="Total do Ativo"
-                totalValue={data.assets.total}
+                totalValue={data.assets?.total ?? 0}
                 totalColor="text-emerald-600 dark:text-emerald-400"
               />
               {data.assets.nonCurrent && (
@@ -338,7 +338,7 @@ export default function BalanceSheetPage() {
                       </span>
                     </div>
                     <div className="divide-y divide-border/30">
-                      {data.assets.nonCurrent.accounts.map(acc => (
+                      {(data.assets.nonCurrent.accounts ?? []).map(acc => (
                         <AccountRow key={acc.name} account={acc} />
                       ))}
                     </div>
@@ -361,9 +361,9 @@ export default function BalanceSheetPage() {
                 title="Passivo"
                 icon={Landmark}
                 iconColor="text-rose-500"
-                section={data.liabilities.current}
+                section={data.liabilities?.current}
                 totalLabel="Total do Passivo"
-                totalValue={data.liabilities.total}
+                totalValue={data.liabilities?.total ?? 0}
                 totalColor="text-rose-600 dark:text-rose-400"
               />
               {data.liabilities.nonCurrent && (
@@ -375,7 +375,7 @@ export default function BalanceSheetPage() {
                       </span>
                     </div>
                     <div className="divide-y divide-border/30">
-                      {data.liabilities.nonCurrent.accounts.map(acc => (
+                      {(data.liabilities.nonCurrent.accounts ?? []).map(acc => (
                         <AccountRow key={acc.name} account={acc} />
                       ))}
                     </div>
@@ -395,8 +395,8 @@ export default function BalanceSheetPage() {
             {/* Column 3: Equity */}
             <div>
               <EquityCard
-                accounts={data.equity.accounts}
-                total={data.equity.total}
+                accounts={data.equity?.accounts ?? []}
+                total={data.equity?.total ?? 0}
               />
             </div>
           </div>
@@ -411,7 +411,7 @@ export default function BalanceSheetPage() {
                       Ativo Total
                     </p>
                     <p className="text-xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
-                      {formatCurrency(data.assets.total)}
+                      {formatCurrency(data.assets?.total ?? 0)}
                     </p>
                   </div>
                   <span className="text-2xl font-light text-muted-foreground">
@@ -419,11 +419,11 @@ export default function BalanceSheetPage() {
                   </span>
                   <div className="text-center sm:text-left">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      Passivo + Patrimonio Liquido
+                      Passivo + Patrimônio Líquido
                     </p>
                     <p className="text-xl font-bold font-mono tabular-nums text-rose-600 dark:text-rose-400">
                       {formatCurrency(
-                        data.liabilities.total + data.equity.total
+                        (data.liabilities?.total ?? 0) + (data.equity?.total ?? 0)
                       )}
                     </p>
                   </div>

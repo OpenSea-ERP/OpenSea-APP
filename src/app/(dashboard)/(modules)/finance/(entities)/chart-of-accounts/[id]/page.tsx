@@ -44,7 +44,7 @@ import { toast } from 'sonner';
 const TYPE_LABELS: Record<ChartOfAccountType, string> = {
   ASSET: 'Ativo',
   LIABILITY: 'Passivo',
-  EQUITY: 'Patrimonio Liquido',
+  EQUITY: 'Patrimônio Líquido',
   REVENUE: 'Receita',
   EXPENSE: 'Despesa',
 };
@@ -71,8 +71,8 @@ const CLASS_LABELS: Record<string, string> = {
 };
 
 const NATURE_LABELS: Record<string, string> = {
-  DEBIT: 'Debito',
-  CREDIT: 'Credito',
+  DEBIT: 'Débito',
+  CREDIT: 'Crédito',
 };
 
 // =============================================================================
@@ -196,7 +196,7 @@ export default function ChartOfAccountDetailPage({
         <PageBody>
           <Card className="p-12 text-center">
             <p className="text-destructive text-lg">
-              Conta contabil nao encontrada.
+              Conta contábil não encontrada.
             </p>
           </Card>
         </PageBody>
@@ -210,7 +210,7 @@ export default function ChartOfAccountDetailPage({
 
   const handleDeleteConfirm = async () => {
     await deleteMutation.mutateAsync(id);
-    toast.success('Conta contabil excluida com sucesso.');
+    toast.success('Conta contábil excluída com sucesso.');
     router.push('/finance/chart-of-accounts');
   };
 
@@ -284,7 +284,7 @@ export default function ChartOfAccountDetailPage({
                 )}
               </div>
               <p className="text-sm text-muted-foreground font-mono mt-0.5">
-                Codigo: {account.code}
+                Código: {account.code}
               </p>
             </div>
             <div className="hidden sm:flex items-center gap-3 shrink-0">
@@ -308,7 +308,7 @@ export default function ChartOfAccountDetailPage({
           <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-50 dark:bg-amber-500/8 px-4 py-3">
             <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              Esta e uma conta de sistema. Ela nao pode ser excluida e algumas
+              Esta é uma conta de sistema. Ela não pode ser excluída e algumas
               propriedades podem ser restritas.
             </p>
           </div>
@@ -317,7 +317,7 @@ export default function ChartOfAccountDetailPage({
         {/* Details Card */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4">
-            <SectionHeader icon={Info} title="Classificacao" />
+            <SectionHeader icon={Info} title="Classificação" />
             <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -469,8 +469,8 @@ export default function ChartOfAccountDetailPage({
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
-        title="Excluir Conta Contabil"
-        description={`Digite seu PIN de acao para excluir "${account.code} - ${account.name}".`}
+        title="Excluir Conta Contábil"
+        description={`Digite seu PIN de ação para excluir "${account.code} - ${account.name}".`}
       />
     </PageLayout>
   );

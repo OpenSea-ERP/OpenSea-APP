@@ -257,12 +257,12 @@ function FiscalPageContent() {
   // ============================================================================
 
   const summaryCounts = useMemo(() => {
-    const nfeCount = documents.filter(d => d.type === 'NFE').length;
-    const nfceCount = documents.filter(d => d.type === 'NFCE').length;
+    const nfeCount = documents.filter(d => d?.type === 'NFE').length;
+    const nfceCount = documents.filter(d => d?.type === 'NFCE').length;
     const authorizedCount = documents.filter(
-      d => d.status === 'AUTHORIZED'
+      d => d?.status === 'AUTHORIZED'
     ).length;
-    const pendingCount = documents.filter(d => d.status === 'PENDING').length;
+    const pendingCount = documents.filter(d => d?.status === 'PENDING').length;
     return { nfeCount, nfceCount, authorizedCount, pendingCount };
   }, [documents]);
 
@@ -607,7 +607,7 @@ function FiscalPageContent() {
   // COMPUTED VALUES
   // ============================================================================
 
-  const initialIds = useMemo(() => documents.map(d => d.id), [documents]);
+  const initialIds = useMemo(() => documents.filter(Boolean).map(d => d.id), [documents]);
 
   // ============================================================================
   // HEADER BUTTONS CONFIGURATION (permission-aware)

@@ -539,7 +539,7 @@ export default function FiscalDocumentDetailPage({
                             Produto
                           </th>
                           <th className="pb-2 pr-4 text-muted-foreground font-medium">
-                            Codigo
+                            Código
                           </th>
                           <th className="pb-2 pr-4 text-muted-foreground font-medium">
                             NCM

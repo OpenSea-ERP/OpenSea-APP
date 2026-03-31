@@ -347,7 +347,7 @@ function CompliancePageContent() {
           <Card className="p-8 text-center">
             <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
-              Voce nao possui permissao para acessar esta pagina.
+              Você não possui permissão para acessar esta página.
             </p>
           </Card>
         </PageBody>
@@ -633,8 +633,8 @@ function CompliancePageContent() {
                   <Calendar className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
                   <p className="text-sm text-muted-foreground">
                     {searchQuery
-                      ? 'Nenhuma obrigacao encontrada para esta busca.'
-                      : 'Nenhuma obrigacao fiscal para este periodo.'}
+                      ? 'Nenhuma obrigação encontrada para esta busca.'
+                      : 'Nenhuma obrigação fiscal para este período.'}
                   </p>
                 </div>
               ) : (
@@ -642,11 +642,11 @@ function CompliancePageContent() {
                   {/* Table header */}
                   <div className="hidden sm:grid grid-cols-[1fr_100px_110px_120px_100px_100px] gap-3 px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <span>Tipo</span>
-                    <span>Referencia</span>
+                    <span>Referência</span>
                     <span>Vencimento</span>
                     <span className="text-right">Valor</span>
                     <span className="text-center">Status</span>
-                    <span className="text-right">Acoes</span>
+                    <span className="text-right">Ações</span>
                   </div>
 
                   {/* Obligation rows */}
@@ -665,7 +665,7 @@ function CompliancePageContent() {
         </Card>
 
         {/* ================================================================= */}
-        {/* SECTION 3: Exportacoes                                            */}
+        {/* SECTION 3: Exportações                                            */}
         {/* ================================================================= */}
 
         {canExport && (
@@ -678,10 +678,10 @@ function CompliancePageContent() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Exportacoes
+                      Exportações
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      Exporte arquivos contabeis obrigatorios
+                      Exporte arquivos contábeis obrigatórios
                     </p>
                   </div>
                 </div>
@@ -732,7 +732,7 @@ function CompliancePageContent() {
           onClose={() => setPayTargetId(null)}
           onSuccess={handlePayConfirm}
           title="Marcar como Pago"
-          description="Digite seu PIN de Acao para confirmar o pagamento desta obrigacao tributaria."
+          description="Digite seu PIN de Ação para confirmar o pagamento desta obrigação tributária."
         />
       </PageBody>
     </PageLayout>

@@ -40,7 +40,8 @@ import {
   useUpdateEscalation,
   useEscalation,
 } from '@/hooks/finance/use-escalations';
-import { useMessagingAccounts } from '@/hooks/messaging/use-messaging';
+import { useQuery } from '@tanstack/react-query';
+import { messagingService } from '@/services/messaging/messaging.service';
 import type {
   EscalationChannel,
   EscalationStep,
@@ -118,8 +119,14 @@ export function EscalationConfigModal({
   // Preview state — tracks which step tempId has preview open
   const [previewStepId, setPreviewStepId] = useState<string | null>(null);
 
-  // Fetch messaging accounts for WhatsApp channel dropdown
-  const { data: messagingAccountsData } = useMessagingAccounts();
+  // Fetch messaging accounts for WhatsApp channel dropdown (only when modal is open)
+  const { data: messagingAccountsData } = useQuery({
+    queryKey: ['messaging', 'accounts'],
+    queryFn: () => messagingService.listAccounts(),
+    enabled: open,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
   const whatsAppAccounts = useMemo(
     () =>
       (messagingAccountsData?.accounts ?? []).filter(

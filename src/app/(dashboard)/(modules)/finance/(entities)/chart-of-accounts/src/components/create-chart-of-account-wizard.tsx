@@ -38,7 +38,7 @@ import { useEffect, useMemo, useState } from 'react';
 const TYPE_OPTIONS: { value: ChartOfAccountType; label: string }[] = [
   { value: 'ASSET', label: 'Ativo' },
   { value: 'LIABILITY', label: 'Passivo' },
-  { value: 'EQUITY', label: 'Patrimonio Liquido' },
+  { value: 'EQUITY', label: 'Patrimônio Líquido' },
   { value: 'REVENUE', label: 'Receita' },
   { value: 'EXPENSE', label: 'Despesa' },
 ];
@@ -52,8 +52,8 @@ const CLASS_OPTIONS: { value: ChartOfAccountClass; label: string }[] = [
 ];
 
 const NATURE_OPTIONS: { value: ChartOfAccountNature; label: string }[] = [
-  { value: 'DEBIT', label: 'Debito' },
-  { value: 'CREDIT', label: 'Credito' },
+  { value: 'DEBIT', label: 'Débito' },
+  { value: 'CREDIT', label: 'Crédito' },
 ];
 
 // =============================================================================
@@ -95,7 +95,7 @@ function StepBasicData({
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="coa-wiz-code">
-          Codigo <span className="text-rose-500">*</span>
+          Código <span className="text-rose-500">*</span>
         </Label>
         <Input
           id="coa-wiz-code"
@@ -330,9 +330,9 @@ export function CreateChartOfAccountWizard({
 
   const steps: WizardStep[] = [
     {
-      title: 'Dados Basicos',
+      title: 'Dados Básicos',
       description:
-        'Preencha o codigo, nome, tipo e natureza da conta contabil.',
+        'Preencha o código, nome, tipo e natureza da conta contábil.',
       icon: (
         <BookOpen className="h-16 w-16 text-violet-400" strokeWidth={1.2} />
       ),
@@ -351,7 +351,7 @@ export function CreateChartOfAccountWizard({
       isValid: step1Valid,
     },
     {
-      title: 'Classificacao',
+      title: 'Classificação',
       description: 'Defina a classe e a conta pai (opcional).',
       icon: (
         <FolderTree className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />

@@ -64,7 +64,7 @@ function StepCostCenterData({
 }) {
   return (
     <div className="space-y-4">
-      {/* Codigo (auto-gerado) */}
+      {/* Código (auto-gerado) */}
       <div className="space-y-2">
         <Label htmlFor="cc-wiz-code">Código</Label>
         <Input

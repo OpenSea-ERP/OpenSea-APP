@@ -64,7 +64,7 @@ import { toast } from 'sonner';
 const TYPE_OPTIONS: { value: ChartOfAccountType; label: string }[] = [
   { value: 'ASSET', label: 'Ativo' },
   { value: 'LIABILITY', label: 'Passivo' },
-  { value: 'EQUITY', label: 'Patrimonio Liquido' },
+  { value: 'EQUITY', label: 'Patrimônio Líquido' },
   { value: 'REVENUE', label: 'Receita' },
   { value: 'EXPENSE', label: 'Despesa' },
 ];
@@ -78,8 +78,8 @@ const CLASS_OPTIONS: { value: ChartOfAccountClass; label: string }[] = [
 ];
 
 const NATURE_OPTIONS: { value: ChartOfAccountNature; label: string }[] = [
-  { value: 'DEBIT', label: 'Debito' },
-  { value: 'CREDIT', label: 'Credito' },
+  { value: 'DEBIT', label: 'Débito' },
+  { value: 'CREDIT', label: 'Crédito' },
 ];
 
 // =============================================================================
@@ -224,23 +224,23 @@ export default function EditChartOfAccountPage({
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      toast.error('O nome e obrigatorio.');
+      toast.error('O nome é obrigatório.');
       return;
     }
     if (!formData.code.trim()) {
-      toast.error('O codigo e obrigatorio.');
+      toast.error('O código é obrigatório.');
       return;
     }
     if (!formData.type) {
-      toast.error('O tipo e obrigatorio.');
+      toast.error('O tipo é obrigatório.');
       return;
     }
     if (!formData.accountClass) {
-      toast.error('A classe e obrigatoria.');
+      toast.error('A classe é obrigatória.');
       return;
     }
     if (!formData.nature) {
-      toast.error('A natureza e obrigatoria.');
+      toast.error('A natureza é obrigatória.');
       return;
     }
 
@@ -259,11 +259,11 @@ export default function EditChartOfAccountPage({
           isActive: formData.isActive,
         },
       });
-      toast.success('Conta contabil atualizada com sucesso!');
+      toast.success('Conta contábil atualizada com sucesso!');
       router.push(`/finance/chart-of-accounts/${id}`);
     } catch (err) {
       logger.error(
-        'Erro ao atualizar conta contabil',
+        'Erro ao atualizar conta contábil',
         err instanceof Error ? err : undefined
       );
       const msg = err instanceof Error ? err.message : String(err);
@@ -285,11 +285,11 @@ export default function EditChartOfAccountPage({
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(id);
-      toast.success('Conta contabil excluida com sucesso.');
+      toast.success('Conta contábil excluída com sucesso.');
       router.push('/finance/chart-of-accounts');
     } catch (err) {
       logger.error(
-        'Erro ao excluir conta contabil',
+        'Erro ao excluir conta contábil',
         err instanceof Error ? err : undefined
       );
       toast.error(translateError(err));
@@ -374,8 +374,8 @@ export default function EditChartOfAccountPage({
         <PageBody>
           <GridError
             type="not-found"
-            title="Conta contabil nao encontrada"
-            message="A conta contabil solicitada nao foi encontrada."
+            title="Conta contábil não encontrada"
+            message="A conta contábil solicitada não foi encontrada."
             action={{
               label: 'Voltar para Plano de Contas',
               onClick: () => router.push('/finance/chart-of-accounts'),
@@ -408,13 +408,13 @@ export default function EditChartOfAccountPage({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-muted-foreground">
-                Editando conta contabil
+                Editando conta contábil
               </p>
               <h1 className="text-xl font-bold truncate">{account.name}</h1>
             </div>
             <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
               <div className="text-right">
-                <p className="text-xs font-semibold">Codigo</p>
+                <p className="text-xs font-semibold">Código</p>
                 <p className="text-[11px] text-muted-foreground font-mono">
                   {account.code}
                 </p>
@@ -428,7 +428,7 @@ export default function EditChartOfAccountPage({
           <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-50 dark:bg-amber-500/8 px-4 py-3">
             <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              Esta e uma conta de sistema. Alguns campos podem ter restricoes.
+              Esta é uma conta de sistema. Alguns campos podem ter restrições.
             </p>
           </div>
         )}
@@ -439,14 +439,14 @@ export default function EditChartOfAccountPage({
             <div className="space-y-5">
               <SectionHeader
                 icon={Info}
-                title="Identificacao"
-                subtitle="Codigo e nome da conta contabil"
+                title="Identificação"
+                subtitle="Código e nome da conta contábil"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="code">
-                      Codigo <span className="text-rose-500">*</span>
+                      Código <span className="text-rose-500">*</span>
                     </Label>
                     <div className="relative">
                       <Input
@@ -480,7 +480,7 @@ export default function EditChartOfAccountPage({
                           if (fieldErrors.name)
                             setFieldErrors(prev => ({ ...prev, name: '' }));
                         }}
-                        placeholder="Nome da conta contabil"
+                        placeholder="Nome da conta contábil"
                         aria-invalid={!!fieldErrors.name}
                       />
                       {fieldErrors.name && (
@@ -500,7 +500,7 @@ export default function EditChartOfAccountPage({
             <div className="space-y-5">
               <SectionHeader
                 icon={FolderTree}
-                title="Classificacao"
+                title="Classificação"
                 subtitle="Tipo, classe, natureza e hierarquia da conta"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
@@ -616,15 +616,15 @@ export default function EditChartOfAccountPage({
             <div className="space-y-5">
               <SectionHeader
                 icon={Settings}
-                title="Configuracoes"
-                subtitle="Status da conta contabil"
+                title="Configurações"
+                subtitle="Status da conta contábil"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="isActive">Conta Ativa</Label>
                     <p className="text-sm text-muted-foreground">
-                      Contas inativas nao aparecem nas selecoes de lancamentos.
+                      Contas inativas não aparecem nas seleções de lançamentos.
                     </p>
                   </div>
                   <Switch
@@ -646,8 +646,8 @@ export default function EditChartOfAccountPage({
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
-        title="Excluir Conta Contabil"
-        description={`Digite seu PIN de acao para excluir a conta "${account.code} - ${account.name}". Esta acao nao pode ser desfeita.`}
+        title="Excluir Conta Contábil"
+        description={`Digite seu PIN de ação para excluir a conta "${account.code} - ${account.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

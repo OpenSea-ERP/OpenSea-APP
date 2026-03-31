@@ -72,7 +72,7 @@ import { Button } from '@/components/ui/button';
 const TYPE_FILTER_OPTIONS = [
   { id: 'ASSET', label: 'Ativo' },
   { id: 'LIABILITY', label: 'Passivo' },
-  { id: 'EQUITY', label: 'Patrimonio Liquido' },
+  { id: 'EQUITY', label: 'Patrimônio Líquido' },
   { id: 'REVENUE', label: 'Receita' },
   { id: 'EXPENSE', label: 'Despesa' },
 ];
@@ -80,7 +80,7 @@ const TYPE_FILTER_OPTIONS = [
 const TYPE_LABELS: Record<ChartOfAccountType, string> = {
   ASSET: 'Ativo',
   LIABILITY: 'Passivo',
-  EQUITY: 'Patrimonio Liquido',
+  EQUITY: 'Patrimônio Líquido',
   REVENUE: 'Receita',
   EXPENSE: 'Despesa',
 };
@@ -107,8 +107,8 @@ const CLASS_LABELS: Record<string, string> = {
 };
 
 const NATURE_LABELS: Record<string, string> = {
-  DEBIT: 'Debito',
-  CREDIT: 'Credito',
+  DEBIT: 'Débito',
+  CREDIT: 'Crédito',
 };
 
 // =============================================================================
@@ -167,7 +167,7 @@ function AccountRow({
         isParent && 'bg-muted/20 font-medium'
       )}
     >
-      {/* Codigo + Nome */}
+      {/* Código + Nome */}
       <td className="px-4 py-3">
         <div
           className="flex items-center gap-2"
@@ -440,7 +440,7 @@ function ChartOfAccountsPageContent() {
     await deleteMutation.mutateAsync(itemToDelete);
     setDeleteModalOpen(false);
     setItemToDelete(null);
-    toast.success('Conta excluida com sucesso!');
+    toast.success('Conta excluída com sucesso!');
   }, [itemToDelete, deleteMutation]);
 
   const handleCreate = useCallback(
@@ -499,14 +499,14 @@ function ChartOfAccountsPageContent() {
 
         <Header
           title="Plano de Contas"
-          description="Gerencie a estrutura contabil hierarquica da empresa"
+          description="Gerencie a estrutura contábil hierárquica da empresa"
         />
       </PageHeader>
 
       <PageBody>
         {/* Search Bar */}
         <SearchBar
-          placeholder="Buscar contas por nome ou codigo..."
+          placeholder="Buscar contas por nome ou código..."
           value={searchQuery}
           onSearch={setSearchQuery}
           onClear={() => setSearchQuery('')}
@@ -567,7 +567,7 @@ function ChartOfAccountsPageContent() {
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
                       <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Codigo / Nome
+                        Código / Nome
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Tipo
@@ -582,7 +582,7 @@ function ChartOfAccountsPageContent() {
                         Status
                       </th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-16">
-                        Acoes
+                        Ações
                       </th>
                     </tr>
                   </thead>
@@ -632,8 +632,8 @@ function ChartOfAccountsPageContent() {
             setItemToDelete(null);
           }}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de Acao para confirmar a exclusao desta conta contabil. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de Ação para confirmar a exclusão desta conta contábil. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

@@ -102,7 +102,7 @@ export function useFiscalDocumentsInfinite(filters?: FiscalDocumentsFilters) {
   });
 
   // Flatten pages into single array
-  const documents = result.data?.pages.flatMap(p => p.documents) ?? [];
+  const documents = result.data?.pages.flatMap(p => p.documents ?? []).filter(Boolean) ?? [];
   const total = result.data?.pages[0]?.meta.total ?? 0;
 
   return {
