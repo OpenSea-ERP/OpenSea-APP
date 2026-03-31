@@ -70,7 +70,7 @@ export const financeEntriesService = {
       const statuses = Array.isArray(params.status)
         ? params.status
         : [params.status];
-      statuses.forEach(s => query.append('status', s));
+      query.append('status', statuses.join(','));
     }
     if (params?.categoryId) query.append('categoryId', params.categoryId);
     if (params?.costCenterId) query.append('costCenterId', params.costCenterId);

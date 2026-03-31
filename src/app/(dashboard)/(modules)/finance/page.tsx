@@ -1,7 +1,11 @@
 /**
  * Finance Module — Smart Command Center
- * Dashboard acionável com widgets de posição de caixa, KPIs, obrigações,
- * aging de vencidos, atividade recente e navegação rápida.
+ * Dashboard acionável com posição de caixa, KPIs, obrigações,
+ * aging de vencidos, atividade recente e navegação rápida agrupada.
+ *
+ * Fluxo de informação (perspectiva do gestor financeiro):
+ *   Alertas → Posição de caixa → KPIs → Ações pendentes →
+ *   Agenda da semana + Vencidos → Navegação → Atividade
  */
 
 'use client';
@@ -56,25 +60,23 @@ export default function FinanceCommandCenter() {
         ]}
       />
 
-      {/* Row 0: Cashflow Alerts Banner (above everything) */}
+      {/* ── Alertas unificados (cashflow + anomalias) ── */}
       <CashflowAlertsBanner />
-
-      {/* Row 0.5: Financial Health Score */}
-      <HealthScoreWidget />
-
-      {/* Row 1: Cash Position Banner */}
-      <CashPositionBanner />
-
-      {/* Row 2: KPI Cards */}
-      <FinanceKPICards />
-
-      {/* Row 2.5: Anomaly Alerts */}
       <AnomalyAlerts />
 
-      {/* Row 2.7: Quick Actions */}
+      {/* ── Posição de caixa: saldo total, trend, burn rate ── */}
+      <CashPositionBanner />
+
+      {/* ── KPIs: A Pagar, A Receber, Vencidos, Pago/Recebido ── */}
+      <FinanceKPICards />
+
+      {/* ── Ações pendentes (vencidos, aprovações, conciliação) ── */}
       <QuickActionsWidget />
 
-      {/* Row 3: Obligations + Overdue Heatmap */}
+      {/* ── Saúde financeira (score compacto) ── */}
+      <HealthScoreWidget />
+
+      {/* ── Agenda da semana + Aging de vencidos ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <WeeklyObligations />
@@ -84,16 +86,16 @@ export default function FinanceCommandCenter() {
         </div>
       </div>
 
-      {/* Row 4: Payment Timing + Activity Feed */}
+      {/* ── Navegação rápida agrupada + Timing + Atividade ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <QuickNavGrid />
+        </div>
         <div className="lg:col-span-1">
           <PaymentTimingWidget />
         </div>
         <div className="lg:col-span-1">
           <RecentActivityFeed />
-        </div>
-        <div className="lg:col-span-1">
-          <QuickNavGrid />
         </div>
       </div>
 

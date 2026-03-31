@@ -94,7 +94,7 @@ function categorizeOverdue(entries: FinanceEntry[]): AgingSegment[] {
 export function OverdueHeatmap() {
   const { data, isLoading } = useFinanceEntries({
     isOverdue: true,
-    perPage: 200,
+    perPage: 100,
     sortBy: 'dueDate',
     sortOrder: 'asc',
   });
