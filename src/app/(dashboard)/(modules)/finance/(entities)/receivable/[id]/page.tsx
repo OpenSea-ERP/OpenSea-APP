@@ -24,8 +24,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BaixaModal } from '@/components/finance/baixa-modal';
+import { BoletoEmitModal } from '@/components/finance/boleto-emit-modal';
 import { BoletoModal } from '@/components/finance/boleto-modal';
 import { EmitNfeModal } from '@/components/finance/emit-nfe-modal';
+import { PixEmitModal } from '@/components/finance/pix-emit-modal';
 import { EscalationTimeline } from '@/components/finance/escalation-timeline';
 import { TaxRetentionPanel } from '@/components/finance/tax-retention-panel';
 import { PixChargeModal } from '@/components/finance/pix-charge-modal';
@@ -182,6 +184,12 @@ export default function ReceivableDetailPage({
 
   // NF-e emission state
   const [nfeModalOpen, setNfeModalOpen] = useState(false);
+
+  // Banking-API boleto emit state
+  const [boletoEmitOpen, setBoletoEmitOpen] = useState(false);
+
+  // Banking-API PIX emit state
+  const [pixEmitOpen, setPixEmitOpen] = useState(false);
 
   // Delete state
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -433,6 +441,30 @@ export default function ReceivableDetailPage({
                 <QrCode className="h-4 w-4" />
               )}
               Gerar Cobrança PIX
+            </Button>
+          )}
+          {/* Banking-API: Gerar Boleto via banco integrado */}
+          {canReceive && entry.bankAccountId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sky-600 border-sky-200 hover:bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:hover:bg-sky-500/10"
+              onClick={() => setBoletoEmitOpen(true)}
+            >
+              <FileText className="h-4 w-4" />
+              Gerar Boleto (Banco)
+            </Button>
+          )}
+          {/* Banking-API: Gerar Cobrança PIX via banco integrado */}
+          {canReceive && entry.bankAccountId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-800 dark:hover:bg-violet-500/10"
+              onClick={() => setPixEmitOpen(true)}
+            >
+              <QrCode className="h-4 w-4" />
+              Gerar PIX (Banco)
             </Button>
           )}
           {/* NF-e Button */}
@@ -1107,6 +1139,33 @@ export default function ReceivableDetailPage({
         prefillCustomerId={entry.customerId ?? undefined}
         prefillCustomerName={entry.customerName ?? undefined}
       />
+
+      {/* Boleto Emit Modal (banking API) */}
+      {canReceive && entry.bankAccountId && (
+        <BoletoEmitModal
+          open={boletoEmitOpen}
+          onOpenChange={setBoletoEmitOpen}
+          entryId={id}
+          entryDescription={entry.description}
+          entryAmount={entry.remainingBalance}
+          entryDueDate={entry.dueDate ?? undefined}
+          customerName={entry.customerName}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {/* PIX Emit Modal (banking API) */}
+      {canReceive && entry.bankAccountId && (
+        <PixEmitModal
+          open={pixEmitOpen}
+          onOpenChange={setPixEmitOpen}
+          entryId={id}
+          entryDescription={entry.description}
+          entryAmount={entry.remainingBalance}
+          customerName={entry.customerName}
+          onSuccess={() => refetch()}
+        />
+      )}
     </div>
   );
 }

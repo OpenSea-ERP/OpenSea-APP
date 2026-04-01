@@ -24,6 +24,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BaixaModal } from '@/components/finance/baixa-modal';
+import { BoletoEmitModal } from '@/components/finance/boleto-emit-modal';
+import { PaymentOrderModal } from '@/components/finance/payment-order-modal';
 import { PixPayConfirmModal } from '@/components/finance/pix-pay-modal';
 import { EscalationTimeline } from '@/components/finance/escalation-timeline';
 import { TaxRetentionPanel } from '@/components/finance/tax-retention-panel';
@@ -45,10 +47,12 @@ import {
 } from '@/types/finance';
 import {
   ArrowLeft,
+  Banknote,
   Calendar,
   CreditCard,
   DollarSign,
   Download,
+  FileBarChart,
   FileText,
   Info,
   Layers,
@@ -148,6 +152,12 @@ export default function PayableDetailPage({
 
   // PIX pay modal state
   const [pixPayOpen, setPixPayOpen] = useState(false);
+
+  // Payment order modal state
+  const [paymentOrderOpen, setPaymentOrderOpen] = useState(false);
+
+  // Boleto emit modal state
+  const [boletoEmitOpen, setBoletoEmitOpen] = useState(false);
 
   // Delete state
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -322,6 +332,28 @@ export default function PayableDetailPage({
             >
               <Send className="h-4 w-4" />
               Pagar via PIX
+            </Button>
+          )}
+          {canPay && entry.bankAccountId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-sky-600 border-sky-200 hover:bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:hover:bg-sky-500/10"
+              onClick={() => setPaymentOrderOpen(true)}
+            >
+              <Banknote className="h-4 w-4" />
+              Solicitar Pagamento
+            </Button>
+          )}
+          {canPay && entry.bankAccountId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-800 dark:hover:bg-violet-500/10"
+              onClick={() => setBoletoEmitOpen(true)}
+            >
+              <FileBarChart className="h-4 w-4" />
+              Gerar Boleto
             </Button>
           )}
           <Link href={`/finance/payable/${id}/edit`}>
@@ -862,6 +894,32 @@ export default function PayableDetailPage({
           open={pixPayOpen}
           onOpenChange={setPixPayOpen}
           entry={entry}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {/* Payment Order Modal */}
+      {canPay && entry.bankAccountId && (
+        <PaymentOrderModal
+          open={paymentOrderOpen}
+          onOpenChange={setPaymentOrderOpen}
+          entryId={id}
+          bankAccountId={entry.bankAccountId}
+          entryDescription={entry.description}
+          entryAmount={entry.remainingBalance}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {/* Boleto Emit Modal */}
+      {canPay && entry.bankAccountId && (
+        <BoletoEmitModal
+          open={boletoEmitOpen}
+          onOpenChange={setBoletoEmitOpen}
+          entryId={id}
+          entryDescription={entry.description}
+          entryAmount={entry.remainingBalance}
+          entryDueDate={entry.dueDate ?? undefined}
           onSuccess={() => refetch()}
         />
       )}
