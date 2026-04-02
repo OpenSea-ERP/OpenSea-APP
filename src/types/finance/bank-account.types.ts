@@ -35,6 +35,8 @@ export interface BankAccount {
   apiEnabled?: boolean;
   apiCertificatePath?: string | null;
   apiKeyPath?: string | null;
+  apiCertFileId?: string | null;
+  apiCertKeyFileId?: string | null;
   autoEmitBoleto?: boolean;
   autoLowThreshold?: number | null;
   apiWebhookSecret?: string | null;
@@ -50,6 +52,8 @@ export interface BankAccount {
 export interface BankApiConfigData {
   apiProvider?: string;
   apiClientId?: string;
+  apiCertFileId?: string;
+  apiCertKeyFileId?: string;
   apiScopes?: string;
   apiEnabled?: boolean;
   autoEmitBoleto?: boolean;

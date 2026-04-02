@@ -3,6 +3,7 @@ import { apiClient } from '@/lib/api-client';
 import type {
   BankAccount,
   BankAccountsQuery,
+  BankApiConfigData,
   CreateBankAccountData,
   UpdateBankAccountData,
 } from '@/types/finance';
@@ -63,18 +64,7 @@ export const bankAccountsService = {
     await apiClient.delete<void>(API_ENDPOINTS.BANK_ACCOUNTS.DELETE(id));
   },
 
-  async updateApiConfig(
-    id: string,
-    data: {
-      apiProvider?: string;
-      apiClientId?: string;
-      apiScopes?: string;
-      apiEnabled?: boolean;
-      autoEmitBoleto?: boolean;
-      autoLowThreshold?: number;
-      apiWebhookSecret?: string;
-    }
-  ): Promise<void> {
+  async updateApiConfig(id: string, data: BankApiConfigData): Promise<void> {
     await apiClient.patch<void>(
       `/v1/finance/bank-accounts/${id}/api-config`,
       data
@@ -87,5 +77,21 @@ export const bankAccountsService = {
     return apiClient.get<{ balance: number; message: string }>(
       `/v1/finance/bank-accounts/${id}/balance`
     );
+  },
+
+  async healthCheck(id: string): Promise<{
+    health: {
+      provider: string;
+      status: 'healthy' | 'degraded' | 'unhealthy';
+      latencyMs: number;
+      checks: {
+        auth: { ok: boolean; error?: string };
+        balance: { ok: boolean; error?: string };
+        timestamp: string;
+      };
+      sandbox: boolean;
+    };
+  }> {
+    return apiClient.get(`/v1/finance/bank-accounts/${id}/health`);
   },
 };
