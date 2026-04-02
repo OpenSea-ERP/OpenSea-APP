@@ -120,6 +120,7 @@ function maskDateInput(value: string): string {
 
 interface ItemInfo {
   productLabel: string;
+  sku?: string;
   fullCode: string;
   unitAbbr: string;
 }
@@ -128,12 +129,10 @@ function buildItemInfoMap(items: Item[]): Map<string, ItemInfo> {
   const map = new Map<string, ItemInfo>();
   for (const item of items) {
     const parts = [item.templateName, item.productName, item.variantName].filter(Boolean) as string[];
-    let productLabel = parts.length > 0 ? parts.join(' ') : 'Item sem nome';
-    if (item.variantSku && item.variantSku !== item.variantName) {
-      productLabel += ` ${item.variantSku}`;
-    }
+    const productLabel = parts.length > 0 ? parts.join(' ') : 'Item sem nome';
     map.set(item.id, {
       productLabel,
+      sku: item.variantSku && item.variantSku !== item.variantName ? item.variantSku : undefined,
       fullCode: item.fullCode || item.uniqueCode || item.id.slice(0, 8),
       unitAbbr: item.templateUnitOfMeasure
         ? (getUnitAbbreviation(item.templateUnitOfMeasure) || item.templateUnitOfMeasure)
@@ -167,18 +166,33 @@ function getReference(m: ItemMovement): string {
   return '';
 }
 
+function getPrintReference(m: ItemMovement): string {
+  if ((m.movementType === 'TRANSFER' || m.movementType === 'ZONE_RECONFIGURE') && (m.originRef || m.destinationRef)) {
+    const from = m.originRef ? stripBinPrefix(m.originRef) : '?';
+    const to = m.destinationRef ? stripBinPrefix(m.destinationRef) : '?';
+    return `<span style="color:#64748b">De:</span> ${from}<br><span style="color:#64748b">Para:</span> ${to}`;
+  }
+  if (m.notes) return m.notes;
+  if (m.batchNumber) return `Lote: ${m.batchNumber}`;
+  return '—';
+}
+
 function printMovements(movements: ItemMovement[], infoMap: Map<string, ItemInfo>) {
   const rows = movements.map((m) => {
     const info = infoMap.get(m.itemId);
+    const code = info?.fullCode ?? m.itemId.slice(0, 8);
+    const name = info?.productLabel ?? 'Item sem nome';
+    const unitAbbr = info?.unitAbbr ?? 'un';
+    const qty = Number(m.quantity).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
     const dir = getMovementDirection(m);
+    const sign = dir === 'IN' ? '+' : dir === 'OUT' ? '-' : '';
+    const userName = m.user?.name ?? '—';
     return {
-      direction: dir === 'IN' ? 'Entrada' : dir === 'OUT' ? 'Saída' : 'Neutro',
       type: MOVEMENT_TYPE_LABELS[m.movementType] ?? m.movementType,
-      product: info?.productLabel ?? 'Item sem nome',
-      code: info?.fullCode ?? m.itemId.slice(0, 8),
-      reference: getReference(m) || '—',
-      date: formatDateTime(m.createdAt),
-      user: m.user?.name ?? '—',
+      product: `${name}<br><span style="font-family:'Cascadia Code','Fira Code',monospace;font-size:10px;color:#64748b">${code}</span>`,
+      reference: getPrintReference(m),
+      qty: `${sign}${qty} ${unitAbbr}`,
+      registro: `${formatDateTime(m.createdAt)}<br><span style="font-size:10px;color:#64748b">${userName}</span>`,
     };
   });
 
@@ -186,17 +200,22 @@ function printMovements(movements: ItemMovement[], infoMap: Map<string, ItemInfo
     brandText: 'Movimentações de Estoque',
     title: 'Movimentações de Estoque',
     columns: [
-      { key: 'direction', label: 'Movimento' },
-      { key: 'type', label: 'Tipo' },
+      { key: 'type', label: 'Movimento', width: '100px' },
+      { key: 'registro', label: 'Registro', width: '130px' },
       { key: 'product', label: 'Produto' },
-      { key: 'code', label: 'Item', mono: true },
-      { key: 'reference', label: 'Referência' },
-      { key: 'date', label: 'Data', align: 'center' },
-      { key: 'user', label: 'Usuário' },
+      { key: 'reference', label: 'Referência', width: '140px' },
+      { key: 'qty', label: 'Quantidade', align: 'right', width: '90px', bold: true },
     ],
     rows,
     summary: [
       { label: 'Total de movimentações', value: String(movements.length) },
+      ...Object.entries(
+        movements.reduce<Record<string, number>>((acc, m) => {
+          const label = MOVEMENT_TYPE_LABELS[m.movementType] ?? m.movementType;
+          acc[label] = (acc[label] || 0) + 1;
+          return acc;
+        }, {})
+      ).map(([label, count]) => ({ label, value: String(count) })),
     ],
     footerRight: 'Estoque — Movimentações',
   });
@@ -600,9 +619,22 @@ export default function MovementsListPage() {
 
                     {/* Product + Code */}
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-[13px] text-foreground truncate">
-                        {info?.productLabel ?? 'Item sem nome'}
-                      </div>
+                      {info?.sku ? (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="font-semibold text-[13px] text-foreground truncate cursor-default">
+                                {info.productLabel}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>SKU: {info.sku}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <div className="font-semibold text-[13px] text-foreground truncate">
+                          {info?.productLabel ?? 'Item sem nome'}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="font-mono text-[11px] text-muted-foreground">{code}</span>
                         <button

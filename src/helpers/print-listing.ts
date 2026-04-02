@@ -84,10 +84,10 @@ const PRINT_CSS = `
   .color-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); display: inline-block; }
 
   /* Summary cards */
-  .summary { display: flex; gap: 12px; margin-bottom: 20px; }
-  .summary-card { flex: 1; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+  .summary { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .summary-card { flex: 1; min-width: 120px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; }
   .summary-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; }
-  .summary-value { font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 2px; }
+  .summary-value { font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 2px; text-align: right; }
   .summary-value .unit { font-size: 12px; font-weight: 400; color: #64748b; margin-left: 2px; }
 
   /* Table */
