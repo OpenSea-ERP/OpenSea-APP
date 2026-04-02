@@ -287,7 +287,9 @@ export function ExitItemsModal({
                 </DialogTitle>
                 <DialogDescription className="mt-0.5">
                   {step === 1
-                    ? 'Selecione o motivo da saída do item.'
+                    ? selectedItems.length === 1
+                      ? 'Selecione o motivo da saída do item.'
+                      : `Selecione o motivo da saída dos ${selectedItems.length} itens.`
                     : 'Confirmação de saída. Essa ação não poderá ser desfeita!'}
                 </DialogDescription>
               </div>

@@ -122,6 +122,8 @@ export interface ItemsInfiniteFilters {
   manufacturerId?: string;
   zoneId?: string;
   hideEmpty?: boolean;
+  updatedFrom?: string;
+  updatedTo?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
@@ -140,6 +142,8 @@ export function useItemsInfinite(filters?: ItemsInfiniteFilters) {
         manufacturerId: filters?.manufacturerId || undefined,
         zoneId: filters?.zoneId || undefined,
         hideEmpty: filters?.hideEmpty,
+        updatedFrom: filters?.updatedFrom,
+        updatedTo: filters?.updatedTo,
         sortBy: filters?.sortBy,
         sortOrder: filters?.sortOrder,
       });

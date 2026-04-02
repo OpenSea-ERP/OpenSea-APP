@@ -101,7 +101,7 @@ export interface EntityCardProps {
   /** Título/nome do item (truncado automaticamente). Aceita ReactNode para composição com badges. */
   title?: ReactNode;
   /** Subtítulo/descrição (max 2 linhas no grid, truncado no list/compact) */
-  subtitle?: string;
+  subtitle?: ReactNode;
   /** Linha de metadados (ReactNode para flexibilidade) */
   metadata?: ReactNode;
 

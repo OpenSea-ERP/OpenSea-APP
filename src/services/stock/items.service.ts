@@ -53,6 +53,8 @@ export const itemsService = {
     if (query?.manufacturerId) params.append('manufacturerId', query.manufacturerId);
     if (query?.zoneId) params.append('zoneId', query.zoneId);
     if (query?.hideEmpty) params.append('hideEmpty', 'true');
+    if (query?.updatedFrom) params.append('updatedFrom', query.updatedFrom);
+    if (query?.updatedTo) params.append('updatedTo', query.updatedTo);
 
     const url = params.toString()
       ? `${API_ENDPOINTS.ITEMS.LIST}?${params.toString()}`

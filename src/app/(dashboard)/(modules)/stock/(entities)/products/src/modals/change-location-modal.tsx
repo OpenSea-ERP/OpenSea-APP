@@ -116,7 +116,9 @@ export function ChangeLocationModal({
                   Transferência de Estoque
                 </DialogTitle>
                 <DialogDescription className="mt-0.5">
-                  Selecione o novo local para o item.
+                  {selectedItems.length === 1
+                    ? 'Selecione o novo local para o item.'
+                    : `Selecione o novo local para os ${selectedItems.length} itens.`}
                 </DialogDescription>
               </div>
             </div>
@@ -152,7 +154,9 @@ export function ChangeLocationModal({
             <div className="flex-1 px-3 py-2.5 rounded-lg border border-border bg-muted/30 text-center">
               <p className="text-[10px] text-muted-foreground mb-0.5">Origem</p>
               <p className="font-mono font-semibold text-sm">
-                {currentLocations[0] || '—'}
+                {currentLocations.length === 1
+                  ? currentLocations[0] || '—'
+                  : 'Múltiplas origens'}
               </p>
             </div>
             <ArrowRight className="h-5 w-5 text-muted-foreground shrink-0" />

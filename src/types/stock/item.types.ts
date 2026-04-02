@@ -1,6 +1,7 @@
 // Item & Movement Types
 
 import type { PaginationMeta, PaginatedQuery } from '../pagination';
+import type { TemplateAttribute } from './template.types';
 import type { Variant } from './variant.types';
 import type { Location } from './warehouse.types';
 
@@ -99,6 +100,7 @@ export interface Item {
   batchNumber?: string;
   manufacturingDate?: string;
   expiryDate?: string;
+  exitMovementType?: ExitMovementType | null;
   createdAt: string;
   updatedAt?: string;
   deletedAt?: string;
@@ -114,8 +116,13 @@ export interface Item {
   productAttributes?: Record<string, unknown>;
   variantAttributes?: Record<string, unknown>;
   variantColorHex?: string;
+  variantReference?: string;
   manufacturerName?: string;
   productId?: string;
+  // Definições de atributos do template (para enableView/enablePrint)
+  templateProductAttributes?: Record<string, TemplateAttribute>;
+  templateVariantAttributes?: Record<string, TemplateAttribute>;
+  templateItemAttributes?: Record<string, TemplateAttribute>;
   // Relacao expandida (opcional)
   bin?: {
     id: string;
@@ -445,6 +452,8 @@ export interface ItemsQuery extends PaginatedQuery {
   manufacturerId?: string;
   zoneId?: string;
   hideEmpty?: boolean;
+  updatedFrom?: string;
+  updatedTo?: string;
 }
 
 export interface PaginatedItemsResponse {

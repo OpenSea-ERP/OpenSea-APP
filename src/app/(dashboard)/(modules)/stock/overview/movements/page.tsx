@@ -13,6 +13,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
+import { printListing } from '@/helpers/print-listing';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -110,57 +111,38 @@ function printMovements(
   movements: ItemMovement[],
   infoMap: Map<string, ItemInfo>
 ) {
-  const rows = movements
-    .map(m => {
-      const info = infoMap.get(m.itemId);
-      const product = info?.productLabel ?? 'Item sem nome';
-      const code = info?.fullCode ?? m.itemId.slice(0, 8);
-      const type = MOVEMENT_TYPE_LABELS[m.movementType] ?? m.movementType;
-      const ref = getReference(m);
-      const date = formatDateTime(m.createdAt);
-      const user = m.user?.name ?? '-';
-      const dir = getMovementDirection(m);
-      const dirLabel =
-        dir === 'IN' ? 'Entrada' : dir === 'OUT' ? 'Saída' : 'Neutro';
-      return `<tr>
-        <td>${dirLabel}</td>
-        <td>${type}</td>
-        <td>${product}</td>
-        <td style="font-family:monospace;font-size:11px">${code}</td>
-        <td>${ref}</td>
-        <td>${date}</td>
-        <td>${user}</td>
-      </tr>`;
-    })
-    .join('');
+  const rows = movements.map((m) => {
+    const info = infoMap.get(m.itemId);
+    const dir = getMovementDirection(m);
+    return {
+      direction: dir === 'IN' ? 'Entrada' : dir === 'OUT' ? 'Saída' : 'Neutro',
+      type: MOVEMENT_TYPE_LABELS[m.movementType] ?? m.movementType,
+      product: info?.productLabel ?? 'Item sem nome',
+      code: info?.fullCode ?? m.itemId.slice(0, 8),
+      reference: getReference(m),
+      date: formatDateTime(m.createdAt),
+      user: m.user?.name ?? '—',
+    };
+  });
 
-  const html = `<!DOCTYPE html>
-<html><head><title>Movimentações de Estoque</title>
-<style>
-  body{font-family:system-ui,sans-serif;padding:24px;font-size:13px}
-  h1{font-size:18px;margin-bottom:4px}
-  .meta{color:#666;margin-bottom:16px;font-size:12px}
-  table{width:100%;border-collapse:collapse;margin-bottom:8px}
-  th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}
-  th{background:#f5f5f5;font-weight:600}
-</style>
-</head><body>
-<h1>Movimentações de Estoque</h1>
-<p class="meta">${movements.length} movimentaç${movements.length === 1 ? 'ão' : 'ões'} &bull; Impresso em ${new Date().toLocaleString('pt-BR')}</p>
-<table>
-  <thead><tr>
-    <th>Movimento</th><th>Tipo</th><th>Produto</th><th>Item</th><th>Referência</th><th>Data</th><th>Usuário</th>
-  </tr></thead>
-  <tbody>${rows}</tbody>
-</table>
-<script>window.onload=function(){window.print()}<\/script>
-</body></html>`;
-
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-  }
+  printListing({
+    brandText: 'Movimentações de Estoque',
+    title: 'Movimentações de Estoque',
+    columns: [
+      { key: 'direction', label: 'Movimento' },
+      { key: 'type', label: 'Tipo' },
+      { key: 'product', label: 'Produto' },
+      { key: 'code', label: 'Item', mono: true },
+      { key: 'reference', label: 'Referência' },
+      { key: 'date', label: 'Data', align: 'center' },
+      { key: 'user', label: 'Usuário' },
+    ],
+    rows,
+    summary: [
+      { label: 'Total de movimentações', value: String(movements.length) },
+    ],
+    footerRight: 'Estoque — Movimentações',
+  });
 }
 
 // ---------------------------------------------------------------------------

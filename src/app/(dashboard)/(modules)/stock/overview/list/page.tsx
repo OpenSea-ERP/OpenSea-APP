@@ -7,17 +7,21 @@
 
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
-import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
-import { SearchBar } from '@/components/layout/search-bar';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { STOCK_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
@@ -39,20 +43,27 @@ import { useWarehouses } from '@/hooks/stock/use-warehouses';
 import { itemsService } from '@/services/stock';
 import { cn } from '@/lib/utils';
 import type { Item } from '@/types/stock';
-import { getUnitAbbreviation, formatUnitOfMeasure } from '@/helpers/formatters';
+import { getUnitAbbreviation } from '@/helpers/formatters';
+import { printListing } from '@/helpers/print-listing';
 import {
   ArrowRightLeft,
+  Copy,
   Factory,
   Grid3X3,
   History,
+  LogOut,
   Loader2,
   MapPin,
   PackageMinus,
   Palette,
   Printer,
   RefreshCw,
+  Search,
+  Tag,
+  X,
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { GoPackageDependents } from 'react-icons/go';
 import {
   Suspense,
   useCallback,
@@ -77,6 +88,7 @@ import {
   type SelectionAction,
 } from '@/core/components/selection-toolbar';
 import { useSelectionContext } from '@/core/selection/selection-context';
+import { usePrintQueue } from '@/core/print-queue';
 
 // =============================================================================
 // CONSTANTS
@@ -87,7 +99,6 @@ const STATUS_OPTIONS = [
   { id: 'RESERVED', label: 'Reservado' },
   { id: 'IN_TRANSIT', label: 'Em Trânsito' },
   { id: 'DAMAGED', label: 'Danificado' },
-  { id: 'EXPIRED', label: 'Vencido' },
 ];
 
 // =============================================================================
@@ -178,6 +189,10 @@ function formatItemQuantity(qty: number, unit?: string): string {
   return `${formatted} ${abbr}`;
 }
 
+function toTitleCase(str: string): string {
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function resolveItemName(item: Item): string {
   return (
     [item.templateName, item.productName, item.variantName]
@@ -187,102 +202,146 @@ function resolveItemName(item: Item): string {
 }
 
 // =============================================================================
-// PRINT HELPERS (preserved from original)
+// TEMPLATE ATTRIBUTE HELPERS
 // =============================================================================
 
-function groupByUnit(items: Item[]): Map<string, Item[]> {
-  const groups = new Map<string, Item[]>();
-  for (const item of items) {
-    const key = item.templateUnitOfMeasure || '_none';
-    const list = groups.get(key);
-    if (list) list.push(item);
-    else groups.set(key, [item]);
+interface ViewableField {
+  key: string;
+  label: string;
+  value: string;
+}
+
+function getViewableFields(item: Item): ViewableField[] {
+  const fields: ViewableField[] = [];
+  const templateAttrs = item.templateItemAttributes;
+  if (!templateAttrs || !item.attributes) return fields;
+
+  for (const [key, def] of Object.entries(templateAttrs)) {
+    if (!def.enableView) continue;
+    const val = item.attributes[key];
+    if (val === undefined || val === null || val === '') continue;
+    fields.push({
+      key,
+      label: def.label || key,
+      value: String(val) + (def.unitOfMeasure ? ` ${def.unitOfMeasure}` : ''),
+    });
   }
-  return groups;
+  return fields;
 }
 
-function buildGroupTable(groupItems: Item[], unitKey: string): string {
-  const abbr =
-    unitKey === '_none' ? '' : getUnitAbbreviation(unitKey);
-  const unitLabel = abbr || (unitKey === '_none' ? '' : unitKey);
+function getPrintableFields(item: Item): ViewableField[] {
+  const fields: ViewableField[] = [];
 
-  const rows = groupItems
-    .map((item) => {
-      const name = [item.templateName, item.productName, item.variantName]
-        .filter(Boolean)
-        .join(' ');
-      const code = item.fullCode || item.uniqueCode || '';
-      const loc =
-        item.bin?.address || item.resolvedAddress || item.lastKnownAddress || '';
-      const qty = item.currentQuantity;
-      const manufacturer = item.manufacturerName || '';
-      return `<tr>
-        <td>${name}</td>
-        <td style="font-family:monospace;font-size:11px">${code}</td>
-        <td>${manufacturer}</td>
-        <td>${loc}</td>
-        <td style="text-align:right">${qty}${unitLabel ? ` ${unitLabel}` : ''}</td>
-      </tr>`;
-    })
-    .join('');
+  // Item-level printable fields
+  const itemAttrs = item.templateItemAttributes;
+  if (itemAttrs && item.attributes) {
+    for (const [key, def] of Object.entries(itemAttrs)) {
+      if (!def.enablePrint) continue;
+      const val = item.attributes[key];
+      if (val === undefined || val === null || val === '') continue;
+      fields.push({
+        key: `item.${key}`,
+        label: def.label || key,
+        value: String(val) + (def.unitOfMeasure ? ` ${def.unitOfMeasure}` : ''),
+      });
+    }
+  }
 
-  const total =
-    Math.round(groupItems.reduce((s, i) => s + i.currentQuantity, 0) * 1000) /
-    1000;
+  // Variant-level printable fields
+  const variantAttrs = item.templateVariantAttributes;
+  if (variantAttrs && item.variantAttributes) {
+    for (const [key, def] of Object.entries(variantAttrs)) {
+      if (!def.enablePrint) continue;
+      const val = item.variantAttributes[key];
+      if (val === undefined || val === null || val === '') continue;
+      fields.push({
+        key: `variant.${key}`,
+        label: def.label || key,
+        value: String(val) + (def.unitOfMeasure ? ` ${def.unitOfMeasure}` : ''),
+      });
+    }
+  }
 
-  return `<table>
-  <thead><tr><th>Item</th><th>Código</th><th>Fabricante</th><th>Localização</th><th style="text-align:right">Quantidade</th></tr></thead>
-  <tbody>${rows}</tbody>
-  <tfoot><tr><td colspan="4">Total</td><td style="text-align:right">${total}${unitLabel ? ` ${unitLabel}` : ''}</td></tr></tfoot>
-</table>`;
+  // Product-level printable fields
+  const productAttrs = item.templateProductAttributes;
+  if (productAttrs && item.productAttributes) {
+    for (const [key, def] of Object.entries(productAttrs)) {
+      if (!def.enablePrint) continue;
+      const val = item.productAttributes[key];
+      if (val === undefined || val === null || val === '') continue;
+      fields.push({
+        key: `product.${key}`,
+        label: def.label || key,
+        value: String(val) + (def.unitOfMeasure ? ` ${def.unitOfMeasure}` : ''),
+      });
+    }
+  }
+
+  return fields;
 }
+
+// =============================================================================
+// PRINT
+// =============================================================================
 
 function printItems(itemsToPrint: Item[]) {
-  const groups = groupByUnit(itemsToPrint);
+  const totalQty = Math.round(
+    itemsToPrint.reduce((s, i) => s + i.currentQuantity, 0) * 1000
+  ) / 1000;
+  const unit = getUnitAbbreviation(itemsToPrint[0]?.templateUnitOfMeasure || '') || 'un';
 
-  let tables: string;
-
-  if (groups.size <= 1) {
-    const [unitKey, groupItems] = [...groups.entries()][0] ?? ['_none', []];
-    tables = buildGroupTable(groupItems, unitKey);
-  } else {
-    tables = [...groups.entries()]
-      .map(([unitKey, groupItems]) => {
-        const abbr =
-          unitKey === '_none' ? '' : getUnitAbbreviation(unitKey);
-        const label = abbr || unitKey;
-        const subtitle = label
-          ? `<h2 style="font-size:15px;margin:24px 0 8px">${formatUnitOfMeasure(unitKey)} — ${groupItems.length} ite${groupItems.length === 1 ? 'm' : 'ns'}</h2>`
-          : `<h2 style="font-size:15px;margin:24px 0 8px">Sem unidade — ${groupItems.length} ite${groupItems.length === 1 ? 'm' : 'ns'}</h2>`;
-        return subtitle + buildGroupTable(groupItems, unitKey);
-      })
-      .join('');
+  // Collect dynamic printable columns
+  const dynamicColMap = new Map<string, string>();
+  for (const item of itemsToPrint) {
+    for (const field of getPrintableFields(item)) {
+      if (!dynamicColMap.has(field.key)) {
+        dynamicColMap.set(field.key, field.label);
+      }
+    }
   }
 
-  const html = `<!DOCTYPE html>
-<html><head><title>Listagem de Estoque</title>
-<style>
-  body{font-family:system-ui,sans-serif;padding:24px;font-size:13px}
-  h1{font-size:18px;margin-bottom:4px}
-  h2{page-break-before:auto}
-  .meta{color:#666;margin-bottom:16px;font-size:12px}
-  table{width:100%;border-collapse:collapse;margin-bottom:8px}
-  th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}
-  th{background:#f5f5f5;font-weight:600}
-  tfoot td{font-weight:600;background:#f9f9f9}
-</style>
-</head><body>
-<h1>Listagem de Estoque</h1>
-<p class="meta">${itemsToPrint.length} ite${itemsToPrint.length === 1 ? 'm' : 'ns'} &bull; Impresso em ${new Date().toLocaleString('pt-BR')}</p>
-${tables}
-<script>window.onload=function(){window.print()}<\/script>
-</body></html>`;
+  const dynamicColumns: import('@/helpers/print-listing').PrintColumn[] = [...dynamicColMap.entries()].map(
+    ([key, label]) => ({ key, label })
+  );
 
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-  }
+  const columns: import('@/helpers/print-listing').PrintColumn[] = [
+    { key: 'name', label: 'Item' },
+    { key: 'code', label: 'Código', mono: true },
+    { key: 'ref', label: 'Ref.' },
+    { key: 'manufacturer', label: 'Fabricante' },
+    { key: 'location', label: 'Localização' },
+    ...dynamicColumns,
+    { key: 'qty', label: 'Quantidade', align: 'right', bold: true },
+  ];
+
+  const rows = itemsToPrint.map((item) => {
+    const printFields = getPrintableFields(item);
+    const fieldMap = Object.fromEntries(printFields.map((f) => [f.key, f.value]));
+    return {
+      name: resolveItemName(item),
+      code: item.fullCode || item.uniqueCode || '',
+      ref: item.variantReference || '',
+      manufacturer: toTitleCase(item.manufacturerName || ''),
+      location: item.bin?.address || item.resolvedAddress || item.lastKnownAddress || '',
+      qty: formatItemQuantity(item.currentQuantity, item.templateUnitOfMeasure),
+      ...fieldMap,
+    };
+  });
+
+  printListing({
+    brandText: 'Consulta de Estoque',
+    title: 'Listagem de Estoque',
+    columns,
+    rows,
+    summary: [
+      { label: 'Itens', value: String(itemsToPrint.length) },
+      { label: 'Quantidade total', value: totalQty.toLocaleString('pt-BR', { maximumFractionDigits: 3 }), unit },
+    ],
+    footerLabel: `Total — ${itemsToPrint.length} ${itemsToPrint.length === 1 ? 'item' : 'itens'}`,
+    footerValue: `${totalQty.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} ${unit}`,
+    footerValueColumn: 'qty',
+    footerRight: 'Estoque Geral — Consulta',
+  });
 }
 
 // =============================================================================
@@ -311,6 +370,7 @@ function StockOverviewListPageContent() {
   const canView = hasPermission(STOCK_PERMISSIONS.ITEMS.ACCESS);
   const canAdmin = hasPermission(STOCK_PERMISSIONS.ITEMS.ADMIN);
   const canPrint = hasPermission(STOCK_PERMISSIONS.ITEMS.PRINT);
+  const { actions: printQueueActions } = usePrintQueue();
 
   // ============================================================================
   // FILTER STATE (synced with URL params)
@@ -331,7 +391,6 @@ function StockOverviewListPageContent() {
     return raw ? [raw] : [];
   }, [searchParams]);
 
-  const [hideEmpty, setHideEmpty] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -348,7 +407,7 @@ function StockOverviewListPageContent() {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyItem, setHistoryItem] = useState<Item | null>(null);
   const [actionSelectorOpen, setActionSelectorOpen] = useState(false);
-  const [actionItem, setActionItem] = useState<Item | null>(null);
+  const [actionItems, setActionItems] = useState<Item[]>([]);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [exitModalOpen, setExitModalOpen] = useState(false);
 
@@ -380,7 +439,7 @@ function StockOverviewListPageContent() {
           ? manufacturerIdFromUrl[0]
           : undefined,
       zoneId: zoneIdFromUrl.length === 1 ? zoneIdFromUrl[0] : undefined,
-      hideEmpty: hideEmpty || undefined,
+      hideEmpty: true,
       sortBy,
       sortOrder,
     }),
@@ -389,7 +448,6 @@ function StockOverviewListPageContent() {
       statusFromUrl,
       manufacturerIdFromUrl,
       zoneIdFromUrl,
-      hideEmpty,
       sortBy,
       sortOrder,
     ]
@@ -545,12 +603,10 @@ function StockOverviewListPageContent() {
 
   const handleTransfer = useCallback(
     (ids: string[]) => {
-      if (ids.length === 1) {
-        const item = items.find((i) => i.id === ids[0]);
-        if (item) {
-          setActionItem(item);
-          setTransferModalOpen(true);
-        }
+      const selected = items.filter((i) => ids.includes(i.id));
+      if (selected.length > 0) {
+        setActionItems(selected);
+        setTransferModalOpen(true);
       }
     },
     [items]
@@ -558,12 +614,10 @@ function StockOverviewListPageContent() {
 
   const handleExit = useCallback(
     (ids: string[]) => {
-      if (ids.length === 1) {
-        const item = items.find((i) => i.id === ids[0]);
-        if (item) {
-          setActionItem(item);
-          setExitModalOpen(true);
-        }
+      const selected = items.filter((i) => ids.includes(i.id));
+      if (selected.length > 0) {
+        setActionItems(selected);
+        setExitModalOpen(true);
       }
     },
     [items]
@@ -571,7 +625,7 @@ function StockOverviewListPageContent() {
 
   const handleOpenActionSelector = useCallback(
     (item: Item) => {
-      setActionItem(item);
+      setActionItems([item]);
       setActionSelectorOpen(true);
     },
     []
@@ -579,35 +633,63 @@ function StockOverviewListPageContent() {
 
   const handleTransferConfirm = useCallback(
     async (newBinId: string, reason: string) => {
-      if (!actionItem) return;
-      await transferMutation.mutateAsync({
-        itemId: actionItem.id,
-        destinationBinId: newBinId,
-        notes: reason || undefined,
-      });
+      if (actionItems.length === 0) return;
+      const toTransfer = actionItems.filter((item) => item.binId !== newBinId);
+      const skipped = actionItems.length - toTransfer.length;
+      if (toTransfer.length === 0) {
+        toast.info(
+          actionItems.length === 1
+            ? 'O item já está neste local.'
+            : 'Todos os itens já estão neste local.'
+        );
+        return;
+      }
+      for (const item of toTransfer) {
+        await transferMutation.mutateAsync({
+          itemId: item.id,
+          destinationBinId: newBinId,
+          notes: reason || undefined,
+        });
+      }
       setTransferModalOpen(false);
-      setActionItem(null);
-      toast.success('Item transferido com sucesso!');
+      setActionItems([]);
+      if (skipped > 0) {
+        toast.success(
+          `${toTransfer.length} ${toTransfer.length === 1 ? 'item transferido' : 'itens transferidos'} com sucesso! ${skipped} ${skipped === 1 ? 'item já estava' : 'itens já estavam'} no destino.`
+        );
+      } else {
+        toast.success(
+          toTransfer.length === 1
+            ? 'Item transferido com sucesso!'
+            : `${toTransfer.length} itens transferidos com sucesso!`
+        );
+      }
       refetch();
     },
-    [actionItem, transferMutation, refetch]
+    [actionItems, transferMutation, refetch]
   );
 
   const handleExitConfirm = useCallback(
     async (exitType: string, reason: string) => {
-      if (!actionItem) return;
-      await exitMutation.mutateAsync({
-        itemId: actionItem.id,
-        quantity: actionItem.currentQuantity,
-        movementType: exitType,
-        reasonCode: reason || undefined,
-      });
+      if (actionItems.length === 0) return;
+      for (const item of actionItems) {
+        await exitMutation.mutateAsync({
+          itemId: item.id,
+          quantity: item.currentQuantity,
+          movementType: exitType as import('@/types/stock').ExitMovementType,
+          reasonCode: reason || undefined,
+        });
+      }
       setExitModalOpen(false);
-      setActionItem(null);
-      toast.success('Saída registrada com sucesso!');
+      setActionItems([]);
+      toast.success(
+        actionItems.length === 1
+          ? 'Saída registrada com sucesso!'
+          : `${actionItems.length} saídas registradas com sucesso!`
+      );
       refetch();
     },
-    [actionItem, exitMutation, refetch]
+    [actionItems, exitMutation, refetch]
   );
 
   // ============================================================================
@@ -641,8 +723,27 @@ function StockOverviewListPageContent() {
           icon: History,
           onClick: handleHistory,
         });
+        if (canPrint) {
+          customActions.push({
+            id: 'print',
+            label: 'Gerar etiqueta',
+            icon: Printer,
+            onClick: (ids: string[]) => {
+              const selected = items.filter((i) => ids.includes(i.id));
+              if (selected.length > 0) {
+                printQueueActions.addToQueue(
+                  selected.map((item) => ({ item }))
+                );
+                toast.success(
+                  selected.length === 1
+                    ? 'Etiqueta adicionada à fila de impressão'
+                    : `${selected.length} etiquetas adicionadas à fila de impressão`
+                );
+              }
+            },
+          });
+        }
       }
-
 
       const badges: {
         label: string;
@@ -652,10 +753,19 @@ function StockOverviewListPageContent() {
 
       if (item.manufacturerName) {
         badges.push({
-          label: item.manufacturerName,
+          label: toTitleCase(item.manufacturerName),
           variant: 'outline',
           color:
             'border-cyan-600/25 dark:border-cyan-500/20 bg-cyan-50 dark:bg-cyan-500/8 text-cyan-700 dark:text-cyan-300',
+        });
+      }
+
+      if (item.variantReference) {
+        badges.push({
+          label: `Ref: ${item.variantReference}`,
+          variant: 'outline',
+          color:
+            'border-indigo-600/25 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/8 text-indigo-700 dark:text-indigo-300',
         });
       }
 
@@ -671,6 +781,16 @@ function StockOverviewListPageContent() {
           variant: 'outline',
           color:
             'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
+        });
+      }
+
+      // Template viewable fields for item level
+      for (const field of getViewableFields(item)) {
+        badges.push({
+          label: `${field.label}: ${field.value}`,
+          variant: 'outline',
+          color:
+            'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300',
         });
       }
 
@@ -690,7 +810,24 @@ function StockOverviewListPageContent() {
             id={item.id}
             variant="grid"
             title={resolveItemName(item)}
-            subtitle={item.fullCode || item.uniqueCode || ''}
+            subtitle={
+              <span className="inline-flex items-center gap-1">
+                {item.fullCode || item.uniqueCode || ''}
+                {(item.fullCode || item.uniqueCode) && (
+                  <button
+                    type="button"
+                    className="text-muted-foreground/40 hover:text-foreground transition-colors cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(item.fullCode || item.uniqueCode || '');
+                      toast.success('Código copiado!');
+                    }}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </button>
+                )}
+              </span>
+            }
             icon={Palette}
             iconBgStyle={{
               background: `linear-gradient(135deg, ${variantColor}, ${variantColor}dd)`,
@@ -707,7 +844,7 @@ function StockOverviewListPageContent() {
                 color: 'emerald',
               },
               right: {
-                icon: PackageMinus,
+                icon: GoPackageDependents,
                 label: formatItemQuantity(
                   item.currentQuantity,
                   item.templateUnitOfMeasure
@@ -768,8 +905,27 @@ function StockOverviewListPageContent() {
           icon: History,
           onClick: handleHistory,
         });
+        if (canPrint) {
+          customActions.push({
+            id: 'print',
+            label: 'Gerar etiqueta',
+            icon: Printer,
+            onClick: (ids: string[]) => {
+              const selected = items.filter((i) => ids.includes(i.id));
+              if (selected.length > 0) {
+                printQueueActions.addToQueue(
+                  selected.map((item) => ({ item }))
+                );
+                toast.success(
+                  selected.length === 1
+                    ? 'Etiqueta adicionada à fila de impressão'
+                    : `${selected.length} etiquetas adicionadas à fila de impressão`
+                );
+              }
+            },
+          });
+        }
       }
-
 
       return (
         <EntityContextMenu
@@ -809,6 +965,25 @@ function StockOverviewListPageContent() {
                   <span className="font-mono text-[11px] text-muted-foreground">
                     {item.fullCode || item.uniqueCode || ''}
                   </span>
+                  {(item.fullCode || item.uniqueCode) && (
+                    <button
+                      type="button"
+                      className="text-muted-foreground/40 hover:text-foreground transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const code = item.fullCode || item.uniqueCode || '';
+                        navigator.clipboard.writeText(code);
+                        toast.success('Código copiado!');
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  )}
+                  {item.variantReference && (
+                    <span className="inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium border border-indigo-600/25 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/8 text-indigo-700 dark:text-indigo-300">
+                      Ref: {item.variantReference}
+                    </span>
+                  )}
                   {item.batchNumber && (
                     <span className="inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium border border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300">
                       Lote: {item.batchNumber}
@@ -892,43 +1067,96 @@ function StockOverviewListPageContent() {
               { label: 'Estoque Geral', href: '/stock/overview/list' },
             ]}
             buttons={[
-              ...(canPrint
-                ? [
-                    {
-                      id: 'print-all',
-                      title: 'Imprimir',
-                      icon: Printer,
-                      onClick: () => printItems(items),
-                      variant: 'outline' as const,
-                    },
-                  ]
-                : []),
               {
-                id: 'refresh',
-                title: 'Atualizar',
-                icon: RefreshCw,
-                onClick: () => refetch(),
+                id: 'exits',
+                title: 'Verificar Saídas',
+                icon: LogOut,
+                onClick: () => router.push('/stock/overview/exits'),
                 variant: 'outline' as const,
               },
             ]}
           />
 
-          <Header
-            title="Listagem de Estoque"
-            description="Visão consolidada de todos os itens com localização, quantidades e atributos."
-          />
+          {/* Hero Banner */}
+          <Card className="relative overflow-hidden px-5 py-4 bg-white shadow-sm dark:shadow-none dark:bg-white/5 border-gray-200 dark:border-white/10 shrink-0">
+            <div className="absolute top-0 right-0 w-44 h-44 bg-violet-500/15 dark:bg-violet-500/10 rounded-full opacity-80 -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/15 dark:bg-indigo-500/10 rounded-full opacity-80 translate-y-1/2 -translate-x-1/2" />
+
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-linear-to-br from-violet-500 to-indigo-600">
+                    <Palette className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+                      Consulta de Estoque
+                    </h1>
+                    <p className="text-sm text-slate-500 dark:text-white/60">
+                      Visão consolidada de todos os itens com localização, quantidades e atributos
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search + actions strip */}
+              <div className="bg-muted/30 dark:bg-white/5 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      placeholder="Buscar por código, produto, fabricante, lote..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 h-9 text-sm bg-white dark:bg-white/5"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 ml-auto">
+                    <TooltipProvider delayDuration={300}>
+                      {canPrint && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() => printItems(items)}
+                              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Imprimir listagem</TooltipContent>
+                        </Tooltip>
+                      )}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => refetch()}
+                            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Atualizar</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
         </PageHeader>
 
         <PageBody>
-          {/* Search Bar */}
-          <SearchBar
-            placeholder="Buscar por código, produto, fabricante, lote..."
-            value={searchQuery}
-            onSearch={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
 
           {/* Grid */}
           {isLoading ? (
@@ -983,24 +1211,9 @@ function StockOverviewListPageContent() {
                       searchPlaceholder="Buscar zona..."
                       emptyText="Nenhuma zona encontrada."
                     />
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Switch
-                        id="hide-empty-items"
-                        checked={hideEmpty}
-                        onCheckedChange={setHideEmpty}
-                        className="scale-75"
-                      />
-                      <Label
-                        htmlFor="hide-empty-items"
-                        className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap"
-                      >
-                        Ocultar saídas
-                      </Label>
-                    </div>
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
                       {total} {total === 1 ? 'item' : 'itens'}
-                      {items.length < total &&
-                        ` (${items.length} carregados)`}
+                      {items.length < total && ` (${items.length} carregados)`}
                     </p>
                   </>
                 }
@@ -1055,7 +1268,7 @@ function StockOverviewListPageContent() {
             onOpenChange={setHistoryModalOpen}
             item={historyItem}
             productId={historyItem?.productId}
-            onBack={actionItem ? () => {
+            onBack={actionItems.length > 0 ? () => {
               setHistoryModalOpen(false);
               setActionSelectorOpen(true);
             } : undefined}
@@ -1066,21 +1279,21 @@ function StockOverviewListPageContent() {
             open={actionSelectorOpen}
             onOpenChange={(open) => {
               setActionSelectorOpen(open);
-              if (!open) setActionItem(null);
+              if (!open) setActionItems([]);
             }}
           >
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Ações do Item</DialogTitle>
               </DialogHeader>
-              {actionItem && (
+              {actionItems.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground mb-4">
-                    {resolveItemName(actionItem)}
+                    {resolveItemName(actionItems[0])}
                     <span className="font-mono text-xs ml-2">
                       {formatItemQuantity(
-                        actionItem.currentQuantity,
-                        actionItem.templateUnitOfMeasure
+                        actionItems[0].currentQuantity,
+                        actionItems[0].templateUnitOfMeasure
                       )}
                     </span>
                   </p>
@@ -1090,7 +1303,7 @@ function StockOverviewListPageContent() {
                       type="button"
                       onClick={() => {
                         setActionSelectorOpen(false);
-                        setHistoryItem(actionItem);
+                        setHistoryItem(actionItems[0]);
                         setHistoryModalOpen(true);
                       }}
                       className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-white dark:bg-white/5 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-50 dark:hover:bg-sky-500/5 transition-all group"
@@ -1130,7 +1343,7 @@ function StockOverviewListPageContent() {
                       className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-white dark:bg-white/5 hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/5 transition-all group"
                     >
                       <div className="w-10 h-10 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center group-hover:bg-rose-100 dark:group-hover:bg-rose-500/20 transition-colors">
-                        <PackageMinus className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                        <GoPackageDependents className="h-5 w-5 text-rose-600 dark:text-rose-400" />
                       </div>
                       <span className="text-xs font-medium text-foreground">
                         Dar Baixa
@@ -1147,14 +1360,14 @@ function StockOverviewListPageContent() {
             open={transferModalOpen}
             onOpenChange={(open) => {
               setTransferModalOpen(open);
-              if (!open) setActionItem(null);
+              if (!open) setActionItems([]);
             }}
-            selectedItems={actionItem ? [actionItem] : []}
+            selectedItems={actionItems}
             onConfirm={handleTransferConfirm}
-            onBack={() => {
+            onBack={actionItems.length === 1 ? () => {
               setTransferModalOpen(false);
               setActionSelectorOpen(true);
-            }}
+            } : undefined}
           />
 
           {/* Exit Modal */}
@@ -1162,14 +1375,14 @@ function StockOverviewListPageContent() {
             open={exitModalOpen}
             onOpenChange={(open) => {
               setExitModalOpen(open);
-              if (!open) setActionItem(null);
+              if (!open) setActionItems([]);
             }}
-            selectedItems={actionItem ? [actionItem] : []}
+            selectedItems={actionItems}
             onConfirm={handleExitConfirm}
-            onTransfer={() => {
+            onTransfer={actionItems.length === 1 ? () => {
               setExitModalOpen(false);
               setTransferModalOpen(true);
-            }}
+            } : undefined}
           />
 
           {/* Bulk Selection Toolbar */}
@@ -1181,6 +1394,19 @@ function StockOverviewListPageContent() {
             onBulkPrint={(ids) => {
               const selected = items.filter((i) => ids.includes(i.id));
               if (selected.length > 0) printItems(selected);
+            }}
+            onBulkLabel={(ids) => {
+              const selected = items.filter((i) => ids.includes(i.id));
+              if (selected.length > 0) {
+                printQueueActions.addToQueue(
+                  selected.map((item) => ({ item }))
+                );
+                toast.success(
+                  selected.length === 1
+                    ? 'Etiqueta adicionada à fila de impressão'
+                    : `${selected.length} etiquetas adicionadas à fila de impressão`
+                );
+              }
             }}
             canView={canView}
             canPrint={canPrint}
@@ -1201,6 +1427,7 @@ function StockSelectionToolbar({
   onBulkTransfer,
   onBulkExit,
   onBulkPrint,
+  onBulkLabel,
   canView,
   canPrint,
 }: {
@@ -1209,6 +1436,7 @@ function StockSelectionToolbar({
   onBulkTransfer: (ids: string[]) => void;
   onBulkExit: (ids: string[]) => void;
   onBulkPrint: (ids: string[]) => void;
+  onBulkLabel: (ids: string[]) => void;
   canView: boolean;
   canPrint: boolean;
 }) {
@@ -1228,12 +1456,18 @@ function StockSelectionToolbar({
       acts.push({
         id: 'bulk-exit',
         label: 'Dar Baixa',
-        icon: PackageMinus,
+        icon: GoPackageDependents,
         onClick: onBulkExit,
       });
     }
 
     if (canPrint) {
+      acts.push({
+        id: 'bulk-label',
+        label: 'Gerar Etiqueta',
+        icon: Tag,
+        onClick: onBulkLabel,
+      });
       acts.push({
         id: 'bulk-print',
         label: 'Imprimir',
@@ -1243,7 +1477,7 @@ function StockSelectionToolbar({
     }
 
     return acts;
-  }, [canView, canPrint, onBulkTransfer, onBulkExit, onBulkPrint]);
+  }, [canView, canPrint, onBulkTransfer, onBulkExit, onBulkPrint, onBulkLabel]);
 
   return (
     <SelectionToolbar
