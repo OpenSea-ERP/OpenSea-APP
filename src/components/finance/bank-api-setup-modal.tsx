@@ -6,6 +6,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { apiClient } from '@/lib/api-client';
 import {
   NavigationWizardDialog,
   type NavigationSection,
@@ -54,6 +55,8 @@ interface BankApiSetupModalProps {
 }
 
 type SectionId = 'provider' | 'certificate' | 'settings' | 'test';
+
+type CertMode = 'pfx' | 'pem';
 
 interface FormState {
   apiProvider: string;
@@ -248,11 +251,25 @@ function CertificateSection({
   onChange,
   certFileRef,
   keyFileRef,
+  certMode,
+  setCertMode,
+  pfxFileRef,
+  pfxFileName,
+  setPfxFileName,
+  pfxPassword,
+  setPfxPassword,
 }: {
   form: FormState;
   onChange: (patch: Partial<FormState>) => void;
   certFileRef: React.MutableRefObject<File | null>;
   keyFileRef: React.MutableRefObject<File | null>;
+  certMode: CertMode;
+  setCertMode: (mode: CertMode) => void;
+  pfxFileRef: React.MutableRefObject<File | null>;
+  pfxFileName: string;
+  setPfxFileName: (name: string) => void;
+  pfxPassword: string;
+  setPfxPassword: (pw: string) => void;
 }) {
   const handleFileChange = (
     field: 'certificatePath' | 'keyPath',
@@ -263,6 +280,17 @@ function CertificateSection({
       if (field === 'certificatePath') certFileRef.current = file;
       else keyFileRef.current = file;
       onChange({ [field]: file.name });
+      toast.info(
+        `Arquivo "${file.name}" selecionado. O envio ocorrerá ao salvar.`
+      );
+    }
+  };
+
+  const handlePfxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      pfxFileRef.current = file;
+      setPfxFileName(file.name);
       toast.info(
         `Arquivo "${file.name}" selecionado. O envio ocorrerá ao salvar.`
       );
@@ -280,93 +308,195 @@ function CertificateSection({
         </p>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Certificado (.pem)</Label>
-        <div className="flex items-center gap-2">
-          <div
-            className={cn(
-              'flex-1 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm',
-              'text-muted-foreground'
-            )}
-          >
-            <ShieldCheck className="h-4 w-4 shrink-0" />
-            <span className="truncate">
-              {form.certificatePath || 'Nenhum arquivo selecionado'}
-            </span>
-          </div>
-          <label
-            htmlFor="cert-upload"
-            className={cn(
-              'flex items-center gap-2 h-9 px-2.5 rounded-lg text-sm font-medium cursor-pointer',
-              'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors'
-            )}
-          >
-            <Upload className="h-4 w-4" />
-            Selecionar
-            <input
-              id="cert-upload"
-              type="file"
-              accept=".pem,.crt"
-              className="sr-only"
-              onChange={e => handleFileChange('certificatePath', e)}
-            />
-          </label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Arquivo de certificado digital em formato PEM ou CRT, emitido pelo
-          banco.
-        </p>
-        {form.certificatePath && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>{form.certificatePath}</span>
-          </div>
-        )}
+      {/* Mode toggle */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setCertMode('pfx')}
+          className={cn(
+            'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+            certMode === 'pfx'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          )}
+        >
+          Certificado PFX
+        </button>
+        <button
+          type="button"
+          onClick={() => setCertMode('pem')}
+          className={cn(
+            'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+            certMode === 'pem'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          )}
+        >
+          PEM (Avançado)
+        </button>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Chave Privada (.key)</Label>
-        <div className="flex items-center gap-2">
-          <div
-            className={cn(
-              'flex-1 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm',
-              'text-muted-foreground'
+      {certMode === 'pfx' ? (
+        <>
+          {/* PFX file input */}
+          <div className="space-y-1.5">
+            <Label>Arquivo de Certificado (.pfx / .p12)</Label>
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'flex-1 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm',
+                  'text-muted-foreground'
+                )}
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span className="truncate">
+                  {pfxFileName || 'Nenhum arquivo selecionado'}
+                </span>
+              </div>
+              <label
+                htmlFor="pfx-upload"
+                className={cn(
+                  'flex items-center gap-2 h-9 px-2.5 rounded-lg text-sm font-medium cursor-pointer',
+                  'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors'
+                )}
+              >
+                <Upload className="h-4 w-4" />
+                Selecionar
+                <input
+                  id="pfx-upload"
+                  type="file"
+                  accept=".pfx,.p12"
+                  className="sr-only"
+                  onChange={handlePfxChange}
+                />
+              </label>
+            </div>
+            {pfxFileName && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>{pfxFileName}</span>
+              </div>
             )}
-          >
-            <ShieldCheck className="h-4 w-4 shrink-0" />
-            <span className="truncate">
-              {form.keyPath || 'Nenhum arquivo selecionado'}
-            </span>
           </div>
-          <label
-            htmlFor="key-upload"
-            className={cn(
-              'flex items-center gap-2 h-9 px-2.5 rounded-lg text-sm font-medium cursor-pointer',
-              'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors'
-            )}
-          >
-            <Upload className="h-4 w-4" />
-            Selecionar
-            <input
-              id="key-upload"
-              type="file"
-              accept=".key,.pem"
-              className="sr-only"
-              onChange={e => handleFileChange('keyPath', e)}
+
+          {/* PFX password */}
+          <div className="space-y-1.5">
+            <Label htmlFor="pfx-password">Senha do certificado</Label>
+            <Input
+              id="pfx-password"
+              type="password"
+              value={pfxPassword}
+              onChange={e => setPfxPassword(e.target.value)}
+              placeholder="••••••••••••••••"
+              autoComplete="new-password"
             />
-          </label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Arquivo de chave privada correspondente ao certificado, em formato KEY
-          ou PEM.
-        </p>
-        {form.keyPath && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>{form.keyPath}</span>
+            <p className="text-xs text-muted-foreground">
+              Senha utilizada para proteger o arquivo PFX/P12.
+            </p>
           </div>
-        )}
-      </div>
+
+          {/* Info box */}
+          <div className="rounded-lg bg-sky-50 dark:bg-sky-500/8 border border-sky-600/20 dark:border-sky-500/20 p-3 flex gap-2">
+            <Info className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-sky-700 dark:text-sky-300">
+              Arquivo PFX/P12 será convertido automaticamente para o formato
+              necessário.
+            </p>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* PEM cert file */}
+          <div className="space-y-1.5">
+            <Label>Certificado (.pem)</Label>
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'flex-1 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm',
+                  'text-muted-foreground'
+                )}
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span className="truncate">
+                  {form.certificatePath || 'Nenhum arquivo selecionado'}
+                </span>
+              </div>
+              <label
+                htmlFor="cert-upload"
+                className={cn(
+                  'flex items-center gap-2 h-9 px-2.5 rounded-lg text-sm font-medium cursor-pointer',
+                  'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors'
+                )}
+              >
+                <Upload className="h-4 w-4" />
+                Selecionar
+                <input
+                  id="cert-upload"
+                  type="file"
+                  accept=".pem,.crt"
+                  className="sr-only"
+                  onChange={e => handleFileChange('certificatePath', e)}
+                />
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Arquivo de certificado digital em formato PEM ou CRT, emitido pelo
+              banco.
+            </p>
+            {form.certificatePath && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>{form.certificatePath}</span>
+              </div>
+            )}
+          </div>
+
+          {/* PEM key file */}
+          <div className="space-y-1.5">
+            <Label>Chave Privada (.key)</Label>
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'flex-1 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm',
+                  'text-muted-foreground'
+                )}
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span className="truncate">
+                  {form.keyPath || 'Nenhum arquivo selecionado'}
+                </span>
+              </div>
+              <label
+                htmlFor="key-upload"
+                className={cn(
+                  'flex items-center gap-2 h-9 px-2.5 rounded-lg text-sm font-medium cursor-pointer',
+                  'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors'
+                )}
+              >
+                <Upload className="h-4 w-4" />
+                Selecionar
+                <input
+                  id="key-upload"
+                  type="file"
+                  accept=".key,.pem"
+                  className="sr-only"
+                  onChange={e => handleFileChange('keyPath', e)}
+                />
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Arquivo de chave privada correspondente ao certificado, em formato KEY
+              ou PEM.
+            </p>
+            {form.keyPath && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>{form.keyPath}</span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -767,6 +897,12 @@ export function BankApiSetupModal({
   const certFileRef = useRef<File | null>(null);
   const keyFileRef = useRef<File | null>(null);
 
+  // PFX state
+  const [certMode, setCertMode] = useState<CertMode>('pfx');
+  const pfxFileRef = useRef<File | null>(null);
+  const [pfxFileName, setPfxFileName] = useState('');
+  const [pfxPassword, setPfxPassword] = useState('');
+
   const [form, setForm] = useState<FormState>({
     apiProvider: '',
     apiClientId: '',
@@ -783,9 +919,13 @@ export function BankApiSetupModal({
   useEffect(() => {
     if (!open) return;
 
-    // Reset file refs when modal opens
+    // Reset file refs and PFX state when modal opens
     certFileRef.current = null;
     keyFileRef.current = null;
+    pfxFileRef.current = null;
+    setPfxFileName('');
+    setPfxPassword('');
+    setCertMode('pfx');
 
     if (bankAccount) {
       const threshold = bankAccount.autoLowThreshold
@@ -820,8 +960,24 @@ export function BankApiSetupModal({
       let certFileId = bankAccount?.apiCertFileId ?? undefined;
       let keyFileId = bankAccount?.apiCertKeyFileId ?? undefined;
 
-      // Upload certificate files if new ones were selected
-      if (certFileRef.current) {
+      // PFX conversion — runs before individual PEM uploads
+      if (certMode === 'pfx' && pfxFileRef.current && pfxPassword) {
+        const formData = new FormData();
+        formData.append('file', pfxFileRef.current);
+        formData.append('password', pfxPassword);
+
+        const pfxRes = await apiClient.post<{ certFileId: string; keyFileId: string }>(
+          `/v1/finance/bank-accounts/${bankAccountId}/convert-pfx`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+
+        certFileId = pfxRes.certFileId;
+        keyFileId = pfxRes.keyFileId;
+      }
+
+      // Upload certificate files if new ones were selected (PEM mode)
+      if (certMode === 'pem' && certFileRef.current) {
         const certRes = await storageFilesService.uploadFile(
           null,
           certFileRef.current,
@@ -833,7 +989,7 @@ export function BankApiSetupModal({
         certFileId = certRes.file.id;
       }
 
-      if (keyFileRef.current) {
+      if (certMode === 'pem' && keyFileRef.current) {
         const keyRes = await storageFilesService.uploadFile(
           null,
           keyFileRef.current,
@@ -884,6 +1040,13 @@ export function BankApiSetupModal({
             onChange={handleChange}
             certFileRef={certFileRef}
             keyFileRef={keyFileRef}
+            certMode={certMode}
+            setCertMode={setCertMode}
+            pfxFileRef={pfxFileRef}
+            pfxFileName={pfxFileName}
+            setPfxFileName={setPfxFileName}
+            pfxPassword={pfxPassword}
+            setPfxPassword={setPfxPassword}
           />
         );
       case 'settings':
