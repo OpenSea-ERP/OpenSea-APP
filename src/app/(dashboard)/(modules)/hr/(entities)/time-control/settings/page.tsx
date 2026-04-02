@@ -183,18 +183,13 @@ export default function PunchConfigSettingsPage() {
   // QUERIES
   // ---------------------------------------------------------------------------
 
-  const {
-    data: config,
-    isLoading: configLoading,
-  } = useQuery<PunchConfiguration>({
-    queryKey: ['punch-config'],
-    queryFn: () => punchConfigApi.getConfig(),
-  });
+  const { data: config, isLoading: configLoading } =
+    useQuery<PunchConfiguration>({
+      queryKey: ['punch-config'],
+      queryFn: () => punchConfigApi.getConfig(),
+    });
 
-  const {
-    data: zonesData,
-    isLoading: zonesLoading,
-  } = useQuery({
+  const { data: zonesData, isLoading: zonesLoading } = useQuery({
     queryKey: ['geofence-zones'],
     queryFn: () => punchConfigApi.listZones(),
   });
@@ -204,23 +199,21 @@ export default function PunchConfigSettingsPage() {
   // Sync local state from server
   useEffect(() => {
     if (config) {
-      setSelfieRequired(config.selfieRequired);
-      setGpsRequired(config.gpsRequired);
-      setGeofenceEnabled(config.geofenceEnabled);
-      setQrCodeEnabled(config.qrCodeEnabled);
-      setDirectLoginEnabled(config.directLoginEnabled);
-      setKioskModeEnabled(config.kioskModeEnabled);
-      setPwaEnabled(config.pwaEnabled);
-      setOfflineAllowed(config.offlineAllowed);
-      setMaxOfflineHours(config.maxOfflineHours);
-      setToleranceMinutes(config.toleranceMinutes);
+      setSelfieRequired(config.selfieRequired ?? false);
+      setGpsRequired(config.gpsRequired ?? false);
+      setGeofenceEnabled(config.geofenceEnabled ?? false);
+      setQrCodeEnabled(config.qrCodeEnabled ?? false);
+      setDirectLoginEnabled(config.directLoginEnabled ?? true);
+      setKioskModeEnabled(config.kioskModeEnabled ?? false);
+      setPwaEnabled(config.pwaEnabled ?? false);
+      setOfflineAllowed(config.offlineAllowed ?? false);
+      setMaxOfflineHours(config.maxOfflineHours ?? 24);
+      setToleranceMinutes(config.toleranceMinutes ?? 10);
       setAutoClockOutHours(
-        config.autoClockOutHours != null
-          ? String(config.autoClockOutHours)
-          : ''
+        config.autoClockOutHours != null ? String(config.autoClockOutHours) : ''
       );
-      setPdfReceiptEnabled(config.pdfReceiptEnabled);
-      setDefaultRadiusMeters(config.defaultRadiusMeters);
+      setPdfReceiptEnabled(config.pdfReceiptEnabled ?? true);
+      setDefaultRadiusMeters(config.defaultRadiusMeters ?? 200);
     }
   }, [config]);
 
@@ -242,8 +235,13 @@ export default function PunchConfigSettingsPage() {
   });
 
   const updateZoneMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof punchConfigApi.updateZone>[1] }) =>
-      punchConfigApi.updateZone(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Parameters<typeof punchConfigApi.updateZone>[1];
+    }) => punchConfigApi.updateZone(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['geofence-zones'] });
       toast.success('Zona atualizada com sucesso');
@@ -287,9 +285,7 @@ export default function PunchConfigSettingsPage() {
         offlineAllowed,
         maxOfflineHours,
         toleranceMinutes,
-        autoClockOutHours: autoClockOutHours
-          ? Number(autoClockOutHours)
-          : null,
+        autoClockOutHours: autoClockOutHours ? Number(autoClockOutHours) : null,
         pdfReceiptEnabled,
         defaultRadiusMeters,
       });
@@ -397,9 +393,7 @@ export default function PunchConfigSettingsPage() {
               <Settings className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground">
-                Controle de Ponto
-              </p>
+              <p className="text-sm text-muted-foreground">Controle de Ponto</p>
               <h1 className="text-xl font-bold truncate">Configurações</h1>
             </div>
           </div>
@@ -492,10 +486,7 @@ export default function PunchConfigSettingsPage() {
                 label="PWA (App Instalável)"
                 description="Funcionário instala como aplicativo no celular"
               >
-                <Switch
-                  checked={pwaEnabled}
-                  onCheckedChange={setPwaEnabled}
-                />
+                <Switch checked={pwaEnabled} onCheckedChange={setPwaEnabled} />
               </ConfigRow>
             </div>
           </Card>

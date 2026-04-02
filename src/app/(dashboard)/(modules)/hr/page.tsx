@@ -572,12 +572,16 @@ export default function HRLandingPage() {
 
   useEffect(() => {
     async function fetchCounts() {
+      // Catch each call individually so the browser doesn't log
+      // "Failed to load resource: 404" for endpoints that may not exist yet.
+      const silenced = <T,>(p: Promise<T>) => p.catch(() => null);
+
       const [employees, departments, positions, teams] =
         await Promise.allSettled([
-          employeesService.listEmployees({ page: 1, perPage: 1 }),
-          departmentsService.listDepartments({ page: 1, perPage: 1 }),
-          positionsService.listPositions({ page: 1, perPage: 1 }),
-          teamsService.listTeams({ page: 1, limit: 1 }),
+          silenced(employeesService.listEmployees({ page: 1, perPage: 1 })),
+          silenced(departmentsService.listDepartments({ page: 1, perPage: 1 })),
+          silenced(positionsService.listPositions({ page: 1, perPage: 1 })),
+          silenced(teamsService.listTeams({ page: 1, limit: 1 })),
         ]);
 
       const extractCount = (
