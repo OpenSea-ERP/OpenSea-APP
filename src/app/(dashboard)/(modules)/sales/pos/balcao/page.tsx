@@ -1,125 +1,254 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft, ShoppingCart, Zap } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Zap } from 'lucide-react';
-import { toast } from 'sonner';
+import { CartProvider, useCartData, useCartActions } from '@/providers/cart-provider';
+import { ProductGrid } from '@/components/sales/product-grid';
+import type { ProductVariant } from '@/components/sales/product-grid';
+import { PaymentOverlay } from '@/components/sales/payment-overlay';
+import { SuccessScreen } from '@/components/sales/success-screen';
+import { SessionOpenModal } from '@/components/sales/session-open-modal';
+import { useActiveSession, useOpenPosSession } from '@/hooks/sales/use-pos';
+import { BalcaoCart } from './_components/balcao-cart';
 
-import {
-  ProductSearch,
-  type PosCartItem,
-} from '../src/components/product-search';
-import { QuickCart } from '../src/components/quick-cart';
-import { PaymentPanel } from '../src/components/payment-panel';
+// =============================================================================
+// MAIN PAGE (wraps with CartProvider)
+// =============================================================================
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+export default function BalcaoPage() {
+  return (
+    <CartProvider>
+      <BalcaoTerminal />
+    </CartProvider>
+  );
+}
 
-export default function BalcaoRapidoPage() {
+// =============================================================================
+// TERMINAL COMPONENT
+// =============================================================================
+
+function BalcaoTerminal() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const terminalId = searchParams.get('terminalId') ?? '';
 
-  // Cart state
-  const [cart, setCart] = useState<PosCartItem[]>([]);
+  // Session management
+  const requiresSession = !!terminalId;
+  const { data: activeSession, isLoading: isLoadingSession } =
+    useActiveSession(terminalId);
+  const openSession = useOpenPosSession();
 
-  // Cart helpers
-  const handleAddToCart = useCallback(
-    (product: { id: string; name: string; sku: string; price: number }) => {
-      setCart(prev => {
-        const existing = prev.find(item => item.productId === product.id);
-        if (existing) {
-          return prev.map(item =>
-            item.productId === product.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          );
-        }
-        return [
-          ...prev,
-          {
-            id: `cart-${Date.now()}-${product.id}`,
-            productId: product.id,
-            name: product.name,
-            sku: product.sku,
-            unitPrice: product.price,
-            quantity: 1,
-          },
-        ];
+  const [showSessionModal, setShowSessionModal] = useState(false);
+
+  // Payment flow
+  const [showPayment, setShowPayment] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successData, setSuccessData] = useState<{
+    changeAmount: number;
+    saleCode: string;
+    payments: Array<{ method: string; amount: number }>;
+  } | null>(null);
+
+  // Mobile cart badge visibility
+  const [showMobileCart, setShowMobileCart] = useState(false);
+
+  // Cart context
+  const { activeOrder, items, itemCount } = useCartData();
+  const { addItem, newCart } = useCartActions();
+
+  const total = activeOrder?.grandTotal ?? 0;
+
+  // Check session on mount
+  useEffect(() => {
+    if (requiresSession && !isLoadingSession && !activeSession) {
+      setShowSessionModal(true);
+    }
+  }, [requiresSession, isLoadingSession, activeSession]);
+
+  // Auto-create draft order if none exists
+  useEffect(() => {
+    if (!activeOrder && !showSuccess) {
+      newCart().catch(() => {
+        // Silent — may fail if not authenticated yet
       });
+    }
+    // Only on mount / after success reset
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handle product tap
+  const handleAddToCart = useCallback(
+    (variant: ProductVariant) => {
+      addItem(variant.id);
+    },
+    [addItem]
+  );
+
+  // Handle charge button
+  const handleCharge = useCallback(() => {
+    if (!activeOrder || items.length === 0) return;
+    setShowPayment(true);
+  }, [activeOrder, items]);
+
+  // Handle payment success
+  const handlePaymentSuccess = useCallback(
+    (result: { changeAmount: number; saleCode: string }) => {
+      setShowPayment(false);
+      setSuccessData({
+        changeAmount: result.changeAmount,
+        saleCode: result.saleCode,
+        payments: [],
+      });
+      setShowSuccess(true);
     },
     []
   );
 
-  const handleUpdateQuantity = useCallback((itemId: string, delta: number) => {
-    setCart(prev =>
-      prev
-        .map(item =>
-          item.id === itemId
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
-        )
-        .filter(item => item.quantity > 0)
-    );
-  }, []);
+  // Handle new sale
+  const handleNewSale = useCallback(async () => {
+    setShowSuccess(false);
+    setSuccessData(null);
+    await newCart();
+  }, [newCart]);
 
-  const handleRemoveItem = useCallback((itemId: string) => {
-    setCart(prev => prev.filter(item => item.id !== itemId));
-  }, []);
-
-  const total = cart.reduce(
-    (sum, item) => sum + item.unitPrice * item.quantity,
-    0
+  // Handle session open
+  const handleOpenSession = useCallback(
+    (openingBalance: number) => {
+      if (!terminalId) return;
+      openSession.mutate(
+        { terminalId, openingBalance },
+        {
+          onSuccess: () => {
+            setShowSessionModal(false);
+          },
+        }
+      );
+    },
+    [terminalId, openSession]
   );
 
-  const handleFinalize = useCallback((_method: 'CASH' | 'CARD' | 'PIX') => {
-    toast.success('Venda registrada com sucesso!');
-    setCart([]);
-  }, []);
-
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Left — Search & Cart (60%) */}
-      <div className="flex-[3] flex flex-col border-r border-border overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-border bg-white dark:bg-slate-800/60">
+    <div className="flex h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.push('/sales/pos')}
+            className="h-9 px-2"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="size-4" />
           </Button>
           <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-sky-500" />
-            <h1 className="font-bold text-base">Balcão Rápido</h1>
+            <Zap className="size-5 text-violet-600 dark:text-violet-400" />
+            <h1 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+              Balcao Rapido
+            </h1>
           </div>
         </div>
 
-        {/* Product Search */}
-        <div className="p-4 flex-shrink-0">
-          <ProductSearch onAddToCart={handleAddToCart} compact />
+        {/* Mobile cart badge - visible below lg */}
+        <button
+          type="button"
+          onClick={() => setShowMobileCart(true)}
+          className={cn(
+            'relative flex h-14 items-center gap-2 rounded-xl px-4 lg:hidden',
+            'bg-violet-600 text-white font-bold shadow-sm',
+            items.length === 0 && 'opacity-50'
+          )}
+        >
+          <ShoppingCart className="size-5" />
+          {itemCount > 0 && (
+            <span className="text-sm">
+              {formatCurrency(total)}
+            </span>
+          )}
+          {itemCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white">
+              {itemCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Main Content: Split Screen */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left: Product Grid */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <ProductGrid onAddToCart={handleAddToCart} />
         </div>
 
-        {/* Quick Cart */}
-        <div className="flex-1 min-h-0 px-4 pb-4">
-          <QuickCart
-            items={cart}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
-            className="h-full"
+        {/* Right: Cart Panel — desktop only */}
+        <div className="hidden w-[380px] shrink-0 lg:flex">
+          <BalcaoCart onCharge={handleCharge} className="w-full" />
+        </div>
+      </div>
+
+      {/* Mobile Cart Bottom Sheet */}
+      {showMobileCart && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowMobileCart(false)}
           />
+          {/* Sheet */}
+          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl bg-white shadow-2xl dark:bg-zinc-950">
+            {/* Drag Handle */}
+            <div className="flex justify-center py-3">
+              <div className="h-1 w-10 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+            </div>
+            <BalcaoCart
+              onCharge={() => {
+                setShowMobileCart(false);
+                handleCharge();
+              }}
+              className="max-h-[80vh] border-l-0"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Right — Payment (40%) */}
-      <div className="flex-[2] bg-white dark:bg-slate-800/60 p-6 overflow-y-auto">
-        <PaymentPanel
-          total={total}
-          onFinalize={handleFinalize}
-          disabled={cart.length === 0}
-        />
-      </div>
+      {/* Session Open Modal */}
+      <SessionOpenModal
+        isOpen={showSessionModal}
+        onClose={() => {
+          setShowSessionModal(false);
+          if (!activeSession) {
+            router.push('/sales/pos');
+          }
+        }}
+        onConfirm={handleOpenSession}
+        isPending={openSession.isPending}
+      />
+
+      {/* Payment Overlay */}
+      <PaymentOverlay
+        isOpen={showPayment}
+        onClose={() => setShowPayment(false)}
+        total={total}
+        orderId={activeOrder?.id ?? ''}
+        terminalMode="FAST_CHECKOUT"
+        posSessionId={activeSession?.id}
+        onSuccess={handlePaymentSuccess}
+      />
+
+      {/* Success Screen */}
+      <SuccessScreen
+        isOpen={showSuccess}
+        saleCode={successData?.saleCode ?? ''}
+        total={total}
+        changeAmount={successData?.changeAmount ?? 0}
+        payments={successData?.payments ?? []}
+        onNewSale={handleNewSale}
+        onClose={() => setShowSuccess(false)}
+      />
     </div>
   );
 }
