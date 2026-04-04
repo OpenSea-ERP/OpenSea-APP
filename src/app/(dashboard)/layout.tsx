@@ -17,6 +17,11 @@ const PrintQueueProvider = dynamic(
   { ssr: false }
 );
 
+const CartProvider = dynamic(
+  () => import('@/providers/cart-provider').then(m => m.CartProvider),
+  { ssr: false }
+);
+
 export default function DashboardLayout({
   children,
 }: {
@@ -54,6 +59,7 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <PrintQueueProvider>
+        <CartProvider>
         <CommandBar />
         {/* Dark Mode Background */}
         <div className="min-h-screen bg-linear-to-br from-white via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -126,6 +132,7 @@ export default function DashboardLayout({
             </main>
           </div>
         </div>
+      </CartProvider>
       </PrintQueueProvider>
     </ProtectedRoute>
   );

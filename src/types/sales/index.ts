@@ -45,3 +45,4 @@ export * from './chatbot.types';
 export * from './cadence.types';
 export * from './lead-scoring.types';
 export * from './lead-routing.types';
+export * from './pdv.types';

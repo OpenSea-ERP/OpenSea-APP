@@ -36,3 +36,4 @@ export * from './predictions.service';
 export * from './cadences.service';
 export * from './lead-scoring.service';
 export * from './lead-routing.service';
+export * from './pdv.service';
