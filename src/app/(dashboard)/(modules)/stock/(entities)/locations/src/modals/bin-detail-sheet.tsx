@@ -41,7 +41,11 @@ import { useBinDetail } from '../api/bins.queries';
 import { useBlockBin, useUnblockBin } from '../api/bins.queries';
 import { useTransferItem } from '../api/items.queries';
 import { useCodeLookup } from '@/hooks/mobile/use-code-lookup';
-import { ScanResultSheet } from '@/components/mobile/scan-result-sheet';
+import {
+  ScanResultSheet,
+  ScanResultDialog,
+} from '@/components/mobile/scan-result-sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { LookupResult } from '@/services/stock/lookup.service';
 import { HiOutlineAdjustmentsHorizontal } from 'react-icons/hi2';
 import { usePrintQueue } from '@/core/print-queue';
@@ -126,6 +130,7 @@ export function BinDetailSheet({
   binId,
   highlightItemId,
 }: BinDetailSheetProps) {
+  const isMobile = useIsMobile();
   const { data, isLoading } = useBinDetail(binId || '');
   const blockBin = useBlockBin();
   const unblockBin = useUnblockBin();
@@ -681,15 +686,26 @@ export function BinDetailSheet({
         />
       )}
 
-      {/* Scan Result Sheet (reused from mobile scanner) */}
-      <ScanResultSheet
-        open={scanSheetOpen}
-        onOpenChange={open => {
-          setScanSheetOpen(open);
-          if (!open) setScanResult(null);
-        }}
-        result={scanResult}
-      />
+      {/* Scan Result — mobile uses bottom sheet, desktop uses sized dialog */}
+      {isMobile ? (
+        <ScanResultSheet
+          open={scanSheetOpen}
+          onOpenChange={open => {
+            setScanSheetOpen(open);
+            if (!open) setScanResult(null);
+          }}
+          result={scanResult}
+        />
+      ) : (
+        <ScanResultDialog
+          open={scanSheetOpen}
+          onOpenChange={open => {
+            setScanSheetOpen(open);
+            if (!open) setScanResult(null);
+          }}
+          result={scanResult}
+        />
+      )}
     </>
   );
 }

@@ -74,7 +74,6 @@ import {
   Package,
   Plus,
   RotateCcw,
-  Search,
   ShoppingCart,
   SlidersHorizontal,
   Undo2,
@@ -98,7 +97,7 @@ interface ItemEntryFormModalProps {
   extraInvalidateKeys?: string[][];
 }
 
-type SectionId = 'variant' | 'entry' | 'costs' | 'batch';
+type SectionId = 'entry' | 'costs' | 'batch';
 
 interface FormData {
   // Entry
@@ -179,9 +178,7 @@ export function ItemEntryFormModal({
   const product = variantProp ? productProp : pickedProduct;
   const variant = variantProp ?? pickedVariant;
 
-  const [activeSection, setActiveSection] = useState<SectionId>(
-    needsVariantSearch ? 'variant' : 'entry'
-  );
+  const [activeSection, setActiveSection] = useState<SectionId>('entry');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
   const [sectionErrors, setSectionErrors] = useState<Record<string, boolean>>(
     {}
@@ -198,13 +195,13 @@ export function ItemEntryFormModal({
   useEffect(() => {
     if (open) {
       setFormData({ ...INITIAL_FORM, binId: initialBinId || '' });
-      setActiveSection(needsVariantSearch ? 'variant' : 'entry');
+      setActiveSection('entry');
       setSectionErrors({});
       setFieldErrors({});
       setPickedProduct(null);
       setPickedVariant(null);
     }
-  }, [open, initialBinId, needsVariantSearch]);
+  }, [open, initialBinId]);
 
   // ---------------------------------------------------------------------------
   // Computed
@@ -244,13 +241,6 @@ export function ItemEntryFormModal({
   const sections: NavigationSection[] = useMemo(
     () => [
       {
-        id: 'variant',
-        label: 'Variante',
-        icon: <Search className="w-4 h-4" />,
-        description: 'Selecionar variante',
-        hidden: !needsVariantSearch,
-      },
-      {
         id: 'entry',
         label: 'Entrada',
         icon: <Package className="w-4 h-4" />,
@@ -271,7 +261,7 @@ export function ItemEntryFormModal({
         description: 'Lote, validade, NF',
       },
     ],
-    [hasAttributes, needsVariantSearch]
+    [hasAttributes]
   );
 
   // ---------------------------------------------------------------------------
@@ -344,7 +334,8 @@ export function ItemEntryFormModal({
     const secs: Record<string, boolean> = {};
 
     if (needsVariantSearch && !variant) {
-      secs.variant = true;
+      errors.variantId = 'Selecione uma variante';
+      secs.entry = true;
     }
     if (!formData.binId) {
       errors.binId = 'Localização é obrigatória';
@@ -498,20 +489,6 @@ export function ItemEntryFormModal({
         </div>
       }
     >
-      {activeSection === 'variant' && needsVariantSearch && (
-        <VariantSearchSection
-          selectedVariant={pickedVariant}
-          onSelect={(v, p) => {
-            setPickedVariant(v);
-            setPickedProduct(p);
-            setSectionErrors(prev => {
-              const next = { ...prev };
-              delete next.variant;
-              return next;
-            });
-          }}
-        />
-      )}
       {activeSection === 'entry' && (
         <EntrySection
           formData={formData}
@@ -522,6 +499,24 @@ export function ItemEntryFormModal({
           fieldErrors={fieldErrors}
           itemAttributes={itemAttributes}
           hasAttributes={hasAttributes}
+          showVariantSearch={needsVariantSearch}
+          pickedVariant={pickedVariant}
+          onVariantSelect={(v, p) => {
+            setPickedVariant(v);
+            setPickedProduct(p);
+            setFieldErrors(prev => {
+              if (!('variantId' in prev)) return prev;
+              const next = { ...prev };
+              delete next.variantId;
+              return next;
+            });
+            setSectionErrors(prev => {
+              if (!prev.entry) return prev;
+              const next = { ...prev };
+              delete next.entry;
+              return next;
+            });
+          }}
         />
       )}
       {activeSection === 'costs' && (
@@ -565,6 +560,9 @@ interface EntrySectionProps extends SectionProps {
   itemAttributes: Record<string, TemplateAttribute>;
   hasAttributes: boolean;
   updateAttribute: (key: string, value: unknown) => void;
+  showVariantSearch?: boolean;
+  pickedVariant?: Variant | null;
+  onVariantSelect?: (variant: Variant, product: Product) => void;
 }
 
 function EntrySection({
@@ -576,6 +574,9 @@ function EntrySection({
   fieldErrors,
   itemAttributes,
   hasAttributes,
+  showVariantSearch,
+  pickedVariant,
+  onVariantSelect,
 }: EntrySectionProps) {
   return (
     <div className="space-y-4">
@@ -622,6 +623,15 @@ function EntrySection({
           })}
         </div>
       </div>
+
+      {/* Variante (opcional — só aparece quando o modal não recebeu uma variante via prop) */}
+      {showVariantSearch && onVariantSelect && (
+        <VariantSearchSection
+          selectedVariant={pickedVariant ?? null}
+          onSelect={onVariantSelect}
+          error={fieldErrors.variantId}
+        />
+      )}
 
       {/* Localização + Quantidade */}
       <div className="grid grid-cols-2 gap-4">
@@ -1016,6 +1026,7 @@ function BatchSection({ formData, updateField, isPending }: SectionProps) {
 interface VariantSearchSectionProps {
   selectedVariant: Variant | null;
   onSelect: (variant: Variant, product: Product) => void;
+  error?: string;
 }
 
 interface VariantSearchOption {
@@ -1030,6 +1041,7 @@ interface VariantSearchOption {
   templateName: string | null;
   manufacturerName: string | null;
   fullLabel: string;
+  searchText: string;
 }
 
 function getSearchPatternStyle(
@@ -1086,9 +1098,19 @@ async function fetchAllSearchPages<T>(
 function VariantSearchSection({
   selectedVariant,
   onSelect,
+  error,
 }: VariantSearchSectionProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
+  const [search, setSearch] = useState('');
+  // Keep the rich VariantSearchOption locally so the trigger can display
+  // the same fields shown in the list (color, fullLabel, manufacturer, reference)
+  const [selectedOption, setSelectedOption] = useState<VariantSearchOption | null>(null);
+
+  // Clear local selection if parent clears the variant
+  useEffect(() => {
+    if (!selectedVariant) setSelectedOption(null);
+  }, [selectedVariant]);
 
   const { data: options, isLoading } = useQuery({
     queryKey: ['item-entry', 'variant-search-options'],
@@ -1122,6 +1144,16 @@ function VariantSearchSection({
         const fullLabel = [templateName, productName, v.name]
           .filter(Boolean)
           .join(' · ');
+        const searchText = [
+          templateName,
+          productName,
+          v.name,
+          manufacturerName,
+          v.reference,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
         return {
           id: v.id,
           name: v.name,
@@ -1134,15 +1166,45 @@ function VariantSearchSection({
           templateName,
           manufacturerName,
           fullLabel,
+          searchText,
         };
       });
     },
     staleTime: 2 * 60 * 1000,
   });
 
+  // Manual filtering with word-by-word matching (much faster than cmdk's fuzzy)
+  // Limit to 50 visible items to keep DOM small even with thousands of variants
+  const { filteredOptions, totalMatches } = useMemo(() => {
+    if (!options) return { filteredOptions: [], totalMatches: 0 };
+    const query = search.trim().toLowerCase();
+    if (!query) {
+      return { filteredOptions: options.slice(0, 50), totalMatches: options.length };
+    }
+    const words = query.split(/\s+/).filter(Boolean);
+    const matches: VariantSearchOption[] = [];
+    let total = 0;
+    for (const opt of options) {
+      let allMatch = true;
+      for (const word of words) {
+        if (!opt.searchText.includes(word)) {
+          allMatch = false;
+          break;
+        }
+      }
+      if (allMatch) {
+        total++;
+        if (matches.length < 50) matches.push(opt);
+      }
+    }
+    return { filteredOptions: matches, totalMatches: total };
+  }, [options, search]);
+
   const handleSelect = useCallback(
     async (option: VariantSearchOption) => {
+      setSelectedOption(option);
       setPopoverOpen(false);
+      setSearch('');
       setIsResolving(true);
       try {
         const productResponse = await productsService.getProduct(
@@ -1189,31 +1251,30 @@ function VariantSearchSection({
   const hasColor = (o: VariantSearchOption) => !!(o.colorHex || o.pattern);
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">
-          Variante <span className="text-rose-500">*</span>
-        </Label>
-        <p className="text-xs text-muted-foreground">
-          Busque e selecione a variante para registrar a entrada.
-        </p>
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={popoverOpen}
-              className="w-full justify-between h-auto min-h-[48px] px-3 py-2.5"
-            >
-              {selectedVariant ? (
-                <div className="flex items-center gap-2.5 min-w-0">
-                  {selectedVariant.colorHex || selectedVariant.pattern ? (
+    <div className="space-y-1.5">
+      <Label className="text-sm font-medium">
+        Variante <span className="text-rose-500">*</span>
+      </Label>
+      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={popoverOpen}
+            className={cn(
+              'w-full justify-between h-auto min-h-[48px] px-3 py-2.5',
+              error && 'border-rose-500'
+            )}
+          >
+              {selectedOption ? (
+                <div className="flex items-center gap-2.5 w-full min-w-0">
+                  {selectedOption.colorHex || selectedOption.pattern ? (
                     <div
                       className="h-7 w-10 rounded-md shrink-0 border border-black/10"
                       style={getSearchPatternStyle(
-                        selectedVariant.colorHex || null,
-                        selectedVariant.secondaryColorHex || null,
-                        selectedVariant.pattern || null
+                        selectedOption.colorHex,
+                        selectedOption.secondaryColorHex,
+                        selectedOption.pattern
                       )}
                     />
                   ) : (
@@ -1221,15 +1282,26 @@ function VariantSearchSection({
                       <Package className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                   )}
-                  <div className="min-w-0 text-left">
+                  <div className="flex-1 min-w-0 text-left">
                     <p className="text-sm font-medium truncate">
-                      {selectedVariant.name}
+                      {selectedOption.fullLabel}
                     </p>
-                    {selectedVariant.reference && (
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        Ref: {selectedVariant.reference}
-                      </p>
-                    )}
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {selectedOption.manufacturerName && (
+                        <span>{selectedOption.manufacturerName}</span>
+                      )}
+                      {selectedOption.manufacturerName &&
+                        selectedOption.reference &&
+                        ' · '}
+                      {selectedOption.reference && (
+                        <span className="font-mono">
+                          Ref: {selectedOption.reference}
+                        </span>
+                      )}
+                      {!selectedOption.manufacturerName &&
+                        !selectedOption.reference &&
+                        '\u00A0'}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -1241,11 +1313,17 @@ function VariantSearchSection({
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-[--radix-popover-trigger-width] min-w-[480px] p-0"
+            className="w-[var(--radix-popover-trigger-width)] p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 shadow-2xl"
             align="start"
+            sideOffset={6}
           >
-            <Command>
-              <CommandInput placeholder="Buscar..." className="h-10" />
+            <Command shouldFilter={false}>
+              <CommandInput
+                placeholder="Buscar por nome, fabricante ou referência..."
+                className="h-10"
+                value={search}
+                onValueChange={setSearch}
+              />
               <CommandList>
                 <CommandEmpty>
                   {isLoading ? (
@@ -1258,11 +1336,11 @@ function VariantSearchSection({
                   )}
                 </CommandEmpty>
                 <CommandGroup>
-                  <ScrollArea className="max-h-[300px]">
-                    {(options ?? []).map(option => (
+                  <ScrollArea className="max-h-[320px]">
+                    {filteredOptions.map(option => (
                       <CommandItem
                         key={option.id}
-                        value={`${option.fullLabel} ${option.manufacturerName || ''} ${option.reference || ''}`}
+                        value={option.id}
                         onSelect={() => handleSelect(option)}
                         className="cursor-pointer py-2.5 px-2"
                       >
@@ -1311,31 +1389,20 @@ function VariantSearchSection({
                   </ScrollArea>
                 </CommandGroup>
               </CommandList>
+              {totalMatches > 50 && (
+                <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 text-[11px] text-muted-foreground bg-slate-50 dark:bg-slate-800/50">
+                  Mostrando 50 de {totalMatches} resultados — refine a busca para ver mais.
+                </div>
+              )}
             </Command>
           </PopoverContent>
         </Popover>
-      </div>
-
+      {error && <p className="text-xs text-rose-500">{error}</p>}
       {isResolving && (
-        <div className="flex items-center justify-center gap-2 py-6">
-          <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-          <span className="text-sm text-muted-foreground">
-            Carregando dados do produto...
-          </span>
-        </div>
-      )}
-
-      {selectedVariant && !isResolving && (
-        <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/5 p-3">
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-            Variante selecionada
-          </p>
-          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/60 mt-0.5">
-            {selectedVariant.name}
-            {selectedVariant.reference &&
-              ` · Ref: ${selectedVariant.reference}`}
-          </p>
-        </div>
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Carregando dados do produto...
+        </p>
       )}
     </div>
   );

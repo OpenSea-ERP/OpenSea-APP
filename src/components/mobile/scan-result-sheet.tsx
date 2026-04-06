@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Drawer, DrawerContent, DrawerFooter, DrawerTitle } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import {
   ArrowRightLeft,
@@ -275,7 +276,181 @@ function ActionButton({
 }
 
 // ============================================
-// Main Component
+// Shared Body — used by both Sheet (mobile) and Dialog (desktop)
+// ============================================
+
+interface ScanResultBodyProps {
+  result: LookupResult;
+  onClose: () => void;
+  variant: 'mobile' | 'desktop';
+}
+
+function ScanResultBody({ result, onClose, variant }: ScanResultBodyProps) {
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [showExit, setShowExit] = useState(false);
+
+  const resetSubFlow = useCallback(() => {
+    setShowTransfer(false);
+    setShowExit(false);
+  }, []);
+
+  const handleSuccess = useCallback(() => {
+    resetSubFlow();
+    onClose();
+  }, [onClose, resetSubFlow]);
+
+  // --- Extract fields ---
+  const templateName = get(result, 'templateName');
+  const productName = get(result, 'productName');
+  const variantName = get(result, 'variantName');
+  const reference = get(result, 'reference');
+  const manufacturerName = get(result, 'manufacturerName');
+  const categoryName = get(result, 'categoryName');
+  const sku = get(result, 'sku');
+  const binLabel = get(result, 'binLabel') || get(result, 'location');
+  const customFields =
+    (result.entity.customFields as Array<{
+      key: string;
+      label: string;
+      value: unknown;
+      type: string;
+      unitOfMeasure?: string;
+    }>) || [];
+  const quantity = get(result, 'quantity');
+  const rawUom = result.entity.unitOfMeasure;
+  const unitOfMeasure =
+    typeof rawUom === 'string'
+      ? rawUom
+      : rawUom && typeof rawUom === 'object' && 'value' in rawUom
+        ? String((rawUom as Record<string, unknown>).value)
+        : '';
+
+  // --- Build banner lines (2 lines only) ---
+  const line1 =
+    [templateName, productName].filter(Boolean).join(' · ') || result.entityId;
+  const line2Parts = [
+    reference ? `Ref: ${reference}` : null,
+    variantName,
+  ].filter(Boolean);
+  const line2 = line2Parts.length ? line2Parts.join(' · ') : undefined;
+
+  // --- Quantity label ---
+  const uomAbbr =
+    UOM_ABBREV[unitOfMeasure] || unitOfMeasure.toLowerCase().slice(0, 3);
+  const quantityLabel =
+    quantity != null
+      ? `${quantity}${uomAbbr ? ` ${uomAbbr}` : ''}`
+      : undefined;
+
+  const isItem = result.entityType === 'ITEM';
+
+  if (showTransfer && isItem) {
+    return (
+      <TransferFlow
+        item={result}
+        onClose={resetSubFlow}
+        onSuccess={handleSuccess}
+      />
+    );
+  }
+  if (showExit && isItem) {
+    return (
+      <ExitFlow item={result} onClose={resetSubFlow} onSuccess={handleSuccess} />
+    );
+  }
+
+  const heroWrapperClass = variant === 'mobile' ? '-mt-6 shrink-0' : 'shrink-0';
+  const actionsWrapperClass =
+    variant === 'mobile'
+      ? 'shrink-0 border-t border-slate-800 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]'
+      : 'shrink-0 border-t border-slate-800 px-4 py-3';
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Hero banner */}
+      <div className={heroWrapperClass}>
+        <HeroBanner
+          result={result}
+          line1={line1}
+          line2={line2}
+          quantityLabel={quantityLabel}
+        />
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2">
+        <div className="grid grid-cols-2 gap-2">
+          <DetailCell
+            icon={<Factory className="h-3.5 w-3.5" />}
+            label="Fabricante"
+            value={manufacturerName || '—'}
+          />
+          <DetailCell
+            icon={<Tag className="h-3.5 w-3.5" />}
+            label="Categoria"
+            value={categoryName || 'Nenhuma'}
+          />
+          <DetailCell
+            icon={<Barcode className="h-3.5 w-3.5" />}
+            label="SKU"
+            value={sku || '—'}
+            copyable={!!sku}
+          />
+          <DetailCell
+            icon={<MapPin className="h-3.5 w-3.5" />}
+            label="Localização"
+            value={binLabel || '—'}
+            copyable={!!binLabel}
+          />
+          {customFields.map(field => {
+            const display =
+              field.type === 'boolean'
+                ? field.value
+                  ? 'Sim'
+                  : 'Não'
+                : field.unitOfMeasure
+                  ? `${field.value} ${field.unitOfMeasure}`
+                  : String(field.value);
+            return (
+              <DetailCell
+                key={field.key}
+                icon={<FileText className="h-3.5 w-3.5" />}
+                label={field.label}
+                value={display}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className={actionsWrapperClass}>
+        <div className="flex gap-2">
+          <ActionButton
+            icon={<ArrowRightLeft className="h-4 w-4" />}
+            label="Transferir"
+            colorClass="text-amber-400"
+            onClick={() => setShowTransfer(true)}
+          />
+          <ActionButton
+            icon={<PackageMinus className="h-4 w-4" />}
+            label="Dar Baixa"
+            colorClass="text-rose-400"
+            onClick={() => setShowExit(true)}
+          />
+          <ActionButton
+            icon={<PackagePlus className="h-4 w-4" />}
+            label="Add Volume"
+            colorClass="text-sky-400"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// Mobile Sheet (bottom drawer)
 // ============================================
 
 interface ScanResultSheetProps {
@@ -289,172 +464,55 @@ export function ScanResultSheet({
   onOpenChange,
   result,
 }: ScanResultSheetProps) {
-  const [showTransfer, setShowTransfer] = useState(false);
-  const [showExit, setShowExit] = useState(false);
-
-  const handleClose = useCallback(() => {
-    setShowTransfer(false);
-    setShowExit(false);
-  }, []);
-
-  const handleSuccess = useCallback(() => {
-    setShowTransfer(false);
-    setShowExit(false);
-    onOpenChange(false);
-  }, [onOpenChange]);
-
   if (!result) return null;
-
-  // --- Extract fields ---
-  const templateName = get(result, 'templateName');
-  const productName = get(result, 'productName');
-  const variantName = get(result, 'variantName');
-  const reference = get(result, 'reference');
-  const manufacturerName = get(result, 'manufacturerName');
-  const categoryName = get(result, 'categoryName');
-  const sku = get(result, 'sku');
-  const binLabel = get(result, 'binLabel') || get(result, 'location');
-  const customFields = (result.entity.customFields as Array<{
-    key: string;
-    label: string;
-    value: unknown;
-    type: string;
-    unitOfMeasure?: string;
-  }>) || [];
-  const quantity = get(result, 'quantity');
-  const rawUom = result.entity.unitOfMeasure;
-  const unitOfMeasure =
-    typeof rawUom === 'string'
-      ? rawUom
-      : rawUom && typeof rawUom === 'object' && 'value' in rawUom
-        ? String((rawUom as Record<string, unknown>).value)
-        : '';
-  // --- Build banner lines (2 lines only) ---
-  const line1 = [templateName, productName].filter(Boolean).join(' · ') || result.entityId;
-  const line2Parts = [reference ? `Ref: ${reference}` : null, variantName].filter(Boolean);
-  const line2 = line2Parts.length ? line2Parts.join(' · ') : undefined;
-
-  // --- Quantity label ---
-  const uomAbbr = UOM_ABBREV[unitOfMeasure] || unitOfMeasure.toLowerCase().slice(0, 3);
-  const quantityLabel = quantity != null
-    ? `${quantity}${uomAbbr ? ` ${uomAbbr}` : ''}`
-    : undefined;
-
-  const isItem = result.entityType === 'ITEM';
-
-  const isSubFlow = showTransfer || showExit;
-
   return (
     <Drawer
       open={open}
-      onOpenChange={value => {
-        if (!value) handleClose();
-        onOpenChange(value);
-      }}
+      onOpenChange={onOpenChange}
       direction="bottom"
     >
-      <DrawerContent
-        className={cn(
-          'bg-slate-900 border-slate-700 [&>div:first-child]:hidden',
-          isSubFlow ? 'h-[95vh]' : 'max-h-[85vh]'
-        )}
-      >
+      <DrawerContent className="bg-slate-900 border-slate-700 [&>div:first-child]:hidden max-h-[85vh]">
         <VisuallyHidden>
           <DrawerTitle>Resultado da leitura</DrawerTitle>
         </VisuallyHidden>
-        {showTransfer && isItem ? (
-          <TransferFlow
-            item={result}
-            onClose={handleClose}
-            onSuccess={handleSuccess}
-          />
-        ) : showExit && isItem ? (
-          <ExitFlow
-            item={result}
-            onClose={handleClose}
-            onSuccess={handleSuccess}
-          />
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col">
-            {/* Hero banner — negative margin to extend behind hidden drag handle */}
-            <div className="-mt-6 shrink-0">
-              <HeroBanner
-                result={result}
-                line1={line1}
-                line2={line2}
-                quantityLabel={quantityLabel}
-              />
-            </div>
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2">
-              {/* Details grid — 2 columns */}
-              <div className="grid grid-cols-2 gap-2">
-                <DetailCell
-                  icon={<Factory className="h-3.5 w-3.5" />}
-                  label="Fabricante"
-                  value={manufacturerName || '—'}
-                />
-                <DetailCell
-                  icon={<Tag className="h-3.5 w-3.5" />}
-                  label="Categoria"
-                  value={categoryName || 'Nenhuma'}
-                />
-                <DetailCell
-                  icon={<Barcode className="h-3.5 w-3.5" />}
-                  label="SKU"
-                  value={sku || '—'}
-                  copyable={!!sku}
-                />
-                <DetailCell
-                  icon={<MapPin className="h-3.5 w-3.5" />}
-                  label="Localização"
-                  value={binLabel || '—'}
-                  copyable={!!binLabel}
-                />
-                {customFields.map(field => {
-                  const display = field.type === 'boolean'
-                    ? (field.value ? 'Sim' : 'Não')
-                    : field.unitOfMeasure
-                      ? `${field.value} ${field.unitOfMeasure}`
-                      : String(field.value);
-                  return (
-                    <DetailCell
-                      key={field.key}
-                      icon={<FileText className="h-3.5 w-3.5" />}
-                      label={field.label}
-                      value={display}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Action buttons — always visible at bottom */}
-            <div className="shrink-0 border-t border-slate-800 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-              <div className="flex gap-2">
-                <ActionButton
-                  icon={<ArrowRightLeft className="h-4 w-4" />}
-                  label="Transferir"
-                  colorClass="text-amber-400"
-                  onClick={() => setShowTransfer(true)}
-                />
-                <ActionButton
-                  icon={<PackageMinus className="h-4 w-4" />}
-                  label="Dar Baixa"
-                  colorClass="text-rose-400"
-                  onClick={() => setShowExit(true)}
-                />
-                <ActionButton
-                  icon={<PackagePlus className="h-4 w-4" />}
-                  label="Add Volume"
-                  colorClass="text-sky-400"
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        <ScanResultBody
+          result={result}
+          variant="mobile"
+          onClose={() => onOpenChange(false)}
+        />
       </DrawerContent>
     </Drawer>
+  );
+}
+
+// ============================================
+// Desktop Dialog — same content, properly sized window
+// ============================================
+
+interface ScanResultDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  result: LookupResult | null;
+}
+
+export function ScanResultDialog({
+  open,
+  onOpenChange,
+  result,
+}: ScanResultDialogProps) {
+  if (!result) return null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg p-0 overflow-hidden bg-slate-900 border-slate-700 gap-0 h-[640px] max-h-[85vh] flex flex-col">
+        <VisuallyHidden>
+          <DialogTitle>Resultado da leitura</DialogTitle>
+        </VisuallyHidden>
+        <ScanResultBody
+          result={result}
+          variant="desktop"
+          onClose={() => onOpenChange(false)}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }
