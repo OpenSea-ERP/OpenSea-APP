@@ -518,8 +518,9 @@ export function ScanResultDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-lg p-0 overflow-hidden bg-slate-900 border-slate-700 gap-0 h-[640px] max-h-[85vh] flex flex-col"
+        className="sm:max-w-lg p-0 overflow-hidden bg-slate-900 sm:border-slate-700 gap-0 sm:h-[640px] sm:max-h-[85vh] flex flex-col"
         showCloseButton={false}
+        fullscreenOnMobile
       >
         <VisuallyHidden>
           <DialogTitle>Resultado da leitura</DialogTitle>

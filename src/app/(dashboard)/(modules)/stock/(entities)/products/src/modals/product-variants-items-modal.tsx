@@ -43,6 +43,8 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { ItemRow } from '../components/item-row';
 import { VariantRow } from '../components/variant-row';
@@ -66,6 +68,7 @@ export function ProductVariantsItemsModal({
 }: ProductVariantsItemsModalProps) {
   const { actions: printActions } = usePrintQueue();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [variantsSearch, setVariantsSearch] = useState('');
@@ -394,7 +397,12 @@ export function ProductVariantsItemsModal({
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
           showCloseButton={false}
-          className="sm:max-w-[1200px] h-[650px] overflow-hidden flex flex-row p-0 gap-0"
+          fullscreenOnMobile
+          className={cn(
+            'overflow-hidden p-0 gap-0 flex flex-col',
+            // Desktop: 1200x650 fixed, two columns side-by-side
+            'sm:w-[1200px] sm:max-w-[1200px] sm:h-[650px] sm:flex-row'
+          )}
         >
           <VisuallyHidden>
             <DialogTitle>Variantes e Itens — {product.name}</DialogTitle>
@@ -402,11 +410,18 @@ export function ProductVariantsItemsModal({
 
           {/* ================================================================ */}
           {/* LEFT COLUMN — Product context + Variants */}
+          {/* On mobile: hidden when a variant is selected (master/detail) */}
           {/* ================================================================ */}
-          <div className="w-[380px] shrink-0 flex flex-col border-r border-border/50 bg-slate-50 dark:bg-white/[0.03]">
+          <div
+            className={cn(
+              'flex flex-col border-r border-border/50 bg-slate-50 dark:bg-white/[0.03]',
+              'sm:w-[380px] sm:shrink-0 sm:flex',
+              isMobile && selectedVariant ? 'hidden' : 'flex w-full flex-1'
+            )}
+          >
             {/* Product Header — min-h matches variant header for aligned border */}
             <div className="px-4 pt-5 pb-4 border-b border-border/30 min-h-[88px] flex items-center">
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 w-full">
                 <div className="shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
                   <Package className="w-5 h-5 text-white" />
                 </div>
@@ -418,6 +433,15 @@ export function ProductVariantsItemsModal({
                     {manufacturerName || 'Fabricante não informado'}
                   </p>
                 </div>
+                {/* Mobile-only close button (since left column has no sibling on mobile) */}
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="sm:hidden shrink-0 h-8 w-8 -mt-1 -mr-1 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  aria-label="Fechar"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
@@ -496,10 +520,38 @@ export function ProductVariantsItemsModal({
 
           {/* ================================================================ */}
           {/* RIGHT COLUMN — Variant detail + Items */}
+          {/* On mobile: hidden when no variant selected (master/detail) */}
           {/* ================================================================ */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <div
+            className={cn(
+              'flex-col overflow-hidden min-w-0',
+              'sm:flex sm:flex-1',
+              isMobile && !selectedVariant ? 'hidden' : 'flex flex-1'
+            )}
+          >
             {selectedVariant ? (
               <>
+                {/* Mobile-only back-to-list bar */}
+                <div className="sm:hidden flex items-center gap-2 px-3 py-2 border-b border-border/30">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVariant(null)}
+                    className="flex items-center gap-1.5 h-8 px-2 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Variantes
+                  </button>
+                  <div className="flex-1" />
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    aria-label="Fechar"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
                 {/* Variant Header */}
                 <VariantDetailHeader
                   variant={selectedVariant}
@@ -525,7 +577,7 @@ export function ProductVariantsItemsModal({
                         placeholder="Buscar itens..."
                         value={itemsSearch}
                         onChange={e => setItemsSearch(e.target.value)}
-                        className="pl-9 h-8 text-sm"
+                        className="pl-9 h-9 sm:h-8 text-sm bg-white dark:bg-white/5"
                       />
                     </div>
                     {items.some((i: Item) => i.currentQuantity === 0) && (
@@ -596,8 +648,12 @@ export function ProductVariantsItemsModal({
                 </div>
 
                 {/* Items Footer */}
-                <div className="flex items-center justify-end px-4 py-3 border-t border-border/30">
-                  <Button size="sm" onClick={() => setShowAddItemModal(true)}>
+                <div className="px-4 py-3 border-t border-border/30 sm:flex sm:items-center sm:justify-end">
+                  <Button
+                    size="sm"
+                    onClick={() => setShowAddItemModal(true)}
+                    className="w-full sm:w-auto"
+                  >
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     Registrar Entrada
                   </Button>
@@ -686,98 +742,104 @@ function VariantDetailHeader({
   const patternLabel = PATTERN_LABELS[variant.pattern as Pattern] || '';
 
   return (
-    <div className="shrink-0 border-b border-border/30 px-5 py-4 min-h-[88px] flex items-center">
-      <div className="flex items-center justify-between gap-4 w-full">
-        {/* Left: name + meta */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold truncate">{variant.name}</h3>
-            {variant.outOfLine && (
-              <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-orange-500/15 text-orange-600 dark:text-orange-400 rounded">
-                Fora de Linha
-              </span>
-            )}
-            {!variant.isActive && (
-              <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-gray-500/15 text-gray-500 rounded">
-                Inativo
-              </span>
-            )}
-          </div>
+    <div className="shrink-0 border-b border-border/30 px-4 sm:px-5 py-4 sm:min-h-[88px] sm:flex sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 w-full">
+        {/* Top row: name + status badges + quantity */}
+        <div className="flex items-start gap-3 min-w-0 sm:flex-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-lg sm:text-base font-semibold truncate">
+                {variant.name}
+              </h3>
+              {variant.outOfLine && (
+                <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-orange-500/15 text-orange-600 dark:text-orange-400 rounded">
+                  Fora de Linha
+                </span>
+              )}
+              {!variant.isActive && (
+                <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-medium bg-gray-500/15 text-gray-500 rounded">
+                  Inativo
+                </span>
+              )}
+            </div>
 
-          {/* Meta badges */}
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            {variant.sku && (
-              <span className="text-[11px] h-5 inline-flex items-center px-1.5 rounded bg-muted text-muted-foreground font-mono">
-                SKU: {variant.sku}
-              </span>
-            )}
-            {variant.reference && (
-              <span className="text-[11px] h-5 inline-flex items-center px-1.5 rounded bg-muted text-muted-foreground">
-                Ref: {variant.reference}
-              </span>
-            )}
-            {patternLabel && (
-              <span className="text-[11px] h-5 inline-flex items-center px-1.5 rounded bg-muted text-muted-foreground">
-                {patternLabel}
-              </span>
-            )}
-            {hasColor && (
-              <span className="h-5 inline-flex items-center gap-1 px-1.5 rounded bg-muted">
-                <span
-                  className="w-3 h-3 rounded-full inline-block ring-1 ring-black/10"
-                  style={{ background: variant.colorHex! }}
-                />
-                {variant.secondaryColorHex && (
+            {/* Meta badges */}
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              {variant.sku && (
+                <span className="text-[11px] h-5 inline-flex items-center px-1.5 rounded bg-muted text-muted-foreground font-mono">
+                  SKU: {variant.sku}
+                </span>
+              )}
+              {variant.reference && (
+                <span className="text-[11px] h-5 inline-flex items-center px-1.5 rounded bg-muted text-muted-foreground">
+                  Ref: {variant.reference}
+                </span>
+              )}
+              {patternLabel && (
+                <span className="text-[11px] h-5 inline-flex items-center px-1.5 rounded bg-muted text-muted-foreground">
+                  {patternLabel}
+                </span>
+              )}
+              {hasColor && (
+                <span className="h-5 inline-flex items-center gap-1 px-1.5 rounded bg-muted">
                   <span
-                    className="w-3 h-3 rounded-full inline-block ring-1 ring-black/10 -ml-0.5"
-                    style={{ background: variant.secondaryColorHex }}
+                    className="w-3 h-3 rounded-full inline-block ring-1 ring-black/10"
+                    style={{ background: variant.colorHex! }}
                   />
-                )}
-              </span>
-            )}
+                  {variant.secondaryColorHex && (
+                    <span
+                      className="w-3 h-3 rounded-full inline-block ring-1 ring-black/10 -ml-0.5"
+                      style={{ background: variant.secondaryColorHex }}
+                    />
+                  )}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Right: quantity + actions */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="text-right">
-            <p className="text-lg font-bold tabular-nums leading-none">
+          {/* Quantity — right of name on both layouts */}
+          <div className="text-right shrink-0">
+            <p className="text-xl sm:text-lg font-bold tabular-nums leading-none">
               {formatQuantity(totalQuantity)}
               <span className="text-xs font-normal text-muted-foreground ml-1">
                 {unitLabel}
               </span>
             </p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-1 border-l border-border/50 pl-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={onEdit}
-              title="Editar variante"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={onPrintListing}
-              title="Imprimir listagem"
-            >
-              <FileText className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={onClose}
-              title="Fechar"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+        {/* Bottom row (mobile) / right group (desktop): action buttons */}
+        <div className="flex items-center gap-1 shrink-0 sm:border-l sm:border-border/50 sm:pl-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none sm:h-8 sm:w-8 sm:p-0"
+            onClick={onEdit}
+            title="Editar variante"
+          >
+            <Edit className="h-4 w-4 sm:m-0 sm:mr-0" />
+            <span className="sm:hidden ml-1.5">Editar</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none sm:h-8 sm:w-8 sm:p-0"
+            onClick={onPrintListing}
+            title="Imprimir listagem"
+          >
+            <FileText className="h-4 w-4" />
+            <span className="sm:hidden ml-1.5">Imprimir</span>
+          </Button>
+          {/* Desktop-only X close — mobile uses the back-bar at the top */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden sm:flex h-8 w-8"
+            onClick={onClose}
+            title="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </div>

@@ -456,15 +456,21 @@ export function ItemEntryFormModal({
       sectionErrors={sectionErrors}
       isPending={isPending}
       footer={
-        <div className="flex items-center gap-2 w-full">
-          <Button variant="outline" onClick={handleClose} disabled={isPending}>
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-2 w-full">
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isPending}
+            className="w-full sm:w-auto"
+          >
             Cancelar
           </Button>
-          <div className="flex-1" />
+          <div className="hidden sm:block sm:flex-1" />
           <Button
             variant="outline"
             onClick={handleSubmitAndContinue}
             disabled={isPending}
+            className="w-full sm:w-auto"
           >
             {createAndContinueMutation.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -473,7 +479,11 @@ export function ItemEntryFormModal({
             )}
             Salvar e Registrar Outro
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isPending}
+            className="w-full sm:w-auto"
+          >
             {createItemMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -634,7 +644,7 @@ function EntrySection({
       )}
 
       {/* Localização + Quantidade */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>
             Localização (Bin) <span className="text-rose-500">*</span>
@@ -725,7 +735,7 @@ function AttributeFields({
 }: AttributeFieldsProps) {
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {Object.entries(itemAttributes).map(
           ([key, config]: [string, TemplateAttribute]) => {
             const rawValue = formData.attributes[key];
@@ -867,7 +877,7 @@ function CostsSection({
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Custo Unitário */}
           <div className="space-y-1.5">
             <Label htmlFor="ief-unitCost">Preço de Custo Unitário</Label>
@@ -942,7 +952,7 @@ function BatchSection({ formData, updateField, isPending }: SectionProps) {
       </div>
 
       {/* Lote + NF */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="ief-batchNumber">N° do Lote</Label>
           <Input
@@ -968,7 +978,7 @@ function BatchSection({ formData, updateField, isPending }: SectionProps) {
       </div>
 
       {/* Datas */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="ief-manufacturingDate">Data de Fabricação</Label>
           <Input

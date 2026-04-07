@@ -178,13 +178,26 @@ function ProductsPageContent() {
   } = useProductsInfinite(filters);
 
   // Dropdown sources from dedicated endpoints (A1 strategy)
-  const { data: allTemplates = [] } = useTemplates();
+  const { data: allTemplates } = useTemplates();
   const { data: allManufacturers } = useManufacturers();
   const { data: allCategories } = useCategories();
 
+  // Defensive: useTemplates may return an array OR a wrapped object depending
+  // on the service response shape; normalize to array before mapping.
+  const templatesArray = useMemo<Array<{ id: string; name: string }>>(() => {
+    if (Array.isArray(allTemplates)) {
+      return allTemplates as Array<{ id: string; name: string }>;
+    }
+    const wrapped = allTemplates as { templates?: unknown } | undefined;
+    if (wrapped && Array.isArray(wrapped.templates)) {
+      return wrapped.templates as Array<{ id: string; name: string }>;
+    }
+    return [];
+  }, [allTemplates]);
+
   const templateOptions = useMemo(
-    () => allTemplates.map(t => ({ id: t.id, label: t.name })),
-    [allTemplates]
+    () => templatesArray.map(t => ({ id: t.id, label: t.name })),
+    [templatesArray]
   );
 
   const manufacturerOptions = useMemo(
@@ -780,6 +793,11 @@ function ProductsPageContent() {
                 config={productsConfig}
                 items={products}
                 showItemCount={false}
+                activeFilterCount={
+                  templateIds.length +
+                  manufacturerIds.length +
+                  categoryIds.length
+                }
                 toolbarStart={
                   <>
                     <FilterDropdown

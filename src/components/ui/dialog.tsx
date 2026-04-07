@@ -52,24 +52,57 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  fullscreenOnMobile = false,
+  style,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
+  /**
+   * When true, the dialog renders truly fullscreen on mobile (< sm) — no
+   * margins, no rounded corners, no border. On sm+ the caller's className
+   * (max-width / rounded / border / etc.) takes over normally.
+   */
+  fullscreenOnMobile?: boolean;
 }) {
+  // CRITICAL: borderRadius/borderColor are intentionally OMITTED from inline
+  // style when fullscreenOnMobile, otherwise they would override the
+  // `rounded-none`/`border-0` Tailwind classes (inline styles beat classes).
+  // For sm+ we re-apply them via arbitrary-value Tailwind classes.
+  const baseStyle: React.CSSProperties = fullscreenOnMobile
+    ? {
+        backgroundColor: 'var(--modal-bg)',
+        color: 'var(--modal-text)',
+      }
+    : {
+        backgroundColor: 'var(--modal-bg)',
+        color: 'var(--modal-text)',
+        borderColor: 'var(--modal-border)',
+        borderRadius: 'var(--modal-radius)',
+      };
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg',
+          // Base layout (positioning + animations)
+          'fixed top-[50%] left-[50%] z-50 grid translate-x-[-50%] translate-y-[-50%] shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          // Default dialog look (margins, rounded, border, padding) — only when NOT fullscreen-on-mobile
+          !fullscreenOnMobile &&
+            'w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border p-6 sm:max-w-lg',
+          // Fullscreen-on-mobile look. Border + radius come from arbitrary
+          // Tailwind classes only on sm+, so the mobile fullscreen state
+          // never has them and inline styles don't fight class overrides.
+          fullscreenOnMobile && [
+            'w-screen h-[100dvh] max-w-none rounded-none border-0',
+            'sm:h-auto sm:border sm:[border-color:var(--modal-border)] sm:[border-radius:var(--modal-radius)]',
+          ],
           className
         )}
         style={{
-          backgroundColor: 'var(--modal-bg)',
-          color: 'var(--modal-text)',
-          borderColor: 'var(--modal-border)',
-          borderRadius: 'var(--modal-radius)',
+          ...baseStyle,
+          ...style,
         }}
         {...props}
       >

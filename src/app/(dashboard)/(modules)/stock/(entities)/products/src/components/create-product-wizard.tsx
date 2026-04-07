@@ -159,7 +159,7 @@ function StepSelectTemplate({
         />
       </div>
 
-      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+      <div className="space-y-2">
         {filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">
             Nenhum template encontrado para &ldquo;{search}&rdquo;
@@ -265,7 +265,7 @@ function StepSelectManufacturer({
         />
       </div>
 
-      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+      <div className="space-y-2">
         {filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">
             Nenhum fabricante encontrado para &ldquo;{search}&rdquo;

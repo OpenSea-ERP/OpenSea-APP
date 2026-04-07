@@ -217,9 +217,9 @@ export function ItemRow({
         </span>
       </div>
 
-      {/* Hover actions */}
+      {/* Actions — always visible on mobile, hover-only on desktop */}
       {!isExited && (
-        <div className="shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="shrink-0 flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 sm:transition-opacity">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

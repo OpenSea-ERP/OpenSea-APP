@@ -655,7 +655,7 @@ function BasicSection({
   return (
     <div className="space-y-4">
       {/* Nome + SKU */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="vfm-name">
             Nome da Variante <span className="text-rose-500">*</span>
@@ -711,7 +711,7 @@ function BasicSection({
       </div>
 
       {/* Switches: Fora de Linha + Ativo */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex items-center justify-between p-3 rounded-lg border">
           <div className="space-y-0.5">
             <Label htmlFor="vfm-outOfLine" className="text-sm font-medium">
@@ -802,7 +802,7 @@ function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
       {/* Cor Primária */}
       <div className={cn('space-y-1.5', colorsDisabled && 'opacity-50')}>
         <Label>Cor Primária</Label>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -851,7 +851,7 @@ function AppearanceSection({ formData, updateField, isPending }: SectionProps) {
             </span>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -1057,7 +1057,7 @@ function PricingSection({
     <TooltipProvider>
       <div className="space-y-4">
         {/* Row 1: Custo Calculado, Custo Informado, Margem */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <Label htmlFor="vfm-calculatedCost">Custo Calculado</Label>
@@ -1120,7 +1120,7 @@ function PricingSection({
         </div>
 
         {/* Row 2: Preço Calculado, Preço Definido, Margem Calculada */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <Label htmlFor="vfm-calculatedSale">Venda Calculado</Label>
@@ -1196,7 +1196,7 @@ function PricingSection({
 function StockSection({ formData, updateField, isPending }: SectionProps) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="vfm-minStock">Estoque Mínimo</Label>
           <Input
@@ -1228,7 +1228,7 @@ function StockSection({ formData, updateField, isPending }: SectionProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="vfm-reorderPoint">Ponto de Reposição</Label>
           <Input
@@ -1295,7 +1295,7 @@ function AttributesSection({
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {Object.entries(variantAttributes).map(
           ([key, config]: [string, TemplateAttribute]) => {
             const rawValue = formData.attributes[key];

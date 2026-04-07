@@ -56,6 +56,11 @@ export function StepWizardDialog({
   const isLast = currentStep === steps.length;
   const canAdvance = step.isValid !== false;
 
+  // Extract height value (e.g. "h-[490px]" -> "490px") so we can apply it on
+  // desktop only via a CSS variable, while keeping mobile fullscreen.
+  const heightMatch = heightClass.match(/h-\[(.+?)\]/);
+  const desktopHeight = heightMatch?.[1] ?? '490px';
+
   return (
     <Dialog
       open={open}
@@ -65,23 +70,30 @@ export function StepWizardDialog({
     >
       <DialogContent
         showCloseButton={false}
-        className={`sm:max-w-[800px] max-w-[800px] ${heightClass} p-0 gap-0 overflow-hidden flex flex-row`}
+        fullscreenOnMobile
+        style={{ '--wizard-h': desktopHeight } as React.CSSProperties}
+        className="p-0 gap-0 overflow-hidden flex flex-col sm:w-[800px] sm:max-w-[800px] sm:flex-row sm:h-[var(--wizard-h)]"
         data-testid="email-account-wizard"
       >
         <VisuallyHidden>
           <DialogTitle>{step.title}</DialogTitle>
         </VisuallyHidden>
-        {/* Left icon column */}
-        <div className="w-[200px] shrink-0 bg-slate-50 dark:bg-white/5 flex items-center justify-center border-r border-border/50">
+
+        {/* Left icon column — desktop only (hidden on mobile to free real estate) */}
+        <div className="hidden sm:flex w-[200px] shrink-0 bg-slate-50 dark:bg-white/5 items-center justify-center border-r border-border/50">
           {step.icon}
         </div>
 
         {/* Right content column */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-5 pb-3">
-            <div>
-              <h2 className="text-lg font-semibold leading-none">
+          <div className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-5 pb-3 border-b border-border/50 sm:border-b-0">
+            {/* Mobile-only compact icon */}
+            <div className="sm:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 [&>*]:!h-5 [&>*]:!w-5">
+              {step.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-semibold leading-tight truncate">
                 {step.title}
               </h2>
               {step.description && (
@@ -93,7 +105,7 @@ export function StepWizardDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="shrink-0 -mr-1 -mt-1 h-8 w-8 flex items-center justify-center rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <X className="h-4 w-4" />
               <span className="sr-only">Fechar</span>
@@ -101,10 +113,12 @@ export function StepWizardDialog({
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto px-6 py-2">{step.content}</div>
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-2">
+            {step.content}
+          </div>
 
           {/* Footer */}
-          <div className="flex items-center gap-2 px-6 py-4 border-t border-border/50">
+          <div className="flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t border-border/50 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-4">
             {step.onBack && (
               <Button
                 type="button"

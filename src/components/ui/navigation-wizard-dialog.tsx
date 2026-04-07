@@ -64,7 +64,13 @@ export function NavigationWizardDialog({
     >
       <DialogContent
         showCloseButton={false}
-        className={cn("sm:max-w-[1000px] max-w-[1000px] h-[600px] p-0 gap-0 overflow-hidden flex flex-row", contentClassName)}
+        fullscreenOnMobile
+        className={cn(
+          'p-0 gap-0 overflow-hidden flex flex-col',
+          // Desktop: 1000x600 fixed, horizontal layout
+          'sm:w-[1000px] sm:max-w-[1000px] sm:h-[600px] sm:flex-row',
+          contentClassName
+        )}
         onPointerDownOutside={e => {
           if (isPending) e.preventDefault();
         }}
@@ -76,10 +82,71 @@ export function NavigationWizardDialog({
           <DialogTitle>{title}</DialogTitle>
         </VisuallyHidden>
 
-        {/* Left column — full height, distinct background */}
+        {/* Mobile header — title + close button (sidebar replaced by chip nav below) */}
+        <div className="sm:hidden flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-border/50 shrink-0">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                {subtitle}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={handleClose}
+            className="shrink-0 h-8 w-8 flex items-center justify-center rounded-md opacity-70 hover:opacity-100 disabled:opacity-40"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Fechar</span>
+          </button>
+        </div>
+
+        {/* Mobile horizontal section nav (chips) */}
+        <div className="sm:hidden border-b border-border/50 shrink-0 overflow-x-auto">
+          <div className="flex gap-2 px-4 py-3 min-w-max">
+            {visibleSections.map(section => {
+              const isActive = section.id === activeSection;
+              const hasError = sectionErrors?.[section.id];
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => onSectionChange(section.id)}
+                  className={cn(
+                    'relative flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors',
+                    'disabled:pointer-events-none disabled:opacity-50',
+                    isActive
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/30'
+                      : 'bg-slate-100 dark:bg-white/5 text-gray-600 dark:text-white/60'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex items-center justify-center w-5 h-5 shrink-0 [&>*]:!h-4 [&>*]:!w-4',
+                      isActive ? 'text-blue-600 dark:text-blue-400' : ''
+                    )}
+                  >
+                    {section.icon}
+                  </span>
+                  {section.label}
+                  {hasError && (
+                    <span className="ml-1 w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Left column — full height, distinct background (DESKTOP ONLY) */}
         <div
           className={cn(
-            'shrink-0 flex flex-col border-r border-border/50',
+            'hidden sm:flex shrink-0 flex-col border-r border-border/50',
             'bg-slate-50 dark:bg-white/[0.03]',
             variant === 'compact' ? 'w-[210px]' : 'w-[270px]'
           )}
@@ -200,11 +267,11 @@ export function NavigationWizardDialog({
 
         {/* Right column — header + content + footer */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-          {/* Header — active section title */}
+          {/* Desktop-only header — active section title */}
           {(() => {
             const active = visibleSections.find(s => s.id === activeSection);
             return (
-              <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border/50 shrink-0">
+              <div className="hidden sm:flex items-center justify-between px-6 pt-5 pb-4 border-b border-border/50 shrink-0">
                 <div className="flex items-center gap-3">
                   {active && (
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
@@ -237,11 +304,11 @@ export function NavigationWizardDialog({
 
           {/* Content */}
           <ScrollArea className="flex-1 min-w-0 min-h-0">
-            <div className="p-6">{children}</div>
+            <div className="p-4 sm:p-6">{children}</div>
           </ScrollArea>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border/50 shrink-0">
+          <div className="flex items-center justify-end gap-2 flex-wrap px-4 sm:px-6 py-3 sm:py-4 border-t border-border/50 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-4">
             {footer}
           </div>
         </div>

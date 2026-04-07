@@ -8,15 +8,24 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '@/components/ui/drawer';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useOptionalSelectionContext } from '@/core/selection';
 import type { BaseEntity, EntityConfig } from '@/core/types';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import {
   ArrowDownAZ,
@@ -25,6 +34,7 @@ import {
   Clock,
   Grid3x3,
   List,
+  SlidersHorizontal,
 } from 'lucide-react';
 import React, {
   useCallback,
@@ -115,6 +125,8 @@ export interface EntityGridProps<T extends BaseEntity> {
   gridColumns?: string;
   /** Conteúdo renderizado no início da toolbar (ex: filtros) */
   toolbarStart?: React.ReactNode;
+  /** Quantidade de filtros ativos (mostrado como badge no botão Filtros mobile) */
+  activeFilterCount?: number;
   /** Callback para sorting server-side. Quando presente, sorting interno é desabilitado. */
   onSortChange?: (sortField: SortField, sortDirection: SortDirection) => void;
 }
@@ -155,6 +167,7 @@ export function EntityGrid<T extends BaseEntity>({
   itemsClassName,
   gridColumns = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
   toolbarStart,
+  activeFilterCount = 0,
   onSortChange,
 }: EntityGridProps<T>) {
   // Selection context (opcional)
@@ -167,6 +180,10 @@ export function EntityGrid<T extends BaseEntity>({
     useState<ViewMode>(defaultView);
   const viewMode = controlledViewMode ?? internalViewMode;
   const setViewMode = onViewModeChange ?? setInternalViewMode;
+
+  // Mobile detection + filters drawer state
+  const isMobile = useIsMobile();
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Sorting state
   const [sortField, setSortField] = useState<SortField>(defaultSortField);
@@ -657,35 +674,41 @@ export function EntityGrid<T extends BaseEntity>({
     <div className={cn('entity-grid', className)}>
       {/* Header: Filters + Count + View Toggle */}
       {(showItemCount || showViewToggle || toolbarStart) && (
-        <div className="flex items-center justify-between mb-4 select-none gap-4 flex-wrap">
-          {/* Left: Filters + Item count */}
-          <div className="flex items-center gap-3 flex-wrap">
-            {toolbarStart}
-            {showItemCount && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                {items.length}{' '}
-                {items.length === 1
-                  ? config.display.labels.singular
-                  : config.display.labels.plural}
-                {selectedIds.size > 0 &&
-                  ` · ${selectedIds.size} selecionado${selectedIds.size > 1 ? 's' : ''}`}
-              </p>
-            )}
-          </div>
+        isMobile && toolbarStart ? (
+          // ============================================================
+          // MOBILE LAYOUT — single Filtros button + compact sort/view
+          // ============================================================
+          <div className="mb-4 select-none">
+            <div className="flex items-center gap-2">
+              {/* Filtros button — opens drawer */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMobileFiltersOpen(true)}
+                className="flex-1 h-11 justify-start gap-2 rounded-xl bg-white/90 dark:bg-white/5 border-gray-200/50 dark:border-white/10"
+              >
+                <SlidersHorizontal className="h-4 w-4 shrink-0" />
+                <span className="font-medium text-sm">Filtros</span>
+                {activeFilterCount > 0 && (
+                  <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[11px] font-semibold text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
 
-          {/* Right: Sort + View toggle */}
-          {showViewToggle && (
-            <div className="flex items-center gap-3">
-              {/* Sort Select */}
-              {showSorting && (
+              {/* Compact Sort (icon only on mobile) */}
+              {showViewToggle && showSorting && (
                 <Select
                   value={currentSortValue}
                   onValueChange={handleSortChange}
                 >
-                  <SelectTrigger className="h-11 cursor-pointer bg-white/90 dark:bg-white/5 border border-gray-200/50 dark:border-white/10 rounded-xl">
-                    <SelectValue placeholder="Ordenar por" />
+                  <SelectTrigger
+                    aria-label="Ordenar por"
+                    className="h-11 w-11 px-0 justify-center [&>svg:last-child]:hidden bg-white/90 dark:bg-white/5 border-gray-200/50 dark:border-white/10 rounded-xl"
+                  >
+                    <ArrowUpDown className="h-4 w-4" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent align="end">
                     {sortOptions.map(option => {
                       const Icon = option.icon;
                       return (
@@ -705,39 +728,175 @@ export function EntityGrid<T extends BaseEntity>({
               )}
 
               {/* View Mode Toggle */}
-              <div className="flex items-center gap-2 bg-white/90 dark:bg-white/5 border border-gray-200/50 dark:border-white/10 rounded-xl p-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  aria-label="Visualização em grade"
-                  className={cn(
-                    'rounded-lg',
-                    viewMode === 'grid'
-                      ? 'bg-white dark:bg-white/10 shadow-sm'
-                      : 'hover:bg-gray-100 dark:hover:bg-white/5'
-                  )}
-                >
-                  <Grid3x3 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  aria-label="Visualização em lista"
-                  className={cn(
-                    'rounded-lg',
-                    viewMode === 'list'
-                      ? 'bg-white dark:bg-white/10 shadow-sm'
-                      : 'hover:bg-gray-100 dark:hover:bg-white/5'
-                  )}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
+              {showViewToggle && (
+                <div className="flex items-center gap-1 bg-white/90 dark:bg-white/5 border border-gray-200/50 dark:border-white/10 rounded-xl p-1 h-11">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    aria-label="Visualização em grade"
+                    className={cn(
+                      'h-8 w-8 p-0 rounded-lg',
+                      viewMode === 'grid'
+                        ? 'bg-white dark:bg-white/10 shadow-sm'
+                        : 'hover:bg-gray-100 dark:hover:bg-white/5'
+                    )}
+                  >
+                    <Grid3x3 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    aria-label="Visualização em lista"
+                    className={cn(
+                      'h-8 w-8 p-0 rounded-lg',
+                      viewMode === 'list'
+                        ? 'bg-white dark:bg-white/10 shadow-sm'
+                        : 'hover:bg-gray-100 dark:hover:bg-white/5'
+                    )}
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* Item count below */}
+            {showItemCount && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-1">
+                {items.length}{' '}
+                {items.length === 1
+                  ? config.display.labels.singular
+                  : config.display.labels.plural}
+                {selectedIds.size > 0 &&
+                  ` · ${selectedIds.size} selecionado${selectedIds.size > 1 ? 's' : ''}`}
+              </p>
+            )}
+
+            {/* Filters Drawer */}
+            <Drawer
+              open={mobileFiltersOpen}
+              onOpenChange={setMobileFiltersOpen}
+              direction="bottom"
+            >
+              <DrawerContent className="max-h-[85vh]">
+                <DrawerHeader className="border-b border-border">
+                  <DrawerTitle className="flex items-center gap-2">
+                    <SlidersHorizontal className="h-5 w-5 text-blue-500" />
+                    Filtros
+                    {activeFilterCount > 0 && (
+                      <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[11px] font-semibold text-white">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </DrawerTitle>
+                  <VisuallyHidden>
+                    <DrawerDescription>
+                      Selecione os filtros para refinar a listagem
+                    </DrawerDescription>
+                  </VisuallyHidden>
+                </DrawerHeader>
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 [&>*]:w-full">
+                  {toolbarStart}
+                </div>
+                <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                  <Button
+                    className="w-full h-11"
+                    onClick={() => setMobileFiltersOpen(false)}
+                  >
+                    Aplicar
+                  </Button>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
+        ) : (
+          // ============================================================
+          // DESKTOP LAYOUT — original inline toolbar
+          // ============================================================
+          <div className="flex items-center justify-between mb-4 select-none gap-4 flex-wrap">
+            {/* Left: Filters + Item count */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {toolbarStart}
+              {showItemCount && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                  {items.length}{' '}
+                  {items.length === 1
+                    ? config.display.labels.singular
+                    : config.display.labels.plural}
+                  {selectedIds.size > 0 &&
+                    ` · ${selectedIds.size} selecionado${selectedIds.size > 1 ? 's' : ''}`}
+                </p>
+              )}
+            </div>
+
+            {/* Right: Sort + View toggle */}
+            {showViewToggle && (
+              <div className="flex items-center gap-3">
+                {/* Sort Select */}
+                {showSorting && (
+                  <Select
+                    value={currentSortValue}
+                    onValueChange={handleSortChange}
+                  >
+                    <SelectTrigger className="h-11 cursor-pointer bg-white/90 dark:bg-white/5 border border-gray-200/50 dark:border-white/10 rounded-xl">
+                      <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortOptions.map(option => {
+                        const Icon = option.icon;
+                        return (
+                          <SelectItem
+                            key={`${option.field}-${option.direction}`}
+                            value={`${option.field}-${option.direction}`}
+                          >
+                            <span className="flex items-center gap-2">
+                              {Icon && <Icon className="w-4 h-4" />}
+                              {option.label}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-2 bg-white/90 dark:bg-white/5 border border-gray-200/50 dark:border-white/10 rounded-xl p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    aria-label="Visualização em grade"
+                    className={cn(
+                      'rounded-lg',
+                      viewMode === 'grid'
+                        ? 'bg-white dark:bg-white/10 shadow-sm'
+                        : 'hover:bg-gray-100 dark:hover:bg-white/5'
+                    )}
+                  >
+                    <Grid3x3 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    aria-label="Visualização em lista"
+                    className={cn(
+                      'rounded-lg',
+                      viewMode === 'list'
+                        ? 'bg-white dark:bg-white/10 shadow-sm'
+                        : 'hover:bg-gray-100 dark:hover:bg-white/5'
+                    )}
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )
       )}
 
       {/* Empty State */}
