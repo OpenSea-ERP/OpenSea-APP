@@ -640,7 +640,8 @@ O `FormFieldWrapper` ja foi atualizado para usar `FormErrorIcon` automaticamente
 ```tsx
 // Asterisco rose após o label
 <Label htmlFor="name">
-  Nome da Variante <span className="text-[rgb(var(--color-destructive))]">*</span>
+  Nome da Variante{' '}
+  <span className="text-[rgb(var(--color-destructive))]">*</span>
 </Label>
 ```
 
@@ -762,7 +763,7 @@ try {
 
 | Arquivo                                                                                                  | Descrição                                                                                                   |
 | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `src/components/ui/form-error-icon.tsx`                                                                  | **ERROR HANDLING** — Icone ⚠ com tooltip rose no campo (zero layout impact)                                 |
+| `src/components/ui/form-error-icon.tsx`                                                                  | **ERROR HANDLING** — Icone ⚠ com tooltip rose no campo (zero layout impact)                                |
 | `src/components/ui/section-error-badge.tsx`                                                              | **ERROR HANDLING** — Badge de contagem de erros na secao                                                    |
 | `src/components/ui/form-error-report-modal.tsx`                                                          | **ERROR HANDLING** — Modal relatorio com lista clicavel de erros                                            |
 | `src/components/ui/password-strength-checklist.tsx`                                                      | **ERROR HANDLING** — Checklist de criterios de senha em tempo real                                          |
@@ -770,7 +771,7 @@ try {
 | `src/hooks/use-uniqueness-check.ts`                                                                      | **ERROR HANDLING** — Hook de validacao de unicidade on blur com debounce                                    |
 | `src/hooks/use-go-to-field.ts`                                                                           | **ERROR HANDLING** — Hook de scroll + highlight ao clicar no relatorio                                      |
 | `src/lib/i18n/index.ts`                                                                                  | **I18N** — Engine de traducao com `t()` function e interpolacao                                             |
-| `src/lib/i18n/locales/pt-BR.ts`                                                                         | **I18N** — Todas as mensagens de erro em portugues formal                                                   |
+| `src/lib/i18n/locales/pt-BR.ts`                                                                          | **I18N** — Todas as mensagens de erro em portugues formal                                                   |
 | `src/app/(dashboard)/(modules)/admin/(entities)/users/src/modals/create-modal.tsx`                       | **REFERENCIA** — Implementacao canonica do novo error handling                                              |
 | `src/core/forms/components/entity-form.tsx`                                                              | EntityForm genérico (principal — react-hook-form interno)                                                   |
 | `src/core/forms/components/entity-form-field.tsx`                                                        | Despacho de tipo de campo → componente especializado                                                        |
@@ -807,11 +808,11 @@ Todo formulario novo DEVE seguir este sistema de error handling. Nao usar toast 
 
 #### Arquitetura de 3 camadas
 
-| Camada | Componente | O que mostra | Quando |
-|--------|-----------|-------------|--------|
-| **Campo** | `FormErrorIcon` | Borda rose (`aria-invalid`) + icone ⚠ no canto direito + tooltip com mensagem | Erros vinculados a um campo |
-| **Secao** | `SectionErrorBadge` | Badge rose com contagem de erros no header da secao | Quando ha erros em campos daquela secao |
-| **Toast** | Sonner (redesenhado) | Notificacao solida com degrade | APENAS erros sem campo: rede, servidor, auth, permissao |
+| Camada    | Componente           | O que mostra                                                                   | Quando                                                  |
+| --------- | -------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| **Campo** | `FormErrorIcon`      | Borda rose (`aria-invalid`) + icone ⚠ no canto direito + tooltip com mensagem | Erros vinculados a um campo                             |
+| **Secao** | `SectionErrorBadge`  | Badge rose com contagem de erros no header da secao                            | Quando ha erros em campos daquela secao                 |
+| **Toast** | Sonner (redesenhado) | Notificacao solida com degrade                                                 | APENAS erros sem campo: rede, servidor, auth, permissao |
 
 #### Quando validar
 
@@ -829,7 +830,10 @@ import { Button } from '@/components/ui/button';
 import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PasswordStrengthChecklist, isPasswordStrong } from '@/components/ui/password-strength-checklist';
+import {
+  PasswordStrengthChecklist,
+  isPasswordStrong,
+} from '@/components/ui/password-strength-checklist';
 import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
 import { t } from '@/lib/i18n';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -841,7 +845,9 @@ import { z } from 'zod';
 const schema = z.object({
   name: z.string().min(2, t('validation.minLength', { field: 'Nome', min: 2 })),
   email: z.string().email(t('validation.email')),
-  password: z.string().min(8, t('validation.minLength', { field: 'Senha', min: 8 })),
+  password: z
+    .string()
+    .min(8, t('validation.minLength', { field: 'Senha', min: 8 })),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -857,7 +863,7 @@ const form = useForm<FormData>({
 const { handleError } = useFormErrorHandler({
   form,
   fieldMap: {
-    'Email already exists': 'email',     // fallback se backend nao enviar field
+    'Email already exists': 'email', // fallback se backend nao enviar field
     'Name already exists': 'name',
   },
 });
@@ -868,13 +874,16 @@ const password = form.watch('password');
 // 5. Submit handler
 const onSubmit = async (data: FormData) => {
   if (!isPasswordStrong(data.password)) {
-    form.setError('password', { type: 'manual', message: t('auth.passwordNotStrong') });
+    form.setError('password', {
+      type: 'manual',
+      message: t('auth.passwordNotStrong'),
+    });
     return;
   }
   try {
     await createEntity(data);
   } catch (error) {
-    handleError(error);  // mapeia para campos ou faz toast
+    handleError(error); // mapeia para campos ou faz toast
   }
 };
 
@@ -912,7 +921,7 @@ const onSubmit = async (data: FormData) => {
     </div>
     <PasswordStrengthChecklist password={password} />
   </div>
-</form>
+</form>;
 ```
 
 #### Exemplo: validacao de unicidade on blur
@@ -924,7 +933,7 @@ const { onBlur: checkEmail } = useUniquenessCheck({
   form,
   field: 'email',
   fieldLabel: 'E-mail',
-  checkFn: async (value) => {
+  checkFn: async value => {
     const res = await usersService.checkEmail(value);
     return res.available; // true = disponivel, false = ja em uso
   },
@@ -932,11 +941,11 @@ const { onBlur: checkEmail } = useUniquenessCheck({
 
 <Input
   {...form.register('email')}
-  onBlur={(e) => {
+  onBlur={e => {
     form.register('email').onBlur(e); // react-hook-form onBlur
-    checkEmail();                      // uniqueness check
+    checkEmail(); // uniqueness check
   }}
-/>
+/>;
 ```
 
 #### Regras de error handling
@@ -952,16 +961,16 @@ const { onBlur: checkEmail } = useUniquenessCheck({
 
 #### Componentes disponiveis
 
-| Componente | Arquivo | Funcao |
-|-----------|---------|--------|
-| `FormErrorIcon` | `src/components/ui/form-error-icon.tsx` | Icone ⚠ com tooltip no campo |
-| `SectionErrorBadge` | `src/components/ui/section-error-badge.tsx` | Badge de contagem de erros na secao |
-| `FormErrorReportModal` | `src/components/ui/form-error-report-modal.tsx` | Modal com lista clicavel de todos os erros |
-| `PasswordStrengthChecklist` | `src/components/ui/password-strength-checklist.tsx` | Checklist de criterios de senha em tempo real |
-| `useFormErrorHandler` | `src/hooks/use-form-error-handler.ts` | Mapeia erro API → campo do form |
-| `useUniquenessCheck` | `src/hooks/use-uniqueness-check.ts` | Validacao de unicidade on blur com debounce |
-| `useGoToField` | `src/hooks/use-go-to-field.ts` | Scroll + highlight ao clicar no relatorio |
-| `t()` | `src/lib/i18n/index.ts` | Traducao com interpolacao: `t('validation.required', { field: 'Nome' })` |
+| Componente                  | Arquivo                                             | Funcao                                                                   |
+| --------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------ |
+| `FormErrorIcon`             | `src/components/ui/form-error-icon.tsx`             | Icone ⚠ com tooltip no campo                                            |
+| `SectionErrorBadge`         | `src/components/ui/section-error-badge.tsx`         | Badge de contagem de erros na secao                                      |
+| `FormErrorReportModal`      | `src/components/ui/form-error-report-modal.tsx`     | Modal com lista clicavel de todos os erros                               |
+| `PasswordStrengthChecklist` | `src/components/ui/password-strength-checklist.tsx` | Checklist de criterios de senha em tempo real                            |
+| `useFormErrorHandler`       | `src/hooks/use-form-error-handler.ts`               | Mapeia erro API → campo do form                                          |
+| `useUniquenessCheck`        | `src/hooks/use-uniqueness-check.ts`                 | Validacao de unicidade on blur com debounce                              |
+| `useGoToField`              | `src/hooks/use-go-to-field.ts`                      | Scroll + highlight ao clicar no relatorio                                |
+| `t()`                       | `src/lib/i18n/index.ts`                             | Traducao com interpolacao: `t('validation.required', { field: 'Nome' })` |
 
 #### Referencia de implementacao
 

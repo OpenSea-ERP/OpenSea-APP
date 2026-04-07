@@ -17,16 +17,19 @@
 All changes are modifications to existing files. No new files created.
 
 **Fase 1 — Low Risk (simple forms, 1-3 fields):**
+
 - `stock/(entities)/tags/src/modals/create-modal.tsx`
 - `stock/(entities)/product-categories/src/modals/create-modal.tsx`
 - `stock/(entities)/locations/src/modals/create-zone-modal.tsx`
 - `stock/(entities)/templates/src/components/quick-create-form.tsx`
 
 **Fase 2 — Medium Risk (multi-field forms):**
+
 - `stock/(entities)/products/src/components/edit-product-form.tsx`
 - `stock/(entities)/manufacturers/src/modals/create-manufacturer-wizard.tsx`
 
 **Fase 3 — High Risk (complex wizards, touch minimally):**
+
 - `stock/(entities)/products/src/modals/variant-form-modal.tsx`
 - `stock/(entities)/products/src/modals/item-entry-form-modal.tsx`
 
@@ -39,9 +42,11 @@ Base path: `src/app/(dashboard)/(modules)/`
 ### Task 1: Tag CreateModal — add error handling
 
 **Files:**
+
 - Modify: `stock/(entities)/tags/src/modals/create-modal.tsx`
 
 The pattern for all Fase 1 forms is identical:
+
 1. Add a `fieldErrors` state object
 2. Wrap `onSubmit` catch to parse error and set field errors
 3. Add `FormErrorIcon` next to fields that can have errors
@@ -51,12 +56,14 @@ The pattern for all Fase 1 forms is identical:
 - [ ] **Step 1: Add imports and error state**
 
 Add to imports:
+
 ```tsx
 import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { translateError } from '@/lib/error-messages';
 ```
 
 Add state after `isSubmitting`:
+
 ```tsx
 const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 ```
@@ -64,6 +71,7 @@ const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 - [ ] **Step 2: Update catch block to map API errors**
 
 Replace the catch block:
+
 ```tsx
 } catch (error) {
   const msg = error instanceof Error ? error.message : String(error);
@@ -83,6 +91,7 @@ Add `import { toast } from 'sonner';` if not present.
 - [ ] **Step 3: Add FormErrorIcon to name field**
 
 Wrap the name Input in a `relative` div and add FormErrorIcon:
+
 ```tsx
 <div className="relative">
   <Input
@@ -103,6 +112,7 @@ Wrap the name Input in a `relative` div and add FormErrorIcon:
 - [ ] **Step 4: Add FormErrorIcon to color field**
 
 Wrap the hex text Input (not the color picker) and add error:
+
 ```tsx
 <Input
   type="text"
@@ -114,8 +124,15 @@ Wrap the hex text Input (not the color picker) and add error:
   placeholder="#3b82f6"
   className="flex-1 font-mono"
   aria-invalid={!!fieldErrors.color}
-/>
-{fieldErrors.color && <FormErrorIcon message={fieldErrors.color} className="right-3 top-1/2 -translate-y-1/2" />}
+/>;
+{
+  fieldErrors.color && (
+    <FormErrorIcon
+      message={fieldErrors.color}
+      className="right-3 top-1/2 -translate-y-1/2"
+    />
+  );
+}
 ```
 
 Note: The color Input uses `type="color"` which renders a native picker — FormErrorIcon only on the text hex input.
@@ -123,6 +140,7 @@ Note: The color Input uses `type="color"` which renders a native picker — Form
 - [ ] **Step 5: Replace `text-red-500` with rose**
 
 Replace the required asterisk color:
+
 ```tsx
 <span className="text-[rgb(var(--color-destructive))]">*</span>
 ```
@@ -130,6 +148,7 @@ Replace the required asterisk color:
 - [ ] **Step 6: Clear errors on modal close**
 
 In the reset logic (after successful submit), add:
+
 ```tsx
 setFieldErrors({});
 ```
@@ -151,6 +170,7 @@ git commit -m "feat(stock): add error handling to tag create modal"
 ### Task 2: Category CreateModal — add error handling
 
 **Files:**
+
 - Modify: `stock/(entities)/product-categories/src/modals/create-modal.tsx`
 
 - [ ] **Step 1: Add imports and error state**
@@ -162,6 +182,7 @@ import { toast } from 'sonner';
 ```
 
 Add state:
+
 ```tsx
 const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 ```
@@ -184,6 +205,7 @@ const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 - [ ] **Step 3: Add FormErrorIcon to name field**
 
 Wrap name Input in relative div:
+
 ```tsx
 <div className="relative">
   <Input
@@ -194,7 +216,9 @@ Wrap name Input in relative div:
       setName(e.target.value);
       if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
     }}
-    onKeyDown={e => { /* existing handler */ }}
+    onKeyDown={e => {
+      /* existing handler */
+    }}
     autoFocus
     className="h-11"
     aria-invalid={!!fieldErrors.name}
@@ -210,6 +234,7 @@ Wrap name Input in relative div:
 ```
 
 In the `useEffect` that resets on `!isOpen`, add:
+
 ```tsx
 setFieldErrors({});
 ```
@@ -226,6 +251,7 @@ git commit -m "feat(stock): add error handling to category create modal"
 ### Task 3: Zone CreateModal — add error handling
 
 **Files:**
+
 - Modify: `stock/(entities)/locations/src/modals/create-zone-modal.tsx`
 
 - [ ] **Step 1: Add imports and error state**
@@ -236,6 +262,7 @@ import { translateError } from '@/lib/error-messages';
 ```
 
 Add state:
+
 ```tsx
 const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 ```
@@ -243,6 +270,7 @@ const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 - [ ] **Step 2: Update catch block in handleCreate**
 
 Replace:
+
 ```tsx
 } catch {
   toast.error('Erro ao criar zona. Tente novamente.');
@@ -250,6 +278,7 @@ Replace:
 ```
 
 With:
+
 ```tsx
 } catch (error) {
   const msg = error instanceof Error ? error.message : String(error);
@@ -264,6 +293,7 @@ With:
 - [ ] **Step 3: Add FormErrorIcon to code field**
 
 Wrap code Input:
+
 ```tsx
 <div className="relative">
   <Input
@@ -285,6 +315,7 @@ Wrap code Input:
 - [ ] **Step 4: Clear errors on handleClose**
 
 Add to handleClose:
+
 ```tsx
 setFieldErrors({});
 ```
@@ -301,6 +332,7 @@ git commit -m "feat(stock): add error handling to zone create modal"
 ### Task 4: Template QuickCreateForm — add error handling
 
 **Files:**
+
 - Modify: `stock/(entities)/templates/src/components/quick-create-form.tsx`
 
 - [ ] **Step 1: Add imports and error state**
@@ -310,6 +342,7 @@ import { FormErrorIcon } from '@/components/ui/form-error-icon';
 ```
 
 Add state:
+
 ```tsx
 const [nameError, setNameError] = useState('');
 ```
@@ -319,6 +352,7 @@ const [nameError, setNameError] = useState('');
 The QuickCreateForm calls `onSubmit` which is handled by parent. The parent catches errors. So we need to expose an `error` prop or handle inside.
 
 Since `onSubmit` is sync (parent handles async), we add an `error` optional prop:
+
 ```tsx
 interface QuickCreateFormProps {
   onBack: () => void;
@@ -330,7 +364,11 @@ interface QuickCreateFormProps {
 - [ ] **Step 3: Display error on name field when parent passes error**
 
 ```tsx
-const displayError = error?.includes('name already exists') || error?.includes('Template with this name') ? error : '';
+const displayError =
+  error?.includes('name already exists') ||
+  error?.includes('Template with this name')
+    ? error
+    : '';
 
 <div className="relative">
   <Input
@@ -344,7 +382,7 @@ const displayError = error?.includes('name already exists') || error?.includes('
     aria-invalid={!!displayError}
   />
   {displayError && <FormErrorIcon message={displayError} />}
-</div>
+</div>;
 ```
 
 - [ ] **Step 4: Replace `text-red-500` with rose**
@@ -383,6 +421,7 @@ git log --oneline -4
 ### Task 6: EditProductForm — add error handling
 
 **Files:**
+
 - Modify: `stock/(entities)/products/src/components/edit-product-form.tsx`
 
 - [ ] **Step 1: Add imports and error state**
@@ -394,6 +433,7 @@ import { toast } from 'sonner';
 ```
 
 Add state:
+
 ```tsx
 const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 ```
@@ -416,7 +456,10 @@ const handleSubmit = async (e: React.FormEvent) => {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    if (msg.includes('name already exists') || msg.includes('Product with this name')) {
+    if (
+      msg.includes('name already exists') ||
+      msg.includes('Product with this name')
+    ) {
       setFieldErrors({ name: translateError(msg) });
     } else if (msg.includes('Name must be at most')) {
       setFieldErrors({ name: translateError(msg) });
@@ -462,6 +505,7 @@ git commit -m "feat(stock): add error handling to edit product form"
 ### Task 7: CreateManufacturerWizard — enhance existing error handling
 
 **Files:**
+
 - Modify: `stock/(entities)/manufacturers/src/modals/create-manufacturer-wizard.tsx`
 
 This form already has good error handling for CNPJ (duplicate check, format validation, rose alerts). We only need to:
@@ -471,19 +515,25 @@ This form already has good error handling for CNPJ (duplicate check, format vali
 The manual flow Step 2 has a `name` input. Add error handling for duplicate name:
 
 Add state:
+
 ```tsx
 const [nameError, setNameError] = useState('');
 ```
 
 In the manual flow submit handler catch, map name errors:
+
 ```tsx
-if (msg.includes('name already exists') || msg.includes('Manufacturer with this name')) {
+if (
+  msg.includes('name already exists') ||
+  msg.includes('Manufacturer with this name')
+) {
   setNameError(translateError(msg));
   return;
 }
 ```
 
 Wrap name input:
+
 ```tsx
 <div className="relative">
   <Input
@@ -522,6 +572,7 @@ git commit -m "feat(stock): add error handling to manufacturer create wizard"
 ### Task 8: VariantFormModal — add FormErrorIcon to existing fieldErrors
 
 **Files:**
+
 - Modify: `stock/(entities)/products/src/modals/variant-form-modal.tsx`
 
 This form ALREADY has `fieldErrors` state and displays errors below fields in rose. We change the display method from inline text to FormErrorIcon tooltip.
@@ -535,13 +586,21 @@ import { FormErrorIcon } from '@/components/ui/form-error-icon';
 - [ ] **Step 2: Replace inline error text with FormErrorIcon for name field**
 
 Find the name field error display (something like):
+
 ```tsx
-{fieldErrors.name && <p className="text-xs text-rose-500">{fieldErrors.name}</p>}
+{
+  fieldErrors.name && (
+    <p className="text-xs text-rose-500">{fieldErrors.name}</p>
+  );
+}
 ```
 
 Replace with FormErrorIcon inside the name input's relative wrapper:
+
 ```tsx
-{fieldErrors.name && <FormErrorIcon message={fieldErrors.name} />}
+{
+  fieldErrors.name && <FormErrorIcon message={fieldErrors.name} />;
+}
 ```
 
 Add `aria-invalid={!!fieldErrors.name}` to the Input.
@@ -549,13 +608,17 @@ Add `aria-invalid={!!fieldErrors.name}` to the Input.
 - [ ] **Step 3: Update onError of mutation to use fieldMap pattern**
 
 In the mutation `onError`, map API errors to field names:
+
 ```tsx
-onError: (error) => {
+onError: error => {
   const msg = error instanceof Error ? error.message : String(error);
   if (msg.includes('SKU already exists')) {
     setFieldErrors(prev => ({ ...prev, sku: translateError(msg) }));
   } else if (msg.includes('Price cannot be negative')) {
-    setFieldErrors(prev => ({ ...prev, definedSalePrice: translateError(msg) }));
+    setFieldErrors(prev => ({
+      ...prev,
+      definedSalePrice: translateError(msg),
+    }));
   } else if (msg.includes('Min stock cannot be greater')) {
     setFieldErrors(prev => ({ ...prev, minStock: translateError(msg) }));
   } else if (msg.includes('Color hex must be')) {
@@ -563,7 +626,7 @@ onError: (error) => {
   } else {
     toast.error(translateError(msg));
   }
-}
+};
 ```
 
 - [ ] **Step 4: Add aria-invalid to SKU field**
@@ -588,6 +651,7 @@ git commit -m "feat(stock): enhance error handling in variant form modal"
 ### Task 9: ItemEntryFormModal — add error mapping to existing catch
 
 **Files:**
+
 - Modify: `stock/(entities)/products/src/modals/item-entry-form-modal.tsx`
 
 This form already has `sectionErrors` and field validation. We only enhance the API error catch.
@@ -602,10 +666,15 @@ import { translateError } from '@/lib/error-messages';
 - [ ] **Step 2: Enhance onError to translate messages**
 
 In the mutation onError, replace generic message with translated:
+
 ```tsx
-onError: (error) => {
-  toast.error(translateError(error instanceof Error ? error.message : 'Erro ao registrar entrada'));
-}
+onError: error => {
+  toast.error(
+    translateError(
+      error instanceof Error ? error.message : 'Erro ao registrar entrada'
+    )
+  );
+};
 ```
 
 - [ ] **Step 3: Add aria-invalid to quantity and binId fields (if applicable)**
@@ -644,6 +713,7 @@ Verify: only stock module files changed, no unrelated files.
 ## Safety Checklist (verify after each task)
 
 For each modified form:
+
 - [ ] No useState→react-hook-form migration
 - [ ] No structural changes to wizard steps/sections
 - [ ] No changes to submit data shape

@@ -28,6 +28,7 @@ Replace the current checkbox matrix permission UI with a **NavigationWizardDialo
 ### Left Sidebar — Module Navigation
 
 Each module item shows:
+
 - Module icon (Lucide)
 - Module label (PT-BR)
 - Badge with `active/total` count
@@ -41,32 +42,38 @@ Each module item shows:
 ### Right Content Area
 
 #### Header Bar
+
 - **Search input**: Filters permissions by label or code. When filtering, auto-expands matching resource cards
 - **"Ativar tudo"** button: Activates all permissions in current module
 - **"Limpar"** button: Deactivates all in current module
 - **"Expandir tudo" / "Colapsar tudo"** toggle button: Expands or collapses all resource cards at once
 
 #### Group Headers
+
 - Group label (e.g., "Cadastros", "Operações") in violet
 - Resource count ("4 recursos")
 - "Ativar grupo" button — toggles all permissions in the group
 
 #### Resource Cards (Collapsible)
+
 Each resource (e.g., "Produtos", "Categorias") is a card:
 
 **Collapsed state:**
+
 - Arrow indicator (▶)
 - Resource name
 - Badge: `active/total` with semantic color (same rules as module badges)
 - "Tudo" button to activate all
 
 **Expanded state:**
+
 - Arrow rotated (▼)
 - Resource name + badge
 - "Tudo" / "Limpar" button (shows "Limpar" when all active)
 - Chips area with toggle chips
 
 **Card border color:**
+
 - Has active permissions → `border-violet-500/20`
 - All active → `border-emerald-500/15`
 - None active → `border-border`
@@ -76,11 +83,13 @@ Each resource (e.g., "Produtos", "Categorias") is a card:
 Each permission is a clickable chip:
 
 **Active chip:**
+
 - Modern checkbox icon (rounded square with checkmark SVG) + label
 - Filled background (violet gradient)
 - `font-weight: 500`
 
 **Inactive chip:**
+
 - Empty checkbox icon (rounded square, no checkmark) + label
 - Outline/muted background
 - `text-muted-foreground`
@@ -110,7 +119,7 @@ interface PermissionResource {
   label: string;
   group: string;
   backendResources: string[];
-  availableActions: string[];  // no longer constrained to StandardAction
+  availableActions: string[]; // no longer constrained to StandardAction
 }
 
 interface PermissionModule {
@@ -161,7 +170,8 @@ const ACTION_CONFIG: Record<string, { label: string; description: string }> = {
   },
   admin: {
     label: 'Administrar',
-    description: 'Acesso administrativo — gerencia registros de todos os usuários',
+    description:
+      'Acesso administrativo — gerencia registros de todos os usuários',
   },
   onlyself: {
     label: 'Somente próprios',
@@ -176,6 +186,7 @@ const ACTION_CONFIG: Record<string, { label: string; description: string }> = {
 ### Selection State
 
 Same diff-based approach as current implementation:
+
 1. Load `currentCodes: Set<string>` from API
 2. User toggles chips → updates `selectedCodes: Set<string>`
 3. On save: `toAdd = selectedCodes - currentCodes`, `toRemove = currentCodes - selectedCodes`
@@ -184,6 +195,7 @@ Same diff-based approach as current implementation:
 ### Badge Count Calculation
 
 Computed from the config + selected codes:
+
 - For each module: count how many of its `backendResources.*.action` codes are in `selectedCodes`
 - For each resource: count its active actions vs available actions
 - For each group: sum its resources
@@ -191,30 +203,33 @@ Computed from the config + selected codes:
 ## Components
 
 ### New Components
+
 - `ManagePermissionsModal` — complete rewrite using NavigationWizardDialog
 - `PermissionResourceCard` — collapsible card with chips
 - `PermissionChip` — individual toggle chip with tooltip
 - `PermissionGroupHeader` — group section header with bulk toggle
 
 ### Reused Components
+
 - `NavigationWizardDialog` (existing)
 - `Tooltip` from shadcn/ui
 - `Badge` from shadcn/ui
 - `Input` for search (shadcn)
 
 ### Removed Components
+
 - `PermissionMatrixTable` (current matrix)
 - Matrix-specific column/row select logic
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `permission-groups/src/modals/manage-permissions-modal.tsx` | Complete rewrite |
-| `permission-groups/src/config/permission-matrix-config.ts` | Evolve to chip config (add descriptions, rename types) |
-| `permission-groups/src/components/permission-resource-card.tsx` | New |
-| `permission-groups/src/components/permission-chip.tsx` | New |
-| `permission-groups/src/components/permission-group-header.tsx` | New |
+| File                                                            | Change                                                 |
+| --------------------------------------------------------------- | ------------------------------------------------------ |
+| `permission-groups/src/modals/manage-permissions-modal.tsx`     | Complete rewrite                                       |
+| `permission-groups/src/config/permission-matrix-config.ts`      | Evolve to chip config (add descriptions, rename types) |
+| `permission-groups/src/components/permission-resource-card.tsx` | New                                                    |
+| `permission-groups/src/components/permission-chip.tsx`          | New                                                    |
+| `permission-groups/src/components/permission-group-header.tsx`  | New                                                    |
 
 ## Out of Scope
 

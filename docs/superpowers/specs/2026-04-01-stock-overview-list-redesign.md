@@ -40,12 +40,14 @@ PageLayout
 ## 3. Grid View — Card Equilibrado
 
 Each card shows:
+
 - **Top row:** Color square (36px, rounded, variant color hex) + Item name + Code (monospace)
 - **Badges row:** Status badge + Batch badge (if batchNumber exists)
 - **Metadata row:** Location icon + bin address | Manufacturer icon + manufacturer name
 - **Footer (border-top):** Zone name (left) | Quantity bold (right)
 
 Uses `EntityCard variant="grid"` with:
+
 - `icon`: Palette (fallback when no color)
 - `iconBgStyle`: `background: linear-gradient(135deg, variantColorHex, variantColorHexdd)`
 - `badges`: status + batch (conditional)
@@ -55,6 +57,7 @@ Uses `EntityCard variant="grid"` with:
 ## 4. List View — Mini-Card Inbox
 
 Each item is a horizontal band:
+
 - **Left edge:** 5px color bar (variant color hex)
 - **Left:** 40px color square (rounded)
 - **Center:** Name + Status badge (first line) | Code · Manufacturer · Location icon + address · Zone (second line, dot-separated)
@@ -66,16 +69,17 @@ Hover: subtle shadow + border color change.
 
 ## 5. Filters (Server-Side, URL-Synced)
 
-| Filter | Query Param | Color | Icon | Options Source |
-|--------|-------------|-------|------|----------------|
-| Status | `status` | violet | CircleDot | Static: AVAILABLE, RESERVED, IN_TRANSIT, DAMAGED, EXPIRED |
-| Fabricante | `manufacturer` | cyan | Factory | Dynamic: from manufacturers endpoint |
-| Zona | `zone` | emerald | Grid3X3 | Dynamic: from warehouses/zones |
-| Localização | `bin` | blue | MapPin | Dynamic: from bins |
+| Filter      | Query Param    | Color   | Icon      | Options Source                                            |
+| ----------- | -------------- | ------- | --------- | --------------------------------------------------------- |
+| Status      | `status`       | violet  | CircleDot | Static: AVAILABLE, RESERVED, IN_TRANSIT, DAMAGED, EXPIRED |
+| Fabricante  | `manufacturer` | cyan    | Factory   | Dynamic: from manufacturers endpoint                      |
+| Zona        | `zone`         | emerald | Grid3X3   | Dynamic: from warehouses/zones                            |
+| Localização | `bin`          | blue    | MapPin    | Dynamic: from bins                                        |
 
 Additional: "Ocultar saídas" switch → `hideEmpty=true` query param
 
 **URL sync pattern:**
+
 ```
 /stock/overview/list?status=AVAILABLE,RESERVED&manufacturer=uuid1&zone=uuid2&hideEmpty=true
 ```
@@ -85,6 +89,7 @@ Filters are read from URL on mount via `useSearchParams`, and written to URL on 
 ## 6. Sorting (Server-Side)
 
 Options for `EntityGrid.onSortChange`:
+
 - `name` — Item name (default)
 - `fullCode` — Item code
 - `currentQuantity` — Quantity
@@ -104,25 +109,25 @@ Query param: `search=texto`
 
 ## 8. Status Badges (Dual-Theme)
 
-| Status | Label | Light | Dark |
-|--------|-------|-------|------|
-| AVAILABLE | Disponível | `bg-emerald-50 text-emerald-700 border-emerald-600/25` | `bg-emerald-500/8 text-emerald-300 border-emerald-500/20` |
-| RESERVED | Reservado | `bg-amber-50 text-amber-700 border-amber-600/25` | `bg-amber-500/8 text-amber-300 border-amber-500/20` |
-| IN_TRANSIT | Em Trânsito | `bg-sky-50 text-sky-700 border-sky-600/25` | `bg-sky-500/8 text-sky-300 border-sky-500/20` |
-| DAMAGED | Danificado | `bg-rose-50 text-rose-700 border-rose-600/25` | `bg-rose-500/8 text-rose-300 border-rose-500/20` |
-| EXPIRED | Vencido | `bg-slate-50 text-slate-700 border-slate-600/25` | `bg-slate-500/8 text-slate-300 border-slate-500/20` |
-| DISPOSED | Descartado | `bg-slate-50 text-slate-700 border-slate-600/25` | `bg-slate-500/8 text-slate-300 border-slate-500/20` |
+| Status     | Label       | Light                                                  | Dark                                                      |
+| ---------- | ----------- | ------------------------------------------------------ | --------------------------------------------------------- |
+| AVAILABLE  | Disponível  | `bg-emerald-50 text-emerald-700 border-emerald-600/25` | `bg-emerald-500/8 text-emerald-300 border-emerald-500/20` |
+| RESERVED   | Reservado   | `bg-amber-50 text-amber-700 border-amber-600/25`       | `bg-amber-500/8 text-amber-300 border-amber-500/20`       |
+| IN_TRANSIT | Em Trânsito | `bg-sky-50 text-sky-700 border-sky-600/25`             | `bg-sky-500/8 text-sky-300 border-sky-500/20`             |
+| DAMAGED    | Danificado  | `bg-rose-50 text-rose-700 border-rose-600/25`          | `bg-rose-500/8 text-rose-300 border-rose-500/20`          |
+| EXPIRED    | Vencido     | `bg-slate-50 text-slate-700 border-slate-600/25`       | `bg-slate-500/8 text-slate-300 border-slate-500/20`       |
+| DISPOSED   | Descartado  | `bg-slate-50 text-slate-700 border-slate-600/25`       | `bg-slate-500/8 text-slate-300 border-slate-500/20`       |
 
 ## 9. Context Menu
 
-| Group | Action | Icon | Permission | Handler |
-|-------|--------|------|------------|---------|
-| Base | Ver detalhes | Eye | stock.items.access | Navigate to `/stock/items/{id}` |
-| Base | Editar | Pencil | stock.items.modify | Navigate to `/stock/items/{id}/edit` |
-| Custom | Transferir | ArrowRightLeft | stock.items.modify | Open transfer modal |
-| Custom | Registrar saída | PackageMinus | stock.items.modify | Open exit modal |
-| Custom | Ver histórico | History | stock.items.access | Open ItemHistoryModal |
-| Destructive | Excluir | Trash2 | stock.items.remove | VerifyActionPinModal → DELETE |
+| Group       | Action          | Icon           | Permission         | Handler                              |
+| ----------- | --------------- | -------------- | ------------------ | ------------------------------------ |
+| Base        | Ver detalhes    | Eye            | stock.items.access | Navigate to `/stock/items/{id}`      |
+| Base        | Editar          | Pencil         | stock.items.modify | Navigate to `/stock/items/{id}/edit` |
+| Custom      | Transferir      | ArrowRightLeft | stock.items.modify | Open transfer modal                  |
+| Custom      | Registrar saída | PackageMinus   | stock.items.modify | Open exit modal                      |
+| Custom      | Ver histórico   | History        | stock.items.access | Open ItemHistoryModal                |
+| Destructive | Excluir         | Trash2         | stock.items.remove | VerifyActionPinModal → DELETE        |
 
 Separator before "Transferir" (first custom) and before "Excluir" (destructive).
 
@@ -133,6 +138,7 @@ Separator before "Transferir" (first custom) and before "Excluir" (destructive).
 Current query params: `page`, `limit`, `variantId`, `binId`, `productId`, `status`
 
 **Add:**
+
 - `search: z.string().optional()` — full-text search
 - `manufacturerId: z.string().uuid().optional()` — filter by manufacturer
 - `zoneId: z.string().uuid().optional()` — filter by zone
@@ -143,6 +149,7 @@ Current query params: `page`, `limit`, `variantId`, `binId`, `productId`, `statu
 ### 10.2 Repository changes
 
 Update `findAllWithRelationsPaginated` to support:
+
 - WHERE clause for search (ILIKE across multiple fields)
 - WHERE clause for manufacturerId (join through variant→product→manufacturer)
 - WHERE clause for zoneId (join through bin→zone)
@@ -158,6 +165,7 @@ Ensure the item presenter includes `status` field in the response (verify it's a
 ### 11.1 New hook: `useItemsInfinite`
 
 Create `src/hooks/stock/use-items-infinite.ts`:
+
 - Uses `useInfiniteQuery` from React Query
 - Accepts filter params object
 - Returns `{ items, total, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage }`
@@ -170,6 +178,7 @@ Add query params support to `listItems()`: search, status, manufacturerId, zoneI
 ### 11.3 Rewrite page component
 
 Replace the entire `page.tsx` (~1036 lines) with the new implementation using:
+
 - `EntityGrid` with `renderGridItem` and `renderListItem`
 - `FilterDropdown` components in `toolbarStart`
 - `EntityContextMenu` on each card

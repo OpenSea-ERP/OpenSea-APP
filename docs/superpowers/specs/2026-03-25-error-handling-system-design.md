@@ -12,12 +12,12 @@ Sistema de error handling com tres camadas de feedback visual, preparado para in
 
 ### Camadas de Feedback
 
-| Camada | Componente | O que mostra | Quando |
-|--------|-----------|-------------|--------|
-| Campo | `FormErrorIcon` | Borda rose + icone ⚠ a direita + tooltip com mensagem | Erros de validacao vinculados a um campo |
-| Secao | `SectionErrorBadge` | Badge de contagem no header da `CollapsibleSection` | Quando ha erros em campos daquela secao |
-| Relatorio | `FormErrorReportModal` | Lista completa de erros, clicavel → scroll + highlight | Ao clicar no badge da secao |
-| Toast | `Toaster` (redesenhado) | Notificacao solida com degrade | Erros sem campo: rede, servidor, auth, permissao |
+| Camada    | Componente              | O que mostra                                           | Quando                                           |
+| --------- | ----------------------- | ------------------------------------------------------ | ------------------------------------------------ |
+| Campo     | `FormErrorIcon`         | Borda rose + icone ⚠ a direita + tooltip com mensagem | Erros de validacao vinculados a um campo         |
+| Secao     | `SectionErrorBadge`     | Badge de contagem no header da `CollapsibleSection`    | Quando ha erros em campos daquela secao          |
+| Relatorio | `FormErrorReportModal`  | Lista completa de erros, clicavel → scroll + highlight | Ao clicar no badge da secao                      |
+| Toast     | `Toaster` (redesenhado) | Notificacao solida com degrade                         | Erros sem campo: rede, servidor, auth, permissao |
 
 ### Estrategia de Validacao
 
@@ -42,6 +42,7 @@ Icone de exclamacao (AlertCircle) posicionado absolutamente a direita do input.
 Ao hover (desktop) ou tap (mobile), abre tooltip/popover com a mensagem de erro.
 
 **Comportamento:**
+
 - Aparece apenas quando o campo tem erro
 - Nao ocupa espaco no layout (position absolute dentro do wrapper)
 - Input recebe `aria-invalid` (borda rose ja existe via CSS)
@@ -49,6 +50,7 @@ Ao hover (desktop) ou tap (mobile), abre tooltip/popover com a mensagem de erro.
 - Cor: rose-500
 
 **Mudanca no FormFieldWrapper:**
+
 - Remover o bloco de erro inline (texto abaixo do campo)
 - Adicionar `FormErrorIcon` dentro do `div.relative` que ja envolve o campo
 - Input recebe `pr-10` quando tem erro (espaco para o icone)
@@ -58,6 +60,7 @@ Ao hover (desktop) ou tap (mobile), abre tooltip/popover com a mensagem de erro.
 Badge numerico exibido no header da `CollapsibleSection`.
 
 **Comportamento:**
+
 - Mostra contagem de erros nos campos daquela secao
 - Cor: bg-rose-500 text-white, pill shape (rounded-full)
 - Clicavel → abre `FormErrorReportModal` filtrado para aquela secao
@@ -69,6 +72,7 @@ Badge numerico exibido no header da `CollapsibleSection`.
 Modal com lista de todos os erros do formulario.
 
 **Comportamento:**
+
 - Agrupado por secao (com icone da secao)
 - Cada erro mostra: nome do campo + mensagem de erro
 - Cada erro e clicavel → fecha modal, faz scroll ate o campo, pulsa borda rose por 2s
@@ -80,6 +84,7 @@ Modal com lista de todos os erros do formulario.
 Checklist de criterios de senha exibido abaixo de campos de senha.
 
 **Criterios:**
+
 - Minimo 8 caracteres
 - Pelo menos 1 letra maiuscula
 - Pelo menos 1 letra minuscula
@@ -87,6 +92,7 @@ Checklist de criterios de senha exibido abaixo de campos de senha.
 - Pelo menos 1 caractere especial
 
 **Visual:**
+
 - Cada criterio: icone check (verde) ou X (cinza) + texto
 - Atualiza em tempo real (on change)
 - Sempre visivel quando o campo de senha esta presente (nao empurra layout porque e previsto)
@@ -96,6 +102,7 @@ Checklist de criterios de senha exibido abaixo de campos de senha.
 Refatoracao visual do componente Sonner.
 
 **Visual:**
+
 - Fundo solido (nao translucido)
 - Degrade suave e maduro (nao bootstrap)
 - Error: degrade rose-600 → rose-700 com borda rose-500
@@ -116,13 +123,17 @@ Refatoracao visual do componente Sonner.
 Hook que processa erros de API e aplica nos campos do formulario.
 
 ```typescript
-function useFormErrorHandler(form: UseFormReturn, options?: {
-  fieldMap?: Record<string, string>; // fallback: mensagem API → campo
-  onUnmappedError?: (error: ApiError) => void; // default: toast
-})
+function useFormErrorHandler(
+  form: UseFormReturn,
+  options?: {
+    fieldMap?: Record<string, string>; // fallback: mensagem API → campo
+    onUnmappedError?: (error: ApiError) => void; // default: toast
+  }
+);
 ```
 
 **Comportamento:**
+
 1. Recebe erro de mutation `onError`
 2. Se `ApiError` com `fieldErrors` → aplica `form.setError()` em cada campo
 3. Se `ApiError` com `field` no response → aplica `form.setError()` no campo
@@ -139,10 +150,11 @@ function useUniquenessCheck(options: {
   checkFn: (value: string) => Promise<boolean>; // true = disponivel
   debounceMs?: number; // default: 300
   form: UseFormReturn;
-})
+});
 ```
 
 **Comportamento:**
+
 1. Registra listener on blur no campo
 2. Debounce de 300ms apos blur
 3. Chama `checkFn` com valor atual
@@ -159,6 +171,7 @@ function useUniquenessCheck(options: {
 Mensagens de erro centralizadas em arquivos de traducao, nao hardcoded nos componentes.
 
 **Estrutura:**
+
 ```
 src/lib/i18n/
   index.ts              # t() function + locale management
@@ -213,7 +226,7 @@ const messages = {
 ### 4.3 Funcao t()
 
 ```typescript
-function t(key: string, params?: Record<string, string | number>): string
+function t(key: string, params?: Record<string, string | number>): string;
 // Exemplo: t('validation.required', { field: 'Nome' }) → 'Nome e obrigatorio'
 ```
 
@@ -272,24 +285,24 @@ class BadRequestError extends Error {
 
 ### Novos Arquivos
 
-| Arquivo | Tipo |
-|---------|------|
-| `src/lib/i18n/index.ts` | i18n engine |
-| `src/lib/i18n/locales/pt-BR.ts` | Traducoes PT-BR |
-| `src/components/ui/form-error-icon.tsx` | Icone de erro com tooltip |
-| `src/components/ui/section-error-badge.tsx` | Badge de erros na secao |
-| `src/components/ui/form-error-report-modal.tsx` | Modal de relatorio de erros |
-| `src/components/ui/password-strength-checklist.tsx` | Checklist de senha |
-| `src/hooks/use-form-error-handler.ts` | Hook de mapeamento API→campo |
-| `src/hooks/use-uniqueness-check.ts` | Hook de validacao de unicidade |
+| Arquivo                                             | Tipo                           |
+| --------------------------------------------------- | ------------------------------ |
+| `src/lib/i18n/index.ts`                             | i18n engine                    |
+| `src/lib/i18n/locales/pt-BR.ts`                     | Traducoes PT-BR                |
+| `src/components/ui/form-error-icon.tsx`             | Icone de erro com tooltip      |
+| `src/components/ui/section-error-badge.tsx`         | Badge de erros na secao        |
+| `src/components/ui/form-error-report-modal.tsx`     | Modal de relatorio de erros    |
+| `src/components/ui/password-strength-checklist.tsx` | Checklist de senha             |
+| `src/hooks/use-form-error-handler.ts`               | Hook de mapeamento API→campo   |
+| `src/hooks/use-uniqueness-check.ts`                 | Hook de validacao de unicidade |
 
 ### Arquivos Modificados
 
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/components/ui/sonner.tsx` | Redesign visual (degrade solido) |
-| `src/core/forms/components/form-field-wrapper.tsx` | Erro via tooltip, nao inline |
-| `src/core/forms/components/entity-form.tsx` | Integrar error handler |
-| `src/core/forms/components/entity-form-validation.ts` | Usar i18n |
-| `src/lib/error-messages.ts` | Migrar para i18n |
-| Admin module forms | Aplicar novo sistema |
+| Arquivo                                               | Mudanca                          |
+| ----------------------------------------------------- | -------------------------------- |
+| `src/components/ui/sonner.tsx`                        | Redesign visual (degrade solido) |
+| `src/core/forms/components/form-field-wrapper.tsx`    | Erro via tooltip, nao inline     |
+| `src/core/forms/components/entity-form.tsx`           | Integrar error handler           |
+| `src/core/forms/components/entity-form-validation.ts` | Usar i18n                        |
+| `src/lib/error-messages.ts`                           | Migrar para i18n                 |
+| Admin module forms                                    | Aplicar novo sistema             |
