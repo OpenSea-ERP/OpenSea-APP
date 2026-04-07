@@ -249,41 +249,47 @@ export function ItemHistoryModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-2xl max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden"
+        className="sm:max-w-2xl max-h-[90vh] sm:max-h-[80vh] w-[calc(100vw-1rem)] sm:w-full flex flex-col p-0 gap-0 overflow-hidden"
         showCloseButton={false}
       >
-        {/* Hero header */}
-        <div className="bg-gradient-to-br from-sky-50 to-sky-100/50 dark:from-sky-500/10 dark:to-sky-500/5 border-b border-border px-6 pt-6 pb-5">
+        {/* Hero header — stacks vertically on mobile, horizontal on desktop */}
+        <div className="bg-gradient-to-br from-sky-50 to-sky-100/50 dark:from-sky-500/10 dark:to-sky-500/5 border-b border-border px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-5">
           <DialogHeader>
-            <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-500/15 border border-sky-600/25 dark:border-sky-500/20 shrink-0">
-                <History className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+            <div className="flex flex-col gap-3">
+              {/* Title row */}
+              <div className="flex items-start gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-500/15 border border-sky-600/25 dark:border-sky-500/20 shrink-0">
+                  <History className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <DialogTitle className="text-base text-left">
+                    Histórico do Item
+                  </DialogTitle>
+                  {item && (
+                    <DialogDescription className="mt-0.5 text-left">
+                      <span className="font-mono text-xs sm:text-sm break-all">
+                        {itemCode}
+                      </span>
+                    </DialogDescription>
+                  )}
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <DialogTitle className="text-base">
-                  Histórico do Item
-                </DialogTitle>
-                {item && (
-                  <DialogDescription className="mt-0.5">
-                    <span className="font-mono text-sm">{itemCode}</span>
-                  </DialogDescription>
-                )}
-              </div>
-              {item && (
-                <div className="flex items-center gap-2 shrink-0">
+              {/* Stats — full width row, wraps on mobile */}
+              {item && (item.bin?.address || item.currentQuantity !== undefined) && (
+                <div className="flex flex-wrap items-stretch gap-2">
                   {item.bin?.address && (
-                    <div className="bg-white dark:bg-white/5 border border-border rounded-lg px-3 py-1.5 text-center">
+                    <div className="flex-1 min-w-[120px] bg-white dark:bg-white/5 border border-border rounded-lg px-3 py-1.5">
                       <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                         Localização
                       </div>
-                      <div className="text-sm font-semibold text-foreground flex items-center gap-1 justify-center mt-0.5">
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
+                      <div className="text-sm font-semibold text-foreground flex items-center gap-1 mt-0.5 break-all">
+                        <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
                         {item.bin.address}
                       </div>
                     </div>
                   )}
                   {item.currentQuantity !== undefined && (
-                    <div className="bg-white dark:bg-white/5 border border-border rounded-lg px-3 py-1.5 text-center">
+                    <div className="flex-1 min-w-[120px] bg-white dark:bg-white/5 border border-border rounded-lg px-3 py-1.5">
                       <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                         Quantidade
                       </div>
@@ -303,7 +309,7 @@ export function ItemHistoryModal({
           </DialogHeader>
         </div>
 
-        <div className="flex-1 overflow-auto px-6">
+        <div className="flex-1 overflow-auto px-4 sm:px-6">
           {isLoading ? (
             <div className="space-y-3 py-4">
               {[1, 2, 3, 4].map(i => (
@@ -339,21 +345,26 @@ export function ItemHistoryModal({
           )}
         </div>
 
-        <div className="flex justify-between items-center gap-2 px-6 py-4 border-t">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t">
+          <div className="flex items-center gap-2 flex-wrap">
             {onBack && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onBack}
-                className="gap-1.5"
+                className="gap-1.5 flex-1 sm:flex-none"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </Button>
             )}
             {(productId || item?.productId) && (
-              <Button variant="outline" size="sm" className="gap-1.5" asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 flex-1 sm:flex-none"
+                asChild
+              >
                 <Link href={`/stock/products/${productId || item?.productId}`}>
                   <ExternalLink className="h-3.5 w-3.5" />
                   Ver Produto
@@ -361,7 +372,11 @@ export function ItemHistoryModal({
               </Button>
             )}
           </div>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="w-full sm:w-auto"
+          >
             Fechar
           </Button>
         </div>
@@ -423,19 +438,19 @@ function MovementItem({
       </div>
 
       {/* Content */}
-      <div className={cn('flex-1 pb-4', isLast && 'pb-0')}>
-        <div className="flex items-start justify-between gap-2">
-          <div>
+      <div className={cn('flex-1 min-w-0 pb-4', isLast && 'pb-0')}>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
+          <div className="min-w-0 flex-1">
             <span
               className={cn(
-                'px-2.5 py-0.5 rounded-full text-xs font-semibold border',
+                'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border',
                 config.badgeClass
               )}
             >
               {config.label}
             </span>
 
-            <div className="mt-2 text-sm text-muted-foreground space-y-0.5">
+            <div className="mt-2 text-sm text-muted-foreground space-y-0.5 break-words">
               {quantityDisplay && (
                 <p className="flex items-center gap-1">
                   <PiHashStraightDuotone className="h-3.5 w-3.5 shrink-0" />
@@ -487,14 +502,14 @@ function MovementItem({
             </div>
           </div>
 
-          <div className="text-right shrink-0">
-            <p className="flex items-center gap-1 text-xs text-muted-foreground justify-end">
-              <PiCalendarBlankDuotone className="h-3.5 w-3.5" />
+          <div className="sm:text-right sm:shrink-0">
+            <p className="flex items-center gap-1 text-xs text-muted-foreground sm:justify-end">
+              <PiCalendarBlankDuotone className="h-3.5 w-3.5 shrink-0" />
               {formatDate(movement.createdAt)}
             </p>
             {movement.user && (
-              <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5 justify-end">
-                <PiUserDuotone className="h-3.5 w-3.5" />
+              <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5 sm:justify-end">
+                <PiUserDuotone className="h-3.5 w-3.5 shrink-0" />
                 {movement.user.name || 'Sistema'}
               </p>
             )}

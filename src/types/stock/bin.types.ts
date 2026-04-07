@@ -137,6 +137,7 @@ export interface BinItem {
   id: string;
   itemCode: string;
   sku: string;
+  productId?: string | null;
   templateName?: string | null;
   productName: string;
   manufacturerName?: string | null;

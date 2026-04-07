@@ -7,6 +7,7 @@ import { MobileTopBar } from '@/components/mobile/mobile-top-bar';
 import { apiClient } from '@/lib/api-client';
 import { Package, Search, Check, Loader2, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ColorPatternSwatch } from '@/components/shared/color-pattern-swatch';
 
 // ============================================
 // Types
@@ -290,28 +291,12 @@ export function MobileVariantSelector({
           disabled && 'opacity-50'
         )}
       >
-        {value?.colorHex ? (
-          <ColorSwatch
-            colorHex={value.colorHex}
-            secondaryColorHex={value.secondaryColorHex}
-            pattern={value.pattern}
-            size="md"
-          />
-        ) : (
-          <div
-            className={cn(
-              'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-              value ? 'bg-indigo-500/20' : 'bg-slate-700/60'
-            )}
-          >
-            <Package
-              className={cn(
-                'h-4 w-4',
-                value ? 'text-indigo-400' : 'text-slate-400'
-              )}
-            />
-          </div>
-        )}
+        <ColorPatternSwatch
+          colorHex={value?.colorHex}
+          secondaryColorHex={value?.secondaryColorHex}
+          pattern={value?.pattern}
+          size="md"
+        />
         <div className="min-w-0 flex-1">
           {value ? (
             <>
@@ -382,7 +367,6 @@ export function MobileVariantSelector({
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nome, fabricante, referência..."
-            autoFocus
             className="w-full rounded-lg border border-slate-700 bg-slate-800 py-2.5 pl-10 pr-4 text-base text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
@@ -408,7 +392,10 @@ export function MobileVariantSelector({
               return (
                 <button
                   key={opt.id}
-                  onClick={() => {
+                  type="button"
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     onChange(opt);
                     setIsOpen(false);
                     setSearch('');
@@ -420,7 +407,7 @@ export function MobileVariantSelector({
                       : 'bg-slate-800/40'
                   )}
                 >
-                  <ColorSwatch
+                  <ColorPatternSwatch
                     colorHex={opt.colorHex}
                     secondaryColorHex={opt.secondaryColorHex}
                     pattern={opt.pattern}

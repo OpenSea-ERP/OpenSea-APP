@@ -16,7 +16,9 @@ import {
   MoreVertical,
   History,
   PackageMinus,
+  ExternalLink,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import {
   Sheet,
   SheetContent,
@@ -38,15 +40,18 @@ import { formatUnitAbbreviation } from '@/helpers/formatters';
 import { getOccupancyBarColor } from '../constants/occupancy-colors';
 import { toast } from 'sonner';
 import { useBinDetail, useBlockBin, useUnblockBin } from '../api/bins.queries';
-import { useItemExit, useTransferItem } from '../api/items.queries';
+import { useTransferItem } from '../api/items.queries';
+import { useRegisterItemExit } from '@/hooks/stock/use-items';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '../api/keys';
+import type { ExitMovementType } from '@/types/stock';
 import { useCodeLookup } from '@/hooks/mobile/use-code-lookup';
 import {
   ScanResultSheet,
   ScanResultDialog,
 } from '@/components/mobile/scan-result-sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ColorPatternSwatch } from '@/components/shared/color-pattern-swatch';
 import type { LookupResult } from '@/services/stock/lookup.service';
 import { HiOutlineAdjustmentsHorizontal } from 'react-icons/hi2';
 import { usePrintQueue } from '@/core/print-queue';
@@ -55,6 +60,7 @@ import { MoveItemModal } from './move-item-modal';
 import { AddItemToBinModal } from './add-item-to-bin-modal';
 import { AdjustCapacityModal } from './adjust-capacity-modal';
 import { ExitItemsModal } from '../../../products/src/modals/exit-items-modal';
+import { ItemHistoryModal } from '../../../products/src/modals/item-history-modal';
 import type { BinItem, Bin, Item } from '@/types/stock';
 
 // ============================================
@@ -80,46 +86,7 @@ function formatDate(date: string | Date) {
   });
 }
 
-function getItemPreviewStyle(item: BinItem): React.CSSProperties | null {
-  const primary = item.colorHex;
-  if (!primary && !item.pattern) return null;
-
-  const color = primary || '#cbd5e1';
-  const secondary = item.secondaryColorHex || '';
-  const hasSecondary = !!secondary;
-  const sec = secondary || '#94a3b8';
-
-  switch (item.pattern) {
-    case 'SOLID':
-      if (hasSecondary) {
-        return {
-          background: `linear-gradient(135deg, ${color} 50%, ${sec} 50%)`,
-        };
-      }
-      return { background: color };
-    case 'STRIPED':
-      return {
-        background: `repeating-linear-gradient(45deg, ${color}, ${color} 4px, ${sec} 4px, ${sec} 8px)`,
-      };
-    case 'PLAID':
-      return {
-        background: `repeating-linear-gradient(0deg, ${sec}00 0px, ${sec}00 6px, ${sec}BB 6px, ${sec}BB 8px, ${sec}00 8px, ${sec}00 14px), repeating-linear-gradient(90deg, ${sec}00 0px, ${sec}00 6px, ${sec}BB 6px, ${sec}BB 8px, ${sec}00 8px, ${sec}00 14px), ${color}`,
-      };
-    case 'PRINTED':
-      return {
-        background: `radial-gradient(circle 2px at 25% 30%, ${sec} 99%, transparent), radial-gradient(circle 1.5px at 60% 20%, ${sec} 99%, transparent), radial-gradient(circle 2px at 80% 60%, ${sec} 99%, transparent), radial-gradient(circle 1.5px at 40% 75%, ${sec} 99%, transparent), ${color}`,
-      };
-    case 'GRADIENT':
-      return { background: `linear-gradient(135deg, ${color}, ${sec})` };
-    case 'JACQUARD':
-      return {
-        background: `repeating-conic-gradient(${color} 0% 25%, ${sec} 0% 50%) 0 0 / 8px 8px`,
-      };
-    default:
-      if (primary) return { background: color };
-      return null;
-  }
-}
+// Color/pattern preview agora vem do componente compartilhado ColorPatternSwatch
 
 // ============================================
 // COMPONENT
@@ -132,6 +99,7 @@ export function BinDetailSheet({
   highlightItemId,
 }: BinDetailSheetProps) {
   const isMobile = useIsMobile();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { data, isLoading } = useBinDetail(binId || '');
   const blockBin = useBlockBin();
@@ -140,24 +108,28 @@ export function BinDetailSheet({
 
   const [moveItem, setMoveItem] = useState<BinItem | null>(null);
   const [exitItem, setExitItem] = useState<BinItem | null>(null);
+  const [historyItem, setHistoryItem] = useState<BinItem | null>(null);
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showCapacityModal, setShowCapacityModal] = useState(false);
   const transferItem = useTransferItem();
-  const itemExit = useItemExit();
+  const registerItemExit = useRegisterItemExit();
 
   // Scan result sheet (reused from mobile scanner — same modal as QR code)
   const [scanResult, setScanResult] = useState<LookupResult | null>(null);
   const [scanSheetOpen, setScanSheetOpen] = useState(false);
   const codeLookup = useCodeLookup();
 
-  // Manual double-click detection (native dblclick is unreliable inside Sheet scroll containers)
+  // Manual double-click detection (native dblclick is unreliable inside Sheet scroll containers).
+  // Single click: nothing. Double click: open ScanResultSheet (visualização completa do item).
+  // Histórico fica acessível apenas via dropdown menu "Ver Histórico".
   const clickTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const handleItemClick = useCallback(
     (item: BinItem) => {
       const key = item.id;
-      if (clickTimers.current[key]) {
-        clearTimeout(clickTimers.current[key]);
+      const pending = clickTimers.current[key];
+      if (pending) {
+        clearTimeout(pending);
         delete clickTimers.current[key];
         // Double click — open ScanResultSheet using item code lookup
         codeLookup.mutate(item.itemCode, {
@@ -177,6 +149,14 @@ export function BinDetailSheet({
     },
     [codeLookup]
   );
+
+  // Cleanup pending click timers on unmount
+  useEffect(() => {
+    const timers = clickTimers.current;
+    return () => {
+      Object.values(timers).forEach(clearTimeout);
+    };
+  }, []);
 
   const bin = data?.bin;
   const items = data?.items ?? [];
@@ -463,13 +443,12 @@ export function BinDetailSheet({
                   <div className="space-y-2">
                     {items.map(item => {
                       const isHighlighted = activeHighlightItemId === item.id;
-                      const previewStyle = getItemPreviewStyle(item);
                       return (
                         <div
                           key={item.id}
                           data-item-id={item.id}
                           onClick={() => handleItemClick(item)}
-                          title="Duplo clique para ações"
+                          title="Duplo clique para ver detalhes"
                           className={cn(
                             'flex gap-3 p-3 rounded-lg border transition-all cursor-pointer select-none',
                             isHighlighted
@@ -477,17 +456,14 @@ export function BinDetailSheet({
                               : 'bg-muted/40 border-border hover:border-blue-300 dark:hover:border-blue-500/40'
                           )}
                         >
-                          {/* Color/Pattern preview or fallback icon */}
-                          {previewStyle ? (
-                            <div
-                              className="h-9 w-9 shrink-0 rounded-lg mt-0.5 border border-black/10 dark:border-white/10"
-                              style={previewStyle}
-                            />
-                          ) : (
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/15 mt-0.5">
-                              <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            </div>
-                          )}
+                          {/* Color/Pattern preview or fallback icon — shared component */}
+                          <ColorPatternSwatch
+                            colorHex={item.colorHex}
+                            secondaryColorHex={item.secondaryColorHex}
+                            pattern={item.pattern}
+                            size="md"
+                            className="mt-0.5"
+                          />
 
                           {/* Info — 4 lines */}
                           <div className="flex-1 min-w-0 space-y-0.5">
@@ -582,13 +558,23 @@ export function BinDetailSheet({
                                   className="w-44"
                                 >
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      toast.info('Histórico em breve')
-                                    }
+                                    onClick={() => setHistoryItem(item)}
                                   >
                                     <History className="mr-2 h-4 w-4" />
                                     Ver Histórico
                                   </DropdownMenuItem>
+                                  {item.productId && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        router.push(
+                                          `/stock/products/${item.productId}`
+                                        )
+                                      }
+                                    >
+                                      <ExternalLink className="mr-2 h-4 w-4" />
+                                      Ver Produto
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuItem
                                     onClick={() => setMoveItem(item)}
                                   >
@@ -674,13 +660,17 @@ export function BinDetailSheet({
               uniqueCode: exitItem.itemCode,
             } as unknown as Item,
           ]}
-          onConfirm={async (_exitType, reason) => {
-            await itemExit.mutateAsync({
+          onConfirm={async (exitType, reason) => {
+            // ExitItemsModal supports TRANSFER too — but transfer goes to a different
+            // endpoint (handled by onTransfer prop). Here we only handle real exits.
+            if (exitType === 'TRANSFER') return;
+            await registerItemExit.mutateAsync({
               itemId: exitItem.id,
               quantity: exitItem.quantity,
-              reason: reason || undefined,
+              movementType: exitType as ExitMovementType,
+              notes: reason || undefined,
             });
-            // useItemExit invalida items/occupancy mas não o binDetail — forçar refresh
+            // useRegisterItemExit invalida items/movements mas não o binDetail — forçar refresh
             await queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.binDetail(bin.id),
             });
@@ -731,6 +721,33 @@ export function BinDetailSheet({
           result={scanResult}
         />
       )}
+
+      {/* Item History Modal — reused from products module, works on mobile */}
+      <ItemHistoryModal
+        open={!!historyItem}
+        onOpenChange={open => {
+          if (!open) setHistoryItem(null);
+        }}
+        item={
+          historyItem
+            ? ({
+                id: historyItem.id,
+                productId: historyItem.productId ?? undefined,
+                fullCode: historyItem.itemCode,
+                uniqueCode: historyItem.itemCode,
+                currentQuantity: historyItem.quantity,
+                templateUnitOfMeasure: historyItem.unitLabel ?? undefined,
+                bin: bin
+                  ? {
+                      id: bin.id,
+                      address: bin.address,
+                    }
+                  : undefined,
+              } as unknown as Item)
+            : null
+        }
+        productId={historyItem?.productId ?? undefined}
+      />
     </>
   );
 }

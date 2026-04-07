@@ -314,12 +314,20 @@ function MobileAddItemSheet({
   const canSubmit =
     !!selectedVariant && parsedQuantity > 0 && !registerEntry.isPending;
 
+  // modal={false}: evita focus trap + body pointerEvents lock que entram em
+  // conflito com o portal do MobileVariantSelector (renderizado em document.body).
+  // dismissible={false}: previne fechamento por clique externo (drawer só fecha pelo X).
+  // noBodyStyles: previne position:fixed no body em iOS Safari (Vaul iOS-specific).
+  // repositionInputs={false}: previne jump quando teclado virtual aparece.
   return (
     <Drawer
       open={open}
       onOpenChange={onOpenChange}
       direction="bottom"
       repositionInputs={false}
+      dismissible={false}
+      noBodyStyles
+      modal={false}
     >
       <DrawerContent className="bg-slate-950 border-slate-700 [&>div:first-child]:hidden max-h-[92vh] flex flex-col">
         <VisuallyHidden>
