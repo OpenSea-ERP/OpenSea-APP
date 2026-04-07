@@ -37,9 +37,10 @@ import { cn } from '@/lib/utils';
 import { formatUnitAbbreviation } from '@/helpers/formatters';
 import { getOccupancyBarColor } from '../constants/occupancy-colors';
 import { toast } from 'sonner';
-import { useBinDetail } from '../api/bins.queries';
-import { useBlockBin, useUnblockBin } from '../api/bins.queries';
-import { useTransferItem } from '../api/items.queries';
+import { useBinDetail, useBlockBin, useUnblockBin } from '../api/bins.queries';
+import { useItemExit, useTransferItem } from '../api/items.queries';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '../api/keys';
 import { useCodeLookup } from '@/hooks/mobile/use-code-lookup';
 import {
   ScanResultSheet,
@@ -131,6 +132,7 @@ export function BinDetailSheet({
   highlightItemId,
 }: BinDetailSheetProps) {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { data, isLoading } = useBinDetail(binId || '');
   const blockBin = useBlockBin();
   const unblockBin = useUnblockBin();
@@ -142,6 +144,7 @@ export function BinDetailSheet({
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showCapacityModal, setShowCapacityModal] = useState(false);
   const transferItem = useTransferItem();
+  const itemExit = useItemExit();
 
   // Scan result sheet (reused from mobile scanner — same modal as QR code)
   const [scanResult, setScanResult] = useState<LookupResult | null>(null);
@@ -671,7 +674,17 @@ export function BinDetailSheet({
               uniqueCode: exitItem.itemCode,
             } as unknown as Item,
           ]}
-          onConfirm={async () => {
+          onConfirm={async (_exitType, reason) => {
+            await itemExit.mutateAsync({
+              itemId: exitItem.id,
+              quantity: exitItem.quantity,
+              reason: reason || undefined,
+            });
+            // useItemExit invalida items/occupancy mas não o binDetail — forçar refresh
+            await queryClient.invalidateQueries({
+              queryKey: QUERY_KEYS.binDetail(bin.id),
+            });
+            toast.success('Baixa realizada com sucesso!');
             setExitItem(null);
           }}
         />

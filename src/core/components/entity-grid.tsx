@@ -376,7 +376,11 @@ export function EntityGrid<T extends BaseEntity>({
       // Só ativa drag selection com botão esquerdo
       if (e.button !== 0) return;
 
-      // Sempre previne o comportamento padrão de drag nativo
+      // Não previne o default se clicou em um card — isso bloquearia click/dblclick no mobile
+      const clickedOnCard = (e.target as HTMLElement).closest('[data-item-card]');
+      if (clickedOnCard) return;
+
+      // Previne o comportamento padrão de drag nativo (somente fora de cards)
       e.preventDefault();
 
       // Inicia drag selection de qualquer lugar (inclusive de cima de cards)
@@ -502,6 +506,12 @@ export function EntityGrid<T extends BaseEntity>({
     (item: T, e: React.MouseEvent) => {
       e.stopPropagation();
 
+      // No mobile, single tap navega diretamente (dblclick não funciona em touch)
+      if (isMobile && onItemDoubleClick) {
+        onItemDoubleClick(item);
+        return;
+      }
+
       // Se tem shift key e selection context, faz range selection
       if (
         e.shiftKey &&
@@ -531,7 +541,7 @@ export function EntityGrid<T extends BaseEntity>({
         onItemClick(item, e);
       }
     },
-    [onItemClick, selectionActions, selectionContext]
+    [isMobile, onItemClick, onItemDoubleClick, selectionActions, selectionContext]
   );
 
   const handleItemDoubleClick = useCallback(
