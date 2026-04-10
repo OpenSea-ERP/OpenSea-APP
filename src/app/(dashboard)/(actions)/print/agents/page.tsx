@@ -1,10 +1,11 @@
 /**
  * Print Agents Management Page
- * Gerenciamento de agentes de impressao remota
+ * Gerenciamento de impressoras remotas e agentes de impressao
  */
 
 'use client';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -22,14 +23,16 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import { PageActionBar } from '@/components/layout/page-action-bar';
+import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import {
   StepWizardDialog,
   type WizardStep,
 } from '@/components/ui/step-wizard-dialog';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useRemotePrinters } from '@/core/print-queue/hooks/use-remote-printers';
 import { printAgentsService } from '@/services/sales/print-agents.service';
-import type { PrintAgent, AgentStatus } from '@/types/sales';
+import type { PrintAgent, AgentStatus, PrinterStatus } from '@/types/sales';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -37,10 +40,14 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import {
   AlertTriangle,
+  CheckCircle,
   CircleDot,
+  Download,
   Link2Off,
+  Monitor,
   MonitorSmartphone,
   Plus,
+  Printer,
   QrCode,
   Router,
   Shield,
@@ -78,6 +85,37 @@ const AGENT_STATUS_CONFIG: Record<
   },
 };
 
+const PRINTER_STATUS_DOT: Record<PrinterStatus, string> = {
+  ONLINE: 'bg-green-500',
+  OFFLINE: 'bg-gray-400',
+  BUSY: 'bg-amber-500',
+  ERROR: 'bg-rose-500',
+  UNKNOWN: 'bg-gray-300',
+};
+
+const INSTALL_STEPS = [
+  {
+    icon: Download,
+    title: 'Baixe o instalador',
+    description: 'Faca o download do agente para Windows',
+  },
+  {
+    icon: Monitor,
+    title: 'Execute no computador',
+    description: 'Abra o programa e siga as instrucoes',
+  },
+  {
+    icon: QrCode,
+    title: 'Digite o codigo',
+    description: 'O codigo aparece ao registrar um agente acima',
+  },
+  {
+    icon: CheckCircle,
+    title: 'Pronto!',
+    description: 'As impressoras aparecerao automaticamente',
+  },
+];
+
 export default function PrintAgentsPage() {
   const { hasPermission } = usePermissions();
   const queryClient = useQueryClient();
@@ -107,6 +145,8 @@ export default function PrintAgentsPage() {
   });
 
   const agents = agentsData ?? [];
+
+  const { printers, isLoading: printersLoading } = useRemotePrinters();
 
   const handleRegister = useCallback(async () => {
     if (!agentName.trim()) return;
@@ -233,7 +273,7 @@ export default function PrintAgentsPage() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Impressao', href: '/print/studio' },
-            { label: 'Agentes' },
+            { label: 'Impressoras' },
           ]}
           actions={
             <div className="flex items-center gap-2">
@@ -243,34 +283,120 @@ export default function PrintAgentsPage() {
                   Studio
                 </Button>
               </Link>
-              {canAdmin && (
-                <Button
-                  size="sm"
-                  className="h-9 px-2.5"
-                  onClick={() => setRegisterOpen(true)}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Registrar Agente
-                </Button>
-              )}
             </div>
           }
         />
       </PageHeader>
 
-      <PageBody>
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Title Section */}
+      <PageBody spacing="gap-6">
+        {/* Hero Banner */}
+        <PageHeroBanner
+          title="Impressoras Remotas"
+          description="Gerencie impressoras conectadas e envie impressoes de qualquer dispositivo"
+          icon={Printer}
+          iconGradient="from-blue-500 to-indigo-600"
+          buttons={
+            canAdmin
+              ? [
+                  {
+                    id: 'register-agent',
+                    label: 'Adicionar Computador',
+                    icon: Plus,
+                    href: '#',
+                    gradient: 'from-blue-500 to-indigo-600',
+                    permission: 'sales.printing.admin',
+                  },
+                ]
+              : []
+          }
+          hasPermission={hasPermission}
+          onButtonClick={(buttonId) => {
+            if (buttonId === 'register-agent') {
+              setRegisterOpen(true);
+            }
+          }}
+        />
+
+        {/* Connected Printers Section */}
+        <section className="space-y-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Agentes de Impressao
-            </h1>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Impressoras Conectadas
+            </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Gerencie os computadores conectados para impressao remota
+              Impressoras disponveis nos computadores pareados
             </p>
           </div>
 
-          {/* Agent List */}
+          {printersLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card
+                  key={i}
+                  className="bg-white dark:bg-slate-800/60 border border-border p-4 animate-pulse"
+                >
+                  <div className="h-10" />
+                </Card>
+              ))}
+            </div>
+          ) : printers.length === 0 ? (
+            <Card className="bg-white dark:bg-slate-800/60 border border-border p-8 text-center">
+              <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
+                <Printer className="w-6 h-6 text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                Nenhuma impressora detectada
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Conecte um computador com agente pareado para ver as impressoras.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {printers.map((printer) => (
+                <Card
+                  key={printer.id}
+                  className="bg-white dark:bg-slate-800/60 border border-border p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        'w-3 h-3 rounded-full shrink-0',
+                        PRINTER_STATUS_DOT[printer.status] ?? 'bg-gray-300',
+                      )}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                        {printer.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {printer.agentName}
+                        {printer.osName ? ` \u00b7 ${printer.osName}` : ''}
+                      </p>
+                    </div>
+                    {printer.isDefault && (
+                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                        Padrao
+                      </Badge>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Agents Section */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Computadores (Agentes)
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Computadores registrados para receber comandos de impressao
+            </p>
+          </div>
+
           {isLoading ? (
             <div className="grid gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -302,7 +428,7 @@ export default function PrintAgentsPage() {
               {canAdmin && (
                 <Button onClick={() => setRegisterOpen(true)}>
                   <Plus className="w-4 h-4 mr-1" />
-                  Registrar Agente
+                  Adicionar Computador
                 </Button>
               )}
             </Card>
@@ -320,7 +446,42 @@ export default function PrintAgentsPage() {
               ))}
             </div>
           )}
-        </div>
+        </section>
+
+        {/* Download / Install Section */}
+        <section>
+          <Card className="bg-white dark:bg-slate-800/60 border border-border p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+              Instalar em um Computador
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {INSTALL_STEPS.map((step, i) => (
+                <div key={i} className="flex flex-col items-center text-center">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center mb-3">
+                    <step.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center mb-2">
+                    {i + 1}
+                  </div>
+                  <p className="font-medium text-sm text-gray-900 dark:text-white">
+                    {step.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {step.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-center">
+              <Button variant="outline" size="sm" className="h-9 px-4" asChild>
+                <a href="/downloads/opensea-print-agent-setup.exe" download>
+                  <Download className="w-4 h-4 mr-2" />
+                  Baixar Instalador (Windows)
+                </a>
+              </Button>
+            </div>
+          </Card>
+        </section>
       </PageBody>
 
       {/* Register Agent Dialog */}
@@ -435,7 +596,7 @@ function AgentCard({
 
           {/* Info */}
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                 {agent.name}
               </h3>
@@ -451,7 +612,7 @@ function AgentCard({
                 {config.label}
               </span>
               {agent.isPaired ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/20">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/20">
                   <Shield className="w-2.5 h-2.5" />
                   Pareado
                 </span>

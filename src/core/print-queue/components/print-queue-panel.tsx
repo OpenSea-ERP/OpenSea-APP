@@ -76,15 +76,27 @@ export function PrintQueuePanel() {
               <DropdownMenuLabel className="p-0 text-lg font-bold">
                 Fila de Impressao
               </DropdownMenuLabel>
-              <Link href="/print/studio">
-                <Button
-                  size="sm"
-                  className="h-7 px-3 text-xs font-semibold text-white bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-sm"
-                >
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Studio
-                </Button>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link href="/print/agents">
+                  <Button
+                    size="sm"
+                    className="h-7 px-3 text-xs font-semibold"
+                    variant="outline"
+                  >
+                    <Printer className="w-3 h-3 mr-1" />
+                    Impressoras
+                  </Button>
+                </Link>
+                <Link href="/print/studio">
+                  <Button
+                    size="sm"
+                    className="h-7 px-3 text-xs font-semibold text-white bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-sm"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Studio
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
 

@@ -21,6 +21,8 @@ export interface PageHeroBannerProps {
   hasPermission: (permission: string) => boolean;
   icon?: React.ElementType;
   iconGradient?: string;
+  /** Optional callback when a button is clicked (prevents navigation if provided) */
+  onButtonClick?: (buttonId: string) => void;
 }
 
 /**
@@ -49,6 +51,7 @@ export function PageHeroBanner({
   hasPermission,
   icon: Icon = Package,
   iconGradient = 'from-emerald-500 to-emerald-600',
+  onButtonClick,
 }: PageHeroBannerProps) {
   return (
     <div>
@@ -73,16 +76,27 @@ export function PageHeroBanner({
           <div className="flex flex-wrap gap-3">
             {buttons
               .filter(btn => !btn.permission || hasPermission(btn.permission))
-              .map(btn => (
-                <Link key={btn.id} href={btn.href}>
+              .map(btn =>
+                onButtonClick ? (
                   <Button
+                    key={btn.id}
                     className={`gap-2 text-white bg-linear-to-r ${btn.gradient} hover:opacity-90`}
+                    onClick={() => onButtonClick(btn.id)}
                   >
                     <btn.icon className="h-4 w-4" />
                     {btn.label}
                   </Button>
-                </Link>
-              ))}
+                ) : (
+                  <Link key={btn.id} href={btn.href}>
+                    <Button
+                      className={`gap-2 text-white bg-linear-to-r ${btn.gradient} hover:opacity-90`}
+                    >
+                      <btn.icon className="h-4 w-4" />
+                      {btn.label}
+                    </Button>
+                  </Link>
+                ),
+              )}
           </div>
         </div>
       </Card>
