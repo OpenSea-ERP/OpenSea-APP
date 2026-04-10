@@ -1579,8 +1579,8 @@ export const API_ENDPOINTS = {
       LIST: '/v1/sales/print-agents',
       CREATE: '/v1/sales/print-agents',
       DELETE: (id: string) => `/v1/sales/print-agents/${id}`,
-      REGENERATE_KEY: (id: string) =>
-        `/v1/sales/print-agents/${id}/regenerate-key`,
+      PAIRING_CODE: (id: string) => `/v1/sales/print-agents/${id}/pairing-code`,
+      UNPAIR: (id: string) => `/v1/sales/print-agents/${id}/unpair`,
     },
     JOBS: {
       LIST: '/v1/sales/print-jobs',

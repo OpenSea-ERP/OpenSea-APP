@@ -5,6 +5,9 @@ export interface PrintAgent {
   id: string;
   name: string;
   status: AgentStatus;
+  isPaired: boolean;
+  deviceLabel: string | null;
+  pairedAt: string | null;
   lastSeenAt: string | null;
   ipAddress: string | null;
   hostname: string | null;
@@ -27,8 +30,11 @@ export interface RemotePrinter {
 
 export interface RegisterAgentResponse {
   agentId: string;
-  apiKey: string;
-  message: string;
+}
+
+export interface AgentPairingCodeResponse {
+  code: string;
+  expiresAt: string;
 }
 
 export interface PrintAgentsResponse {
