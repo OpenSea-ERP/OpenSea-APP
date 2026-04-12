@@ -58,10 +58,6 @@ const CreateModal = dynamic(
     import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })),
   { ssr: false }
 );
-const ViewModal = dynamic(
-  () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
-  { ssr: false }
-);
 const RenameModal = dynamic(
   () =>
     import('./src/modals/rename-modal').then(m => ({
@@ -559,13 +555,6 @@ function WorkSchedulesPageContent() {
               }}
             />
           )}
-
-          {/* View Modal */}
-          <ViewModal
-            isOpen={page.modals.isOpen('view')}
-            onClose={() => page.modals.close('view')}
-            workSchedule={page.modals.viewingItem}
-          />
 
           {/* Create Modal */}
           <CreateModal

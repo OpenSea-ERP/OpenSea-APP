@@ -202,7 +202,7 @@ export default function WorkScheduleDetailPage() {
 
       <PageBody className="space-y-6">
         {/* Resumo */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
             <NotebookText className="h-5 w-5 text-foreground" />
             <div className="flex-1">
@@ -250,7 +250,7 @@ export default function WorkScheduleDetailPage() {
         </Card>
 
         {/* Jornada Semanal */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="space-y-5 px-6 py-4">
             {/* Section header with pills */}
             <div className="flex items-start justify-between gap-4">

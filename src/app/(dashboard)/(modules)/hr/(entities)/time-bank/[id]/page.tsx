@@ -239,7 +239,7 @@ export default function TimeBankDetailPage() {
 
       <PageBody className="space-y-6">
         {/* Resumo */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
             <NotebookText className="h-5 w-5 text-foreground" />
             <div className="flex-1">
@@ -276,7 +276,7 @@ export default function TimeBankDetailPage() {
         </Card>
 
         {/* Detalhes */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
             <FileText className="h-5 w-5 text-foreground" />
             <div className="flex-1">
