@@ -112,7 +112,7 @@ export function CreateModal({
   };
 
   const handleSubmit = async () => {
-    if (!selectedCompany || !departmentName || !departmentCode) return;
+    if (!selectedCompany || !departmentName.trim() || !departmentCode.trim()) return;
 
     try {
       await onSubmit({
@@ -221,7 +221,7 @@ export function CreateModal({
         title: 'Dados do Departamento',
         description: 'Preencha as informações do novo departamento',
         icon: <BookUser className="h-16 w-16 text-emerald-500/60" />,
-        isValid: !!departmentName && !!departmentCode && !isSubmitting,
+        isValid: !!departmentName.trim() && !!departmentCode.trim() && !isSubmitting,
         onBack: () => setCurrentStep(1),
         content: (
           <div className="flex flex-col h-full space-y-4">
@@ -298,7 +298,7 @@ export function CreateModal({
         footer: (
           <Button
             type="button"
-            disabled={isSubmitting || !departmentName || !departmentCode}
+            disabled={isSubmitting || !departmentName.trim() || !departmentCode.trim()}
             onClick={handleSubmit}
           >
             {isSubmitting ? (

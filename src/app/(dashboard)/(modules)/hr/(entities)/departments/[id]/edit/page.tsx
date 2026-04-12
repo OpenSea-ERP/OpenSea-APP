@@ -140,7 +140,7 @@ export default function DepartmentEditPage() {
   };
 
   const handleSave = async () => {
-    if (!department || !departmentName || !departmentCode) return;
+    if (!department || !departmentName.trim() || !departmentCode.trim()) return;
 
     setIsSaving(true);
     try {
@@ -191,7 +191,7 @@ export default function DepartmentEditPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Departamentos', href: '/hr/departments' },
             ]}
           />
@@ -209,7 +209,7 @@ export default function DepartmentEditPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Departamentos', href: '/hr/departments' },
             ]}
           />
@@ -241,7 +241,7 @@ export default function DepartmentEditPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
+            { label: 'RH', href: '/hr' },
             { label: 'Departamentos', href: '/hr/departments' },
             {
               label: department.name,
@@ -308,7 +308,7 @@ export default function DepartmentEditPage() {
 
       <PageBody className="space-y-6">
         {/* Dados Cadastrais */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
             <NotebookText className="h-5 w-5 text-foreground" />
             <div className="flex-1">
@@ -374,7 +374,7 @@ export default function DepartmentEditPage() {
         </Card>
 
         {/* Empresa Vinculada */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
             <Factory className="h-5 w-5 text-foreground" />
             <div className="flex-1">

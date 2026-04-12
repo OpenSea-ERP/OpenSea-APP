@@ -4,4 +4,3 @@
  */
 
 export * from './departments.crud';
-export * from './departments.utils';
