@@ -52,17 +52,17 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AddMemberDialog } from '../../src';
 
-const PRESET_COLORS = [
-  '#3B82F6',
-  '#06B6D4',
-  '#10B981',
-  '#8B5CF6',
-  '#F59E0B',
-  '#EF4444',
-  '#EC4899',
-  '#F97316',
-  '#14B8A6',
-  '#6366F1',
+const PRESET_COLORS: { hex: string; name: string }[] = [
+  { hex: '#3B82F6', name: 'Azul' },
+  { hex: '#06B6D4', name: 'Ciano' },
+  { hex: '#10B981', name: 'Esmeralda' },
+  { hex: '#8B5CF6', name: 'Violeta' },
+  { hex: '#F59E0B', name: 'Âmbar' },
+  { hex: '#EF4444', name: 'Vermelho' },
+  { hex: '#EC4899', name: 'Rosa' },
+  { hex: '#F97316', name: 'Laranja' },
+  { hex: '#14B8A6', name: 'Teal' },
+  { hex: '#6366F1', name: 'Índigo' },
 ];
 
 export default function HREditTeamPage() {
@@ -282,7 +282,7 @@ export default function HREditTeamPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Equipes', href: '/hr/teams' },
               { label: 'Carregando...' },
             ]}
@@ -305,7 +305,7 @@ export default function HREditTeamPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Equipes', href: '/hr/teams' },
               { label: 'Não encontrada' },
             ]}
@@ -334,7 +334,7 @@ export default function HREditTeamPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
+            { label: 'RH', href: '/hr' },
             { label: 'Equipes', href: '/hr/teams' },
             { label: team.name, href: `/hr/teams/${teamId}` },
             { label: 'Editar' },
@@ -420,21 +420,23 @@ export default function HREditTeamPage() {
               <div className="space-y-2">
                 <Label>Cor</Label>
                 <div className="flex flex-wrap gap-2">
-                  {PRESET_COLORS.map(color => (
+                  {PRESET_COLORS.map(({ hex, name }) => (
                     <button
-                      key={color}
+                      key={hex}
                       type="button"
                       className="w-8 h-8 rounded-full border-2 transition-all cursor-pointer"
                       style={{
-                        backgroundColor: color,
+                        backgroundColor: hex,
                         borderColor:
-                          form.color === color ? 'white' : 'transparent',
+                          form.color === hex ? 'white' : 'transparent',
                         boxShadow:
-                          form.color === color ? `0 0 0 2px ${color}` : 'none',
+                          form.color === hex ? `0 0 0 2px ${hex}` : 'none',
                       }}
                       onClick={() =>
-                        updateField('color', form.color === color ? '' : color)
+                        updateField('color', form.color === hex ? '' : hex)
                       }
+                      aria-label={`Selecionar cor ${name}`}
+                      title={name}
                     />
                   ))}
                 </div>

@@ -325,6 +325,7 @@ function HRTeamsPageContent() {
         label: 'Renomear',
         icon: Pencil,
         onClick: handleContextRename,
+        separator: 'before',
       });
     }
 
@@ -574,7 +575,7 @@ function HRTeamsPageContent() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Equipes', href: '/hr/teams' },
             ]}
             buttons={actionButtons}

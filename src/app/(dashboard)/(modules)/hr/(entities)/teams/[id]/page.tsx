@@ -139,7 +139,7 @@ export default function HRTeamDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Equipes', href: '/hr/teams' },
               { label: 'Carregando...' },
             ]}
@@ -162,7 +162,7 @@ export default function HRTeamDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Equipes', href: '/hr/teams' },
               { label: 'Não encontrada' },
             ]}
@@ -191,7 +191,7 @@ export default function HRTeamDetailPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
+            { label: 'RH', href: '/hr' },
             { label: 'Equipes', href: '/hr/teams' },
             { label: team.name },
           ]}

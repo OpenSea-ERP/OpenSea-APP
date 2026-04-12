@@ -55,7 +55,7 @@ export const hrTeamsConfig = defineEntityConfig<Team>()({
       editButton: 'Editar',
       deleteButton: 'Excluir',
       emptyState: 'Nenhuma equipe encontrada',
-      searchPlaceholder: 'Buscar equipes por nome ou descricao...',
+      searchPlaceholder: 'Buscar equipes por nome ou descrição...',
     },
   },
 

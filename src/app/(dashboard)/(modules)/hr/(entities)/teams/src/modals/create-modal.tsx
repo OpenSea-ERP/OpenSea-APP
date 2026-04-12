@@ -21,17 +21,17 @@ import { useState } from 'react';
 import { PiUsersThreeDuotone } from 'react-icons/pi';
 import { createTeam } from '../utils/teams.crud';
 
-const PRESET_COLORS = [
-  '#3B82F6', // blue
-  '#06B6D4', // cyan
-  '#10B981', // emerald
-  '#8B5CF6', // violet
-  '#F59E0B', // amber
-  '#F43F5E', // rose
-  '#EC4899', // pink
-  '#F97316', // orange
-  '#14B8A6', // teal
-  '#6366F1', // indigo
+const PRESET_COLORS: { hex: string; name: string }[] = [
+  { hex: '#3B82F6', name: 'Azul' },
+  { hex: '#06B6D4', name: 'Ciano' },
+  { hex: '#10B981', name: 'Esmeralda' },
+  { hex: '#8B5CF6', name: 'Violeta' },
+  { hex: '#F59E0B', name: 'Âmbar' },
+  { hex: '#F43F5E', name: 'Rosa' },
+  { hex: '#EC4899', name: 'Pink' },
+  { hex: '#F97316', name: 'Laranja' },
+  { hex: '#14B8A6', name: 'Teal' },
+  { hex: '#6366F1', name: 'Índigo' },
 ];
 
 interface CreateModalProps {
@@ -143,27 +143,31 @@ export function CreateModal({
           <div className="space-y-2">
             <Label>Cor</Label>
             <div className="flex flex-wrap gap-2">
-              {PRESET_COLORS.map(color => (
+              {PRESET_COLORS.map(({ hex, name }) => (
                 <button
-                  key={color}
+                  key={hex}
                   type="button"
                   className="w-8 h-8 rounded-full border-2 transition-all cursor-pointer"
                   style={{
-                    backgroundColor: color,
+                    backgroundColor: hex,
                     borderColor:
-                      selectedColor === color ? 'white' : 'transparent',
+                      selectedColor === hex ? 'white' : 'transparent',
                     boxShadow:
-                      selectedColor === color ? `0 0 0 2px ${color}` : 'none',
+                      selectedColor === hex ? `0 0 0 2px ${hex}` : 'none',
                   }}
                   onClick={() =>
-                    setSelectedColor(selectedColor === color ? '' : color)
+                    setSelectedColor(selectedColor === hex ? '' : hex)
                   }
+                  aria-label={`Selecionar cor ${name}`}
+                  title={name}
                 />
               ))}
             </div>
             {selectedColor && (
               <p className="text-xs text-muted-foreground">
-                Cor selecionada: {selectedColor}
+                Cor selecionada:{' '}
+                {PRESET_COLORS.find(c => c.hex === selectedColor)?.name ??
+                  selectedColor}
               </p>
             )}
           </div>
