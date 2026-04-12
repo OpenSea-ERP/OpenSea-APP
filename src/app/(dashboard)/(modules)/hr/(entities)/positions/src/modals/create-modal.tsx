@@ -62,10 +62,7 @@ export function CreateModal({
     queryKey: ['companies', 'list-for-departments'],
     queryFn: async () => {
       const response = await companiesApi.list({ perPage: 100 });
-      const companies = Array.isArray(response)
-        ? response
-        : response?.companies || [];
-      return companies;
+      return response.companies;
     },
     enabled: isOpen,
   });

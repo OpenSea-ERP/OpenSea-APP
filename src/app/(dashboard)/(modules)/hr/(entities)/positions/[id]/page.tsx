@@ -87,7 +87,7 @@ export default function PositionDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Cargos', href: '/hr/positions' },
             ]}
           />
@@ -105,7 +105,7 @@ export default function PositionDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Cargos', href: '/hr/positions' },
             ]}
           />
@@ -134,7 +134,7 @@ export default function PositionDetailPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
+            { label: 'RH', href: '/hr' },
             { label: 'Cargos', href: '/hr/positions' },
             { label: position.name },
           ]}

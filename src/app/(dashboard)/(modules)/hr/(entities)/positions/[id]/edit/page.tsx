@@ -148,6 +148,28 @@ export default function PositionEditPage() {
   const handleSave = async () => {
     if (!position || !positionName || !positionCode) return;
 
+    const parsedMin = minSalary ? parseFloat(minSalary) : undefined;
+    const parsedMax = maxSalary ? parseFloat(maxSalary) : undefined;
+
+    if (parsedMin !== undefined && parsedMin < 0) {
+      toast.error('O salário mínimo não pode ser negativo.');
+      return;
+    }
+    if (parsedMax !== undefined && parsedMax < 0) {
+      toast.error('O salário máximo não pode ser negativo.');
+      return;
+    }
+    if (
+      parsedMin !== undefined &&
+      parsedMax !== undefined &&
+      parsedMin > parsedMax
+    ) {
+      toast.error(
+        'O salário mínimo não pode ser maior que o salário máximo.'
+      );
+      return;
+    }
+
     setIsSaving(true);
     try {
       await positionsApi.update(positionId, {
@@ -156,8 +178,8 @@ export default function PositionEditPage() {
         description: positionDescription || undefined,
         departmentId: selectedDepartment?.id || position.departmentId,
         level: positionLevel,
-        minSalary: minSalary ? parseFloat(minSalary) : undefined,
-        maxSalary: maxSalary ? parseFloat(maxSalary) : undefined,
+        minSalary: parsedMin,
+        maxSalary: parsedMax,
         isActive,
       });
       await queryClient.invalidateQueries({ queryKey: ['positions'] });
@@ -200,7 +222,7 @@ export default function PositionEditPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Cargos', href: '/hr/positions' },
             ]}
           />
@@ -218,7 +240,7 @@ export default function PositionEditPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Cargos', href: '/hr/positions' },
             ]}
           />
@@ -251,7 +273,7 @@ export default function PositionEditPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
+            { label: 'RH', href: '/hr' },
             { label: 'Cargos', href: '/hr/positions' },
             {
               label: position.name,
@@ -266,9 +288,7 @@ export default function PositionEditPage() {
                 title: 'Excluir',
                 icon: Trash2,
                 onClick: () => setIsDeleteOpen(true),
-                variant: 'default' as const,
-                className:
-                  'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+                variant: 'destructive' as const,
                 disabled: isSaving,
               },
               {
