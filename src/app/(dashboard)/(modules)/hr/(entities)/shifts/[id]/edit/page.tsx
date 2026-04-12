@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { usePermissions } from '@/hooks/use-permissions';
-import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HR_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { translateError } from '@/lib/error-messages';
 import type { ShiftType, UpdateShiftData } from '@/types/hr';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -152,8 +152,8 @@ export default function EditShiftPage() {
   const shiftId = params.id as string;
 
   const { hasPermission } = usePermissions();
-  const canDelete = hasPermission(HR_PERMISSIONS.SHIFTS.DELETE);
-  const canSave = hasPermission(HR_PERMISSIONS.SHIFTS.UPDATE);
+  const canDelete = hasPermission(HR_PERMISSIONS.SHIFTS.REMOVE);
+  const canSave = hasPermission(HR_PERMISSIONS.SHIFTS.MODIFY);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 

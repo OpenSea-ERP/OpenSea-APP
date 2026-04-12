@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { usePermissions } from '@/hooks/use-permissions';
-import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HR_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { employeesService } from '@/services/hr/employees.service';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -164,8 +164,8 @@ export default function ShiftDetailPage() {
   const shiftId = params.id as string;
 
   const { hasPermission } = usePermissions();
-  const canEdit = hasPermission(HR_PERMISSIONS.SHIFTS.UPDATE);
-  const canManage = hasPermission(HR_PERMISSIONS.SHIFTS.MANAGE);
+  const canEdit = hasPermission(HR_PERMISSIONS.SHIFTS.MODIFY);
+  const canManage = hasPermission(HR_PERMISSIONS.SHIFTS.ADMIN);
 
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [unassignTarget, setUnassignTarget] = useState<string | null>(null);
@@ -381,7 +381,7 @@ export default function ShiftDetailPage() {
         </Card>
 
         {/* Schedule Details */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
             <Timer className="h-5 w-5 text-foreground" />
             <div className="flex-1">
@@ -453,7 +453,7 @@ export default function ShiftDetailPage() {
         </Card>
 
         {/* Assignments */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
             <Users className="h-5 w-5 text-foreground" />
             <div className="flex-1">

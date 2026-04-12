@@ -21,7 +21,7 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
-import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
+import { HR_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { HRSelectionToolbar } from '../../_shared/components/hr-selection-toolbar';
 import type { Shift } from '@/types/hr';
 import {
@@ -74,10 +74,10 @@ export default function ShiftsPage() {
   const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
   // Permissions
-  const canView = hasPermission(HR_PERMISSIONS.SHIFTS.VIEW);
-  const canEdit = hasPermission(HR_PERMISSIONS.SHIFTS.UPDATE);
-  const canCreate = hasPermission(HR_PERMISSIONS.SHIFTS.CREATE);
-  const canDelete = hasPermission(HR_PERMISSIONS.SHIFTS.DELETE);
+  const canView = hasPermission(HR_PERMISSIONS.SHIFTS.ACCESS);
+  const canEdit = hasPermission(HR_PERMISSIONS.SHIFTS.MODIFY);
+  const canCreate = hasPermission(HR_PERMISSIONS.SHIFTS.REGISTER);
+  const canDelete = hasPermission(HR_PERMISSIONS.SHIFTS.REMOVE);
 
   // ============================================================================
   // FILTERS
