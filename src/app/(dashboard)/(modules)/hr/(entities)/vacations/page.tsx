@@ -35,7 +35,6 @@ import {
   DollarSign,
   Download,
   ExternalLink,
-  Eye,
   Loader2,
   Palmtree,
   Plus,
@@ -74,10 +73,6 @@ const SellDaysModal = dynamic(
     import('./src/modals/sell-days-modal').then(m => ({
       default: m.SellDaysModal,
     })),
-  { ssr: false }
-);
-const ViewModal = dynamic(
-  () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
   { ssr: false }
 );
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
@@ -204,9 +199,6 @@ export default function VacationsPage() {
   );
   const [showSellModal, setShowSellModal] = useState(false);
   const [sellVacationId, setSellVacationId] = useState<string | null>(null);
-  const [isViewOpen, setIsViewOpen] = useState(false);
-  const [selectedVacation, setSelectedVacation] =
-    useState<VacationPeriod | null>(null);
   const [showCancelPin, setShowCancelPin] = useState(false);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
 
@@ -223,14 +215,10 @@ export default function VacationsPage() {
   const handleViewItem = useCallback(
     (ids: string[]) => {
       if (ids.length > 0) {
-        const item = vacations.find(v => v.id === ids[0]);
-        if (item) {
-          setSelectedVacation(item);
-          setIsViewOpen(true);
-        }
+        router.push(`/hr/vacations/${ids[0]}`);
       }
     },
-    [vacations]
+    [router]
   );
 
   const handleSchedule = useCallback((vacationId: string) => {
@@ -304,12 +292,6 @@ export default function VacationsPage() {
         onClick: (ids: string[]) => {
           if (ids.length > 0) router.push(`/hr/vacations/${ids[0]}`);
         },
-      });
-      actions.push({
-        id: 'view',
-        label: 'Visualizar',
-        icon: Eye,
-        onClick: handleViewItem,
       });
     }
     if (canManage) {
@@ -644,8 +626,7 @@ export default function VacationsPage() {
               isSearching={!!searchQuery}
               onItemDoubleClick={item => {
                 if (canView) {
-                  setSelectedVacation(item);
-                  setIsViewOpen(true);
+                  router.push(`/hr/vacations/${item.id}`);
                 }
               }}
               showSorting={true}
@@ -686,15 +667,6 @@ export default function VacationsPage() {
             vacationId={sellVacationId}
             onSell={(id, data) => sellDays.mutate({ id, data })}
             isSubmitting={sellDays.isPending}
-          />
-
-          <ViewModal
-            isOpen={isViewOpen}
-            onClose={() => {
-              setIsViewOpen(false);
-              setSelectedVacation(null);
-            }}
-            vacation={selectedVacation}
           />
 
           <VerifyActionPinModal

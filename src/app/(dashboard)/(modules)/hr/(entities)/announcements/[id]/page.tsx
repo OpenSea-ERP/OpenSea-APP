@@ -123,7 +123,7 @@ export default function AnnouncementDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Comunicados', href: '/hr/announcements' },
             ]}
           />
@@ -141,7 +141,7 @@ export default function AnnouncementDetailPage() {
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
-              { label: 'Recursos Humanos', href: '/hr' },
+              { label: 'RH', href: '/hr' },
               { label: 'Comunicados', href: '/hr/announcements' },
             ]}
           />
@@ -191,7 +191,7 @@ export default function AnnouncementDetailPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Recursos Humanos', href: '/hr' },
+            { label: 'RH', href: '/hr' },
             { label: 'Comunicados', href: '/hr/announcements' },
             { label: announcement.title },
           ]}

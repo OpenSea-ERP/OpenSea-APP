@@ -242,7 +242,7 @@ export default function AbsenceDetailPage() {
 
       <PageBody className="space-y-6">
         {/* Dados da Ausência */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
             <NotebookText className="h-5 w-5 text-muted-foreground" />
             <div>
@@ -294,7 +294,7 @@ export default function AbsenceDetailPage() {
 
         {/* Motivo */}
         {absence.reason && (
-          <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+          <Card className="bg-white/5 border border-border overflow-hidden py-0">
             <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
               <FileText className="h-5 w-5 text-muted-foreground" />
               <div>
@@ -317,7 +317,7 @@ export default function AbsenceDetailPage() {
 
         {/* Dados Médicos (apenas para atestado médico) */}
         {isSickLeave && (
-          <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+          <Card className="bg-white/5 border border-border overflow-hidden py-0">
             <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
               <Heart className="h-5 w-5 text-muted-foreground" />
               <div>
@@ -346,7 +346,7 @@ export default function AbsenceDetailPage() {
 
         {/* Aprovação */}
         {isApproved && (
-          <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+          <Card className="bg-white/5 border border-border overflow-hidden py-0">
             <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
               <ShieldCheck className="h-5 w-5 text-emerald-500" />
               <div>
@@ -375,7 +375,7 @@ export default function AbsenceDetailPage() {
 
         {/* Rejeição */}
         {isRejected && (
-          <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+          <Card className="bg-white/5 border border-border overflow-hidden py-0">
             <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
               <ShieldX className="h-5 w-5 text-rose-500" />
               <div>

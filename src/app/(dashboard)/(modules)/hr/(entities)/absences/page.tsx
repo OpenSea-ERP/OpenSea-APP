@@ -35,7 +35,6 @@ import {
   Clock,
   Download,
   ExternalLink,
-  Eye,
   FileText,
   Loader2,
   Plus,
@@ -68,10 +67,6 @@ const RequestSickLeaveModal = dynamic(
 const RejectModal = dynamic(
   () =>
     import('./src/modals/reject-modal').then(m => ({ default: m.RejectModal })),
-  { ssr: false }
-);
-const ViewModal = dynamic(
-  () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
   { ssr: false }
 );
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
@@ -228,8 +223,6 @@ export default function AbsencesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectAbsenceId, setRejectAbsenceId] = useState<string | null>(null);
-  const [isViewOpen, setIsViewOpen] = useState(false);
-  const [selectedAbsence, setSelectedAbsence] = useState<Absence | null>(null);
   const [showCancelPin, setShowCancelPin] = useState(false);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [showBulkApprove, setShowBulkApprove] = useState(false);
@@ -331,14 +324,10 @@ export default function AbsencesPage() {
   const handleViewItem = useCallback(
     (ids: string[]) => {
       if (ids.length > 0) {
-        const item = absences.find(a => a.id === ids[0]);
-        if (item) {
-          setSelectedAbsence(item);
-          setIsViewOpen(true);
-        }
+        router.push(`/hr/absences/${ids[0]}`);
       }
     },
-    [absences]
+    [router]
   );
 
   const handleApprove = useCallback(
@@ -380,12 +369,6 @@ export default function AbsencesPage() {
         onClick: (ids: string[]) => {
           if (ids.length > 0) router.push(`/hr/absences/${ids[0]}`);
         },
-      });
-      actions.push({
-        id: 'view',
-        label: 'Visualizar',
-        icon: Eye,
-        onClick: handleViewItem,
       });
     }
     if (canApprove) {
@@ -701,8 +684,7 @@ export default function AbsencesPage() {
               isSearching={false}
               onItemDoubleClick={item => {
                 if (canView) {
-                  setSelectedAbsence(item);
-                  setIsViewOpen(true);
+                  router.push(`/hr/absences/${item.id}`);
                 }
               }}
               showSorting={true}
@@ -730,15 +712,6 @@ export default function AbsencesPage() {
               setRejectAbsenceId(null);
             }}
             absenceId={rejectAbsenceId}
-          />
-
-          <ViewModal
-            isOpen={isViewOpen}
-            onClose={() => {
-              setIsViewOpen(false);
-              setSelectedAbsence(null);
-            }}
-            absence={selectedAbsence}
           />
 
           <VerifyActionPinModal

@@ -265,7 +265,7 @@ export default function VacationDetailPage() {
 
       <PageBody className="space-y-6">
         {/* Dados Gerais */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
             <Calendar className="h-5 w-5 text-muted-foreground" />
             <div>
@@ -294,7 +294,7 @@ export default function VacationDetailPage() {
         </Card>
 
         {/* Período Concessivo */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
             <CalendarDays className="h-5 w-5 text-muted-foreground" />
             <div>
@@ -314,7 +314,7 @@ export default function VacationDetailPage() {
         </Card>
 
         {/* Saldo de Dias */}
-        <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+        <Card className="bg-white/5 border border-border overflow-hidden py-0">
           <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
             <Clock className="h-5 w-5 text-muted-foreground" />
             <div>
@@ -361,7 +361,7 @@ export default function VacationDetailPage() {
 
         {/* Agendamento (only if scheduled) */}
         {(vacation.scheduledStart || vacation.scheduledEnd) && (
-          <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+          <Card className="bg-white/5 border border-border overflow-hidden py-0">
             <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
               <CalendarDays className="h-5 w-5 text-muted-foreground" />
               <div>
@@ -386,7 +386,7 @@ export default function VacationDetailPage() {
 
         {/* Observações (only if notes exist) */}
         {vacation.notes && (
-          <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+          <Card className="bg-white/5 border border-border overflow-hidden py-0">
             <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-3">
               <FileText className="h-5 w-5 text-muted-foreground" />
               <div>
