@@ -39,9 +39,9 @@ import {
   ExternalLink,
   Loader2,
   LogOut,
+  Palmtree,
   Plus,
   Printer,
-  Palmtree,
   Trash2,
   Upload,
   Users,
@@ -699,6 +699,31 @@ function EmployeesPageContent() {
               label: statusBadge.label,
               variant: statusBadge.variant,
             },
+            ...(companyInfo
+              ? [
+                  {
+                    label:
+                      companyInfo.tradeName || companyInfo.legalName,
+                    variant: 'outline' as const,
+                  },
+                ]
+              : []),
+            ...(deptInfo
+              ? [
+                  {
+                    label: deptInfo.name,
+                    variant: 'outline' as const,
+                  },
+                ]
+              : []),
+            ...(posInfo
+              ? [
+                  {
+                    label: posInfo.name,
+                    variant: 'outline' as const,
+                  },
+                ]
+              : []),
           ]}
           isSelected={isSelected}
           showSelection={false}
@@ -707,91 +732,32 @@ function EmployeesPageContent() {
           updatedAt={item.updatedAt}
           showStatusBadges={true}
           customFooter={
-            <>
-              {/* Body info lines */}
-              <div className="flex flex-col gap-1.5 px-6 pb-2">
-                {companyInfo && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Building2 className="h-3 w-3 shrink-0" />
-                    <span className="truncate">
-                      {companyInfo.tradeName || companyInfo.legalName}
-                    </span>
-                  </div>
-                )}
-                {deptInfo && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Users className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{deptInfo.name}</span>
-                  </div>
-                )}
-                {posInfo && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Briefcase className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{posInfo.name}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Stats row */}
-              <div className="flex items-center gap-3 px-6 py-2 border-t border-border">
-                <div
-                  className="flex items-center gap-1 text-xs text-muted-foreground"
-                  title="Ausências no mês"
-                >
-                  <CalendarOff className="h-3 w-3" />
-                  <span>&mdash;</span>
+            <div className="flex flex-col sm:flex-row rounded-b-xl overflow-hidden">
+              <button
+                onClick={() => {
+                  setTimeEntryTarget({
+                    id: item.id,
+                    fullName: item.fullName,
+                  });
+                }}
+                className="w-full flex items-center justify-between px-3 py-4 text-xs font-medium text-white transition-colors cursor-pointer bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
+              >
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span className="truncate">Registrar Ponto</span>
                 </div>
-                <div
-                  className="flex items-center gap-1 text-xs text-muted-foreground"
-                  title="Atrasos"
-                >
-                  <Clock className="h-3 w-3" />
-                  <span>&mdash;</span>
+              </button>
+              <div className="h-px sm:h-auto sm:w-px bg-white/20 dark:bg-white/10" />
+              <a
+                href={`/hr/employees/${item.id}?tab=badge`}
+                className="w-full flex items-center justify-between px-3 py-4 text-xs font-medium text-white transition-colors cursor-pointer bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
+              >
+                <div className="flex items-center gap-2">
+                  <Printer className="w-4 h-4" />
+                  <span className="truncate">Imprimir Crachá</span>
                 </div>
-                <div
-                  className="flex items-center gap-1 text-xs text-muted-foreground"
-                  title="Dias trabalhados"
-                >
-                  <Briefcase className="h-3 w-3" />
-                  <span>&mdash;</span>
-                </div>
-                <div
-                  className="flex items-center gap-1 text-xs text-muted-foreground"
-                  title="Próximas férias"
-                >
-                  <Palmtree className="h-3 w-3" />
-                  <span>&mdash;</span>
-                </div>
-              </div>
-
-              {/* Footer buttons */}
-              <div className="flex rounded-b-xl overflow-hidden">
-                <button
-                  onClick={() => {
-                    setTimeEntryTarget({
-                      id: item.id,
-                      fullName: item.fullName,
-                    });
-                  }}
-                  className="w-full flex items-center justify-between px-3 py-4 text-xs font-medium text-white transition-colors cursor-pointer bg-gray-400 hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-500"
-                >
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    <span className="truncate">Registrar Ponto</span>
-                  </div>
-                </button>
-                <div className="w-px bg-white/20 dark:bg-white/10" />
-                <a
-                  href={`/hr/employees/${item.id}?tab=badge`}
-                  className="w-full flex items-center justify-between px-3 py-4 text-xs font-medium text-white transition-colors cursor-pointer bg-gray-400 hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-500"
-                >
-                  <div className="flex items-center gap-2">
-                    <Printer className="w-4 h-4" />
-                    <span className="truncate">Imprimir Crachá</span>
-                  </div>
-                </a>
-              </div>
-            </>
+              </a>
+            </div>
           }
         />
       </EntityContextMenu>
@@ -816,56 +782,27 @@ function EmployeesPageContent() {
       ? `Matrícula ${item.registrationNumber}`
       : 'Sem matrícula';
 
-    // Build metadata with info lines
+    // Build metadata with styled inline badges
     const metadataContent = (
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         {companyInfo && (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border border-border">
             <Building2 className="h-3 w-3 shrink-0" />
             {companyInfo.tradeName || companyInfo.legalName}
           </span>
         )}
         {deptInfo && (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border border-border">
             <Users className="h-3 w-3 shrink-0" />
             {deptInfo.name}
           </span>
         )}
         {posInfo && (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium border border-border">
             <Briefcase className="h-3 w-3 shrink-0" />
             {posInfo.name}
           </span>
         )}
-        <span className="text-gray-300 dark:text-gray-600">|</span>
-        <span
-          className="flex items-center gap-1 text-xs text-muted-foreground"
-          title="Ausências"
-        >
-          <CalendarOff className="h-3 w-3" />
-          &mdash;
-        </span>
-        <span
-          className="flex items-center gap-1 text-xs text-muted-foreground"
-          title="Atrasos"
-        >
-          <Clock className="h-3 w-3" />
-          &mdash;
-        </span>
-        <span
-          className="flex items-center gap-1 text-xs text-muted-foreground"
-          title="Dias trabalhados"
-        >
-          <Briefcase className="h-3 w-3" />
-          &mdash;
-        </span>
-        <span
-          className="flex items-center gap-1 text-xs text-muted-foreground"
-          title="Próximas férias"
-        >
-          <Palmtree className="h-3 w-3" />
-          &mdash;
-        </span>
       </div>
     );
 
