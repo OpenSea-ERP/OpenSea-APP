@@ -162,7 +162,7 @@ function TimeControlPageContent() {
       {
         id: 'settings',
         icon: Settings,
-        onClick: () => router.push('/hr/time-control/settings'),
+        onClick: () => router.push('/hr/settings?tab=ponto'),
         variant: 'ghost',
         tooltip: 'Configurações',
       },

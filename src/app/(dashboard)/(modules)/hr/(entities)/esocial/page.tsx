@@ -559,7 +559,7 @@ export default function EsocialDashboardPage() {
               variant="outline"
               size="sm"
               className="h-9 px-2.5"
-              onClick={() => router.push('/hr/esocial/settings')}
+              onClick={() => router.push('/hr/settings?tab=esocial')}
             >
               <Settings className="h-4 w-4 mr-1.5" />
               Configurações
@@ -623,7 +623,7 @@ export default function EsocialDashboardPage() {
               variant="outline"
               size="sm"
               className="shrink-0 border-amber-300 text-amber-700 dark:border-amber-500/30 dark:text-amber-300"
-              onClick={() => router.push('/hr/esocial/settings')}
+              onClick={() => router.push('/hr/settings?tab=esocial')}
             >
               Configurar
             </Button>
@@ -648,7 +648,7 @@ export default function EsocialDashboardPage() {
               variant="outline"
               size="sm"
               className="shrink-0 border-rose-300 text-rose-700 dark:border-rose-500/30 dark:text-rose-300"
-              onClick={() => router.push('/hr/esocial/settings')}
+              onClick={() => router.push('/hr/settings?tab=esocial')}
             >
               Renovar
             </Button>

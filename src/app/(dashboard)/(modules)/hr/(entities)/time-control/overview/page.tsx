@@ -301,7 +301,7 @@ function AttendanceOverviewContent() {
       title: 'Configurações',
       icon: Settings,
       onClick: () => {
-        window.location.href = '/hr/time-control/settings';
+        window.location.href = '/hr/settings?tab=ponto';
       },
       variant: 'outline',
     },
