@@ -34,7 +34,6 @@ import {
   DollarSign,
   Download,
   ExternalLink,
-  Eye,
   Loader2,
   Plus,
 } from 'lucide-react';
@@ -59,10 +58,6 @@ import {
 const CreateModal = dynamic(
   () =>
     import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })),
-  { ssr: false }
-);
-const ViewModal = dynamic(
-  () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
   { ssr: false }
 );
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
@@ -172,9 +167,7 @@ export default function PayrollPage() {
   // ============================================================================
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [viewTarget, setViewTarget] = useState<Payroll | null>(null);
-  const [isViewOpen, setIsViewOpen] = useState(false);
-  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
   // ============================================================================
   // COMPUTED
@@ -267,14 +260,10 @@ export default function PayrollPage() {
   const handleViewItem = useCallback(
     (ids: string[]) => {
       if (ids.length > 0 && canView) {
-        const item = payrolls.find(p => p.id === ids[0]);
-        if (item) {
-          setViewTarget(item);
-          setIsViewOpen(true);
-        }
+        router.push(`/hr/payroll/${ids[0]}`);
       }
     },
-    [payrolls, canView]
+    [canView, router]
   );
 
   // ============================================================================
@@ -291,12 +280,6 @@ export default function PayrollPage() {
         onClick: (ids: string[]) => {
           if (ids.length > 0) router.push(`/hr/payroll/${ids[0]}`);
         },
-      });
-      actions.push({
-        id: 'view',
-        label: 'Visualizar',
-        icon: Eye,
-        onClick: handleViewItem,
       });
     }
     if (canProcess) {
@@ -599,8 +582,7 @@ export default function PayrollPage() {
               isSearching={!!searchQuery}
               onItemDoubleClick={item => {
                 if (canView) {
-                  setViewTarget(item);
-                  setIsViewOpen(true);
+                  router.push(`/hr/payroll/${item.id}`);
                 }
               }}
               showSorting={true}
@@ -623,16 +605,7 @@ export default function PayrollPage() {
             isSubmitting={createMutation.isPending}
           />
 
-          <ViewModal
-            isOpen={isViewOpen}
-            onClose={() => {
-              setIsViewOpen(false);
-              setViewTarget(null);
-            }}
-            payroll={viewTarget}
-          />
-
-          <HRSelectionToolbar
+<HRSelectionToolbar
             totalItems={payrolls.length}
             defaultActions={{
               export: true,

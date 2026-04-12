@@ -29,7 +29,6 @@ import {
   CircleCheck,
   Download,
   ExternalLink,
-  Eye,
   FileText,
   Loader2,
   MinusCircle,
@@ -60,10 +59,6 @@ import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-moda
 const CreateModal = dynamic(
   () =>
     import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })),
-  { ssr: false }
-);
-const ViewModal = dynamic(
-  () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
   { ssr: false }
 );
 import { HR_PERMISSIONS } from '@/app/(dashboard)/(modules)/hr/_shared/constants/hr-permissions';
@@ -181,9 +176,7 @@ export default function DeductionsPage() {
   // ============================================================================
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [viewTarget, setViewTarget] = useState<Deduction | null>(null);
-  const [isViewOpen, setIsViewOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   // ============================================================================
@@ -220,14 +213,10 @@ export default function DeductionsPage() {
   const handleViewItem = useCallback(
     (ids: string[]) => {
       if (ids.length > 0) {
-        const item = deductions.find(d => d.id === ids[0]);
-        if (item) {
-          setViewTarget(item);
-          setIsViewOpen(true);
-        }
+        router.push(`/hr/deductions/${ids[0]}`);
       }
     },
-    [deductions]
+    [router]
   );
 
   const handleDeleteRequest = useCallback((ids: string[]) => {
@@ -307,12 +296,6 @@ export default function DeductionsPage() {
         onClick: (ids: string[]) => {
           if (ids.length > 0) router.push(`/hr/deductions/${ids[0]}`);
         },
-      });
-      actions.push({
-        id: 'view',
-        label: 'Visualizar',
-        icon: Eye,
-        onClick: handleViewItem,
       });
     }
 
@@ -597,8 +580,7 @@ export default function DeductionsPage() {
               isSearching={!!searchQuery}
               onItemDoubleClick={item => {
                 if (canView) {
-                  setViewTarget(item);
-                  setIsViewOpen(true);
+                  router.push(`/hr/deductions/${item.id}`);
                 }
               }}
               showSorting={true}
@@ -619,16 +601,6 @@ export default function DeductionsPage() {
             isOpen={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
             onSubmit={handleCreate}
-          />
-
-          {/* View Modal */}
-          <ViewModal
-            isOpen={isViewOpen}
-            onClose={() => {
-              setIsViewOpen(false);
-              setViewTarget(null);
-            }}
-            deduction={viewTarget}
           />
 
           {/* Delete Confirmation */}
