@@ -127,7 +127,7 @@ function CombosPageContent() {
   }, [itemsToDelete, deleteMutation]);
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="combos-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
@@ -156,6 +156,7 @@ function CombosPageContent() {
 
       <PageBody>
         <SearchBar
+          data-testid="combos-search"
           placeholder="Buscar combos..."
           value={searchQuery}
           onSearch={setSearchQuery}
@@ -191,15 +192,24 @@ function CombosPageContent() {
                 searchPlaceholder="Buscar tipo..."
                 emptyText="Nenhum tipo encontrado."
               />
-              <p className="text-sm text-muted-foreground whitespace-nowrap">
+              <p data-testid="combos-count" className="text-sm text-muted-foreground whitespace-nowrap">
                 {total} {total === 1 ? 'combo' : 'combos'}
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {combos.length === 0 ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                  <Package className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum combo encontrado
+                  </p>
+                </div>
+              ) : null}
               {combos.map((combo: Combo) => (
                 <div
                   key={combo.id}
+                  data-testid={`combo-card-${combo.id}`}
                   onClick={() => router.push(`/sales/combos/${combo.id}`)}
                   className={cn(
                     'group relative rounded-xl border bg-card p-4 cursor-pointer transition-all',
@@ -243,6 +253,7 @@ function CombosPageContent() {
 
                   {hasPermission(SALES_PERMISSIONS.COMBOS.ADMIN) && (
                     <button
+                      data-testid={`combo-delete-${combo.id}`}
                       onClick={e => {
                         e.stopPropagation();
                         handleDelete([combo.id]);

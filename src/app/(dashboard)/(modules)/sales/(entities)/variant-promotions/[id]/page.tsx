@@ -197,7 +197,7 @@ export default function VariantPromotionDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="variant-promotion-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
@@ -240,7 +240,7 @@ export default function VariantPromotionDetailPage() {
 
       <PageBody>
         {/* Identity Card */}
-        <Card className="bg-white/5 p-5">
+        <Card data-testid="variant-promotion-identity" className="bg-white/5 p-5">
           <div className="flex items-start gap-4">
             <div
               className={cn(

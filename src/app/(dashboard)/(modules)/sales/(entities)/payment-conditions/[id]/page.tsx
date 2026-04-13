@@ -183,7 +183,7 @@ export default function PaymentConditionDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="payment-condition-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}
@@ -192,7 +192,7 @@ export default function PaymentConditionDetailPage() {
       </PageHeader>
       <PageBody>
         {/* Identity Card */}
-        <Card className="bg-white/5 p-5">
+        <Card data-testid="payment-condition-identity" className="bg-white/5 p-5">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl shadow-lg bg-linear-to-br from-violet-500 to-purple-600">
               <CreditCard className="h-7 w-7 text-white" />
@@ -226,7 +226,7 @@ export default function PaymentConditionDetailPage() {
         </Card>
 
         {/* Section: Informações Gerais */}
-        <Card className="bg-white/5 py-2 overflow-hidden">
+        <Card data-testid="payment-condition-info-general" className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ export default function PaymentConditionDetailPage() {
         </Card>
 
         {/* Section: Regras Financeiras */}
-        <Card className="bg-white/5 py-2 overflow-hidden">
+        <Card data-testid="payment-condition-info-financial" className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -361,7 +361,7 @@ export default function PaymentConditionDetailPage() {
 
         {/* Section: Resumo de Parcelas */}
         {pc.type === 'INSTALLMENT' && pc.installments > 1 && (
-          <Card className="bg-white/5 py-2 overflow-hidden">
+          <Card data-testid="payment-condition-info-installments" className="bg-white/5 py-2 overflow-hidden">
             <div className="px-6 py-4 space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">

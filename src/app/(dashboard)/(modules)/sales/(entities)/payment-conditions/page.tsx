@@ -170,7 +170,7 @@ function PaymentConditionsPageContent() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="payment-conditions-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
@@ -202,6 +202,7 @@ function PaymentConditionsPageContent() {
 
       <PageBody>
         <SearchBar
+          data-testid="payment-conditions-search"
           placeholder="Buscar condições de pagamento..."
           value={searchQuery}
           onSearch={setSearchQuery}
@@ -228,6 +229,7 @@ function PaymentConditionsPageContent() {
           <>
             <div className="flex items-center gap-2 mb-4">
               <FilterDropdown
+                data-testid="payment-conditions-filter-type"
                 label="Tipo"
                 icon={Tag}
                 options={typeOptions}
@@ -238,6 +240,7 @@ function PaymentConditionsPageContent() {
                 emptyText="Nenhum tipo encontrado."
               />
               <FilterDropdown
+                data-testid="payment-conditions-filter-status"
                 label="Status"
                 icon={Tag}
                 options={statusOptions}
@@ -247,15 +250,45 @@ function PaymentConditionsPageContent() {
                 searchPlaceholder="Buscar status..."
                 emptyText="Nenhum status encontrado."
               />
-              <p className="text-sm text-muted-foreground whitespace-nowrap">
+              <p
+                data-testid="payment-conditions-count"
+                className="text-sm text-muted-foreground whitespace-nowrap"
+              >
                 {total} {total === 1 ? 'condição' : 'condições'}
               </p>
             </div>
 
+            {paymentConditions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <CreditCard className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                <h3 className="text-base font-semibold text-muted-foreground mb-1">
+                  Nenhuma condição de pagamento encontrada
+                </h3>
+                <p className="text-sm text-muted-foreground/70 mb-4">
+                  {debouncedSearch || typeFilter.length > 0 || statusFilter.length > 0
+                    ? 'Tente ajustar os filtros ou termos de busca.'
+                    : 'Crie a primeira condição de pagamento para começar.'}
+                </p>
+                {canCreate &&
+                  !debouncedSearch &&
+                  typeFilter.length === 0 &&
+                  statusFilter.length === 0 && (
+                    <button
+                      data-testid="payment-conditions-empty-create-btn"
+                      onClick={() => setCreateOpen(true)}
+                      className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Nova Condição
+                    </button>
+                  )}
+              </div>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {paymentConditions.map((pc: PaymentConditionDTO) => (
                 <div
                   key={pc.id}
+                  data-testid={`payment-condition-card-${pc.id}`}
                   className={cn(
                     'group relative rounded-xl border bg-card p-4 transition-all cursor-pointer hover:shadow-md',
                     !pc.isActive && 'opacity-60'
@@ -315,6 +348,7 @@ function PaymentConditionsPageContent() {
 
                   {canDelete && (
                     <button
+                      data-testid={`payment-condition-delete-${pc.id}`}
                       onClick={e => {
                         e.stopPropagation();
                         handleDelete([pc.id]);
@@ -327,6 +361,7 @@ function PaymentConditionsPageContent() {
                 </div>
               ))}
             </div>
+            )}
 
             <div ref={sentinelRef} className="h-1" />
           </>

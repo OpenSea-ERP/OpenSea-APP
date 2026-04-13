@@ -145,6 +145,7 @@ export function CreatePaymentConditionWizard({
             <Label>Nome *</Label>
             <div className="relative">
               <Input
+                data-testid="payment-condition-create-name"
                 placeholder="Ex: 30/60/90 dias"
                 value={name}
                 onChange={e => {
@@ -315,6 +316,7 @@ export function CreatePaymentConditionWizard({
       footer: (
         <Button
           type="button"
+          data-testid="payment-condition-create-submit"
           onClick={handleSubmit}
           disabled={createMutation.isPending}
         >
@@ -331,6 +333,7 @@ export function CreatePaymentConditionWizard({
 
   return (
     <StepWizardDialog
+      data-testid="payment-condition-create-wizard"
       open={open}
       onOpenChange={onOpenChange}
       steps={steps}

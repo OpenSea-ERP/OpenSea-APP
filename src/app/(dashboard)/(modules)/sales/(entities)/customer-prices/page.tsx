@@ -282,7 +282,7 @@ function CustomerPricesPageContent() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="customer-prices-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
@@ -311,6 +311,7 @@ function CustomerPricesPageContent() {
 
       <PageBody>
         <SearchBar
+          data-testid="customer-prices-search"
           placeholder="Buscar por cliente ou variante..."
           value={searchQuery}
           onSearch={setSearchQuery}
@@ -356,7 +357,7 @@ function CustomerPricesPageContent() {
                 searchPlaceholder="Buscar status..."
                 emptyText="Nenhum status encontrado."
               />
-              <p className="text-sm text-muted-foreground whitespace-nowrap">
+              <p data-testid="customer-prices-count" className="text-sm text-muted-foreground whitespace-nowrap">
                 {total} {total === 1 ? 'preco' : 'preços'}
               </p>
             </div>
@@ -371,6 +372,7 @@ function CustomerPricesPageContent() {
                 return (
                   <div
                     key={cp.id}
+                    data-testid={`customer-price-card-${cp.id}`}
                     className={cn(
                       'group relative rounded-xl border bg-card p-4 transition-all cursor-pointer hover:shadow-md',
                       status === 'expired' && 'opacity-60'
@@ -440,6 +442,7 @@ function CustomerPricesPageContent() {
                       SALES_PERMISSIONS.CUSTOMER_PRICES.REMOVE
                     ) && (
                       <button
+                        data-testid={`customer-price-delete-${cp.id}`}
                         onClick={e => {
                           e.stopPropagation();
                           handleDelete([cp.id]);
@@ -455,7 +458,7 @@ function CustomerPricesPageContent() {
             </div>
 
             {customerPrices.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div data-testid="customer-prices-empty" className="flex flex-col items-center justify-center py-16 text-center">
                 <BadgeDollarSign className="h-12 w-12 text-muted-foreground/30 mb-4" />
                 <h3 className="text-sm font-medium text-muted-foreground">
                   Nenhum preço por cliente encontrado

@@ -235,6 +235,7 @@ export function CreateComboWizard({
       footer: (
         <Button
           type="button"
+          data-testid="combo-create-submit"
           onClick={handleSubmit}
           disabled={!step1Valid || createMutation.isPending}
         >
@@ -251,6 +252,7 @@ export function CreateComboWizard({
 
   return (
     <StepWizardDialog
+      data-testid="combo-create-wizard"
       open={open}
       onOpenChange={onOpenChange}
       steps={steps}

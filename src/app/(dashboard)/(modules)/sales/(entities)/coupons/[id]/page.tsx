@@ -206,7 +206,7 @@ export default function CouponDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="coupon-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}
@@ -215,7 +215,7 @@ export default function CouponDetailPage() {
       </PageHeader>
       <PageBody>
         {/* Identity Card */}
-        <Card className="bg-white/5 p-5">
+        <Card data-testid="coupon-identity" className="bg-white/5 p-5">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl shadow-lg bg-linear-to-br from-violet-500 to-purple-600">
               <Ticket className="h-7 w-7 text-white" />

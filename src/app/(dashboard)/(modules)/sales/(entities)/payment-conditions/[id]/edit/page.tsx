@@ -334,7 +334,7 @@ export default function EditPaymentConditionPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="payment-condition-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}
@@ -386,6 +386,7 @@ export default function EditPaymentConditionPage() {
                     </Label>
                     <Input
                       id="name"
+                      data-testid="payment-condition-field-name"
                       value={name}
                       onChange={e => setName(e.target.value)}
                       placeholder="Ex: 30/60/90 dias"
@@ -401,7 +402,7 @@ export default function EditPaymentConditionPage() {
                       value={type}
                       onValueChange={v => setType(v as PaymentConditionType)}
                     >
-                      <SelectTrigger id="type">
+                      <SelectTrigger id="type" data-testid="payment-condition-field-type">
                         <SelectValue placeholder="Selecione o tipo..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -427,7 +428,7 @@ export default function EditPaymentConditionPage() {
                         setApplicableTo(v as PaymentConditionApplicable)
                       }
                     >
-                      <SelectTrigger id="applicableTo">
+                      <SelectTrigger id="applicableTo" data-testid="payment-condition-field-applicableTo">
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -452,6 +453,7 @@ export default function EditPaymentConditionPage() {
                     </Label>
                     <Input
                       id="installments"
+                      data-testid="payment-condition-field-installments"
                       type="number"
                       min="1"
                       value={installments}
@@ -491,6 +493,7 @@ export default function EditPaymentConditionPage() {
                   <Label htmlFor="description">Descrição</Label>
                   <Textarea
                     id="description"
+                    data-testid="payment-condition-field-description"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     placeholder="Descreva a condição de pagamento..."

@@ -129,6 +129,7 @@ export function CreateCouponWizard({
             <Label>Código do Cupom *</Label>
             <div className="relative">
               <Input
+                data-testid="coupon-create-code"
                 placeholder="Ex: DESCONTO10"
                 value={code}
                 onChange={e => {
@@ -288,6 +289,7 @@ export function CreateCouponWizard({
       footer: (
         <Button
           type="button"
+          data-testid="coupon-create-submit"
           onClick={handleSubmit}
           disabled={!step2Valid || createMutation.isPending}
         >
@@ -304,6 +306,7 @@ export function CreateCouponWizard({
 
   return (
     <StepWizardDialog
+      data-testid="coupon-create-wizard"
       open={open}
       onOpenChange={onOpenChange}
       steps={steps}

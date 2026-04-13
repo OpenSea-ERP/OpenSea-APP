@@ -325,7 +325,7 @@ export default function EditCouponPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="coupon-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}
@@ -377,6 +377,7 @@ export default function EditCouponPage() {
                     </Label>
                     <Input
                       id="code"
+                      data-testid="coupon-field-code"
                       value={code}
                       onChange={e => setCode(e.target.value.toUpperCase())}
                       placeholder="EX: DESCONTO10"
@@ -393,7 +394,7 @@ export default function EditCouponPage() {
                       value={type}
                       onValueChange={v => setType(v as CouponType)}
                     >
-                      <SelectTrigger id="type">
+                      <SelectTrigger id="type" data-testid="coupon-field-type">
                         <SelectValue placeholder="Selecione o tipo..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -418,6 +419,7 @@ export default function EditCouponPage() {
                     </Label>
                     <Input
                       id="value"
+                      data-testid="coupon-field-value"
                       type="number"
                       min="0"
                       step={type === 'PERCENTAGE' ? '1' : '0.01'}
@@ -537,6 +539,7 @@ export default function EditCouponPage() {
                     </Label>
                     <Input
                       id="validFrom"
+                      data-testid="coupon-field-validFrom"
                       type="date"
                       value={validFrom}
                       onChange={e => setValidFrom(e.target.value)}
@@ -550,6 +553,7 @@ export default function EditCouponPage() {
                     </Label>
                     <Input
                       id="validUntil"
+                      data-testid="coupon-field-validUntil"
                       type="date"
                       value={validUntil}
                       onChange={e => setValidUntil(e.target.value)}

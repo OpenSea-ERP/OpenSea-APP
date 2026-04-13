@@ -304,7 +304,7 @@ export default function EditVariantPromotionPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="variant-promotion-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

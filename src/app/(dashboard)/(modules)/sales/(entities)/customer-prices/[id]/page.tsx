@@ -190,7 +190,7 @@ export default function CustomerPriceDetailPage() {
   const status = getStatus();
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="customer-price-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
@@ -230,7 +230,7 @@ export default function CustomerPriceDetailPage() {
         </Button>
 
         {/* Identity Card */}
-        <Card className="bg-white/5 p-5 mb-6">
+        <Card data-testid="customer-price-identity" className="bg-white/5 p-5 mb-6">
           <div className="flex items-start gap-4">
             <div
               className={cn(

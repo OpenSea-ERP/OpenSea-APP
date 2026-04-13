@@ -396,7 +396,7 @@ export default function EditComboPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="combo-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

@@ -136,7 +136,7 @@ function CouponsPageContent() {
     new Date(coupon.validUntil) < new Date();
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="coupons-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
@@ -165,6 +165,7 @@ function CouponsPageContent() {
 
       <PageBody>
         <SearchBar
+          data-testid="coupons-search"
           placeholder="Buscar cupons por código..."
           value={searchQuery}
           onSearch={setSearchQuery}
@@ -191,6 +192,7 @@ function CouponsPageContent() {
           <>
             <div className="flex items-center gap-2 mb-4">
               <FilterDropdown
+                data-testid="coupons-filter-type"
                 label="Tipo"
                 icon={Tag}
                 options={typeOptions}
@@ -200,17 +202,32 @@ function CouponsPageContent() {
                 searchPlaceholder="Buscar tipo..."
                 emptyText="Nenhum tipo encontrado."
               />
-              <p className="text-sm text-muted-foreground whitespace-nowrap">
+              <p
+                data-testid="coupons-count"
+                className="text-sm text-muted-foreground whitespace-nowrap"
+              >
                 {total} {total === 1 ? 'cupom' : 'cupons'}
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {coupons.length === 0 && (
+                <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                  <Ticket className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Nenhum cupom encontrado
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">
+                    Tente ajustar os filtros ou crie um novo cupom.
+                  </p>
+                </div>
+              )}
               {coupons.map((coupon: Coupon) => {
                 const expired = isExpired(coupon);
                 return (
                   <div
                     key={coupon.id}
+                    data-testid={`coupon-card-${coupon.id}`}
                     className={cn(
                       'group relative rounded-xl border bg-card p-4 transition-all',
                       expired && 'opacity-60'
@@ -273,6 +290,7 @@ function CouponsPageContent() {
 
                     {hasPermission(SALES_PERMISSIONS.COUPONS.ADMIN) && (
                       <button
+                        data-testid={`coupon-delete-${coupon.id}`}
                         onClick={e => {
                           e.stopPropagation();
                           handleDelete([coupon.id]);
