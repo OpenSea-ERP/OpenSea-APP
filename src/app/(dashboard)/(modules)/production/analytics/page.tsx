@@ -55,6 +55,9 @@ const STATUS_COLOR_MAP: Record<
 
 export default function ProductionAnalyticsPage() {
   const { hasPermission } = usePermissions();
+  const canAccess = hasPermission(PRODUCTION_PERMISSIONS.ANALYTICS.ACCESS);
+
+  if (!canAccess) return null;
 
   const {
     data: dashboard,
