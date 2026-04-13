@@ -897,6 +897,11 @@ function ReceivablePageContent() {
               entry={baixaEntry}
               categoryInterestRate={baixaCategoryRates.interestRate}
               categoryPenaltyRate={baixaCategoryRates.penaltyRate}
+              onSuccess={() => {
+                setBaixaOpen(false);
+                setBaixaEntry(null);
+                refetch();
+              }}
             />
           )}
 
@@ -922,7 +927,10 @@ function ReceivablePageContent() {
             onOpenChange={setBulkPayOpen}
             selectedIds={bulkSelectedIds}
             entries={entries}
-            onSuccess={() => setBulkSelectedIds([])}
+            onSuccess={() => {
+              setBulkSelectedIds([]);
+              refetch();
+            }}
             actionLabel="Registrar Recebimento"
           />
 

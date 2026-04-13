@@ -151,7 +151,7 @@ function CertificateInfo({ config }: { config: Record<string, unknown> }) {
             Expirado
           </span>
         ) : (
-          <Badge variant="success">Válido</Badge>
+          <Badge variant="outline" className="border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300">Válido</Badge>
         )}
         {!isExpired && isCritical && (
           <Badge className="bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300 border-rose-200 dark:border-rose-500/20">

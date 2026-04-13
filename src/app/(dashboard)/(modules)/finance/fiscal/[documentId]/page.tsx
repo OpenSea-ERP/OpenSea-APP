@@ -185,7 +185,7 @@ export default function FiscalDocumentDetailPage({
   const { documentId } = use(params);
   const router = useRouter();
   const { hasPermission } = usePermissions();
-  const { data, isLoading } = useFiscalDocument(documentId);
+  const { data, isLoading, refetch } = useFiscalDocument(documentId);
   const cancelMutation = useCancelDocument();
   const correctionMutation = useCorrectionLetter();
 
@@ -215,10 +215,11 @@ export default function FiscalDocumentDetailPage({
       setCancelReasonOpen(false);
       setCancelReason('');
       toast.success('Documento fiscal cancelado com sucesso.');
+      refetch();
     } catch {
       toast.error('Erro ao cancelar documento fiscal.');
     }
-  }, [document, cancelReason, cancelMutation]);
+  }, [document, cancelReason, cancelMutation, refetch]);
 
   const handleCorrectionConfirm = useCallback(async () => {
     if (!document) return;
@@ -230,10 +231,11 @@ export default function FiscalDocumentDetailPage({
       setCorrectionOpen(false);
       setCorrectionText('');
       toast.success('Carta de correção emitida com sucesso.');
+      refetch();
     } catch {
       toast.error('Erro ao emitir carta de correção.');
     }
-  }, [document, correctionText, correctionMutation]);
+  }, [document, correctionText, correctionMutation, refetch]);
 
   if (isLoading) return <DetailSkeleton />;
 
@@ -426,7 +428,7 @@ export default function FiscalDocumentDetailPage({
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Info className="h-4 w-4" />
-                    Destinatario
+                    Destinatário
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -551,7 +553,7 @@ export default function FiscalDocumentDetailPage({
                             Qtd
                           </th>
                           <th className="pb-2 pr-4 text-muted-foreground font-medium text-right">
-                            Unitario
+                            Unitário
                           </th>
                           <th className="pb-2 text-muted-foreground font-medium text-right">
                             Total
@@ -706,7 +708,7 @@ export default function FiscalDocumentDetailPage({
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  Historico de Eventos
+                  Histórico de Eventos
                 </CardTitle>
               </CardHeader>
               <CardContent>

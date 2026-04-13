@@ -52,6 +52,7 @@ interface BaixaModalProps {
   entry: FinanceEntry;
   categoryInterestRate?: number;
   categoryPenaltyRate?: number;
+  onSuccess?: () => void;
 }
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
@@ -90,6 +91,7 @@ export function BaixaModal({
   entry,
   categoryInterestRate,
   categoryPenaltyRate,
+  onSuccess,
 }: BaixaModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const registerPayment = useRegisterPayment();
@@ -209,6 +211,7 @@ export function BaixaModal({
       });
       toast.success('Pagamento registrado com sucesso!');
       handleClose();
+      onSuccess?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (
@@ -234,6 +237,7 @@ export function BaixaModal({
     effectivePenalty,
     registerPayment,
     handleClose,
+    onSuccess,
   ]);
 
   // Step 1 validation: amount must be valid

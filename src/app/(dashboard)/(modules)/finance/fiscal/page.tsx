@@ -372,10 +372,11 @@ function FiscalPageContent() {
       setCancelTarget(null);
       setCancelReason('');
       toast.success('Documento fiscal cancelado com sucesso.');
+      refetch();
     } catch {
       toast.error('Erro ao cancelar documento fiscal.');
     }
-  }, [cancelTarget, cancelReason, cancelMutation]);
+  }, [cancelTarget, cancelReason, cancelMutation, refetch]);
 
   const handleCorrectionConfirm = useCallback(async () => {
     if (!correctionTarget) return;
@@ -388,10 +389,11 @@ function FiscalPageContent() {
       setCorrectionTarget(null);
       setCorrectionText('');
       toast.success('Carta de correção emitida com sucesso.');
+      refetch();
     } catch {
       toast.error('Erro ao emitir carta de correção.');
     }
-  }, [correctionTarget, correctionText, correctionMutation]);
+  }, [correctionTarget, correctionText, correctionMutation, refetch]);
 
   // ============================================================================
   // RENDER FUNCTIONS

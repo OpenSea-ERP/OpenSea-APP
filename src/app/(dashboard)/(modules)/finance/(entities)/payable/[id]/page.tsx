@@ -46,7 +46,6 @@ import {
   RECURRENCE_UNIT_LABELS,
 } from '@/types/finance';
 import {
-  ArrowLeft,
   Banknote,
   Calendar,
   CreditCard,
@@ -85,27 +84,23 @@ function formatDate(dateStr: string | null | undefined): string {
   return new Date(dateStr).toLocaleDateString('pt-BR');
 }
 
-function getStatusBadgeVariant(
-  status: FinanceEntryStatus
-): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' {
-  switch (status) {
-    case 'PAID':
-      return 'success';
-    case 'RECEIVED':
-      return 'success';
-    case 'PENDING':
-      return 'secondary';
-    case 'OVERDUE':
-      return 'destructive';
-    case 'PARTIALLY_PAID':
-      return 'warning';
-    case 'CANCELLED':
-      return 'outline';
-    case 'SCHEDULED':
-      return 'default';
-    default:
-      return 'secondary';
-  }
+function getStatusColor(status: FinanceEntryStatus): string {
+  const colors: Record<FinanceEntryStatus, string> = {
+    PENDING:
+      'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+    OVERDUE:
+      'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300',
+    PAID: 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    RECEIVED:
+      'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    PARTIALLY_PAID:
+      'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+    CANCELLED:
+      'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300',
+    SCHEDULED:
+      'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
+  };
+  return colors[status] ?? colors.PENDING;
 }
 
 function formatFileSize(bytes: number): string {
@@ -299,79 +294,88 @@ export default function PayableDetailPage({
   const hasAllocations =
     entry.costCenterAllocations && entry.costCenterAllocations.length > 0;
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/finance/payable">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Voltar
-            </Button>
-          </Link>
-        </div>
-
-        <div className="flex gap-2">
-          {canPay && (
-            <Button
-              size="sm"
-              className="gap-2"
-              onClick={() => setBaixaOpen(true)}
-            >
-              <DollarSign className="h-4 w-4" />
-              Registrar Pagamento
-            </Button>
-          )}
-          {canPay && entry.pixKey && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-500/10"
-              onClick={() => setPixPayOpen(true)}
-            >
-              <Send className="h-4 w-4" />
-              Pagar via PIX
-            </Button>
-          )}
-          {canPay && entry.bankAccountId && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 text-sky-600 border-sky-200 hover:bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:hover:bg-sky-500/10"
-              onClick={() => setPaymentOrderOpen(true)}
-            >
-              <Banknote className="h-4 w-4" />
-              Solicitar Pagamento
-            </Button>
-          )}
-          {canPay && entry.bankAccountId && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-800 dark:hover:bg-violet-500/10"
-              onClick={() => setBoletoEmitOpen(true)}
-            >
-              <FileBarChart className="h-4 w-4" />
-              Gerar Boleto
-            </Button>
-          )}
-          <Link href={`/finance/payable/${id}/edit`}>
-            <Button variant="outline" size="sm" className="gap-2">
-              Editar
-            </Button>
-          </Link>
+  const actionButtons = [
+    ...(canPay
+      ? [
           <Button
+            key="baixa"
+            size="sm"
+            className="gap-2"
+            onClick={() => setBaixaOpen(true)}
+          >
+            <DollarSign className="h-4 w-4" />
+            Registrar Pagamento
+          </Button>,
+        ]
+      : []),
+    ...(canPay && entry.pixKey
+      ? [
+          <Button
+            key="pix"
             variant="outline"
             size="sm"
-            onClick={() => setPinModalOpen(true)}
-            className="gap-2"
+            className="gap-2 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-500/10"
+            onClick={() => setPixPayOpen(true)}
           >
-            <Trash2 className="h-4 w-4 text-destructive" />
-            Excluir
-          </Button>
-        </div>
-      </div>
+            <Send className="h-4 w-4" />
+            Pagar via PIX
+          </Button>,
+        ]
+      : []),
+    ...(canPay && entry.bankAccountId
+      ? [
+          <Button
+            key="payment-order"
+            variant="outline"
+            size="sm"
+            className="gap-2 text-sky-600 border-sky-200 hover:bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:hover:bg-sky-500/10"
+            onClick={() => setPaymentOrderOpen(true)}
+          >
+            <Banknote className="h-4 w-4" />
+            Solicitar Pagamento
+          </Button>,
+          <Button
+            key="boleto"
+            variant="outline"
+            size="sm"
+            className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-800 dark:hover:bg-violet-500/10"
+            onClick={() => setBoletoEmitOpen(true)}
+          >
+            <FileBarChart className="h-4 w-4" />
+            Gerar Boleto
+          </Button>,
+        ]
+      : []),
+    <Link key="edit" href={`/finance/payable/${id}/edit`}>
+      <Button variant="outline" size="sm" className="gap-2">
+        Editar
+      </Button>
+    </Link>,
+    <Button
+      key="delete"
+      variant="outline"
+      size="sm"
+      onClick={() => setPinModalOpen(true)}
+      className="gap-2"
+    >
+      <Trash2 className="h-4 w-4 text-destructive" />
+      Excluir
+    </Button>,
+  ];
+
+  return (
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={[
+            { label: 'Financeiro', href: '/finance' },
+            { label: 'Contas a Pagar', href: '/finance/payable' },
+            { label: entry.description || `#${entry.code}` },
+          ]}
+          actions={<div className="flex items-center gap-2">{actionButtons}</div>}
+        />
+      </PageHeader>
+      <PageBody>
 
       {/* Entry Header Card */}
       <Card className="p-4 sm:p-6">
@@ -405,7 +409,7 @@ export default function PayableDetailPage({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant={getStatusBadgeVariant(entry.status)}>
+              <Badge variant="outline" className={cn("text-xs", getStatusColor(entry.status))}>
                 {FINANCE_ENTRY_STATUS_LABELS[entry.status]}
               </Badge>
               {entry.currentInstallment != null &&
@@ -844,7 +848,7 @@ export default function PayableDetailPage({
                       {formatCurrency(child.expectedAmount)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(child.status)}>
+                      <Badge variant="outline" className={cn("text-xs", getStatusColor(child.status))}>
                         {FINANCE_ENTRY_STATUS_LABELS[child.status]}
                       </Badge>
                     </TableCell>
@@ -943,7 +947,8 @@ export default function PayableDetailPage({
           entityType="supplier"
         />
       )}
-    </div>
+      </PageBody>
+    </PageLayout>
   );
 }
 
