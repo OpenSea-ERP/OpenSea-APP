@@ -68,7 +68,7 @@ export default function CadenceEditPage() {
       setDescription(data.cadence.description || '');
       setIsActive(data.cadence.isActive);
       setSteps(
-        (data.cadence.steps || [])
+        (data.cadence.steps ?? [])
           .sort((a, b) => a.order - b.order)
           .map(s => ({
             type: s.type,

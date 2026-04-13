@@ -133,7 +133,7 @@ export default function EditWorkflowPage() {
       setTrigger(workflow.trigger || 'ORDER_CREATED');
       setIsActive(workflow.isActive ?? true);
       setSteps(
-        (workflow.steps || []).map(s => ({
+        (workflow.steps ?? []).map(s => ({
           order: s.order,
           type: s.type,
           config: s.config || {},

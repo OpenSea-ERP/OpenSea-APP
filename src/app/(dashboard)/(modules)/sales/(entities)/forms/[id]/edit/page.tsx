@@ -124,7 +124,7 @@ export default function EditFormPage() {
       setTitle(form.title || '');
       setDescription(form.description || '');
       setFields(
-        (form.fields || []).map(f => ({
+        (form.fields ?? []).map(f => ({
           label: f.label,
           type: f.type,
           isRequired: f.isRequired,

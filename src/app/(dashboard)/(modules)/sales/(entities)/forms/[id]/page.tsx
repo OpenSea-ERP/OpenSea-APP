@@ -140,7 +140,7 @@ export default function FormDetailPage() {
   // ============================================================================
 
   const statusLabel = FORM_STATUS_LABELS[form.status] || form.status;
-  const fields = form.fields || [];
+  const fields = form.fields ?? [];
 
   const createdDate = new Date(form.createdAt).toLocaleDateString('pt-BR', {
     day: '2-digit',

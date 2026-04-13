@@ -131,7 +131,7 @@ export default function CashierSessionDetailPage() {
 
   const statusLabel =
     CASHIER_SESSION_STATUS_LABELS[session.status] || session.status;
-  const transactions = session.transactions || [];
+  const transactions = session.transactions ?? [];
   const diff = session.difference ?? 0;
 
   const openedDate = new Date(session.openedAt).toLocaleDateString('pt-BR', {

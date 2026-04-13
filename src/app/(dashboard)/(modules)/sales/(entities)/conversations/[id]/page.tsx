@@ -198,7 +198,7 @@ export default function ConversationDetailPage() {
 
   const statusLabel =
     CONVERSATION_STATUS_LABELS[conversation.status] || conversation.status;
-  const messages = conversation.messages || [];
+  const messages = conversation.messages ?? [];
   const isOpen = conversation.status === 'OPEN';
 
   const createdDate = new Date(conversation.createdAt).toLocaleDateString(

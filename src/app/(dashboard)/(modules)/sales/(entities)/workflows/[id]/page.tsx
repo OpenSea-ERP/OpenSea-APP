@@ -151,7 +151,7 @@ export default function WorkflowDetailPage() {
     year: 'numeric',
   });
 
-  const steps = workflow.steps || [];
+  const steps = workflow.steps ?? [];
 
   // ============================================================================
   // RENDER
