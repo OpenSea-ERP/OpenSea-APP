@@ -356,7 +356,7 @@ export default function RecurringDetailPage({
             </CardContent>
           </Card>
 
-          {/* Card 2: Periodo */}
+          {/* Card 2: Período */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">

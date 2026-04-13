@@ -448,7 +448,7 @@ function FiscalPageContent() {
               ? `${FISCAL_DOCUMENT_TYPE_LABELS[item.type]} ${item.series}/${item.number}`
               : `${FISCAL_DOCUMENT_TYPE_LABELS[item.type]} ${item.series}/${item.number}`
           }
-          subtitle={item.recipientName ?? 'Sem destinatario'}
+          subtitle={item.recipientName ?? 'Sem destinatário'}
           icon={item.type === 'NFCE' ? Receipt : FileText}
           iconBgColor={
             item.type === 'NFCE'
@@ -559,7 +559,7 @@ function FiscalPageContent() {
                 {item.number}
               </span>
               <span className="text-xs text-muted-foreground shrink-0">
-                {item.recipientName ?? 'Sem destinatario'}
+                {item.recipientName ?? 'Sem destinatário'}
               </span>
             </span>
           }

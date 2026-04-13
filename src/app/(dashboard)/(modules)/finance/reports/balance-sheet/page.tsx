@@ -307,7 +307,7 @@ export default function BalanceSheetPage() {
           <CardContent className="py-12 text-center">
             <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-rose-500 opacity-50" />
             <p className="text-muted-foreground">
-              Erro ao carregar o balanco patrimonial. Tente novamente.
+              Erro ao carregar o balanço patrimonial. Tente novamente.
             </p>
           </CardContent>
         </Card>
@@ -454,7 +454,7 @@ export default function BalanceSheetPage() {
           <CardContent className="py-12 text-center">
             <Scale className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-30" />
             <p className="text-muted-foreground">
-              Selecione um periodo para gerar o balanco patrimonial.
+              Selecione um período para gerar o balanço patrimonial.
             </p>
           </CardContent>
         </Card>

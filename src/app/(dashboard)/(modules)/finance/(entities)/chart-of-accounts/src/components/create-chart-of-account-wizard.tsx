@@ -45,7 +45,7 @@ const TYPE_OPTIONS: { value: ChartOfAccountType; label: string }[] = [
 
 const CLASS_OPTIONS: { value: ChartOfAccountClass; label: string }[] = [
   { value: 'CURRENT', label: 'Circulante' },
-  { value: 'NON_CURRENT', label: 'Nao Circulante' },
+  { value: 'NON_CURRENT', label: 'Não Circulante' },
   { value: 'OPERATIONAL', label: 'Operacional' },
   { value: 'FINANCIAL', label: 'Financeiro' },
   { value: 'OTHER', label: 'Outro' },

@@ -373,7 +373,7 @@ function CompliancePageContent() {
 
         <Header
           title="Compliance Fiscal"
-          description="Acompanhe obrigacoes fiscais, regime tributario e exportacoes contabeis"
+          description="Acompanhe obrigações fiscais, regime tributário e exportações contábeis"
         />
       </PageHeader>
 
@@ -506,7 +506,7 @@ function CompliancePageContent() {
             ) : (
               <div className="text-center py-8">
                 <p className="text-sm text-muted-foreground">
-                  Nenhum dado disponivel.
+                  Nenhum dado disponível.
                 </p>
               </div>
             )}
@@ -527,10 +527,10 @@ function CompliancePageContent() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Calendario Fiscal
+                    Calendário Fiscal
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Obrigacoes tributarias do periodo
+                    Obrigações tributárias do período
                   </p>
                 </div>
               </div>
@@ -600,7 +600,7 @@ function CompliancePageContent() {
 
             {/* Search */}
             <SearchBar
-              placeholder="Buscar obrigacoes por tipo, status ou valor..."
+              placeholder="Buscar obrigações por tipo, status ou valor..."
               value={searchQuery}
               onSearch={setSearchQuery}
               onClear={() => setSearchQuery('')}
@@ -617,7 +617,7 @@ function CompliancePageContent() {
               ) : calendarQuery.error ? (
                 <div className="text-center py-8">
                   <p className="text-sm text-muted-foreground">
-                    Erro ao carregar calendario fiscal.
+                    Erro ao carregar calendário fiscal.
                   </p>
                   <Button
                     variant="outline"
