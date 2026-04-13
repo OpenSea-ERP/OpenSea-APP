@@ -91,7 +91,7 @@ export default function ConnectionDetailPage() {
     syncProducts.mutate(
       { connectionId, productIds: [] },
       {
-        onSuccess: () => toast.success('Sincronizacao de produtos iniciada'),
+        onSuccess: () => toast.success('Sincronização de produtos iniciada'),
         onError: () => toast.error('Erro ao sincronizar produtos'),
       }
     );
@@ -99,7 +99,7 @@ export default function ConnectionDetailPage() {
 
   function handleSyncInventory() {
     syncInventory.mutate(connectionId, {
-      onSuccess: () => toast.success('Sincronizacao de estoque iniciada'),
+      onSuccess: () => toast.success('Sincronização de estoque iniciada'),
       onError: () => toast.error('Erro ao sincronizar estoque'),
     });
   }
@@ -108,7 +108,7 @@ export default function ConnectionDetailPage() {
     importOrders.mutate(
       { connectionId },
       {
-        onSuccess: () => toast.success('Importacao de pedidos iniciada'),
+        onSuccess: () => toast.success('Importação de pedidos iniciada'),
         onError: () => toast.error('Erro ao importar pedidos'),
       }
     );
@@ -295,7 +295,7 @@ export default function ConnectionDetailPage() {
                 <div>
                   <p className="font-medium text-sm">Financeiro</p>
                   <p className="text-xs text-muted-foreground">
-                    Reconciliacao e pagamentos
+                    Reconciliação e pagamentos
                   </p>
                 </div>
               </div>
@@ -343,11 +343,11 @@ export default function ConnectionDetailPage() {
 
           {/* Sync Config */}
           <Card className="bg-white dark:bg-slate-800/60 border border-border p-5">
-            <h3 className="font-medium mb-4">Configuracoes de Sincronizacao</h3>
+            <h3 className="font-medium mb-4">Configuracoes de Sincronização</h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 text-sm">
               {[
                 { label: 'Produtos', active: connection.syncProducts },
-                { label: 'Precos', active: connection.syncPrices },
+                { label: 'Preços', active: connection.syncPrices },
                 { label: 'Estoque', active: connection.syncStock },
                 { label: 'Pedidos', active: connection.syncOrders },
                 { label: 'Mensagens', active: connection.syncMessages },
@@ -366,15 +366,15 @@ export default function ConnectionDetailPage() {
             </div>
             <div className="mt-3 space-y-1">
               <p className="text-xs text-muted-foreground">
-                Intervalo de sincronizacao: {connection.syncIntervalMin} min
+                Intervalo de sincronização: {connection.syncIntervalMin} min
                 {connection.commissionPercent !== undefined &&
-                  ` | Comissao: ${connection.commissionPercent}%`}
-                {connection.autoCalcPrice && ' | Calculo automatico de preco'}
+                  ` | Comissão: ${connection.commissionPercent}%`}
+                {connection.autoCalcPrice && ' | Calculo automático de preco'}
               </p>
               {connection.lastSyncAt && (
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <RefreshCw className="h-3 w-3" />
-                  Ultima sincronizacao:{' '}
+                  Última sincronização:{' '}
                   {new Date(connection.lastSyncAt).toLocaleString('pt-BR')}
                 </p>
               )}

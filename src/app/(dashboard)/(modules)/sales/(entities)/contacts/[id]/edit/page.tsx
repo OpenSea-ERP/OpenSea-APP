@@ -208,7 +208,7 @@ export default function EditContactPage() {
 
   const handleSubmit = async () => {
     if (!firstName.trim()) {
-      toast.error('Nome e obrigatorio');
+      toast.error('Nome e obrigatório');
       return;
     }
 
@@ -251,7 +251,7 @@ export default function EditContactPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(contactId);
-      toast.success('Contato excluido com sucesso!');
+      toast.success('Contato excluído com sucesso!');
       router.push('/sales/contacts');
     } catch (err) {
       logger.error(
@@ -327,8 +327,8 @@ export default function EditContactPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Contato nao encontrado"
-            message="O contato solicitado nao foi encontrado."
+            title="Contato não encontrado"
+            message="O contato solicitado não foi encontrado."
             action={{
               label: 'Voltar para Contatos',
               onClick: () => router.push('/sales/contacts'),
@@ -390,7 +390,7 @@ export default function EditContactPage() {
               <SectionHeader
                 icon={NotebookText}
                 title="Dados Pessoais"
-                subtitle="Informacoes basicas de identificacao"
+                subtitle="Informações básicas de identificação"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -460,7 +460,7 @@ export default function EditContactPage() {
               <SectionHeader
                 icon={Briefcase}
                 title="Profissional"
-                subtitle="Informacoes profissionais do contato"
+                subtitle="Informações profissionais do contato"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -510,14 +510,14 @@ export default function EditContactPage() {
           </div>
         </Card>
 
-        {/* Form Card: Qualificacao */}
+        {/* Form Card: Qualificação */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={Flame}
-                title="Qualificacao"
-                subtitle="Classificacao e pontuacao do lead"
+                title="Qualificação"
+                subtitle="Classificação e pontuação do lead"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -653,7 +653,7 @@ export default function EditContactPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Contato"
-        description={`Digite seu PIN de acao para excluir o contato "${contact.fullName}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir o contato "${contact.fullName}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

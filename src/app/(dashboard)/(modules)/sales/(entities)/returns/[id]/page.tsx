@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Return Detail Page
- * Pagina de detalhes da devolucao com informacoes completas
+ * Página de detalhes da devolucao com informações completas
  */
 
 'use client';
@@ -244,8 +244,8 @@ export default function ReturnDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Devolucao nao encontrada"
-            message="A devolucao que voce esta procurando nao existe ou foi removida."
+            title="Devolucao não encontrada"
+            message="A devolucao que você está procurando não existe ou foi removida."
             action={{
               label: 'Voltar para Devolucoes',
               onClick: () => router.push('/sales/returns'),
@@ -304,14 +304,14 @@ export default function ReturnDetailPage() {
             <SectionHeader
               icon={ClipboardList}
               title="Dados da Devolucao"
-              subtitle="Informacoes gerais sobre a devolucao"
+              subtitle="Informações gerais sobre a devolucao"
             />
 
             <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow
                   icon={Hash}
-                  label="Numero da devolucao"
+                  label="Número da devolucao"
                   value={orderReturn.returnNumber}
                 />
                 <InfoRow
@@ -338,12 +338,12 @@ export default function ReturnDetailPage() {
                 />
                 <InfoRow
                   icon={Calendar}
-                  label="Data de criacao"
+                  label="Data de criação"
                   value={formatDateTime(orderReturn.createdAt)}
                 />
                 <InfoRow
                   icon={Calendar}
-                  label="Ultima atualizacao"
+                  label="Última atualização"
                   value={formatDateTime(orderReturn.updatedAt)}
                 />
                 {orderReturn.exchangeOrderId && (
@@ -364,7 +364,7 @@ export default function ReturnDetailPage() {
             <SectionHeader
               icon={Banknote}
               title="Valores e Reembolso"
-              subtitle="Informacoes financeiras da devolucao"
+              subtitle="Informações financeiras da devolucao"
             />
 
             <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
@@ -398,13 +398,13 @@ export default function ReturnDetailPage() {
           </div>
         </Card>
 
-        {/* Aprovacao e Recebimento */}
+        {/* Aprovação e Recebimento */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-6">
             <SectionHeader
               icon={ShieldCheck}
-              title="Aprovacao e Recebimento"
-              subtitle="Historico de aprovacao e recebimento da devolucao"
+              title="Aprovação e Recebimento"
+              subtitle="Histórico de aprovação e recebimento da devolucao"
             />
 
             <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
@@ -421,7 +421,7 @@ export default function ReturnDetailPage() {
                 />
                 <InfoRow
                   icon={Calendar}
-                  label="Data de aprovacao"
+                  label="Data de aprovação"
                   value={formatDateTime(orderReturn.approvedAt)}
                 />
                 <InfoRow
@@ -441,13 +441,13 @@ export default function ReturnDetailPage() {
           </div>
         </Card>
 
-        {/* Observacoes */}
+        {/* Observações */}
         {orderReturn.notes && (
           <Card className="bg-white/5 py-2 overflow-hidden">
             <div className="px-6 py-4 space-y-6">
               <SectionHeader
                 icon={NotebookText}
-                title="Observacoes"
+                title="Observações"
                 subtitle="Notas adicionais sobre a devolucao"
               />
 

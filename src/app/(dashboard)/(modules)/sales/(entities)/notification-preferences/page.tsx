@@ -78,7 +78,7 @@ const CATEGORIES: NotificationCategory[] = [
     id: 'orders',
     title: 'Pedidos',
     subtitle:
-      'Notificacoes sobre criacao, atualizacao e finalizacao de pedidos',
+      'Notificações sobre criação, atualização e finalização de pedidos',
     icon: ShoppingCart,
     iconColor: 'text-violet-600 dark:text-violet-400',
     iconBg: 'bg-violet-50 dark:bg-violet-500/10',
@@ -108,7 +108,7 @@ const CATEGORIES: NotificationCategory[] = [
   {
     id: 'payments',
     title: 'Pagamentos',
-    subtitle: 'Atualizacoes sobre recebimentos e inadimplencia',
+    subtitle: 'Atualizações sobre recebimentos e inadimplencia',
     icon: CreditCard,
     iconColor: 'text-emerald-600 dark:text-emerald-400',
     iconBg: 'bg-emerald-50 dark:bg-emerald-500/10',
@@ -132,31 +132,31 @@ const CATEGORIES: NotificationCategory[] = [
   },
   {
     id: 'deals',
-    title: 'Negocios',
-    subtitle: 'Movimentacoes no pipeline de vendas',
+    title: 'Negócios',
+    subtitle: 'Movimentações no pipeline de vendas',
     icon: TrendingUp,
     iconColor: 'text-sky-600 dark:text-sky-400',
     iconBg: 'bg-sky-50 dark:bg-sky-500/10',
     types: [
       {
         id: 'deal_stage_changed',
-        label: 'Mudanca de etapa',
-        description: 'Quando um negocio mudar de etapa no pipeline',
+        label: 'Mudança de etapa',
+        description: 'Quando um negócio mudar de etapa no pipeline',
       },
       {
         id: 'deal_won',
-        label: 'Negocio ganho',
-        description: 'Quando um negocio for marcado como ganho',
+        label: 'Negócio ganho',
+        description: 'Quando um negócio for marcado como ganho',
       },
       {
         id: 'deal_lost',
-        label: 'Negocio perdido',
-        description: 'Quando um negocio for marcado como perdido',
+        label: 'Negócio perdido',
+        description: 'Quando um negócio for marcado como perdido',
       },
       {
         id: 'deal_assigned',
-        label: 'Negocio atribuido',
-        description: 'Quando um negocio for atribuido a voce',
+        label: 'Negócio atribuído',
+        description: 'Quando um negócio for atribuído a você',
       },
     ],
   },
@@ -172,7 +172,7 @@ const CATEGORIES: NotificationCategory[] = [
         id: 'stock_low',
         label: 'Estoque baixo',
         description:
-          'Quando um produto vendido estiver com estoque abaixo do minimo',
+          'Quando um produto vendido estiver com estoque abaixo do mínimo',
       },
       {
         id: 'stock_reserved',
@@ -183,8 +183,8 @@ const CATEGORIES: NotificationCategory[] = [
   },
   {
     id: 'comments',
-    title: 'Comentarios',
-    subtitle: 'Notificacoes sobre comentarios em pedidos e negocios',
+    title: 'Comentários',
+    subtitle: 'Notificações sobre comentários em pedidos e negócios',
     icon: MessageSquare,
     iconColor: 'text-teal-600 dark:text-teal-400',
     iconBg: 'bg-teal-50 dark:bg-teal-500/10',
@@ -192,7 +192,7 @@ const CATEGORIES: NotificationCategory[] = [
       {
         id: 'comment_added',
         label: 'Novo comentario',
-        description: 'Quando alguem comentar em um pedido ou negocio seu',
+        description: 'Quando alguem comentar em um pedido ou negócio seu',
       },
       {
         id: 'comment_reply',
@@ -452,7 +452,7 @@ export default function NotificationPreferencesPage() {
 
   const handleSave = useCallback(async () => {
     if (pendingChanges.length === 0) {
-      toast.info('Nenhuma alteracao para salvar.');
+      toast.info('Nenhuma alteração para salvar.');
       return;
     }
 
@@ -480,10 +480,10 @@ export default function NotificationPreferencesPage() {
       const failedCount = results.filter(r => r.status === 'rejected').length;
 
       if (failedCount === 0) {
-        toast.success('Preferencias de notificacao salvas com sucesso.');
+        toast.success('Preferencias de notificação salvas com sucesso.');
       } else {
         toast.error(
-          `${failedCount} alteracao(oes) nao puderam ser salvas. Tente novamente.`
+          `${failedCount} alteração(oes) nao puderam ser salvas. Tente novamente.`
         );
       }
 
@@ -505,7 +505,7 @@ export default function NotificationPreferencesPage() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
-            { label: 'Preferencias de Notificacao' },
+            { label: 'Preferencias de Notificação' },
           ]}
           buttons={[
             {
@@ -532,10 +532,10 @@ export default function NotificationPreferencesPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-                Preferencias de Notificacao
+                Preferencias de Notificação
               </h1>
               <p className="text-sm text-slate-500 dark:text-white/60">
-                Configure quais notificacoes voce deseja receber e por quais
+                Configure quais notificações você deseja receber e por quais
                 canais.
               </p>
             </div>
@@ -543,7 +543,7 @@ export default function NotificationPreferencesPage() {
             {hasPendingChanges && (
               <div className="ml-auto flex items-center gap-2">
                 <span className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 rounded-md">
-                  {pendingChanges.length} alteracao(oes) nao salva(s)
+                  {pendingChanges.length} alteração(oes) nao salva(s)
                 </span>
               </div>
             )}
@@ -556,7 +556,7 @@ export default function NotificationPreferencesPage() {
         ) : isError ? (
           <GridError
             title="Erro ao carregar preferencias"
-            message="Nao foi possivel carregar suas preferencias de notificacao."
+            message="Nao foi possivel carregar suas preferencias de notificação."
             action={{
               label: 'Tentar novamente',
               onClick: () => {
@@ -583,7 +583,7 @@ export default function NotificationPreferencesPage() {
                   <div className="flex items-center gap-2 text-sm">
                     <RefreshCw className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      {pendingChanges.length} alteracao(oes) pendente(s)
+                      {pendingChanges.length} alteração(oes) pendente(s)
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

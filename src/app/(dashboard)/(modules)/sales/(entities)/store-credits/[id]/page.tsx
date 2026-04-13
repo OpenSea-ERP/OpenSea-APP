@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Store Credit Detail Page
- * Pagina de detalhes do credito de loja com informacoes do cliente, saldo e historico
+ * Página de detalhes do credito de loja com informações do cliente, saldo e histórico
  */
 
 'use client';
@@ -96,7 +96,7 @@ export default function StoreCreditDetailPage() {
   const handleDeleteConfirm = useCallback(async () => {
     await deleteMutation.mutateAsync(creditId);
     setDeleteModalOpen(false);
-    toast.success('Credito de loja excluido com sucesso!');
+    toast.success('Credito de loja excluído com sucesso!');
     router.push('/sales/store-credits');
   }, [creditId, deleteMutation, router]);
 
@@ -154,8 +154,8 @@ export default function StoreCreditDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Credito de loja nao encontrado"
-            message="O credito de loja que voce esta procurando nao existe ou foi removido."
+            title="Credito de loja não encontrado"
+            message="O credito de loja que você está procurando não existe ou foi removido."
             action={{
               label: 'Voltar para Creditos de Loja',
               onClick: () => router.push('/sales/store-credits'),
@@ -252,7 +252,7 @@ export default function StoreCreditDetailPage() {
                 <div>
                   <h3 className="text-base font-semibold">Saldo</h3>
                   <p className="text-sm text-muted-foreground">
-                    Detalhes do valor e utilizacao do credito
+                    Detalhes do valor e utilização do credito
                   </p>
                 </div>
               </div>
@@ -322,7 +322,7 @@ export default function StoreCreditDetailPage() {
                 <CreditCard className="h-5 w-5 text-foreground" />
                 <div>
                   <h3 className="text-base font-semibold">
-                    Informacoes do Credito
+                    Informações do Credito
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     Detalhes de origem, validade e cliente
@@ -346,16 +346,16 @@ export default function StoreCreditDetailPage() {
                 />
                 <InfoRow
                   icon={Calendar}
-                  label="Data de Criacao"
+                  label="Data de Criação"
                   value={formatDate(credit.createdAt)}
                 />
                 <InfoRow
                   icon={Calendar}
-                  label="Data de Expiracao"
+                  label="Data de Expiração"
                   value={
                     credit.expiresAt
                       ? formatDate(credit.expiresAt)
-                      : 'Sem expiracao'
+                      : 'Sem expiração'
                   }
                   valueClassName={
                     isExpired ? 'text-rose-600 dark:text-rose-400' : undefined
@@ -371,8 +371,8 @@ export default function StoreCreditDetailPage() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir este credito de loja. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir este credito de loja. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

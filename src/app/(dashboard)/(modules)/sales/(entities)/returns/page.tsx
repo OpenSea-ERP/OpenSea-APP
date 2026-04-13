@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Returns Listing Page
- * Pagina de listagem de devolucoes com infinite scroll
+ * Página de listagem de devolucoes com infinite scroll
  */
 
 'use client';
@@ -221,7 +221,7 @@ function ReturnsPageContent() {
       await deleteMutation.mutateAsync(itemToDelete);
       setDeleteModalOpen(false);
       setItemToDelete(null);
-      toast.success('Devolucao excluida com sucesso!');
+      toast.success('Devolucao excluída com sucesso!');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
       toast.error('Erro ao excluir devolucao', { description: message });
@@ -281,7 +281,7 @@ function ReturnsPageContent() {
 
       <PageBody>
         <SearchBar
-          placeholder="Buscar devolucoes por numero..."
+          placeholder="Buscar devolucoes por número..."
           value={searchQuery}
           onSearch={setSearchQuery}
           onClear={() => setSearchQuery('')}
@@ -423,8 +423,8 @@ function ReturnsPageContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir esta devolucao. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir esta devolucao. Esta ação não pode ser desfeita."
         />
 
         <CreateReturnWizard

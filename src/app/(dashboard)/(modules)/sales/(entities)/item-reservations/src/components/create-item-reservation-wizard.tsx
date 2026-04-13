@@ -73,7 +73,7 @@ function StepItemAndQuantity({
   );
 }
 
-// ─── Step 2: Expiracao e Pedido ──────────────────────────────
+// ─── Step 2: Expiração e Pedido ──────────────────────────────
 
 function StepExpirationAndOrder({
   expiresAt,
@@ -89,14 +89,14 @@ function StepExpirationAndOrder({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Data de expiracao *</Label>
+        <Label>Data de expiração *</Label>
         <Input
           type="datetime-local"
           value={expiresAt}
           onChange={e => onExpiresAtChange(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          Data e hora em que a reserva expira automaticamente.
+          Data e hora em que a reserva expira automáticamente.
         </p>
       </div>
 
@@ -193,8 +193,8 @@ export function CreateItemReservationWizard({
       isValid: !!itemId && !!quantity && parseInt(quantity, 10) > 0,
     },
     {
-      title: 'Expiracao e Pedido',
-      description: 'Defina a expiracao e vincule a um pedido (opcional).',
+      title: 'Expiração e Pedido',
+      description: 'Defina a expiração e vincule a um pedido (opcional).',
       icon: <Calendar className="h-16 w-16 text-sky-400" strokeWidth={1.2} />,
       onBack: () => setCurrentStep(1),
       content: (

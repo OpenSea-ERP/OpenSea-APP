@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Item Reservation Detail Page
- * Pagina de detalhes de uma reserva de item
+ * Página de detalhes de uma reserva de item
  */
 
 'use client';
@@ -133,9 +133,9 @@ function ItemReservationDetailContent() {
         <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-500/10">
           <AlertTriangle className="h-10 w-10 text-red-500" />
         </div>
-        <h2 className="text-lg font-semibold">Reserva nao encontrada</h2>
+        <h2 className="text-lg font-semibold">Reserva não encontrada</h2>
         <p className="text-sm text-muted-foreground text-center max-w-sm">
-          A reserva solicitada nao existe ou voce nao tem permissao para
+          A reserva solicitada não existe ou você nao tem permissão para
           acessa-la.
         </p>
         <Link href="/sales/item-reservations">
@@ -258,7 +258,7 @@ function ItemReservationDetailContent() {
 
           <DetailRow
             icon={Calendar}
-            label="Data de Expiracao"
+            label="Data de Expiração"
             value={formatDateTime(reservation.expiresAt)}
           />
 
@@ -284,7 +284,7 @@ function ItemReservationDetailContent() {
         onClose={() => setShowDeleteModal(false)}
         onSuccess={handleDelete}
         title="Confirmar Cancelamento"
-        description={`Digite seu PIN de acao para cancelar a reserva de "${productName}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para cancelar a reserva de "${productName}". Esta ação não pode ser desfeita.`}
       />
     </div>
   );

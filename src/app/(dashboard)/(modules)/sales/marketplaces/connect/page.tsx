@@ -35,7 +35,7 @@ const MARKETPLACES: {
   {
     type: 'AMAZON',
     label: 'Amazon Brasil',
-    description: 'Marketplace global com operacao brasileira',
+    description: 'Marketplace global com operação brasileira',
   },
   {
     type: 'MAGALU',
@@ -66,7 +66,7 @@ const MARKETPLACES: {
   {
     type: 'CUSTOM',
     label: 'Personalizado',
-    description: 'Configuracao manual de API',
+    description: 'Configuração manual de API',
   },
 ];
 
@@ -149,7 +149,7 @@ export default function ConnectMarketplacePage() {
 
           {selectedType && (
             <Card className="bg-white dark:bg-slate-800/60 border border-border p-5 space-y-4">
-              <h3 className="font-medium">Configuracao da Conexao</h3>
+              <h3 className="font-medium">Configuração da Conexao</h3>
               <div className="space-y-3">
                 <div>
                   <Label>Nome da conexao *</Label>

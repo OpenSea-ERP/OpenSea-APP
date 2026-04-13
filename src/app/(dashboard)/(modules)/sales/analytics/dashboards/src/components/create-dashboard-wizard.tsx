@@ -33,18 +33,18 @@ const ROLE_OPTIONS: { value: DashboardRole | ''; label: string }[] = [
   { value: 'SELLER', label: 'Vendedor' },
   { value: 'MANAGER', label: 'Gerente' },
   { value: 'DIRECTOR', label: 'Diretor' },
-  { value: 'BID_SPECIALIST', label: 'Especialista em Licitacoes' },
+  { value: 'BID_SPECIALIST', label: 'Especialista em Licitações' },
   { value: 'MARKETPLACE_OPS', label: 'Operacoes Marketplace' },
   { value: 'CASHIER', label: 'Caixa' },
 ];
 
 const VISIBILITY_OPTIONS: { value: DashboardVisibility; label: string }[] = [
-  { value: 'PRIVATE', label: 'Privado (somente voce)' },
+  { value: 'PRIVATE', label: 'Privado (somente você)' },
   { value: 'TEAM', label: 'Equipe' },
   { value: 'TENANT', label: 'Todos da empresa' },
 ];
 
-// ─── Step 1: Informacoes do Dashboard ─────────────────────────
+// ─── Step 1: Informações do Dashboard ─────────────────────────
 
 function StepDashboardInfo({
   name,
@@ -75,7 +75,7 @@ function StepDashboardInfo({
       </div>
 
       <div className="space-y-2">
-        <Label>Descricao</Label>
+        <Label>Descrição</Label>
         <Textarea
           placeholder="Descreva o proposito deste dashboard..."
           value={description}
@@ -139,8 +139,8 @@ function StepConfig({
 
       <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
         <p>
-          Apos criar o dashboard, voce podera adicionar e configurar widgets de
-          visualizacao de dados na pagina de edicao.
+          Apos criar o dashboard, você podera adicionar e configurar widgets de
+          visualização de dados na página de edicao.
         </p>
       </div>
     </div>
@@ -227,8 +227,8 @@ export function CreateDashboardWizard({
 
   const steps: WizardStep[] = [
     {
-      title: 'Informacoes do Dashboard',
-      description: 'Defina o nome e descricao do dashboard.',
+      title: 'Informações do Dashboard',
+      description: 'Defina o nome e descrição do dashboard.',
       icon: (
         <LayoutDashboard
           className="h-16 w-16 text-purple-400"

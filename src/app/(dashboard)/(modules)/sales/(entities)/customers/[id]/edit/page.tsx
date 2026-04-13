@@ -154,7 +154,7 @@ export default function EditCustomerPage() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('Nome e obrigatorio');
+      toast.error('Nome e obrigatório');
       return;
     }
 
@@ -196,7 +196,7 @@ export default function EditCustomerPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(customerId);
-      toast.success('Cliente excluido com sucesso!');
+      toast.success('Cliente excluído com sucesso!');
       router.push('/sales/customers');
     } catch (err) {
       logger.error(
@@ -272,8 +272,8 @@ export default function EditCustomerPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Cliente nao encontrado"
-            message="O cliente solicitado nao foi encontrado."
+            title="Cliente não encontrado"
+            message="O cliente solicitado não foi encontrado."
             action={{
               label: 'Voltar para Clientes',
               onClick: () => router.push('/sales/customers'),
@@ -345,7 +345,7 @@ export default function EditCustomerPage() {
               <SectionHeader
                 icon={NotebookText}
                 title="Dados do Cliente"
-                subtitle="Informacoes basicas de identificacao"
+                subtitle="Informações básicas de identificação"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -377,10 +377,10 @@ export default function EditCustomerPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="INDIVIDUAL">
-                          Pessoa Fisica
+                          Pessoa Física
                         </SelectItem>
                         <SelectItem value="BUSINESS">
-                          Pessoa Juridica
+                          Pessoa Jurídica
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -425,7 +425,7 @@ export default function EditCustomerPage() {
               <SectionHeader
                 icon={Mail}
                 title="Contato"
-                subtitle="Informacoes de contato do cliente"
+                subtitle="Informações de contato do cliente"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -462,7 +462,7 @@ export default function EditCustomerPage() {
               <SectionHeader
                 icon={MapPin}
                 title="Endereco"
-                subtitle="Localizacao do cliente"
+                subtitle="Localização do cliente"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -472,7 +472,7 @@ export default function EditCustomerPage() {
                       id="address"
                       value={address}
                       onChange={e => setAddress(e.target.value)}
-                      placeholder="Rua, numero, complemento"
+                      placeholder="Rua, número, complemento"
                     />
                   </div>
 
@@ -521,18 +521,18 @@ export default function EditCustomerPage() {
           </div>
         </Card>
 
-        {/* Form Card: Observacoes */}
+        {/* Form Card: Observações */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={NotebookText}
-                title="Observacoes"
+                title="Observações"
                 subtitle="Notas internas sobre o cliente"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
                 <div className="grid gap-2">
-                  <Label htmlFor="notes">Observacoes</Label>
+                  <Label htmlFor="notes">Observações</Label>
                   <Textarea
                     id="notes"
                     value={notes}
@@ -553,7 +553,7 @@ export default function EditCustomerPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Cliente"
-        description={`Digite seu PIN de acao para excluir o cliente "${customer.name}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir o cliente "${customer.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

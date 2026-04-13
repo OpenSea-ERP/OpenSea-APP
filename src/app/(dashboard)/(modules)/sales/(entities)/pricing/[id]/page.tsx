@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Price Table Detail Page
- * Visualizacao da tabela de preco com grid de itens
+ * Visualização da tabela de preço com grid de itens
  */
 
 'use client';
@@ -54,7 +54,7 @@ function PriceTableDetailContent() {
   const handleDeleteConfirm = useCallback(async () => {
     await deleteMutation.mutateAsync(id);
     setDeleteModalOpen(false);
-    toast.success('Tabela de preco excluida com sucesso!');
+    toast.success('Tabela de preço excluída com sucesso!');
     router.push('/sales/pricing');
   }, [id, deleteMutation, router]);
 
@@ -116,7 +116,7 @@ function PriceTableDetailContent() {
                 {priceTable.name}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {priceTable.description || 'Sem descricao'}
+                {priceTable.description || 'Sem descrição'}
               </p>
               <div className="flex items-center gap-2 mt-3">
                 <span
@@ -199,8 +199,8 @@ function PriceTableDetailContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir esta tabela de preco. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir esta tabela de preco. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

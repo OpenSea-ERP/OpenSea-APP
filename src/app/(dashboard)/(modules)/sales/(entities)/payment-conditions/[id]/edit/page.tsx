@@ -179,12 +179,12 @@ export default function EditPaymentConditionPage() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('Nome da condicao e obrigatorio');
+      toast.error('Nome da condição e obrigatório');
       return;
     }
 
     if (Number(installments) < 1) {
-      toast.error('O numero de parcelas deve ser pelo menos 1');
+      toast.error('O número de parcelas deve ser pelo menos 1');
       return;
     }
 
@@ -214,18 +214,18 @@ export default function EditPaymentConditionPage() {
         },
       });
 
-      toast.success('Condicao de pagamento atualizada com sucesso!');
+      toast.success('Condição de pagamento atualizada com sucesso!');
       await queryClient.invalidateQueries({
         queryKey: ['payment-conditions', pcId],
       });
       router.push(`/sales/payment-conditions/${pcId}`);
     } catch (err) {
       logger.error(
-        'Erro ao atualizar condicao de pagamento',
+        'Erro ao atualizar condição de pagamento',
         err instanceof Error ? err : undefined
       );
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error('Erro ao atualizar condicao de pagamento', {
+      toast.error('Erro ao atualizar condição de pagamento', {
         description: message,
       });
     } finally {
@@ -236,15 +236,15 @@ export default function EditPaymentConditionPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(pcId);
-      toast.success('Condicao de pagamento excluida com sucesso!');
+      toast.success('Condição de pagamento excluída com sucesso!');
       router.push('/sales/payment-conditions');
     } catch (err) {
       logger.error(
-        'Erro ao deletar condicao de pagamento',
+        'Erro ao deletar condição de pagamento',
         err instanceof Error ? err : undefined
       );
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error('Erro ao deletar condicao de pagamento', {
+      toast.error('Erro ao deletar condição de pagamento', {
         description: message,
       });
     }
@@ -285,7 +285,7 @@ export default function EditPaymentConditionPage() {
   const breadcrumbItems = [
     { label: 'Vendas', href: '/sales' },
     {
-      label: 'Condicoes de Pagamento',
+      label: 'Condições de Pagamento',
       href: '/sales/payment-conditions',
     },
     {
@@ -317,10 +317,10 @@ export default function EditPaymentConditionPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Condicao de pagamento nao encontrada"
-            message="A condicao de pagamento solicitada nao foi encontrada."
+            title="Condição de pagamento não encontrada"
+            message="A condição de pagamento solicitada não foi encontrada."
             action={{
-              label: 'Voltar para Condicoes de Pagamento',
+              label: 'Voltar para Condições de Pagamento',
               onClick: () => router.push('/sales/payment-conditions'),
             }}
           />
@@ -351,7 +351,7 @@ export default function EditPaymentConditionPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-muted-foreground">
-                Editando condicao de pagamento
+                Editando condição de pagamento
               </p>
               <h1 className="text-xl font-bold truncate">{pc.name}</h1>
             </div>
@@ -369,14 +369,14 @@ export default function EditPaymentConditionPage() {
           </div>
         </Card>
 
-        {/* Form Card: Dados Basicos */}
+        {/* Form Card: Dados Básicos */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={CreditCard}
-                title="Dados Basicos"
-                subtitle="Nome, tipo e parcelas da condicao"
+                title="Dados Básicos"
+                subtitle="Nome, tipo e parcelas da condição"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -420,7 +420,7 @@ export default function EditPaymentConditionPage() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="applicableTo">Aplicavel a</Label>
+                    <Label htmlFor="applicableTo">Aplicável a</Label>
                     <Select
                       value={applicableTo}
                       onValueChange={v =>
@@ -488,12 +488,12 @@ export default function EditPaymentConditionPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="description">Descricao</Label>
+                  <Label htmlFor="description">Descrição</Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
-                    placeholder="Descreva a condicao de pagamento..."
+                    placeholder="Descreva a condição de pagamento..."
                     rows={2}
                   />
                 </div>
@@ -515,10 +515,10 @@ export default function EditPaymentConditionPage() {
                 <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-white dark:bg-slate-800/60">
                   <div className="space-y-0.5">
                     <Label className="text-base font-medium">
-                      Condicao Padrao
+                      Condição Padrão
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Usar como condicao padrao para novos pedidos
+                      Usar como condição padrão para novos pedidos
                     </p>
                   </div>
                   <Switch checked={isDefault} onCheckedChange={setIsDefault} />
@@ -554,7 +554,7 @@ export default function EditPaymentConditionPage() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="discountCash">Desconto a Vista (%)</Label>
+                    <Label htmlFor="discountCash">Desconto à Vista (%)</Label>
                     <Input
                       id="discountCash"
                       type="number"
@@ -631,13 +631,13 @@ export default function EditPaymentConditionPage() {
               <SectionHeader
                 icon={ShieldCheck}
                 title="Limites de Valor"
-                subtitle="Restricoes de valor minimo e maximo do pedido"
+                subtitle="Restrições de valor mínimo e máximo do pedido"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="minOrderValue">
-                      Valor Minimo do Pedido (R$)
+                      Valor Mínimo do Pedido (R$)
                     </Label>
                     <Input
                       id="minOrderValue"
@@ -652,7 +652,7 @@ export default function EditPaymentConditionPage() {
 
                   <div className="grid gap-2">
                     <Label htmlFor="maxOrderValue">
-                      Valor Maximo do Pedido (R$)
+                      Valor Máximo do Pedido (R$)
                     </Label>
                     <Input
                       id="maxOrderValue"
@@ -677,8 +677,8 @@ export default function EditPaymentConditionPage() {
               <div className="space-y-5">
                 <SectionHeader
                   icon={Calendar}
-                  title="Pre-visualizacao de Parcelas"
-                  subtitle="Simulacao dos vencimentos com base nos parametros atuais"
+                  title="Pré-visualização de Parcelas"
+                  subtitle="Simulação dos vencimentos com base nos parametros atuais"
                 />
                 <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -694,7 +694,7 @@ export default function EditPaymentConditionPage() {
                             Parcela {i + 1}
                           </span>
                           <p className="text-sm font-semibold">
-                            {daysFromNow} dias apos o pedido
+                            {daysFromNow} dias após o pedido
                           </p>
                         </div>
                       );
@@ -712,8 +712,8 @@ export default function EditPaymentConditionPage() {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
-        title="Excluir Condicao de Pagamento"
-        description={`Digite seu PIN de acao para excluir a condicao "${pc.name}". Esta acao nao pode ser desfeita.`}
+        title="Excluir Condição de Pagamento"
+        description={`Digite seu PIN de ação para excluir a condição "${pc.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

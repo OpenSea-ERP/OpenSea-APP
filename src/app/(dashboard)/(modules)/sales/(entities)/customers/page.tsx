@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Customers Page
- * Pagina de gerenciamento de clientes com infinite scroll e filtros server-side
+ * Página de gerenciamento de clientes com infinite scroll e filtros server-side
  */
 
 'use client';
@@ -213,8 +213,8 @@ function CustomersPageContent() {
 
   const typeOptions = useMemo(
     () => [
-      { id: 'INDIVIDUAL', label: 'Pessoa Fisica' },
-      { id: 'BUSINESS', label: 'Pessoa Juridica' },
+      { id: 'INDIVIDUAL', label: 'Pessoa Física' },
+      { id: 'BUSINESS', label: 'Pessoa Jurídica' },
     ],
     []
   );
@@ -248,8 +248,8 @@ function CustomersPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Cliente excluido com sucesso!'
-        : `${itemsToDelete.length} clientes excluidos!`
+        ? 'Cliente excluído com sucesso!'
+        : `${itemsToDelete.length} clientes excluídos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -259,7 +259,7 @@ function CustomersPageContent() {
 
   const renderGridCard = (item: Customer, isSelected: boolean) => {
     const isCompany = item.type === 'BUSINESS';
-    const typeLabel = isCompany ? 'Pessoa Juridica' : 'Pessoa Fisica';
+    const typeLabel = isCompany ? 'Pessoa Jurídica' : 'Pessoa Física';
     const statusLabel = item.isActive ? 'Ativo' : 'Inativo';
 
     return (
@@ -291,7 +291,7 @@ function CustomersPageContent() {
           id={item.id}
           variant="grid"
           title={item.name}
-          subtitle={item.document || 'Documento nao informado'}
+          subtitle={item.document || 'Documento não informado'}
           icon={isCompany ? Building2 : User}
           iconBgColor={
             isCompany
@@ -612,11 +612,11 @@ function CustomersPageContent() {
             isOpen={deleteModalOpen}
             onClose={() => setDeleteModalOpen(false)}
             onSuccess={handleDeleteConfirm}
-            title="Confirmar Exclusao"
+            title="Confirmar Exclusão"
             description={
               itemsToDelete.length === 1
-                ? 'Digite seu PIN de acao para excluir este cliente. Esta acao nao pode ser desfeita.'
-                : `Digite seu PIN de acao para excluir ${itemsToDelete.length} clientes. Esta acao nao pode ser desfeita.`
+                ? 'Digite seu PIN de ação para excluir este cliente. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de ação para excluir ${itemsToDelete.length} clientes. Esta ação não pode ser desfeita.`
             }
           />
         </PageBody>

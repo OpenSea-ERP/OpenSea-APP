@@ -105,13 +105,13 @@ function ConnectionCard({
       {connection.lastSyncAt && (
         <p className="mt-3 text-xs text-muted-foreground flex items-center gap-1">
           <RefreshCw className="h-3 w-3" />
-          Ultima sync: {new Date(connection.lastSyncAt).toLocaleString('pt-BR')}
+          Última sync: {new Date(connection.lastSyncAt).toLocaleString('pt-BR')}
         </p>
       )}
 
       {connection.commissionPercent !== undefined && (
         <p className="mt-1 text-xs text-muted-foreground">
-          Comissao: {connection.commissionPercent}%
+          Comissão: {connection.commissionPercent}%
         </p>
       )}
     </Card>
@@ -153,7 +153,7 @@ export default function MarketplacesPage() {
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Conecte seu primeiro marketplace para comecar a vender em
-              multiplos canais.
+              múltiplos canais.
             </p>
             <Button
               className="mt-4"

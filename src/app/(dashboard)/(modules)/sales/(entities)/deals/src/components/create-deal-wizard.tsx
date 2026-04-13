@@ -25,7 +25,7 @@ interface CreateDealWizardProps {
   isSubmitting?: boolean;
 }
 
-// ─── Step 1: Informacoes Basicas ──────────────────────────────
+// ─── Step 1: Informações Basicas ──────────────────────────────
 
 function StepBasicInfo({
   title,
@@ -56,7 +56,7 @@ function StepBasicInfo({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Titulo *</Label>
+        <Label>Título *</Label>
         <div className="relative">
           <Input
             placeholder="Ex: Proposta comercial - Empresa X"
@@ -255,8 +255,8 @@ export function CreateDealWizard({
 
   const steps: WizardStep[] = [
     {
-      title: 'Informacoes Basicas',
-      description: 'Defina o titulo, pipeline e etapa do negocio.',
+      title: 'Informações Basicas',
+      description: 'Defina o título, pipeline e etapa do negócio.',
       icon: (
         <Handshake className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />
       ),
@@ -303,7 +303,7 @@ export function CreateDealWizard({
           ) : (
             <Check className="h-4 w-4 mr-2" />
           )}
-          Criar Negocio
+          Criar Negócio
         </Button>
       ),
     },

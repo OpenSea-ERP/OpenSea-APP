@@ -416,8 +416,8 @@ export function CommentsSection({
           isOpen={deleteTarget !== null}
           onClose={() => setDeleteTarget(null)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir este comentario."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir este comentario."
         />
       </div>
     );
@@ -438,7 +438,7 @@ export function CommentsSection({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold">Comentarios</h3>
+                <h3 className="text-sm font-semibold">Comentários</h3>
                 {comments.length > 0 && (
                   <span className="text-[10px] font-medium tabular-nums px-1.5 py-0.5 rounded-md text-muted-foreground bg-muted/50">
                     {comments.length}
@@ -446,11 +446,11 @@ export function CommentsSection({
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Comentarios e discussoes sobre este{' '}
+                Comentários e discussoes sobre este{' '}
                 {entityType === 'order'
                   ? 'pedido'
                   : entityType === 'deal'
-                    ? 'negocio'
+                    ? 'negócio'
                     : 'registro'}
               </p>
             </div>
@@ -497,8 +497,8 @@ export function CommentsSection({
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onSuccess={handleDeleteConfirm}
-        title="Confirmar Exclusao"
-        description="Digite seu PIN de acao para excluir este comentario."
+        title="Confirmar Exclusão"
+        description="Digite seu PIN de ação para excluir este comentario."
       />
     </Collapsible>
   );

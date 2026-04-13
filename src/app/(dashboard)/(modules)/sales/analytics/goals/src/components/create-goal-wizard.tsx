@@ -211,7 +211,7 @@ function StepPeriod({
 
       <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
         <p>
-          A meta será acompanhada automaticamente durante o período selecionado.
+          A meta será acompanhada automáticamente durante o período selecionado.
           Você poderá editar os valores a qualquer momento.
         </p>
       </div>

@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Campaigns Page
- * Pagina de gerenciamento de campanhas promocionais com infinite scroll
+ * Página de gerenciamento de campanhas promocionais com infinite scroll
  */
 
 'use client';
@@ -139,8 +139,8 @@ function CampaignsPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Campanha excluida com sucesso!'
-        : `${itemsToDelete.length} campanhas excluidas!`
+        ? 'Campanha excluída com sucesso!'
+        : `${itemsToDelete.length} campanhas excluídas!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -301,8 +301,8 @@ function CampaignsPageContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir esta campanha. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir esta campanha. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

@@ -1,7 +1,7 @@
 /**
  * OpenSea OS - Edit Item Reservation Page
- * Pagina de edicao de reserva de item (campos limitados)
- * Apenas status (cancelar) e data de expiracao sao editaveis
+ * Página de edicao de reserva de item (campos limitados)
+ * Apenas status (cancelar) e data de expiração sao editaveis
  */
 
 'use client';
@@ -236,8 +236,8 @@ export default function EditItemReservationPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Reserva nao encontrada"
-            message="A reserva solicitada nao foi encontrada."
+            title="Reserva não encontrada"
+            message="A reserva solicitada não foi encontrada."
             action={{
               label: 'Voltar para Reservas',
               onClick: () => router.push('/sales/item-reservations'),
@@ -301,7 +301,7 @@ export default function EditItemReservationPage() {
               <SectionHeader
                 icon={Hash}
                 title="Dados da Reserva"
-                subtitle="Informacoes da reserva (somente leitura)"
+                subtitle="Informações da reserva (somente leitura)"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -365,7 +365,7 @@ export default function EditItemReservationPage() {
               <SectionHeader
                 icon={Calendar}
                 title="Datas"
-                subtitle="Datas de criacao e expiracao da reserva"
+                subtitle="Datas de criação e expiração da reserva"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -400,13 +400,13 @@ export default function EditItemReservationPage() {
                 <SectionHeader
                   icon={AlertTriangle}
                   title="Aviso"
-                  subtitle="Esta reserva nao pode ser modificada"
+                  subtitle="Esta reserva não pode ser modificada"
                 />
                 <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
                   <p className="text-sm text-muted-foreground">
                     {reservation.status === 'CANCELLED'
-                      ? 'Esta reserva ja foi cancelada e nao pode ser alterada.'
-                      : 'Esta reserva ja foi confirmada e nao pode ser alterada.'}
+                      ? 'Esta reserva ja foi cancelada e não pode ser alterada.'
+                      : 'Esta reserva ja foi confirmada e não pode ser alterada.'}
                   </p>
                 </div>
               </div>
@@ -421,7 +421,7 @@ export default function EditItemReservationPage() {
         onClose={() => setCancelModalOpen(false)}
         onSuccess={handleCancelConfirm}
         title="Cancelar Reserva"
-        description={`Digite seu PIN de acao para cancelar esta reserva de ${reservation.quantity} unidade(s). Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para cancelar esta reserva de ${reservation.quantity} unidade(s). Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

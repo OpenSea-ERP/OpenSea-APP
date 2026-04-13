@@ -169,7 +169,7 @@ export default function EditDealPage() {
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      toast.error('O titulo do negocio e obrigatorio.');
+      toast.error('O título do negócio e obrigatório.');
       return;
     }
 
@@ -201,16 +201,16 @@ export default function EditDealPage() {
         });
       }
 
-      toast.success('Negocio atualizado com sucesso!');
+      toast.success('Negócio atualizado com sucesso!');
       await queryClient.invalidateQueries({ queryKey: ['deals', dealId] });
       router.push(`/sales/deals/${dealId}`);
     } catch (err) {
       logger.error(
-        'Erro ao atualizar negocio',
+        'Erro ao atualizar negócio',
         err instanceof Error ? err : undefined
       );
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error('Erro ao atualizar negocio', { description: message });
+      toast.error('Erro ao atualizar negócio', { description: message });
     } finally {
       setIsSaving(false);
     }
@@ -219,7 +219,7 @@ export default function EditDealPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(dealId);
-      toast.success('Negocio excluido com sucesso!');
+      toast.success('Negócio excluído com sucesso!');
       router.push(
         deal?.pipelineId
           ? `/sales/pipelines/${deal.pipelineId}`
@@ -227,11 +227,11 @@ export default function EditDealPage() {
       );
     } catch (err) {
       logger.error(
-        'Erro ao deletar negocio',
+        'Erro ao deletar negócio',
         err instanceof Error ? err : undefined
       );
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error('Erro ao excluir negocio', { description: message });
+      toast.error('Erro ao excluir negócio', { description: message });
     }
   };
 
@@ -315,8 +315,8 @@ export default function EditDealPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Negocio nao encontrado"
-            message="O negocio solicitado nao foi encontrado."
+            title="Negócio não encontrado"
+            message="O negócio solicitado não foi encontrado."
             action={{
               label: 'Voltar para Pipelines',
               onClick: () => router.push('/sales/pipelines'),
@@ -348,32 +348,32 @@ export default function EditDealPage() {
               <Handshake className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground">Editando negocio</p>
+              <p className="text-sm text-muted-foreground">Editando negócio</p>
               <h1 className="text-xl font-bold truncate">{deal.title}</h1>
             </div>
           </div>
         </Card>
 
-        {/* Form Card: Dados do Negocio */}
+        {/* Form Card: Dados do Negócio */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={DollarSign}
-                title="Dados do Negocio"
-                subtitle="Informacoes principais do negocio"
+                title="Dados do Negócio"
+                subtitle="Informações principais do negócio"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2 sm:col-span-2">
                     <Label htmlFor="title">
-                      Titulo <span className="text-red-500">*</span>
+                      Título <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="title"
                       value={title}
                       onChange={e => setTitle(e.target.value)}
-                      placeholder="Titulo do negocio"
+                      placeholder="Título do negócio"
                       required
                     />
                   </div>
@@ -428,7 +428,7 @@ export default function EditDealPage() {
               <SectionHeader
                 icon={GitBranch}
                 title="Pipeline"
-                subtitle="Pipeline e etapa atual do negocio"
+                subtitle="Pipeline e etapa atual do negócio"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -479,23 +479,23 @@ export default function EditDealPage() {
           </div>
         </Card>
 
-        {/* Form Card: Observacoes */}
+        {/* Form Card: Observações */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={NotebookText}
-                title="Observacoes"
-                subtitle="Notas internas sobre o negocio"
+                title="Observações"
+                subtitle="Notas internas sobre o negócio"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
                 <div className="grid gap-2">
-                  <Label htmlFor="notes">Observacoes</Label>
+                  <Label htmlFor="notes">Observações</Label>
                   <Textarea
                     id="notes"
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
-                    placeholder="Notas internas sobre o negocio..."
+                    placeholder="Notas internas sobre o negócio..."
                     rows={4}
                   />
                 </div>
@@ -510,8 +510,8 @@ export default function EditDealPage() {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
-        title="Excluir Negocio"
-        description={`Digite seu PIN de acao para excluir o negocio "${deal.title}". Esta acao nao pode ser desfeita.`}
+        title="Excluir Negócio"
+        description={`Digite seu PIN de ação para excluir o negócio "${deal.title}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

@@ -62,7 +62,7 @@ export default function PipelinesListPage() {
     if (!deleteTarget) return;
     deletePipeline.mutate(deleteTarget.id, {
       onSuccess: () => {
-        toast.success('Pipeline excluido com sucesso.');
+        toast.success('Pipeline excluído com sucesso.');
         setDeleteTarget(null);
       },
       onError: () => {
@@ -79,7 +79,7 @@ export default function PipelinesListPage() {
         </div>
         <h2 className="text-lg font-semibold">Acesso negado</h2>
         <p className="text-sm text-muted-foreground">
-          Voce nao tem permissao para acessar os pipelines.
+          Voce nao tem permissão para acessar os pipelines.
         </p>
       </div>
     );
@@ -251,7 +251,7 @@ export default function PipelinesListPage() {
                     variant="secondary"
                     className="text-xs bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300"
                   >
-                    Padrao
+                    Padrão
                   </Badge>
                 )}
               </div>
@@ -276,8 +276,8 @@ export default function PipelinesListPage() {
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onSuccess={handleDelete}
-        title="Confirmar Exclusao"
-        description={`Digite seu PIN de acao para excluir o pipeline "${deleteTarget?.name}".`}
+        title="Confirmar Exclusão"
+        description={`Digite seu PIN de ação para excluir o pipeline "${deleteTarget?.name}".`}
       />
 
       {/* Create Pipeline Wizard */}

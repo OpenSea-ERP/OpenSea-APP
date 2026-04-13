@@ -44,7 +44,7 @@ export default function InvoiceDetailPage() {
 
       {!isLoading && !invoice && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-800/50 dark:bg-rose-900/20 dark:text-rose-300">
-          Nota fiscal nao encontrada.
+          Nota fiscal não encontrada.
         </div>
       )}
 
@@ -55,8 +55,8 @@ export default function InvoiceDetailPage() {
             <Info label="Pedido" value={invoice.orderId} />
             <Info label="Tipo" value={invoice.type} />
             <Info label="Status" value={invoiceStatusLabel(invoice.status)} />
-            <Info label="Numero" value={invoice.number || '-'} />
-            <Info label="Serie" value={invoice.series || '-'} />
+            <Info label="Número" value={invoice.number || '-'} />
+            <Info label="Série" value={invoice.series || '-'} />
             <Info label="Chave de acesso" value={invoice.accessKey} />
             <Info
               label="Emitida em"
@@ -103,7 +103,7 @@ export default function InvoiceDetailPage() {
             <h2 className="mb-3 text-base font-medium">Cancelar nota</h2>
             <textarea
               className="min-h-[120px] w-full rounded-md border border-zinc-300 bg-white p-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-              placeholder="Informe o motivo do cancelamento (minimo 10 caracteres)"
+              placeholder="Informe o motivo do cancelamento (mínimo 10 caracteres)"
               value={reason}
               onChange={e => setReason(e.target.value)}
             />

@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Contact Detail Page
- * Pagina de detalhes do contato com abas: Informacoes, Negociacoes, Timeline
+ * Página de detalhes do contato com abas: Informações, Negociacoes, Timeline
  */
 
 'use client';
@@ -261,8 +261,8 @@ export default function ContactDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Contato nao encontrado"
-            message="O contato que voce esta procurando nao existe ou foi removido."
+            title="Contato não encontrado"
+            message="O contato que você está procurando não existe ou foi removido."
             action={{
               label: 'Voltar para Contatos',
               onClick: () => router.push('/sales/contacts'),
@@ -415,12 +415,12 @@ export default function ContactDetailPage() {
         {/* Tabs */}
         <Tabs defaultValue="info" className="w-full">
           <TabsList className="grid w-full grid-cols-3 h-12 mb-4">
-            <TabsTrigger value="info">Informacoes</TabsTrigger>
+            <TabsTrigger value="info">Informações</TabsTrigger>
             <TabsTrigger value="deals">Negociacoes</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
 
-          {/* TAB: Informacoes */}
+          {/* TAB: Informações */}
           <TabsContent value="info" className="space-y-6">
             {/* Dados de Contato */}
             <Card className="bg-white/5 py-2 overflow-hidden">
@@ -433,7 +433,7 @@ export default function ContactDetailPage() {
                         Dados de Contato
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Informacoes pessoais e de comunicacao
+                        Informações pessoais e de comunicação
                       </p>
                     </div>
                   </div>

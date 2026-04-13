@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Deals Page
- * Pagina de gerenciamento de negocios com infinite scroll e filtros server-side
+ * Página de gerenciamento de negócios com infinite scroll e filtros server-side
  */
 
 'use client';
@@ -274,8 +274,8 @@ function DealsPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Negocio excluido com sucesso!'
-        : `${itemsToDelete.length} negocios excluidos!`
+        ? 'Negócio excluído com sucesso!'
+        : `${itemsToDelete.length} negócios excluídos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -496,7 +496,7 @@ function DealsPageContent() {
     () => [
       {
         id: 'create-deal',
-        title: 'Novo Negocio',
+        title: 'Novo Negócio',
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
@@ -532,14 +532,14 @@ function DealsPageContent() {
           <PageActionBar
             breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
-              { label: 'Negocios', href: '/sales/deals' },
+              { label: 'Negócios', href: '/sales/deals' },
             ]}
             buttons={visibleActionButtons}
           />
 
           <Header
-            title="Negocios"
-            description="Gerencie os negocios do pipeline de vendas"
+            title="Negócios"
+            description="Gerencie os negócios do pipeline de vendas"
           />
         </PageHeader>
 
@@ -560,8 +560,8 @@ function DealsPageContent() {
           ) : error ? (
             <GridError
               type="server"
-              title="Erro ao carregar negocios"
-              message="Ocorreu um erro ao tentar carregar os negocios. Por favor, tente novamente."
+              title="Erro ao carregar negócios"
+              message="Ocorreu um erro ao tentar carregar os negócios. Por favor, tente novamente."
               action={{
                 label: 'Tentar Novamente',
                 onClick: () => {
@@ -598,7 +598,7 @@ function DealsPageContent() {
                       emptyText="Nenhum pipeline encontrado."
                     />
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
-                      {total} {total === 1 ? 'negocio' : 'negocios'}
+                      {total} {total === 1 ? 'negócio' : 'negócios'}
                     </p>
                   </>
                 }
@@ -631,7 +631,7 @@ function DealsPageContent() {
             onOpenChange={setCreateOpen}
             onSubmit={async data => {
               await createMutation.mutateAsync(data);
-              toast.success('Negocio criado com sucesso!');
+              toast.success('Negócio criado com sucesso!');
             }}
             isSubmitting={createMutation.isPending}
           />
@@ -641,11 +641,11 @@ function DealsPageContent() {
             isOpen={deleteModalOpen}
             onClose={() => setDeleteModalOpen(false)}
             onSuccess={handleDeleteConfirm}
-            title="Confirmar Exclusao"
+            title="Confirmar Exclusão"
             description={
               itemsToDelete.length === 1
-                ? 'Digite seu PIN de acao para excluir este negocio. Esta acao nao pode ser desfeita.'
-                : `Digite seu PIN de acao para excluir ${itemsToDelete.length} negocios. Esta acao nao pode ser desfeita.`
+                ? 'Digite seu PIN de ação para excluir este negócio. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de ação para excluir ${itemsToDelete.length} negócios. Esta ação não pode ser desfeita.`
             }
           />
         </PageBody>

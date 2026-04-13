@@ -43,7 +43,7 @@ export function useIssueInvoice() {
     }) => invoicingService.issueInvoice(orderId, data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: INVOICING_KEYS.all });
-      toast.success('Emissao fiscal iniciada com sucesso.');
+      toast.success('Emissão fiscal iniciada com sucesso.');
     },
     onError: () => {
       toast.error('Nao foi possivel emitir a nota fiscal.');
@@ -80,10 +80,10 @@ export function useConfigureFocusNfe() {
       invoicingService.configureFocusNfe(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: INVOICING_KEYS.all });
-      toast.success('Configuracao Focus NFe salva.');
+      toast.success('Configuração Focus NFe salva.');
     },
     onError: () => {
-      toast.error('Falha ao salvar configuracao Focus NFe.');
+      toast.error('Falha ao salvar configuração Focus NFe.');
     },
   });
 }

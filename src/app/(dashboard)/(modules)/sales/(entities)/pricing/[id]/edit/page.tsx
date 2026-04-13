@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Edit Price Table Page
- * Pagina de edicao de tabela de preco
+ * Página de edicao de tabela de preco
  */
 
 'use client';
@@ -86,7 +86,7 @@ function EditPriceTableContent() {
           description: formData.description || undefined,
         },
       });
-      toast.success('Tabela de preco atualizada com sucesso!');
+      toast.success('Tabela de preço atualizada com sucesso!');
       router.push(`/sales/pricing/${id}`);
     } catch {
       toast.error('Erro ao atualizar tabela de preco.');
@@ -96,7 +96,7 @@ function EditPriceTableContent() {
   const handleDeleteConfirm = useCallback(async () => {
     await deleteMutation.mutateAsync(id);
     setDeleteModalOpen(false);
-    toast.success('Tabela de preco excluida com sucesso!');
+    toast.success('Tabela de preço excluída com sucesso!');
     router.push('/sales/pricing');
   }, [id, deleteMutation, router]);
 
@@ -149,7 +149,7 @@ function EditPriceTableContent() {
                 Editar Tabela de Preco
               </h2>
               <p className="text-sm text-muted-foreground">
-                Altere as informacoes da tabela
+                Altere as informações da tabela
               </p>
             </div>
           </div>
@@ -189,7 +189,7 @@ function EditPriceTableContent() {
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="description">Descricao</Label>
+              <Label htmlFor="description">Descrição</Label>
               <Input
                 id="description"
                 value={formData.description}
@@ -199,7 +199,7 @@ function EditPriceTableContent() {
                     description: e.target.value,
                   }))
                 }
-                placeholder="Descricao da tabela"
+                placeholder="Descrição da tabela"
               />
             </div>
 
@@ -260,7 +260,7 @@ function EditPriceTableContent() {
                   }
                   className="rounded"
                 />
-                Tabela Padrao
+                Tabela Padrão
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -274,7 +274,7 @@ function EditPriceTableContent() {
                   }
                   className="rounded"
                 />
-                Preco inclui imposto
+                Preço inclui imposto
               </label>
             </div>
           </div>
@@ -284,8 +284,8 @@ function EditPriceTableContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir esta tabela de preco. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir esta tabela de preco. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

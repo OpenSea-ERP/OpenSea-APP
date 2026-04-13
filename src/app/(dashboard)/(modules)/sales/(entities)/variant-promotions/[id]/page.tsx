@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Variant Promotion Detail Page
- * Pagina de detalhes de uma promocao de variante
+ * Página de detalhes de uma promoção de variante
  */
 
 'use client';
@@ -74,7 +74,7 @@ export default function VariantPromotionDetailPage() {
 
   const handleDelete = async () => {
     await deleteMutation.mutateAsync(promotionId);
-    toast.success('Promocao excluida com sucesso!');
+    toast.success('Promoção excluída com sucesso!');
     router.push('/sales/variant-promotions');
   };
 
@@ -144,7 +144,7 @@ export default function VariantPromotionDetailPage() {
             breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
               {
-                label: 'Promocoes de Variantes',
+                label: 'Promoções de Variantes',
                 href: '/sales/variant-promotions',
               },
               { label: 'Carregando...' },
@@ -166,7 +166,7 @@ export default function VariantPromotionDetailPage() {
             breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
               {
-                label: 'Promocoes de Variantes',
+                label: 'Promoções de Variantes',
                 href: '/sales/variant-promotions',
               },
               { label: 'Erro' },
@@ -176,8 +176,8 @@ export default function VariantPromotionDetailPage() {
         <PageBody>
           <GridError
             type="server"
-            title="Erro ao carregar promocao"
-            message="Nao foi possivel carregar os detalhes desta promocao."
+            title="Erro ao carregar promoção"
+            message="Nao foi possivel carregar os detalhes desta promoção."
             action={{
               label: 'Tentar Novamente',
               onClick: () => {
@@ -203,7 +203,7 @@ export default function VariantPromotionDetailPage() {
           breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
             {
-              label: 'Promocoes de Variantes',
+              label: 'Promoções de Variantes',
               href: '/sales/variant-promotions',
             },
             { label: promotion.name },
@@ -312,7 +312,7 @@ export default function VariantPromotionDetailPage() {
             {/* Date Range */}
             <div>
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                Periodo de Vigencia
+                Período de Vigencia
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
@@ -351,7 +351,7 @@ export default function VariantPromotionDetailPage() {
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-1.5">
                   <FileText className="h-4 w-4" />
-                  Observacoes
+                  Observações
                 </h3>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                   {promotion.notes}
@@ -382,8 +382,8 @@ export default function VariantPromotionDetailPage() {
           isOpen={isDeletePinOpen}
           onClose={() => setIsDeletePinOpen(false)}
           onSuccess={handleDelete}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir esta promocao. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir esta promoção. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Combo Detail Page
- * Pagina de detalhes do combo com informacoes gerais e itens
+ * Página de detalhes do combo com informações gerais e itens
  */
 
 'use client';
@@ -52,7 +52,7 @@ function formatDate(dateString: string): string {
 }
 
 const COMBO_TYPE_LABELS: Record<string, string> = {
-  FIXED: 'Preco Fixo',
+  FIXED: 'Preço Fixo',
   DYNAMIC: 'Dinamico',
 };
 
@@ -158,8 +158,8 @@ export default function ComboDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Combo nao encontrado"
-            message="O combo que voce esta procurando nao existe ou foi removido."
+            title="Combo não encontrado"
+            message="O combo que você está procurando não existe ou foi removido."
             action={{
               label: 'Voltar para Combos',
               onClick: () => router.push('/sales/combos'),
@@ -226,7 +226,7 @@ export default function ComboDetailPage() {
           </div>
         </Card>
 
-        {/* Informacoes Gerais */}
+        {/* Informações Gerais */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-3">
@@ -234,10 +234,10 @@ export default function ComboDetailPage() {
                 <Info className="h-5 w-5 text-foreground" />
                 <div>
                   <h3 className="text-base font-semibold">
-                    Informacoes Gerais
+                    Informações Gerais
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Dados de configuracao do combo
+                    Dados de configuração do combo
                   </p>
                 </div>
               </div>
@@ -250,7 +250,7 @@ export default function ComboDetailPage() {
                 {combo.type === 'FIXED' && combo.fixedPrice != null && (
                   <InfoRow
                     icon={DollarSign}
-                    label="Preco Fixo"
+                    label="Preço Fixo"
                     value={formatCurrency(combo.fixedPrice)}
                   />
                 )}
@@ -270,12 +270,12 @@ export default function ComboDetailPage() {
                 )}
                 <InfoRow
                   icon={Hash}
-                  label="Minimo de Itens"
+                  label="Mínimo de Itens"
                   value={combo.minItems?.toString()}
                 />
                 <InfoRow
                   icon={Hash}
-                  label="Maximo de Itens"
+                  label="Máximo de Itens"
                   value={combo.maxItems?.toString()}
                 />
                 <InfoRow
@@ -298,7 +298,7 @@ export default function ComboDetailPage() {
               {combo.description && (
                 <div className="mt-6 pt-4 border-t border-border">
                   <p className="text-xs text-muted-foreground mb-1">
-                    Descricao
+                    Descrição
                   </p>
                   <p className="text-sm whitespace-pre-wrap">
                     {combo.description}

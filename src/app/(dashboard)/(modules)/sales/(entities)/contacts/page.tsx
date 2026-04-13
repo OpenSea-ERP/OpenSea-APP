@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Contacts Page
- * Pagina de gerenciamento de contatos com infinite scroll e filtros server-side
+ * Página de gerenciamento de contatos com infinite scroll e filtros server-side
  */
 
 'use client';
@@ -329,8 +329,8 @@ function ContactsPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Contato excluido com sucesso!'
-        : `${itemsToDelete.length} contatos excluidos!`
+        ? 'Contato excluído com sucesso!'
+        : `${itemsToDelete.length} contatos excluídos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -721,11 +721,11 @@ function ContactsPageContent() {
             isOpen={deleteModalOpen}
             onClose={() => setDeleteModalOpen(false)}
             onSuccess={handleDeleteConfirm}
-            title="Confirmar Exclusao"
+            title="Confirmar Exclusão"
             description={
               itemsToDelete.length === 1
-                ? 'Digite seu PIN de acao para excluir este contato. Esta acao nao pode ser desfeita.'
-                : `Digite seu PIN de acao para excluir ${itemsToDelete.length} contatos. Esta acao nao pode ser desfeita.`
+                ? 'Digite seu PIN de ação para excluir este contato. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de ação para excluir ${itemsToDelete.length} contatos. Esta ação não pode ser desfeita.`
             }
           />
         </PageBody>

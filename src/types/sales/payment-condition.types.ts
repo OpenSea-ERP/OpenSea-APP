@@ -89,7 +89,7 @@ export const PAYMENT_CONDITION_APPLICABLE_LABELS: Record<
   ALL: 'Todos',
   RETAIL: 'Varejo',
   WHOLESALE: 'Atacado',
-  BID: 'Licitacao',
+  BID: 'Licitação',
 };
 
 export interface PaymentConditionsResponse {

@@ -248,7 +248,7 @@ export default function EditComboPage() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('Nome e obrigatorio');
+      toast.error('Nome e obrigatório');
       return;
     }
 
@@ -303,7 +303,7 @@ export default function EditComboPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(comboId);
-      toast.success('Combo excluido com sucesso!');
+      toast.success('Combo excluído com sucesso!');
       router.push('/sales/combos');
     } catch (err) {
       logger.error(
@@ -379,8 +379,8 @@ export default function EditComboPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Combo nao encontrado"
-            message="O combo solicitado nao foi encontrado."
+            title="Combo não encontrado"
+            message="O combo solicitado não foi encontrado."
             action={{
               label: 'Voltar para Combos',
               onClick: () => router.push('/sales/combos'),
@@ -436,7 +436,7 @@ export default function EditComboPage() {
               <SectionHeader
                 icon={Info}
                 title="Dados do Combo"
-                subtitle="Informacoes basicas de identificacao"
+                subtitle="Informações básicas de identificação"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -465,7 +465,7 @@ export default function EditComboPage() {
                         <SelectValue placeholder="Selecione o tipo..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="FIXED">Preco Fixo</SelectItem>
+                        <SelectItem value="FIXED">Preço Fixo</SelectItem>
                         <SelectItem value="DYNAMIC">Dinamico</SelectItem>
                       </SelectContent>
                     </Select>
@@ -473,12 +473,12 @@ export default function EditComboPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="description">Descricao</Label>
+                  <Label htmlFor="description">Descrição</Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
-                    placeholder="Descricao do combo..."
+                    placeholder="Descrição do combo..."
                     rows={3}
                   />
                 </div>
@@ -500,20 +500,20 @@ export default function EditComboPage() {
           </div>
         </Card>
 
-        {/* Form Card: Precos e Descontos */}
+        {/* Form Card: Preços e Descontos */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={DollarSign}
-                title="Precos e Descontos"
-                subtitle="Configuracao de valores do combo"
+                title="Preços e Descontos"
+                subtitle="Configuração de valores do combo"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {type === 'FIXED' && (
                     <div className="grid gap-2">
-                      <Label htmlFor="fixedPrice">Preco Fixo (R$)</Label>
+                      <Label htmlFor="fixedPrice">Preço Fixo (R$)</Label>
                       <Input
                         id="fixedPrice"
                         type="number"
@@ -567,26 +567,26 @@ export default function EditComboPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="minItems">Minimo de Itens</Label>
+                    <Label htmlFor="minItems">Mínimo de Itens</Label>
                     <Input
                       id="minItems"
                       type="number"
                       min="0"
                       value={minItems}
                       onChange={e => setMinItems(e.target.value)}
-                      placeholder="Sem minimo"
+                      placeholder="Sem mínimo"
                     />
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="maxItems">Maximo de Itens</Label>
+                    <Label htmlFor="maxItems">Máximo de Itens</Label>
                     <Input
                       id="maxItems"
                       type="number"
                       min="0"
                       value={maxItems}
                       onChange={e => setMaxItems(e.target.value)}
-                      placeholder="Sem maximo"
+                      placeholder="Sem máximo"
                     />
                   </div>
                 </div>
@@ -595,13 +595,13 @@ export default function EditComboPage() {
           </div>
         </Card>
 
-        {/* Form Card: Periodo de Validade */}
+        {/* Form Card: Período de Validade */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={Calendar}
-                title="Periodo de Validade"
+                title="Período de Validade"
                 subtitle="Defina quando o combo estara disponivel"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
@@ -657,7 +657,7 @@ export default function EditComboPage() {
                     <div className="hidden sm:grid sm:grid-cols-[1fr_100px_80px_40px] gap-3 px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       <span>Produto / Variante</span>
                       <span className="text-center">Quantidade</span>
-                      <span className="text-center">Obrigatorio</span>
+                      <span className="text-center">Obrigatório</span>
                       <span />
                     </div>
 
@@ -786,7 +786,7 @@ export default function EditComboPage() {
                         {/* Required toggle */}
                         <div className="flex items-center justify-center gap-2">
                           <Label className="sm:hidden text-xs text-muted-foreground">
-                            Obrigatorio
+                            Obrigatório
                           </Label>
                           <Switch
                             checked={item.isRequired}
@@ -835,7 +835,7 @@ export default function EditComboPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Combo"
-        description={`Digite seu PIN de acao para excluir o combo "${combo.name}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir o combo "${combo.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

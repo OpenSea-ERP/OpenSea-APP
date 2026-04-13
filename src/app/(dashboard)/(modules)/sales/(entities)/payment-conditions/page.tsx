@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Payment Conditions Page
- * Pagina de gerenciamento de condicoes de pagamento com infinite scroll
+ * Página de gerenciamento de condições de pagamento com infinite scroll
  */
 
 'use client';
@@ -151,8 +151,8 @@ function PaymentConditionsPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Condicao de pagamento excluida com sucesso!'
-        : `${itemsToDelete.length} condicoes excluidas!`
+        ? 'Condição de pagamento excluída com sucesso!'
+        : `${itemsToDelete.length} condições excluídas!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -176,7 +176,7 @@ function PaymentConditionsPageContent() {
           breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
             {
-              label: 'Condicoes de Pagamento',
+              label: 'Condições de Pagamento',
               href: '/sales/payment-conditions',
             },
           ]}
@@ -185,7 +185,7 @@ function PaymentConditionsPageContent() {
               ? [
                   {
                     id: 'create-payment-condition',
-                    title: 'Nova Condicao',
+                    title: 'Nova Condição',
                     icon: Plus,
                     onClick: () => setCreateOpen(true),
                     variant: 'default',
@@ -195,14 +195,14 @@ function PaymentConditionsPageContent() {
           }
         />
         <Header
-          title="Condicoes de Pagamento"
-          description="Gerencie condicoes e prazos de pagamento para vendas"
+          title="Condições de Pagamento"
+          description="Gerencie condições e prazos de pagamento para vendas"
         />
       </PageHeader>
 
       <PageBody>
         <SearchBar
-          placeholder="Buscar condicoes de pagamento..."
+          placeholder="Buscar condições de pagamento..."
           value={searchQuery}
           onSearch={setSearchQuery}
           onClear={() => setSearchQuery('')}
@@ -215,7 +215,7 @@ function PaymentConditionsPageContent() {
         ) : error ? (
           <GridError
             type="server"
-            title="Erro ao carregar condicoes de pagamento"
+            title="Erro ao carregar condições de pagamento"
             message="Ocorreu um erro. Por favor, tente novamente."
             action={{
               label: 'Tentar Novamente',
@@ -248,7 +248,7 @@ function PaymentConditionsPageContent() {
                 emptyText="Nenhum status encontrado."
               />
               <p className="text-sm text-muted-foreground whitespace-nowrap">
-                {total} {total === 1 ? 'condicao' : 'condicoes'}
+                {total} {total === 1 ? 'condição' : 'condições'}
               </p>
             </div>
 
@@ -296,7 +296,7 @@ function PaymentConditionsPageContent() {
                     </span>
                     {pc.isDefault && (
                       <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border border-violet-600/25 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300">
-                        Padrao
+                        Padrão
                       </span>
                     )}
                     {pc.type === 'INSTALLMENT' && (
@@ -308,7 +308,7 @@ function PaymentConditionsPageContent() {
                     {pc.discountCash != null && pc.discountCash > 0 && (
                       <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                         <Percent className="h-3 w-3" />
-                        {pc.discountCash}% a vista
+                        {pc.discountCash}% à vista
                       </span>
                     )}
                   </div>
@@ -341,8 +341,8 @@ function PaymentConditionsPageContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir esta condicao de pagamento. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir esta condição de pagamento. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

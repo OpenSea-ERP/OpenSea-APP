@@ -58,15 +58,15 @@ function BidDocumentsContent() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Vendas' },
-            { label: 'Licitacoes', href: '/sales/bids' },
+            { label: 'Licitações', href: '/sales/bids' },
             { label: 'Documentos' },
           ]}
         />
       </PageHeader>
       <PageBody>
         <Header
-          title="Documentos de Licitacao"
-          description="Certidoes, atestados e documentos de habilitacao"
+          title="Documentos de Licitação"
+          description="Certidões, atestados e documentos de habilitação"
         />
 
         <div className="flex gap-2 mb-4">
@@ -121,7 +121,7 @@ function BidDocumentsContent() {
                 </div>
                 <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" /> Emissao:{' '}
+                    <Calendar className="h-3.5 w-3.5" /> Emissão:{' '}
                     {formatDate(doc.issueDate)}
                   </span>
                   <span className="flex items-center gap-1">

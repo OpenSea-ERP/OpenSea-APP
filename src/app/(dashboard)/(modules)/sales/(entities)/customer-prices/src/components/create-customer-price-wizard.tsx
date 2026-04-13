@@ -87,7 +87,7 @@ function StepSelectEntities({
   );
 }
 
-// ─── Step 2: Preco e Validade ────────────────────────────────
+// ─── Step 2: Preço e Validade ────────────────────────────────
 
 function StepPriceDetails({
   price,
@@ -111,7 +111,7 @@ function StepPriceDetails({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Preco (R$) *</Label>
+        <Label>Preço (R$) *</Label>
         <Input
           type="number"
           placeholder="0,00"
@@ -142,9 +142,9 @@ function StepPriceDetails({
       </div>
 
       <div className="space-y-2">
-        <Label>Observacoes</Label>
+        <Label>Observações</Label>
         <Textarea
-          placeholder="Observacoes sobre o preco negociado..."
+          placeholder="Observações sobre o preço negociado..."
           value={notes}
           onChange={e => onNotesChange(e.target.value)}
           rows={3}
@@ -278,8 +278,8 @@ export function CreateCustomerPriceWizard({
       isValid: !!customerId && !!variantId,
     },
     {
-      title: 'Preco e Validade',
-      description: 'Defina o preco negociado e periodo de validade.',
+      title: 'Preço e Validade',
+      description: 'Defina o preço negociado e período de validade.',
       icon: (
         <DollarSign className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />
       ),

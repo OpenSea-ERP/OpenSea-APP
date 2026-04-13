@@ -1,4 +1,4 @@
-// Bid (Licitacao) Types
+// Bid (Licitação) Types
 import type { PaginatedQuery, PaginationMeta } from '../pagination';
 
 export type BidModality =

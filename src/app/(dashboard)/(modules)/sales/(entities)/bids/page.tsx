@@ -142,10 +142,10 @@ function BidsPageContent() {
     if (!deleteTarget) return;
     try {
       await deleteMutation.mutateAsync(deleteTarget.id);
-      toast.success('Licitacao excluida com sucesso');
+      toast.success('Licitação excluída com sucesso');
       setDeleteTarget(null);
     } catch {
-      toast.error('Erro ao excluir licitacao');
+      toast.error('Erro ao excluir licitação');
     }
   }, [deleteTarget, deleteMutation]);
 
@@ -302,13 +302,13 @@ function BidsPageContent() {
     <PageLayout>
       <PageHeader>
         <PageActionBar
-          breadcrumbItems={[{ label: 'Vendas' }, { label: 'Licitacoes' }]}
+          breadcrumbItems={[{ label: 'Vendas' }, { label: 'Licitações' }]}
           buttons={headerButtons}
         />
 
         <Header
-          title="Licitacoes"
-          description="Gerenciamento de licitacoes e pregoes"
+          title="Licitações"
+          description="Gerenciamento de licitações e pregoes"
         />
       </PageHeader>
       <PageBody>
@@ -316,13 +316,13 @@ function BidsPageContent() {
           value={search}
           onSearch={handleSearch}
           onClear={() => setSearch('')}
-          placeholder="Buscar por numero, orgao ou objeto..."
+          placeholder="Buscar por número, orgao ou objeto..."
         />
 
         {isLoading ? (
           <GridLoading />
         ) : error ? (
-          <GridError message="Erro ao carregar licitacoes" />
+          <GridError message="Erro ao carregar licitações" />
         ) : (
           <EntityGrid
             config={bidsConfig}

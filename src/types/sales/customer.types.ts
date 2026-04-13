@@ -20,13 +20,13 @@ export type ContactSource =
   | 'API';
 
 export const CUSTOMER_TYPE_LABELS: Record<CustomerType, string> = {
-  INDIVIDUAL: 'Pessoa Fisica',
-  BUSINESS: 'Pessoa Juridica',
+  INDIVIDUAL: 'Pessoa Física',
+  BUSINESS: 'Pessoa Jurídica',
 };
 
 export const CONTACT_SOURCE_LABELS: Record<ContactSource, string> = {
   MANUAL: 'Manual',
-  IMPORT: 'Importacao',
+  IMPORT: 'Importação',
   FORM: 'Formulario',
   WHATSAPP: 'WhatsApp',
   INSTAGRAM: 'Instagram',
@@ -36,7 +36,7 @@ export const CONTACT_SOURCE_LABELS: Record<ContactSource, string> = {
   EMAIL: 'E-mail',
   PDV: 'Ponto de Venda',
   MARKETPLACE: 'Marketplace',
-  BID: 'Licitacao',
+  BID: 'Licitação',
   API: 'API',
 };
 

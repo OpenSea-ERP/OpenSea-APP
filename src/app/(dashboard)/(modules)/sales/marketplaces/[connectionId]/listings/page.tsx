@@ -94,7 +94,7 @@ function ListingRow({ listing }: { listing: MarketplaceListingDTO }) {
         <span>Vendidos: {listing.totalSold}</span>
         <span>Receita: {formatCurrency(listing.totalRevenue)}</span>
         {listing.averageRating !== undefined && (
-          <span>Avaliacao: {listing.averageRating.toFixed(1)}</span>
+          <span>Avaliação: {listing.averageRating.toFixed(1)}</span>
         )}
         {listing.buyBoxOwner && (
           <Badge variant="default" className="text-xs">

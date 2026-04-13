@@ -29,6 +29,7 @@ export * from './use-payment-config';
 export * from './use-pdv';
 export * from './use-pipelines';
 export * from './use-pos';
+export * from './use-device-terminal';
 export * from './use-predictions';
 export * from './use-price-tables';
 export * from './use-printing';

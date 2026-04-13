@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Edit Return Page
- * Pagina de edicao da devolucao seguindo o padrao: PageLayout > PageHeader > PageBody
+ * Página de edicao da devolucao seguindo o padrão: PageLayout > PageHeader > PageBody
  */
 
 'use client';
@@ -212,7 +212,7 @@ export default function EditReturnPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(returnId);
-      toast.success('Devolucao excluida com sucesso!');
+      toast.success('Devolucao excluída com sucesso!');
       router.push('/sales/returns');
     } catch (err) {
       logger.error(
@@ -290,8 +290,8 @@ export default function EditReturnPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Devolucao nao encontrada"
-            message="A devolucao solicitada nao foi encontrada."
+            title="Devolucao não encontrada"
+            message="A devolucao solicitada não foi encontrada."
             action={{
               label: 'Voltar para Devolucoes',
               onClick: () => router.push('/sales/returns'),
@@ -357,7 +357,7 @@ export default function EditReturnPage() {
               <SectionHeader
                 icon={ClipboardList}
                 title="Motivo da Devolucao"
-                subtitle="Informacoes sobre o motivo da devolucao"
+                subtitle="Informações sobre o motivo da devolucao"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -410,7 +410,7 @@ export default function EditReturnPage() {
               <SectionHeader
                 icon={Banknote}
                 title="Reembolso"
-                subtitle="Informacoes sobre o reembolso ao cliente"
+                subtitle="Informações sobre o reembolso ao cliente"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -458,18 +458,18 @@ export default function EditReturnPage() {
           </div>
         </Card>
 
-        {/* Form Card: Observacoes */}
+        {/* Form Card: Observações */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={NotebookText}
-                title="Observacoes"
+                title="Observações"
                 subtitle="Notas internas sobre a devolucao"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
                 <div className="grid gap-2">
-                  <Label htmlFor="notes">Observacoes</Label>
+                  <Label htmlFor="notes">Observações</Label>
                   <Textarea
                     id="notes"
                     value={notes}
@@ -490,7 +490,7 @@ export default function EditReturnPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Devolucao"
-        description={`Digite seu PIN de acao para excluir a devolucao "${orderReturn.returnNumber}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir a devolucao "${orderReturn.returnNumber}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

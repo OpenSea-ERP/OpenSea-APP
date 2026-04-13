@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Edit Store Credit Page
- * Pagina de edicao de credito de loja (campos limitados apos criacao)
+ * Página de edicao de credito de loja (campos limitados apos criação)
  */
 
 'use client';
@@ -141,14 +141,14 @@ export default function EditStoreCreditPage() {
     // Store credits have no update endpoint — this page is mostly informational
     // with the ability to delete. Show a toast explaining the limitation.
     toast.info(
-      'Creditos de loja nao podem ser editados apos a criacao. Utilize a exclusao se necessario.'
+      'Creditos de loja não podem ser editados apos a criação. Utilize a exclusão se necessario.'
     );
   };
 
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(id);
-      toast.success('Credito excluido com sucesso!');
+      toast.success('Credito excluído com sucesso!');
       router.push('/sales/store-credits');
     } catch (err) {
       logger.error(
@@ -216,8 +216,8 @@ export default function EditStoreCreditPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Credito nao encontrado"
-            message="O credito de loja solicitado nao foi encontrado."
+            title="Credito não encontrado"
+            message="O credito de loja solicitado não foi encontrado."
             action={{
               label: 'Voltar para Creditos',
               onClick: () => router.push('/sales/store-credits'),
@@ -319,7 +319,7 @@ export default function EditStoreCreditPage() {
               <SectionHeader
                 icon={Calendar}
                 title="Validade"
-                subtitle="Data de expiracao do credito"
+                subtitle="Data de expiração do credito"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -336,7 +336,7 @@ export default function EditStoreCreditPage() {
                                 year: 'numeric',
                               }
                             )
-                          : 'Sem data de expiracao'}
+                          : 'Sem data de expiração'}
                       </span>
                     </div>
                   </div>
@@ -360,14 +360,14 @@ export default function EditStoreCreditPage() {
             <div className="space-y-5">
               <SectionHeader
                 icon={Info}
-                title="Informacoes"
-                subtitle="Creditos de loja nao podem ser editados apos a criacao"
+                title="Informações"
+                subtitle="Creditos de loja não podem ser editados apos a criação"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
                 <p className="text-sm text-muted-foreground">
-                  Creditos de loja sao imutaveis apos a criacao. Para corrigir
+                  Creditos de loja sao imutaveis apos a criação. Para corrigir
                   um credito, exclua-o e crie um novo. O saldo e atualizado
-                  automaticamente conforme o uso.
+                  automáticamente conforme o uso.
                 </p>
               </div>
             </div>
@@ -381,7 +381,7 @@ export default function EditStoreCreditPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Credito"
-        description={`Digite seu PIN de acao para excluir este credito de loja de ${formatCurrency(storeCredit.amount)}. Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir este credito de loja de ${formatCurrency(storeCredit.amount)}. Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

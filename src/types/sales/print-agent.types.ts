@@ -22,6 +22,7 @@ export interface RemotePrinter {
   type: string;
   status: PrinterStatus;
   isDefault: boolean;
+  isHidden: boolean;
   agentId: string | null;
   agentName?: string;
   osName: string | null;

@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 
 interface BalcaoCartProps {
   onCharge: () => void;
+  onIdentifyCustomer?: () => void;
   className?: string;
 }
 
@@ -21,7 +22,7 @@ interface BalcaoCartProps {
 // BALCAO CART COMPONENT
 // =============================================================================
 
-function BalcaoCart({ onCharge, className }: BalcaoCartProps) {
+function BalcaoCart({ onCharge, onIdentifyCustomer, className }: BalcaoCartProps) {
   const { activeOrder, items, itemCount, isLoading } = useCartData();
   const { updateItemQuantity, removeItem } = useCartActions();
 
@@ -70,6 +71,7 @@ function BalcaoCart({ onCharge, className }: BalcaoCartProps) {
         ) : (
           <button
             type="button"
+            onClick={onIdentifyCustomer}
             className={cn(
               'flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300',
               'text-sm font-medium text-zinc-500 transition-colors',

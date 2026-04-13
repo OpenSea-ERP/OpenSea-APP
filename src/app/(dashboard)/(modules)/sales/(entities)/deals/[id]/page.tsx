@@ -150,10 +150,10 @@ function DealDetailContent() {
       { dealId: deal.id, data: { stageId: stage.id } },
       {
         onSuccess: () => {
-          toast.success(`Negocio movido para "${stage.name}".`);
+          toast.success(`Negócio movido para "${stage.name}".`);
         },
         onError: () => {
-          toast.error('Erro ao alterar etapa do negocio.');
+          toast.error('Erro ao alterar etapa do negócio.');
         },
       }
     );
@@ -163,7 +163,7 @@ function DealDetailContent() {
     if (!deal) return;
     deleteDeal.mutate(deal.id, {
       onSuccess: () => {
-        toast.success('Negocio excluido com sucesso.');
+        toast.success('Negócio excluído com sucesso.');
         router.push(
           deal.pipelineId
             ? `/sales/pipelines/${deal.pipelineId}`
@@ -171,7 +171,7 @@ function DealDetailContent() {
         );
       },
       onError: () => {
-        toast.error('Erro ao excluir negocio.');
+        toast.error('Erro ao excluir negócio.');
       },
     });
   }
@@ -216,10 +216,10 @@ function DealDetailContent() {
         <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-500/10">
           <AlertTriangle className="h-10 w-10 text-red-500" />
         </div>
-        <h2 className="text-lg font-semibold">Negocio nao encontrado</h2>
+        <h2 className="text-lg font-semibold">Negócio não encontrado</h2>
         <p className="text-sm text-muted-foreground text-center max-w-sm">
-          O negocio solicitado nao existe ou voce nao tem permissao para
-          acessa-lo.
+          O negócio solicitado não existe ou você nao tem permissão para
+          acessá-lo.
         </p>
         <Link href="/sales/pipelines">
           <Button variant="outline" size="sm" className="gap-2">
@@ -551,7 +551,7 @@ function DealDetailContent() {
               <DetailRow
                 icon={User}
                 label="Responsavel"
-                value={deal.assignedToUserId || 'Nao atribuido'}
+                value={deal.assignedToUserId || 'Nao atribuído'}
               />
 
               {/* Customer */}
@@ -601,7 +601,7 @@ function DealDetailContent() {
                 <User className="h-8 w-8 text-slate-400" />
               </div>
               <p className="text-sm text-muted-foreground">
-                Contatos vinculados ao negocio serao exibidos aqui.
+                Contatos vinculados ao negócio serao exibidos aqui.
               </p>
               <p className="text-xs text-muted-foreground">Em breve</p>
             </div>
@@ -718,8 +718,8 @@ function DealDetailContent() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onSuccess={handleDelete}
-        title="Confirmar Exclusao"
-        description={`Digite seu PIN de acao para excluir o negocio "${deal.title}".`}
+        title="Confirmar Exclusão"
+        description={`Digite seu PIN de ação para excluir o negócio "${deal.title}".`}
       />
     </div>
   );

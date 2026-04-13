@@ -199,7 +199,7 @@ export default function EditConnectionPage() {
   // Handlers
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('Nome da conexao e obrigatorio');
+      toast.error('Nome da conexao e obrigatório');
       return;
     }
 
@@ -242,7 +242,7 @@ export default function EditConnectionPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(connectionId);
-      toast.success('Conexao excluida com sucesso!');
+      toast.success('Conexao excluída com sucesso!');
       router.push('/sales/marketplaces');
     } catch (err) {
       logger.error(
@@ -312,8 +312,8 @@ export default function EditConnectionPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Conexao nao encontrada"
-            message="A conexao solicitada nao foi encontrada."
+            title="Conexao não encontrada"
+            message="A conexao solicitada não foi encontrada."
             action={{
               label: 'Voltar para Marketplaces',
               onClick: () => router.push('/sales/marketplaces'),
@@ -363,13 +363,13 @@ export default function EditConnectionPage() {
           </div>
         </Card>
 
-        {/* Section: Informacoes Gerais */}
+        {/* Section: Informações Gerais */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <CollapsibleSection
               icon={Settings}
-              title="Informacoes Gerais"
-              subtitle="Nome, status e identificacao da conexao"
+              title="Informações Gerais"
+              subtitle="Nome, status e identificação da conexao"
             >
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -422,12 +422,12 @@ export default function EditConnectionPage() {
           </div>
         </Card>
 
-        {/* Section: Sincronizacao */}
+        {/* Section: Sincronização */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <CollapsibleSection
               icon={RefreshCw}
-              title="Sincronizacao"
+              title="Sincronização"
               subtitle="Configure quais dados sincronizar e o intervalo"
             >
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
@@ -439,7 +439,7 @@ export default function EditConnectionPage() {
                       onChange: setSyncProducts,
                     },
                     {
-                      label: 'Sincronizar Precos',
+                      label: 'Sincronizar Preços',
                       checked: syncPrices,
                       onChange: setSyncPrices,
                     },
@@ -473,7 +473,7 @@ export default function EditConnectionPage() {
 
                   <div className="grid gap-2">
                     <Label htmlFor="syncInterval">
-                      Intervalo de Sincronizacao (min)
+                      Intervalo de Sincronização (min)
                     </Label>
                     <Input
                       id="syncInterval"
@@ -490,7 +490,7 @@ export default function EditConnectionPage() {
                 {connection.lastSyncAt && (
                   <div className="rounded-lg border border-border bg-white/5 p-3 text-sm text-muted-foreground flex items-center gap-2">
                     <RefreshCw className="h-4 w-4" />
-                    Ultima sincronizacao:{' '}
+                    Última sincronização:{' '}
                     {new Date(connection.lastSyncAt).toLocaleString('pt-BR')}
                     {connection.lastSyncStatus &&
                       ` - Status: ${connection.lastSyncStatus}`}
@@ -501,18 +501,18 @@ export default function EditConnectionPage() {
           </div>
         </Card>
 
-        {/* Section: Precos e Fulfillment */}
+        {/* Section: Preços e Fulfillment */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <CollapsibleSection
               icon={Truck}
-              title="Precos e Logistica"
-              subtitle="Comissao, calculo de preco e tipo de envio"
+              title="Preços e Logistica"
+              subtitle="Comissão, calculo de preço e tipo de envio"
             >
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="commission">Comissao (%)</Label>
+                    <Label htmlFor="commission">Comissão (%)</Label>
                     <Input
                       id="commission"
                       type="number"
@@ -563,11 +563,11 @@ export default function EditConnectionPage() {
                   <div className="flex items-center justify-between rounded-lg border border-border p-3 sm:col-span-2 lg:col-span-3">
                     <div>
                       <Label className="text-sm">
-                        Calculo Automatico de Preco
+                        Calculo Automático de Preco
                       </Label>
                       <p className="text-xs text-muted-foreground">
-                        Aplica o multiplicador automaticamente sobre a tabela de
-                        precos
+                        Aplica o multiplicador automáticamente sobre a tabela de
+                        preços
                       </p>
                     </div>
                     <Switch
@@ -588,7 +588,7 @@ export default function EditConnectionPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Conexao"
-        description={`Digite seu PIN de acao para excluir a conexao "${connection.name}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir a conexao "${connection.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

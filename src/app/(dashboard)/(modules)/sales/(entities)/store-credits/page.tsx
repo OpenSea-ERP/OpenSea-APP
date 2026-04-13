@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Store Credits Page
- * Pagina de gerenciamento de creditos de loja com infinite scroll e filtros
+ * Página de gerenciamento de creditos de loja com infinite scroll e filtros
  */
 
 'use client';
@@ -136,8 +136,8 @@ function StoreCreditsPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Credito de loja excluido com sucesso!'
-        : `${itemsToDelete.length} creditos de loja excluidos!`
+        ? 'Credito de loja excluído com sucesso!'
+        : `${itemsToDelete.length} creditos de loja excluídos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -420,11 +420,11 @@ function StoreCreditsPageContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
+          title="Confirmar Exclusão"
           description={
             itemsToDelete.length === 1
-              ? 'Digite seu PIN de acao para excluir este credito de loja. Esta acao nao pode ser desfeita.'
-              : `Digite seu PIN de acao para excluir ${itemsToDelete.length} creditos de loja. Esta acao nao pode ser desfeita.`
+              ? 'Digite seu PIN de ação para excluir este credito de loja. Esta ação não pode ser desfeita.'
+              : `Digite seu PIN de ação para excluir ${itemsToDelete.length} creditos de loja. Esta ação não pode ser desfeita.`
           }
         />
 

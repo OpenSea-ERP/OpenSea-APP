@@ -12,13 +12,13 @@ export type PriceTableType =
   | 'BID';
 
 export const PRICE_TABLE_TYPE_LABELS: Record<PriceTableType, string> = {
-  DEFAULT: 'Padrao',
+  DEFAULT: 'Padrão',
   RETAIL: 'Varejo',
   WHOLESALE: 'Atacado',
   REGIONAL: 'Regional',
   CHANNEL: 'Canal',
   CUSTOMER: 'Cliente',
-  BID: 'Licitacao',
+  BID: 'Licitação',
 };
 
 export interface PriceTable {

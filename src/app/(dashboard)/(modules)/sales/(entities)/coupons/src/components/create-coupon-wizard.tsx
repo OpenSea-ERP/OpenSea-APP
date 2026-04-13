@@ -144,7 +144,7 @@ export function CreateCouponWizard({
               <FormErrorIcon message={fieldErrors.code} />
             </div>
             <p className="text-xs text-muted-foreground">
-              O código será convertido automaticamente para maiúsculas.
+              O código será convertido automáticamente para maiúsculas.
             </p>
           </div>
 

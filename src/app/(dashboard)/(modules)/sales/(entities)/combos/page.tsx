@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Combos Page
- * Pagina de gerenciamento de combos de produtos com infinite scroll
+ * Página de gerenciamento de combos de produtos com infinite scroll
  */
 
 'use client';
@@ -121,8 +121,8 @@ function CombosPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Combo excluido com sucesso!'
-        : `${itemsToDelete.length} combos excluidos!`
+        ? 'Combo excluído com sucesso!'
+        : `${itemsToDelete.length} combos excluídos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -266,8 +266,8 @@ function CombosPageContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir este combo. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir este combo. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

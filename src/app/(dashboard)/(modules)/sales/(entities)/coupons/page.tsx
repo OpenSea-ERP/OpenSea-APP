@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Coupons Page
- * Pagina de gerenciamento de cupons de desconto com infinite scroll
+ * Página de gerenciamento de cupons de desconto com infinite scroll
  */
 
 'use client';
@@ -121,8 +121,8 @@ function CouponsPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Cupom excluido com sucesso!'
-        : `${itemsToDelete.length} cupons excluidos!`
+        ? 'Cupom excluído com sucesso!'
+        : `${itemsToDelete.length} cupons excluídos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -159,13 +159,13 @@ function CouponsPageContent() {
         />
         <Header
           title="Cupons de Desconto"
-          description="Gerencie cupons promocionais e codigos de desconto"
+          description="Gerencie cupons promocionais e códigos de desconto"
         />
       </PageHeader>
 
       <PageBody>
         <SearchBar
-          placeholder="Buscar cupons por codigo..."
+          placeholder="Buscar cupons por código..."
           value={searchQuery}
           onSearch={setSearchQuery}
           onClear={() => setSearchQuery('')}
@@ -235,7 +235,7 @@ function CouponsPageContent() {
                           {coupon.type === 'PERCENTAGE'
                             ? `${coupon.value}% de desconto`
                             : coupon.type === 'FREE_SHIPPING'
-                              ? 'Frete gratis'
+                              ? 'Frete grátis'
                               : `R$ ${coupon.value.toFixed(2)} de desconto`}
                         </p>
                       </div>
@@ -297,8 +297,8 @@ function CouponsPageContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir este cupom. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir este cupom. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

@@ -1,212 +1,57 @@
 'use client';
 
-import { PageActionBar } from '@/components/layout/page-action-bar';
-import { PageBody, PageLayout } from '@/components/layout/page-layout';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { GridLoading } from '@/components/handlers/grid-loading';
-import { GridError } from '@/components/handlers/grid-error';
-import { usePosTerminals } from '@/hooks/sales';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Monitor,
-  Smartphone,
-  TabletSmartphone,
-  Globe,
-  Plus,
-  Settings,
-  UserCheck,
-  Zap,
-  ArrowRight,
-} from 'lucide-react';
+import { Loader2, Monitor } from 'lucide-react';
+import { useDeviceTerminal } from '@/hooks/sales';
 
-const MODE_CONFIG = {
-  FAST_CHECKOUT: {
-    label: 'Caixa Rapido',
-    icon: Monitor,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10',
-  },
-  CONSULTIVE: {
-    label: 'Consultivo',
-    icon: TabletSmartphone,
-    color: 'text-emerald-500',
-    bgColor: 'bg-emerald-500/10',
-  },
-  SELF_SERVICE: {
-    label: 'Autoatendimento',
-    icon: Smartphone,
-    color: 'text-purple-500',
-    bgColor: 'bg-purple-500/10',
-  },
-  EXTERNAL: {
-    label: 'Venda Externa',
-    icon: Globe,
-    color: 'text-orange-500',
-    bgColor: 'bg-orange-500/10',
-  },
-} as const;
-
-export default function PosTerminalSelectorPage() {
+export default function PosEntryPage() {
   const router = useRouter();
-  const { data, isLoading, error } = usePosTerminals({ isActive: true });
+  const {
+    isLoading,
+    needsPairing,
+    needsSession,
+    isReady,
+    mode,
+    terminal,
+  } = useDeviceTerminal();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (needsPairing) {
+      router.replace('/sales/pos/pair');
+      return;
+    }
+
+    if (needsSession) {
+      router.replace('/sales/pos/session/open');
+      return;
+    }
+
+    if (isReady) {
+      if (mode === 'TOTEM') {
+        router.replace('/sales/pos/totem');
+      } else {
+        router.replace('/sales/pos/operator');
+      }
+    }
+  }, [isLoading, needsPairing, needsSession, isReady, mode, router]);
 
   return (
-    <PageLayout>
-      <PageActionBar
-        breadcrumbItems={[
-          { label: 'Vendas', href: '/sales' },
-          { label: 'PDV' },
-        ]}
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/sales/pos/terminals')}
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              Gerenciar Terminais
-            </Button>
-          </div>
-        }
-      />
-
-      <PageBody>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Ponto de Venda</h1>
-          <p className="text-muted-foreground mt-1">
-            Escolha o modo de atendimento ou selecione um terminal
-          </p>
-        </div>
-
-        {/* Mode Selector Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <Card
-            className="group relative cursor-pointer overflow-hidden border border-border bg-white dark:bg-slate-800/60 p-0 transition-all hover:shadow-lg hover:border-violet-400/50 dark:hover:border-violet-500/40"
-            onClick={() => router.push('/sales/pos/atendimento')}
-          >
-            <div className="relative p-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/5 dark:to-purple-500/5" />
-              <div className="relative flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20">
-                  <UserCheck className="h-7 w-7 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-bold mb-1">
-                    Atendimento Assistido
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Acompanhe o cliente na loja com venda consultiva
-                  </p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1 shrink-0" />
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            className="group relative cursor-pointer overflow-hidden border border-border bg-white dark:bg-slate-800/60 p-0 transition-all hover:shadow-lg hover:border-sky-400/50 dark:hover:border-sky-500/40"
-            onClick={() => router.push('/sales/pos/balcao')}
-          >
-            <div className="relative p-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-blue-500/10 dark:from-sky-500/5 dark:to-blue-500/5" />
-              <div className="relative flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/20">
-                  <Zap className="h-7 w-7 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-bold mb-1">Balcão Rápido</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Venda rápida direto no balcão
-                  </p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1 shrink-0" />
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Terminal List */}
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Terminais</h2>
-          <p className="text-sm text-muted-foreground">
-            Acesse um terminal específico para operar
-          </p>
-        </div>
-
-        {isLoading ? (
-          <GridLoading />
-        ) : error ? (
-          <GridError />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {data?.data.map(terminal => {
-              const config = MODE_CONFIG[terminal.mode];
-              const ModeIcon = config.icon;
-
-              return (
-                <Card
-                  key={terminal.id}
-                  className="group relative cursor-pointer overflow-hidden border border-border bg-white dark:bg-slate-800/60 p-5 transition-all hover:shadow-md hover:border-primary/30"
-                  onClick={() => router.push(`/sales/pos/${terminal.id}`)}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${config.bgColor}`}
-                    >
-                      <ModeIcon className={`h-6 w-6 ${config.color}`} />
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {config.label}
-                    </Badge>
-                  </div>
-
-                  <h3 className="font-semibold text-lg mb-1">
-                    {terminal.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {terminal.deviceId}
-                  </p>
-
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${
-                        terminal.lastOnlineAt &&
-                        new Date(terminal.lastOnlineAt).getTime() >
-                          Date.now() - 5 * 60 * 1000
-                          ? 'bg-emerald-500'
-                          : 'bg-slate-400'
-                      }`}
-                    />
-                    {terminal.lastOnlineAt
-                      ? `Ultimo acesso: ${new Date(terminal.lastOnlineAt).toLocaleDateString('pt-BR')}`
-                      : 'Nunca conectado'}
-                  </div>
-                </Card>
-              );
-            })}
-
-            {/* Empty state */}
-            {data?.data.length === 0 && (
-              <Card className="col-span-full flex flex-col items-center justify-center p-12 border-dashed">
-                <Monitor className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="font-semibold text-lg mb-1">
-                  Nenhum terminal cadastrado
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Cadastre seu primeiro terminal para comecar a vender
-                </p>
-                <Button onClick={() => router.push('/sales/pos/terminals')}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Cadastrar Terminal
-                </Button>
-              </Card>
-            )}
-          </div>
-        )}
-      </PageBody>
-    </PageLayout>
+    <div className="flex h-screen flex-col items-center justify-center bg-gradient-to-br from-violet-50 via-white to-sky-50 dark:from-violet-950/40 dark:via-slate-950 dark:to-sky-950/40">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-sky-500 shadow-lg shadow-violet-500/30 mb-4">
+        <Monitor className="h-8 w-8 text-white" />
+      </div>
+      {terminal && (
+        <h1 className="text-xl font-bold text-foreground mb-1">
+          {terminal.terminalName}
+        </h1>
+      )}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span>Carregando terminal...</span>
+      </div>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Payment Condition Detail Page
- * Pagina de detalhes da condicao de pagamento com informacoes gerais e regras
+ * Página de detalhes da condição de pagamento com informações gerais e regras
  */
 
 'use client';
@@ -130,7 +130,7 @@ export default function PaymentConditionDetailPage() {
 
   const breadcrumbItems = [
     { label: 'Vendas', href: '/sales' },
-    { label: 'Condicoes de Pagamento', href: '/sales/payment-conditions' },
+    { label: 'Condições de Pagamento', href: '/sales/payment-conditions' },
     { label: pc?.name || '...' },
   ];
 
@@ -160,10 +160,10 @@ export default function PaymentConditionDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Condicao de pagamento nao encontrada"
-            message="A condicao de pagamento que voce esta procurando nao existe ou foi removida."
+            title="Condição de pagamento não encontrada"
+            message="A condição de pagamento que você está procurando não existe ou foi removida."
             action={{
-              label: 'Voltar para Condicoes de Pagamento',
+              label: 'Voltar para Condições de Pagamento',
               onClick: () => router.push('/sales/payment-conditions'),
             }}
           />
@@ -199,7 +199,7 @@ export default function PaymentConditionDetailPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-muted-foreground">
-                Condicao de pagamento
+                Condição de pagamento
               </p>
               <h1 className="text-xl font-bold truncate">{pc.name}</h1>
               <p className="text-sm text-muted-foreground">
@@ -218,14 +218,14 @@ export default function PaymentConditionDetailPage() {
               </div>
               {pc.isDefault && (
                 <div className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300">
-                  Padrao
+                  Padrão
                 </div>
               )}
             </div>
           </div>
         </Card>
 
-        {/* Section: Informacoes Gerais */}
+        {/* Section: Informações Gerais */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-3">
@@ -233,10 +233,10 @@ export default function PaymentConditionDetailPage() {
                 <Tag className="h-5 w-5 text-foreground" />
                 <div>
                   <h3 className="text-base font-semibold">
-                    Informacoes Gerais
+                    Informações Gerais
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Tipo, parcelas e prazos da condicao
+                    Tipo, parcelas e prazos da condição
                   </p>
                 </div>
               </div>
@@ -267,13 +267,13 @@ export default function PaymentConditionDetailPage() {
                 />
                 <InfoRow
                   icon={Target}
-                  label="Aplicavel a"
+                  label="Aplicável a"
                   value={PAYMENT_CONDITION_APPLICABLE_LABELS[pc.applicableTo]}
                 />
                 {pc.description && (
                   <InfoRow
                     icon={Tag}
-                    label="Descricao"
+                    label="Descrição"
                     value={pc.description}
                   />
                 )}
@@ -312,7 +312,7 @@ export default function PaymentConditionDetailPage() {
                 {pc.discountCash != null && pc.discountCash > 0 && (
                   <InfoRow
                     icon={Percent}
-                    label="Desconto a Vista"
+                    label="Desconto à Vista"
                     value={formatPercent(pc.discountCash)}
                   />
                 )}
@@ -333,14 +333,14 @@ export default function PaymentConditionDetailPage() {
                 {pc.minOrderValue != null && (
                   <InfoRow
                     icon={ShieldCheck}
-                    label="Valor Minimo do Pedido"
+                    label="Valor Mínimo do Pedido"
                     value={formatCurrency(pc.minOrderValue)}
                   />
                 )}
                 {pc.maxOrderValue != null && (
                   <InfoRow
                     icon={ShieldCheck}
-                    label="Valor Maximo do Pedido"
+                    label="Valor Máximo do Pedido"
                     value={formatCurrency(pc.maxOrderValue)}
                   />
                 )}
@@ -371,7 +371,7 @@ export default function PaymentConditionDetailPage() {
                       Resumo de Parcelas
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Simulacao dos vencimentos para um pedido hipotetico
+                      Simulação dos vencimentos para um pedido hipotético
                     </p>
                   </div>
                 </div>
@@ -394,7 +394,7 @@ export default function PaymentConditionDetailPage() {
                           </span>
                         </div>
                         <p className="text-sm font-semibold">
-                          {daysFromNow} dias apos o pedido
+                          {daysFromNow} dias após o pedido
                         </p>
                       </div>
                     );

@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Customer Prices Page
- * Pagina de gerenciamento de precos por cliente com infinite scroll
+ * Página de gerenciamento de preços por cliente com infinite scroll
  */
 
 'use client';
@@ -223,15 +223,15 @@ function CustomerPricesPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Preco excluido com sucesso!'
-        : `${itemsToDelete.length} precos excluidos!`
+        ? 'Preço excluído com sucesso!'
+        : `${itemsToDelete.length} preços excluídos!`
     );
   }, [itemsToDelete, deleteMutation]);
 
   const handleCreateSubmit = useCallback(
     async (data: CreateCustomerPriceRequest) => {
       await createMutation.mutateAsync(data);
-      toast.success('Preco por cliente criado com sucesso!');
+      toast.success('Preço por cliente criado com sucesso!');
     },
     [createMutation]
   );
@@ -287,7 +287,7 @@ function CustomerPricesPageContent() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
-            { label: 'Precos por Cliente', href: '/sales/customer-prices' },
+            { label: 'Preços por Cliente', href: '/sales/customer-prices' },
           ]}
           buttons={
             canCreate
@@ -304,8 +304,8 @@ function CustomerPricesPageContent() {
           }
         />
         <Header
-          title="Precos por Cliente"
-          description="Gerencie precos negociados individualmente para cada cliente"
+          title="Preços por Cliente"
+          description="Gerencie preços negociados individualmente para cada cliente"
         />
       </PageHeader>
 
@@ -324,8 +324,8 @@ function CustomerPricesPageContent() {
         ) : error ? (
           <GridError
             type="server"
-            title="Erro ao carregar precos"
-            message="Ocorreu um erro ao tentar carregar os precos por cliente. Por favor, tente novamente."
+            title="Erro ao carregar preços"
+            message="Ocorreu um erro ao tentar carregar os preços por cliente. Por favor, tente novamente."
             action={{
               label: 'Tentar Novamente',
               onClick: () => {
@@ -357,7 +357,7 @@ function CustomerPricesPageContent() {
                 emptyText="Nenhum status encontrado."
               />
               <p className="text-sm text-muted-foreground whitespace-nowrap">
-                {total} {total === 1 ? 'preco' : 'precos'}
+                {total} {total === 1 ? 'preco' : 'preços'}
               </p>
             </div>
 
@@ -458,10 +458,10 @@ function CustomerPricesPageContent() {
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <BadgeDollarSign className="h-12 w-12 text-muted-foreground/30 mb-4" />
                 <h3 className="text-sm font-medium text-muted-foreground">
-                  Nenhum preco por cliente encontrado
+                  Nenhum preço por cliente encontrado
                 </h3>
                 <p className="text-xs text-muted-foreground/70 mt-1">
-                  Precos negociados individualmente aparecerao aqui.
+                  Preços negociados individualmente aparecerão aqui.
                 </p>
               </div>
             )}
@@ -474,11 +474,11 @@ function CustomerPricesPageContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
+          title="Confirmar Exclusão"
           description={
             itemsToDelete.length === 1
-              ? 'Digite seu PIN de acao para excluir este preco. Esta acao nao pode ser desfeita.'
-              : `Digite seu PIN de acao para excluir ${itemsToDelete.length} precos. Esta acao nao pode ser desfeita.`
+              ? 'Digite seu PIN de ação para excluir este preco. Esta ação não pode ser desfeita.'
+              : `Digite seu PIN de ação para excluir ${itemsToDelete.length} preços. Esta ação não pode ser desfeita.`
           }
         />
 

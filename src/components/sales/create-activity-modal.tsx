@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Create Activity Modal
- * Modal para criacao rapida de atividades vinculadas a um contato ou negocio
+ * Modal para criação rapida de atividades vinculadas a um contato ou negócio
  */
 
 'use client';

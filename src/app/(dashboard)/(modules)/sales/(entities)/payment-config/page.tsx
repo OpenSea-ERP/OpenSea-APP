@@ -311,7 +311,7 @@ export default function PaymentConfigPage() {
       {activeSection === 'primary' && (
         <GatewaySection
           title="Gateway Primário"
-          description="Selecione o gateway principal para processar pagamentos automaticamente."
+          description="Selecione o gateway principal para processar pagamentos automáticamente."
           provider={primaryProvider}
           onProviderChange={v => {
             setPrimaryProvider(v);
@@ -337,7 +337,7 @@ export default function PaymentConfigPage() {
       {activeSection === 'fallback' && (
         <GatewaySection
           title="Gateway Secundário (Fallback)"
-          description="Quando o primário não suportar um método, o secundário será usado automaticamente."
+          description="Quando o primário não suportar um método, o secundário será usado automáticamente."
           provider={fallbackProvider as PaymentProviderName}
           onProviderChange={v => {
             setFallbackProvider(v);

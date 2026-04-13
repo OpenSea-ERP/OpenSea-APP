@@ -35,4 +35,19 @@ export const printAgentsService = {
   async unpair(id: string): Promise<void> {
     return apiClient.post(API_ENDPOINTS.SALES_PRINTING.AGENTS.UNPAIR(id));
   },
+
+  async togglePrinterHidden(
+    printerId: string,
+    isHidden: boolean,
+  ): Promise<{ id: string; isHidden: boolean }> {
+    return apiClient.patch(`/v1/sales/printers/${printerId}/hidden`, {
+      isHidden,
+    });
+  },
+
+  async setDefaultPrinter(
+    printerId: string,
+  ): Promise<{ id: string; isDefault: boolean }> {
+    return apiClient.patch(`/v1/sales/printers/${printerId}/default`);
+  },
 };

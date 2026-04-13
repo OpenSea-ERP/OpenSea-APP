@@ -51,7 +51,7 @@ export default function InvoicingPage() {
           Faturamento Fiscal
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Emissao, consulta e controle de NF-e/NFC-e.
+          Emissão, consulta e controle de NF-e/NFC-e.
         </p>
       </div>
 
@@ -126,7 +126,7 @@ export default function InvoicingPage() {
         <div className="flex flex-wrap items-center gap-2">
           <input
             className="h-10 min-w-[280px] rounded-md border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            placeholder="Order ID para emissao"
+            placeholder="Order ID para emissão"
             value={issueOrderId}
             onChange={e => setIssueOrderId(e.target.value)}
           />
@@ -142,7 +142,7 @@ export default function InvoicingPage() {
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="mb-3 text-base font-medium">Configuracao Focus NFe</h2>
+        <h2 className="mb-3 text-base font-medium">Configuração Focus NFe</h2>
         <div className="grid gap-3 md:grid-cols-4">
           <input
             type="password"
@@ -157,7 +157,7 @@ export default function InvoicingPage() {
               checked={focusProductionMode}
               onChange={e => setFocusProductionMode(e.target.checked)}
             />
-            Modo producao
+            Modo produção
           </label>
           <label className="flex h-10 items-center gap-2 rounded-md border border-zinc-300 px-3 text-sm dark:border-zinc-700">
             <input
@@ -165,7 +165,7 @@ export default function InvoicingPage() {
               checked={focusAutoIssue}
               onChange={e => setFocusAutoIssue(e.target.checked)}
             />
-            Emissao automatica
+            Emissão automática
           </label>
         </div>
         <div className="mt-3">
@@ -181,7 +181,7 @@ export default function InvoicingPage() {
               })
             }
           >
-            Salvar configuracao
+            Salvar configuração
           </button>
         </div>
       </section>
@@ -191,7 +191,7 @@ export default function InvoicingPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-800/60">
               <tr>
-                <th className="px-4 py-3 text-left font-medium">Numero</th>
+                <th className="px-4 py-3 text-left font-medium">Número</th>
                 <th className="px-4 py-3 text-left font-medium">Serie</th>
                 <th className="px-4 py-3 text-left font-medium">Tipo</th>
                 <th className="px-4 py-3 text-left font-medium">Status</th>
@@ -261,7 +261,7 @@ export default function InvoicingPage() {
             Anterior
           </button>
           <span className="text-sm text-zinc-600 dark:text-zinc-300">
-            Pagina {data?.page ?? page} de {data?.pages ?? 1}
+            Página {data?.page ?? page} de {data?.pages ?? 1}
           </span>
           <button
             type="button"
@@ -269,7 +269,7 @@ export default function InvoicingPage() {
             disabled={(data?.page ?? page) >= (data?.pages ?? 1)}
             onClick={() => setPage(p => p + 1)}
           >
-            Proxima
+            Próxima
           </button>
         </div>
       </div>

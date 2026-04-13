@@ -85,14 +85,14 @@ function StepExpiration({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Data de expiracao</Label>
+        <Label>Data de expiração</Label>
         <Input
           type="date"
           value={expiresAt}
           onChange={e => onExpiresAtChange(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          Deixe em branco para credito sem data de expiracao.
+          Deixe em branco para credito sem data de expiração.
         </p>
       </div>
     </div>
@@ -161,7 +161,7 @@ export function CreateStoreCreditWizard({
     },
     {
       title: 'Validade',
-      description: 'Defina a data de expiracao do credito (opcional).',
+      description: 'Defina a data de expiração do credito (opcional).',
       icon: <Calendar className="h-16 w-16 text-sky-400" strokeWidth={1.2} />,
       onBack: () => setCurrentStep(1),
       content: (

@@ -25,7 +25,7 @@ interface CreateVariantPromotionWizardProps {
 }
 
 // ============================================================================
-// STEP 1: Informacoes da Promocao
+// STEP 1: Informações da Promoção
 // ============================================================================
 
 function StepPromotionInfo({
@@ -101,7 +101,7 @@ function StepPromotionInfo({
 }
 
 // ============================================================================
-// STEP 2: Periodo e Detalhes
+// STEP 2: Período e Detalhes
 // ============================================================================
 
 function StepPeriodAndDetails({

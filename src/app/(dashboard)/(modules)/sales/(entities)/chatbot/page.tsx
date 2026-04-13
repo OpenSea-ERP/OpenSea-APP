@@ -248,7 +248,7 @@ function ChatbotConfigContent() {
                   disabled={!canAdmin}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Enviada automaticamente quando nenhum agente está disponível.
+                  Enviada automáticamente quando nenhum agente está disponível.
                 </p>
               </div>
             </div>
@@ -306,7 +306,7 @@ function ChatbotConfigContent() {
                   disabled={!canAdmin}
                 />
                 <p className="text-xs text-muted-foreground">
-                  As conversas serão atribuídas automaticamente a este usuário.
+                  As conversas serão atribuídas automáticamente a este usuário.
                 </p>
               </div>
 

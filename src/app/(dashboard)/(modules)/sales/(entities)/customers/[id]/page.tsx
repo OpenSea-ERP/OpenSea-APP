@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Customer Detail Page
- * Pagina de detalhes do cliente com abas: Informacoes, Contatos, Negociacoes, Timeline
+ * Página de detalhes do cliente com abas: Informações, Contatos, Negociacoes, Timeline
  */
 
 'use client';
@@ -130,8 +130,8 @@ export default function CustomerDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Cliente nao encontrado"
-            message="O cliente que voce esta procurando nao existe ou foi removido."
+            title="Cliente não encontrado"
+            message="O cliente que você está procurando não existe ou foi removido."
             action={{
               label: 'Voltar para Clientes',
               onClick: () => router.push('/sales/customers'),
@@ -147,7 +147,7 @@ export default function CustomerDetailPage() {
   // ============================================================================
 
   const isCompany = customer.type === 'BUSINESS';
-  const typeLabel = isCompany ? 'Pessoa Juridica' : 'Pessoa Fisica';
+  const typeLabel = isCompany ? 'Pessoa Jurídica' : 'Pessoa Física';
   const fullAddress = [
     customer.address,
     customer.city,
@@ -218,13 +218,13 @@ export default function CustomerDetailPage() {
         {/* Tabs */}
         <Tabs defaultValue="info" className="w-full">
           <TabsList className="grid w-full grid-cols-4 h-12 mb-4">
-            <TabsTrigger value="info">Informacoes</TabsTrigger>
+            <TabsTrigger value="info">Informações</TabsTrigger>
             <TabsTrigger value="contacts">Contatos</TabsTrigger>
             <TabsTrigger value="deals">Negociacoes</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
 
-          {/* TAB: Informacoes */}
+          {/* TAB: Informações */}
           <TabsContent value="info" className="space-y-6">
             <Card className="bg-white/5 py-2 overflow-hidden">
               <div className="px-6 py-4 space-y-6">
@@ -236,7 +236,7 @@ export default function CustomerDetailPage() {
                         Dados do Cliente
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Informacoes de identificacao e contato
+                        Informações de identificação e contato
                       </p>
                     </div>
                   </div>
@@ -275,7 +275,7 @@ export default function CustomerDetailPage() {
                   {customer.notes && (
                     <div className="mt-6 pt-4 border-t border-border">
                       <p className="text-xs text-muted-foreground mb-1">
-                        Observacoes
+                        Observações
                       </p>
                       <p className="text-sm whitespace-pre-wrap">
                         {customer.notes}
@@ -315,7 +315,7 @@ export default function CustomerDetailPage() {
                     Negociacoes
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    O historico de negociacoes e oportunidades estara disponivel
+                    O histórico de negociacoes e oportunidades estara disponivel
                     em breve.
                   </p>
                 </div>

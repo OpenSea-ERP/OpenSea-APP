@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Item Reservations Page
- * Pagina de gerenciamento de reservas de itens com infinite scroll e filtros server-side
+ * Página de gerenciamento de reservas de itens com infinite scroll e filtros server-side
  */
 
 'use client';
@@ -631,8 +631,8 @@ function ItemReservationsPageContent() {
             title="Confirmar Cancelamento"
             description={
               itemsToDelete.length === 1
-                ? 'Digite seu PIN de acao para cancelar esta reserva. Esta acao nao pode ser desfeita.'
-                : `Digite seu PIN de acao para cancelar ${itemsToDelete.length} reservas. Esta acao nao pode ser desfeita.`
+                ? 'Digite seu PIN de ação para cancelar esta reserva. Esta ação não pode ser desfeita.'
+                : `Digite seu PIN de ação para cancelar ${itemsToDelete.length} reservas. Esta ação não pode ser desfeita.`
             }
           />
 

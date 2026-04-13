@@ -27,7 +27,7 @@ export default function PrintersPage() {
           Impressoras
         </h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Cadastro e gerenciamento de impressoras termicas para recibos POS.
+          Cadastro e gerenciamento de impressoras térmicas para recibos POS.
         </p>
       </div>
 

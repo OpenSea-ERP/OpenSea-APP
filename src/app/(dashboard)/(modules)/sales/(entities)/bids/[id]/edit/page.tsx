@@ -94,10 +94,10 @@ export default function BidEditPage() {
           notes: formData.notes || undefined,
         },
       });
-      toast.success('Licitacao atualizada com sucesso');
+      toast.success('Licitação atualizada com sucesso');
       router.push(`/sales/bids/${bidId}`);
     } catch {
-      toast.error('Erro ao atualizar licitacao');
+      toast.error('Erro ao atualizar licitação');
     }
   };
 
@@ -108,7 +108,7 @@ export default function BidEditPage() {
           <PageActionBar
             breadcrumbItems={[
               { label: 'Vendas' },
-              { label: 'Licitacoes', href: '/sales/bids' },
+              { label: 'Licitações', href: '/sales/bids' },
               { label: 'Carregando...' },
             ]}
           />
@@ -127,13 +127,13 @@ export default function BidEditPage() {
           <PageActionBar
             breadcrumbItems={[
               { label: 'Vendas' },
-              { label: 'Licitacoes', href: '/sales/bids' },
+              { label: 'Licitações', href: '/sales/bids' },
               { label: 'Erro' },
             ]}
           />
         </PageHeader>
         <PageBody>
-          <GridError message="Licitacao nao encontrada" />
+          <GridError message="Licitação não encontrada" />
         </PageBody>
       </PageLayout>
     );
@@ -145,7 +145,7 @@ export default function BidEditPage() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Vendas' },
-            { label: 'Licitacoes', href: '/sales/bids' },
+            { label: 'Licitações', href: '/sales/bids' },
             { label: bid.editalNumber, href: `/sales/bids/${bidId}` },
             { label: 'Editar' },
           ]}

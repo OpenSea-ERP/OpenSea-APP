@@ -25,7 +25,7 @@ export type ActivityOutcome =
   | 'CANCELLED';
 
 export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
-  CALL: 'Ligacao',
+  CALL: 'Ligação',
   EMAIL: 'E-mail',
   MEETING: 'Reuniao',
   TASK: 'Tarefa',
@@ -41,7 +41,7 @@ export const ACTIVITY_OUTCOME_LABELS: Record<ActivityOutcome, string> = {
   NO_ANSWER: 'Sem Resposta',
   BUSY: 'Ocupado',
   VOICEMAIL: 'Caixa Postal',
-  WRONG_NUMBER: 'Numero Errado',
+  WRONG_NUMBER: 'Número Errado',
   INTERESTED: 'Interessado',
   NOT_INTERESTED: 'Sem Interesse',
   RESCHEDULED: 'Reagendado',

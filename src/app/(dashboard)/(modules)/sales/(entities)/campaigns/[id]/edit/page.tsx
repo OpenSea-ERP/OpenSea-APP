@@ -155,7 +155,7 @@ export default function EditCampaignPage() {
   const [priority, setPriority] = useState(0);
   const [stackable, setStackable] = useState(false);
 
-  // Periodo
+  // Período
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 

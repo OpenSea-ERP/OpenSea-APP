@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Coupon Detail Page
- * Pagina de detalhes do cupom com informacoes gerais, regras e estatisticas
+ * Página de detalhes do cupom com informações gerais, regras e estatisticas
  */
 
 'use client';
@@ -181,8 +181,8 @@ export default function CouponDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Cupom nao encontrado"
-            message="O cupom que voce esta procurando nao existe ou foi removido."
+            title="Cupom não encontrado"
+            message="O cupom que você está procurando não existe ou foi removido."
             action={{
               label: 'Voltar para Cupons',
               onClick: () => router.push('/sales/coupons'),
@@ -245,7 +245,7 @@ export default function CouponDetailPage() {
           </div>
         </Card>
 
-        {/* Section: Informacoes do Desconto */}
+        {/* Section: Informações do Desconto */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-3">
@@ -253,7 +253,7 @@ export default function CouponDetailPage() {
                 <Percent className="h-5 w-5 text-foreground" />
                 <div>
                   <h3 className="text-base font-semibold">
-                    Informacoes do Desconto
+                    Informações do Desconto
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     Tipo, valor e regras do cupom
@@ -277,20 +277,20 @@ export default function CouponDetailPage() {
                 />
                 <InfoRow
                   icon={Target}
-                  label="Aplicavel a"
+                  label="Aplicável a"
                   value={COUPON_APPLICABLE_LABELS[coupon.applicableTo]}
                 />
                 {coupon.minOrderValue != null && (
                   <InfoRow
                     icon={ShieldCheck}
-                    label="Valor Minimo do Pedido"
+                    label="Valor Mínimo do Pedido"
                     value={formatCurrency(coupon.minOrderValue)}
                   />
                 )}
                 {coupon.maxDiscount != null && (
                   <InfoRow
                     icon={ShieldCheck}
-                    label="Desconto Maximo"
+                    label="Desconto Máximo"
                     value={formatCurrency(coupon.maxDiscount)}
                   />
                 )}
@@ -315,7 +315,7 @@ export default function CouponDetailPage() {
                 <div>
                   <h3 className="text-base font-semibold">Validade e Uso</h3>
                   <p className="text-sm text-muted-foreground">
-                    Periodo de validade e limites de utilizacao
+                    Período de validade e limites de utilização
                   </p>
                 </div>
               </div>
@@ -358,16 +358,16 @@ export default function CouponDetailPage() {
           </div>
         </Card>
 
-        {/* Section: Historico de Uso */}
+        {/* Section: Histórico de Uso */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <BarChart3 className="h-5 w-5 text-foreground" />
                 <div>
-                  <h3 className="text-base font-semibold">Historico de Uso</h3>
+                  <h3 className="text-base font-semibold">Histórico de Uso</h3>
                   <p className="text-sm text-muted-foreground">
-                    Resumo de utilizacao e progresso do cupom
+                    Resumo de utilização e progresso do cupom
                   </p>
                 </div>
               </div>
@@ -383,7 +383,7 @@ export default function CouponDetailPage() {
                     <div className="flex items-center gap-2">
                       <TrendingUp className="h-4 w-4 text-violet-500" />
                       <span className="text-sm font-medium">
-                        Progresso de Utilizacao
+                        Progresso de Utilização
                       </span>
                     </div>
                     <span className="text-sm font-semibold">
@@ -434,7 +434,7 @@ export default function CouponDetailPage() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Este cupom nao possui limite de utilizacao
+                    Este cupom nao possui limite de utilização
                   </p>
                 </div>
               )}
@@ -497,8 +497,8 @@ export default function CouponDetailPage() {
                         Limite de uso atingido
                       </p>
                       <p className="text-xs text-rose-600 dark:text-rose-400">
-                        Este cupom atingiu o numero maximo de utilizacoes
-                        permitidas e nao pode mais ser utilizado.
+                        Este cupom atingiu o número máximo de utilizacoes
+                        permitidas e não pode mais ser utilizado.
                       </p>
                     </div>
                   </div>

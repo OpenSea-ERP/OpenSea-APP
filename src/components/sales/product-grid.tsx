@@ -305,7 +305,7 @@ function ProductGrid({ onAddToCart, className }: ProductGridProps) {
       </div>
       {isScanningCode && (
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Validando codigo escaneado...
+          Validando código escaneado...
         </p>
       )}
 

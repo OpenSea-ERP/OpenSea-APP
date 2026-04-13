@@ -94,7 +94,7 @@ export default function DashboardViewPage() {
   const handleDeleteConfirm = useCallback(async () => {
     try {
       await deleteMutation.mutateAsync(dashboardId);
-      toast.success('Dashboard excluido com sucesso.');
+      toast.success('Dashboard excluído com sucesso.');
       router.push('/sales/analytics/dashboards');
     } catch {
       toast.error('Erro ao excluir dashboard.');
@@ -130,8 +130,8 @@ export default function DashboardViewPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Dashboard nao encontrado"
-            message="O dashboard solicitado nao foi encontrado."
+            title="Dashboard não encontrado"
+            message="O dashboard solicitado não foi encontrado."
             action={{
               label: 'Voltar para Dashboards',
               onClick: () => router.push('/sales/analytics/dashboards'),
@@ -229,7 +229,7 @@ export default function DashboardViewPage() {
                       variant="secondary"
                       className="text-xs bg-green-50 text-green-700 dark:bg-green-500/8 dark:text-green-300"
                     >
-                      Padrao
+                      Padrão
                     </Badge>
                   )}
                 </div>
@@ -273,7 +273,7 @@ export default function DashboardViewPage() {
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-blue-500" />
-                  Vendas por Periodo
+                  Vendas por Período
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -332,7 +332,7 @@ export default function DashboardViewPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Dashboard"
-        description={`Digite seu PIN de acao para excluir o dashboard "${dashboard.name}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir o dashboard "${dashboard.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

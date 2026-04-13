@@ -172,12 +172,12 @@ export default function EditCouponPage() {
 
   const handleSubmit = async () => {
     if (!code.trim()) {
-      toast.error('Codigo do cupom e obrigatorio');
+      toast.error('Código do cupom e obrigatório');
       return;
     }
 
     if (!value || Number(value) <= 0) {
-      toast.error('Valor do desconto e obrigatorio e deve ser maior que zero');
+      toast.error('Valor do desconto e obrigatório e deve ser maior que zero');
       return;
     }
 
@@ -232,7 +232,7 @@ export default function EditCouponPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(couponId);
-      toast.success('Cupom excluido com sucesso!');
+      toast.success('Cupom excluído com sucesso!');
       router.push('/sales/coupons');
     } catch (err) {
       logger.error(
@@ -308,8 +308,8 @@ export default function EditCouponPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Cupom nao encontrado"
-            message="O cupom solicitado nao foi encontrado."
+            title="Cupom não encontrado"
+            message="O cupom solicitado não foi encontrado."
             action={{
               label: 'Voltar para Cupons',
               onClick: () => router.push('/sales/coupons'),
@@ -367,13 +367,13 @@ export default function EditCouponPage() {
               <SectionHeader
                 icon={Percent}
                 title="Dados do Cupom"
-                subtitle="Codigo, tipo e valor do desconto"
+                subtitle="Código, tipo e valor do desconto"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="code">
-                      Codigo <span className="text-red-500">*</span>
+                      Código <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="code"
@@ -433,7 +433,7 @@ export default function EditCouponPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="applicableTo">Aplicavel a</Label>
+                    <Label htmlFor="applicableTo">Aplicável a</Label>
                     <Select
                       value={applicableTo}
                       onValueChange={v =>
@@ -483,13 +483,13 @@ export default function EditCouponPage() {
               <SectionHeader
                 icon={ShieldCheck}
                 title="Limites"
-                subtitle="Restricoes de valor e desconto maximo"
+                subtitle="Restrições de valor e desconto máximo"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="minOrderValue">
-                      Valor Minimo do Pedido (R$)
+                      Valor Mínimo do Pedido (R$)
                     </Label>
                     <Input
                       id="minOrderValue"
@@ -503,7 +503,7 @@ export default function EditCouponPage() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="maxDiscount">Desconto Maximo (R$)</Label>
+                    <Label htmlFor="maxDiscount">Desconto Máximo (R$)</Label>
                     <Input
                       id="maxDiscount"
                       type="number"
@@ -527,7 +527,7 @@ export default function EditCouponPage() {
               <SectionHeader
                 icon={Calendar}
                 title="Validade e Uso"
-                subtitle="Periodo de validade e limites de utilizacao"
+                subtitle="Período de validade e limites de utilização"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -608,12 +608,12 @@ export default function EditCouponPage() {
               <div className="space-y-5">
                 <SectionHeader
                   icon={Settings2}
-                  title="Informacoes de IA"
-                  subtitle="Este cupom foi gerado automaticamente por inteligencia artificial"
+                  title="Informações de IA"
+                  subtitle="Este cupom foi gerado automáticamente por inteligencia artificial"
                 />
                 <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
                   <div className="grid gap-2">
-                    <Label>Motivo da Geracao</Label>
+                    <Label>Motivo da Geração</Label>
                     <div className="flex items-center min-h-10 px-3 py-2 rounded-md border border-border bg-muted/50">
                       <span className="text-sm text-muted-foreground">
                         {coupon.aiReason || 'Nenhum motivo registrado'}
@@ -633,7 +633,7 @@ export default function EditCouponPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Cupom"
-        description={`Digite seu PIN de acao para excluir o cupom "${coupon.code}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir o cupom "${coupon.code}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

@@ -46,7 +46,7 @@ function nextStageId(): string {
   return `temp-stage-${stageCounter}`;
 }
 
-// ─── Step 1: Informacoes do Pipeline ──────────────────────────
+// ─── Step 1: Informações do Pipeline ──────────────────────────
 
 function StepPipelineInfo({
   name,
@@ -78,7 +78,7 @@ function StepPipelineInfo({
       </div>
 
       <div className="space-y-2">
-        <Label>Descricao</Label>
+        <Label>Descrição</Label>
         <Textarea
           placeholder="Descreva o proposito deste pipeline..."
           value={description}
@@ -274,7 +274,7 @@ export function CreatePipelineWizard({
   const steps: WizardStep[] = [
     {
       title: 'Novo Pipeline',
-      description: 'Defina o nome e a descricao do pipeline.',
+      description: 'Defina o nome e a descrição do pipeline.',
       icon: (
         <GitBranch className="h-16 w-16 text-violet-400" strokeWidth={1.2} />
       ),

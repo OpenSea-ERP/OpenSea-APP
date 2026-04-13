@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Campaign Detail Page
- * Visualizacao de campanha com detalhes e performance
+ * Visualização de campanha com detalhes e performance
  */
 
 'use client';
@@ -66,7 +66,7 @@ function CampaignDetailContent() {
   const handleDeleteConfirm = useCallback(async () => {
     await deleteMutation.mutateAsync(id);
     setDeleteModalOpen(false);
-    toast.success('Campanha excluida com sucesso!');
+    toast.success('Campanha excluída com sucesso!');
     router.push('/sales/campaigns');
   }, [id, deleteMutation, router]);
 
@@ -152,7 +152,7 @@ function CampaignDetailContent() {
                 {campaign.name}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {campaign.description || 'Sem descricao'}
+                {campaign.description || 'Sem descrição'}
               </p>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <span
@@ -179,7 +179,7 @@ function CampaignDetailContent() {
         {/* Performance / Details */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div className="rounded-xl border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Periodo</p>
+            <p className="text-sm text-muted-foreground">Período</p>
             <p className="text-sm font-medium mt-1">
               {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
             </p>
@@ -206,8 +206,8 @@ function CampaignDetailContent() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir esta campanha. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir esta campanha. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

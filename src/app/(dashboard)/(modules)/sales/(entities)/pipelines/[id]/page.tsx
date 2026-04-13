@@ -216,13 +216,13 @@ function PipelineKanbanContent() {
         {
           onSuccess: () => {
             toast.success(
-              `Negocio movido para "${targetStage?.name ?? 'nova etapa'}".`
+              `Negócio movido para "${targetStage?.name ?? 'nova etapa'}".`
             );
             // Invalidate all deals queries to refresh
             queryClient.invalidateQueries({ queryKey: ['deals'] });
           },
           onError: () => {
-            toast.error('Erro ao mover negocio. Tente novamente.');
+            toast.error('Erro ao mover negócio. Tente novamente.');
             queryClient.invalidateQueries({ queryKey: ['deals'] });
           },
         }
@@ -289,10 +289,10 @@ function PipelineKanbanContent() {
         <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-500/10">
           <AlertTriangle className="h-10 w-10 text-red-500" />
         </div>
-        <h2 className="text-lg font-semibold">Pipeline nao encontrado</h2>
+        <h2 className="text-lg font-semibold">Pipeline não encontrado</h2>
         <p className="text-sm text-muted-foreground text-center max-w-sm">
-          O pipeline solicitado nao existe ou voce nao tem permissao para
-          acessa-lo.
+          O pipeline solicitado não existe ou você nao tem permissão para
+          acessá-lo.
         </p>
         <Link href="/sales/pipelines">
           <Button variant="outline" size="sm" className="gap-2">
@@ -318,7 +318,7 @@ function PipelineKanbanContent() {
             ? [
                 {
                   id: 'create-deal',
-                  title: 'Novo Negocio',
+                  title: 'Novo Negócio',
                   icon: Plus,
                   variant: 'default' as const,
                   onClick: () => setCreateDealOpen(true),
@@ -379,7 +379,7 @@ function PipelineKanbanContent() {
                 <div className="font-bold text-lg text-slate-900 dark:text-white">
                   {allDeals.length}
                 </div>
-                <div className="text-xs text-muted-foreground">Negocios</div>
+                <div className="text-xs text-muted-foreground">Negócios</div>
               </div>
               <div className="text-center">
                 <div className="font-bold text-lg text-slate-900 dark:text-white">
@@ -404,7 +404,7 @@ function PipelineKanbanContent() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar negocios..."
+                  placeholder="Buscar negócios..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   className="pl-9 h-9 bg-white dark:bg-white/10 border-gray-200 dark:border-white/10"

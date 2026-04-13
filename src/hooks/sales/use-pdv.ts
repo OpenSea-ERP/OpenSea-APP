@@ -31,6 +31,9 @@ export function usePdvOrder(id: string | null) {
     queryKey: PDV_KEYS.order(id ?? ''),
     queryFn: () => pdvService.getOrder(id!),
     enabled: !!id,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 

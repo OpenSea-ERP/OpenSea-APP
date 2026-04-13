@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Price Tables Page
- * Pagina de gerenciamento de tabelas de preco com infinite scroll
+ * Página de gerenciamento de tabelas de preço com infinite scroll
  */
 
 'use client';
@@ -93,7 +93,7 @@ function PricingPageContent() {
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useCallback((el: HTMLDivElement | null) => {
-    // Disconnect previous observer
+    // Disconnect prévious observer
     if (observerRef.current) {
       observerRef.current.disconnect();
       observerRef.current = null;
@@ -139,8 +139,8 @@ function PricingPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Tabela de preco excluida com sucesso!'
-        : `${itemsToDelete.length} tabelas excluidas!`
+        ? 'Tabela de preço excluída com sucesso!'
+        : `${itemsToDelete.length} tabelas excluídas!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -167,8 +167,8 @@ function PricingPageContent() {
           }
         />
         <Header
-          title="Tabelas de Preco"
-          description="Gerencie tabelas de preco, precos por cliente e politicas de precificacao"
+          title="Tabelas de Preço"
+          description="Gerencie tabelas de preco, preços por cliente e politicas de precificação"
         />
       </PageHeader>
 
@@ -261,7 +261,7 @@ function PricingPageContent() {
                     </span>
                     {table.isDefault && (
                       <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300">
-                        Padrao
+                        Padrão
                       </span>
                     )}
                   </div>

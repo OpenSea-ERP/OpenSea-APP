@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Variant Promotions Page
- * Pagina de gerenciamento de promocoes de variantes com infinite scroll e filtros
+ * Página de gerenciamento de promoções de variantes com infinite scroll e filtros
  */
 
 'use client';
@@ -166,8 +166,8 @@ function VariantPromotionsPageContent() {
     setItemsToDelete([]);
     toast.success(
       itemsToDelete.length === 1
-        ? 'Promocao excluida com sucesso!'
-        : `${itemsToDelete.length} promocoes excluidas!`
+        ? 'Promoção excluída com sucesso!'
+        : `${itemsToDelete.length} promoções excluídas!`
     );
   }, [itemsToDelete, deleteMutation]);
 
@@ -233,7 +233,7 @@ function VariantPromotionsPageContent() {
           breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
             {
-              label: 'Promocoes de Variantes',
+              label: 'Promoções de Variantes',
               href: '/sales/variant-promotions',
             },
           ]}
@@ -242,7 +242,7 @@ function VariantPromotionsPageContent() {
               ? [
                   {
                     id: 'create-promotion',
-                    title: 'Nova Promocao',
+                    title: 'Nova Promoção',
                     icon: Plus,
                     onClick: () => setCreateWizardOpen(true),
                     variant: 'default',
@@ -252,14 +252,14 @@ function VariantPromotionsPageContent() {
           }
         />
         <Header
-          title="Promocoes de Variantes"
-          description="Gerencie promocoes e descontos aplicados a variantes de produtos"
+          title="Promoções de Variantes"
+          description="Gerencie promoções e descontos aplicados a variantes de produtos"
         />
       </PageHeader>
 
       <PageBody>
         <SearchBar
-          placeholder="Buscar promocoes por nome..."
+          placeholder="Buscar promoções por nome..."
           value={searchQuery}
           onSearch={setSearchQuery}
           onClear={() => setSearchQuery('')}
@@ -272,8 +272,8 @@ function VariantPromotionsPageContent() {
         ) : error ? (
           <GridError
             type="server"
-            title="Erro ao carregar promocoes"
-            message="Ocorreu um erro ao tentar carregar as promocoes. Por favor, tente novamente."
+            title="Erro ao carregar promoções"
+            message="Ocorreu um erro ao tentar carregar as promoções. Por favor, tente novamente."
             action={{
               label: 'Tentar Novamente',
               onClick: () => {
@@ -305,7 +305,7 @@ function VariantPromotionsPageContent() {
                 emptyText="Nenhum tipo encontrado."
               />
               <p className="text-sm text-muted-foreground whitespace-nowrap">
-                {total} {total === 1 ? 'promocao' : 'promocoes'}
+                {total} {total === 1 ? 'promoção' : 'promoções'}
               </p>
             </div>
 
@@ -315,14 +315,14 @@ function VariantPromotionsPageContent() {
                   <Tag className="h-7 w-7 text-muted-foreground" />
                 </div>
                 <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                  Nenhuma promocao encontrada
+                  Nenhuma promoção encontrada
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   {debouncedSearch ||
                   statusFilter.length > 0 ||
                   discountTypeFilter.length > 0
                     ? 'Tente ajustar os filtros de busca.'
-                    : 'Crie a primeira promocao para comecar.'}
+                    : 'Crie a primeira promoção para comecar.'}
                 </p>
               </div>
             ) : (

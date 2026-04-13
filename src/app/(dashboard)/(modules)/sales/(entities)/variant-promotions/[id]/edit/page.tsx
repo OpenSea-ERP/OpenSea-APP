@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Edit Variant Promotion Page
- * Pagina de edicao de promocao de variante
+ * Página de edicao de promoção de variante
  */
 
 'use client';
@@ -155,13 +155,13 @@ export default function EditVariantPromotionPage() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('O nome da promocao e obrigatorio');
+      toast.error('O nome da promoção e obrigatório');
       return;
     }
 
     if (!discountValue || Number(discountValue) <= 0) {
       toast.error(
-        'O valor do desconto e obrigatorio e deve ser maior que zero'
+        'O valor do desconto e obrigatório e deve ser maior que zero'
       );
       return;
     }
@@ -191,18 +191,18 @@ export default function EditVariantPromotionPage() {
         },
       });
 
-      toast.success('Promocao atualizada com sucesso!');
+      toast.success('Promoção atualizada com sucesso!');
       await queryClient.invalidateQueries({
         queryKey: ['variant-promotions', promotionId],
       });
       router.push(`/sales/variant-promotions/${promotionId}`);
     } catch (err) {
       logger.error(
-        'Erro ao atualizar promocao',
+        'Erro ao atualizar promoção',
         err instanceof Error ? err : undefined
       );
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error('Erro ao atualizar promocao', { description: message });
+      toast.error('Erro ao atualizar promoção', { description: message });
     } finally {
       setIsSaving(false);
     }
@@ -211,15 +211,15 @@ export default function EditVariantPromotionPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(promotionId);
-      toast.success('Promocao excluida com sucesso!');
+      toast.success('Promoção excluída com sucesso!');
       router.push('/sales/variant-promotions');
     } catch (err) {
       logger.error(
-        'Erro ao deletar promocao',
+        'Erro ao deletar promoção',
         err instanceof Error ? err : undefined
       );
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error('Erro ao deletar promocao', { description: message });
+      toast.error('Erro ao deletar promoção', { description: message });
     }
   };
 
@@ -257,7 +257,7 @@ export default function EditVariantPromotionPage() {
 
   const breadcrumbItems = [
     { label: 'Vendas', href: '/sales' },
-    { label: 'Promocoes', href: '/sales/variant-promotions' },
+    { label: 'Promoções', href: '/sales/variant-promotions' },
     {
       label: promotion?.name || '...',
       href: `/sales/variant-promotions/${promotionId}`,
@@ -287,10 +287,10 @@ export default function EditVariantPromotionPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Promocao nao encontrada"
-            message="A promocao solicitada nao foi encontrada."
+            title="Promoção não encontrada"
+            message="A promoção solicitada não foi encontrada."
             action={{
-              label: 'Voltar para Promocoes',
+              label: 'Voltar para Promoções',
               onClick: () => router.push('/sales/variant-promotions'),
             }}
           />
@@ -320,7 +320,7 @@ export default function EditVariantPromotionPage() {
               <Tag className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground">Editando promocao</p>
+              <p className="text-sm text-muted-foreground">Editando promoção</p>
               <h1 className="text-xl font-bold truncate">{promotion.name}</h1>
             </div>
             <div className="hidden sm:flex items-center gap-3 shrink-0">
@@ -337,13 +337,13 @@ export default function EditVariantPromotionPage() {
           </div>
         </Card>
 
-        {/* Form Card: Dados da Promocao */}
+        {/* Form Card: Dados da Promoção */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={Percent}
-                title="Dados da Promocao"
+                title="Dados da Promoção"
                 subtitle="Nome, tipo e valor do desconto"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
@@ -356,7 +356,7 @@ export default function EditVariantPromotionPage() {
                       id="name"
                       value={name}
                       onChange={e => setName(e.target.value)}
-                      placeholder="Nome da promocao"
+                      placeholder="Nome da promoção"
                       required
                     />
                   </div>
@@ -427,14 +427,14 @@ export default function EditVariantPromotionPage() {
           </div>
         </Card>
 
-        {/* Form Card: Periodo */}
+        {/* Form Card: Período */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={Calendar}
-                title="Periodo"
-                subtitle="Datas de inicio e fim da promocao"
+                title="Período"
+                subtitle="Datas de inicio e fim da promoção"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -469,14 +469,14 @@ export default function EditVariantPromotionPage() {
           </div>
         </Card>
 
-        {/* Form Card: Observacoes */}
+        {/* Form Card: Observações */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={FileText}
-                title="Observacoes"
-                subtitle="Notas adicionais sobre esta promocao"
+                title="Observações"
+                subtitle="Notas adicionais sobre esta promoção"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid gap-2">
@@ -485,7 +485,7 @@ export default function EditVariantPromotionPage() {
                     id="notes"
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
-                    placeholder="Observacoes sobre esta promocao..."
+                    placeholder="Observações sobre esta promoção..."
                     rows={3}
                   />
                 </div>
@@ -500,8 +500,8 @@ export default function EditVariantPromotionPage() {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
-        title="Excluir Promocao"
-        description={`Digite seu PIN de acao para excluir a promocao "${promotion.name}". Esta acao nao pode ser desfeita.`}
+        title="Excluir Promoção"
+        description={`Digite seu PIN de ação para excluir a promoção "${promotion.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

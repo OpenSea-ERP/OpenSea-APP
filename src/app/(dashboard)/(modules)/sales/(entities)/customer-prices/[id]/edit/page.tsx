@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Edit Customer Price Page
- * Pagina de edicao de preco por cliente
+ * Página de edicao de preço por cliente
  */
 
 'use client';
@@ -145,7 +145,7 @@ export default function EditCustomerPricePage() {
 
   const handleSubmit = async () => {
     if (!price || Number(price) <= 0) {
-      toast.error('O preco e obrigatorio e deve ser maior que zero');
+      toast.error('O preço e obrigatório e deve ser maior que zero');
       return;
     }
 
@@ -163,7 +163,7 @@ export default function EditCustomerPricePage() {
         },
       });
 
-      toast.success('Preco atualizado com sucesso!');
+      toast.success('Preço atualizado com sucesso!');
       await queryClient.invalidateQueries({
         queryKey: ['customer-prices'],
       });
@@ -183,7 +183,7 @@ export default function EditCustomerPricePage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(id);
-      toast.success('Preco excluido com sucesso!');
+      toast.success('Preço excluído com sucesso!');
       router.push('/sales/customer-prices');
     } catch (err) {
       logger.error(
@@ -229,7 +229,7 @@ export default function EditCustomerPricePage() {
 
   const breadcrumbItems = [
     { label: 'Vendas', href: '/sales' },
-    { label: 'Precos por Cliente', href: '/sales/customer-prices' },
+    { label: 'Preços por Cliente', href: '/sales/customer-prices' },
     {
       label: customerPrice ? formatPrice(customerPrice.price) : '...',
       href: `/sales/customer-prices/${id}`,
@@ -259,10 +259,10 @@ export default function EditCustomerPricePage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Preco nao encontrado"
-            message="O preco solicitado nao foi encontrado."
+            title="Preço não encontrado"
+            message="O preço solicitado não foi encontrado."
             action={{
-              label: 'Voltar para Precos',
+              label: 'Voltar para Preços',
               onClick: () => router.push('/sales/customer-prices'),
             }}
           />
@@ -293,7 +293,7 @@ export default function EditCustomerPricePage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-muted-foreground">
-                Editando preco por cliente
+                Editando preço por cliente
               </p>
               <h1 className="text-xl font-bold truncate">
                 {formatPrice(customerPrice.price)}
@@ -302,13 +302,13 @@ export default function EditCustomerPricePage() {
           </div>
         </Card>
 
-        {/* Form Card: Informacoes (read-only) */}
+        {/* Form Card: Informações (read-only) */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={DollarSign}
-                title="Identificacao"
+                title="Identificação"
                 subtitle="Cliente e variante associados (somente leitura)"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
@@ -335,20 +335,20 @@ export default function EditCustomerPricePage() {
           </div>
         </Card>
 
-        {/* Form Card: Preco */}
+        {/* Form Card: Preço */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={DollarSign}
-                title="Preco"
-                subtitle="Valor do preco especial para este cliente"
+                title="Preço"
+                subtitle="Valor do preço especial para este cliente"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="price">
-                      Preco (R$) <span className="text-red-500">*</span>
+                      Preço (R$) <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="price"
@@ -374,7 +374,7 @@ export default function EditCustomerPricePage() {
               <SectionHeader
                 icon={Calendar}
                 title="Validade"
-                subtitle="Periodo de vigencia do preco especial"
+                subtitle="Período de vigencia do preço especial"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -402,13 +402,13 @@ export default function EditCustomerPricePage() {
           </div>
         </Card>
 
-        {/* Form Card: Observacoes */}
+        {/* Form Card: Observações */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <div className="space-y-5">
               <SectionHeader
                 icon={FileText}
-                title="Observacoes"
+                title="Observações"
                 subtitle="Notas adicionais sobre este preco"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
@@ -418,7 +418,7 @@ export default function EditCustomerPricePage() {
                     id="notes"
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
-                    placeholder="Observacoes sobre este preco especial..."
+                    placeholder="Observações sobre este preço especial..."
                     rows={3}
                   />
                 </div>
@@ -433,8 +433,8 @@ export default function EditCustomerPricePage() {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
-        title="Excluir Preco"
-        description={`Digite seu PIN de acao para excluir este preco por cliente. Esta acao nao pode ser desfeita.`}
+        title="Excluir Preço"
+        description={`Digite seu PIN de ação para excluir este preço por cliente. Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

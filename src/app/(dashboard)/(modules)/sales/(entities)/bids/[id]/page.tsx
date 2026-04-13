@@ -58,7 +58,7 @@ export default function BidDetailPage() {
           <PageActionBar
             breadcrumbItems={[
               { label: 'Vendas' },
-              { label: 'Licitacoes', href: '/sales/bids' },
+              { label: 'Licitações', href: '/sales/bids' },
               { label: 'Carregando...' },
             ]}
           />
@@ -77,13 +77,13 @@ export default function BidDetailPage() {
           <PageActionBar
             breadcrumbItems={[
               { label: 'Vendas' },
-              { label: 'Licitacoes', href: '/sales/bids' },
+              { label: 'Licitações', href: '/sales/bids' },
               { label: 'Erro' },
             ]}
           />
         </PageHeader>
         <PageBody>
-          <GridError message="Licitacao nao encontrada" />
+          <GridError message="Licitação não encontrada" />
         </PageBody>
       </PageLayout>
     );
@@ -95,7 +95,7 @@ export default function BidDetailPage() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Vendas' },
-            { label: 'Licitacoes', href: '/sales/bids' },
+            { label: 'Licitações', href: '/sales/bids' },
             { label: bid.editalNumber },
           ]}
           actions={[
@@ -179,7 +179,7 @@ export default function BidDetailPage() {
             <TabsTrigger value="items">Itens ({items.length})</TabsTrigger>
             <TabsTrigger value="details">Detalhes</TabsTrigger>
             <TabsTrigger value="history">
-              Historico ({history.length})
+              Histórico ({history.length})
             </TabsTrigger>
           </TabsList>
 
@@ -300,7 +300,7 @@ export default function BidDetailPage() {
           <TabsContent value="history">
             {history.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Nenhum historico
+                Nenhum histórico
               </p>
             ) : (
               <div className="space-y-2">

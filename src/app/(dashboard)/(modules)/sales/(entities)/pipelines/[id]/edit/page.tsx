@@ -1,7 +1,7 @@
 /**
  * OpenSea OS - Edit Pipeline Page
- * Pagina de edicao de pipeline (nome e descricao apenas)
- * Stages sao gerenciados na pagina de detalhes (Kanban)
+ * Página de edicao de pipeline (nome e descrição apenas)
+ * Stages sao gerenciados na página de detalhes (Kanban)
  */
 
 'use client';
@@ -122,7 +122,7 @@ export default function EditPipelinePage() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('O nome do pipeline e obrigatorio');
+      toast.error('O nome do pipeline e obrigatório');
       return;
     }
 
@@ -156,7 +156,7 @@ export default function EditPipelinePage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(pipelineId);
-      toast.success('Pipeline excluido com sucesso!');
+      toast.success('Pipeline excluído com sucesso!');
       router.push('/sales/pipelines');
     } catch (err) {
       logger.error(
@@ -232,8 +232,8 @@ export default function EditPipelinePage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Pipeline nao encontrado"
-            message="O pipeline solicitado nao foi encontrado."
+            title="Pipeline não encontrado"
+            message="O pipeline solicitado não foi encontrado."
             action={{
               label: 'Voltar para Pipelines',
               onClick: () => router.push('/sales/pipelines'),
@@ -292,7 +292,7 @@ export default function EditPipelinePage() {
               <SectionHeader
                 icon={Settings2}
                 title="Dados do Pipeline"
-                subtitle="Nome e descricao do pipeline"
+                subtitle="Nome e descrição do pipeline"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 gap-4">
@@ -310,12 +310,12 @@ export default function EditPipelinePage() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="description">Descricao</Label>
+                    <Label htmlFor="description">Descrição</Label>
                     <Textarea
                       id="description"
                       value={description}
                       onChange={e => setDescription(e.target.value)}
-                      placeholder="Descricao do pipeline..."
+                      placeholder="Descrição do pipeline..."
                       rows={3}
                     />
                   </div>
@@ -332,7 +332,7 @@ export default function EditPipelinePage() {
               <SectionHeader
                 icon={GitBranch}
                 title="Etapas"
-                subtitle="As etapas sao gerenciadas na pagina de detalhes do pipeline"
+                subtitle="As etapas sao gerenciadas na página de detalhes do pipeline"
               />
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
                 <p className="text-sm text-muted-foreground">
@@ -343,9 +343,9 @@ export default function EditPipelinePage() {
                     }
                     className="text-sky-600 dark:text-sky-400 underline hover:no-underline"
                   >
-                    pagina de detalhes
+                    página de detalhes
                   </button>{' '}
-                  do pipeline, onde voce pode gerenciar o Kanban completo.
+                  do pipeline, onde você pode gerenciar o Kanban completo.
                 </p>
               </div>
             </div>
@@ -359,7 +359,7 @@ export default function EditPipelinePage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Pipeline"
-        description={`Digite seu PIN de acao para excluir o pipeline "${pipeline.name}". Todas as etapas serao removidas. Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir o pipeline "${pipeline.name}". Todas as etapas serao removidas. Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

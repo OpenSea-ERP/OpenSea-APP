@@ -135,7 +135,7 @@ export default function EditDashboardPage() {
   // Handlers
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('Nome do dashboard e obrigatorio');
+      toast.error('Nome do dashboard e obrigatório');
       return;
     }
 
@@ -167,7 +167,7 @@ export default function EditDashboardPage() {
   const handleDeleteConfirm = async () => {
     try {
       await deleteMutation.mutateAsync(dashboardId);
-      toast.success('Dashboard excluido com sucesso!');
+      toast.success('Dashboard excluído com sucesso!');
       router.push('/sales/analytics/dashboards');
     } catch (err) {
       logger.error(
@@ -238,8 +238,8 @@ export default function EditDashboardPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Dashboard nao encontrado"
-            message="O dashboard solicitado nao foi encontrado."
+            title="Dashboard não encontrado"
+            message="O dashboard solicitado não foi encontrado."
             action={{
               label: 'Voltar para Dashboards',
               onClick: () => router.push('/sales/analytics/dashboards'),
@@ -279,13 +279,13 @@ export default function EditDashboardPage() {
           </div>
         </Card>
 
-        {/* Section: Informacoes Gerais */}
+        {/* Section: Informações Gerais */}
         <Card className="bg-white/5 py-2 overflow-hidden">
           <div className="px-6 py-4 space-y-8">
             <CollapsibleSection
               icon={NotebookText}
-              title="Informacoes Gerais"
-              subtitle="Nome e descricao do dashboard"
+              title="Informações Gerais"
+              subtitle="Nome e descrição do dashboard"
             >
               <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                 <div className="grid grid-cols-1 gap-4">
@@ -303,7 +303,7 @@ export default function EditDashboardPage() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="description">Descricao</Label>
+                    <Label htmlFor="description">Descrição</Label>
                     <Textarea
                       id="description"
                       value={description}
@@ -343,7 +343,7 @@ export default function EditDashboardPage() {
                         <SelectItem value="MANAGER">Gerente</SelectItem>
                         <SelectItem value="DIRECTOR">Diretor</SelectItem>
                         <SelectItem value="BID_SPECIALIST">
-                          Especialista em Licitacoes
+                          Especialista em Licitações
                         </SelectItem>
                         <SelectItem value="MARKETPLACE_OPS">
                           Operacoes Marketplace
@@ -366,7 +366,7 @@ export default function EditDashboardPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="PRIVATE">
-                          Privado (somente voce)
+                          Privado (somente você)
                         </SelectItem>
                         <SelectItem value="TEAM">Equipe</SelectItem>
                         <SelectItem value="TENANT">Todos da empresa</SelectItem>
@@ -393,7 +393,7 @@ export default function EditDashboardPage() {
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Dashboard"
-        description={`Digite seu PIN de acao para excluir o dashboard "${dashboard.name}". Esta acao nao pode ser desfeita.`}
+        description={`Digite seu PIN de ação para excluir o dashboard "${dashboard.name}". Esta ação não pode ser desfeita.`}
       />
     </PageLayout>
   );

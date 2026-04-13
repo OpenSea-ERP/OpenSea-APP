@@ -188,9 +188,9 @@ function StepRefundDetails({
       </div>
 
       <div className="space-y-2">
-        <Label>Observacoes</Label>
+        <Label>Observações</Label>
         <Textarea
-          placeholder="Observacoes adicionais..."
+          placeholder="Observações adicionais..."
           value={notes}
           onChange={e => onNotesChange(e.target.value)}
           rows={2}
@@ -294,7 +294,7 @@ export function CreateReturnWizard({
     },
     {
       title: 'Reembolso e Detalhes',
-      description: 'Defina o metodo de reembolso e observacoes.',
+      description: 'Defina o metodo de reembolso e observações.',
       icon: (
         <Package className="h-16 w-16 text-emerald-400" strokeWidth={1.2} />
       ),

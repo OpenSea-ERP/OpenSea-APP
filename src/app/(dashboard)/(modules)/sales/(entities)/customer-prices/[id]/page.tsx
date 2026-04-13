@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Customer Price Detail Page
- * Pagina de detalhes de preco por cliente (somente leitura)
+ * Página de detalhes de preço por cliente (somente leitura)
  */
 
 'use client';
@@ -125,7 +125,7 @@ export default function CustomerPriceDetailPage() {
   const handleDeleteConfirm = useCallback(async () => {
     await deleteMutation.mutateAsync(id);
     setDeleteModalOpen(false);
-    toast.success('Preco excluido com sucesso!');
+    toast.success('Preço excluído com sucesso!');
     router.push('/sales/customer-prices');
   }, [id, deleteMutation, router]);
 
@@ -141,7 +141,7 @@ export default function CustomerPriceDetailPage() {
             breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
               {
-                label: 'Precos por Cliente',
+                label: 'Preços por Cliente',
                 href: '/sales/customer-prices',
               },
               { label: 'Detalhes' },
@@ -164,7 +164,7 @@ export default function CustomerPriceDetailPage() {
             breadcrumbItems={[
               { label: 'Vendas', href: '/sales' },
               {
-                label: 'Precos por Cliente',
+                label: 'Preços por Cliente',
                 href: '/sales/customer-prices',
               },
               { label: 'Detalhes' },
@@ -175,8 +175,8 @@ export default function CustomerPriceDetailPage() {
         <PageBody>
           <GridError
             type="not-found"
-            title="Preco nao encontrado"
-            message="O preco por cliente solicitado nao foi encontrado."
+            title="Preço não encontrado"
+            message="O preço por cliente solicitado não foi encontrado."
             action={{
               label: 'Voltar',
               onClick: () => router.push('/sales/customer-prices'),
@@ -196,7 +196,7 @@ export default function CustomerPriceDetailPage() {
           breadcrumbItems={[
             { label: 'Vendas', href: '/sales' },
             {
-              label: 'Precos por Cliente',
+              label: 'Preços por Cliente',
               href: '/sales/customer-prices',
             },
             { label: customerName },
@@ -269,11 +269,11 @@ export default function CustomerPriceDetailPage() {
           <Card className="bg-white dark:bg-slate-800/60 border border-border p-5">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
               <DollarSign className="h-4 w-4 text-emerald-600" />
-              Informacoes de Preco
+              Informações de Preco
             </h2>
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-muted-foreground">Preco Negociado</p>
+                <p className="text-xs text-muted-foreground">Preço Negociado</p>
                 <p className="font-mono font-bold text-lg text-gray-900 dark:text-white">
                   {formatPrice(customerPrice.price)}
                 </p>
@@ -307,7 +307,7 @@ export default function CustomerPriceDetailPage() {
           <Card className="bg-white dark:bg-slate-800/60 border border-border p-5">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
               <Calendar className="h-4 w-4 text-sky-600" />
-              Periodo de Validade
+              Período de Validade
             </h2>
             <div className="space-y-3">
               <div>
@@ -331,10 +331,10 @@ export default function CustomerPriceDetailPage() {
           <Card className="bg-white dark:bg-slate-800/60 border border-border p-5">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
               <FileText className="h-4 w-4 text-teal-600" />
-              Observacoes
+              Observações
             </h2>
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              {customerPrice.notes || 'Nenhuma observacao registrada.'}
+              {customerPrice.notes || 'Nenhuma observação registrada.'}
             </p>
           </Card>
         </div>
@@ -371,8 +371,8 @@ export default function CustomerPriceDetailPage() {
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onSuccess={handleDeleteConfirm}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir este preco. Esta acao nao pode ser desfeita."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir este preco. Esta ação não pode ser desfeita."
         />
       </PageBody>
     </PageLayout>

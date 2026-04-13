@@ -1,6 +1,6 @@
 /**
  * OpenSea OS - Create Payment Condition Wizard
- * StepWizardDialog com 2 etapas: dados basicos + regras financeiras
+ * StepWizardDialog com 2 etapas: dados básicos + regras financeiras
  */
 
 'use client';
@@ -134,8 +134,8 @@ export function CreatePaymentConditionWizard({
 
   const steps: WizardStep[] = [
     {
-      title: 'Dados Basicos',
-      description: 'Defina o nome, tipo e parcelas da condicao.',
+      title: 'Dados Básicos',
+      description: 'Defina o nome, tipo e parcelas da condição.',
       icon: (
         <CreditCard className="h-16 w-16 text-teal-400" strokeWidth={1.2} />
       ),
@@ -161,9 +161,9 @@ export function CreatePaymentConditionWizard({
           </div>
 
           <div className="space-y-2">
-            <Label>Descricao</Label>
+            <Label>Descrição</Label>
             <Textarea
-              placeholder="Descreva a condicao de pagamento..."
+              placeholder="Descreva a condição de pagamento..."
               rows={2}
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -247,7 +247,7 @@ export function CreatePaymentConditionWizard({
               />
             </div>
             <div className="space-y-2">
-              <Label>Desconto a Vista (%)</Label>
+              <Label>Desconto à Vista (%)</Label>
               <Input
                 type="number"
                 min={0}
@@ -287,7 +287,7 @@ export function CreatePaymentConditionWizard({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Valor Minimo do Pedido (R$)</Label>
+              <Label>Valor Mínimo do Pedido (R$)</Label>
               <Input
                 type="number"
                 min={0}
@@ -298,7 +298,7 @@ export function CreatePaymentConditionWizard({
               />
             </div>
             <div className="space-y-2">
-              <Label>Valor Maximo do Pedido (R$)</Label>
+              <Label>Valor Máximo do Pedido (R$)</Label>
               <Input
                 type="number"
                 min={0}
@@ -323,7 +323,7 @@ export function CreatePaymentConditionWizard({
           ) : (
             <Check className="h-4 w-4 mr-2" />
           )}
-          Criar Condicao
+          Criar Condição
         </Button>
       ),
     },

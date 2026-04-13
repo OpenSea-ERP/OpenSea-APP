@@ -1,47 +1,40 @@
 // POS Terminal
 export type PosTerminalMode =
-  | 'FAST_CHECKOUT'
-  | 'CONSULTIVE'
-  | 'SELF_SERVICE'
-  | 'EXTERNAL';
-export type PosCashierMode = 'INTEGRATED' | 'SEPARATED';
+  | 'SALES_ONLY'
+  | 'SALES_WITH_CHECKOUT'
+  | 'CASHIER'
+  | 'TOTEM';
 
 export interface PosTerminal {
   id: string;
   tenantId: string;
-  name: string;
-  deviceId: string;
+  terminalName: string;
+  terminalCode: string;
+  totemCode: string | null;
   mode: PosTerminalMode;
-  cashierMode: PosCashierMode;
   acceptsPendingOrders: boolean;
-  warehouseId: string;
-  defaultPriceTableId: string | null;
+  requiresSession: boolean;
+  allowAnonymous: boolean;
   isActive: boolean;
-  lastSyncAt: string | null;
-  lastOnlineAt: string | null;
-  settings: Record<string, unknown> | null;
+  hasPairing: boolean;
+  defaultPriceTableId: string | null;
   createdAt: string;
   updatedAt: string | null;
 }
 
 export interface CreatePosTerminalRequest {
-  name: string;
-  deviceId: string;
+  terminalName: string;
   mode: PosTerminalMode;
-  cashierMode?: PosCashierMode;
   acceptsPendingOrders?: boolean;
-  warehouseId: string;
-  defaultPriceTableId?: string;
+  warehouseIds?: string[];
+  defaultPriceTableId?: string | null;
   settings?: Record<string, unknown>;
 }
 
 export interface UpdatePosTerminalRequest {
-  name?: string;
-  deviceId?: string;
+  terminalName?: string;
   mode?: PosTerminalMode;
-  cashierMode?: PosCashierMode;
   acceptsPendingOrders?: boolean;
-  warehouseId?: string;
   defaultPriceTableId?: string | null;
   isActive?: boolean;
   settings?: Record<string, unknown> | null;
@@ -60,6 +53,31 @@ export interface PosTerminalsQuery {
   isActive?: boolean;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+}
+
+// Pairing
+export interface PairDeviceRequest {
+  pairingCode: string;
+  deviceLabel: string;
+}
+
+export interface PairDeviceResponse {
+  deviceToken: string;
+  terminal: Pick<PosTerminal, 'id' | 'terminalName' | 'terminalCode' | 'mode'>;
+}
+
+export interface PairingCodeResponse {
+  code: string;
+  expiresAt: string;
+}
+
+export interface PairThisDeviceRequest {
+  deviceLabel: string;
+}
+
+export interface PairThisDeviceResponse {
+  deviceToken: string;
+  terminal: PosTerminal;
 }
 
 // POS Session
@@ -83,9 +101,18 @@ export interface PosSession {
   updatedAt: string | null;
 }
 
+export interface DeviceState {
+  terminal: PosTerminal;
+  currentSession: PosSession | null;
+}
+
 export interface OpenPosSessionRequest {
   terminalId: string;
   openingBalance: number;
+}
+
+export interface OpenTotemSessionRequest {
+  totemCode: string;
 }
 
 export interface ClosePosSessionRequest {
@@ -176,6 +203,27 @@ export interface CreatePosTransactionRequest {
   customerName?: string;
   customerDocument?: string;
   payments: PaymentInput[];
+}
+
+// Session Summary (reconciliation)
+export interface PaymentMethodBreakdown {
+  method: string;
+  total: number;
+  count: number;
+}
+
+export interface SessionSummary {
+  sessionId: string;
+  openingBalance: number;
+  totalSales: number;
+  transactionCount: number;
+  cancelledCount: number;
+  paymentBreakdown: PaymentMethodBreakdown[];
+  totalSupplies: number;
+  totalWithdrawals: number;
+  totalCashReceived: number;
+  totalChangeGiven: number;
+  expectedCashBalance: number;
 }
 
 // Cash Movement

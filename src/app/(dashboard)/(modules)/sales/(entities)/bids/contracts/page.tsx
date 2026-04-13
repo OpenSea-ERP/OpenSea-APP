@@ -60,15 +60,15 @@ function BidContractsContent() {
         <PageActionBar
           breadcrumbItems={[
             { label: 'Vendas' },
-            { label: 'Licitacoes', href: '/sales/bids' },
+            { label: 'Licitações', href: '/sales/bids' },
             { label: 'Contratos' },
           ]}
         />
       </PageHeader>
       <PageBody>
         <Header
-          title="Contratos de Licitacao"
-          description="Contratos firmados a partir de licitacoes vencidas"
+          title="Contratos de Licitação"
+          description="Contratos firmados a partir de licitações vencidas"
         />
 
         <div className="flex gap-2 mb-4">
@@ -102,7 +102,7 @@ function BidContractsContent() {
                         {contract.contractNumber}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Licitacao ID: {contract.bidId.slice(0, 8)}...
+                        Licitação ID: {contract.bidId.slice(0, 8)}...
                       </p>
                     </div>
                   </div>
