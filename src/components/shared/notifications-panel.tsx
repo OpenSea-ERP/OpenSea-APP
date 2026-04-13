@@ -28,6 +28,8 @@ import {
   useMarkNotificationAsRead,
   useNotificationsList,
 } from '@/hooks/notifications';
+import { usePermissions } from '@/hooks/use-permissions';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import type { BackendNotification } from '@/types/admin';
 import { AnimatePresence, motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -164,12 +166,21 @@ export function NotificationsPanel() {
   // so new emails are detected without manual "Verificar"
   useAutoEmailSync();
 
+  // Permission check: hide finance notifications from unauthorized users
+  const { hasPermission } = usePermissions();
+  const canAccessFinance = hasPermission(FINANCE_PERMISSIONS.ENTRIES.ACCESS);
+
   // Fetch notifications — polls every 30s
   const { data, isLoading } = useNotificationsList({
     limit: 30,
   });
 
-  const notifications = data?.notifications ?? [];
+  // Filter out module-specific notifications the user has no permission for
+  const allNotifications = data?.notifications ?? [];
+  const notifications = allNotifications.filter(n => {
+    if (n.entityType === 'finance_entry' && !canAccessFinance) return false;
+    return true;
+  });
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   // Mutations
