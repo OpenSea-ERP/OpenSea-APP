@@ -71,22 +71,20 @@ function formatDate(dateStr: string | null | undefined): string {
   return new Date(dateStr).toLocaleDateString('pt-BR');
 }
 
-function getStatusVariant(
-  status: LoanStatus
-): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' {
+function getStatusColor(status: LoanStatus): string {
   switch (status) {
     case 'ACTIVE':
-      return 'success';
+      return 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300';
     case 'PAID_OFF':
-      return 'default';
+      return '';
     case 'DEFAULTED':
-      return 'destructive';
+      return 'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300';
     case 'RENEGOTIATED':
-      return 'warning';
+      return 'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300';
     case 'CANCELLED':
-      return 'secondary';
+      return 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300';
     default:
-      return 'secondary';
+      return 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300';
   }
 }
 
@@ -425,7 +423,7 @@ export default function LoanDetailPage({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={getStatusVariant(loan.status)}>
+                <Badge variant="outline" className={cn("text-xs", getStatusColor(loan.status))}>
                   {LOAN_STATUS_LABELS[loan.status]}
                 </Badge>
                 <Badge variant="outline">{LOAN_TYPE_LABELS[loan.type]}</Badge>

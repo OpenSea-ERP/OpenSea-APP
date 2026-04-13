@@ -97,35 +97,31 @@ function formatDate(dateStr: string | null | undefined): string {
   return new Date(dateStr).toLocaleDateString('pt-BR');
 }
 
-function getStatusVariant(
-  status: ConsortiumStatus
-): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' {
+function getStatusColor(status: ConsortiumStatus): string {
   switch (status) {
     case 'ACTIVE':
-      return 'success';
+      return 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300';
     case 'CONTEMPLATED':
-      return 'default';
+      return '';
     case 'WITHDRAWN':
-      return 'warning';
+      return 'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300';
     case 'COMPLETED':
-      return 'secondary';
+      return 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300';
     case 'CANCELLED':
-      return 'destructive';
+      return 'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300';
     default:
-      return 'secondary';
+      return 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300';
   }
 }
 
-function getPaymentStatusVariant(
-  status: string
-): 'success' | 'destructive' | 'secondary' {
+function getPaymentStatusColor(status: string): string {
   switch (status) {
     case 'PAID':
-      return 'success';
+      return 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300';
     case 'OVERDUE':
-      return 'destructive';
+      return 'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300';
     default:
-      return 'secondary';
+      return 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300';
   }
 }
 
@@ -532,11 +528,11 @@ export default function ConsortiumDetailPage({
                 <h1 className="text-xl font-bold truncate">
                   {consortium.name}
                 </h1>
-                <Badge variant={getStatusVariant(consortium.status)}>
+                <Badge variant="outline" className={cn("text-xs", getStatusColor(consortium.status))}>
                   {CONSORTIUM_STATUS_LABELS[consortium.status]}
                 </Badge>
                 {consortium.isContemplated && (
-                  <Badge variant="success" className="gap-1">
+                  <Badge variant="outline" className={cn("gap-1", "border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300")}>
                     <CheckCircle className="h-3 w-3" />
                     Contemplado
                   </Badge>
@@ -789,7 +785,8 @@ export default function ConsortiumDetailPage({
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge
-                            variant={getPaymentStatusVariant(payment.status)}
+                            variant="outline"
+                            className={cn("text-xs", getPaymentStatusColor(payment.status))}
                           >
                             {FINANCE_ENTRY_STATUS_LABELS[payment.status] ??
                               payment.status}

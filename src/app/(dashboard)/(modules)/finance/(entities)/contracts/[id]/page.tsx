@@ -73,22 +73,20 @@ function formatDate(dateStr: string | null | undefined): string {
   return new Intl.DateTimeFormat('pt-BR').format(new Date(dateStr));
 }
 
-function getStatusVariant(
-  status: ContractStatus
-): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline' {
+function getStatusColor(status: ContractStatus): string {
   switch (status) {
     case 'ACTIVE':
-      return 'success';
+      return 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300';
     case 'DRAFT':
-      return 'secondary';
+      return 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300';
     case 'EXPIRED':
-      return 'destructive';
+      return 'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300';
     case 'RENEWED':
-      return 'default';
+      return '';
     case 'CANCELLED':
-      return 'warning';
+      return 'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300';
     default:
-      return 'secondary';
+      return 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300';
   }
 }
 
@@ -336,7 +334,7 @@ export default function ContractDetailPage({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold truncate">{contract.title}</h1>
-                <Badge variant={getStatusVariant(contract.status)}>
+                <Badge variant="outline" className={cn("text-xs", getStatusColor(contract.status))}>
                   {CONTRACT_STATUS_LABELS[contract.status]}
                 </Badge>
                 {contract.autoRenew && (
