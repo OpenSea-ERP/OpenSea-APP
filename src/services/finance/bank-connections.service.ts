@@ -10,7 +10,17 @@ export interface BankConnectionResponse {
   connection: BankConnection;
 }
 
+export interface ListBankConnectionsResponse {
+  data: BankConnection[];
+}
+
 export const bankConnectionsService = {
+  async list(): Promise<ListBankConnectionsResponse> {
+    return apiClient.get<ListBankConnectionsResponse>(
+      API_ENDPOINTS.BANK_CONNECTIONS.LIST,
+    );
+  },
+
   async getConnectToken(): Promise<ConnectTokenResponse> {
     return apiClient.post<ConnectTokenResponse>(
       API_ENDPOINTS.BANK_CONNECTIONS.CONNECT_TOKEN,

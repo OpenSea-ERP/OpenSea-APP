@@ -25,7 +25,7 @@ import { useBankAccounts } from '@/hooks/finance/use-bank-accounts';
 import { usePermissions } from '@/hooks/use-permissions';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { bankConnectionsService } from '@/services/finance';
-import type { BankConnection, BankConnectionStatus } from '@/types/finance';
+import type { BankConnectionStatus } from '@/types/finance';
 import {
   Building2,
   Landmark,
@@ -93,9 +93,7 @@ export default function BankConnectionsPage() {
   const { data: bankAccountsData } = useBankAccounts();
   const bankAccounts = bankAccountsData?.bankAccounts ?? [];
 
-  // Fetch connections
-  // Note: We'll use a simple query since there's no dedicated list endpoint with connections
-  // For now we mock the shape — in reality, the backend could return connections as part of bank accounts
+  // Fetch connections from the real API
   const {
     data: connectionsData,
     isLoading,
@@ -103,9 +101,8 @@ export default function BankConnectionsPage() {
   } = useQuery({
     queryKey: ['bank-connections'],
     queryFn: async () => {
-      // The connections are stored separately; there's no dedicated list in the service yet
-      // We'll call a list endpoint when available
-      return [] as BankConnection[];
+      const response = await bankConnectionsService.list();
+      return response.data;
     },
   });
 

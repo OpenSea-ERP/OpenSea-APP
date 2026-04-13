@@ -865,6 +865,7 @@ export const API_ENDPOINTS = {
   },
   // Finance - Bank Connections (Open Finance)
   BANK_CONNECTIONS: {
+    LIST: '/v1/finance/bank-connections',
     CONNECT_TOKEN: '/v1/finance/bank-connections/connect-token',
     CREATE: '/v1/finance/bank-connections',
     SYNC: (id: string) => `/v1/finance/bank-connections/${id}/sync`,
