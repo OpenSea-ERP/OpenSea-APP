@@ -23,6 +23,7 @@ import {
   ClipboardList,
   GitBranch,
   Handshake,
+  Settings,
   ShoppingCart,
   Users,
 } from 'lucide-react';
@@ -70,6 +71,13 @@ const heroBannerButtons = [
     href: '/sales/deals',
     gradient: 'from-emerald-500 to-emerald-600',
     permission: SALES_PERMISSIONS.DEALS.ACCESS,
+  },
+  {
+    id: 'settings',
+    label: 'Configurações',
+    icon: Settings,
+    href: '/sales/settings',
+    gradient: 'from-slate-500 to-slate-600',
   },
 ];
 
