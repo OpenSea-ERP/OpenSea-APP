@@ -77,7 +77,7 @@ export function PrintQueuePanel() {
                 Fila de Impressao
               </DropdownMenuLabel>
               <div className="flex items-center gap-2">
-                <Link href="/print/agents">
+                <Link href="/devices/remote-prints">
                   <Button
                     size="sm"
                     className="h-7 px-3 text-xs font-semibold"

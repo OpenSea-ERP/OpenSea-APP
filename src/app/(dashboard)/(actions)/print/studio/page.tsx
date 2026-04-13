@@ -629,7 +629,7 @@ export default function PrintStudioPage() {
         id: 'agents',
         title: 'Agentes',
         icon: Router,
-        onClick: () => router.push('/print/agents'),
+        onClick: () => router.push('/devices/remote-prints'),
         variant: 'outline',
       },
       {

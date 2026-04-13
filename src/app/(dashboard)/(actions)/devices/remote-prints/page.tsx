@@ -1,6 +1,6 @@
 /**
- * Print Agents Management Page
- * Gerenciamento de impressoras remotas e agentes de impressao
+ * Remote Prints Management Page
+ * Gerenciamento de impressoras remotas e agentes de impressão
  */
 
 'use client';
@@ -15,6 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -41,26 +48,29 @@ import { toast } from 'sonner';
 import type { RemotePrinter } from '@/types/sales';
 import {
   AlertTriangle,
-  CheckCircle,
+  ChevronDown,
   CircleDot,
   Copy,
   Download,
   Eye,
   EyeOff,
   Link2Off,
-  Monitor,
   MonitorSmartphone,
+  MoreVertical,
   Plus,
   Printer,
   QrCode,
-  Router,
   Shield,
+  Sparkles,
+  Star,
   Trash2,
   Wifi,
   WifiOff,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+
+const MAX_AGENT_NAME_LENGTH = 30;
 
 const AGENT_STATUS_CONFIG: Record<
   AgentStatus,
@@ -89,38 +99,73 @@ const AGENT_STATUS_CONFIG: Record<
   },
 };
 
-const PRINTER_STATUS_DOT: Record<PrinterStatus, string> = {
+const PRINTER_STATUS_DOT: Record<PrinterStatus | 'SERVER_OFFLINE', string> = {
   ONLINE: 'bg-green-500',
   OFFLINE: 'bg-gray-400',
   BUSY: 'bg-amber-500',
   ERROR: 'bg-rose-500',
   UNKNOWN: 'bg-gray-300',
+  SERVER_OFFLINE: 'bg-orange-400',
 };
 
-const INSTALL_STEPS = [
-  {
-    icon: Download,
-    title: 'Baixe o instalador',
-    description: 'Faca o download do agente para Windows',
-  },
-  {
-    icon: Monitor,
-    title: 'Execute no computador',
-    description: 'Abra o programa e siga as instrucoes',
-  },
-  {
-    icon: QrCode,
-    title: 'Digite o codigo',
-    description: 'O codigo aparece ao registrar um agente acima',
-  },
-  {
-    icon: CheckCircle,
-    title: 'Pronto!',
-    description: 'As impressoras aparecerao automaticamente',
-  },
+type PrinterFilterMode =
+  | 'show_all'
+  | 'hide_all'
+  | 'hide_offline'
+  | 'show_online'
+  | 'show_hidden';
+
+const FILTER_OPTIONS: { value: PrinterFilterMode; label: string }[] = [
+  { value: 'show_all', label: 'Exibir todas' },
+  { value: 'show_online', label: 'Exibir todas online' },
+  { value: 'hide_offline', label: 'Ocultar as que estão offline' },
+  { value: 'hide_all', label: 'Ocultar todas' },
+  { value: 'show_hidden', label: 'Ver ocultas' },
 ];
 
-export default function PrintAgentsPage() {
+function getPrinterEffectiveStatus(
+  printer: RemotePrinter,
+  agents: PrintAgent[],
+): PrinterStatus | 'SERVER_OFFLINE' {
+  if (printer.status === 'ONLINE') return 'ONLINE';
+  if (printer.agentId) {
+    const agent = agents.find((a) => a.id === printer.agentId);
+    if (agent && agent.status === 'OFFLINE') return 'SERVER_OFFLINE';
+  }
+  return printer.status;
+}
+
+function getPrinterStatusLabel(status: PrinterStatus | 'SERVER_OFFLINE'): string {
+  switch (status) {
+    case 'ONLINE':
+      return 'Online';
+    case 'SERVER_OFFLINE':
+      return 'Servidor Offline';
+    case 'BUSY':
+      return 'Ocupada';
+    case 'ERROR':
+      return 'Erro';
+    default:
+      return 'Offline';
+  }
+}
+
+function getPrinterStatusStyle(status: PrinterStatus | 'SERVER_OFFLINE'): string {
+  switch (status) {
+    case 'ONLINE':
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20';
+    case 'SERVER_OFFLINE':
+      return 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/20';
+    case 'BUSY':
+      return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20';
+    case 'ERROR':
+      return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20';
+    default:
+      return 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20';
+  }
+}
+
+export default function RemotePrintsPage() {
   const { hasPermission } = usePermissions();
   const queryClient = useQueryClient();
   const canAdmin = hasPermission('sales.printing.admin');
@@ -134,6 +179,8 @@ export default function PrintAgentsPage() {
   const [deleteAgentId, setDeleteAgentId] = useState<string | null>(null);
   const [unpairAgentId, setUnpairAgentId] = useState<string | null>(null);
   const [pairingAgentId, setPairingAgentId] = useState<string | null>(null);
+
+  const [filterMode, setFilterMode] = useState<PrinterFilterMode>('show_all');
 
   const {
     data: agentsData,
@@ -151,17 +198,25 @@ export default function PrintAgentsPage() {
   const agents = agentsData ?? [];
 
   const { printers: allPrinters, isLoading: printersLoading } = useRemotePrinters();
-  const [showHidden, setShowHidden] = useState(false);
 
-  const visiblePrinters = useMemo(
-    () => allPrinters.filter((p) => !p.isHidden),
-    [allPrinters],
-  );
-  const hiddenPrinters = useMemo(
-    () => allPrinters.filter((p) => p.isHidden),
-    [allPrinters],
-  );
-  const printers = showHidden ? allPrinters : visiblePrinters;
+  const filteredPrinters = useMemo(() => {
+    switch (filterMode) {
+      case 'show_all':
+        return allPrinters.filter((p) => !p.isHidden);
+      case 'show_online':
+        return allPrinters.filter((p) => !p.isHidden && p.status === 'ONLINE');
+      case 'hide_offline':
+        return allPrinters.filter((p) => !p.isHidden && p.status !== 'OFFLINE');
+      case 'hide_all':
+        return [];
+      case 'show_hidden':
+        return allPrinters.filter((p) => p.isHidden);
+      default:
+        return allPrinters.filter((p) => !p.isHidden);
+    }
+  }, [allPrinters, filterMode]);
+
+  const totalCount = allPrinters.length;
 
   const handleToggleHidden = useCallback(
     async (printer: RemotePrinter) => {
@@ -180,11 +235,26 @@ export default function PrintAgentsPage() {
     [queryClient],
   );
 
+  const handleSetDefault = useCallback(
+    async (printer: RemotePrinter) => {
+      try {
+        await printAgentsService.setDefaultPrinter(printer.id);
+        queryClient.invalidateQueries({ queryKey: ['remote-printers'] });
+        toast.success(`"${printer.name}" definida como padrão`);
+      } catch {
+        toast.error('Erro ao definir impressora padrão');
+      }
+    },
+    [queryClient],
+  );
+
   const handleRegister = useCallback(async () => {
     if (!agentName.trim()) return;
     setIsRegistering(true);
     try {
-      const result = await printAgentsService.register(agentName.trim());
+      const result = await printAgentsService.register(
+        agentName.trim().slice(0, MAX_AGENT_NAME_LENGTH),
+      );
       setNewAgentId(result.agentId);
       setRegisterStep(2);
       queryClient.invalidateQueries({ queryKey: ['print-agents'] });
@@ -237,8 +307,8 @@ export default function PrintAgentsPage() {
 
   const registerSteps: WizardStep[] = [
     {
-      title: 'Nome do Agente',
-      description: 'Identifique o computador que executara o agente',
+      title: 'Nome do Computador',
+      description: 'Identifique o computador que executará o Print Server',
       icon: (
         <div className="w-16 h-16 rounded-2xl bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
           <MonitorSmartphone className="w-8 h-8 text-blue-600 dark:text-blue-400" />
@@ -247,18 +317,25 @@ export default function PrintAgentsPage() {
       content: (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="agent-name">Nome do agente</Label>
+            <Label htmlFor="agent-name">Nome do computador</Label>
             <Input
               id="agent-name"
               placeholder="Ex: Computador do Estoque"
               value={agentName}
-              onChange={(e) => setAgentName(e.target.value)}
+              onChange={(e) =>
+                setAgentName(e.target.value.slice(0, MAX_AGENT_NAME_LENGTH))
+              }
+              maxLength={MAX_AGENT_NAME_LENGTH}
               autoFocus
             />
-            <p className="text-xs text-muted-foreground">
-              Um nome descritivo para identificar o computador onde o agente
-              sera instalado.
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Um nome descritivo para identificar o computador.
+              </p>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {agentName.length}/{MAX_AGENT_NAME_LENGTH}
+              </span>
+            </div>
           </div>
         </div>
       ),
@@ -278,8 +355,8 @@ export default function PrintAgentsPage() {
       ),
     },
     {
-      title: 'Codigo de Pareamento',
-      description: 'Use o codigo abaixo para parear o agente',
+      title: 'Código de Pareamento',
+      description: 'Use o código abaixo para parear o Print Server',
       icon: (
         <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-500/10 flex items-center justify-center">
           <QrCode className="w-8 h-8 text-violet-600 dark:text-violet-400" />
@@ -306,17 +383,27 @@ export default function PrintAgentsPage() {
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
-            { label: 'Impressao', href: '/print/studio' },
-            { label: 'Impressoras' },
+            { label: 'Dispositivos', href: '/devices' },
+            { label: 'Impressoras Remotas' },
           ]}
           actions={
             <div className="flex items-center gap-2">
               <Link href="/print/studio">
                 <Button variant="outline" size="sm" className="h-9 px-2.5">
-                  <Router className="w-4 h-4 mr-1" />
+                  <Sparkles className="w-4 h-4 mr-1" />
                   Studio
                 </Button>
               </Link>
+              {canAdmin && (
+                <Button
+                  size="sm"
+                  className="h-9 px-2.5"
+                  onClick={() => setRegisterOpen(true)}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Criar Computador
+                </Button>
+              )}
             </div>
           }
         />
@@ -326,35 +413,25 @@ export default function PrintAgentsPage() {
         {/* Hero Banner */}
         <PageHeroBanner
           title="Impressoras Remotas"
-          description="Gerencie impressoras conectadas e envie impressoes de qualquer dispositivo"
+          description="Gerencie impressoras conectadas e envie impressões de qualquer dispositivo"
           icon={Printer}
           iconGradient="from-blue-500 to-indigo-600"
-          buttons={
-            canAdmin
-              ? [
-                  {
-                    id: 'register-agent',
-                    label: 'Adicionar Computador',
-                    icon: Plus,
-                    href: '#',
-                    gradient: 'from-blue-500 to-indigo-600',
-                    permission: 'sales.printing.admin',
-                  },
-                ]
-              : []
-          }
+          buttons={[
+            {
+              id: 'download-print-server',
+              label: 'Download Print Server',
+              icon: Download,
+              href: '/downloads/print-server',
+              gradient: 'from-blue-500 to-indigo-600',
+            },
+          ]}
           hasPermission={hasPermission}
-          onButtonClick={(buttonId) => {
-            if (buttonId === 'register-agent') {
-              setRegisterOpen(true);
-            }
-          }}
         />
 
         {/* Connected Printers Section */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Impressoras Conectadas
               </h2>
@@ -362,26 +439,29 @@ export default function PrintAgentsPage() {
                 Impressoras disponíveis nos computadores pareados
               </p>
             </div>
-            {hiddenPrinters.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs"
-                onClick={() => setShowHidden(!showHidden)}
-              >
-                {showHidden ? (
-                  <>
-                    <EyeOff className="w-3 h-3 mr-1" />
-                    Ocultar ({hiddenPrinters.length})
-                  </>
-                ) : (
-                  <>
-                    <Eye className="w-3 h-3 mr-1" />
-                    Mostrar ocultas ({hiddenPrinters.length})
-                  </>
-                )}
-              </Button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 px-3 text-xs shrink-0">
+                  <span>
+                    Exibindo {filteredPrinters.length}/{totalCount} impressoras
+                  </span>
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {FILTER_OPTIONS.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => setFilterMode(option.value)}
+                    className={cn(
+                      filterMode === option.value && 'bg-accent',
+                    )}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {printersLoading ? (
@@ -395,79 +475,117 @@ export default function PrintAgentsPage() {
                 </Card>
               ))}
             </div>
-          ) : printers.length === 0 ? (
+          ) : filteredPrinters.length === 0 ? (
             <Card className="bg-white dark:bg-slate-800/60 border border-border p-8 text-center">
               <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
                 <Printer className="w-6 h-6 text-gray-400" />
               </div>
               <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                Nenhuma impressora detectada
+                {filterMode === 'show_hidden'
+                  ? 'Nenhuma impressora oculta'
+                  : filterMode === 'hide_all'
+                    ? 'Todas as impressoras estão ocultas'
+                    : 'Nenhuma impressora detectada'}
               </p>
               <p className="text-xs text-muted-foreground">
-                Conecte um computador com agente pareado para ver as impressoras.
+                {filterMode === 'show_hidden' || filterMode === 'hide_all'
+                  ? 'Altere o filtro para ver as impressoras disponíveis.'
+                  : 'Conecte um computador com Print Server pareado para ver as impressoras.'}
               </p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {printers.map((printer) => (
-                <Card
-                  key={printer.id}
-                  className={cn(
-                    'bg-white dark:bg-slate-800/60 border border-border p-4 group',
-                    printer.isHidden && 'opacity-50',
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={cn(
-                        'w-3 h-3 rounded-full shrink-0',
-                        PRINTER_STATUS_DOT[printer.status] ?? 'bg-gray-300',
-                      )}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
-                        {printer.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {printer.agentName}
-                        {printer.osName ? ` \u00b7 ${printer.osName}` : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {printer.isDefault && (
-                        <Badge variant="outline" className="text-[10px]">
-                          Padrão
-                        </Badge>
-                      )}
-                      <Badge
-                        variant="outline"
+              {filteredPrinters.map((printer) => {
+                const effectiveStatus = getPrinterEffectiveStatus(printer, agents);
+                return (
+                  <Card
+                    key={printer.id}
+                    className={cn(
+                      'bg-white dark:bg-slate-800/60 border border-border p-4',
+                      printer.isHidden && 'opacity-50',
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
                         className={cn(
-                          'text-[10px] font-medium border',
-                          printer.status === 'ONLINE'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20'
-                            : 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20',
+                          'w-3 h-3 rounded-full shrink-0',
+                          PRINTER_STATUS_DOT[effectiveStatus] ?? 'bg-gray-300',
                         )}
-                      >
-                        {printer.status === 'ONLINE' ? 'Online' : 'Offline'}
-                      </Badge>
-                      {canAdmin && (
-                        <button
-                          type="button"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                          onClick={() => handleToggleHidden(printer)}
-                          title={printer.isHidden ? 'Tornar visível' : 'Ocultar impressora'}
-                        >
-                          {printer.isHidden ? (
-                            <Eye className="w-3.5 h-3.5 text-gray-400" />
-                          ) : (
-                            <EyeOff className="w-3.5 h-3.5 text-gray-400" />
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                            {printer.name}
+                          </p>
+                          {printer.isDefault && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] shrink-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20"
+                            >
+                              Padrão
+                            </Badge>
                           )}
-                        </button>
-                      )}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {printer.agentName ?? 'Computador desconhecido'}
+                          {printer.osName ? ` · ${printer.osName}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-[10px] font-medium border',
+                            getPrinterStatusStyle(effectiveStatus),
+                          )}
+                        >
+                          {getPrinterStatusLabel(effectiveStatus)}
+                        </Badge>
+                        {canAdmin && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <MoreVertical className="w-4 h-4 text-gray-400" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem
+                                onClick={() => handleSetDefault(printer)}
+                                disabled={printer.isDefault}
+                                className={cn(
+                                  printer.isDefault && 'opacity-50',
+                                )}
+                              >
+                                <Star className="w-4 h-4 mr-2" />
+                                Tornar Padrão
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleToggleHidden(printer)}
+                              >
+                                {printer.isHidden ? (
+                                  <>
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    Reexibir
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="w-4 h-4 mr-2" />
+                                    Ocultar
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </section>
@@ -479,7 +597,7 @@ export default function PrintAgentsPage() {
               Computadores (Agentes)
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Computadores registrados para receber comandos de impressao
+              Computadores registrados para receber comandos de impressão
             </p>
           </div>
 
@@ -509,12 +627,12 @@ export default function PrintAgentsPage() {
                 Nenhum agente registrado
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Registre um agente para comecar a imprimir remotamente.
+                Registre um computador para começar a imprimir remotamente.
               </p>
               {canAdmin && (
                 <Button onClick={() => setRegisterOpen(true)}>
                   <Plus className="w-4 h-4 mr-1" />
-                  Adicionar Computador
+                  Criar Computador
                 </Button>
               )}
             </Card>
@@ -532,41 +650,6 @@ export default function PrintAgentsPage() {
               ))}
             </div>
           )}
-        </section>
-
-        {/* Download / Install Section */}
-        <section>
-          <Card className="bg-white dark:bg-slate-800/60 border border-border p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-              Instalar em um Computador
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {INSTALL_STEPS.map((step, i) => (
-                <div key={i} className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center mb-3">
-                    <step.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center mb-2">
-                    {i + 1}
-                  </div>
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
-                    {step.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {step.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 flex justify-center">
-              <Button variant="outline" size="sm" className="h-9 px-4" asChild>
-                <a href="/downloads/opensea-print-agent-setup.exe" download>
-                  <Download className="w-4 h-4 mr-2" />
-                  Baixar Instalador (Windows)
-                </a>
-              </Button>
-            </div>
-          </Card>
         </section>
       </PageBody>
 
@@ -588,8 +671,8 @@ export default function PrintAgentsPage() {
           isOpen={!!deleteAgentId}
           onClose={() => setDeleteAgentId(null)}
           onSuccess={() => handleDelete(deleteAgentId)}
-          title="Confirmar Exclusao"
-          description="Digite seu PIN de acao para excluir este agente de impressao."
+          title="Confirmar Exclusão"
+          description="Digite seu PIN de ação para excluir este agente de impressão."
         />
       )}
 
@@ -599,8 +682,8 @@ export default function PrintAgentsPage() {
           isOpen={!!unpairAgentId}
           onClose={() => setUnpairAgentId(null)}
           onSuccess={() => handleUnpair(unpairAgentId)}
-          title="Confirmar Desvinculacao"
-          description="Digite seu PIN de acao para desvincular este dispositivo. O agente precisara ser pareado novamente."
+          title="Confirmar Desvinculação"
+          description="Digite seu PIN de ação para desvincular este dispositivo. O agente precisará ser pareado novamente."
         />
       )}
 
@@ -648,15 +731,20 @@ function AgentCard({
     : 'Nunca visto';
 
   const pairedDate = agent.pairedAt
-    ? format(new Date(agent.pairedAt), "dd/MM/yyyy 'as' HH:mm", {
+    ? format(new Date(agent.pairedAt), "dd/MM/yyyy 'às' HH:mm", {
         locale: ptBR,
       })
     : null;
 
+  const displayName =
+    agent.name.length > MAX_AGENT_NAME_LENGTH
+      ? agent.name.slice(0, MAX_AGENT_NAME_LENGTH) + '…'
+      : agent.name;
+
   return (
-    <Card className="p-5 bg-white dark:bg-slate-800/60 border border-border">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
+    <Card className="p-4 sm:p-5 bg-white dark:bg-slate-800/60 border border-border">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-0 sm:justify-between">
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           {/* Status Icon */}
           <div
             className={cn(
@@ -681,14 +769,17 @@ function AgentCard({
           </div>
 
           {/* Info */}
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                {agent.name}
+              <h3
+                className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[200px]"
+                title={agent.name}
+              >
+                {displayName}
               </h3>
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border',
+                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border shrink-0',
                   config.color,
                 )}
               >
@@ -698,18 +789,18 @@ function AgentCard({
                 {config.label}
               </span>
               {agent.isPaired ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/20">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/20 shrink-0">
                   <Shield className="w-2.5 h-2.5" />
                   Pareado
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20 shrink-0">
                   Aguardando pareamento
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
               {agent.deviceLabel && (
                 <span className="flex items-center gap-1">
                   <MonitorSmartphone className="w-3 h-3" />
@@ -735,7 +826,7 @@ function AgentCard({
               {agent.version && <span>v{agent.version}</span>}
             </div>
 
-            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
               <span>Visto {lastSeen}</span>
               {pairedDate && <span>Pareado em {pairedDate}</span>}
             </div>
@@ -744,7 +835,7 @@ function AgentCard({
 
         {/* Actions */}
         {canAdmin && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0 self-start sm:self-auto">
             {agent.isPaired ? (
               <Button
                 variant="ghost"
@@ -763,7 +854,7 @@ function AgentCard({
                 onClick={onShowCode}
               >
                 <QrCode className="w-3 h-3 mr-1" />
-                Exibir Codigo
+                Exibir Código
               </Button>
             )}
             <Button
@@ -810,13 +901,12 @@ function PairingCodeDialog({
       setCode(result.code);
       setExpiresAt(result.expiresAt);
     } catch {
-      toast.error('Erro ao obter codigo de pareamento');
+      toast.error('Erro ao obter código de pareamento');
     } finally {
       setIsLoading(false);
     }
   }, [agentId]);
 
-  // Fetch code on mount and every 55s
   useEffect(() => {
     if (!open) return;
     fetchCode();
@@ -824,7 +914,6 @@ function PairingCodeDialog({
     return () => clearInterval(refreshInterval);
   }, [open, fetchCode]);
 
-  // Countdown timer
   useEffect(() => {
     if (!expiresAt) return;
 
@@ -851,16 +940,16 @@ function PairingCodeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Codigo de Pareamento</DialogTitle>
+          <DialogTitle>Código de Pareamento</DialogTitle>
           <DialogDescription>
-            O operador deve digitar este codigo no computador do estoque
+            O operador deve digitar este código no Print Server do computador
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-4 py-6">
           {isLoading && !code ? (
             <div className="h-16 flex items-center">
-              <p className="text-muted-foreground">Gerando codigo...</p>
+              <p className="text-muted-foreground">Gerando código...</p>
             </div>
           ) : code ? (
             <>
@@ -898,13 +987,13 @@ function PairingCodeDialog({
               </div>
 
               <p className="text-xs text-center text-muted-foreground max-w-xs">
-                O codigo e renovado automaticamente. Inicie o Print Agent no
-                computador e digite este codigo quando solicitado.
+                O código é renovado automaticamente. Inicie o Print Server no
+                computador e digite este código quando solicitado.
               </p>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Erro ao gerar codigo. Feche e tente novamente.
+              Erro ao gerar código. Feche e tente novamente.
             </p>
           )}
         </div>
@@ -968,7 +1057,7 @@ function PairingCodeDisplay({ agentId }: { agentId: string }) {
   if (isLoading && !code) {
     return (
       <div className="text-center py-4 text-muted-foreground">
-        Gerando codigo de pareamento...
+        Gerando código de pareamento...
       </div>
     );
   }
@@ -976,7 +1065,7 @@ function PairingCodeDisplay({ agentId }: { agentId: string }) {
   if (!code) {
     return (
       <div className="text-center py-4 text-muted-foreground">
-        Erro ao gerar codigo. Feche e tente novamente.
+        Erro ao gerar código. Feche e tente novamente.
       </div>
     );
   }
@@ -987,7 +1076,7 @@ function PairingCodeDisplay({ agentId }: { agentId: string }) {
         <div className="flex items-start gap-2">
           <QrCode className="w-4 h-4 text-violet-600 dark:text-violet-400 mt-0.5 shrink-0" />
           <p className="text-sm text-violet-800 dark:text-violet-300">
-            Inicie o Print Agent no computador e digite este codigo quando
+            Inicie o Print Server no computador e digite este código quando
             solicitado.
           </p>
         </div>
