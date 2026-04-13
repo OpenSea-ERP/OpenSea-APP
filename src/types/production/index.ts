@@ -7,3 +7,8 @@ export * from './production-order.types';
 export * from './downtime-reason.types';
 export * from './defect-type.types';
 export * from './job-card.types';
+export * from './schedule.types';
+export * from './inspection-plan.types';
+export * from './quality-hold.types';
+export * from './downtime-record.types';
+export * from './analytics.types';

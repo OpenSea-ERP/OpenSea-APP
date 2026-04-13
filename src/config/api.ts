@@ -1736,6 +1736,52 @@ export const API_ENDPOINTS = {
       UPDATE: (id: string) => `/v1/production/defect-types/${id}`,
       DELETE: (id: string) => `/v1/production/defect-types/${id}`,
     },
+    // Job Cards
+    JOB_CARDS: {
+      LIST: '/v1/production/job-cards',
+      CREATE: '/v1/production/job-cards',
+      START: (id: string) => `/v1/production/job-cards/${id}/start`,
+      COMPLETE: (id: string) => `/v1/production/job-cards/${id}/complete`,
+      HOLD: (id: string) => `/v1/production/job-cards/${id}/hold`,
+      REPORT: (id: string) => `/v1/production/job-cards/${id}/report`,
+    },
+    // Schedules
+    SCHEDULES: {
+      LIST: '/v1/production/schedules',
+      GET: (id: string) => `/v1/production/schedules/${id}`,
+      CREATE: '/v1/production/schedules',
+      DELETE: (id: string) => `/v1/production/schedules/${id}`,
+    },
+    // Schedule Entries
+    SCHEDULE_ENTRIES: {
+      LIST: '/v1/production/schedule-entries',
+      CREATE: '/v1/production/schedule-entries',
+      UPDATE: (id: string) => `/v1/production/schedule-entries/${id}`,
+      DELETE: (id: string) => `/v1/production/schedule-entries/${id}`,
+    },
+    // Inspection Plans
+    INSPECTION_PLANS: {
+      LIST: '/v1/production/inspection-plans',
+      CREATE: '/v1/production/inspection-plans',
+      UPDATE: (id: string) => `/v1/production/inspection-plans/${id}`,
+      DELETE: (id: string) => `/v1/production/inspection-plans/${id}`,
+    },
+    // Quality Holds
+    QUALITY_HOLDS: {
+      LIST: '/v1/production/quality-holds',
+      CREATE: '/v1/production/quality-holds',
+      RELEASE: (id: string) => `/v1/production/quality-holds/${id}/release`,
+    },
+    // Downtime Records
+    DOWNTIME_RECORDS: {
+      LIST: '/v1/production/downtime-records',
+      CREATE: '/v1/production/downtime-records',
+      END: (id: string) => `/v1/production/downtime-records/${id}/end`,
+    },
+    // Analytics
+    ANALYTICS: {
+      DASHBOARD: '/v1/production/analytics/dashboard',
+    },
   },
   // Health
   HEALTH: '/health',
