@@ -635,7 +635,7 @@ export default function ProductionOrdersPage() {
 
   return (
     <CoreProvider selection={{ namespace: 'production-orders', initialIds }}>
-      <PageLayout>
+      <PageLayout data-testid="production-orders-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

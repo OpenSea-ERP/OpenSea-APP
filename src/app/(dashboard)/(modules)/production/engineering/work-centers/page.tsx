@@ -299,7 +299,7 @@ export default function WorkCentersPage() {
 
   return (
     <CoreProvider selection={{ namespace: 'work-centers', initialIds }}>
-      <PageLayout>
+      <PageLayout data-testid="production-work-centers-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

@@ -469,7 +469,7 @@ export default function WorkstationsPage() {
 
   return (
     <CoreProvider selection={{ namespace: 'workstations', initialIds }}>
-      <PageLayout>
+      <PageLayout data-testid="production-workstations-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
