@@ -20,14 +20,17 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PRODUCTION_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { usePermissions } from '@/hooks/use-permissions';
-import { productionOrdersService } from '@/services/production';
+import { productionOrdersService, materialReservationsService, materialIssuesService, materialReturnsService } from '@/services/production';
 import type {
   ProductionOrder,
   ProductionOrderStatus,
 } from '@/types/production';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  ArrowDownLeft,
   ArrowRight,
+  ArrowUpRight,
+  BoxIcon,
   Calendar,
   CheckCircle,
   Clock,
@@ -234,6 +237,28 @@ export default function ProductionOrderDetailPage() {
   });
 
   const order = orderData as ProductionOrder | undefined;
+
+  const { data: reservationsData } = useQuery({
+    queryKey: ['material-reservations', orderId],
+    queryFn: () => materialReservationsService.list(orderId),
+    enabled: !!orderId && !!order,
+  });
+
+  const { data: issuesData } = useQuery({
+    queryKey: ['material-issues', orderId],
+    queryFn: () => materialIssuesService.list(orderId),
+    enabled: !!orderId && !!order,
+  });
+
+  const { data: returnsData } = useQuery({
+    queryKey: ['material-returns', orderId],
+    queryFn: () => materialReturnsService.list(orderId),
+    enabled: !!orderId && !!order,
+  });
+
+  const reservations = reservationsData?.materialReservations ?? [];
+  const issues = issuesData?.materialIssues ?? [];
+  const returns = returnsData?.materialReturns ?? [];
 
   const changeStatusMutation = useMutation({
     mutationFn: ({
@@ -565,31 +590,156 @@ export default function ProductionOrderDetailPage() {
 
             {/* Materials Tab */}
             <TabsContent value="materials">
-              <div className="space-y-5">
-                <SectionHeader
-                  icon={Package}
-                  title="Materiais"
-                  subtitle="Itens da lista de materiais (BOM) vinculada"
-                />
-                <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60">
-                  <p className="text-sm text-muted-foreground">
-                    Os materiais são definidos na BOM vinculada a esta ordem.
-                    Consulte a BOM <strong>{order.bomId}</strong> para ver a
-                    lista completa de materiais.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4 h-9 px-2.5"
-                    onClick={() =>
-                      router.push(
-                        `/production/engineering/boms/${order.bomId}`,
-                      )
-                    }
-                  >
-                    Ver BOM
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
+              <div className="space-y-6">
+                {/* BOM link */}
+                <div>
+                  <SectionHeader
+                    icon={Package}
+                    title="Lista de Materiais (BOM)"
+                    subtitle="Materiais definidos na BOM vinculada"
+                  />
+                  <div className="w-full rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        BOM: <strong>{order.bomId}</strong>
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-2.5"
+                        onClick={() => router.push(`/production/engineering/boms/${order.bomId}`)}
+                      >
+                        Ver BOM
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reservations */}
+                <div>
+                  <SectionHeader
+                    icon={BoxIcon}
+                    title="Reservas de Material"
+                    subtitle={`${reservations.length} reserva(s) registrada(s)`}
+                  />
+                  {reservations.length === 0 ? (
+                    <div className="w-full rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60">
+                      <p className="text-sm text-muted-foreground">Nenhuma reserva de material registrada.</p>
+                    </div>
+                  ) : (
+                    <div className="w-full rounded-xl border border-border bg-white dark:bg-slate-800/60 overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-slate-50 dark:bg-slate-800/80">
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Material</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Armazém</th>
+                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Reservado</th>
+                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Emitido</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reservations.map((r) => (
+                            <tr key={r.id} className="border-b border-border last:border-0">
+                              <td className="px-4 py-2 font-mono text-xs">{r.materialId}</td>
+                              <td className="px-4 py-2 font-mono text-xs">{r.warehouseId}</td>
+                              <td className="px-4 py-2 text-right">{r.quantityReserved}</td>
+                              <td className="px-4 py-2 text-right">{r.quantityIssued}</td>
+                              <td className="px-4 py-2">
+                                <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium ${
+                                  r.status === 'RESERVED' ? 'border-blue-600/25 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/8 dark:text-blue-300' :
+                                  r.status === 'PARTIALLY_ISSUED' ? 'border-amber-600/25 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/8 dark:text-amber-300' :
+                                  r.status === 'FULLY_ISSUED' ? 'border-emerald-600/25 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/8 dark:text-emerald-300' :
+                                  'border-rose-600/25 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/8 dark:text-rose-300'
+                                }`}>
+                                  {r.status === 'RESERVED' ? 'Reservado' : r.status === 'PARTIALLY_ISSUED' ? 'Parcial' : r.status === 'FULLY_ISSUED' ? 'Emitido' : 'Cancelado'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Issues */}
+                <div>
+                  <SectionHeader
+                    icon={ArrowUpRight}
+                    title="Requisições de Material"
+                    subtitle={`${issues.length} requisição(ões) registrada(s)`}
+                  />
+                  {issues.length === 0 ? (
+                    <div className="w-full rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60">
+                      <p className="text-sm text-muted-foreground">Nenhuma requisição de material registrada.</p>
+                    </div>
+                  ) : (
+                    <div className="w-full rounded-xl border border-border bg-white dark:bg-slate-800/60 overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-slate-50 dark:bg-slate-800/80">
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Material</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Armazém</th>
+                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Quantidade</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Lote</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Data</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {issues.map((issue) => (
+                            <tr key={issue.id} className="border-b border-border last:border-0">
+                              <td className="px-4 py-2 font-mono text-xs">{issue.materialId}</td>
+                              <td className="px-4 py-2 font-mono text-xs">{issue.warehouseId}</td>
+                              <td className="px-4 py-2 text-right">{issue.quantity}</td>
+                              <td className="px-4 py-2">{issue.batchNumber ?? '—'}</td>
+                              <td className="px-4 py-2 text-xs text-muted-foreground">{new Date(issue.issuedAt).toLocaleDateString('pt-BR')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Returns */}
+                <div>
+                  <SectionHeader
+                    icon={ArrowDownLeft}
+                    title="Devoluções de Material"
+                    subtitle={`${returns.length} devolução(ões) registrada(s)`}
+                  />
+                  {returns.length === 0 ? (
+                    <div className="w-full rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60">
+                      <p className="text-sm text-muted-foreground">Nenhuma devolução de material registrada.</p>
+                    </div>
+                  ) : (
+                    <div className="w-full rounded-xl border border-border bg-white dark:bg-slate-800/60 overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-slate-50 dark:bg-slate-800/80">
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Material</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Armazém</th>
+                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Quantidade</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Motivo</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Data</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {returns.map((ret) => (
+                            <tr key={ret.id} className="border-b border-border last:border-0">
+                              <td className="px-4 py-2 font-mono text-xs">{ret.materialId}</td>
+                              <td className="px-4 py-2 font-mono text-xs">{ret.warehouseId}</td>
+                              <td className="px-4 py-2 text-right">{ret.quantity}</td>
+                              <td className="px-4 py-2">{ret.reason ?? '—'}</td>
+                              <td className="px-4 py-2 text-xs text-muted-foreground">{new Date(ret.returnedAt).toLocaleDateString('pt-BR')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
