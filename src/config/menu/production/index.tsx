@@ -13,4 +13,5 @@ export const productionMenu: MenuItem = {
   icon: <Factory className="w-6 h-6" />,
   href: '/production',
   requiredPermission: PRODUCTION_PERMISSIONS.ORDERS.ACCESS,
+  requiredModule: 'PRODUCTION',
 };

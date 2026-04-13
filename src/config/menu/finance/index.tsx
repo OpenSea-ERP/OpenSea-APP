@@ -13,4 +13,5 @@ export const financeMenu: MenuItem = {
   icon: <DollarSign className="w-6 h-6" />,
   href: '/finance',
   requiredPermission: FINANCE_PERMISSIONS.ENTRIES.ACCESS,
+  requiredModule: 'FINANCE',
 };

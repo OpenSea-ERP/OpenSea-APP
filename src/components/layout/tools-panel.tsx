@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import type { ToolConfig } from '@/config/tools-config';
 import { TOOLS } from '@/config/tools-config';
 import { useEmailUnreadCount } from '@/hooks/email/use-email-unread-count';
+import { useModules } from '@/hooks/use-modules';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { MenuItem } from '@/types/menu';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -50,6 +51,7 @@ type TabId = 'navigation' | 'tools';
 export function ToolsPanel({ isOpen, onClose, menuItems }: ToolsPanelProps) {
   const router = useRouter();
   const { hasPermission, hasAnyPermission, isLoading } = usePermissions();
+  const { hasModule } = useModules();
   const [menuHistory, setMenuHistory] = useState<MenuItem[][]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('navigation');
@@ -58,6 +60,7 @@ export function ToolsPanel({ isOpen, onClose, menuItems }: ToolsPanelProps) {
 
   const hasMenuPermission = (item: MenuItem): boolean => {
     if (isLoading) return true;
+    if (item.requiredModule && !hasModule(item.requiredModule)) return false;
     if (!item.requiredPermission && !item.requiredPermissions) return true;
     if (item.requiredPermission) return hasPermission(item.requiredPermission);
     if (item.requiredPermissions && item.requiredPermissions.length > 0) {

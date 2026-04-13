@@ -17,6 +17,7 @@ import {
 } from '@/config/rbac/permission-codes';
 import { useAuth } from '@/contexts/auth-context';
 import { useTenant } from '@/contexts/tenant-context';
+import { useModules } from '@/hooks/use-modules';
 import { usePermissions } from '@/hooks/use-permissions';
 
 import {
@@ -42,6 +43,7 @@ const moduleCards = [
     gradient: 'from-emerald-500 to-emerald-600',
     hoverBg: 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
     permission: STOCK_PERMISSIONS.PRODUCTS.ACCESS,
+    requiredModule: 'STOCK',
   },
   {
     id: 'hr',
@@ -53,6 +55,7 @@ const moduleCards = [
     gradient: 'from-blue-500 to-purple-600',
     hoverBg: 'hover:bg-blue-50 dark:hover:bg-blue-500/10',
     permission: HR_PERMISSIONS.EMPLOYEES.ACCESS,
+    requiredModule: 'HR',
   },
   {
     id: 'sales',
@@ -63,6 +66,7 @@ const moduleCards = [
     gradient: 'from-orange-500 to-amber-600',
     hoverBg: 'hover:bg-orange-50 dark:hover:bg-orange-500/10',
     permission: SALES_PERMISSIONS.CUSTOMERS.ACCESS,
+    requiredModule: 'SALES',
   },
   {
     id: 'finance',
@@ -73,6 +77,7 @@ const moduleCards = [
     gradient: 'from-blue-500 to-emerald-600',
     hoverBg: 'hover:bg-teal-50 dark:hover:bg-teal-500/10',
     permission: FINANCE_PERMISSIONS.ENTRIES.ACCESS,
+    requiredModule: 'FINANCE',
   },
   {
     id: 'admin',
@@ -90,6 +95,7 @@ export default function DashboardWelcomePage() {
   const { user } = useAuth();
   const { currentTenant } = useTenant();
   const { hasPermission } = usePermissions();
+  const { hasModule } = useModules();
 
   // Usa o primeiro nome do perfil, ou fallback para username/email
   const firstName =
@@ -99,9 +105,11 @@ export default function DashboardWelcomePage() {
     'Usuário';
   const tenantName = currentTenant?.name || 'Sua Empresa';
 
-  const visibleModules = moduleCards.filter(
-    card => !card.permission || hasPermission(card.permission)
-  );
+  const visibleModules = moduleCards.filter(card => {
+    if (card.requiredModule && !hasModule(card.requiredModule)) return false;
+    if (card.permission && !hasPermission(card.permission)) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-8">

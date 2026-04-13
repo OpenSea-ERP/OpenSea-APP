@@ -13,4 +13,5 @@ export const hrMenu: MenuItem = {
   icon: <UserRoundCog className="w-6 h-6" />,
   href: '/hr',
   requiredPermission: HR_PERMISSIONS.EMPLOYEES.ACCESS,
+  requiredModule: 'HR',
 };

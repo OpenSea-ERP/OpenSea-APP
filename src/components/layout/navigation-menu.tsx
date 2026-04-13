@@ -8,6 +8,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useModules } from '@/hooks/use-modules';
 import { usePermissions } from '@/hooks/use-permissions';
 import type { MenuItem } from '@/types/menu';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -28,6 +29,7 @@ export function NavigationMenu({
 }: NavigationMenuProps) {
   const router = useRouter();
   const { hasPermission, hasAnyPermission, isLoading } = usePermissions();
+  const { hasModule } = useModules();
   const [menuHistory, setMenuHistory] = useState<MenuItem[][]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -36,6 +38,11 @@ export function NavigationMenu({
     // Durante carregamento, mostrar todos os itens (será filtrado depois)
     if (isLoading) {
       return true;
+    }
+
+    // Verifica módulo do plano primeiro
+    if (item.requiredModule && !hasModule(item.requiredModule)) {
+      return false;
     }
 
     // Se não tem requisito de permissão, permite acesso

@@ -13,4 +13,5 @@ export const salesMenu: MenuItem = {
   icon: <ShoppingBag className="w-6 h-6" />,
   href: '/sales',
   requiredPermission: SALES_PERMISSIONS.CUSTOMERS.ACCESS,
+  requiredModule: 'SALES',
 };

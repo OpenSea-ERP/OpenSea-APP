@@ -15,4 +15,5 @@ export interface MenuItem {
   variant?: MenuItemVariant;
   requiredPermission?: string; // Permissão necessária para ver este item
   requiredPermissions?: string[]; // Múltiplas permissões (OR - precisa de pelo menos uma)
+  requiredModule?: string; // Módulo do plano necessário para ver este item
 }

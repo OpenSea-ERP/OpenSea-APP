@@ -13,4 +13,5 @@ export const stockMenu: MenuItem = {
   icon: <Package className="w-6 h-6" />,
   href: '/stock',
   requiredPermission: STOCK_PERMISSIONS.PRODUCTS.ACCESS,
+  requiredModule: 'STOCK',
 };
