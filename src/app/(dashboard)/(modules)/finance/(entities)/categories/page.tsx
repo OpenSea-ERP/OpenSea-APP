@@ -410,7 +410,7 @@ export default function FinanceCategoriesPage() {
             </div>
           </Card>
         ) : (
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-hidden" data-testid="categories-table">
             <Table aria-label="Tabela de categorias financeiras">
               <TableHeader>
                 <TableRow>

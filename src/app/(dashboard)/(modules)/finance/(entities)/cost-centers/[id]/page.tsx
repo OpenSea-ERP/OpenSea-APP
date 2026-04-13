@@ -1,28 +1,57 @@
 /**
  * Cost Center Detail Page
+ * Follows pattern: PageLayout > PageActionBar > Identity Card > Content Cards
  */
 
 'use client';
 
+import { GridLoading } from '@/components/handlers/grid-loading';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
+import { InfoField } from '@/components/shared/info-field';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import PermissionCodes from '@/config/rbac/permission-codes';
+import type { HeaderButton } from '@/components/layout/types/header.types';
+import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useCostCenter, useDeleteCostCenter } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
-import { ArrowLeft, Building2, Edit, Trash } from 'lucide-react';
-import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import {
+  Building2,
+  Calendar,
+  Clock,
+  DollarSign,
+  Edit,
+  GitBranch,
+  Target,
+  Trash2,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useState } from 'react';
 import { toast } from 'sonner';
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+const formatCurrency = (value: number | null | undefined) => {
+  if (value === null || value === undefined) return 'R$ 0,00';
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+};
+
+// =============================================================================
+// PAGE
+// =============================================================================
 
 export default function CostCenterDetailPage({
   params,
@@ -36,7 +65,19 @@ export default function CostCenterDetailPage({
   const deleteMutation = useDeleteCostCenter();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const { hasPermission } = usePermissions();
-  const canDelete = hasPermission(PermissionCodes.FINANCE.COST_CENTERS.REMOVE);
+  const canEdit = hasPermission(FINANCE_PERMISSIONS.COST_CENTERS.MODIFY);
+  const canDelete = hasPermission(FINANCE_PERMISSIONS.COST_CENTERS.REMOVE);
+
+  // Breadcrumbs
+  const breadcrumbItems = [
+    { label: 'Financeiro', href: '/finance' },
+    { label: 'Centros de Custo', href: '/finance/cost-centers' },
+    ...(costCenter ? [{ label: costCenter.name }] : []),
+  ];
+
+  // ============================================================================
+  // LOADING
+  // ============================================================================
 
   if (isLoading) {
     return (
@@ -71,17 +112,14 @@ export default function CostCenterDetailPage({
               ))}
             </div>
           </Card>
-          <Card className="p-6">
-            <Skeleton className="h-6 w-32 mb-4" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Skeleton className="h-10 w-48" />
-              <Skeleton className="h-10 w-48" />
-            </div>
-          </Card>
         </PageBody>
       </PageLayout>
     );
   }
+
+  // ============================================================================
+  // NOT FOUND
+  // ============================================================================
 
   if (!costCenter) {
     return (
@@ -95,153 +133,222 @@ export default function CostCenterDetailPage({
           />
         </PageHeader>
         <PageBody>
-          <Card className="p-12 text-center">
-            <p className="text-destructive text-lg">
-              Centro de custo não encontrado.
+          <Card className="bg-white/5 p-12 text-center">
+            <Target className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-semibold mb-2">
+              Centro de custo não encontrado
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              O centro de custo que você está procurando não existe ou foi
+              removido.
             </p>
+            <Button onClick={() => router.push('/finance/cost-centers')}>
+              Voltar para Centros de Custo
+            </Button>
           </Card>
         </PageBody>
       </PageLayout>
     );
   }
 
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
   const handleDeleteConfirm = async () => {
-    await deleteMutation.mutateAsync(id);
-    toast.success('Centro de custo excluído com sucesso.');
-    router.push('/finance/cost-centers');
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success('Centro de custo excluído com sucesso.');
+      router.push('/finance/cost-centers');
+    } catch {
+      toast.error('Erro ao excluir centro de custo.');
+    }
   };
 
-  const formatCurrency = (value: number | null | undefined) => {
-    if (!value) return 'R$ 0,00';
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  // ============================================================================
+  // ACTION BUTTONS
+  // ============================================================================
+
+  const actionButtons: HeaderButton[] = [
+    ...(canDelete
+      ? [
+          {
+            id: 'delete',
+            title: 'Excluir',
+            icon: Trash2,
+            onClick: () => setDeleteModalOpen(true),
+            variant: 'default' as const,
+            className:
+              'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
+          },
+        ]
+      : []),
+    ...(canEdit
+      ? [
+          {
+            id: 'edit',
+            title: 'Editar',
+            icon: Edit,
+            onClick: () => router.push(`/finance/cost-centers/${id}/edit`),
+            variant: 'default' as const,
+          },
+        ]
+      : []),
+  ];
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/finance/cost-centers">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Voltar para centros de custo
-            </Button>
-          </Link>
-        </div>
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={breadcrumbItems}
+          buttons={actionButtons}
+        />
+      </PageHeader>
 
-        <div className="flex gap-2">
-          {canDelete && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDeleteModalOpen(true)}
-              className="gap-2"
-            >
-              <Trash className="h-4 w-4 text-rose-600" />
-              Excluir
-            </Button>
-          )}
-
-          <Link href={`/finance/cost-centers/${id}/edit`}>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Edit className="h-4 w-4 text-sky-500" />
-              Editar
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Cost Center Info Card */}
-      <Card className="p-4 sm:p-6">
-        <div className="flex gap-4 sm:flex-row items-center sm:gap-6">
-          <div className="flex items-center justify-center h-10 w-10 md:h-16 md:w-16 rounded-lg bg-linear-to-br from-purple-500 to-pink-600 shrink-0">
-            <Building2 className="md:h-8 md:w-8 text-white" />
-          </div>
-          <div className="flex justify-between flex-1 gap-4 flex-row items-center">
-            <div>
-              <h1 className="text-lg sm:text-3xl font-bold tracking-tight">
-                {costCenter.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
+      <PageBody>
+        {/* Identity Card */}
+        <Card className="bg-white/5 p-5" data-testid="cost-center-identity">
+          <div className="flex items-start gap-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-emerald-600 shadow-lg">
+              <Target className="h-7 w-7 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1
+                  className="text-2xl font-bold tracking-tight"
+                  data-testid="cost-center-name"
+                >
+                  {costCenter.name}
+                </h1>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'text-xs',
+                    costCenter.isActive
+                      ? 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
+                      : 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300'
+                  )}
+                >
+                  {costCenter.isActive ? 'Ativo' : 'Inativo'}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5 font-mono">
                 Código: {costCenter.code}
               </p>
             </div>
-            <div>
-              <Badge variant={costCenter.isActive ? 'success' : 'secondary'}>
-                {costCenter.isActive ? 'Ativo' : 'Inativo'}
-              </Badge>
+            <div className="hidden sm:flex flex-col gap-2 shrink-0 text-sm">
+              {costCenter.createdAt && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4 text-blue-500" />
+                  <span>
+                    {new Date(costCenter.createdAt).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              )}
+              {costCenter.updatedAt && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4 text-amber-500" />
+                  <span>
+                    {new Date(costCenter.updatedAt).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
 
-      {/* Details Card */}
-      <Card className="p-4 sm:p-6">
-        <h2 className="text-lg font-semibold mb-4">Informações Gerais</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Código</p>
-            <p className="font-medium">{costCenter.code}</p>
+        {/* General Info */}
+        <Card
+          className="p-4 sm:p-6 w-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10"
+          data-testid="cost-center-info"
+        >
+          <h3 className="text-lg uppercase font-semibold flex items-center gap-2 mb-4">
+            <Target className="h-5 w-5" />
+            Informações Gerais
+          </h3>
+          <div className="grid md:grid-cols-3 gap-6">
+            <InfoField
+              label="Nome"
+              value={costCenter.name}
+              showCopyButton
+              copyTooltip="Copiar Nome"
+            />
+            <InfoField
+              label="Código"
+              value={costCenter.code}
+              showCopyButton
+              copyTooltip="Copiar Código"
+            />
+            <InfoField
+              label="Status"
+              value={costCenter.isActive ? 'Ativo' : 'Inativo'}
+            />
+            {costCenter.companyName && (
+              <InfoField
+                label="Empresa Vinculada"
+                value={costCenter.companyName}
+                icon={<Building2 className="h-4 w-4 text-violet-500" />}
+              />
+            )}
+            {costCenter.parentName && (
+              <InfoField
+                label="Centro de Custo Pai"
+                value={costCenter.parentName}
+                icon={<GitBranch className="h-4 w-4 text-sky-500" />}
+              />
+            )}
+            {costCenter.description && (
+              <InfoField
+                label="Descrição"
+                value={costCenter.description}
+                className="md:col-span-3"
+              />
+            )}
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Nome</p>
-            <p className="font-medium">{costCenter.name}</p>
-          </div>
-          {costCenter.companyName && (
+        </Card>
+
+        {/* Budget */}
+        <Card
+          className="p-4 sm:p-6 w-full bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10"
+          data-testid="cost-center-budget"
+        >
+          <h3 className="text-lg uppercase font-semibold flex items-center gap-2 mb-4">
+            <DollarSign className="h-5 w-5" />
+            Orçamento
+          </h3>
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Empresa</p>
-              <p className="font-medium">{costCenter.companyName}</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Orçamento Mensal
+              </p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(costCenter.monthlyBudget)}
+              </p>
             </div>
-          )}
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Status</p>
-            <Badge variant={costCenter.isActive ? 'success' : 'secondary'}>
-              {costCenter.isActive ? 'Ativo' : 'Inativo'}
-            </Badge>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">
+                Orçamento Anual
+              </p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(costCenter.annualBudget)}
+              </p>
+            </div>
           </div>
-        </div>
+        </Card>
+      </PageBody>
 
-        {costCenter.description && (
-          <div className="mt-6">
-            <p className="text-sm text-muted-foreground mb-1">Descrição</p>
-            <p className="font-medium">{costCenter.description}</p>
-          </div>
-        )}
-      </Card>
-
-      {/* Budget Card */}
-      <Card className="p-4 sm:p-6">
-        <h2 className="text-lg font-semibold mb-4">Orçamento</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">
-              Orçamento Mensal
-            </p>
-            <p className="text-2xl font-bold text-emerald-600">
-              {formatCurrency(costCenter.monthlyBudget)}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">
-              Orçamento Anual
-            </p>
-            <p className="text-2xl font-bold text-emerald-600">
-              {formatCurrency(costCenter.annualBudget)}
-            </p>
-          </div>
-        </div>
-      </Card>
-
+      {/* Delete PIN Confirmation */}
       <VerifyActionPinModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onSuccess={handleDeleteConfirm}
         title="Excluir Centro de Custo"
-        description={`Digite seu PIN de ação para excluir "${costCenter.name}".`}
+        description={`Digite seu PIN de Ação para confirmar a exclusão do centro de custo "${costCenter.name}". Esta ação não pode ser desfeita.`}
       />
-    </div>
+    </PageLayout>
   );
 }

@@ -64,7 +64,7 @@ const TYPE_COLORS: Record<ChartOfAccountType, string> = {
 
 const CLASS_LABELS: Record<string, string> = {
   CURRENT: 'Circulante',
-  NON_CURRENT: 'Nao Circulante',
+  NON_CURRENT: 'Não Circulante',
   OPERATIONAL: 'Operacional',
   FINANCIAL: 'Financeiro',
   OTHER: 'Outro',
@@ -260,14 +260,14 @@ export default function ChartOfAccountDetailPage({
 
       <PageBody>
         {/* Identity Card */}
-        <Card className="bg-white/5 p-5">
+        <Card className="bg-white/5 p-5" data-testid="chart-account-identity">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-purple-600 shadow-lg">
               <BookOpen className="h-7 w-7 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold truncate">{account.name}</h1>
+                <h1 className="text-xl font-bold truncate" data-testid="chart-account-name">{account.name}</h1>
                 <Badge
                   variant="outline"
                   className={cn('text-xs', TYPE_COLORS[account.type])}

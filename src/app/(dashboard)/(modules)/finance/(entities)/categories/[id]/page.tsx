@@ -132,7 +132,7 @@ export default function FinanceCategoryDetailPage({
         />
 
         {/* Identity Card */}
-        <Card className="bg-white/5 p-5">
+        <Card className="bg-white/5 p-5" data-testid="category-identity">
           <div className="flex items-start gap-5">
             <div
               className="flex h-14 w-14 items-center justify-center rounded-xl shrink-0"
@@ -146,7 +146,7 @@ export default function FinanceCategoryDetailPage({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight">
+                <h1 className="text-2xl font-bold tracking-tight" data-testid="category-name">
                   {category.name}
                 </h1>
                 <Badge variant={category.isActive ? 'success' : 'secondary'}>

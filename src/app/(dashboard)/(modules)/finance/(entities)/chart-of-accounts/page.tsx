@@ -100,7 +100,7 @@ const TYPE_COLORS: Record<ChartOfAccountType, string> = {
 
 const CLASS_LABELS: Record<string, string> = {
   CURRENT: 'Circulante',
-  NON_CURRENT: 'Nao Circulante',
+  NON_CURRENT: 'Não Circulante',
   OPERATIONAL: 'Operacional',
   FINANCIAL: 'Financeiro',
   OTHER: 'Outro',
@@ -561,7 +561,7 @@ function ChartOfAccountsPageContent() {
           </div>
         ) : (
           <>
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="rounded-lg border border-border overflow-hidden" data-testid="chart-of-accounts-table">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
