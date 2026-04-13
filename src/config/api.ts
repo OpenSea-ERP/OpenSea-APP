@@ -1655,6 +1655,87 @@ export const API_ENDPOINTS = {
     CREATE: '/v1/payments/charges',
     STATUS: (chargeId: string) => `/v1/payments/charges/${chargeId}/status`,
   },
+  // =========================================================================
+  // Production Module
+  // =========================================================================
+  PRODUCTION: {
+    // Workstation Types
+    WORKSTATION_TYPES: {
+      LIST: '/v1/production/workstation-types',
+      GET: (id: string) => `/v1/production/workstation-types/${id}`,
+      CREATE: '/v1/production/workstation-types',
+      UPDATE: (id: string) => `/v1/production/workstation-types/${id}`,
+      DELETE: (id: string) => `/v1/production/workstation-types/${id}`,
+    },
+    // Workstations
+    WORKSTATIONS: {
+      LIST: '/v1/production/workstations',
+      GET: (id: string) => `/v1/production/workstations/${id}`,
+      CREATE: '/v1/production/workstations',
+      UPDATE: (id: string) => `/v1/production/workstations/${id}`,
+      DELETE: (id: string) => `/v1/production/workstations/${id}`,
+    },
+    // Work Centers
+    WORK_CENTERS: {
+      LIST: '/v1/production/work-centers',
+      GET: (id: string) => `/v1/production/work-centers/${id}`,
+      CREATE: '/v1/production/work-centers',
+      UPDATE: (id: string) => `/v1/production/work-centers/${id}`,
+      DELETE: (id: string) => `/v1/production/work-centers/${id}`,
+    },
+    // BOMs (Bill of Materials)
+    BOMS: {
+      LIST: '/v1/production/boms',
+      GET: (id: string) => `/v1/production/boms/${id}`,
+      CREATE: '/v1/production/boms',
+      UPDATE: (id: string) => `/v1/production/boms/${id}`,
+      DELETE: (id: string) => `/v1/production/boms/${id}`,
+      APPROVE: (id: string) => `/v1/production/boms/${id}/approve`,
+      // BOM Items
+      ITEMS: {
+        LIST: (bomId: string) => `/v1/production/boms/${bomId}/items`,
+        CREATE: (bomId: string) => `/v1/production/boms/${bomId}/items`,
+        UPDATE: (bomId: string, id: string) =>
+          `/v1/production/boms/${bomId}/items/${id}`,
+        DELETE: (bomId: string, id: string) =>
+          `/v1/production/boms/${bomId}/items/${id}`,
+      },
+      // Operation Routings
+      ROUTINGS: {
+        LIST: (bomId: string) => `/v1/production/boms/${bomId}/routings`,
+        CREATE: (bomId: string) => `/v1/production/boms/${bomId}/routings`,
+        UPDATE: (bomId: string, id: string) =>
+          `/v1/production/boms/${bomId}/routings/${id}`,
+        DELETE: (bomId: string, id: string) =>
+          `/v1/production/boms/${bomId}/routings/${id}`,
+      },
+    },
+    // Production Orders
+    ORDERS: {
+      LIST: '/v1/production/orders',
+      GET: (id: string) => `/v1/production/orders/${id}`,
+      CREATE: '/v1/production/orders',
+      UPDATE: (id: string) => `/v1/production/orders/${id}`,
+      CHANGE_STATUS: (id: string) =>
+        `/v1/production/orders/${id}/change-status`,
+      CANCEL: (id: string) => `/v1/production/orders/${id}/cancel`,
+      COUNT_BY_STATUS: '/v1/production/orders/count-by-status',
+    },
+    // Downtime Reasons
+    DOWNTIME_REASONS: {
+      LIST: '/v1/production/downtime-reasons',
+      CREATE: '/v1/production/downtime-reasons',
+      UPDATE: (id: string) => `/v1/production/downtime-reasons/${id}`,
+      DELETE: (id: string) => `/v1/production/downtime-reasons/${id}`,
+    },
+    // Defect Types
+    DEFECT_TYPES: {
+      LIST: '/v1/production/defect-types',
+      CREATE: '/v1/production/defect-types',
+      UPDATE: (id: string) => `/v1/production/defect-types/${id}`,
+      DELETE: (id: string) => `/v1/production/defect-types/${id}`,
+    },
+  },
   // Health
   HEALTH: '/health',
 } as const;

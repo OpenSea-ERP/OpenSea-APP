@@ -1042,6 +1042,59 @@ export const SYSTEM_PERMISSIONS = {
 // WILDCARD - Permissão especial (Super Admin)
 // =============================================================================
 
+// =============================================================================
+// PRODUCTION - Controle de Produção
+// =============================================================================
+
+export const PRODUCTION_PERMISSIONS = {
+  ENGINEERING: perm(
+    'production',
+    'engineering',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin',
+  ),
+  ORDERS: perm(
+    'production',
+    'orders',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'export',
+    'print',
+    'admin',
+  ),
+  SHOPFLOOR: perm(
+    'production',
+    'shopfloor',
+    'access',
+    'register',
+    'modify',
+    'admin',
+  ),
+  PLANNING: perm(
+    'production',
+    'planning',
+    'access',
+    'register',
+    'modify',
+    'admin',
+  ),
+  QUALITY: perm(
+    'production',
+    'quality',
+    'access',
+    'register',
+    'modify',
+    'admin',
+  ),
+  COSTING: perm('production', 'costing', 'access', 'admin'),
+  ANALYTICS: perm('production', 'analytics', 'access', 'export'),
+} as const;
+
 export const WILDCARD_PERMISSIONS = {
   /** Acesso total ao sistema (Super Admin) */
   FULL_ACCESS: '*.*.*',
@@ -1062,6 +1115,7 @@ export const PermissionCodes = {
   ADMIN: ADMIN_PERMISSIONS,
   TOOLS: TOOLS_PERMISSIONS,
   SYSTEM: SYSTEM_PERMISSIONS,
+  PRODUCTION: PRODUCTION_PERMISSIONS,
   WILDCARD: WILDCARD_PERMISSIONS,
 } as const;
 
@@ -1086,6 +1140,8 @@ export type AdminPermission = DeepValues<typeof ADMIN_PERMISSIONS>;
 export type ToolsPermission = DeepValues<typeof TOOLS_PERMISSIONS>;
 export type SystemPermission = DeepValues<typeof SYSTEM_PERMISSIONS>;
 
+export type ProductionPermission = DeepValues<typeof PRODUCTION_PERMISSIONS>;
+
 export type AnyPermission =
   | StockPermission
   | FinancePermission
@@ -1094,6 +1150,7 @@ export type AnyPermission =
   | AdminPermission
   | ToolsPermission
   | SystemPermission
+  | ProductionPermission
   | typeof WILDCARD_PERMISSIONS.FULL_ACCESS;
 
 export default PermissionCodes;
