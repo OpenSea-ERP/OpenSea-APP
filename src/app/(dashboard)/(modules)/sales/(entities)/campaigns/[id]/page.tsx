@@ -5,6 +5,7 @@
 
 'use client';
 
+import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
 import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
@@ -46,13 +47,19 @@ function CampaignDetailContent() {
   const { hasPermission } = usePermissions();
   const id = params.id as string;
 
-  const { data, isLoading } = useCampaign(id);
+  const { data, isLoading, error } = useCampaign(id);
   const deleteMutation = useDeleteCampaign();
   const activateMutation = useActivateCampaign();
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const campaign = data?.campaign;
+
+  const breadcrumbItems = [
+    { label: 'Vendas', href: '/sales' },
+    { label: 'Campanhas', href: '/sales/campaigns' },
+    { label: campaign?.name ?? 'Campanha' },
+  ];
 
   const handleActivate = useCallback(async () => {
     try {
@@ -70,8 +77,38 @@ function CampaignDetailContent() {
     router.push('/sales/campaigns');
   }, [id, deleteMutation, router]);
 
-  if (isLoading || !campaign) {
-    return <GridLoading count={1} layout="grid" size="lg" />;
+  if (isLoading) {
+    return (
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridLoading count={3} layout="list" size="md" />
+        </PageBody>
+      </PageLayout>
+    );
+  }
+
+  if (error || !campaign) {
+    return (
+      <PageLayout>
+        <PageHeader>
+          <PageActionBar breadcrumbItems={breadcrumbItems} />
+        </PageHeader>
+        <PageBody>
+          <GridError
+            type="not-found"
+            title="Campanha não encontrada"
+            message="A campanha que você está procurando não existe ou foi removida."
+            action={{
+              label: 'Voltar para Campanhas',
+              onClick: () => router.push('/sales/campaigns'),
+            }}
+          />
+        </PageBody>
+      </PageLayout>
+    );
   }
 
   const formatDate = (dateStr: string) =>
@@ -91,11 +128,7 @@ function CampaignDetailContent() {
     <PageLayout data-testid="campaign-detail">
       <PageHeader>
         <PageActionBar
-          breadcrumbItems={[
-            { label: 'Vendas', href: '/sales' },
-            { label: 'Campanhas', href: '/sales/campaigns' },
-            { label: campaign.name },
-          ]}
+          breadcrumbItems={breadcrumbItems}
           buttons={[
             ...(canActivate
               ? [
