@@ -2,6 +2,8 @@
 .claude
 .playwright-cli/
 nul
+# E2E test screenshots
+tests/e2e/**/screenshots/
 # Logs
 logs
 *.log
