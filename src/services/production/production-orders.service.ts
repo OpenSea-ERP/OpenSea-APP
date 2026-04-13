@@ -69,8 +69,9 @@ export const productionOrdersService = {
   },
 
   async countByStatus(): Promise<ProductionOrderStatusCount> {
-    return apiClient.get<ProductionOrderStatusCount>(
+    const response = await apiClient.get<{ counts: ProductionOrderStatusCount }>(
       API_ENDPOINTS.PRODUCTION.ORDERS.COUNT_BY_STATUS,
     );
+    return response.counts;
   },
 };

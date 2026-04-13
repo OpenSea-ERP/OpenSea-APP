@@ -22,7 +22,6 @@ import {
   LayoutList,
   Scissors,
   Settings,
-  Timer,
   Wrench,
   AlertTriangle,
   BarChart3,

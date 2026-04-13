@@ -283,6 +283,9 @@ export default function ProductionOrderDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['production-orders'] });
       toast.success('Ordem cancelada!');
     },
+    onError: () => {
+      toast.error('Erro ao cancelar ordem.');
+    },
   });
 
   const handleStatusTransition = async (targetStatus: ProductionOrderStatus) => {
