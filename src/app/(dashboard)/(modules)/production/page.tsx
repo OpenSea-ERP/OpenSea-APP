@@ -23,6 +23,7 @@ import {
   Timer,
   Wrench,
   AlertTriangle,
+  BarChart3,
   Bug,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -136,6 +137,16 @@ const sections: {
         gradient: 'from-teal-500 to-teal-600',
         hoverBg: 'hover:bg-teal-50 dark:hover:bg-teal-500/10',
         permission: PRODUCTION_PERMISSIONS.QUALITY.ACCESS,
+      },
+      {
+        id: 'analytics',
+        title: 'Análise',
+        description: 'Indicadores de desempenho e métricas de produção',
+        icon: BarChart3,
+        href: '/production/analytics',
+        gradient: 'from-sky-500 to-sky-600',
+        hoverBg: 'hover:bg-sky-50 dark:hover:bg-sky-500/10',
+        permission: PRODUCTION_PERMISSIONS.ANALYTICS.ACCESS,
       },
     ],
   },
