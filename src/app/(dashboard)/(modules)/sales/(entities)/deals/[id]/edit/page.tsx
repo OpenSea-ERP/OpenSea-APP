@@ -332,7 +332,7 @@ export default function EditDealPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="deal-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

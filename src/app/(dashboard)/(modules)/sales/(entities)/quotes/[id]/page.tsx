@@ -235,7 +235,7 @@ export default function QuoteDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="quote-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

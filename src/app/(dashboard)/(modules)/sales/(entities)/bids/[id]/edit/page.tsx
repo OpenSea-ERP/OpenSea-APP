@@ -140,7 +140,7 @@ export default function BidEditPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="bid-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

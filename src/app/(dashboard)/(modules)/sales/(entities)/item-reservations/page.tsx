@@ -518,7 +518,7 @@ function ItemReservationsPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="item-reservations-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -552,6 +552,7 @@ function ItemReservationsPageContent() {
         <PageBody>
           {/* Search Bar */}
           <SearchBar
+            data-testid="item-reservations-search"
             placeholder={
               itemReservationsConfig.display.labels.searchPlaceholder
             }

@@ -88,7 +88,7 @@ function CampaignDetailContent() {
     campaign.status !== 'ARCHIVED';
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="campaign-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

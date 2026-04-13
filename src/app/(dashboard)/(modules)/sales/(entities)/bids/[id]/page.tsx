@@ -90,7 +90,7 @@ export default function BidDetailPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="bid-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

@@ -256,7 +256,7 @@ export default function EditItemReservationPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="item-reservation-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

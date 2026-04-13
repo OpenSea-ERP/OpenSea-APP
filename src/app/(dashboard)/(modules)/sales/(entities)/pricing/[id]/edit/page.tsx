@@ -105,7 +105,7 @@ function EditPriceTableContent() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="price-table-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

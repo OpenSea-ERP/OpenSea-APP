@@ -303,7 +303,7 @@ export default function ContactDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="contact-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

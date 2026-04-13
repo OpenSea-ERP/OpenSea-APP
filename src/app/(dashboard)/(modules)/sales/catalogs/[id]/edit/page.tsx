@@ -145,7 +145,7 @@ export default function EditCatalogPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="catalog-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

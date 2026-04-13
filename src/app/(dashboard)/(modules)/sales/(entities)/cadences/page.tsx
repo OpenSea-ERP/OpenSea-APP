@@ -456,7 +456,7 @@ function CadencesPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="cadences-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

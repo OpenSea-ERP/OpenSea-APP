@@ -350,7 +350,7 @@ export default function EditCampaignPage() {
   // ==========================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="campaign-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

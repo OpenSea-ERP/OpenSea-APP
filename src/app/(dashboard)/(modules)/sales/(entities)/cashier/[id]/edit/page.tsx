@@ -213,7 +213,7 @@ export default function EditCashierSessionPage() {
     CASHIER_SESSION_STATUS_LABELS[session.status] || session.status;
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="cashier-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

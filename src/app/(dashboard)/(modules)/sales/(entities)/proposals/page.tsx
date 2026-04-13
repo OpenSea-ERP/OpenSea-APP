@@ -473,7 +473,7 @@ function ProposalsPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="proposals-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

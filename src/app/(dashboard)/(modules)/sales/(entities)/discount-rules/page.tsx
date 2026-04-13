@@ -489,7 +489,7 @@ function DiscountRulesPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="discount-rules-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -508,6 +508,7 @@ function DiscountRulesPageContent() {
         <PageBody>
           {/* Search Bar */}
           <SearchBar
+            data-testid="discount-rules-search"
             placeholder={discountRulesConfig.display.labels.searchPlaceholder}
             value={searchQuery}
             onSearch={setSearchQuery}

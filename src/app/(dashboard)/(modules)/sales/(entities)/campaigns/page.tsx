@@ -153,7 +153,7 @@ function CampaignsPageContent() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="campaigns-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

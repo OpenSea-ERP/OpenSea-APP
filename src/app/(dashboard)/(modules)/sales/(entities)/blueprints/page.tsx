@@ -91,7 +91,7 @@ export default function BlueprintsListPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid="blueprints-page">
       <PageActionBar
         breadcrumbItems={[
           { label: 'Vendas', href: '/sales' },

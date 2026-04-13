@@ -45,7 +45,7 @@ export default function InvoicingPage() {
   const configureFocus = useConfigureFocusNfe();
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6" data-testid="invoicing-page">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
           Faturamento Fiscal

@@ -156,7 +156,7 @@ function ItemReservationDetailContent() {
     reservation.status === 'PENDING' && isExpired(reservation.expiresAt);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid="item-reservation-detail">
       {/* Action Bar */}
       <PageActionBar
         breadcrumbItems={[

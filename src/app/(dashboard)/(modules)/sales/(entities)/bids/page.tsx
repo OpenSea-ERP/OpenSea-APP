@@ -299,7 +299,7 @@ function BidsPageContent() {
   );
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="bids-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[{ label: 'Vendas' }, { label: 'Licitações' }]}

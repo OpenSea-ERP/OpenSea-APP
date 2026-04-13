@@ -252,7 +252,7 @@ export default function EditMessageTemplatePage() {
   const ChannelIcon = CHANNEL_ICONS[channel] || Send;
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="msg-template-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

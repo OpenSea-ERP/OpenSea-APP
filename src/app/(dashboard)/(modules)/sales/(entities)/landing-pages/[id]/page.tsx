@@ -105,7 +105,7 @@ function LandingPageDetailContent() {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid="landing-page-detail">
       <PageActionBar
         breadcrumbItems={[
           { label: 'Vendas', href: '/sales' },

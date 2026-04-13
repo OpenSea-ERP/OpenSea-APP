@@ -168,7 +168,7 @@ export default function CustomerDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="customer-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

@@ -158,7 +158,7 @@ export default function WorkflowDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="workflow-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

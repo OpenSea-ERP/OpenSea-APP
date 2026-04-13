@@ -228,7 +228,7 @@ export default function ConversationDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="conversation-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

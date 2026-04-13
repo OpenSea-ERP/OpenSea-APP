@@ -145,7 +145,7 @@ function PricingPageContent() {
   }, [itemsToDelete, deleteMutation]);
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="pricing-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

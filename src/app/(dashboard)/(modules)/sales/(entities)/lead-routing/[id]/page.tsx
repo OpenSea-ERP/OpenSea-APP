@@ -117,7 +117,7 @@ export default function LeadRoutingDetailPage() {
   const StrategyIcon = STRATEGY_ICONS[rule.strategy];
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="lead-route-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

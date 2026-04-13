@@ -295,7 +295,7 @@ export default function EditCustomerPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="customer-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

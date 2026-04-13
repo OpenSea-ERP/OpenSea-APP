@@ -111,7 +111,7 @@ export default function CatalogDetailPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="catalog-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

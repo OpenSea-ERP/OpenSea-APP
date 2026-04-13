@@ -203,7 +203,7 @@ export default function OrdersPage() {
 
   return (
     <CoreProvider>
-      <PageLayout>
+      <PageLayout data-testid="orders-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={breadcrumbs}

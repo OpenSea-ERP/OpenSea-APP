@@ -175,7 +175,7 @@ export default function DiscountRuleDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="discount-rule-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

@@ -429,7 +429,7 @@ function ConversationsPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="conversations-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

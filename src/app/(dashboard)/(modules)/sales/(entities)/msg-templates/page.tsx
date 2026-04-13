@@ -448,7 +448,7 @@ function MessageTemplatesPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="msg-templates-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

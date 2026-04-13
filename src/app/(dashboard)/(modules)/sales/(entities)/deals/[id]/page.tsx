@@ -235,7 +235,7 @@ function DealDetailContent() {
   const StatusIcon = statusStyle.icon;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid="deal-detail">
       {/* Action Bar */}
       <PageActionBar
         breadcrumbItems={[

@@ -458,7 +458,7 @@ function WorkflowsPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="workflows-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

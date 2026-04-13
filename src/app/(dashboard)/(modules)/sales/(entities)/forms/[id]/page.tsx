@@ -166,7 +166,7 @@ export default function FormDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="form-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

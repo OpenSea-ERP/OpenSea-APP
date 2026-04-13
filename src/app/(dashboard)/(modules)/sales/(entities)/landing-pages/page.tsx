@@ -95,7 +95,7 @@ export default function LandingPagesListPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid="landing-pages-page">
       <PageActionBar
         breadcrumbItems={[
           { label: 'Vendas', href: '/sales' },

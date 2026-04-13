@@ -53,7 +53,7 @@ function BidDocumentsContent() {
   );
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="bid-documents-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

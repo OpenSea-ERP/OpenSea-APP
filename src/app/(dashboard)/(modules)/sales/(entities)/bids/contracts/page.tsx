@@ -55,7 +55,7 @@ function BidContractsContent() {
   );
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="bid-contracts-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

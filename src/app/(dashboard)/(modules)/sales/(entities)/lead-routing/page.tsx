@@ -501,7 +501,7 @@ function LeadRoutingPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="lead-routing-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

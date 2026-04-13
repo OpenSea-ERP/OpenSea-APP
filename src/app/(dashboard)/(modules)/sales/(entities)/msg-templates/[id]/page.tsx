@@ -149,7 +149,7 @@ export default function MessageTemplateDetailPage() {
   });
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="msg-template-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

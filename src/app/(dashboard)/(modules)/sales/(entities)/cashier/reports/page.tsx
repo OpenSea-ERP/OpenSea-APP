@@ -17,7 +17,7 @@ export default function CashierReportsPage() {
   const { data, isLoading } = useCashierSessionReport(sessionId);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6" data-testid="cashier-reports-page">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
           Relatórios de Caixa

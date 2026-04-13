@@ -193,7 +193,7 @@ export default function CadenceEditPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="cadence-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

@@ -443,7 +443,7 @@ function LeadScoringPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="lead-scoring-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

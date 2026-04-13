@@ -433,7 +433,7 @@ function FormsPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="forms-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

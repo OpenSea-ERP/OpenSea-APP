@@ -166,7 +166,7 @@ export default function CashierSessionDetailPage() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="cashier-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

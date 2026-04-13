@@ -303,7 +303,7 @@ export default function EditWorkflowPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="workflow-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

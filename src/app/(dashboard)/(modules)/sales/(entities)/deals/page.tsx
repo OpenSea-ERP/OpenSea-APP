@@ -527,7 +527,7 @@ function DealsPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="deals-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

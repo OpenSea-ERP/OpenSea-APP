@@ -83,7 +83,7 @@ function BlueprintDetailContent() {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid="blueprint-detail">
       <PageActionBar
         breadcrumbItems={[
           { label: 'Vendas', href: '/sales' },

@@ -155,7 +155,7 @@ export default function CadenceDetailPage() {
   // ─── Render ───────────────────────────────────────────────
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="cadence-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

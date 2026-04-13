@@ -256,7 +256,7 @@ export default function ProposalDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="proposal-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

@@ -471,7 +471,7 @@ function QuotesPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="quotes-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

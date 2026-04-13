@@ -442,7 +442,7 @@ function CashierPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="cashier-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

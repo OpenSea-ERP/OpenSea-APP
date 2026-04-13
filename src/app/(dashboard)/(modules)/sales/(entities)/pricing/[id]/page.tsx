@@ -63,7 +63,7 @@ function PriceTableDetailContent() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="price-table-detail">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

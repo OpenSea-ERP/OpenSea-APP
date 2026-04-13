@@ -300,7 +300,7 @@ export default function EditFormPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="form-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

@@ -601,7 +601,7 @@ function ContactsPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="contacts-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

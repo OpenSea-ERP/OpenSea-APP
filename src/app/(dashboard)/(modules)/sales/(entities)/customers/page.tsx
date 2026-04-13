@@ -509,7 +509,7 @@ function CustomersPageContent() {
         initialIds,
       }}
     >
-      <PageLayout>
+      <PageLayout data-testid="customers-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[

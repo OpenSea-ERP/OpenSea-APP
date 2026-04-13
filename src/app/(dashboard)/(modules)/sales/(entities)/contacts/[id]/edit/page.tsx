@@ -352,7 +352,7 @@ export default function EditContactPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="contact-edit">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

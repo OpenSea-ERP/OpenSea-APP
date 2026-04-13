@@ -142,7 +142,7 @@ export default function CatalogsPage() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="catalogs-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[{ label: 'Vendas' }, { label: 'Catálogos' }]}
