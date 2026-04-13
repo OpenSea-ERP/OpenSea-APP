@@ -267,13 +267,13 @@ function CustomersPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          customersConfig.permissions.update &&
-          hasPermission(customersConfig.permissions.update)
+          customersConfig.permissions!.update &&
+          hasPermission(customersConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(customersConfig.permissions.delete)
+          ...(hasPermission(customersConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -392,13 +392,13 @@ function CustomersPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          customersConfig.permissions.update &&
-          hasPermission(customersConfig.permissions.update)
+          customersConfig.permissions!.update &&
+          hasPermission(customersConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(customersConfig.permissions.delete)
+          ...(hasPermission(customersConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -482,7 +482,7 @@ function CustomersPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: customersConfig.permissions.create,
+        permission: customersConfig.permissions!.create,
       },
     ],
     [handleCreate]

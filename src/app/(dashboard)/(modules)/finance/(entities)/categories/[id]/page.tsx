@@ -146,7 +146,10 @@ export default function FinanceCategoryDetailPage({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight" data-testid="category-name">
+                <h1
+                  className="text-2xl font-bold tracking-tight"
+                  data-testid="category-name"
+                >
                   {category.name}
                 </h1>
                 <Badge variant={category.isActive ? 'success' : 'secondary'}>

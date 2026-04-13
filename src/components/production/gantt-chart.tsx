@@ -61,12 +61,14 @@ function addDays(date: Date, n: number): Date {
 
 function diffDays(a: Date, b: Date): number {
   return Math.round(
-    (startOfDay(b).getTime() - startOfDay(a).getTime()) / (1000 * 60 * 60 * 24),
+    (startOfDay(b).getTime() - startOfDay(a).getTime()) / (1000 * 60 * 60 * 24)
   );
 }
 
 function formatWeekday(date: Date): string {
-  return date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+  return date
+    .toLocaleDateString('pt-BR', { weekday: 'short' })
+    .replace('.', '');
 }
 
 function isWeekend(date: Date): boolean {
@@ -123,12 +125,8 @@ function Tooltip({
         {entry.title}
       </p>
       <div className="mt-1 space-y-1 text-xs text-gray-600 dark:text-white/60">
-        <p>
-          Início: {formatShortDate(new Date(entry.startDate))}
-        </p>
-        <p>
-          Fim: {formatShortDate(new Date(entry.endDate))}
-        </p>
+        <p>Início: {formatShortDate(new Date(entry.startDate))}</p>
+        <p>Fim: {formatShortDate(new Date(entry.endDate))}</p>
         <p className="flex items-center gap-1.5">
           Status:{' '}
           <span
@@ -284,11 +282,12 @@ export function GanttChart({
                 <div
                   key={idx}
                   className={`flex flex-col items-center justify-center text-center border-r border-gray-100 dark:border-white/5 ${
-                    isWeekend(day)
-                      ? 'bg-slate-50 dark:bg-slate-800/30'
-                      : ''
+                    isWeekend(day) ? 'bg-slate-50 dark:bg-slate-800/30' : ''
                   }`}
-                  style={{ width: `${(1 / totalDays) * 100}%`, minWidth: DAY_WIDTH }}
+                  style={{
+                    width: `${(1 / totalDays) * 100}%`,
+                    minWidth: DAY_WIDTH,
+                  }}
                 >
                   <span className="text-[10px] font-medium text-gray-400 dark:text-white/40 uppercase">
                     {formatWeekday(day)}
@@ -331,7 +330,10 @@ export function GanttChart({
                           ? 'bg-slate-50/50 dark:bg-slate-800/20'
                           : ''
                       }`}
-                      style={{ width: `${(1 / totalDays) * 100}%`, minWidth: DAY_WIDTH }}
+                      style={{
+                        width: `${(1 / totalDays) * 100}%`,
+                        minWidth: DAY_WIDTH,
+                      }}
                     />
                   ))}
                 </div>
@@ -347,7 +349,7 @@ export function GanttChart({
                 )}
 
                 {/* Bars */}
-                {row.entries.map((entry) => {
+                {row.entries.map(entry => {
                   const style = getBarStyle(entry);
                   const colors = STATUS_COLORS[entry.status];
                   return (
@@ -360,14 +362,14 @@ export function GanttChart({
                         minWidth: 24,
                       }}
                       onClick={() => onEntryClick?.(entry)}
-                      onMouseEnter={(e) => {
+                      onMouseEnter={e => {
                         setHoveredEntry({
                           entry,
                           x: e.clientX,
                           y: e.clientY,
                         });
                       }}
-                      onMouseMove={(e) => {
+                      onMouseMove={e => {
                         if (hoveredEntry?.entry.id === entry.id) {
                           setHoveredEntry({
                             entry,

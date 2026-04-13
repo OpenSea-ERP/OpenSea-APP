@@ -167,7 +167,7 @@ export default function PayrollPage() {
   // ============================================================================
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
   // ============================================================================
   // COMPUTED
@@ -605,7 +605,7 @@ const [cancelTarget, setCancelTarget] = useState<string | null>(null);
             isSubmitting={createMutation.isPending}
           />
 
-<HRSelectionToolbar
+          <HRSelectionToolbar
             totalItems={payrolls.length}
             defaultActions={{
               export: true,

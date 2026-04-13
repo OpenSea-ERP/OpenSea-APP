@@ -95,7 +95,7 @@ export function PageHeroBanner({
                       {btn.label}
                     </Button>
                   </Link>
-                ),
+                )
               )}
           </div>
         </div>

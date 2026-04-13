@@ -238,7 +238,8 @@ export default function EditQuotePage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(hasPermission(quotesConfig.permissions.delete)
+    ...(quotesConfig.permissions!.delete &&
+    hasPermission(quotesConfig.permissions!.delete)
       ? [
           {
             id: 'delete',

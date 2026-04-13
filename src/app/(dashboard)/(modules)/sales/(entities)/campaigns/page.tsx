@@ -238,13 +238,13 @@ function CampaignsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          campaignsConfig.permissions.update &&
-          hasPermission(campaignsConfig.permissions.update)
+          campaignsConfig.permissions!.update &&
+          hasPermission(campaignsConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(campaignsConfig.permissions.delete)
+          ...(hasPermission(campaignsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -335,13 +335,13 @@ function CampaignsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          campaignsConfig.permissions.update &&
-          hasPermission(campaignsConfig.permissions.update)
+          campaignsConfig.permissions!.update &&
+          hasPermission(campaignsConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(campaignsConfig.permissions.delete)
+          ...(hasPermission(campaignsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -419,7 +419,7 @@ function CampaignsPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: campaignsConfig.permissions.create,
+        permission: campaignsConfig.permissions!.create,
       },
     ],
     [handleCreate]
@@ -545,7 +545,10 @@ function CampaignsPageContent() {
           )}
 
           {/* Create Wizard */}
-          <CreateCampaignWizard open={createOpen} onOpenChange={setCreateOpen} />
+          <CreateCampaignWizard
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+          />
 
           {/* Delete Confirmation */}
           <VerifyActionPinModal

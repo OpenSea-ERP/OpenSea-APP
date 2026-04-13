@@ -28,12 +28,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { PRODUCTION_PERMISSIONS } from '@/config/rbac/permission-codes';
 import {
@@ -99,9 +94,7 @@ function formatDate(iso: string | null): string {
 }
 
 function elapsedMinutes(startIso: string): number {
-  return Math.round(
-    (Date.now() - new Date(startIso).getTime()) / (1000 * 60),
-  );
+  return Math.round((Date.now() - new Date(startIso).getTime()) / (1000 * 60));
 }
 
 function formatDuration(minutes: number): string {
@@ -175,13 +168,13 @@ export default function ShopFloorPage() {
     const today = new Date().toDateString();
     return {
       total: jobCards.length,
-      inProgress: jobCards.filter((c) => c.status === 'IN_PROGRESS').length,
-      pending: jobCards.filter((c) => c.status === 'PENDING').length,
+      inProgress: jobCards.filter(c => c.status === 'IN_PROGRESS').length,
+      pending: jobCards.filter(c => c.status === 'PENDING').length,
       completedToday: jobCards.filter(
-        (c) =>
+        c =>
           c.status === 'COMPLETED' &&
           c.actualEnd &&
-          new Date(c.actualEnd).toDateString() === today,
+          new Date(c.actualEnd).toDateString() === today
       ).length,
     };
   }, [jobCards]);
@@ -235,23 +228,23 @@ export default function ShopFloorPage() {
   // ---- OEE calculations ---------------------------------------------------
 
   const oee = useMemo(() => {
-    const completed = jobCards.filter((c) => c.status === 'COMPLETED');
+    const completed = jobCards.filter(c => c.status === 'COMPLETED');
     if (completed.length === 0)
       return { availability: 0, performance: 0, quality: 0, overall: 0 };
 
     // Availability: ratio of cards that actually ran (have actualStart) vs total
     const totalCards = jobCards.length || 1;
-    const ranCards = jobCards.filter((c) => c.actualStart).length;
+    const ranCards = jobCards.filter(c => c.actualStart).length;
     const availability = Math.min((ranCards / totalCards) * 100, 100);
 
     // Performance: completed quantity vs planned quantity (across completed cards)
     const totalPlanned = completed.reduce(
       (sum, c) => sum + c.quantityPlanned,
-      0,
+      0
     );
     const totalCompleted = completed.reduce(
       (sum, c) => sum + c.quantityCompleted,
-      0,
+      0
     );
     const performance =
       totalPlanned > 0
@@ -261,17 +254,18 @@ export default function ShopFloorPage() {
     // Quality: (completed - scrapped) / completed
     const totalScrapped = completed.reduce(
       (sum, c) => sum + c.quantityScrapped,
-      0,
+      0
     );
     const quality =
       totalCompleted > 0
         ? Math.min(
             ((totalCompleted - totalScrapped) / totalCompleted) * 100,
-            100,
+            100
           )
         : 0;
 
-    const overall = (availability / 100) * (performance / 100) * (quality / 100) * 100;
+    const overall =
+      (availability / 100) * (performance / 100) * (quality / 100) * 100;
 
     return { availability, performance, quality, overall };
   }, [jobCards]);
@@ -281,17 +275,17 @@ export default function ShopFloorPage() {
   const activeCards = useMemo(
     () =>
       jobCards.filter(
-        (c) =>
+        c =>
           c.status === 'PENDING' ||
           c.status === 'IN_PROGRESS' ||
-          c.status === 'ON_HOLD',
+          c.status === 'ON_HOLD'
       ),
-    [jobCards],
+    [jobCards]
   );
 
   const activeDowntimes = useMemo(
-    () => (downtimeData ?? []).filter((d) => !d.endTime),
-    [downtimeData],
+    () => (downtimeData ?? []).filter(d => !d.endTime),
+    [downtimeData]
   );
 
   // ---- Render helpers -----------------------------------------------------
@@ -349,7 +343,7 @@ export default function ShopFloorPage() {
 
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsCards.map((s) => (
+        {statsCards.map(s => (
           <Card
             key={s.label}
             className="p-4 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10"
@@ -415,7 +409,7 @@ export default function ShopFloorPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {activeCards.map((card) => (
+            {activeCards.map(card => (
               <JobCardTile
                 key={card.id}
                 card={card}
@@ -457,7 +451,7 @@ export default function ShopFloorPage() {
             )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {activeDowntimes.map((dt) => (
+            {activeDowntimes.map(dt => (
               <DowntimeTile
                 key={dt.id}
                 record={dt}
@@ -744,9 +738,11 @@ function OeeGaugeCard({
 }) {
   const pct = Math.round(value);
   const color =
-    pct >= 85 ? 'text-emerald-600 dark:text-emerald-400' :
-    pct >= 60 ? 'text-amber-600 dark:text-amber-400' :
-    'text-rose-600 dark:text-rose-400';
+    pct >= 85
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : pct >= 60
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-rose-600 dark:text-rose-400';
 
   return (
     <Card className="p-5 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10 flex flex-col items-center gap-3">

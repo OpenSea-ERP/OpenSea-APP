@@ -68,7 +68,7 @@ test.describe('Sales Mobile Responsiveness', () => {
         const overflowElements = await page.evaluate(() => {
           const elements = document.querySelectorAll('*');
           const overflows: string[] = [];
-          elements.forEach((el) => {
+          elements.forEach(el => {
             const rect = el.getBoundingClientRect();
             if (rect.right > window.innerWidth + 10 && rect.width > 50) {
               const tag = el.tagName.toLowerCase();
@@ -119,9 +119,7 @@ test.describe('Sales Mobile Responsiveness', () => {
         });
 
         const status =
-          issues.filter((i) => i.route === route.path).length === 0
-            ? '✅'
-            : '⚠️';
+          issues.filter(i => i.route === route.path).length === 0 ? '✅' : '⚠️';
         console.log(`  ${status} ${route.name} [${route.path}]`);
       } catch (err) {
         issues.push({

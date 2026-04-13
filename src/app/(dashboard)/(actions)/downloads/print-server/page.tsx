@@ -85,8 +85,11 @@ function parseReleaseBody(body: string): string[] {
   return changes;
 }
 
-function findAssetUrl(assets: GitHubAsset[], pattern: RegExp): string | undefined {
-  return assets.find((a) => pattern.test(a.name))?.browser_download_url;
+function findAssetUrl(
+  assets: GitHubAsset[],
+  pattern: RegExp
+): string | undefined {
+  return assets.find(a => pattern.test(a.name))?.browser_download_url;
 }
 
 function parseRelease(release: GitHubRelease): ParsedRelease {
@@ -112,17 +115,17 @@ function useGitHubReleases() {
     fetch(GITHUB_API, {
       headers: { Accept: 'application/vnd.github+json' },
     })
-      .then((res) => {
+      .then(res => {
         if (!res.ok) throw new Error(`GitHub API: ${res.status}`);
         return res.json();
       })
       .then((data: GitHubRelease[]) => {
         const parsed = data
-          .filter((r) => !r.draft && !r.prerelease)
+          .filter(r => !r.draft && !r.prerelease)
           .map(parseRelease);
         setReleases(parsed);
       })
-      .catch((err) => {
+      .catch(err => {
         setError(err.message);
       })
       .finally(() => setLoading(false));
@@ -287,7 +290,7 @@ function DownloadButton({
           ? 'bg-gray-300 dark:bg-gray-700 cursor-wait opacity-60'
           : isAvailable
             ? `${config.activeColor} ${config.activeHover} cursor-pointer`
-            : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-60',
+            : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-60'
       )}
     >
       <PlatformIcon className="w-6 h-6 shrink-0" />
@@ -365,7 +368,7 @@ export default function PrintServerDownloadPage() {
             </p>
 
             <div className="flex flex-wrap gap-3">
-              {PLATFORM_CONFIGS.map((config) => (
+              {PLATFORM_CONFIGS.map(config => (
                 <DownloadButton
                   key={config.id}
                   config={config}
@@ -427,9 +430,7 @@ export default function PrintServerDownloadPage() {
                   <button
                     type="button"
                     className="flex items-center justify-between w-full text-left"
-                    onClick={() =>
-                      setExpandedFaq(expandedFaq === i ? null : i)
-                    }
+                    onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
                   >
                     <span className="text-sm font-medium text-gray-900 dark:text-white pr-4">
                       {item.question}
@@ -466,7 +467,11 @@ export default function PrintServerDownloadPage() {
                   </div>
                 </div>
                 <Link href="/downloads/print-server/changelog">
-                  <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                  >
                     Ver todos
                   </Button>
                 </Link>
@@ -492,7 +497,7 @@ export default function PrintServerDownloadPage() {
                           'text-xs font-mono',
                           idx === 0
                             ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20'
-                            : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20',
+                            : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20'
                         )}
                       >
                         v{release.version}

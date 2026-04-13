@@ -33,10 +33,7 @@ import {
 } from '@/hooks/stock/use-stock-other';
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
-import type {
-  Manufacturer,
-  UpdateManufacturerRequest,
-} from '@/types/stock';
+import type { Manufacturer, UpdateManufacturerRequest } from '@/types/stock';
 import { COUNTRIES } from '@/components/ui/country-select';
 import { formatCNPJ } from '@/lib/masks';
 import {

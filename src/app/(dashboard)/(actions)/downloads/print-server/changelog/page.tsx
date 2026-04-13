@@ -63,23 +63,23 @@ export default function PrintServerChangelogPage() {
     fetch(GITHUB_API, {
       headers: { Accept: 'application/vnd.github+json' },
     })
-      .then((res) => {
+      .then(res => {
         if (!res.ok) throw new Error(`GitHub API: ${res.status}`);
         return res.json();
       })
       .then((data: GitHubRelease[]) => {
         const parsed = data
-          .filter((r) => !r.draft && !r.prerelease)
-          .map((r) => ({
+          .filter(r => !r.draft && !r.prerelease)
+          .map(r => ({
             version: r.tag_name.replace(/^v/, ''),
             date: r.published_at,
             changes: parseReleaseBody(r.body),
-            windowsUrl: r.assets.find((a) => /\.exe$/i.test(a.name))
+            windowsUrl: r.assets.find(a => /\.exe$/i.test(a.name))
               ?.browser_download_url,
           }));
         setReleases(parsed);
       })
-      .catch((err) => setError(err.message))
+      .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -137,7 +137,7 @@ export default function PrintServerChangelogPage() {
                         'text-xs font-mono',
                         idx === 0
                           ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20'
-                          : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20',
+                          : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20'
                       )}
                     >
                       v{release.version}

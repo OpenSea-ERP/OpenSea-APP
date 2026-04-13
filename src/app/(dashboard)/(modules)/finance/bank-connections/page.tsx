@@ -125,14 +125,14 @@ export default function BankConnectionsPage() {
       try {
         const result = await syncMutation.mutateAsync(connectionId);
         toast.success(
-          `Sincronização concluída: ${result.transactionsImported} transações importadas, ${result.matchedCount} conciliadas`,
+          `Sincronização concluída: ${result.transactionsImported} transações importadas, ${result.matchedCount} conciliadas`
         );
         queryClient.invalidateQueries({ queryKey: ['bank-connections'] });
       } catch {
         toast.error('Erro ao sincronizar transações');
       }
     },
-    [syncMutation, queryClient],
+    [syncMutation, queryClient]
   );
 
   // Pluggy widget success callback
@@ -151,7 +151,7 @@ export default function BankConnectionsPage() {
         toast.error('Erro ao salvar conexão');
       }
     },
-    [selectedBankAccountId, queryClient],
+    [selectedBankAccountId, queryClient]
   );
 
   const handleDisconnectConfirm = useCallback(async () => {

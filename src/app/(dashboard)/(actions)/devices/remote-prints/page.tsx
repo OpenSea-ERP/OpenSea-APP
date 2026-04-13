@@ -125,17 +125,19 @@ const FILTER_OPTIONS: { value: PrinterFilterMode; label: string }[] = [
 
 function getPrinterEffectiveStatus(
   printer: RemotePrinter,
-  agents: PrintAgent[],
+  agents: PrintAgent[]
 ): PrinterStatus | 'SERVER_OFFLINE' {
   if (printer.status === 'ONLINE') return 'ONLINE';
   if (printer.agentId) {
-    const agent = agents.find((a) => a.id === printer.agentId);
+    const agent = agents.find(a => a.id === printer.agentId);
     if (agent && agent.status === 'OFFLINE') return 'SERVER_OFFLINE';
   }
   return printer.status;
 }
 
-function getPrinterStatusLabel(status: PrinterStatus | 'SERVER_OFFLINE'): string {
+function getPrinterStatusLabel(
+  status: PrinterStatus | 'SERVER_OFFLINE'
+): string {
   switch (status) {
     case 'ONLINE':
       return 'Online';
@@ -150,7 +152,9 @@ function getPrinterStatusLabel(status: PrinterStatus | 'SERVER_OFFLINE'): string
   }
 }
 
-function getPrinterStatusStyle(status: PrinterStatus | 'SERVER_OFFLINE'): string {
+function getPrinterStatusStyle(
+  status: PrinterStatus | 'SERVER_OFFLINE'
+): string {
   switch (status) {
     case 'ONLINE':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20';
@@ -197,22 +201,23 @@ export default function RemotePrintsPage() {
 
   const agents = agentsData ?? [];
 
-  const { printers: allPrinters, isLoading: printersLoading } = useRemotePrinters();
+  const { printers: allPrinters, isLoading: printersLoading } =
+    useRemotePrinters();
 
   const filteredPrinters = useMemo(() => {
     switch (filterMode) {
       case 'show_all':
-        return allPrinters.filter((p) => !p.isHidden);
+        return allPrinters.filter(p => !p.isHidden);
       case 'show_online':
-        return allPrinters.filter((p) => !p.isHidden && p.status === 'ONLINE');
+        return allPrinters.filter(p => !p.isHidden && p.status === 'ONLINE');
       case 'hide_offline':
-        return allPrinters.filter((p) => !p.isHidden && p.status !== 'OFFLINE');
+        return allPrinters.filter(p => !p.isHidden && p.status !== 'OFFLINE');
       case 'hide_all':
         return [];
       case 'show_hidden':
-        return allPrinters.filter((p) => p.isHidden);
+        return allPrinters.filter(p => p.isHidden);
       default:
-        return allPrinters.filter((p) => !p.isHidden);
+        return allPrinters.filter(p => !p.isHidden);
     }
   }, [allPrinters, filterMode]);
 
@@ -221,18 +226,21 @@ export default function RemotePrintsPage() {
   const handleToggleHidden = useCallback(
     async (printer: RemotePrinter) => {
       try {
-        await printAgentsService.togglePrinterHidden(printer.id, !printer.isHidden);
+        await printAgentsService.togglePrinterHidden(
+          printer.id,
+          !printer.isHidden
+        );
         queryClient.invalidateQueries({ queryKey: ['remote-printers'] });
         toast.success(
           printer.isHidden
             ? `"${printer.name}" agora está visível`
-            : `"${printer.name}" foi ocultada`,
+            : `"${printer.name}" foi ocultada`
         );
       } catch {
         toast.error('Erro ao alterar visibilidade');
       }
     },
-    [queryClient],
+    [queryClient]
   );
 
   const handleSetDefault = useCallback(
@@ -245,7 +253,7 @@ export default function RemotePrintsPage() {
         toast.error('Erro ao definir impressora padrão');
       }
     },
-    [queryClient],
+    [queryClient]
   );
 
   const handleRegister = useCallback(async () => {
@@ -253,7 +261,7 @@ export default function RemotePrintsPage() {
     setIsRegistering(true);
     try {
       const result = await printAgentsService.register(
-        agentName.trim().slice(0, MAX_AGENT_NAME_LENGTH),
+        agentName.trim().slice(0, MAX_AGENT_NAME_LENGTH)
       );
       setNewAgentId(result.agentId);
       setRegisterStep(2);
@@ -278,7 +286,7 @@ export default function RemotePrintsPage() {
         setDeleteAgentId(null);
       }
     },
-    [queryClient],
+    [queryClient]
   );
 
   const handleUnpair = useCallback(
@@ -294,7 +302,7 @@ export default function RemotePrintsPage() {
         setUnpairAgentId(null);
       }
     },
-    [queryClient],
+    [queryClient]
   );
 
   const closeRegisterDialog = () => {
@@ -322,7 +330,7 @@ export default function RemotePrintsPage() {
               id="agent-name"
               placeholder="Ex: Computador do Estoque"
               value={agentName}
-              onChange={(e) =>
+              onChange={e =>
                 setAgentName(e.target.value.slice(0, MAX_AGENT_NAME_LENGTH))
               }
               maxLength={MAX_AGENT_NAME_LENGTH}
@@ -441,7 +449,11 @@ export default function RemotePrintsPage() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 px-3 text-xs shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-xs shrink-0"
+                >
                   <span>
                     Exibindo {filteredPrinters.length}/{totalCount} impressoras
                   </span>
@@ -449,13 +461,11 @@ export default function RemotePrintsPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {FILTER_OPTIONS.map((option) => (
+                {FILTER_OPTIONS.map(option => (
                   <DropdownMenuItem
                     key={option.value}
                     onClick={() => setFilterMode(option.value)}
-                    className={cn(
-                      filterMode === option.value && 'bg-accent',
-                    )}
+                    className={cn(filterMode === option.value && 'bg-accent')}
                   >
                     {option.label}
                   </DropdownMenuItem>
@@ -495,21 +505,24 @@ export default function RemotePrintsPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredPrinters.map((printer) => {
-                const effectiveStatus = getPrinterEffectiveStatus(printer, agents);
+              {filteredPrinters.map(printer => {
+                const effectiveStatus = getPrinterEffectiveStatus(
+                  printer,
+                  agents
+                );
                 return (
                   <Card
                     key={printer.id}
                     className={cn(
                       'bg-white dark:bg-slate-800/60 border border-border p-4',
-                      printer.isHidden && 'opacity-50',
+                      printer.isHidden && 'opacity-50'
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <span
                         className={cn(
                           'w-3 h-3 rounded-full shrink-0',
-                          PRINTER_STATUS_DOT[effectiveStatus] ?? 'bg-gray-300',
+                          PRINTER_STATUS_DOT[effectiveStatus] ?? 'bg-gray-300'
                         )}
                       />
                       <div className="flex-1 min-w-0">
@@ -536,7 +549,7 @@ export default function RemotePrintsPage() {
                           variant="outline"
                           className={cn(
                             'text-[10px] font-medium border',
-                            getPrinterStatusStyle(effectiveStatus),
+                            getPrinterStatusStyle(effectiveStatus)
                           )}
                         >
                           {getPrinterStatusLabel(effectiveStatus)}
@@ -556,7 +569,7 @@ export default function RemotePrintsPage() {
                                 onClick={() => handleSetDefault(printer)}
                                 disabled={printer.isDefault}
                                 className={cn(
-                                  printer.isDefault && 'opacity-50',
+                                  printer.isDefault && 'opacity-50'
                                 )}
                               >
                                 <Star className="w-4 h-4 mr-2" />
@@ -638,7 +651,7 @@ export default function RemotePrintsPage() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {agents.map((agent) => (
+              {agents.map(agent => (
                 <AgentCard
                   key={agent.id}
                   agent={agent}
@@ -656,7 +669,7 @@ export default function RemotePrintsPage() {
       {/* Register Agent Dialog */}
       <StepWizardDialog
         open={registerOpen}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) closeRegisterDialog();
         }}
         steps={registerSteps}
@@ -692,7 +705,7 @@ export default function RemotePrintsPage() {
         <PairingCodeDialog
           agentId={pairingAgentId}
           open={!!pairingAgentId}
-          onOpenChange={(open) => {
+          onOpenChange={open => {
             if (!open) setPairingAgentId(null);
           }}
         />
@@ -753,7 +766,7 @@ function AgentCard({
                 ? 'bg-green-100 dark:bg-green-500/10'
                 : agent.status === 'ERROR'
                   ? 'bg-rose-100 dark:bg-rose-500/10'
-                  : 'bg-gray-100 dark:bg-gray-500/10',
+                  : 'bg-gray-100 dark:bg-gray-500/10'
             )}
           >
             <StatusIcon
@@ -763,7 +776,7 @@ function AgentCard({
                   ? 'text-green-600 dark:text-green-400'
                   : agent.status === 'ERROR'
                     ? 'text-rose-600 dark:text-rose-400'
-                    : 'text-gray-500 dark:text-gray-400',
+                    : 'text-gray-500 dark:text-gray-400'
               )}
             />
           </div>
@@ -780,7 +793,7 @@ function AgentCard({
               <span
                 className={cn(
                   'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border shrink-0',
-                  config.color,
+                  config.color
                 )}
               >
                 <span
@@ -975,7 +988,7 @@ function PairingCodeDialog({
                       ? 'bg-green-500'
                       : secondsLeft > 10
                         ? 'bg-amber-500'
-                        : 'bg-rose-500 animate-pulse',
+                        : 'bg-rose-500 animate-pulse'
                   )}
                 />
                 <span>
@@ -1105,7 +1118,7 @@ function PairingCodeDisplay({ agentId }: { agentId: string }) {
                 ? 'bg-green-500'
                 : secondsLeft > 10
                   ? 'bg-amber-500'
-                  : 'bg-rose-500 animate-pulse',
+                  : 'bg-rose-500 animate-pulse'
             )}
           />
           <span>

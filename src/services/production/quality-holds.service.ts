@@ -16,26 +16,24 @@ export const qualityHoldsService = {
     if (params?.status) searchParams.set('status', params.status);
     const qs = searchParams.toString();
     return apiClient.get<QualityHoldsResponse>(
-      `${API_ENDPOINTS.PRODUCTION.QUALITY_HOLDS.LIST}${qs ? `?${qs}` : ''}`,
+      `${API_ENDPOINTS.PRODUCTION.QUALITY_HOLDS.LIST}${qs ? `?${qs}` : ''}`
     );
   },
 
-  async create(
-    data: Record<string, unknown>,
-  ): Promise<QualityHoldResponse> {
+  async create(data: Record<string, unknown>): Promise<QualityHoldResponse> {
     return apiClient.post<QualityHoldResponse>(
       API_ENDPOINTS.PRODUCTION.QUALITY_HOLDS.CREATE,
-      data,
+      data
     );
   },
 
   async release(
     id: string,
-    data: Record<string, unknown>,
+    data: Record<string, unknown>
   ): Promise<QualityHoldResponse> {
     return apiClient.post<QualityHoldResponse>(
       API_ENDPOINTS.PRODUCTION.QUALITY_HOLDS.RELEASE(id),
-      data,
+      data
     );
   },
 };

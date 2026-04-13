@@ -46,7 +46,11 @@ import type {
   DowntimeCategory,
   CreateDowntimeReasonRequest,
 } from '@/types/production';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { AlertTriangle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -118,12 +122,7 @@ export default function DowntimeReasonsPage() {
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState<DowntimeCategory>('OTHER');
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useInfiniteQuery({
+  const { data, isLoading, error, refetch } = useInfiniteQuery({
     queryKey: ['downtime-reasons'],
     queryFn: async () => {
       const res = await downtimeReasonsService.list();
@@ -133,19 +132,18 @@ export default function DowntimeReasonsPage() {
     initialPageParam: 1,
   });
 
-  const allItems = data?.pages.flatMap((p) => p) ?? [];
+  const allItems = data?.pages.flatMap(p => p) ?? [];
   const items = useMemo(() => {
     let filtered = allItems;
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
-        (i) =>
-          i.name.toLowerCase().includes(q) ||
-          i.code.toLowerCase().includes(q),
+        i =>
+          i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q)
       );
     }
     if (categoryFilter !== 'ALL') {
-      filtered = filtered.filter((i) => i.category === categoryFilter);
+      filtered = filtered.filter(i => i.category === categoryFilter);
     }
     return filtered;
   }, [allItems, debouncedSearch, categoryFilter]);
@@ -210,7 +208,7 @@ export default function DowntimeReasonsPage() {
         separator: 'before' as const,
       },
     ],
-    [],
+    []
   );
 
   const renderGridCard = (item: DowntimeReason, isSelected: boolean) => (
@@ -278,7 +276,7 @@ export default function DowntimeReasonsPage() {
     </EntityContextMenu>
   );
 
-  const initialIds = useMemo(() => items.map((i) => i.id), [items]);
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   const actionButtons = useMemo<HeaderButton[]>(() => {
     const buttons: HeaderButton[] = [];
@@ -310,7 +308,7 @@ export default function DowntimeReasonsPage() {
               id="dr-code"
               data-testid="downtime-reason-code-input"
               value={newCode}
-              onChange={(e) => setNewCode(e.target.value)}
+              onChange={e => setNewCode(e.target.value)}
               placeholder="Ex: PAR-01"
             />
           </div>
@@ -322,7 +320,7 @@ export default function DowntimeReasonsPage() {
               id="dr-name"
               data-testid="downtime-reason-name-input"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={e => setNewName(e.target.value)}
               placeholder="Nome do motivo de parada"
             />
           </div>
@@ -330,13 +328,13 @@ export default function DowntimeReasonsPage() {
             <Label>Categoria</Label>
             <Select
               value={newCategory}
-              onValueChange={(v) => setNewCategory(v as DowntimeCategory)}
+              onValueChange={v => setNewCategory(v as DowntimeCategory)}
             >
               <SelectTrigger data-testid="downtime-reason-category-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ALL_CATEGORIES.map((c) => (
+                {ALL_CATEGORIES.map(c => (
                   <SelectItem key={c} value={c}>
                     {CATEGORY_LABELS[c]}
                   </SelectItem>
@@ -403,7 +401,12 @@ export default function DowntimeReasonsPage() {
               type="server"
               title="Erro ao carregar motivos de parada"
               message="Ocorreu um erro ao carregar os motivos de parada."
-              action={{ label: 'Tentar Novamente', onClick: () => refetch() }}
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
             />
           ) : (
             <EntityGrid
@@ -417,12 +420,11 @@ export default function DowntimeReasonsPage() {
               toolbarStart={
                 <div className="flex items-center gap-3">
                   <p className="text-sm text-muted-foreground whitespace-nowrap">
-                    {items.length}{' '}
-                    {items.length === 1 ? 'motivo' : 'motivos'}
+                    {items.length} {items.length === 1 ? 'motivo' : 'motivos'}
                   </p>
                   <Select
                     value={categoryFilter}
-                    onValueChange={(v) =>
+                    onValueChange={v =>
                       setCategoryFilter(v as DowntimeCategory | 'ALL')
                     }
                   >
@@ -434,7 +436,7 @@ export default function DowntimeReasonsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ALL">Todas as categorias</SelectItem>
-                      {ALL_CATEGORIES.map((cat) => (
+                      {ALL_CATEGORIES.map(cat => (
                         <SelectItem key={cat} value={cat}>
                           {CATEGORY_LABELS[cat]}
                         </SelectItem>

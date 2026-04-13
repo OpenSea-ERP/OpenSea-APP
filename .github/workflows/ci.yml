@@ -21,6 +21,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Runs ESLint, Prettier format check, and TypeScript type checking
+  # to catch code quality issues early before attempting a build.
   lint-format-typecheck:
     name: Lint, Format & Type Check
     runs-on: ubuntu-latest
@@ -45,6 +47,8 @@ jobs:
       - name: Run TypeScript type check
         run: npx tsc --noEmit
 
+  # Performs a full Next.js production build to ensure the app compiles
+  # without errors. Caches .next/cache to speed up subsequent builds.
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -63,6 +67,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Restore Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: nextjs-cache-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx', '**/*.css') }}
+          restore-keys: |
+            nextjs-cache-${{ hashFiles('package-lock.json') }}-
+            nextjs-cache-
 
       - name: Build project
         run: npm run build

@@ -69,7 +69,10 @@ interface RecentOrdersTableProps {
 export function RecentOrdersTable({ data, isLoading }: RecentOrdersTableProps) {
   if (isLoading) {
     return (
-      <Card data-testid="sales-recent-orders" className="bg-white dark:bg-slate-800/60 border border-border">
+      <Card
+        data-testid="sales-recent-orders"
+        className="bg-white dark:bg-slate-800/60 border border-border"
+      >
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <Skeleton className="h-5 w-5 rounded" />

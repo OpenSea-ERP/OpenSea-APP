@@ -280,13 +280,13 @@ function DiscountRulesPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          discountRulesConfig.permissions.update &&
-          hasPermission(discountRulesConfig.permissions.update)
+          discountRulesConfig.permissions!.update &&
+          hasPermission(discountRulesConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(discountRulesConfig.permissions.delete)
+          ...(hasPermission(discountRulesConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -378,13 +378,13 @@ function DiscountRulesPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          discountRulesConfig.permissions.update &&
-          hasPermission(discountRulesConfig.permissions.update)
+          discountRulesConfig.permissions!.update &&
+          hasPermission(discountRulesConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(discountRulesConfig.permissions.delete)
+          ...(hasPermission(discountRulesConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -462,7 +462,7 @@ function DiscountRulesPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: discountRulesConfig.permissions.create,
+        permission: discountRulesConfig.permissions!.create,
       },
     ],
     [handleCreate]

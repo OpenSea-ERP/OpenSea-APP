@@ -268,14 +268,15 @@ function ProposalsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          proposalsConfig.permissions.update &&
-          hasPermission(proposalsConfig.permissions.update) &&
+          proposalsConfig.permissions!.update &&
+          hasPermission(proposalsConfig.permissions!.update) &&
           item.status === 'DRAFT'
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(proposalsConfig.permissions.delete)
+          ...(proposalsConfig.permissions!.delete &&
+          hasPermission(proposalsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -364,14 +365,15 @@ function ProposalsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          proposalsConfig.permissions.update &&
-          hasPermission(proposalsConfig.permissions.update) &&
+          proposalsConfig.permissions!.update &&
+          hasPermission(proposalsConfig.permissions!.update) &&
           item.status === 'DRAFT'
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(proposalsConfig.permissions.delete)
+          ...(proposalsConfig.permissions!.delete &&
+          hasPermission(proposalsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -446,7 +448,7 @@ function ProposalsPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: proposalsConfig.permissions.create,
+        permission: proposalsConfig.permissions!.create,
       },
     ],
     [handleCreate]

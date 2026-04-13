@@ -52,7 +52,12 @@ import type {
   WorkCenter,
   CreateWorkstationRequest,
 } from '@/types/production';
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Cog, Hash, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
@@ -92,12 +97,7 @@ export default function WorkstationsPage() {
   const [newCapacity, setNewCapacity] = useState('1');
 
   // Data
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useInfiniteQuery({
+  const { data, isLoading, error, refetch } = useInfiniteQuery({
     queryKey: ['workstations'],
     queryFn: async () => {
       const res = await workstationsService.list();
@@ -123,35 +123,34 @@ export default function WorkstationsPage() {
     },
   });
 
-  const allItems = data?.pages.flatMap((p) => p) ?? [];
+  const allItems = data?.pages.flatMap(p => p) ?? [];
   const items = useMemo(() => {
     let filtered = allItems;
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
-        (i) =>
-          i.name.toLowerCase().includes(q) ||
-          i.code.toLowerCase().includes(q),
+        i =>
+          i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q)
       );
     }
     if (typeFilter !== 'ALL') {
-      filtered = filtered.filter((i) => i.workstationTypeId === typeFilter);
+      filtered = filtered.filter(i => i.workstationTypeId === typeFilter);
     }
     if (centerFilter !== 'ALL') {
-      filtered = filtered.filter((i) => i.workCenterId === centerFilter);
+      filtered = filtered.filter(i => i.workCenterId === centerFilter);
     }
     return filtered;
   }, [allItems, debouncedSearch, typeFilter, centerFilter]);
 
   const typeMap = useMemo(() => {
     const map = new Map<string, string>();
-    types?.forEach((t) => map.set(t.id, t.name));
+    types?.forEach(t => map.set(t.id, t.name));
     return map;
   }, [types]);
 
   const centerMap = useMemo(() => {
     const map = new Map<string, string>();
-    centers?.forEach((c) => map.set(c.id, c.name));
+    centers?.forEach(c => map.set(c.id, c.name));
     return map;
   }, [centers]);
 
@@ -197,7 +196,15 @@ export default function WorkstationsPage() {
       capacityPerDay: Number(newCapacity) || 1,
     });
     setCreateOpen(false);
-  }, [newCode, newName, newDescription, newTypeId, newCenterId, newCapacity, createMutation]);
+  }, [
+    newCode,
+    newName,
+    newDescription,
+    newTypeId,
+    newCenterId,
+    newCapacity,
+    createMutation,
+  ]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (itemToDelete) {
@@ -221,7 +228,7 @@ export default function WorkstationsPage() {
         separator: 'before' as const,
       },
     ],
-    [],
+    []
   );
 
   const renderGridCard = (item: Workstation, isSelected: boolean) => (
@@ -303,7 +310,7 @@ export default function WorkstationsPage() {
     </EntityContextMenu>
   );
 
-  const initialIds = useMemo(() => items.map((i) => i.id), [items]);
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   const actionButtons = useMemo<HeaderButton[]>(() => {
     const buttons: HeaderButton[] = [];
@@ -334,7 +341,7 @@ export default function WorkstationsPage() {
             <Input
               id="ws-code"
               value={newCode}
-              onChange={(e) => setNewCode(e.target.value)}
+              onChange={e => setNewCode(e.target.value)}
               placeholder="Ex: CNC-01"
             />
           </div>
@@ -345,7 +352,7 @@ export default function WorkstationsPage() {
             <Input
               id="ws-name"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={e => setNewName(e.target.value)}
               placeholder="Nome do posto de trabalho"
             />
           </div>
@@ -358,7 +365,7 @@ export default function WorkstationsPage() {
                 <SelectValue placeholder="Selecione um tipo" />
               </SelectTrigger>
               <SelectContent>
-                {types?.map((t) => (
+                {types?.map(t => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name}
                   </SelectItem>
@@ -383,7 +390,7 @@ export default function WorkstationsPage() {
                 <SelectValue placeholder="Selecione (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                {centers?.map((c) => (
+                {centers?.map(c => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
                   </SelectItem>
@@ -398,7 +405,7 @@ export default function WorkstationsPage() {
               type="number"
               min={1}
               value={newCapacity}
-              onChange={(e) => setNewCapacity(e.target.value)}
+              onChange={e => setNewCapacity(e.target.value)}
             />
           </div>
           <div className="grid gap-2">
@@ -406,7 +413,7 @@ export default function WorkstationsPage() {
             <Textarea
               id="ws-desc"
               value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
+              onChange={e => setNewDescription(e.target.value)}
               placeholder="Descrição do posto"
               rows={3}
             />
@@ -444,7 +451,7 @@ export default function WorkstationsPage() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">Todos os tipos</SelectItem>
-          {types?.map((t) => (
+          {types?.map(t => (
             <SelectItem key={t.id} value={t.id}>
               {t.name}
             </SelectItem>
@@ -457,7 +464,7 @@ export default function WorkstationsPage() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">Todos os centros</SelectItem>
-          {centers?.map((c) => (
+          {centers?.map(c => (
             <SelectItem key={c.id} value={c.id}>
               {c.name}
             </SelectItem>
@@ -505,7 +512,12 @@ export default function WorkstationsPage() {
               type="server"
               title="Erro ao carregar postos"
               message="Ocorreu um erro ao carregar os postos de trabalho."
-              action={{ label: 'Tentar Novamente', onClick: () => refetch() }}
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
             />
           ) : (
             <EntityGrid

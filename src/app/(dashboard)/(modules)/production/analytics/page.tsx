@@ -57,8 +57,6 @@ export default function ProductionAnalyticsPage() {
   const { hasPermission } = usePermissions();
   const canAccess = hasPermission(PRODUCTION_PERMISSIONS.ANALYTICS.ACCESS);
 
-  if (!canAccess) return null;
-
   const {
     data: dashboard,
     isLoading,
@@ -68,8 +66,10 @@ export default function ProductionAnalyticsPage() {
     queryFn: async () => {
       return analyticsService.getDashboard();
     },
-    enabled: hasPermission(PRODUCTION_PERMISSIONS.ANALYTICS.ACCESS),
+    enabled: canAccess,
   });
+
+  if (!canAccess) return null;
 
   const orderCounts = dashboard?.orderCounts ?? {};
 

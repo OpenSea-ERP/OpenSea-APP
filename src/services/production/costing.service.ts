@@ -23,34 +23,41 @@ export interface CostSummary {
 export const costingService = {
   async list(orderId: string) {
     return apiClient.get<{ costs: ProductionCost[] }>(
-      API_ENDPOINTS.PRODUCTION.COSTING.LIST(orderId),
+      API_ENDPOINTS.PRODUCTION.COSTING.LIST(orderId)
     );
   },
-  async create(orderId: string, data: {
-    costType: 'MATERIAL' | 'LABOR' | 'OVERHEAD';
-    description?: string;
-    plannedAmount: number;
-    actualAmount: number;
-  }) {
+  async create(
+    orderId: string,
+    data: {
+      costType: 'MATERIAL' | 'LABOR' | 'OVERHEAD';
+      description?: string;
+      plannedAmount: number;
+      actualAmount: number;
+    }
+  ) {
     return apiClient.post<{ cost: ProductionCost }>(
       API_ENDPOINTS.PRODUCTION.COSTING.CREATE(orderId),
-      data,
+      data
     );
   },
-  async update(orderId: string, id: string, data: {
-    costType?: 'MATERIAL' | 'LABOR' | 'OVERHEAD';
-    description?: string | null;
-    plannedAmount?: number;
-    actualAmount?: number;
-  }) {
+  async update(
+    orderId: string,
+    id: string,
+    data: {
+      costType?: 'MATERIAL' | 'LABOR' | 'OVERHEAD';
+      description?: string | null;
+      plannedAmount?: number;
+      actualAmount?: number;
+    }
+  ) {
     return apiClient.patch<{ cost: ProductionCost }>(
       API_ENDPOINTS.PRODUCTION.COSTING.UPDATE(orderId, id),
-      data,
+      data
     );
   },
   async getSummary(orderId: string) {
     return apiClient.get<CostSummary>(
-      API_ENDPOINTS.PRODUCTION.COSTING.SUMMARY(orderId),
+      API_ENDPOINTS.PRODUCTION.COSTING.SUMMARY(orderId)
     );
   },
 };

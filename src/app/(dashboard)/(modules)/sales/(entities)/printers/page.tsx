@@ -179,9 +179,7 @@ function PrintersPageContent() {
                 <div className="flex items-center gap-3">
                   <Printer className="h-5 w-5 text-foreground" />
                   <div>
-                    <h3 className="text-base font-semibold">
-                      Nova Impressora
-                    </h3>
+                    <h3 className="text-base font-semibold">Nova Impressora</h3>
                     <p className="text-sm text-muted-foreground">
                       Preencha os dados da impressora
                     </p>
@@ -211,7 +209,10 @@ function PrintersPageContent() {
                       value={type}
                       onValueChange={v => setType(v as PrinterType)}
                     >
-                      <SelectTrigger id="printer-type" data-testid="printer-field-type">
+                      <SelectTrigger
+                        id="printer-type"
+                        data-testid="printer-field-type"
+                      >
                         <SelectValue placeholder="Selecione o tipo..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -230,9 +231,7 @@ function PrintersPageContent() {
                     <Label htmlFor="printer-connection">Conexão</Label>
                     <Select
                       value={connection}
-                      onValueChange={v =>
-                        setConnection(v as PrinterConnection)
-                      }
+                      onValueChange={v => setConnection(v as PrinterConnection)}
                     >
                       <SelectTrigger
                         id="printer-connection"
@@ -282,10 +281,7 @@ function PrintersPageContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="printer-paper">Largura do Papel</Label>
-                    <Select
-                      value={paperWidth}
-                      onValueChange={setPaperWidth}
-                    >
+                    <Select value={paperWidth} onValueChange={setPaperWidth}>
                       <SelectTrigger
                         id="printer-paper"
                         data-testid="printer-field-paper"
@@ -313,10 +309,7 @@ function PrintersPageContent() {
                     )}
                     Cadastrar
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={resetForm}
-                  >
+                  <Button variant="outline" onClick={resetForm}>
                     Cancelar
                   </Button>
                 </div>
@@ -335,7 +328,9 @@ function PrintersPageContent() {
             message="Ocorreu um erro. Por favor, tente novamente."
             action={{
               label: 'Tentar Novamente',
-              onClick: () => { refetch(); },
+              onClick: () => {
+                refetch();
+              },
             }}
           />
         ) : printers.length === 0 ? (
@@ -363,8 +358,7 @@ function PrintersPageContent() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {printers.map(printer => {
-              const ConnIcon =
-                CONNECTION_ICONS[printer.connection] || Wifi;
+              const ConnIcon = CONNECTION_ICONS[printer.connection] || Wifi;
               return (
                 <div
                   key={printer.id}

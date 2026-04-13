@@ -259,13 +259,13 @@ function CadencesPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          cadencesConfig.permissions.update &&
-          hasPermission(cadencesConfig.permissions.update)
+          cadencesConfig.permissions!.update &&
+          hasPermission(cadencesConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(cadencesConfig.permissions.delete)
+          ...(hasPermission(cadencesConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -352,13 +352,13 @@ function CadencesPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          cadencesConfig.permissions.update &&
-          hasPermission(cadencesConfig.permissions.update)
+          cadencesConfig.permissions!.update &&
+          hasPermission(cadencesConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(cadencesConfig.permissions.delete)
+          ...(hasPermission(cadencesConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -429,7 +429,7 @@ function CadencesPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: cadencesConfig.permissions.create,
+        permission: cadencesConfig.permissions!.create,
       },
     ],
     [handleCreate]

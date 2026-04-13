@@ -26,5 +26,9 @@ export interface InspectionResult {
   createdAt: string;
 }
 
-export interface InspectionPlanResponse { inspectionPlan: InspectionPlan; }
-export interface InspectionPlansResponse { inspectionPlans: InspectionPlan[]; }
+export interface InspectionPlanResponse {
+  inspectionPlan: InspectionPlan;
+}
+export interface InspectionPlansResponse {
+  inspectionPlans: InspectionPlan[];
+}

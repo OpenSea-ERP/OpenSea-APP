@@ -80,8 +80,8 @@ export default function WorkflowDetailPage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(workflowsConfig.permissions.update &&
-    hasPermission(workflowsConfig.permissions.update)
+    ...(workflowsConfig.permissions!.update &&
+    hasPermission(workflowsConfig.permissions!.update)
       ? [
           {
             id: 'edit',

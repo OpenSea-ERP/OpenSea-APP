@@ -17,22 +17,20 @@ export const downtimeRecordsService = {
       searchParams.set('downtimeReasonId', params.downtimeReasonId);
     const qs = searchParams.toString();
     return apiClient.get<DowntimeRecordsResponse>(
-      `${API_ENDPOINTS.PRODUCTION.DOWNTIME_RECORDS.LIST}${qs ? `?${qs}` : ''}`,
+      `${API_ENDPOINTS.PRODUCTION.DOWNTIME_RECORDS.LIST}${qs ? `?${qs}` : ''}`
     );
   },
 
-  async create(
-    data: Record<string, unknown>,
-  ): Promise<DowntimeRecordResponse> {
+  async create(data: Record<string, unknown>): Promise<DowntimeRecordResponse> {
     return apiClient.post<DowntimeRecordResponse>(
       API_ENDPOINTS.PRODUCTION.DOWNTIME_RECORDS.CREATE,
-      data,
+      data
     );
   },
 
   async end(id: string): Promise<DowntimeRecordResponse> {
     return apiClient.post<DowntimeRecordResponse>(
-      API_ENDPOINTS.PRODUCTION.DOWNTIME_RECORDS.END(id),
+      API_ENDPOINTS.PRODUCTION.DOWNTIME_RECORDS.END(id)
     );
   },
 };

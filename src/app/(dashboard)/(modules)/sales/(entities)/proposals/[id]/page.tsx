@@ -170,8 +170,8 @@ export default function ProposalDetailPage() {
 
   const actionButtons: HeaderButton[] = [
     ...(proposal?.status === 'DRAFT' &&
-    proposalsConfig.permissions.update &&
-    hasPermission(proposalsConfig.permissions.update)
+    proposalsConfig.permissions!.update &&
+    hasPermission(proposalsConfig.permissions!.update)
       ? [
           {
             id: 'edit',

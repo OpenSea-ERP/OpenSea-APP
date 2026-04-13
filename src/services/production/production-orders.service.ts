@@ -23,55 +23,55 @@ export const productionOrdersService = {
     if (params?.search) searchParams.set('search', params.search);
     const qs = searchParams.toString();
     return apiClient.get<ProductionOrdersResponse>(
-      `${API_ENDPOINTS.PRODUCTION.ORDERS.LIST}${qs ? `?${qs}` : ''}`,
+      `${API_ENDPOINTS.PRODUCTION.ORDERS.LIST}${qs ? `?${qs}` : ''}`
     );
   },
 
   async getById(id: string): Promise<ProductionOrderResponse> {
     return apiClient.get<ProductionOrderResponse>(
-      API_ENDPOINTS.PRODUCTION.ORDERS.GET(id),
+      API_ENDPOINTS.PRODUCTION.ORDERS.GET(id)
     );
   },
 
   async create(
-    data: CreateProductionOrderRequest,
+    data: CreateProductionOrderRequest
   ): Promise<ProductionOrderResponse> {
     return apiClient.post<ProductionOrderResponse>(
       API_ENDPOINTS.PRODUCTION.ORDERS.CREATE,
-      data,
+      data
     );
   },
 
   async update(
     id: string,
-    data: UpdateProductionOrderRequest,
+    data: UpdateProductionOrderRequest
   ): Promise<ProductionOrderResponse> {
     return apiClient.put<ProductionOrderResponse>(
       API_ENDPOINTS.PRODUCTION.ORDERS.UPDATE(id),
-      data,
+      data
     );
   },
 
   async changeStatus(
     id: string,
-    targetStatus: ProductionOrderStatus,
+    targetStatus: ProductionOrderStatus
   ): Promise<ProductionOrderResponse> {
     return apiClient.post<ProductionOrderResponse>(
       API_ENDPOINTS.PRODUCTION.ORDERS.CHANGE_STATUS(id),
-      { targetStatus },
+      { targetStatus }
     );
   },
 
   async cancel(id: string): Promise<ProductionOrderResponse> {
     return apiClient.post<ProductionOrderResponse>(
-      API_ENDPOINTS.PRODUCTION.ORDERS.CANCEL(id),
+      API_ENDPOINTS.PRODUCTION.ORDERS.CANCEL(id)
     );
   },
 
   async countByStatus(): Promise<ProductionOrderStatusCount> {
-    const response = await apiClient.get<{ counts: ProductionOrderStatusCount }>(
-      API_ENDPOINTS.PRODUCTION.ORDERS.COUNT_BY_STATUS,
-    );
+    const response = await apiClient.get<{
+      counts: ProductionOrderStatusCount;
+    }>(API_ENDPOINTS.PRODUCTION.ORDERS.COUNT_BY_STATUS);
     return response.counts;
   },
 };

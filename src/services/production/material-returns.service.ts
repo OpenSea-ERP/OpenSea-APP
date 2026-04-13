@@ -15,7 +15,7 @@ export interface MaterialReturn {
 export const materialReturnsService = {
   async list(productionOrderId: string) {
     return apiClient.get<{ materialReturns: MaterialReturn[] }>(
-      `${API_ENDPOINTS.PRODUCTION.MATERIAL_RETURNS.LIST}?productionOrderId=${productionOrderId}`,
+      `${API_ENDPOINTS.PRODUCTION.MATERIAL_RETURNS.LIST}?productionOrderId=${productionOrderId}`
     );
   },
   async create(data: {
@@ -27,7 +27,7 @@ export const materialReturnsService = {
   }) {
     return apiClient.post<{ materialReturn: MaterialReturn }>(
       API_ENDPOINTS.PRODUCTION.MATERIAL_RETURNS.CREATE,
-      data,
+      data
     );
   },
 };

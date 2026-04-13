@@ -236,7 +236,8 @@ export default function EditProposalPage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(hasPermission(proposalsConfig.permissions.delete)
+    ...(proposalsConfig.permissions!.delete &&
+    hasPermission(proposalsConfig.permissions!.delete)
       ? [
           {
             id: 'delete',

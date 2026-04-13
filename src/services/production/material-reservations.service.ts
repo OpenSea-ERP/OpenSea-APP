@@ -16,7 +16,7 @@ export interface MaterialReservation {
 export const materialReservationsService = {
   async list(productionOrderId: string) {
     return apiClient.get<{ materialReservations: MaterialReservation[] }>(
-      `${API_ENDPOINTS.PRODUCTION.MATERIAL_RESERVATIONS.LIST}?productionOrderId=${productionOrderId}`,
+      `${API_ENDPOINTS.PRODUCTION.MATERIAL_RESERVATIONS.LIST}?productionOrderId=${productionOrderId}`
     );
   },
   async create(data: {
@@ -27,12 +27,12 @@ export const materialReservationsService = {
   }) {
     return apiClient.post<{ materialReservation: MaterialReservation }>(
       API_ENDPOINTS.PRODUCTION.MATERIAL_RESERVATIONS.CREATE,
-      data,
+      data
     );
   },
   async cancel(id: string) {
     return apiClient.post<{ materialReservation: MaterialReservation }>(
-      API_ENDPOINTS.PRODUCTION.MATERIAL_RESERVATIONS.CANCEL(id),
+      API_ENDPOINTS.PRODUCTION.MATERIAL_RESERVATIONS.CANCEL(id)
     );
   },
 };

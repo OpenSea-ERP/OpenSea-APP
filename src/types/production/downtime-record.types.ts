@@ -10,5 +10,9 @@ export interface DowntimeRecord {
   createdAt: string;
 }
 
-export interface DowntimeRecordResponse { record: DowntimeRecord; }
-export interface DowntimeRecordsResponse { downtimeRecords: DowntimeRecord[]; }
+export interface DowntimeRecordResponse {
+  record: DowntimeRecord;
+}
+export interface DowntimeRecordsResponse {
+  downtimeRecords: DowntimeRecord[];
+}

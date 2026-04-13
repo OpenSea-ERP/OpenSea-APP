@@ -203,7 +203,7 @@ export default function CadenceEditPage() {
             { label: 'Editar' },
           ]}
           buttons={[
-            ...(hasPermission(cadencesConfig.permissions.delete)
+            ...(hasPermission(cadencesConfig.permissions!.delete)
               ? [
                   {
                     id: 'delete',

@@ -192,7 +192,10 @@ function CombosPageContent() {
                 searchPlaceholder="Buscar tipo..."
                 emptyText="Nenhum tipo encontrado."
               />
-              <p data-testid="combos-count" className="text-sm text-muted-foreground whitespace-nowrap">
+              <p
+                data-testid="combos-count"
+                className="text-sm text-muted-foreground whitespace-nowrap"
+              >
                 {total} {total === 1 ? 'combo' : 'combos'}
               </p>
             </div>

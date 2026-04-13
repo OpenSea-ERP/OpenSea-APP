@@ -17,5 +17,7 @@ export * from './material-issue.types';
 export * from './material-return.types';
 export * from './time-entry.types';
 export * from './production-entry.types';
-export * from './inspection-result.types';
-export * from './defect-record.types';
+// inspection-result.types re-exports InspectionStatus and InspectionResult
+// which are already exported from inspection-plan.types — skip to avoid TS2308
+export type { DefectRecord } from './defect-record.types';
+// DefectSeverity already exported from defect-type.types — skip to avoid TS2308

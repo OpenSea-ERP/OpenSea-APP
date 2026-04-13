@@ -31,12 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -143,8 +138,11 @@ export default function PlanningPage() {
   const [createScheduleStep, setCreateScheduleStep] = useState(1);
   const [showCreateEntry, setShowCreateEntry] = useState(false);
   const [createEntryStep, setCreateEntryStep] = useState(1);
-  const [deleteTarget, setDeleteTarget] = useState<ProductionSchedule | null>(null);
-  const [deleteEntryTarget, setDeleteEntryTarget] = useState<ScheduleEntry | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProductionSchedule | null>(
+    null
+  );
+  const [deleteEntryTarget, setDeleteEntryTarget] =
+    useState<ScheduleEntry | null>(null);
 
   // Schedule form state
   const [scheduleForm, setScheduleForm] = useState({
@@ -168,10 +166,7 @@ export default function PlanningPage() {
 
   // ---- Data queries ---------------------------------------------------------
 
-  const {
-    data: schedules,
-    isLoading: isLoadingSchedules,
-  } = useQuery({
+  const { data: schedules, isLoading: isLoadingSchedules } = useQuery({
     queryKey: ['production', 'schedules'],
     queryFn: async () => {
       const res = await schedulesService.list();
@@ -179,10 +174,7 @@ export default function PlanningPage() {
     },
   });
 
-  const {
-    data: allEntries,
-    isLoading: isLoadingEntries,
-  } = useQuery({
+  const { data: allEntries, isLoading: isLoadingEntries } = useQuery({
     queryKey: ['production', 'schedule-entries', selectedScheduleId],
     queryFn: async () => {
       const params =
@@ -205,7 +197,8 @@ export default function PlanningPage() {
   // ---- Mutations ------------------------------------------------------------
 
   const createScheduleMutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) => schedulesService.create(data),
+    mutationFn: (data: Record<string, unknown>) =>
+      schedulesService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['production', 'schedules'] });
       toast.success('Programação criada com sucesso');
@@ -218,7 +211,9 @@ export default function PlanningPage() {
     mutationFn: (id: string) => schedulesService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['production', 'schedules'] });
-      queryClient.invalidateQueries({ queryKey: ['production', 'schedule-entries'] });
+      queryClient.invalidateQueries({
+        queryKey: ['production', 'schedule-entries'],
+      });
       toast.success('Programação excluída com sucesso');
       setDeleteTarget(null);
     },
@@ -226,9 +221,12 @@ export default function PlanningPage() {
   });
 
   const createEntryMutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) => schedulesService.createEntry(data),
+    mutationFn: (data: Record<string, unknown>) =>
+      schedulesService.createEntry(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['production', 'schedule-entries'] });
+      queryClient.invalidateQueries({
+        queryKey: ['production', 'schedule-entries'],
+      });
       toast.success('Entrada criada com sucesso');
       resetEntryForm();
     },
@@ -238,7 +236,9 @@ export default function PlanningPage() {
   const deleteEntryMutation = useMutation({
     mutationFn: (id: string) => schedulesService.deleteEntry(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['production', 'schedule-entries'] });
+      queryClient.invalidateQueries({
+        queryKey: ['production', 'schedule-entries'],
+      });
       toast.success('Entrada excluída com sucesso');
       setDeleteEntryTarget(null);
     },
@@ -249,12 +249,12 @@ export default function PlanningPage() {
 
   const { start: monthStart, end: monthEnd } = useMemo(
     () => getMonthRange(currentMonth),
-    [currentMonth],
+    [currentMonth]
   );
 
   const filteredEntries = useMemo(() => {
     if (!allEntries) return [];
-    return allEntries.filter((e) => {
+    return allEntries.filter(e => {
       const s = new Date(e.startDate);
       const ed = new Date(e.endDate);
       return ed >= monthStart && s <= monthEnd;
@@ -272,9 +272,11 @@ export default function PlanningPage() {
 
   // Stats
   const totalSchedules = schedules?.length ?? 0;
-  const activeSchedules = schedules?.filter((s) => s.isActive).length ?? 0;
-  const plannedEntries = allEntries?.filter((e) => e.status === 'PLANNED').length ?? 0;
-  const inProgressEntries = allEntries?.filter((e) => e.status === 'IN_PROGRESS').length ?? 0;
+  const activeSchedules = schedules?.filter(s => s.isActive).length ?? 0;
+  const plannedEntries =
+    allEntries?.filter(e => e.status === 'PLANNED').length ?? 0;
+  const inProgressEntries =
+    allEntries?.filter(e => e.status === 'IN_PROGRESS').length ?? 0;
 
   // ---- Form helpers ---------------------------------------------------------
 
@@ -324,11 +326,11 @@ export default function PlanningPage() {
   // ---- Month navigation -----------------------------------------------------
 
   function prevMonth() {
-    setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1));
+    setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1));
   }
 
   function nextMonth() {
-    setCurrentMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1));
+    setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1));
   }
 
   function goToToday() {
@@ -351,8 +353,8 @@ export default function PlanningPage() {
               id="schedule-name"
               placeholder="Ex: Programação Abril 2026"
               value={scheduleForm.name}
-              onChange={(e) =>
-                setScheduleForm((f) => ({ ...f, name: e.target.value }))
+              onChange={e =>
+                setScheduleForm(f => ({ ...f, name: e.target.value }))
               }
             />
           </div>
@@ -362,8 +364,8 @@ export default function PlanningPage() {
               id="schedule-desc"
               placeholder="Descrição opcional"
               value={scheduleForm.description}
-              onChange={(e) =>
-                setScheduleForm((f) => ({ ...f, description: e.target.value }))
+              onChange={e =>
+                setScheduleForm(f => ({ ...f, description: e.target.value }))
               }
               rows={3}
             />
@@ -385,8 +387,8 @@ export default function PlanningPage() {
               id="schedule-start"
               type="date"
               value={scheduleForm.startDate}
-              onChange={(e) =>
-                setScheduleForm((f) => ({ ...f, startDate: e.target.value }))
+              onChange={e =>
+                setScheduleForm(f => ({ ...f, startDate: e.target.value }))
               }
             />
           </div>
@@ -396,8 +398,8 @@ export default function PlanningPage() {
               id="schedule-end"
               type="date"
               value={scheduleForm.endDate}
-              onChange={(e) =>
-                setScheduleForm((f) => ({ ...f, endDate: e.target.value }))
+              onChange={e =>
+                setScheduleForm(f => ({ ...f, endDate: e.target.value }))
               }
             />
           </div>
@@ -405,10 +407,7 @@ export default function PlanningPage() {
       ),
       footer: (
         <div className="flex items-center gap-2 w-full justify-end">
-          <Button
-            variant="outline"
-            onClick={() => setCreateScheduleStep(1)}
-          >
+          <Button variant="outline" onClick={() => setCreateScheduleStep(1)}>
             ← Voltar
           </Button>
           <Button
@@ -444,8 +443,8 @@ export default function PlanningPage() {
               id="entry-title"
               placeholder="Ex: Corte CNC - Lote 42"
               value={entryForm.title}
-              onChange={(e) =>
-                setEntryForm((f) => ({ ...f, title: e.target.value }))
+              onChange={e =>
+                setEntryForm(f => ({ ...f, title: e.target.value }))
               }
             />
           </div>
@@ -453,15 +452,13 @@ export default function PlanningPage() {
             <Label>Programação *</Label>
             <Select
               value={entryForm.scheduleId}
-              onValueChange={(v) =>
-                setEntryForm((f) => ({ ...f, scheduleId: v }))
-              }
+              onValueChange={v => setEntryForm(f => ({ ...f, scheduleId: v }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a programação" />
               </SelectTrigger>
               <SelectContent>
-                {schedules?.map((s) => (
+                {schedules?.map(s => (
                   <SelectItem key={s.id} value={s.id}>
                     {s.name}
                   </SelectItem>
@@ -473,15 +470,15 @@ export default function PlanningPage() {
             <Label>Estação de Trabalho</Label>
             <Select
               value={entryForm.workstationId}
-              onValueChange={(v) =>
-                setEntryForm((f) => ({ ...f, workstationId: v }))
+              onValueChange={v =>
+                setEntryForm(f => ({ ...f, workstationId: v }))
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Opcional" />
               </SelectTrigger>
               <SelectContent>
-                {workstations?.map((ws) => (
+                {workstations?.map(ws => (
                   <SelectItem key={ws.id} value={ws.id}>
                     {ws.name}
                   </SelectItem>
@@ -506,8 +503,8 @@ export default function PlanningPage() {
                 id="entry-start"
                 type="date"
                 value={entryForm.startDate}
-                onChange={(e) =>
-                  setEntryForm((f) => ({ ...f, startDate: e.target.value }))
+                onChange={e =>
+                  setEntryForm(f => ({ ...f, startDate: e.target.value }))
                 }
               />
             </div>
@@ -517,8 +514,8 @@ export default function PlanningPage() {
                 id="entry-end"
                 type="date"
                 value={entryForm.endDate}
-                onChange={(e) =>
-                  setEntryForm((f) => ({ ...f, endDate: e.target.value }))
+                onChange={e =>
+                  setEntryForm(f => ({ ...f, endDate: e.target.value }))
                 }
               />
             </div>
@@ -527,8 +524,8 @@ export default function PlanningPage() {
             <Label>Status</Label>
             <Select
               value={entryForm.status}
-              onValueChange={(v) =>
-                setEntryForm((f) => ({
+              onValueChange={v =>
+                setEntryForm(f => ({
                   ...f,
                   status: v as ScheduleEntryStatus,
                 }))
@@ -557,8 +554,8 @@ export default function PlanningPage() {
               id="entry-notes"
               placeholder="Observações opcionais"
               value={entryForm.notes}
-              onChange={(e) =>
-                setEntryForm((f) => ({ ...f, notes: e.target.value }))
+              onChange={e =>
+                setEntryForm(f => ({ ...f, notes: e.target.value }))
               }
               rows={3}
             />
@@ -673,10 +670,8 @@ export default function PlanningPage() {
                     <SelectValue placeholder="Todas as programações" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">
-                      Todas as programações
-                    </SelectItem>
-                    {schedules?.map((s) => (
+                    <SelectItem value="all">Todas as programações</SelectItem>
+                    {schedules?.map(s => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name}
                       </SelectItem>
@@ -736,7 +731,7 @@ export default function PlanningPage() {
               startDate={monthStart}
               endDate={monthEnd}
               workstationNames={workstationNameMap}
-              onEntryClick={(entry) => {
+              onEntryClick={entry => {
                 // Could navigate to entry detail in the future
                 toast.info(`Entrada: ${entry.title}`);
               }}
@@ -750,7 +745,7 @@ export default function PlanningPage() {
                 Entradas no Período ({filteredEntries.length})
               </h3>
               <div className="grid gap-2">
-                {filteredEntries.map((entry) => {
+                {filteredEntries.map(entry => {
                   const statusCfg = ENTRY_STATUS_CONFIG[entry.status];
                   return (
                     <Card
@@ -762,16 +757,14 @@ export default function PlanningPage() {
                           {entry.title}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-white/50">
-                          {formatDate(entry.startDate)} — {formatDate(entry.endDate)}
+                          {formatDate(entry.startDate)} —{' '}
+                          {formatDate(entry.endDate)}
                           {entry.workstationId &&
                             workstationNameMap[entry.workstationId] &&
                             ` · ${workstationNameMap[entry.workstationId]}`}
                         </p>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className={statusCfg.badgeClass}
-                      >
+                      <Badge variant="outline" className={statusCfg.badgeClass}>
                         {statusCfg.label}
                       </Badge>
                       {canRegister && (
@@ -831,7 +824,7 @@ export default function PlanningPage() {
             </Card>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {schedules.map((schedule) => (
+              {schedules.map(schedule => (
                 <Card
                   key={schedule.id}
                   className="p-4 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10 flex flex-col gap-3"
@@ -861,7 +854,8 @@ export default function PlanningPage() {
 
                   <div className="text-xs text-gray-500 dark:text-white/50">
                     <p>
-                      Período: {formatDateLong(schedule.startDate)} — {formatDateLong(schedule.endDate)}
+                      Período: {formatDateLong(schedule.startDate)} —{' '}
+                      {formatDateLong(schedule.endDate)}
                     </p>
                   </div>
 
@@ -901,7 +895,7 @@ export default function PlanningPage() {
       {/* Create Schedule Wizard */}
       <StepWizardDialog
         open={showCreateSchedule}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) resetScheduleForm();
         }}
         steps={scheduleWizardSteps}
@@ -913,7 +907,7 @@ export default function PlanningPage() {
       {/* Create Entry Wizard */}
       <StepWizardDialog
         open={showCreateEntry}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) resetEntryForm();
         }}
         steps={entryWizardSteps}
@@ -938,7 +932,8 @@ export default function PlanningPage() {
         isOpen={!!deleteEntryTarget}
         onClose={() => setDeleteEntryTarget(null)}
         onSuccess={() => {
-          if (deleteEntryTarget) deleteEntryMutation.mutate(deleteEntryTarget.id);
+          if (deleteEntryTarget)
+            deleteEntryMutation.mutate(deleteEntryTarget.id);
         }}
         title="Confirmar Exclusão"
         description={`Digite seu PIN de ação para excluir a entrada "${deleteEntryTarget?.title}".`}

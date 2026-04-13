@@ -10,32 +10,32 @@ import type {
 export const downtimeReasonsService = {
   async list(): Promise<DowntimeReasonsResponse> {
     return apiClient.get<DowntimeReasonsResponse>(
-      API_ENDPOINTS.PRODUCTION.DOWNTIME_REASONS.LIST,
+      API_ENDPOINTS.PRODUCTION.DOWNTIME_REASONS.LIST
     );
   },
 
   async create(
-    data: CreateDowntimeReasonRequest,
+    data: CreateDowntimeReasonRequest
   ): Promise<DowntimeReasonResponse> {
     return apiClient.post<DowntimeReasonResponse>(
       API_ENDPOINTS.PRODUCTION.DOWNTIME_REASONS.CREATE,
-      data,
+      data
     );
   },
 
   async update(
     id: string,
-    data: UpdateDowntimeReasonRequest,
+    data: UpdateDowntimeReasonRequest
   ): Promise<DowntimeReasonResponse> {
     return apiClient.put<DowntimeReasonResponse>(
       API_ENDPOINTS.PRODUCTION.DOWNTIME_REASONS.UPDATE(id),
-      data,
+      data
     );
   },
 
   async delete(id: string): Promise<void> {
     return apiClient.delete<void>(
-      API_ENDPOINTS.PRODUCTION.DOWNTIME_REASONS.DELETE(id),
+      API_ENDPOINTS.PRODUCTION.DOWNTIME_REASONS.DELETE(id)
     );
   },
 };

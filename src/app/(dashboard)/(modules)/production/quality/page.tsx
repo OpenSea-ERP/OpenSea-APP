@@ -31,12 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -280,9 +275,9 @@ export default function QualityPage() {
   const stats = useMemo(() => {
     return {
       totalPlans: plans.length,
-      activePlans: plans.filter((p) => p.isActive).length,
-      activeHolds: holds.filter((h) => h.status === 'ACTIVE').length,
-      releasedHolds: holds.filter((h) => h.status === 'RELEASED').length,
+      activePlans: plans.filter(p => p.isActive).length,
+      activeHolds: holds.filter(h => h.status === 'ACTIVE').length,
+      releasedHolds: holds.filter(h => h.status === 'RELEASED').length,
     };
   }, [plans, holds]);
 
@@ -447,8 +442,8 @@ export default function QualityPage() {
             <Input
               placeholder="Ex: Visual, Dimensional, Funcional"
               value={planForm.inspectionType}
-              onChange={(e) =>
-                setPlanForm((p) => ({ ...p, inspectionType: e.target.value }))
+              onChange={e =>
+                setPlanForm(p => ({ ...p, inspectionType: e.target.value }))
               }
             />
           </div>
@@ -457,8 +452,8 @@ export default function QualityPage() {
             <Textarea
               placeholder="Descreva o plano de inspeção..."
               value={planForm.description}
-              onChange={(e) =>
-                setPlanForm((p) => ({ ...p, description: e.target.value }))
+              onChange={e =>
+                setPlanForm(p => ({ ...p, description: e.target.value }))
               }
               rows={3}
             />
@@ -470,8 +465,8 @@ export default function QualityPage() {
               placeholder="Ex: 10"
               min={1}
               value={planForm.sampleSize}
-              onChange={(e) =>
-                setPlanForm((p) => ({ ...p, sampleSize: e.target.value }))
+              onChange={e =>
+                setPlanForm(p => ({ ...p, sampleSize: e.target.value }))
               }
             />
           </div>
@@ -489,9 +484,7 @@ export default function QualityPage() {
             <Label>Nível AQL</Label>
             <Select
               value={planForm.aqlLevel}
-              onValueChange={(v) =>
-                setPlanForm((p) => ({ ...p, aqlLevel: v }))
-              }
+              onValueChange={v => setPlanForm(p => ({ ...p, aqlLevel: v }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o nível AQL" />
@@ -516,8 +509,8 @@ export default function QualityPage() {
             <Textarea
               placeholder="Descreva as instruções detalhadas para a inspeção..."
               value={planForm.instructions}
-              onChange={(e) =>
-                setPlanForm((p) => ({ ...p, instructions: e.target.value }))
+              onChange={e =>
+                setPlanForm(p => ({ ...p, instructions: e.target.value }))
               }
               rows={5}
             />
@@ -565,8 +558,8 @@ export default function QualityPage() {
             <Input
               placeholder="Ex: Visual, Dimensional, Funcional"
               value={editPlanForm.inspectionType}
-              onChange={(e) =>
-                setEditPlanForm((p) => ({
+              onChange={e =>
+                setEditPlanForm(p => ({
                   ...p,
                   inspectionType: e.target.value,
                 }))
@@ -578,8 +571,8 @@ export default function QualityPage() {
             <Textarea
               placeholder="Descreva o plano de inspeção..."
               value={editPlanForm.description}
-              onChange={(e) =>
-                setEditPlanForm((p) => ({ ...p, description: e.target.value }))
+              onChange={e =>
+                setEditPlanForm(p => ({ ...p, description: e.target.value }))
               }
               rows={3}
             />
@@ -591,8 +584,8 @@ export default function QualityPage() {
               placeholder="Ex: 10"
               min={1}
               value={editPlanForm.sampleSize}
-              onChange={(e) =>
-                setEditPlanForm((p) => ({ ...p, sampleSize: e.target.value }))
+              onChange={e =>
+                setEditPlanForm(p => ({ ...p, sampleSize: e.target.value }))
               }
             />
           </div>
@@ -601,9 +594,7 @@ export default function QualityPage() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  setEditPlanForm((p) => ({ ...p, isActive: true }))
-                }
+                onClick={() => setEditPlanForm(p => ({ ...p, isActive: true }))}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   editPlanForm.isActive
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-500/8 dark:text-emerald-300 dark:border-emerald-500/20'
@@ -615,7 +606,7 @@ export default function QualityPage() {
               <button
                 type="button"
                 onClick={() =>
-                  setEditPlanForm((p) => ({ ...p, isActive: false }))
+                  setEditPlanForm(p => ({ ...p, isActive: false }))
                 }
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   !editPlanForm.isActive
@@ -641,9 +632,7 @@ export default function QualityPage() {
             <Label>Nível AQL</Label>
             <Select
               value={editPlanForm.aqlLevel}
-              onValueChange={(v) =>
-                setEditPlanForm((p) => ({ ...p, aqlLevel: v }))
-              }
+              onValueChange={v => setEditPlanForm(p => ({ ...p, aqlLevel: v }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o nível AQL" />
@@ -668,8 +657,8 @@ export default function QualityPage() {
             <Textarea
               placeholder="Descreva as instruções detalhadas para a inspeção..."
               value={editPlanForm.instructions}
-              onChange={(e) =>
-                setEditPlanForm((p) => ({ ...p, instructions: e.target.value }))
+              onChange={e =>
+                setEditPlanForm(p => ({ ...p, instructions: e.target.value }))
               }
               rows={5}
             />
@@ -717,15 +706,15 @@ export default function QualityPage() {
             <Label>Ordem de Produção *</Label>
             <Select
               value={holdForm.productionOrderId}
-              onValueChange={(v) =>
-                setHoldForm((p) => ({ ...p, productionOrderId: v }))
+              onValueChange={v =>
+                setHoldForm(p => ({ ...p, productionOrderId: v }))
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a ordem de produção" />
               </SelectTrigger>
               <SelectContent>
-                {(ordersData ?? []).map((order) => (
+                {(ordersData ?? []).map(order => (
                   <SelectItem key={order.id} value={order.id}>
                     {order.orderNumber} — {order.status}
                   </SelectItem>
@@ -738,8 +727,8 @@ export default function QualityPage() {
             <Textarea
               placeholder="Descreva o motivo da retenção de qualidade..."
               value={holdForm.reason}
-              onChange={(e) =>
-                setHoldForm((p) => ({ ...p, reason: e.target.value }))
+              onChange={e =>
+                setHoldForm(p => ({ ...p, reason: e.target.value }))
               }
               rows={4}
             />
@@ -811,7 +800,7 @@ export default function QualityPage() {
 
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsCards.map((s) => (
+        {statsCards.map(s => (
           <Card
             key={s.label}
             className="p-4 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10"
@@ -893,7 +882,7 @@ export default function QualityPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {plans.map((plan) => {
+            {plans.map(plan => {
               const statusKey = plan.isActive ? 'active' : 'inactive';
               const cfg = PLAN_STATUS_CONFIG[statusKey];
               return (
@@ -1008,7 +997,7 @@ export default function QualityPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {holds.map((hold) => {
+            {holds.map(hold => {
               const cfg = HOLD_STATUS_CONFIG[hold.status];
               return (
                 <Card
@@ -1096,7 +1085,7 @@ export default function QualityPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {defects.map((defect) => {
+            {defects.map(defect => {
               const sev = SEVERITY_CONFIG[defect.severity];
               return (
                 <Card
@@ -1153,7 +1142,7 @@ export default function QualityPage() {
       {/* --- Create Plan Wizard --- */}
       <StepWizardDialog
         open={showCreatePlan}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) {
             setShowCreatePlan(false);
             resetPlanForm();
@@ -1171,7 +1160,7 @@ export default function QualityPage() {
       {/* --- Edit Plan Wizard --- */}
       <StepWizardDialog
         open={editingPlan !== null}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setEditingPlan(null);
         }}
         steps={editPlanSteps}
@@ -1183,7 +1172,7 @@ export default function QualityPage() {
       {/* --- Create Hold Wizard --- */}
       <StepWizardDialog
         open={showCreateHold}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) {
             setShowCreateHold(false);
             resetHoldForm();
@@ -1202,7 +1191,7 @@ export default function QualityPage() {
       {releasingHoldId && (
         <StepWizardDialog
           open={releasingHoldId !== null}
-          onOpenChange={(open) => {
+          onOpenChange={open => {
             if (!open) {
               setReleasingHoldId(null);
               setReleaseResolution('');
@@ -1222,7 +1211,7 @@ export default function QualityPage() {
                     <Textarea
                       placeholder="Descreva a resolução ou ação corretiva tomada..."
                       value={releaseResolution}
-                      onChange={(e) => setReleaseResolution(e.target.value)}
+                      onChange={e => setReleaseResolution(e.target.value)}
                       rows={4}
                     />
                   </div>

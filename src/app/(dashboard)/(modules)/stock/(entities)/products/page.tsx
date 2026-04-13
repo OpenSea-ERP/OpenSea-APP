@@ -710,7 +710,7 @@ function ProductsPageContent() {
         icon: Upload,
         onClick: handleImport,
         variant: 'outline',
-        permission: productsConfig.permissions.import,
+        permission: productsConfig.permissions!.import,
       },
       {
         id: 'create-product',
@@ -718,7 +718,7 @@ function ProductsPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: productsConfig.permissions.create,
+        permission: productsConfig.permissions!.create,
       },
     ],
     [handleImport, handleCreate]

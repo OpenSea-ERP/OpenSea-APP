@@ -42,7 +42,10 @@ export function DailySalesChart({ data, isLoading }: DailySalesChartProps) {
 
   if (isLoading) {
     return (
-      <Card data-testid="sales-daily-chart" className="bg-white dark:bg-slate-800/60 border border-border">
+      <Card
+        data-testid="sales-daily-chart"
+        className="bg-white dark:bg-slate-800/60 border border-border"
+      >
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <Skeleton className="h-5 w-5 rounded" />

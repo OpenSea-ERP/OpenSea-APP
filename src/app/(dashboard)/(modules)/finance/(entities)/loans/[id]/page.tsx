@@ -423,7 +423,10 @@ export default function LoanDetailPage({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className={cn("text-xs", getStatusColor(loan.status))}>
+                <Badge
+                  variant="outline"
+                  className={cn('text-xs', getStatusColor(loan.status))}
+                >
                   {LOAN_STATUS_LABELS[loan.status]}
                 </Badge>
                 <Badge variant="outline">{LOAN_TYPE_LABELS[loan.type]}</Badge>

@@ -7,14 +7,8 @@ import { useDeviceTerminal } from '@/hooks/sales';
 
 export default function PosEntryPage() {
   const router = useRouter();
-  const {
-    isLoading,
-    needsPairing,
-    needsSession,
-    isReady,
-    mode,
-    terminal,
-  } = useDeviceTerminal();
+  const { isLoading, needsPairing, needsSession, isReady, mode, terminal } =
+    useDeviceTerminal();
 
   useEffect(() => {
     if (isLoading) return;

@@ -15,7 +15,7 @@ export interface ProductionEntryData {
 export const productionEntriesService = {
   async list(jobCardId: string) {
     return apiClient.get<{ productionEntries: ProductionEntryData[] }>(
-      `${API_ENDPOINTS.PRODUCTION.PRODUCTION_ENTRIES.LIST}?jobCardId=${jobCardId}`,
+      `${API_ENDPOINTS.PRODUCTION.PRODUCTION_ENTRIES.LIST}?jobCardId=${jobCardId}`
     );
   },
   async create(data: {
@@ -27,7 +27,7 @@ export const productionEntriesService = {
   }) {
     return apiClient.post<{ productionEntry: ProductionEntryData }>(
       API_ENDPOINTS.PRODUCTION.PRODUCTION_ENTRIES.CREATE,
-      data,
+      data
     );
   },
 };

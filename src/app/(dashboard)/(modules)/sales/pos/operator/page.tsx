@@ -110,7 +110,13 @@ function OperatorTerminal() {
 
   // Auto-open session if terminal requires it and none exists
   useEffect(() => {
-    if (!isLoading && terminal && terminal.requiresSession && !currentSession && isReady === false) {
+    if (
+      !isLoading &&
+      terminal &&
+      terminal.requiresSession &&
+      !currentSession &&
+      isReady === false
+    ) {
       openSession
         .mutateAsync({
           terminalId: terminal.id,
@@ -126,7 +132,12 @@ function OperatorTerminal() {
 
   // Auto-create draft order if needed (non-cashier mode)
   useEffect(() => {
-    if (terminal?.mode !== 'CASHIER' && !activeOrder && !showSuccess && isReady) {
+    if (
+      terminal?.mode !== 'CASHIER' &&
+      !activeOrder &&
+      !showSuccess &&
+      isReady
+    ) {
       newCart().catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -219,7 +230,11 @@ function OperatorTerminal() {
                 <>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-9 px-2.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-2.5"
+                      >
                         <RotateCcw className="h-4 w-4" />
                         <span className="hidden md:inline ml-1">
                           Resgatar Carrinho

@@ -349,13 +349,13 @@ function ContactsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          contactsConfig.permissions.update &&
-          hasPermission(contactsConfig.permissions.update)
+          contactsConfig.permissions!.update &&
+          hasPermission(contactsConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(contactsConfig.permissions.delete)
+          ...(hasPermission(contactsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -485,13 +485,13 @@ function ContactsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          contactsConfig.permissions.update &&
-          hasPermission(contactsConfig.permissions.update)
+          contactsConfig.permissions!.update &&
+          hasPermission(contactsConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(contactsConfig.permissions.delete)
+          ...(hasPermission(contactsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -574,7 +574,7 @@ function ContactsPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: contactsConfig.permissions.create,
+        permission: contactsConfig.permissions!.create,
       },
     ],
     [handleCreate]

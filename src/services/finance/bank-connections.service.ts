@@ -17,7 +17,7 @@ export interface ListBankConnectionsResponse {
 export const bankConnectionsService = {
   async list(): Promise<ListBankConnectionsResponse> {
     return apiClient.get<ListBankConnectionsResponse>(
-      API_ENDPOINTS.BANK_CONNECTIONS.LIST,
+      API_ENDPOINTS.BANK_CONNECTIONS.LIST
     );
   },
 

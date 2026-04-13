@@ -36,7 +36,11 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { useDebounce } from '@/hooks/use-debounce';
 import { workCentersService } from '@/services/production';
 import type { WorkCenter, CreateWorkCenterRequest } from '@/types/production';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Factory, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -68,12 +72,7 @@ export default function WorkCentersPage() {
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useInfiniteQuery({
+  const { data, isLoading, error, refetch } = useInfiniteQuery({
     queryKey: ['work-centers'],
     queryFn: async () => {
       const res = await workCentersService.list();
@@ -83,15 +82,15 @@ export default function WorkCentersPage() {
     initialPageParam: 1,
   });
 
-  const allItems = data?.pages.flatMap((p) => p) ?? [];
+  const allItems = data?.pages.flatMap(p => p) ?? [];
   const items = useMemo(() => {
     if (!debouncedSearch) return allItems;
     const q = debouncedSearch.toLowerCase();
     return allItems.filter(
-      (i) =>
+      i =>
         i.name.toLowerCase().includes(q) ||
         i.code.toLowerCase().includes(q) ||
-        i.description?.toLowerCase().includes(q),
+        i.description?.toLowerCase().includes(q)
     );
   }, [allItems, debouncedSearch]);
 
@@ -155,7 +154,7 @@ export default function WorkCentersPage() {
         separator: 'before' as const,
       },
     ],
-    [],
+    []
   );
 
   const renderGridCard = (item: WorkCenter, isSelected: boolean) => (
@@ -221,7 +220,7 @@ export default function WorkCentersPage() {
     </EntityContextMenu>
   );
 
-  const initialIds = useMemo(() => items.map((i) => i.id), [items]);
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   const actionButtons = useMemo<HeaderButton[]>(() => {
     const buttons: HeaderButton[] = [];
@@ -252,7 +251,7 @@ export default function WorkCentersPage() {
             <Input
               id="wc-code"
               value={newCode}
-              onChange={(e) => setNewCode(e.target.value)}
+              onChange={e => setNewCode(e.target.value)}
               placeholder="Ex: CT-01"
             />
           </div>
@@ -263,7 +262,7 @@ export default function WorkCentersPage() {
             <Input
               id="wc-name"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={e => setNewName(e.target.value)}
               placeholder="Nome do centro de trabalho"
             />
           </div>
@@ -272,7 +271,7 @@ export default function WorkCentersPage() {
             <Textarea
               id="wc-desc"
               value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
+              onChange={e => setNewDescription(e.target.value)}
               placeholder="Descrição do centro"
               rows={3}
             />
@@ -335,7 +334,12 @@ export default function WorkCentersPage() {
               type="server"
               title="Erro ao carregar centros de trabalho"
               message="Ocorreu um erro ao carregar os centros de trabalho."
-              action={{ label: 'Tentar Novamente', onClick: () => refetch() }}
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
             />
           ) : (
             <EntityGrid

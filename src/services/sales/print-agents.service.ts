@@ -9,26 +9,26 @@ import type {
 export const printAgentsService = {
   async list(): Promise<PrintAgentsResponse> {
     return apiClient.get<PrintAgentsResponse>(
-      API_ENDPOINTS.SALES_PRINTING.AGENTS.LIST,
+      API_ENDPOINTS.SALES_PRINTING.AGENTS.LIST
     );
   },
 
   async register(name: string): Promise<RegisterAgentResponse> {
     return apiClient.post<RegisterAgentResponse>(
       API_ENDPOINTS.SALES_PRINTING.AGENTS.CREATE,
-      { name },
+      { name }
     );
   },
 
   async delete(id: string): Promise<void> {
     return apiClient.delete<void>(
-      API_ENDPOINTS.SALES_PRINTING.AGENTS.DELETE(id),
+      API_ENDPOINTS.SALES_PRINTING.AGENTS.DELETE(id)
     );
   },
 
   async getPairingCode(id: string): Promise<AgentPairingCodeResponse> {
     return apiClient.get<AgentPairingCodeResponse>(
-      API_ENDPOINTS.SALES_PRINTING.AGENTS.PAIRING_CODE(id),
+      API_ENDPOINTS.SALES_PRINTING.AGENTS.PAIRING_CODE(id)
     );
   },
 
@@ -38,7 +38,7 @@ export const printAgentsService = {
 
   async togglePrinterHidden(
     printerId: string,
-    isHidden: boolean,
+    isHidden: boolean
   ): Promise<{ id: string; isHidden: boolean }> {
     return apiClient.patch(`/v1/sales/printers/${printerId}/hidden`, {
       isHidden,
@@ -46,7 +46,7 @@ export const printAgentsService = {
   },
 
   async setDefaultPrinter(
-    printerId: string,
+    printerId: string
   ): Promise<{ id: string; isDefault: boolean }> {
     return apiClient.patch(`/v1/sales/printers/${printerId}/default`);
   },

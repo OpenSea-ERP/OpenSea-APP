@@ -80,8 +80,8 @@ export default function CustomerDetailPage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(customersConfig.permissions.update &&
-    hasPermission(customersConfig.permissions.update)
+    ...(customersConfig.permissions!.update &&
+    hasPermission(customersConfig.permissions!.update)
       ? [
           {
             id: 'edit',

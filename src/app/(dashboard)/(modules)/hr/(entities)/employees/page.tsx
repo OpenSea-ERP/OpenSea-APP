@@ -702,8 +702,7 @@ function EmployeesPageContent() {
             ...(companyInfo
               ? [
                   {
-                    label:
-                      companyInfo.tradeName || companyInfo.legalName,
+                    label: companyInfo.tradeName || companyInfo.legalName,
                     variant: 'outline' as const,
                   },
                 ]

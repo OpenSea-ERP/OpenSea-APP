@@ -63,18 +63,12 @@ export const campaignsConfig = defineEntityConfig<Campaign>()({
         field: 'status',
         label: 'Status',
         colorMap: {
-          DRAFT:
-            'bg-gray-500/20 text-gray-700 dark:text-gray-400',
-          SCHEDULED:
-            'bg-blue-500/20 text-blue-700 dark:text-blue-400',
-          ACTIVE:
-            'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-          PAUSED:
-            'bg-amber-500/20 text-amber-700 dark:text-amber-400',
-          ENDED:
-            'bg-rose-500/20 text-rose-700 dark:text-rose-400',
-          ARCHIVED:
-            'bg-gray-500/20 text-gray-700 dark:text-gray-400',
+          DRAFT: 'bg-gray-500/20 text-gray-700 dark:text-gray-400',
+          SCHEDULED: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',
+          ACTIVE: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+          PAUSED: 'bg-amber-500/20 text-amber-700 dark:text-amber-400',
+          ENDED: 'bg-rose-500/20 text-rose-700 dark:text-rose-400',
+          ARCHIVED: 'bg-gray-500/20 text-gray-700 dark:text-gray-400',
         },
         render: (value: unknown) => {
           const labels = {

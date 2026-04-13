@@ -176,7 +176,7 @@ export default function DeductionsPage() {
   // ============================================================================
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   // ============================================================================

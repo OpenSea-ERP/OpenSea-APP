@@ -38,7 +38,10 @@ export interface ColorPatternSwatchProps {
   fallbackIcon?: React.ReactNode;
 }
 
-const SIZE_CLASSES: Record<NonNullable<ColorPatternSwatchProps['size']>, string> = {
+const SIZE_CLASSES: Record<
+  NonNullable<ColorPatternSwatchProps['size']>,
+  string
+> = {
   xs: 'h-7 w-7',
   sm: 'h-8 w-8',
   md: 'h-9 w-9',

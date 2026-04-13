@@ -34,8 +34,8 @@ export interface CreateOperationRoutingRequest {
   imageUrl?: string;
 }
 
-export interface UpdateOperationRoutingRequest
-  extends Partial<CreateOperationRoutingRequest> {}
+export type UpdateOperationRoutingRequest =
+  Partial<CreateOperationRoutingRequest>;
 
 export interface OperationRoutingResponse {
   operationRouting: OperationRouting;

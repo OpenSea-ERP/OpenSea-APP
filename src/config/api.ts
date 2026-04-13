@@ -1413,8 +1413,7 @@ export const API_ENDPOINTS = {
       GET: (id: string) => `/v1/pos/terminals/${id}`,
       UPDATE: (id: string) => `/v1/pos/terminals/${id}`,
       DELETE: (id: string) => `/v1/pos/terminals/${id}`,
-      PAIRING_CODE: (id: string) =>
-        `/v1/pos/terminals/${id}/pairing-code`,
+      PAIRING_CODE: (id: string) => `/v1/pos/terminals/${id}/pairing-code`,
       PAIR_SELF: (id: string) => `/v1/pos/terminals/${id}/pair-self`,
       UNPAIR: (id: string) => `/v1/pos/terminals/${id}/pairing`,
     },
@@ -1786,7 +1785,8 @@ export const API_ENDPOINTS = {
     MATERIAL_RESERVATIONS: {
       LIST: '/v1/production/material-reservations',
       CREATE: '/v1/production/material-reservations',
-      CANCEL: (id: string) => `/v1/production/material-reservations/${id}/cancel`,
+      CANCEL: (id: string) =>
+        `/v1/production/material-reservations/${id}/cancel`,
     },
     // Material Issues
     MATERIAL_ISSUES: {
@@ -1813,7 +1813,8 @@ export const API_ENDPOINTS = {
     INSPECTION_RESULTS: {
       LIST: '/v1/production/inspection-results',
       CREATE: '/v1/production/inspection-results',
-      UPDATE_STATUS: (id: string) => `/v1/production/inspection-results/${id}/status`,
+      UPDATE_STATUS: (id: string) =>
+        `/v1/production/inspection-results/${id}/status`,
     },
     // Defect Records
     DEFECT_RECORDS: {
@@ -1824,14 +1825,18 @@ export const API_ENDPOINTS = {
     COSTING: {
       LIST: (orderId: string) => `/v1/production/orders/${orderId}/costs`,
       CREATE: (orderId: string) => `/v1/production/orders/${orderId}/costs`,
-      UPDATE: (orderId: string, id: string) => `/v1/production/orders/${orderId}/costs/${id}`,
-      SUMMARY: (orderId: string) => `/v1/production/orders/${orderId}/costs/summary`,
+      UPDATE: (orderId: string, id: string) =>
+        `/v1/production/orders/${orderId}/costs/${id}`,
+      SUMMARY: (orderId: string) =>
+        `/v1/production/orders/${orderId}/costs/summary`,
     },
     // Textile
     TEXTILE: {
       CONFIG: '/v1/production/textile/config',
-      CUT_PLAN: (orderId: string) => `/v1/production/orders/${orderId}/cut-plan`,
-      BUNDLE_TICKETS: (orderId: string) => `/v1/production/orders/${orderId}/bundle-tickets`,
+      CUT_PLAN: (orderId: string) =>
+        `/v1/production/orders/${orderId}/cut-plan`,
+      BUNDLE_TICKETS: (orderId: string) =>
+        `/v1/production/orders/${orderId}/bundle-tickets`,
     },
   },
   // Health

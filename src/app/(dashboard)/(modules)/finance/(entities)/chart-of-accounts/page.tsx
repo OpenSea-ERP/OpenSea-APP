@@ -561,7 +561,10 @@ function ChartOfAccountsPageContent() {
           </div>
         ) : (
           <>
-            <div className="rounded-lg border border-border overflow-hidden" data-testid="chart-of-accounts-table">
+            <div
+              className="rounded-lg border border-border overflow-hidden"
+              data-testid="chart-of-accounts-table"
+            >
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>

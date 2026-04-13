@@ -82,10 +82,7 @@ export default function CostingPage() {
     enabled: !!searchedOrderId,
   });
 
-  const {
-    data: summaryData,
-    isLoading: isLoadingSummary,
-  } = useQuery({
+  const { data: summaryData, isLoading: isLoadingSummary } = useQuery({
     queryKey: ['production', 'costs', 'summary', searchedOrderId],
     queryFn: async () => {
       return costingService.getSummary(searchedOrderId);
@@ -126,7 +123,8 @@ export default function CostingPage() {
           label: 'Variação',
           value: formatCurrency(summaryData.totalVariance),
           icon: summaryData.totalVariance > 0 ? TrendingDown : ArrowUpDown,
-          from: summaryData.totalVariance > 0 ? 'from-rose-500' : 'from-violet-500',
+          from:
+            summaryData.totalVariance > 0 ? 'from-rose-500' : 'from-violet-500',
           to: summaryData.totalVariance > 0 ? 'to-rose-600' : 'to-violet-600',
         },
       ]
@@ -165,17 +163,13 @@ export default function CostingPage() {
             <Input
               placeholder="ID da Ordem de Produção"
               value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onChange={e => setOrderId(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
               className="pl-10"
               data-testid="costing-order-input"
             />
           </div>
-          <Button
-            size="sm"
-            className="h-9 px-2.5 gap-1"
-            onClick={handleSearch}
-          >
+          <Button size="sm" className="h-9 px-2.5 gap-1" onClick={handleSearch}>
             <Search className="h-4 w-4" />
             Buscar
           </Button>
@@ -192,7 +186,7 @@ export default function CostingPage() {
       {/* Summary stats */}
       {statsCards.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {statsCards.map((s) => (
+          {statsCards.map(s => (
             <Card
               key={s.label}
               className="p-4 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10"
@@ -260,7 +254,7 @@ export default function CostingPage() {
                 </tr>
               </thead>
               <tbody>
-                {costs.map((cost) => (
+                {costs.map(cost => (
                   <tr
                     key={cost.id}
                     className="border-b border-gray-100 dark:border-white/5 last:border-0"

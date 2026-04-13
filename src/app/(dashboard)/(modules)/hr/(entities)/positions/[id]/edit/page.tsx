@@ -164,9 +164,7 @@ export default function PositionEditPage() {
       parsedMax !== undefined &&
       parsedMin > parsedMax
     ) {
-      toast.error(
-        'O salário mínimo não pode ser maior que o salário máximo.'
-      );
+      toast.error('O salário mínimo não pode ser maior que o salário máximo.');
       return;
     }
 

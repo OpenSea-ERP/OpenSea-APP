@@ -14,5 +14,9 @@ export interface QualityHold {
   updatedAt: string;
 }
 
-export interface QualityHoldResponse { qualityHold: QualityHold; }
-export interface QualityHoldsResponse { qualityHolds: QualityHold[]; }
+export interface QualityHoldResponse {
+  qualityHold: QualityHold;
+}
+export interface QualityHoldsResponse {
+  qualityHolds: QualityHold[];
+}

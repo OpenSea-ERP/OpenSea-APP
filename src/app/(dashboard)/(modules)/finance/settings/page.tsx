@@ -602,13 +602,13 @@ export default function FinanceSettingsPage() {
                       const result = await processMutation.mutateAsync();
                       if (result.created > 0) {
                         toast.success(
-                          `${result.created} lançamento(s) criado(s) de ${result.processed} e-mail(s) processado(s)`,
+                          `${result.created} lançamento(s) criado(s) de ${result.processed} e-mail(s) processado(s)`
                         );
                       } else if (result.processed === 0) {
                         toast.info('Nenhum e-mail pendente encontrado');
                       } else {
                         toast.info(
-                          `${result.processed} e-mail(s) processado(s), nenhum lançamento criado`,
+                          `${result.processed} e-mail(s) processado(s), nenhum lançamento criado`
                         );
                       }
                       await queryClient.invalidateQueries({

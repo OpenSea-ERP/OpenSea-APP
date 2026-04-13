@@ -47,7 +47,11 @@ import type {
   DefectSeverity,
   CreateDefectTypeRequest,
 } from '@/types/production';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Bug, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -86,9 +90,9 @@ export default function DefectTypesPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
-  const [severityFilter, setSeverityFilter] = useState<
-    DefectSeverity | 'ALL'
-  >('ALL');
+  const [severityFilter, setSeverityFilter] = useState<DefectSeverity | 'ALL'>(
+    'ALL'
+  );
   const [createOpen, setCreateOpen] = useState(false);
   const [createStep, setCreateStep] = useState(1);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -100,12 +104,7 @@ export default function DefectTypesPage() {
   const [newDescription, setNewDescription] = useState('');
   const [newSeverity, setNewSeverity] = useState<DefectSeverity>('MINOR');
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useInfiniteQuery({
+  const { data, isLoading, error, refetch } = useInfiniteQuery({
     queryKey: ['defect-types'],
     queryFn: async () => {
       const res = await defectTypesService.list();
@@ -115,20 +114,20 @@ export default function DefectTypesPage() {
     initialPageParam: 1,
   });
 
-  const allItems = data?.pages.flatMap((p) => p) ?? [];
+  const allItems = data?.pages.flatMap(p => p) ?? [];
   const items = useMemo(() => {
     let filtered = allItems;
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
-        (i) =>
+        i =>
           i.name.toLowerCase().includes(q) ||
           i.code.toLowerCase().includes(q) ||
-          i.description?.toLowerCase().includes(q),
+          i.description?.toLowerCase().includes(q)
       );
     }
     if (severityFilter !== 'ALL') {
-      filtered = filtered.filter((i) => i.severity === severityFilter);
+      filtered = filtered.filter(i => i.severity === severityFilter);
     }
     return filtered;
   }, [allItems, debouncedSearch, severityFilter]);
@@ -195,7 +194,7 @@ export default function DefectTypesPage() {
         separator: 'before' as const,
       },
     ],
-    [],
+    []
   );
 
   const renderGridCard = (item: DefectType, isSelected: boolean) => (
@@ -265,7 +264,7 @@ export default function DefectTypesPage() {
     </EntityContextMenu>
   );
 
-  const initialIds = useMemo(() => items.map((i) => i.id), [items]);
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   const actionButtons = useMemo<HeaderButton[]>(() => {
     const buttons: HeaderButton[] = [];
@@ -297,7 +296,7 @@ export default function DefectTypesPage() {
               id="dt-code"
               data-testid="defect-type-code-input"
               value={newCode}
-              onChange={(e) => setNewCode(e.target.value)}
+              onChange={e => setNewCode(e.target.value)}
               placeholder="Ex: DEF-01"
             />
           </div>
@@ -309,7 +308,7 @@ export default function DefectTypesPage() {
               id="dt-name"
               data-testid="defect-type-name-input"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={e => setNewName(e.target.value)}
               placeholder="Nome do tipo de defeito"
             />
           </div>
@@ -317,13 +316,13 @@ export default function DefectTypesPage() {
             <Label>Severidade</Label>
             <Select
               value={newSeverity}
-              onValueChange={(v) => setNewSeverity(v as DefectSeverity)}
+              onValueChange={v => setNewSeverity(v as DefectSeverity)}
             >
               <SelectTrigger data-testid="defect-type-severity-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ALL_SEVERITIES.map((s) => (
+                {ALL_SEVERITIES.map(s => (
                   <SelectItem key={s} value={s}>
                     {SEVERITY_LABELS[s]}
                   </SelectItem>
@@ -337,7 +336,7 @@ export default function DefectTypesPage() {
               id="dt-desc"
               data-testid="defect-type-description-input"
               value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
+              onChange={e => setNewDescription(e.target.value)}
               placeholder="Descrição do tipo de defeito"
               rows={3}
             />
@@ -401,7 +400,12 @@ export default function DefectTypesPage() {
               type="server"
               title="Erro ao carregar tipos de defeito"
               message="Ocorreu um erro ao carregar os tipos de defeito."
-              action={{ label: 'Tentar Novamente', onClick: () => refetch() }}
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
             />
           ) : (
             <EntityGrid
@@ -422,7 +426,7 @@ export default function DefectTypesPage() {
                   </p>
                   <Select
                     value={severityFilter}
-                    onValueChange={(v) =>
+                    onValueChange={v =>
                       setSeverityFilter(v as DefectSeverity | 'ALL')
                     }
                   >
@@ -434,7 +438,7 @@ export default function DefectTypesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ALL">Todas as severidades</SelectItem>
-                      {ALL_SEVERITIES.map((sev) => (
+                      {ALL_SEVERITIES.map(sev => (
                         <SelectItem key={sev} value={sev}>
                           {SEVERITY_LABELS[sev]}
                         </SelectItem>

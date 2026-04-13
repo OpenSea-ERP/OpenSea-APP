@@ -265,7 +265,9 @@ function PaymentConditionsPageContent() {
                   Nenhuma condição de pagamento encontrada
                 </h3>
                 <p className="text-sm text-muted-foreground/70 mb-4">
-                  {debouncedSearch || typeFilter.length > 0 || statusFilter.length > 0
+                  {debouncedSearch ||
+                  typeFilter.length > 0 ||
+                  statusFilter.length > 0
                     ? 'Tente ajustar os filtros ou termos de busca.'
                     : 'Crie a primeira condição de pagamento para começar.'}
                 </p>
@@ -284,83 +286,83 @@ function PaymentConditionsPageContent() {
                   )}
               </div>
             ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {paymentConditions.map((pc: PaymentConditionDTO) => (
-                <div
-                  key={pc.id}
-                  data-testid={`payment-condition-card-${pc.id}`}
-                  className={cn(
-                    'group relative rounded-xl border bg-card p-4 transition-all cursor-pointer hover:shadow-md',
-                    !pc.isActive && 'opacity-60'
-                  )}
-                  onClick={() =>
-                    router.push(`/sales/payment-conditions/${pc.id}`)
-                  }
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={cn(
-                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white bg-linear-to-br',
-                        getTypeColor(pc.type)
-                      )}
-                    >
-                      <CreditCard className="h-5 w-5" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {paymentConditions.map((pc: PaymentConditionDTO) => (
+                  <div
+                    key={pc.id}
+                    data-testid={`payment-condition-card-${pc.id}`}
+                    className={cn(
+                      'group relative rounded-xl border bg-card p-4 transition-all cursor-pointer hover:shadow-md',
+                      !pc.isActive && 'opacity-60'
+                    )}
+                    onClick={() =>
+                      router.push(`/sales/payment-conditions/${pc.id}`)
+                    }
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white bg-linear-to-br',
+                          getTypeColor(pc.type)
+                        )}
+                      >
+                        <CreditCard className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                          {pc.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {PAYMENT_CONDITION_TYPE_LABELS[pc.type]}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-                        {pc.name}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {PAYMENT_CONDITION_TYPE_LABELS[pc.type]}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-                    <span
-                      className={cn(
-                        'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
-                        pc.isActive
-                          ? 'border-emerald-600/25 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
-                          : 'border-gray-300 bg-gray-50 dark:bg-white/[0.04] text-gray-500'
+                    <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+                      <span
+                        className={cn(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
+                          pc.isActive
+                            ? 'border-emerald-600/25 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
+                            : 'border-gray-300 bg-gray-50 dark:bg-white/[0.04] text-gray-500'
+                        )}
+                      >
+                        {pc.isActive ? 'Ativo' : 'Inativo'}
+                      </span>
+                      {pc.isDefault && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border border-violet-600/25 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300">
+                          Padrão
+                        </span>
                       )}
-                    >
-                      {pc.isActive ? 'Ativo' : 'Inativo'}
-                    </span>
-                    {pc.isDefault && (
-                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border border-violet-600/25 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300">
-                        Padrão
-                      </span>
-                    )}
-                    {pc.type === 'INSTALLMENT' && (
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {pc.installments}x de {pc.intervalDays} dias
-                      </span>
-                    )}
-                    {pc.discountCash != null && pc.discountCash > 0 && (
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Percent className="h-3 w-3" />
-                        {pc.discountCash}% à vista
-                      </span>
+                      {pc.type === 'INSTALLMENT' && (
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {pc.installments}x de {pc.intervalDays} dias
+                        </span>
+                      )}
+                      {pc.discountCash != null && pc.discountCash > 0 && (
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Percent className="h-3 w-3" />
+                          {pc.discountCash}% à vista
+                        </span>
+                      )}
+                    </div>
+
+                    {canDelete && (
+                      <button
+                        data-testid={`payment-condition-delete-${pc.id}`}
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleDelete([pc.id]);
+                        }}
+                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     )}
                   </div>
-
-                  {canDelete && (
-                    <button
-                      data-testid={`payment-condition-delete-${pc.id}`}
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleDelete([pc.id]);
-                      }}
-                      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
             )}
 
             <div ref={sentinelRef} className="h-1" />

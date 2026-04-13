@@ -230,7 +230,10 @@ export default function CustomerPriceDetailPage() {
         </Button>
 
         {/* Identity Card */}
-        <Card data-testid="customer-price-identity" className="bg-white/5 p-5 mb-6">
+        <Card
+          data-testid="customer-price-identity"
+          className="bg-white/5 p-5 mb-6"
+        >
           <div className="flex items-start gap-4">
             <div
               className={cn(

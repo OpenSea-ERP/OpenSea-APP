@@ -22,7 +22,11 @@ interface BalcaoCartProps {
 // BALCAO CART COMPONENT
 // =============================================================================
 
-function BalcaoCart({ onCharge, onIdentifyCustomer, className }: BalcaoCartProps) {
+function BalcaoCart({
+  onCharge,
+  onIdentifyCustomer,
+  className,
+}: BalcaoCartProps) {
   const { activeOrder, items, itemCount, isLoading } = useCartData();
   const { updateItemQuantity, removeItem } = useCartActions();
 

@@ -23,7 +23,7 @@ interface UsePermissionsReturn {
   /** Lista completa de permissões efetivas */
   effectivePermissions: EffectivePermission[];
   /** Verifica se o usuário tem uma permissão específica */
-  hasPermission: (code: string) => boolean;
+  hasPermission: (code: string | undefined) => boolean;
   /** Verifica se uma permissão é negada explicitamente */
   isDenied: (code: string) => boolean;
   /** Verifica múltiplas permissões (OR - pelo menos uma) */
@@ -89,8 +89,8 @@ export function usePermissions(): UsePermissionsReturn {
   }, [effectivePermissions]);
 
   // Verificar se usuário tem uma permissão
-  const hasPermission = (code: string): boolean => {
-    if (!user) return false;
+  const hasPermission = (code: string | undefined): boolean => {
+    if (!user || !code) return false;
     return isPermissionAllowed(permissions, code);
   };
 

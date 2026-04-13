@@ -17,7 +17,7 @@ export interface TimeEntry {
 export const timeEntriesService = {
   async list(jobCardId: string) {
     return apiClient.get<{ timeEntries: TimeEntry[] }>(
-      `${API_ENDPOINTS.PRODUCTION.TIME_ENTRIES.LIST}?jobCardId=${jobCardId}`,
+      `${API_ENDPOINTS.PRODUCTION.TIME_ENTRIES.LIST}?jobCardId=${jobCardId}`
     );
   },
   async create(data: {
@@ -30,13 +30,13 @@ export const timeEntriesService = {
   }) {
     return apiClient.post<{ timeEntry: TimeEntry }>(
       API_ENDPOINTS.PRODUCTION.TIME_ENTRIES.CREATE,
-      data,
+      data
     );
   },
   async end(id: string, data?: { endTime?: string; breakMinutes?: number }) {
     return apiClient.patch<{ timeEntry: TimeEntry }>(
       API_ENDPOINTS.PRODUCTION.TIME_ENTRIES.END(id),
-      data ?? {},
+      data ?? {}
     );
   },
 };

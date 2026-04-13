@@ -28,12 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { PRODUCTION_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { textileService } from '@/services/production';
@@ -81,14 +76,14 @@ export default function TextilePage() {
   const [baseConsumption, setBaseConsumption] = useState('');
   const [wastePercentage, setWastePercentage] = useState('5');
   const [cutMatrixJson, setCutMatrixJson] = useState(
-    JSON.stringify(DEFAULT_MATRIX, null, 2),
+    JSON.stringify(DEFAULT_MATRIX, null, 2)
   );
 
   // Bundle Tickets state
   const [bundleOrderId, setBundleOrderId] = useState('');
   const [bundleSize, setBundleSize] = useState('15');
   const [bundleMatrixJson, setBundleMatrixJson] = useState(
-    JSON.stringify(DEFAULT_MATRIX, null, 2),
+    JSON.stringify(DEFAULT_MATRIX, null, 2)
   );
 
   const canAccess = hasPermission(PRODUCTION_PERMISSIONS.SHOPFLOOR.ACCESS);
@@ -203,7 +198,7 @@ export default function TextilePage() {
                   <Input
                     placeholder="ID da Ordem de Produção"
                     value={cutOrderId}
-                    onChange={(e) => setCutOrderId(e.target.value)}
+                    onChange={e => setCutOrderId(e.target.value)}
                     className="pl-10"
                     data-testid="textile-cut-order-input"
                   />
@@ -232,7 +227,7 @@ export default function TextilePage() {
                     step="0.01"
                     placeholder="Ex: 1.5"
                     value={baseConsumption}
-                    onChange={(e) => setBaseConsumption(e.target.value)}
+                    onChange={e => setBaseConsumption(e.target.value)}
                     data-testid="textile-base-consumption-input"
                   />
                 </div>
@@ -245,7 +240,7 @@ export default function TextilePage() {
                     step="0.1"
                     placeholder="5"
                     value={wastePercentage}
-                    onChange={(e) => setWastePercentage(e.target.value)}
+                    onChange={e => setWastePercentage(e.target.value)}
                     data-testid="textile-waste-input"
                   />
                 </div>
@@ -257,7 +252,7 @@ export default function TextilePage() {
                 <textarea
                   className="w-full min-h-[160px] rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-3 text-sm font-mono text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
                   value={cutMatrixJson}
-                  onChange={(e) => setCutMatrixJson(e.target.value)}
+                  onChange={e => setCutMatrixJson(e.target.value)}
                   data-testid="textile-cut-matrix-input"
                 />
               </div>
@@ -329,7 +324,7 @@ export default function TextilePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {cutPlan.piecesPerSize.map((item) => (
+                        {cutPlan.piecesPerSize.map(item => (
                           <tr
                             key={item.size}
                             className="border-b border-gray-100 dark:border-white/5 last:border-0"
@@ -377,7 +372,7 @@ export default function TextilePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {cutPlan.piecesPerColor.map((item) => (
+                        {cutPlan.piecesPerColor.map(item => (
                           <tr
                             key={item.color}
                             className="border-b border-gray-100 dark:border-white/5 last:border-0"
@@ -406,7 +401,8 @@ export default function TextilePage() {
           {cutPlanMutation.isError && (
             <Card className="p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
               <p className="text-sm text-rose-600 dark:text-rose-400">
-                Erro ao gerar plano de corte. Verifique o ID da ordem e o JSON da matriz.
+                Erro ao gerar plano de corte. Verifique o ID da ordem e o JSON
+                da matriz.
               </p>
             </Card>
           )}
@@ -422,7 +418,7 @@ export default function TextilePage() {
                   <Input
                     placeholder="ID da Ordem de Produção"
                     value={bundleOrderId}
-                    onChange={(e) => setBundleOrderId(e.target.value)}
+                    onChange={e => setBundleOrderId(e.target.value)}
                     className="pl-10"
                     data-testid="textile-bundle-order-input"
                   />
@@ -432,7 +428,7 @@ export default function TextilePage() {
                     type="number"
                     placeholder="Tam. pacote"
                     value={bundleSize}
-                    onChange={(e) => setBundleSize(e.target.value)}
+                    onChange={e => setBundleSize(e.target.value)}
                     data-testid="textile-bundle-size-input"
                   />
                 </div>
@@ -457,7 +453,7 @@ export default function TextilePage() {
                 <textarea
                   className="w-full min-h-[160px] rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-3 text-sm font-mono text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
                   value={bundleMatrixJson}
-                  onChange={(e) => setBundleMatrixJson(e.target.value)}
+                  onChange={e => setBundleMatrixJson(e.target.value)}
                   data-testid="textile-bundle-matrix-input"
                 />
               </div>
@@ -521,7 +517,7 @@ export default function TextilePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {bundleResult.bundles.map((ticket) => (
+                        {bundleResult.bundles.map(ticket => (
                           <tr
                             key={ticket.bundleNumber}
                             className="border-b border-gray-100 dark:border-white/5 last:border-0"
@@ -564,18 +560,21 @@ export default function TextilePage() {
           {bundleTicketsMutation.isError && (
             <Card className="p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
               <p className="text-sm text-rose-600 dark:text-rose-400">
-                Erro ao gerar tickets de pacote. Verifique o ID da ordem e o JSON da matriz.
+                Erro ao gerar tickets de pacote. Verifique o ID da ordem e o
+                JSON da matriz.
               </p>
             </Card>
           )}
 
-          {bundleTicketsMutation.isSuccess && bundleResult && bundleResult.bundles.length === 0 && (
-            <Card className="p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
-              <p className="text-sm text-gray-500 dark:text-white/60">
-                Nenhum ticket gerado para esta ordem.
-              </p>
-            </Card>
-          )}
+          {bundleTicketsMutation.isSuccess &&
+            bundleResult &&
+            bundleResult.bundles.length === 0 && (
+              <Card className="p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
+                <p className="text-sm text-gray-500 dark:text-white/60">
+                  Nenhum ticket gerado para esta ordem.
+                </p>
+              </Card>
+            )}
         </TabsContent>
       </Tabs>
     </div>

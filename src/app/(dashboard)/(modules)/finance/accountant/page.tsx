@@ -64,7 +64,8 @@ function getStatusInfo(access: AccountantAccess) {
     return {
       label: 'Revogado',
       variant: 'outline' as const,
-      className: 'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300',
+      className:
+        'border-rose-600/25 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/8 text-rose-700 dark:text-rose-300',
       icon: ShieldOff,
     };
   }
@@ -72,14 +73,16 @@ function getStatusInfo(access: AccountantAccess) {
     return {
       label: 'Expirado',
       variant: 'outline' as const,
-      className: 'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
+      className:
+        'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
       icon: Clock,
     };
   }
   return {
     label: 'Ativo',
     variant: 'outline' as const,
-    className: 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    className:
+      'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
     icon: Shield,
   };
 }
@@ -112,7 +115,10 @@ function AccountantCard({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="font-medium truncate">{access.name}</h3>
-                <Badge variant={status.variant} className={cn('shrink-0 text-xs', status.className)}>
+                <Badge
+                  variant={status.variant}
+                  className={cn('shrink-0 text-xs', status.className)}
+                >
                   <StatusIcon className="mr-1 h-3 w-3" />
                   {status.label}
                 </Badge>
@@ -295,7 +301,13 @@ export default function AccountantPortalPage() {
       )}
 
       {/* Invite Modal */}
-      <InviteAccountantModal open={inviteOpen} onOpenChange={(open) => { setInviteOpen(open); if (!open) refetch(); }} />
+      <InviteAccountantModal
+        open={inviteOpen}
+        onOpenChange={open => {
+          setInviteOpen(open);
+          if (!open) refetch();
+        }}
+      />
 
       {/* Revoke PIN Confirmation */}
       <VerifyActionPinModal

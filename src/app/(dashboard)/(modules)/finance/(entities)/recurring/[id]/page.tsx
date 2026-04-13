@@ -290,7 +290,10 @@ export default function RecurringDetailPage({
                 <h1 className="text-xl font-bold truncate">
                   {config.description}
                 </h1>
-                <Badge variant="outline" className={getStatusColor(config.status)}>
+                <Badge
+                  variant="outline"
+                  className={getStatusColor(config.status)}
+                >
                   {RECURRING_STATUS_LABELS[config.status]}
                 </Badge>
                 <Badge variant="outline">
@@ -488,7 +491,6 @@ export default function RecurringDetailPage({
         title="Confirmar Cancelamento"
         description={`Digite seu PIN de Ação para cancelar a recorrência "${config.description}". Esta ação não pode ser desfeita.`}
       />
-
     </PageLayout>
   );
 }

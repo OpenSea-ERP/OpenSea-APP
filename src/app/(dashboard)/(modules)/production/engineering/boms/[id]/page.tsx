@@ -141,7 +141,7 @@ export default function BomDetailPage() {
     queryKey: ['bom-routings', bomId],
     queryFn: async () => {
       const res = await apiClient.get<OperationRoutingsResponse>(
-        API_ENDPOINTS.PRODUCTION.BOMS.ROUTINGS.LIST(bomId),
+        API_ENDPOINTS.PRODUCTION.BOMS.ROUTINGS.LIST(bomId)
       );
       return res.operationRoutings;
     },
@@ -353,7 +353,7 @@ export default function BomDetailPage() {
                       <tbody>
                         {bomItems
                           .sort((a, b) => a.sequence - b.sequence)
-                          .map((item) => (
+                          .map(item => (
                             <tr
                               key={item.id}
                               className="border-b border-border last:border-0 hover:bg-gray-50/50 dark:hover:bg-slate-700/20"
@@ -409,7 +409,10 @@ export default function BomDetailPage() {
                   </div>
                 ) : (
                   <div className="w-full rounded-xl border border-border bg-white dark:bg-slate-800/60 overflow-hidden">
-                    <table className="w-full text-sm" data-testid="routings-table">
+                    <table
+                      className="w-full text-sm"
+                      data-testid="routings-table"
+                    >
                       <thead>
                         <tr className="border-b border-border bg-gray-50 dark:bg-slate-800">
                           <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
@@ -441,7 +444,7 @@ export default function BomDetailPage() {
                       <tbody>
                         {routings
                           .sort((a, b) => a.sequence - b.sequence)
-                          .map((r) => (
+                          .map(r => (
                             <tr
                               key={r.id}
                               className="border-b border-border last:border-0 hover:bg-gray-50/50 dark:hover:bg-slate-700/20"
@@ -519,10 +522,7 @@ export default function BomDetailPage() {
                   <InfoField label="Versão" value={`v${bom.version}`} />
                 </div>
                 <div className="mt-6 grid gap-6 md:grid-cols-3">
-                  <InfoField
-                    label="Quantidade Base"
-                    value={bom.baseQuantity}
-                  />
+                  <InfoField label="Quantidade Base" value={bom.baseQuantity} />
                   <InfoField
                     label="Válida de"
                     value={formatDate(bom.validFrom)}

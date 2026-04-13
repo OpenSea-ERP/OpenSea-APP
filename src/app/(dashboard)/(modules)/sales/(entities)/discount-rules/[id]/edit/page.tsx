@@ -235,7 +235,7 @@ export default function EditDiscountRulePage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(hasPermission(discountRulesConfig.permissions.delete)
+    ...(hasPermission(discountRulesConfig.permissions!.delete)
       ? [
           {
             id: 'delete',

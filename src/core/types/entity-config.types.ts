@@ -24,7 +24,7 @@ import { EntityViewerConfig } from './viewer.types';
 export interface EntityConfig<T extends BaseEntity = BaseEntity> {
   // ======================== IDENTIFICAÇÃO ========================
   /** Nome singular da entidade (ex: "product") */
-  name: string;
+  name?: string;
   /** Nome plural da entidade (ex: "products") - opcional */
   namePlural?: string;
   /** Slug para URLs (ex: "products") - opcional */
@@ -36,11 +36,11 @@ export interface EntityConfig<T extends BaseEntity = BaseEntity> {
 
   // ======================== API ========================
   /** Configurações de API */
-  api: EntityApiConfig;
+  api?: EntityApiConfig;
 
   // ======================== ROTAS ========================
   /** Configurações de rotas */
-  routes: EntityRoutes;
+  routes?: EntityRoutes;
 
   // ======================== DISPLAY ========================
   /** Como exibir a entidade em cards, listas, etc */
@@ -60,7 +60,7 @@ export interface EntityConfig<T extends BaseEntity = BaseEntity> {
 
   // ======================== PERMISSÕES ========================
   /** Permissões RBAC */
-  permissions: EntityPermissions;
+  permissions?: EntityPermissions;
 
   // ======================== FEATURES ========================
   /** Features habilitadas */
@@ -150,7 +150,7 @@ export interface EntityDisplayConfig<T extends BaseEntity = BaseEntity> {
   /** Gradiente para ícone */
   gradient?: string;
   /** Campo usado como título (ex: "name") */
-  titleField: keyof T;
+  titleField?: keyof T;
   /** Campo usado como subtítulo (ex: "code") */
   subtitleField?: keyof T;
   /** Campo usado como descrição */
@@ -293,15 +293,15 @@ export interface EntityFilter<T> {
 
 export interface EntityPermissions {
   /** Permissão para visualizar */
-  view: string;
+  view?: string;
   /** Permissão para criar */
-  create: string;
+  create?: string;
   /** Permissão para editar */
   update?: string;
   /** Alias para update */
   edit?: string;
   /** Permissão para deletar */
-  delete: string;
+  delete?: string;
   /** Permissão para exportar */
   export?: string;
   /** Permissão para importar */

@@ -260,8 +260,7 @@ export function PosCustomerWizard({
   const [newDocument, setNewDocument] = useState('');
 
   const createCustomer = useMutation({
-    mutationFn: (data: CreateCustomerRequest) =>
-      customersService.create(data),
+    mutationFn: (data: CreateCustomerRequest) => customersService.create(data),
     onSuccess: response => {
       const customer = response.customer;
       toast.success('Cliente cadastrado com sucesso.');

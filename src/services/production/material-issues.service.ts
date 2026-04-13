@@ -16,7 +16,7 @@ export interface MaterialIssue {
 export const materialIssuesService = {
   async list(productionOrderId: string) {
     return apiClient.get<{ materialIssues: MaterialIssue[] }>(
-      `${API_ENDPOINTS.PRODUCTION.MATERIAL_ISSUES.LIST}?productionOrderId=${productionOrderId}`,
+      `${API_ENDPOINTS.PRODUCTION.MATERIAL_ISSUES.LIST}?productionOrderId=${productionOrderId}`
     );
   },
   async create(data: {
@@ -29,7 +29,7 @@ export const materialIssuesService = {
   }) {
     return apiClient.post<{ materialIssue: MaterialIssue }>(
       API_ENDPOINTS.PRODUCTION.MATERIAL_ISSUES.CREATE,
-      data,
+      data
     );
   },
 };

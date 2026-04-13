@@ -62,8 +62,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: 'payment-conditions',
     title: 'Condições de Pagamento',
-    description:
-      'Gerencie prazos, parcelas, juros e descontos para vendas.',
+    description: 'Gerencie prazos, parcelas, juros e descontos para vendas.',
     icon: Wallet,
     href: '/sales/payment-conditions',
     gradient: 'from-violet-500 to-purple-600',
@@ -72,8 +71,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: 'brand',
     title: 'Identidade Visual',
-    description:
-      'Personalize cores, tipografia e logotipo da sua marca.',
+    description: 'Personalize cores, tipografia e logotipo da sua marca.',
     icon: Paintbrush,
     href: '/sales/brand',
     gradient: 'from-pink-500 to-rose-600',
@@ -91,8 +89,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: 'integrations',
     title: 'Integrações',
-    description:
-      'Conecte CRM, marketing, marketplace e gateways de pagamento.',
+    description: 'Conecte CRM, marketing, marketplace e gateways de pagamento.',
     icon: Link2,
     href: '/sales/integrations',
     gradient: 'from-teal-500 to-cyan-600',
@@ -110,8 +107,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: 'notifications',
     title: 'Notificações',
-    description:
-      'Configure preferências de e-mail, push e SMS por categoria.',
+    description: 'Configure preferências de e-mail, push e SMS por categoria.',
     icon: Bell,
     href: '/sales/notification-preferences',
     gradient: 'from-amber-500 to-orange-600',

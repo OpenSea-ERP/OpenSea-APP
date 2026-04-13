@@ -292,13 +292,13 @@ function DealsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          dealsConfig.permissions.update &&
-          hasPermission(dealsConfig.permissions.update)
+          dealsConfig.permissions!.update &&
+          hasPermission(dealsConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(dealsConfig.permissions.delete)
+          ...(hasPermission(dealsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -414,13 +414,13 @@ function DealsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          dealsConfig.permissions.update &&
-          hasPermission(dealsConfig.permissions.update)
+          dealsConfig.permissions!.update &&
+          hasPermission(dealsConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(dealsConfig.permissions.delete)
+          ...(hasPermission(dealsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -500,7 +500,7 @@ function DealsPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: dealsConfig.permissions.create,
+        permission: dealsConfig.permissions!.create,
       },
     ],
     [handleCreate]

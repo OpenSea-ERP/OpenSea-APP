@@ -357,7 +357,10 @@ function CustomerPricesPageContent() {
                 searchPlaceholder="Buscar status..."
                 emptyText="Nenhum status encontrado."
               />
-              <p data-testid="customer-prices-count" className="text-sm text-muted-foreground whitespace-nowrap">
+              <p
+                data-testid="customer-prices-count"
+                className="text-sm text-muted-foreground whitespace-nowrap"
+              >
                 {total} {total === 1 ? 'preco' : 'preços'}
               </p>
             </div>
@@ -458,7 +461,10 @@ function CustomerPricesPageContent() {
             </div>
 
             {customerPrices.length === 0 && (
-              <div data-testid="customer-prices-empty" className="flex flex-col items-center justify-center py-16 text-center">
+              <div
+                data-testid="customer-prices-empty"
+                className="flex flex-col items-center justify-center py-16 text-center"
+              >
                 <BadgeDollarSign className="h-12 w-12 text-muted-foreground/30 mb-4" />
                 <h3 className="text-sm font-medium text-muted-foreground">
                   Nenhum preço por cliente encontrado

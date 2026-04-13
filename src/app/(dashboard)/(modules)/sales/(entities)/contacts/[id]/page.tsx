@@ -211,8 +211,8 @@ export default function ContactDetailPage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(contactsConfig.permissions.update &&
-    hasPermission(contactsConfig.permissions.update)
+    ...(contactsConfig.permissions!.update &&
+    hasPermission(contactsConfig.permissions!.update)
       ? [
           {
             id: 'edit',

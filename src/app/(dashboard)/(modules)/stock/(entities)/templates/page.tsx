@@ -448,7 +448,7 @@ export default function TemplatesPage() {
         icon: Import,
         onClick: handleImport,
         variant: 'ghost',
-        permission: templatesConfig.permissions.import,
+        permission: templatesConfig.permissions!.import,
       },
       {
         id: 'create-template',
@@ -456,7 +456,7 @@ export default function TemplatesPage() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: templatesConfig.permissions.create,
+        permission: templatesConfig.permissions!.create,
       },
     ],
     [handleImport, handleCreate]

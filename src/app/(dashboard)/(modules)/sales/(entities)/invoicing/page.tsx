@@ -37,13 +37,8 @@ export default function InvoicingPage() {
     [status, orderId, fromDate, toDate]
   );
 
-  const {
-    data,
-    isLoading,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  } = useInvoicesInfinite(filters);
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useInvoicesInfinite(filters);
   const issueInvoice = useIssueInvoice();
   const configureFocus = useConfigureFocusNfe();
 

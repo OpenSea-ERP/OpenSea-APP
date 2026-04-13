@@ -1,4 +1,9 @@
-export type ScheduleEntryStatus = 'PLANNED' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type ScheduleEntryStatus =
+  | 'PLANNED'
+  | 'CONFIRMED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED';
 
 export interface ProductionSchedule {
   id: string;
@@ -26,7 +31,15 @@ export interface ScheduleEntry {
   updatedAt: string;
 }
 
-export interface ScheduleResponse { schedule: ProductionSchedule; }
-export interface SchedulesResponse { schedules: ProductionSchedule[]; }
-export interface ScheduleEntryResponse { entry: ScheduleEntry; }
-export interface ScheduleEntriesResponse { entries: ScheduleEntry[]; }
+export interface ScheduleResponse {
+  schedule: ProductionSchedule;
+}
+export interface SchedulesResponse {
+  schedules: ProductionSchedule[];
+}
+export interface ScheduleEntryResponse {
+  entry: ScheduleEntry;
+}
+export interface ScheduleEntriesResponse {
+  entries: ScheduleEntry[];
+}

@@ -227,7 +227,8 @@ export default function EditWorkflowPage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(hasPermission(workflowsConfig.permissions.delete)
+    ...(workflowsConfig.permissions!.delete &&
+    hasPermission(workflowsConfig.permissions!.delete)
       ? [
           {
             id: 'delete',

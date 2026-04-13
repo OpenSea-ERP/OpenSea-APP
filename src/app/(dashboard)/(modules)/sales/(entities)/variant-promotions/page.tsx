@@ -305,13 +305,19 @@ function VariantPromotionsPageContent() {
                 searchPlaceholder="Buscar tipo..."
                 emptyText="Nenhum tipo encontrado."
               />
-              <p data-testid="variant-promotions-count" className="text-sm text-muted-foreground whitespace-nowrap">
+              <p
+                data-testid="variant-promotions-count"
+                className="text-sm text-muted-foreground whitespace-nowrap"
+              >
                 {total} {total === 1 ? 'promoção' : 'promoções'}
               </p>
             </div>
 
             {promotions.length === 0 ? (
-              <div data-testid="variant-promotions-empty" className="flex flex-col items-center justify-center py-16 text-center">
+              <div
+                data-testid="variant-promotions-empty"
+                className="flex flex-col items-center justify-center py-16 text-center"
+              >
                 <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-100 dark:bg-white/[0.04] mb-4">
                   <Tag className="h-7 w-7 text-muted-foreground" />
                 </div>

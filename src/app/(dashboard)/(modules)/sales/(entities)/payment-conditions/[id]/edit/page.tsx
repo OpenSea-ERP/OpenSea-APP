@@ -402,7 +402,10 @@ export default function EditPaymentConditionPage() {
                       value={type}
                       onValueChange={v => setType(v as PaymentConditionType)}
                     >
-                      <SelectTrigger id="type" data-testid="payment-condition-field-type">
+                      <SelectTrigger
+                        id="type"
+                        data-testid="payment-condition-field-type"
+                      >
                         <SelectValue placeholder="Selecione o tipo..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -428,7 +431,10 @@ export default function EditPaymentConditionPage() {
                         setApplicableTo(v as PaymentConditionApplicable)
                       }
                     >
-                      <SelectTrigger id="applicableTo" data-testid="payment-condition-field-applicableTo">
+                      <SelectTrigger
+                        id="applicableTo"
+                        data-testid="payment-condition-field-applicableTo"
+                      >
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>

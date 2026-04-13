@@ -268,7 +268,7 @@ export default function EditContactPage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(hasPermission(contactsConfig.permissions.delete)
+    ...(hasPermission(contactsConfig.permissions!.delete)
       ? [
           {
             id: 'delete',

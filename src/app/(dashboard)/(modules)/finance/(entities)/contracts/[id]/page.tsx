@@ -334,7 +334,10 @@ export default function ContractDetailPage({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold truncate">{contract.title}</h1>
-                <Badge variant="outline" className={cn("text-xs", getStatusColor(contract.status))}>
+                <Badge
+                  variant="outline"
+                  className={cn('text-xs', getStatusColor(contract.status))}
+                >
                   {CONTRACT_STATUS_LABELS[contract.status]}
                 </Badge>
                 {contract.autoRenew && (

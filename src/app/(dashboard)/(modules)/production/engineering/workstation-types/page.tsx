@@ -39,7 +39,11 @@ import type {
   WorkstationType,
   CreateWorkstationTypeRequest,
 } from '@/types/production';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Loader2, Plus, Settings, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
@@ -77,12 +81,7 @@ export default function WorkstationTypesPage() {
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useInfiniteQuery({
+  const { data, isLoading, error, refetch } = useInfiniteQuery({
     queryKey: ['workstation-types'],
     queryFn: async () => {
       const res = await workstationTypesService.list();
@@ -92,14 +91,14 @@ export default function WorkstationTypesPage() {
     initialPageParam: 1,
   });
 
-  const allItems = data?.pages.flatMap((p) => p) ?? [];
+  const allItems = data?.pages.flatMap(p => p) ?? [];
   const items = useMemo(() => {
     if (!debouncedSearch) return allItems;
     const q = debouncedSearch.toLowerCase();
     return allItems.filter(
-      (i) =>
+      i =>
         i.name.toLowerCase().includes(q) ||
-        i.description?.toLowerCase().includes(q),
+        i.description?.toLowerCase().includes(q)
     );
   }, [allItems, debouncedSearch]);
 
@@ -161,14 +160,11 @@ export default function WorkstationTypesPage() {
         separator: 'before' as const,
       },
     ],
-    [],
+    []
   );
 
   const renderGridCard = (item: WorkstationType, isSelected: boolean) => (
-    <EntityContextMenu
-      itemId={item.id}
-      actions={contextActions}
-    >
+    <EntityContextMenu itemId={item.id} actions={contextActions}>
       <EntityCard
         id={item.id}
         variant="grid"
@@ -195,10 +191,7 @@ export default function WorkstationTypesPage() {
   );
 
   const renderListCard = (item: WorkstationType, isSelected: boolean) => (
-    <EntityContextMenu
-      itemId={item.id}
-      actions={contextActions}
-    >
+    <EntityContextMenu itemId={item.id} actions={contextActions}>
       <EntityCard
         id={item.id}
         variant="list"
@@ -224,7 +217,7 @@ export default function WorkstationTypesPage() {
     </EntityContextMenu>
   );
 
-  const initialIds = useMemo(() => items.map((i) => i.id), [items]);
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   const actionButtons = useMemo<HeaderButton[]>(() => {
     const buttons: HeaderButton[] = [];
@@ -255,7 +248,7 @@ export default function WorkstationTypesPage() {
             <Input
               id="wst-name"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={e => setNewName(e.target.value)}
               placeholder="Ex: CNC, Solda, Montagem"
             />
           </div>
@@ -264,7 +257,7 @@ export default function WorkstationTypesPage() {
             <Textarea
               id="wst-desc"
               value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
+              onChange={e => setNewDescription(e.target.value)}
               placeholder="Descrição do tipo de posto"
               rows={3}
             />
@@ -325,7 +318,12 @@ export default function WorkstationTypesPage() {
               type="server"
               title="Erro ao carregar tipos de posto"
               message="Ocorreu um erro ao carregar os tipos de posto."
-              action={{ label: 'Tentar Novamente', onClick: () => refetch() }}
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
             />
           ) : (
             <EntityGrid

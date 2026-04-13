@@ -179,7 +179,8 @@ export default function DependantDetailPage() {
                     id: 'edit',
                     title: 'Editar',
                     icon: Pencil,
-                    onClick: () => router.push(`/hr/dependants/${dependantId}/edit`),
+                    onClick: () =>
+                      router.push(`/hr/dependants/${dependantId}/edit`),
                     variant: 'outline' as const,
                   },
                 ]

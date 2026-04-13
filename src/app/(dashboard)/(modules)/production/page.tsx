@@ -223,7 +223,7 @@ export default function ProductionLandingPage() {
         ordersCount.status === 'fulfilled'
           ? Object.values(ordersCount.value).reduce(
               (sum: number, v: number) => sum + v,
-              0,
+              0
             )
           : null;
 

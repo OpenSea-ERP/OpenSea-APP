@@ -266,14 +266,15 @@ function QuotesPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          quotesConfig.permissions.update &&
-          hasPermission(quotesConfig.permissions.update) &&
+          quotesConfig.permissions!.update &&
+          hasPermission(quotesConfig.permissions!.update) &&
           item.status === 'DRAFT'
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(quotesConfig.permissions.delete)
+          ...(quotesConfig.permissions!.delete &&
+          hasPermission(quotesConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -362,14 +363,15 @@ function QuotesPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          quotesConfig.permissions.update &&
-          hasPermission(quotesConfig.permissions.update) &&
+          quotesConfig.permissions!.update &&
+          hasPermission(quotesConfig.permissions!.update) &&
           item.status === 'DRAFT'
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(quotesConfig.permissions.delete)
+          ...(quotesConfig.permissions!.delete &&
+          hasPermission(quotesConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -444,7 +446,7 @@ function QuotesPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: quotesConfig.permissions.create,
+        permission: quotesConfig.permissions!.create,
       },
     ],
     [handleCreate]

@@ -139,7 +139,7 @@ function ItemReservationsPageContent() {
   const [itemsToDelete, setItemsToDelete] = useState<string[]>([]);
   const [createWizardOpen, setCreateWizardOpen] = useState(false);
 
-  const canCreate = hasPermission(itemReservationsConfig.permissions.create);
+  const canCreate = hasPermission(itemReservationsConfig.permissions!.create);
 
   // ============================================================================
   // DATA
@@ -327,7 +327,7 @@ function ItemReservationsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         actions={[
-          ...(hasPermission(itemReservationsConfig.permissions.delete)
+          ...(hasPermission(itemReservationsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -445,7 +445,7 @@ function ItemReservationsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         actions={[
-          ...(hasPermission(itemReservationsConfig.permissions.delete)
+          ...(hasPermission(itemReservationsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',

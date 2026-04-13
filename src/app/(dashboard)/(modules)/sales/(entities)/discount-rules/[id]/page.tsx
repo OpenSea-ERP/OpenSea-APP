@@ -85,8 +85,8 @@ export default function DiscountRuleDetailPage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(discountRulesConfig.permissions.update &&
-    hasPermission(discountRulesConfig.permissions.update)
+    ...(discountRulesConfig.permissions!.update &&
+    hasPermission(discountRulesConfig.permissions!.update)
       ? [
           {
             id: 'edit',

@@ -158,29 +158,39 @@ export function UserDropdown() {
               onClick={() => router.push('/sales/pos')}
             >
               <div className="flex items-center w-full gap-3">
-                <div className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-lg',
-                  currentSession
-                    ? 'bg-emerald-50 dark:bg-emerald-500/10'
-                    : 'bg-zinc-100 dark:bg-zinc-800'
-                )}>
-                  <Monitor className={cn(
-                    'h-4 w-4',
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-lg',
                     currentSession
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-zinc-500 dark:text-zinc-400'
-                  )} />
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10'
+                      : 'bg-zinc-100 dark:bg-zinc-800'
+                  )}
+                >
+                  <Monitor
+                    className={cn(
+                      'h-4 w-4',
+                      currentSession
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-zinc-500 dark:text-zinc-400'
+                    )}
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{terminal.terminalName}</p>
-                  <p className="text-xs font-mono text-muted-foreground">{terminal.terminalCode}</p>
+                  <p className="text-sm font-medium truncate">
+                    {terminal.terminalName}
+                  </p>
+                  <p className="text-xs font-mono text-muted-foreground">
+                    {terminal.terminalCode}
+                  </p>
                 </div>
-                <Badge className={cn(
-                  'border-0 text-xs shrink-0',
-                  currentSession
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
-                    : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
-                )}>
+                <Badge
+                  className={cn(
+                    'border-0 text-xs shrink-0',
+                    currentSession
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
+                      : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                  )}
+                >
                   {currentSession ? 'Aberto' : 'Fechado'}
                 </Badge>
               </div>

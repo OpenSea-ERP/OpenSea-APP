@@ -43,7 +43,11 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { useDebounce } from '@/hooks/use-debounce';
 import { bomsService } from '@/services/production';
 import type { Bom, BomStatus, CreateBomRequest } from '@/types/production';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { LayoutList, Loader2, Plus, Star, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
@@ -96,12 +100,7 @@ export default function BomsPage() {
   const [newVersion, setNewVersion] = useState(1);
   const [newDescription, setNewDescription] = useState('');
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useInfiniteQuery({
+  const { data, isLoading, error, refetch } = useInfiniteQuery({
     queryKey: ['boms'],
     queryFn: async () => {
       const res = await bomsService.list();
@@ -111,19 +110,19 @@ export default function BomsPage() {
     initialPageParam: 1,
   });
 
-  const allItems = data?.pages.flatMap((p) => p) ?? [];
+  const allItems = data?.pages.flatMap(p => p) ?? [];
   const items = useMemo(() => {
     let filtered = allItems;
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
-        (i) =>
+        i =>
           i.name.toLowerCase().includes(q) ||
-          i.description?.toLowerCase().includes(q),
+          i.description?.toLowerCase().includes(q)
       );
     }
     if (statusFilter !== 'ALL') {
-      filtered = filtered.filter((i) => i.status === statusFilter);
+      filtered = filtered.filter(i => i.status === statusFilter);
     }
     return filtered;
   }, [allItems, debouncedSearch, statusFilter]);
@@ -195,7 +194,7 @@ export default function BomsPage() {
         separator: 'before' as const,
       },
     ],
-    [],
+    []
   );
 
   const renderGridCard = (item: Bom, isSelected: boolean) => (
@@ -280,7 +279,7 @@ export default function BomsPage() {
     </EntityContextMenu>
   );
 
-  const initialIds = useMemo(() => items.map((i) => i.id), [items]);
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   const actionButtons = useMemo<HeaderButton[]>(() => {
     const buttons: HeaderButton[] = [];
@@ -312,7 +311,7 @@ export default function BomsPage() {
               id="bom-product"
               data-testid="bom-product-input"
               value={newProductId}
-              onChange={(e) => setNewProductId(e.target.value)}
+              onChange={e => setNewProductId(e.target.value)}
               placeholder="ID do produto"
             />
           </div>
@@ -324,7 +323,7 @@ export default function BomsPage() {
               id="bom-name"
               data-testid="bom-name-input"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={e => setNewName(e.target.value)}
               placeholder="Nome da lista de materiais"
             />
           </div>
@@ -336,7 +335,7 @@ export default function BomsPage() {
               type="number"
               min={1}
               value={newVersion}
-              onChange={(e) => setNewVersion(Number(e.target.value) || 1)}
+              onChange={e => setNewVersion(Number(e.target.value) || 1)}
               placeholder="1"
             />
           </div>
@@ -346,7 +345,7 @@ export default function BomsPage() {
               id="bom-desc"
               data-testid="bom-description-input"
               value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
+              onChange={e => setNewDescription(e.target.value)}
               placeholder="Descrição da BOM"
               rows={3}
             />
@@ -381,14 +380,14 @@ export default function BomsPage() {
       </p>
       <Select
         value={statusFilter}
-        onValueChange={(v) => setStatusFilter(v as BomStatus | 'ALL')}
+        onValueChange={v => setStatusFilter(v as BomStatus | 'ALL')}
       >
         <SelectTrigger className="w-[160px] h-9">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">Todos os status</SelectItem>
-          {ALL_BOM_STATUSES.map((s) => (
+          {ALL_BOM_STATUSES.map(s => (
             <SelectItem key={s} value={s}>
               {BOM_STATUS_LABELS[s]}
             </SelectItem>
@@ -436,7 +435,12 @@ export default function BomsPage() {
               type="server"
               title="Erro ao carregar BOMs"
               message="Ocorreu um erro ao carregar as listas de materiais."
-              action={{ label: 'Tentar Novamente', onClick: () => refetch() }}
+              action={{
+                label: 'Tentar Novamente',
+                onClick: () => {
+                  refetch();
+                },
+              }}
             />
           ) : (
             <EntityGrid
@@ -448,7 +452,7 @@ export default function BomsPage() {
               isSearching={!!debouncedSearch}
               showItemCount={false}
               toolbarStart={filterToolbar}
-              onItemDoubleClick={(item) =>
+              onItemDoubleClick={item =>
                 router.push(`/production/engineering/boms/${item.id}`)
               }
             />

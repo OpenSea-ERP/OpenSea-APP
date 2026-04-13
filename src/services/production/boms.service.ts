@@ -16,7 +16,7 @@ export const bomsService = {
   async list(productId?: string): Promise<BomsResponse> {
     const params = productId ? `?productId=${productId}` : '';
     return apiClient.get<BomsResponse>(
-      `${API_ENDPOINTS.PRODUCTION.BOMS.LIST}${params}`,
+      `${API_ENDPOINTS.PRODUCTION.BOMS.LIST}${params}`
     );
   },
 
@@ -27,14 +27,14 @@ export const bomsService = {
   async create(data: CreateBomRequest): Promise<BomResponse> {
     return apiClient.post<BomResponse>(
       API_ENDPOINTS.PRODUCTION.BOMS.CREATE,
-      data,
+      data
     );
   },
 
   async update(id: string, data: UpdateBomRequest): Promise<BomResponse> {
     return apiClient.put<BomResponse>(
       API_ENDPOINTS.PRODUCTION.BOMS.UPDATE(id),
-      data,
+      data
     );
   },
 
@@ -44,41 +44,41 @@ export const bomsService = {
 
   async approve(id: string): Promise<BomResponse> {
     return apiClient.post<BomResponse>(
-      API_ENDPOINTS.PRODUCTION.BOMS.APPROVE(id),
+      API_ENDPOINTS.PRODUCTION.BOMS.APPROVE(id)
     );
   },
 
   // BOM Items
   async listItems(bomId: string): Promise<BomItemsResponse> {
     return apiClient.get<BomItemsResponse>(
-      API_ENDPOINTS.PRODUCTION.BOMS.ITEMS.LIST(bomId),
+      API_ENDPOINTS.PRODUCTION.BOMS.ITEMS.LIST(bomId)
     );
   },
 
   async createItem(
     bomId: string,
-    data: CreateBomItemRequest,
+    data: CreateBomItemRequest
   ): Promise<BomItemResponse> {
     return apiClient.post<BomItemResponse>(
       API_ENDPOINTS.PRODUCTION.BOMS.ITEMS.CREATE(bomId),
-      data,
+      data
     );
   },
 
   async updateItem(
     bomId: string,
     id: string,
-    data: UpdateBomItemRequest,
+    data: UpdateBomItemRequest
   ): Promise<BomItemResponse> {
     return apiClient.put<BomItemResponse>(
       API_ENDPOINTS.PRODUCTION.BOMS.ITEMS.UPDATE(bomId, id),
-      data,
+      data
     );
   },
 
   async deleteItem(bomId: string, id: string): Promise<void> {
     return apiClient.delete<void>(
-      API_ENDPOINTS.PRODUCTION.BOMS.ITEMS.DELETE(bomId, id),
+      API_ENDPOINTS.PRODUCTION.BOMS.ITEMS.DELETE(bomId, id)
     );
   },
 };

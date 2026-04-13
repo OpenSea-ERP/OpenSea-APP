@@ -1,8 +1,18 @@
 import { apiClient } from '@/lib/api-client';
 import type { PunchConfiguration, UpdatePunchConfigData } from '@/types/hr';
-import type { GeofenceZone, CreateGeofenceZoneData, UpdateGeofenceZoneData } from '@/types/hr';
+import type {
+  GeofenceZone,
+  CreateGeofenceZoneData,
+  UpdateGeofenceZoneData,
+} from '@/types/hr';
 
-export type { PunchConfiguration, UpdatePunchConfigData, GeofenceZone, CreateGeofenceZoneData, UpdateGeofenceZoneData };
+export type {
+  PunchConfiguration,
+  UpdatePunchConfigData,
+  GeofenceZone,
+  CreateGeofenceZoneData,
+  UpdateGeofenceZoneData,
+};
 
 // =============================================================================
 // API

@@ -24,7 +24,11 @@ export interface CutPlanResult {
   productionOrderId: string;
   orderNumber: string;
   totalPieces: number;
-  piecesPerSize: Array<{ size: string; totalPieces: number; estimatedFabricMeters: number }>;
+  piecesPerSize: Array<{
+    size: string;
+    totalPieces: number;
+    estimatedFabricMeters: number;
+  }>;
   piecesPerColor: Array<{ color: string; totalPieces: number }>;
   totalEstimatedFabricMeters: number;
   wastePercentage: number;
@@ -54,29 +58,37 @@ export interface BundleTicketsResult {
 
 export const textileService = {
   async getConfig() {
-    return apiClient.get<TextileConfig>(API_ENDPOINTS.PRODUCTION.TEXTILE.CONFIG);
-  },
-  async generateCutPlan(orderId: string, data: {
-    matrix: SizeColorMatrix;
-    baseFabricConsumptionPerPiece: number;
-    wastePercentage?: number;
-    spreadingTableWidthPieces?: number;
-    sizeConsumptionFactors?: Record<string, number>;
-  }) {
-    return apiClient.post<{ cutPlan: CutPlanResult }>(
-      API_ENDPOINTS.PRODUCTION.TEXTILE.CUT_PLAN(orderId),
-      data,
+    return apiClient.get<TextileConfig>(
+      API_ENDPOINTS.PRODUCTION.TEXTILE.CONFIG
     );
   },
-  async generateBundleTickets(orderId: string, data: {
-    bundleSize?: number;
-    sizes: string[];
-    colors: string[];
-    quantities: Record<string, Record<string, number>>;
-  }) {
+  async generateCutPlan(
+    orderId: string,
+    data: {
+      matrix: SizeColorMatrix;
+      baseFabricConsumptionPerPiece: number;
+      wastePercentage?: number;
+      spreadingTableWidthPieces?: number;
+      sizeConsumptionFactors?: Record<string, number>;
+    }
+  ) {
+    return apiClient.post<{ cutPlan: CutPlanResult }>(
+      API_ENDPOINTS.PRODUCTION.TEXTILE.CUT_PLAN(orderId),
+      data
+    );
+  },
+  async generateBundleTickets(
+    orderId: string,
+    data: {
+      bundleSize?: number;
+      sizes: string[];
+      colors: string[];
+      quantities: Record<string, Record<string, number>>;
+    }
+  ) {
     return apiClient.post<{ result: BundleTicketsResult }>(
       API_ENDPOINTS.PRODUCTION.TEXTILE.BUNDLE_TICKETS(orderId),
-      data,
+      data
     );
   },
 };

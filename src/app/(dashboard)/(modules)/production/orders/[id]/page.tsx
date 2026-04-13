@@ -20,7 +20,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PRODUCTION_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { usePermissions } from '@/hooks/use-permissions';
-import { productionOrdersService, materialReservationsService, materialIssuesService, materialReturnsService } from '@/services/production';
+import {
+  productionOrdersService,
+  materialReservationsService,
+  materialIssuesService,
+  materialReturnsService,
+} from '@/services/production';
 import type {
   ProductionOrder,
   ProductionOrderStatus,
@@ -68,8 +73,7 @@ const STATUS_COLORS: Record<ProductionOrderStatus, string> = {
     'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300',
   PLANNED:
     'border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300',
-  FIRM:
-    'border-indigo-600/25 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/8 text-indigo-700 dark:text-indigo-300',
+  FIRM: 'border-indigo-600/25 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/8 text-indigo-700 dark:text-indigo-300',
   RELEASED:
     'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
   IN_PROCESS:
@@ -93,7 +97,10 @@ const STATUS_FLOW: ProductionOrderStatus[] = [
 ];
 
 const NEXT_STATUS_MAP: Partial<
-  Record<ProductionOrderStatus, { target: ProductionOrderStatus; label: string; icon: React.ElementType }>
+  Record<
+    ProductionOrderStatus,
+    { target: ProductionOrderStatus; label: string; icon: React.ElementType }
+  >
 > = {
   DRAFT: { target: 'PLANNED', label: 'Planejar', icon: Calendar },
   PLANNED: { target: 'FIRM', label: 'Firmar', icon: Shield },
@@ -148,7 +155,11 @@ function InfoField({
           {label}
         </div>
         <p className="text-sm sm:text-base text-foreground">
-          {value ?? <span className="text-slate-400 dark:text-slate-500/80">&mdash;</span>}
+          {value ?? (
+            <span className="text-slate-400 dark:text-slate-500/80">
+              &mdash;
+            </span>
+          )}
         </p>
       </div>
     </div>
@@ -183,9 +194,7 @@ function StatusTimeline({
                     : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-white/10 dark:bg-white/5 dark:text-gray-500'
               }`}
             >
-              {isActive && !isCurrent && (
-                <CheckCircle className="h-3 w-3" />
-              )}
+              {isActive && !isCurrent && <CheckCircle className="h-3 w-3" />}
               {STATUS_LABELS[status]}
             </div>
             {idx < STATUS_FLOW.length - 1 && (
@@ -288,7 +297,9 @@ export default function ProductionOrderDetailPage() {
     },
   });
 
-  const handleStatusTransition = async (targetStatus: ProductionOrderStatus) => {
+  const handleStatusTransition = async (
+    targetStatus: ProductionOrderStatus
+  ) => {
     if (!order) return;
     setIsChangingStatus(true);
     try {
@@ -610,7 +621,11 @@ export default function ProductionOrderDetailPage() {
                         variant="outline"
                         size="sm"
                         className="h-9 px-2.5"
-                        onClick={() => router.push(`/production/engineering/boms/${order.bomId}`)}
+                        onClick={() =>
+                          router.push(
+                            `/production/engineering/boms/${order.bomId}`
+                          )
+                        }
                       >
                         Ver BOM
                         <ArrowRight className="h-4 w-4 ml-1" />
@@ -628,35 +643,69 @@ export default function ProductionOrderDetailPage() {
                   />
                   {reservations.length === 0 ? (
                     <div className="w-full rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60">
-                      <p className="text-sm text-muted-foreground">Nenhuma reserva de material registrada.</p>
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma reserva de material registrada.
+                      </p>
                     </div>
                   ) : (
                     <div className="w-full rounded-xl border border-border bg-white dark:bg-slate-800/60 overflow-hidden">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-border bg-slate-50 dark:bg-slate-800/80">
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Material</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Armazém</th>
-                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Reservado</th>
-                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Emitido</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Material
+                            </th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Armazém
+                            </th>
+                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">
+                              Reservado
+                            </th>
+                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">
+                              Emitido
+                            </th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Status
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {reservations.map((r) => (
-                            <tr key={r.id} className="border-b border-border last:border-0">
-                              <td className="px-4 py-2 font-mono text-xs">{r.materialId}</td>
-                              <td className="px-4 py-2 font-mono text-xs">{r.warehouseId}</td>
-                              <td className="px-4 py-2 text-right">{r.quantityReserved}</td>
-                              <td className="px-4 py-2 text-right">{r.quantityIssued}</td>
+                          {reservations.map(r => (
+                            <tr
+                              key={r.id}
+                              className="border-b border-border last:border-0"
+                            >
+                              <td className="px-4 py-2 font-mono text-xs">
+                                {r.materialId}
+                              </td>
+                              <td className="px-4 py-2 font-mono text-xs">
+                                {r.warehouseId}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                {r.quantityReserved}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                {r.quantityIssued}
+                              </td>
                               <td className="px-4 py-2">
-                                <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium ${
-                                  r.status === 'RESERVED' ? 'border-blue-600/25 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/8 dark:text-blue-300' :
-                                  r.status === 'PARTIALLY_ISSUED' ? 'border-amber-600/25 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/8 dark:text-amber-300' :
-                                  r.status === 'FULLY_ISSUED' ? 'border-emerald-600/25 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/8 dark:text-emerald-300' :
-                                  'border-rose-600/25 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/8 dark:text-rose-300'
-                                }`}>
-                                  {r.status === 'RESERVED' ? 'Reservado' : r.status === 'PARTIALLY_ISSUED' ? 'Parcial' : r.status === 'FULLY_ISSUED' ? 'Emitido' : 'Cancelado'}
+                                <span
+                                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium ${
+                                    r.status === 'RESERVED'
+                                      ? 'border-blue-600/25 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/8 dark:text-blue-300'
+                                      : r.status === 'PARTIALLY_ISSUED'
+                                        ? 'border-amber-600/25 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/8 dark:text-amber-300'
+                                        : r.status === 'FULLY_ISSUED'
+                                          ? 'border-emerald-600/25 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/8 dark:text-emerald-300'
+                                          : 'border-rose-600/25 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/8 dark:text-rose-300'
+                                  }`}
+                                >
+                                  {r.status === 'RESERVED'
+                                    ? 'Reservado'
+                                    : r.status === 'PARTIALLY_ISSUED'
+                                      ? 'Parcial'
+                                      : r.status === 'FULLY_ISSUED'
+                                        ? 'Emitido'
+                                        : 'Cancelado'}
                                 </span>
                               </td>
                             </tr>
@@ -676,28 +725,55 @@ export default function ProductionOrderDetailPage() {
                   />
                   {issues.length === 0 ? (
                     <div className="w-full rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60">
-                      <p className="text-sm text-muted-foreground">Nenhuma requisição de material registrada.</p>
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma requisição de material registrada.
+                      </p>
                     </div>
                   ) : (
                     <div className="w-full rounded-xl border border-border bg-white dark:bg-slate-800/60 overflow-hidden">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-border bg-slate-50 dark:bg-slate-800/80">
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Material</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Armazém</th>
-                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Quantidade</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Lote</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Data</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Material
+                            </th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Armazém
+                            </th>
+                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">
+                              Quantidade
+                            </th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Lote
+                            </th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Data
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {issues.map((issue) => (
-                            <tr key={issue.id} className="border-b border-border last:border-0">
-                              <td className="px-4 py-2 font-mono text-xs">{issue.materialId}</td>
-                              <td className="px-4 py-2 font-mono text-xs">{issue.warehouseId}</td>
-                              <td className="px-4 py-2 text-right">{issue.quantity}</td>
-                              <td className="px-4 py-2">{issue.batchNumber ?? '—'}</td>
-                              <td className="px-4 py-2 text-xs text-muted-foreground">{new Date(issue.issuedAt).toLocaleDateString('pt-BR')}</td>
+                          {issues.map(issue => (
+                            <tr
+                              key={issue.id}
+                              className="border-b border-border last:border-0"
+                            >
+                              <td className="px-4 py-2 font-mono text-xs">
+                                {issue.materialId}
+                              </td>
+                              <td className="px-4 py-2 font-mono text-xs">
+                                {issue.warehouseId}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                {issue.quantity}
+                              </td>
+                              <td className="px-4 py-2">
+                                {issue.batchNumber ?? '—'}
+                              </td>
+                              <td className="px-4 py-2 text-xs text-muted-foreground">
+                                {new Date(issue.issuedAt).toLocaleDateString(
+                                  'pt-BR'
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -715,28 +791,53 @@ export default function ProductionOrderDetailPage() {
                   />
                   {returns.length === 0 ? (
                     <div className="w-full rounded-xl border border-border bg-white p-4 dark:bg-slate-800/60">
-                      <p className="text-sm text-muted-foreground">Nenhuma devolução de material registrada.</p>
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma devolução de material registrada.
+                      </p>
                     </div>
                   ) : (
                     <div className="w-full rounded-xl border border-border bg-white dark:bg-slate-800/60 overflow-hidden">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-border bg-slate-50 dark:bg-slate-800/80">
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Material</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Armazém</th>
-                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Quantidade</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Motivo</th>
-                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">Data</th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Material
+                            </th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Armazém
+                            </th>
+                            <th className="px-4 py-2 text-right font-medium text-muted-foreground">
+                              Quantidade
+                            </th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Motivo
+                            </th>
+                            <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                              Data
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
-                          {returns.map((ret) => (
-                            <tr key={ret.id} className="border-b border-border last:border-0">
-                              <td className="px-4 py-2 font-mono text-xs">{ret.materialId}</td>
-                              <td className="px-4 py-2 font-mono text-xs">{ret.warehouseId}</td>
-                              <td className="px-4 py-2 text-right">{ret.quantity}</td>
+                          {returns.map(ret => (
+                            <tr
+                              key={ret.id}
+                              className="border-b border-border last:border-0"
+                            >
+                              <td className="px-4 py-2 font-mono text-xs">
+                                {ret.materialId}
+                              </td>
+                              <td className="px-4 py-2 font-mono text-xs">
+                                {ret.warehouseId}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                {ret.quantity}
+                              </td>
                               <td className="px-4 py-2">{ret.reason ?? '—'}</td>
-                              <td className="px-4 py-2 text-xs text-muted-foreground">{new Date(ret.returnedAt).toLocaleDateString('pt-BR')}</td>
+                              <td className="px-4 py-2 text-xs text-muted-foreground">
+                                {new Date(ret.returnedAt).toLocaleDateString(
+                                  'pt-BR'
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -766,9 +867,7 @@ export default function ProductionOrderDetailPage() {
                     size="sm"
                     className="mt-4 h-9 px-2.5"
                     onClick={() =>
-                      router.push(
-                        `/production/engineering/boms/${order.bomId}`,
-                      )
+                      router.push(`/production/engineering/boms/${order.bomId}`)
                     }
                   >
                     Ver Roteiro

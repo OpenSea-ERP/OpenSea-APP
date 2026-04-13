@@ -528,11 +528,20 @@ export default function ConsortiumDetailPage({
                 <h1 className="text-xl font-bold truncate">
                   {consortium.name}
                 </h1>
-                <Badge variant="outline" className={cn("text-xs", getStatusColor(consortium.status))}>
+                <Badge
+                  variant="outline"
+                  className={cn('text-xs', getStatusColor(consortium.status))}
+                >
                   {CONSORTIUM_STATUS_LABELS[consortium.status]}
                 </Badge>
                 {consortium.isContemplated && (
-                  <Badge variant="outline" className={cn("gap-1", "border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300")}>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'gap-1',
+                      'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
+                    )}
+                  >
                     <CheckCircle className="h-3 w-3" />
                     Contemplado
                   </Badge>
@@ -786,7 +795,10 @@ export default function ConsortiumDetailPage({
                         <TableCell className="text-center">
                           <Badge
                             variant="outline"
-                            className={cn("text-xs", getPaymentStatusColor(payment.status))}
+                            className={cn(
+                              'text-xs',
+                              getPaymentStatusColor(payment.status)
+                            )}
                           >
                             {FINANCE_ENTRY_STATUS_LABELS[payment.status] ??
                               payment.status}

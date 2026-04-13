@@ -150,8 +150,8 @@ export default function QuoteDetailPage() {
 
   const actionButtons: HeaderButton[] = [
     ...(quote?.status === 'DRAFT' &&
-    quotesConfig.permissions.update &&
-    hasPermission(quotesConfig.permissions.update)
+    quotesConfig.permissions!.update &&
+    hasPermission(quotesConfig.permissions!.update)
       ? [
           {
             id: 'edit',

@@ -39,8 +39,9 @@ export function CashierQueue({ onChargeOrder }: CashierQueueProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['pos-cashier-queue'],
     queryFn: async () => {
-      const response =
-        await apiClient.get<CashierQueueResponse>('/v1/pos/orders/queue');
+      const response = await apiClient.get<CashierQueueResponse>(
+        '/v1/pos/orders/queue'
+      );
       return response.orders;
     },
     refetchInterval: 5000,
@@ -55,9 +56,7 @@ export function CashierQueue({ onChargeOrder }: CashierQueueProps) {
     return (
       <Card className="flex flex-col items-center justify-center p-12 border-dashed">
         <ShoppingBag className="h-12 w-12 text-muted-foreground/40 mb-4" />
-        <h3 className="font-semibold text-lg mb-1">
-          Nenhum pedido aguardando
-        </h3>
+        <h3 className="font-semibold text-lg mb-1">Nenhum pedido aguardando</h3>
         <p className="text-sm text-muted-foreground">
           Os pedidos aparecerão aqui assim que os vendedores enviarem.
         </p>
@@ -108,10 +107,7 @@ export function CashierQueue({ onChargeOrder }: CashierQueueProps) {
             </p>
           </div>
 
-          <Button
-            size="sm"
-            onClick={() => onChargeOrder(order)}
-          >
+          <Button size="sm" onClick={() => onChargeOrder(order)}>
             Receber
           </Button>
         </Card>

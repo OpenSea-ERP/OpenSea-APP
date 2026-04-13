@@ -115,12 +115,10 @@ export default function EditProductionOrderPage() {
       setPriority(String(order.priority || 2));
       setQuantityPlanned(String(order.quantityPlanned));
       setPlannedStartDate(
-        order.plannedStartDate
-          ? order.plannedStartDate.split('T')[0]
-          : '',
+        order.plannedStartDate ? order.plannedStartDate.split('T')[0] : ''
       );
       setPlannedEndDate(
-        order.plannedEndDate ? order.plannedEndDate.split('T')[0] : '',
+        order.plannedEndDate ? order.plannedEndDate.split('T')[0] : ''
       );
       setNotes(order.notes || '');
     }
@@ -152,7 +150,7 @@ export default function EditProductionOrderPage() {
     } catch (err) {
       logger.error(
         'Failed to update production order',
-        err instanceof Error ? err : new Error(String(err)),
+        err instanceof Error ? err : new Error(String(err))
       );
       toast.error('Não foi possível atualizar a ordem de produção.');
     } finally {
@@ -164,7 +162,7 @@ export default function EditProductionOrderPage() {
     const form = document.getElementById('order-form') as HTMLFormElement;
     if (form) {
       form.dispatchEvent(
-        new Event('submit', { cancelable: true, bubbles: true }),
+        new Event('submit', { cancelable: true, bubbles: true })
       );
     }
   };
@@ -180,7 +178,7 @@ export default function EditProductionOrderPage() {
     } catch (err) {
       logger.error(
         'Failed to cancel production order',
-        err instanceof Error ? err : new Error(String(err)),
+        err instanceof Error ? err : new Error(String(err))
       );
       toast.error('Erro ao cancelar a ordem de produção.');
     } finally {
@@ -324,7 +322,7 @@ export default function EditProductionOrderPage() {
                       type="number"
                       min={1}
                       value={quantityPlanned}
-                      onChange={(e) => setQuantityPlanned(e.target.value)}
+                      onChange={e => setQuantityPlanned(e.target.value)}
                       required
                     />
                   </div>
@@ -364,7 +362,7 @@ export default function EditProductionOrderPage() {
                       id="plannedStartDate"
                       type="date"
                       value={plannedStartDate}
-                      onChange={(e) => setPlannedStartDate(e.target.value)}
+                      onChange={e => setPlannedStartDate(e.target.value)}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -375,7 +373,7 @@ export default function EditProductionOrderPage() {
                       id="plannedEndDate"
                       type="date"
                       value={plannedEndDate}
-                      onChange={(e) => setPlannedEndDate(e.target.value)}
+                      onChange={e => setPlannedEndDate(e.target.value)}
                     />
                   </div>
                 </div>
@@ -395,7 +393,7 @@ export default function EditProductionOrderPage() {
                   <Textarea
                     id="notes"
                     value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    onChange={e => setNotes(e.target.value)}
                     placeholder="Observações sobre a ordem de produção"
                     rows={4}
                     maxLength={1000}

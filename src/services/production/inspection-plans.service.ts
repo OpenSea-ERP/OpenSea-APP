@@ -17,32 +17,30 @@ export const inspectionPlansService = {
       searchParams.set('isActive', String(params.isActive));
     const qs = searchParams.toString();
     return apiClient.get<InspectionPlansResponse>(
-      `${API_ENDPOINTS.PRODUCTION.INSPECTION_PLANS.LIST}${qs ? `?${qs}` : ''}`,
+      `${API_ENDPOINTS.PRODUCTION.INSPECTION_PLANS.LIST}${qs ? `?${qs}` : ''}`
     );
   },
 
-  async create(
-    data: Record<string, unknown>,
-  ): Promise<InspectionPlanResponse> {
+  async create(data: Record<string, unknown>): Promise<InspectionPlanResponse> {
     return apiClient.post<InspectionPlanResponse>(
       API_ENDPOINTS.PRODUCTION.INSPECTION_PLANS.CREATE,
-      data,
+      data
     );
   },
 
   async update(
     id: string,
-    data: Record<string, unknown>,
+    data: Record<string, unknown>
   ): Promise<InspectionPlanResponse> {
     return apiClient.put<InspectionPlanResponse>(
       API_ENDPOINTS.PRODUCTION.INSPECTION_PLANS.UPDATE(id),
-      data,
+      data
     );
   },
 
   async delete(id: string): Promise<void> {
     return apiClient.delete<void>(
-      API_ENDPOINTS.PRODUCTION.INSPECTION_PLANS.DELETE(id),
+      API_ENDPOINTS.PRODUCTION.INSPECTION_PLANS.DELETE(id)
     );
   },
 };

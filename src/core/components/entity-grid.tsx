@@ -377,7 +377,9 @@ export function EntityGrid<T extends BaseEntity>({
       if (e.button !== 0) return;
 
       // Não previne o default se clicou em um card — isso bloquearia click/dblclick no mobile
-      const clickedOnCard = (e.target as HTMLElement).closest('[data-item-card]');
+      const clickedOnCard = (e.target as HTMLElement).closest(
+        '[data-item-card]'
+      );
       if (clickedOnCard) return;
 
       // Previne o comportamento padrão de drag nativo (somente fora de cards)
@@ -502,7 +504,9 @@ export function EntityGrid<T extends BaseEntity>({
   }, [isDragging, isDragStarted, handleMouseMove, handleMouseUp]);
 
   // Manual double-tap detection for mobile (touch devices don't fire dblclick)
-  const tapTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const tapTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {}
+  );
   const DOUBLE_TAP_MS = 300;
 
   // Cleanup pending tap timers on unmount

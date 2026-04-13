@@ -48,7 +48,11 @@ import type {
   ProductionOrderStatus,
   CreateProductionOrderRequest,
 } from '@/types/production';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   ArrowDownAZ,
   Calendar,
@@ -84,8 +88,7 @@ const STATUS_COLORS: Record<ProductionOrderStatus, string> = {
     'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300',
   PLANNED:
     'border-blue-600/25 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/8 text-blue-700 dark:text-blue-300',
-  FIRM:
-    'border-indigo-600/25 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/8 text-indigo-700 dark:text-indigo-300',
+  FIRM: 'border-indigo-600/25 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/8 text-indigo-700 dark:text-indigo-300',
   RELEASED:
     'border-violet-600/25 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/8 text-violet-700 dark:text-violet-300',
   IN_PROCESS:
@@ -195,11 +198,7 @@ export default function ProductionOrdersPage() {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: [
-      'production-orders',
-      debouncedSearch,
-      statusFilter,
-    ],
+    queryKey: ['production-orders', debouncedSearch, statusFilter],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await productionOrdersService.list({
         page: pageParam as number,
@@ -209,7 +208,7 @@ export default function ProductionOrdersPage() {
       });
       return response;
     },
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.meta.page < lastPage.meta.pages) {
         return lastPage.meta.page + 1;
       }
@@ -219,8 +218,8 @@ export default function ProductionOrdersPage() {
   });
 
   const items = useMemo(
-    () => data?.pages.flatMap((p) => p.productionOrders) ?? [],
-    [data],
+    () => data?.pages.flatMap(p => p.productionOrders) ?? [],
+    [data]
   );
   const total = data?.pages[0]?.meta.total ?? 0;
 
@@ -250,12 +249,12 @@ export default function ProductionOrdersPage() {
     if (!el) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
-      { rootMargin: '300px' },
+      { rootMargin: '300px' }
     );
 
     observer.observe(el);
@@ -271,11 +270,13 @@ export default function ProductionOrdersPage() {
 
   const handleContextEdit = (ids: string[]) => {
     if (ids.length === 1) {
-      const order = items.find((o) => o.id === ids[0]);
+      const order = items.find(o => o.id === ids[0]);
       if (order && (order.status === 'DRAFT' || order.status === 'PLANNED')) {
         router.push(`/production/orders/${ids[0]}/edit`);
       } else {
-        toast.error('Apenas ordens em Rascunho ou Planejada podem ser editadas.');
+        toast.error(
+          'Apenas ordens em Rascunho ou Planejada podem ser editadas.'
+        );
       }
     }
   };
@@ -345,16 +346,14 @@ export default function ProductionOrdersPage() {
         variant: 'destructive' as const,
         separator: 'before' as const,
         hidden: (ids: string[]) => {
-          const order = items.find((o) => o.id === ids[0]);
+          const order = items.find(o => o.id === ids[0]);
           return (
-            !order ||
-            order.status === 'CANCELLED' ||
-            order.status === 'CLOSED'
+            !order || order.status === 'CANCELLED' || order.status === 'CLOSED'
           );
         },
       },
     ],
-    [items],
+    [items]
   );
 
   // Sort options
@@ -373,7 +372,7 @@ export default function ProductionOrdersPage() {
         icon: Calendar,
       },
     ],
-    [],
+    []
   );
 
   // Render grid card
@@ -478,7 +477,7 @@ export default function ProductionOrdersPage() {
   };
 
   // Computed
-  const initialIds = useMemo(() => items.map((i) => i.id), [items]);
+  const initialIds = useMemo(() => items.map(i => i.id), [items]);
 
   // Header buttons
   const actionButtons = useMemo<HeaderButton[]>(() => {
@@ -501,7 +500,11 @@ export default function ProductionOrdersPage() {
       title: 'Dados Básicos',
       description: 'Defina o produto, BOM e quantidade',
       icon: <ClipboardList className="h-12 w-12 text-amber-500" />,
-      isValid: !!newBomId && !!newProductId && !!newQuantity && Number(newQuantity) > 0,
+      isValid:
+        !!newBomId &&
+        !!newProductId &&
+        !!newQuantity &&
+        Number(newQuantity) > 0,
       content: (
         <div className="space-y-4 p-1">
           <div className="grid gap-2">
@@ -511,7 +514,7 @@ export default function ProductionOrdersPage() {
             <Input
               id="productId"
               value={newProductId}
-              onChange={(e) => setNewProductId(e.target.value)}
+              onChange={e => setNewProductId(e.target.value)}
               placeholder="ID do produto"
             />
           </div>
@@ -522,7 +525,7 @@ export default function ProductionOrdersPage() {
             <Input
               id="bomId"
               value={newBomId}
-              onChange={(e) => setNewBomId(e.target.value)}
+              onChange={e => setNewBomId(e.target.value)}
               placeholder="ID da lista de materiais"
             />
           </div>
@@ -535,7 +538,7 @@ export default function ProductionOrdersPage() {
               type="number"
               min={1}
               value={newQuantity}
-              onChange={(e) => setNewQuantity(e.target.value)}
+              onChange={e => setNewQuantity(e.target.value)}
               placeholder="0"
             />
           </div>
@@ -570,7 +573,7 @@ export default function ProductionOrdersPage() {
               id="plannedStart"
               type="date"
               value={newPlannedStart}
-              onChange={(e) => setNewPlannedStart(e.target.value)}
+              onChange={e => setNewPlannedStart(e.target.value)}
             />
           </div>
           <div className="grid gap-2">
@@ -579,7 +582,7 @@ export default function ProductionOrdersPage() {
               id="plannedEnd"
               type="date"
               value={newPlannedEnd}
-              onChange={(e) => setNewPlannedEnd(e.target.value)}
+              onChange={e => setNewPlannedEnd(e.target.value)}
             />
           </div>
           <div className="grid gap-2">
@@ -587,7 +590,7 @@ export default function ProductionOrdersPage() {
             <Textarea
               id="notes"
               value={newNotes}
-              onChange={(e) => setNewNotes(e.target.value)}
+              onChange={e => setNewNotes(e.target.value)}
               placeholder="Observações adicionais"
               rows={4}
             />
@@ -617,14 +620,14 @@ export default function ProductionOrdersPage() {
   const statusFilterDropdown = (
     <Select
       value={statusFilter}
-      onValueChange={(v) => setStatusFilter(v as ProductionOrderStatus | 'ALL')}
+      onValueChange={v => setStatusFilter(v as ProductionOrderStatus | 'ALL')}
     >
       <SelectTrigger className="w-[180px] h-9">
         <SelectValue placeholder="Status" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="ALL">Todos os status</SelectItem>
-        {ALL_STATUSES.map((s) => (
+        {ALL_STATUSES.map(s => (
           <SelectItem key={s} value={s}>
             {STATUS_LABELS[s]}
           </SelectItem>
@@ -669,7 +672,9 @@ export default function ProductionOrdersPage() {
               message="Ocorreu um erro ao carregar as ordens de produção."
               action={{
                 label: 'Tentar Novamente',
-                onClick: () => refetch(),
+                onClick: () => {
+                  refetch();
+                },
               }}
             />
           ) : (
@@ -686,13 +691,12 @@ export default function ProductionOrdersPage() {
                   <div className="flex items-center gap-3">
                     <p className="text-sm text-muted-foreground whitespace-nowrap">
                       {total} {total === 1 ? 'ordem' : 'ordens'}
-                      {items.length < total &&
-                        ` (${items.length} carregados)`}
+                      {items.length < total && ` (${items.length} carregados)`}
                     </p>
                     {statusFilterDropdown}
                   </div>
                 }
-                onItemDoubleClick={(item) =>
+                onItemDoubleClick={item =>
                   router.push(`/production/orders/${item.id}`)
                 }
                 showSorting={true}

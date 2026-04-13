@@ -240,7 +240,10 @@ export default function VariantPromotionDetailPage() {
 
       <PageBody>
         {/* Identity Card */}
-        <Card data-testid="variant-promotion-identity" className="bg-white/5 p-5">
+        <Card
+          data-testid="variant-promotion-identity"
+          className="bg-white/5 p-5"
+        >
           <div className="flex items-start gap-4">
             <div
               className={cn(

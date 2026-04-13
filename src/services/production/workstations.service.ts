@@ -10,36 +10,36 @@ import type {
 export const workstationsService = {
   async list(): Promise<WorkstationsResponse> {
     return apiClient.get<WorkstationsResponse>(
-      API_ENDPOINTS.PRODUCTION.WORKSTATIONS.LIST,
+      API_ENDPOINTS.PRODUCTION.WORKSTATIONS.LIST
     );
   },
 
   async getById(id: string): Promise<WorkstationResponse> {
     return apiClient.get<WorkstationResponse>(
-      API_ENDPOINTS.PRODUCTION.WORKSTATIONS.GET(id),
+      API_ENDPOINTS.PRODUCTION.WORKSTATIONS.GET(id)
     );
   },
 
   async create(data: CreateWorkstationRequest): Promise<WorkstationResponse> {
     return apiClient.post<WorkstationResponse>(
       API_ENDPOINTS.PRODUCTION.WORKSTATIONS.CREATE,
-      data,
+      data
     );
   },
 
   async update(
     id: string,
-    data: UpdateWorkstationRequest,
+    data: UpdateWorkstationRequest
   ): Promise<WorkstationResponse> {
     return apiClient.put<WorkstationResponse>(
       API_ENDPOINTS.PRODUCTION.WORKSTATIONS.UPDATE(id),
-      data,
+      data
     );
   },
 
   async delete(id: string): Promise<void> {
     return apiClient.delete<void>(
-      API_ENDPOINTS.PRODUCTION.WORKSTATIONS.DELETE(id),
+      API_ENDPOINTS.PRODUCTION.WORKSTATIONS.DELETE(id)
     );
   },
 };

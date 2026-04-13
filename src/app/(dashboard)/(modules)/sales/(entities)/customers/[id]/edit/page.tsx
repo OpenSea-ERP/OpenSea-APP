@@ -213,7 +213,7 @@ export default function EditCustomerPage() {
   // ============================================================================
 
   const actionButtons: HeaderButton[] = [
-    ...(hasPermission(customersConfig.permissions.delete)
+    ...(hasPermission(customersConfig.permissions!.delete)
       ? [
           {
             id: 'delete',

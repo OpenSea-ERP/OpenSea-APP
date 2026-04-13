@@ -88,11 +88,11 @@ export default function CadenceDetailPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const cadence = data?.cadence;
-  const canDelete = cadencesConfig.permissions.delete
-    ? hasPermission(cadencesConfig.permissions.delete)
+  const canDelete = cadencesConfig.permissions!.delete
+    ? hasPermission(cadencesConfig.permissions!.delete)
     : false;
-  const canEdit = cadencesConfig.permissions.update
-    ? hasPermission(cadencesConfig.permissions.update)
+  const canEdit = cadencesConfig.permissions!.update
+    ? hasPermission(cadencesConfig.permissions!.update)
     : false;
 
   const handleDelete = useCallback(async () => {

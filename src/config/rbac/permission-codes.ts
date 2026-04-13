@@ -274,13 +274,7 @@ export const FINANCE_PERMISSIONS = {
     'remove',
     'admin'
   ),
-  ACCOUNTANT: perm(
-    'finance',
-    'accountant',
-    'access',
-    'register',
-    'admin'
-  ),
+  ACCOUNTANT: perm('finance', 'accountant', 'access', 'register', 'admin'),
 } as const;
 
 // =============================================================================
@@ -1061,7 +1055,7 @@ export const PRODUCTION_PERMISSIONS = {
     'register',
     'modify',
     'remove',
-    'admin',
+    'admin'
   ),
   ORDERS: perm(
     'production',
@@ -1072,7 +1066,7 @@ export const PRODUCTION_PERMISSIONS = {
     'remove',
     'export',
     'print',
-    'admin',
+    'admin'
   ),
   SHOPFLOOR: perm(
     'production',
@@ -1080,7 +1074,7 @@ export const PRODUCTION_PERMISSIONS = {
     'access',
     'register',
     'modify',
-    'admin',
+    'admin'
   ),
   PLANNING: perm(
     'production',
@@ -1088,7 +1082,7 @@ export const PRODUCTION_PERMISSIONS = {
     'access',
     'register',
     'modify',
-    'admin',
+    'admin'
   ),
   QUALITY: perm(
     'production',
@@ -1096,7 +1090,7 @@ export const PRODUCTION_PERMISSIONS = {
     'access',
     'register',
     'modify',
-    'admin',
+    'admin'
   ),
   COSTING: perm('production', 'costing', 'access', 'admin'),
   ANALYTICS: perm('production', 'analytics', 'access', 'export'),

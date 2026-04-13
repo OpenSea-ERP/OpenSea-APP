@@ -101,9 +101,9 @@ test.describe('Condições de Pagamento - CRUD', () => {
 
     // Verificar que a página de detalhe carregou
     await expect(page.locator(`text=${uniqueName}`)).toBeVisible();
-    await expect(
-      page.locator('text=Informações Gerais')
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Informações Gerais')).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test('Excluir condição de pagamento com PIN', async ({ page }) => {
@@ -124,9 +124,9 @@ test.describe('Condições de Pagamento - CRUD', () => {
       .click();
 
     // Modal de PIN deve aparecer
-    await expect(
-      page.locator('text=Confirmar Exclusão')
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Confirmar Exclusão')).toBeVisible({
+      timeout: 5000,
+    });
 
     // Inserir PIN
     await page
@@ -169,9 +169,7 @@ test.describe('Cupons - CRUD', () => {
     await page.waitForTimeout(500);
 
     await page
-      .locator(
-        '[data-testid="coupon-create-submit"], button:has-text("Criar")'
-      )
+      .locator('[data-testid="coupon-create-submit"], button:has-text("Criar")')
       .first()
       .click();
 
@@ -188,10 +186,7 @@ test.describe('Contatos - CRUD', () => {
   test('Criar contato via wizard', async ({ page }) => {
     await setup(page, '/sales/contacts');
 
-    await page
-      .locator('button:has-text("Novo Contato")')
-      .first()
-      .click();
+    await page.locator('button:has-text("Novo Contato")').first().click();
     await page.waitForTimeout(1000);
 
     // Preencher campos de nome (primeiro nome / sobrenome)
@@ -230,14 +225,14 @@ test.describe('Dashboard de Vendas', () => {
     await expect(page.locator('text=Vendas')).toBeVisible();
 
     // Verificar seção de KPIs
-    await expect(
-      page.locator('[data-testid="sales-kpi-cards"]')
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="sales-kpi-cards"]')).toBeVisible({
+      timeout: 10000,
+    });
 
     // Verificar gráficos carregados
-    await expect(
-      page.locator('[data-testid="sales-daily-chart"]')
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="sales-daily-chart"]')).toBeVisible(
+      { timeout: 10000 }
+    );
   });
 
   test('Página de configurações carrega', async ({ page }) => {

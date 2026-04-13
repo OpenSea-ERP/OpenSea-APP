@@ -24,10 +24,7 @@ import { ProductGrid } from '@/components/sales/product-grid';
 import type { ProductVariant } from '@/components/sales/product-grid';
 import { PaymentOverlay } from '@/components/sales/payment-overlay';
 import { SuccessScreen } from '@/components/sales/success-screen';
-import {
-  useDeviceTerminal,
-  useOpenTotemSession,
-} from '@/hooks/sales';
+import { useDeviceTerminal, useOpenTotemSession } from '@/hooks/sales';
 import { formatCurrency } from '@/lib/utils';
 
 export default function TotemPage() {
@@ -119,9 +116,7 @@ function TotemTerminal() {
           </div>
           <h1 className="text-4xl font-bold mb-2">OpenSea PDV</h1>
           <p className="text-lg text-muted-foreground mb-8">
-            {hasSession
-              ? 'Toque para iniciar o atendimento'
-              : 'Bem-vindo!'}
+            {hasSession ? 'Toque para iniciar o atendimento' : 'Bem-vindo!'}
           </p>
 
           {hasSession ? (
@@ -176,10 +171,7 @@ function TotemTerminal() {
               />
             </div>
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowOpenModal(false)}
-              >
+              <Button variant="outline" onClick={() => setShowOpenModal(false)}>
                 Cancelar
               </Button>
               <Button

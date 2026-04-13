@@ -14,17 +14,21 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { logger } from '@/lib/logger';
 import { hrConfigService } from '@/services/hr/hr-config.service';
 import { esocialService } from '@/services/hr/esocial.service';
-import type { HrTenantConfig, PunchConfiguration, GeofenceZone, CreateGeofenceZoneData } from '@/types/hr';
-import type { EsocialConfig, EsocialCertificate, EsocialEnvironment } from '@/types/esocial';
+import type {
+  HrTenantConfig,
+  PunchConfiguration,
+  GeofenceZone,
+  CreateGeofenceZoneData,
+} from '@/types/hr';
+import type {
+  EsocialConfig,
+  EsocialCertificate,
+  EsocialEnvironment,
+} from '@/types/esocial';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -134,9 +138,7 @@ function ZoneCard({
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div
           className={`h-2 w-2 rounded-full shrink-0 ${
-            zone.isActive
-              ? 'bg-emerald-500'
-              : 'bg-slate-400 dark:bg-slate-600'
+            zone.isActive ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'
           }`}
         />
         <div className="min-w-0">
@@ -182,7 +184,8 @@ function GeralTab() {
   const [empresaCidadaEnabled, setEmpresaCidadaEnabled] = useState(false);
   const [maternityLeaveDays, setMaternityLeaveDays] = useState(120);
   const [paternityLeaveDays, setPaternityLeaveDays] = useState(5);
-  const [unionContributionEnabled, setUnionContributionEnabled] = useState(false);
+  const [unionContributionEnabled, setUnionContributionEnabled] =
+    useState(false);
   const [unionContributionRate, setUnionContributionRate] = useState(100);
   const [patEnabled, setPatEnabled] = useState(false);
   const [patMonthlyValue, setPatMonthlyValue] = useState<number>(0);
@@ -437,7 +440,9 @@ function GeralTab() {
               min={1}
               max={12}
               value={timeBankIndividualMonths}
-              onChange={e => setTimeBankIndividualMonths(Number(e.target.value))}
+              onChange={e =>
+                setTimeBankIndividualMonths(Number(e.target.value))
+              }
               className="w-24 h-9 text-sm text-center"
             />
           </ConfigRow>
@@ -451,7 +456,9 @@ function GeralTab() {
               min={1}
               max={24}
               value={timeBankCollectiveMonths}
-              onChange={e => setTimeBankCollectiveMonths(Number(e.target.value))}
+              onChange={e =>
+                setTimeBankCollectiveMonths(Number(e.target.value))
+              }
               className="w-24 h-9 text-sm text-center"
             />
           </ConfigRow>
@@ -535,7 +542,9 @@ function PontoTab() {
   const [offlineAllowed, setOfflineAllowed] = useState(false);
   const [maxOfflineHours, setMaxOfflineHours] = useState(24);
   const [toleranceMinutes, setToleranceMinutes] = useState(10);
-  const [autoClockOutHours, setAutoClockOutHours] = useState<number | null>(null);
+  const [autoClockOutHours, setAutoClockOutHours] = useState<number | null>(
+    null
+  );
   const [pdfReceiptEnabled, setPdfReceiptEnabled] = useState(false);
   const [defaultRadiusMeters, setDefaultRadiusMeters] = useState(200);
   const [isSaving, setIsSaving] = useState(false);
@@ -550,14 +559,17 @@ function PontoTab() {
   const [deleteZoneName, setDeleteZoneName] = useState('');
 
   // Queries
-  const { data: punchConfig, isLoading: isLoadingConfig } = useQuery<PunchConfiguration>({
-    queryKey: ['punch-config'],
-    queryFn: async () => {
-      return punchConfigApi.getConfig();
-    },
-  });
+  const { data: punchConfig, isLoading: isLoadingConfig } =
+    useQuery<PunchConfiguration>({
+      queryKey: ['punch-config'],
+      queryFn: async () => {
+        return punchConfigApi.getConfig();
+      },
+    });
 
-  const { data: zonesData, isLoading: isLoadingZones } = useQuery<{ zones: GeofenceZone[] }>({
+  const { data: zonesData, isLoading: isLoadingZones } = useQuery<{
+    zones: GeofenceZone[];
+  }>({
     queryKey: ['geofence-zones'],
     queryFn: async () => {
       return punchConfigApi.listZones();
@@ -1000,31 +1012,39 @@ function EsocialTab() {
   const queryClient = useQueryClient();
 
   // Config query
-  const { data: configData, isLoading: isLoadingConfig } = useQuery<EsocialConfig>({
-    queryKey: ['esocial', 'config'],
-    queryFn: async () => {
-      const response = await esocialService.getConfig();
-      return response.config;
-    },
-  });
+  const { data: configData, isLoading: isLoadingConfig } =
+    useQuery<EsocialConfig>({
+      queryKey: ['esocial', 'config'],
+      queryFn: async () => {
+        const response = await esocialService.getConfig();
+        return response.config;
+      },
+    });
 
   // Certificate query
-  const { data: certData, isLoading: isLoadingCert } = useQuery<EsocialCertificate | null>({
-    queryKey: ['esocial', 'certificate'],
-    queryFn: async () => {
-      const response = await esocialService.getCertificate();
-      return response?.certificate ?? null;
-    },
-  });
+  const { data: certData, isLoading: isLoadingCert } =
+    useQuery<EsocialCertificate | null>({
+      queryKey: ['esocial', 'certificate'],
+      queryFn: async () => {
+        const response = await esocialService.getCertificate();
+        return response?.certificate ?? null;
+      },
+    });
 
   // Config mutation (instant save)
   const configMutation = useMutation({
-    mutationFn: (data: Partial<{ environment: EsocialEnvironment; autoGenerate: boolean; requireApproval: boolean; employerType: string }>) =>
-      esocialService.updateConfig(data),
+    mutationFn: (
+      data: Partial<{
+        environment: EsocialEnvironment;
+        autoGenerate: boolean;
+        requireApproval: boolean;
+        employerType: string;
+      }>
+    ) => esocialService.updateConfig(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['esocial', 'config'] });
     },
-    onError: (error) => {
+    onError: error => {
       logger.error(
         'Erro ao salvar configuração eSocial',
         error instanceof Error ? error : undefined
@@ -1044,7 +1064,9 @@ function EsocialTab() {
     setIsUploading(true);
     try {
       await esocialService.uploadCertificate(certFile, certPassphrase);
-      await queryClient.invalidateQueries({ queryKey: ['esocial', 'certificate'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['esocial', 'certificate'],
+      });
       toast.success('Certificado digital enviado com sucesso');
       setCertFile(null);
       setCertPassphrase('');
@@ -1101,8 +1123,12 @@ function EsocialTab() {
                 <Settings className="h-4 w-4 text-violet-500" />
               </div>
               <div>
-                <h3 className="text-base font-semibold">Configurações Gerais</h3>
-                <p className="text-sm text-muted-foreground">Ambiente e regras de geração</p>
+                <h3 className="text-base font-semibold">
+                  Configurações Gerais
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Ambiente e regras de geração
+                </p>
               </div>
             </div>
             <div className="border-b border-border" />
@@ -1118,18 +1144,30 @@ function EsocialTab() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  variant={configData?.environment === 'PRODUCAO' ? 'default' : 'outline'}
+                  variant={
+                    configData?.environment === 'PRODUCAO'
+                      ? 'default'
+                      : 'outline'
+                  }
                   className="h-9 px-2.5"
-                  onClick={() => configMutation.mutate({ environment: 'PRODUCAO' })}
+                  onClick={() =>
+                    configMutation.mutate({ environment: 'PRODUCAO' })
+                  }
                   disabled={configMutation.isPending}
                 >
                   Produção
                 </Button>
                 <Button
                   size="sm"
-                  variant={configData?.environment === 'HOMOLOGACAO' ? 'default' : 'outline'}
+                  variant={
+                    configData?.environment === 'HOMOLOGACAO'
+                      ? 'default'
+                      : 'outline'
+                  }
                   className="h-9 px-2.5"
-                  onClick={() => configMutation.mutate({ environment: 'HOMOLOGACAO' })}
+                  onClick={() =>
+                    configMutation.mutate({ environment: 'HOMOLOGACAO' })
+                  }
                   disabled={configMutation.isPending}
                 >
                   Homologação
@@ -1182,16 +1220,22 @@ function EsocialTab() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  variant={configData?.employerType === 'CNPJ' ? 'default' : 'outline'}
+                  variant={
+                    configData?.employerType === 'CNPJ' ? 'default' : 'outline'
+                  }
                   className="h-9 px-2.5"
-                  onClick={() => configMutation.mutate({ employerType: 'CNPJ' })}
+                  onClick={() =>
+                    configMutation.mutate({ employerType: 'CNPJ' })
+                  }
                   disabled={configMutation.isPending}
                 >
                   CNPJ
                 </Button>
                 <Button
                   size="sm"
-                  variant={configData?.employerType === 'CPF' ? 'default' : 'outline'}
+                  variant={
+                    configData?.employerType === 'CPF' ? 'default' : 'outline'
+                  }
                   className="h-9 px-2.5"
                   onClick={() => configMutation.mutate({ employerType: 'CPF' })}
                   disabled={configMutation.isPending}
@@ -1212,7 +1256,9 @@ function EsocialTab() {
               </div>
               <div>
                 <h3 className="text-base font-semibold">Certificado Digital</h3>
-                <p className="text-sm text-muted-foreground">Certificado A1 (PFX/P12)</p>
+                <p className="text-sm text-muted-foreground">
+                  Certificado A1 (PFX/P12)
+                </p>
               </div>
             </div>
             <div className="border-b border-border" />
@@ -1228,8 +1274,12 @@ function EsocialTab() {
                     {getCertStatusBadge(certData)}
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Número de Série</p>
-                    <p className="text-sm font-mono truncate">{certData.serialNumber}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Número de Série
+                    </p>
+                    <p className="text-sm font-mono truncate">
+                      {certData.serialNumber}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Emissor</p>
@@ -1243,13 +1293,19 @@ function EsocialTab() {
                     <div>
                       <p className="text-xs text-muted-foreground">Válido de</p>
                       <p className="text-sm">
-                        {new Date(certData.validFrom).toLocaleDateString('pt-BR')}
+                        {new Date(certData.validFrom).toLocaleDateString(
+                          'pt-BR'
+                        )}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Válido até</p>
+                      <p className="text-xs text-muted-foreground">
+                        Válido até
+                      </p>
                       <p className="text-sm">
-                        {new Date(certData.validUntil).toLocaleDateString('pt-BR')}
+                        {new Date(certData.validUntil).toLocaleDateString(
+                          'pt-BR'
+                        )}
                       </p>
                     </div>
                   </div>
@@ -1316,10 +1372,12 @@ function EsocialTab() {
           <div className="space-y-1">
             <p className="text-sm font-medium">Sobre o eSocial</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              O eSocial (Sistema de Escrituração Digital das Obrigações Fiscais, Previdenciárias e
-              Trabalhistas) é o sistema do Governo Federal que unifica o envio das informações
-              trabalhistas, previdenciárias e fiscais relativas a todos os trabalhadores. Mantenha o
-              certificado digital atualizado e configure o ambiente correto antes de transmitir eventos.
+              O eSocial (Sistema de Escrituração Digital das Obrigações Fiscais,
+              Previdenciárias e Trabalhistas) é o sistema do Governo Federal que
+              unifica o envio das informações trabalhistas, previdenciárias e
+              fiscais relativas a todos os trabalhadores. Mantenha o certificado
+              digital atualizado e configure o ambiente correto antes de
+              transmitir eventos.
             </p>
           </div>
         </div>

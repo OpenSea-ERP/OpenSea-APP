@@ -258,13 +258,14 @@ function WorkflowsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          workflowsConfig.permissions.update &&
-          hasPermission(workflowsConfig.permissions.update)
+          workflowsConfig.permissions!.update &&
+          hasPermission(workflowsConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(workflowsConfig.permissions.delete)
+          ...(workflowsConfig.permissions!.delete &&
+          hasPermission(workflowsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -349,13 +350,14 @@ function WorkflowsPageContent() {
         itemId={item.id}
         onView={handleContextView}
         onEdit={
-          workflowsConfig.permissions.update &&
-          hasPermission(workflowsConfig.permissions.update)
+          workflowsConfig.permissions!.update &&
+          hasPermission(workflowsConfig.permissions!.update)
             ? handleContextEdit
             : undefined
         }
         actions={[
-          ...(hasPermission(workflowsConfig.permissions.delete)
+          ...(workflowsConfig.permissions!.delete &&
+          hasPermission(workflowsConfig.permissions!.delete)
             ? [
                 {
                   id: 'delete',
@@ -431,7 +433,7 @@ function WorkflowsPageContent() {
         icon: Plus,
         onClick: handleCreate,
         variant: 'default',
-        permission: workflowsConfig.permissions.create,
+        permission: workflowsConfig.permissions!.create,
       },
     ],
     [handleCreate]
