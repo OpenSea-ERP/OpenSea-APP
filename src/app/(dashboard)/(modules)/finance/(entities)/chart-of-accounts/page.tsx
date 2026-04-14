@@ -504,29 +504,34 @@ function ChartOfAccountsPageContent() {
       </PageHeader>
 
       <PageBody>
+        <div data-testid="chart-of-accounts-page" className="contents" />
         {/* Search Bar */}
-        <SearchBar
-          placeholder="Buscar contas por nome ou código..."
-          value={searchQuery}
-          onSearch={setSearchQuery}
-          onClear={() => setSearchQuery('')}
-          showClear={true}
-          size="md"
-        />
+        <div data-testid="chart-of-accounts-search">
+          <SearchBar
+            placeholder="Buscar contas por nome ou código..."
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            showClear={true}
+            size="md"
+          />
+        </div>
 
         {/* Filters */}
         <div className="flex items-center gap-2 flex-wrap">
-          <FilterDropdown
-            label="Tipo"
-            icon={BookOpen}
-            options={TYPE_FILTER_OPTIONS}
-            selected={typeIds}
-            onSelectionChange={setTypeFilter}
-            activeColor="violet"
-            searchPlaceholder="Buscar tipo..."
-            emptyText="Nenhum tipo encontrado."
-          />
-          <p className="text-sm text-muted-foreground whitespace-nowrap">
+          <div data-testid="chart-of-accounts-filter-type">
+            <FilterDropdown
+              label="Tipo"
+              icon={BookOpen}
+              options={TYPE_FILTER_OPTIONS}
+              selected={typeIds}
+              onSelectionChange={setTypeFilter}
+              activeColor="violet"
+              searchPlaceholder="Buscar tipo..."
+              emptyText="Nenhum tipo encontrado."
+            />
+          </div>
+          <p className="text-sm text-muted-foreground whitespace-nowrap" data-testid="chart-of-accounts-count">
             {total} {total === 1 ? 'conta' : 'contas'}
             {accounts.length < total && ` (${accounts.length} carregadas)`}
           </p>
