@@ -315,23 +315,27 @@ export default function FinanceCategoriesPage() {
       </PageHeader>
 
       <PageBody>
+        <div data-testid="categories-page" className="contents" />
         {/* Search */}
-        <SearchBar
-          placeholder="Buscar por nome, descrição ou tipo..."
-          value={searchQuery}
-          onSearch={setSearchQuery}
-          onClear={() => setSearchQuery('')}
-          showClear
-          size="md"
-        />
+        <div data-testid="categories-search">
+          <SearchBar
+            placeholder="Buscar por nome, descrição ou tipo..."
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            showClear
+            size="md"
+          />
+        </div>
 
         {/* Type Filter + Sort */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-2">
+          <div className="flex gap-2" data-testid="categories-filter-type">
             <Button
               variant={typeFilter === 'all' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setTypeFilter('all')}
+              data-testid="categories-filter-all"
             >
               Todos
             </Button>
@@ -339,6 +343,7 @@ export default function FinanceCategoriesPage() {
               variant={typeFilter === 'REVENUE' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setTypeFilter('REVENUE')}
+              data-testid="categories-filter-revenue"
             >
               Receita
             </Button>
@@ -346,6 +351,7 @@ export default function FinanceCategoriesPage() {
               variant={typeFilter === 'EXPENSE' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setTypeFilter('EXPENSE')}
+              data-testid="categories-filter-expense"
             >
               Despesa
             </Button>
