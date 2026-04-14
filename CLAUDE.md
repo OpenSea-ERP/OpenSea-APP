@@ -190,3 +190,56 @@ const api = {
 ### 10. Labels & Text — Portuguese
 
 All user-facing text (labels, placeholders, toasts, titles, errors, dialogs) in **formal Portuguese** with correct accents. Code and logs stay in English.
+
+---
+
+## UI Quality Bar (MANDATORY — applies to every new page or refactor)
+
+**Rule:** before implementing UI, cite a reference product + specific behavior you're reproducing. Generic "make it better" is forbidden.
+
+### Required pattern pairings
+
+| Data / interaction | ❌ Never ship | ✅ Ship instead (reference) |
+|---|---|---|
+| Date input | `<input type="text">` | Calendar picker (Google Calendar, Airbnb) |
+| Timeframe / cronograma | Plain date pair | Timeline / Gantt / calendar grid (Linear Cycles, Asana) |
+| File upload | Raw `<input type="file">` | Dropzone + preview + per-file progress (Dropbox, Vercel, Notion) |
+| Long form | Single scroll with 20 fields | `StepWizardDialog` OR `CollapsibleSection` groups (Stripe, Typeform) |
+| Data table | Plain `<table>` | `EntityGrid` + filters + empty state + skeleton (Linear, Airtable) |
+| Global search | Scattered search inputs | Command palette `⌘K` (Raycast, Linear, Notion) |
+| Numeric entry (money, %, qty) | Plain text input | Masked input with currency/locale formatting |
+| Status / category | Dropdown with text | Colored chip/badge with dual-theme (see §9) |
+| Chart | Raw numbers | Visual chart with tooltip + legend (Stripe, Vercel Analytics) |
+
+### Every listing page MUST have
+
+- **Skeleton loading** — not just a spinner (`GridLoading`)
+- **Empty state** — illustration or icon + explanatory text + primary CTA + link to docs/help
+- **Error state** — useful message + retry button (`GridError`), never "Something went wrong"
+- **Filter drawer/dropdowns** — inside toolbar (`toolbarStart`), not above the grid
+- **Data-testid anchors** — on page root, search, filters, count, each row
+
+### Every form MUST
+
+- Use **correct input types**: `type="email"`, `type="tel"`, `type="number"`, `inputMode="decimal"` when applicable
+- Have **inline validation** (on blur + on submit), never alert()
+- Show **masked inputs** for CPF, CNPJ, phone, currency (use existing masked input primitives)
+- Support **keyboard submit** (Enter in last field = submit)
+- Have **labels tied to inputs** (`htmlFor` + `id`)
+- Show **visible focus states** (keyboard navigation must work)
+- Have **mobile-optimized layout** (stack at `sm`, reasonable input heights)
+
+### Before implementing, ask yourself
+
+1. Is there a world-class product that solves this same interaction? If yes, **cite it** — which flow, which screen, which micro-interaction.
+2. What 3 specific behaviors from that reference are we reproducing? What 1 behavior are we deliberately NOT copying (and why)?
+3. Does the current page already have skeleton/empty/error states? If not, add them.
+4. Am I about to ship a plain `<input type="date">` or `<input type="file">`? Stop. Use a proper widget.
+
+### When unsure
+
+Ask the user before coding. A 30-second question saves a half-day rework. Never guess on UX that will be user-visible.
+
+### Escalation
+
+If a PR ships UI that violates these rules without justification, it's a **blocker** — fix before merge, don't patch after.
