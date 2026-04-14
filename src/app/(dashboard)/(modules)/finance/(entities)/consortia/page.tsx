@@ -584,15 +584,18 @@ function ConsortiaPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="consortia-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            placeholder={consortiumConfig.display.labels.searchPlaceholder}
-            value={searchQuery}
-            onSearch={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="consortia-search">
+            <SearchBar
+              placeholder={consortiumConfig.display.labels.searchPlaceholder}
+              value={searchQuery}
+              onSearch={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -617,27 +620,31 @@ function ConsortiaPageContent() {
                 showItemCount={false}
                 toolbarStart={
                   <>
-                    <FilterDropdown
-                      label="Status"
-                      icon={Users}
-                      options={STATUS_OPTIONS}
-                      selected={statusIds}
-                      onSelectionChange={setStatusFilter}
-                      activeColor="violet"
-                      searchPlaceholder="Buscar status..."
-                      emptyText="Nenhum status encontrado."
-                    />
-                    <FilterDropdown
-                      label="Contemplado"
-                      icon={CheckCircle}
-                      options={CONTEMPLATED_OPTIONS}
-                      selected={contemplatedIds}
-                      onSelectionChange={setContemplatedFilter}
-                      activeColor="emerald"
-                      searchPlaceholder="Buscar..."
-                      emptyText="Nenhuma opção encontrada."
-                    />
-                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    <div data-testid="consortia-filter-status">
+                      <FilterDropdown
+                        label="Status"
+                        icon={Users}
+                        options={STATUS_OPTIONS}
+                        selected={statusIds}
+                        onSelectionChange={setStatusFilter}
+                        activeColor="violet"
+                        searchPlaceholder="Buscar status..."
+                        emptyText="Nenhum status encontrado."
+                      />
+                    </div>
+                    <div data-testid="consortia-filter-contemplated">
+                      <FilterDropdown
+                        label="Contemplado"
+                        icon={CheckCircle}
+                        options={CONTEMPLATED_OPTIONS}
+                        selected={contemplatedIds}
+                        onSelectionChange={setContemplatedFilter}
+                        activeColor="emerald"
+                        searchPlaceholder="Buscar..."
+                        emptyText="Nenhuma opção encontrada."
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-nowrap" data-testid="consortia-count">
                       {total} {total === 1 ? 'consórcio' : 'consórcios'}
                       {consortia.length < total &&
                         ` (${consortia.length} carregados)`}
