@@ -772,15 +772,18 @@ function ReceivablePageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="receivable-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            placeholder={receivableConfig.display.labels.searchPlaceholder}
-            value={searchQuery}
-            onSearch={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="receivable-search">
+            <SearchBar
+              placeholder={receivableConfig.display.labels.searchPlaceholder}
+              value={searchQuery}
+              onSearch={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -805,27 +808,31 @@ function ReceivablePageContent() {
                 showItemCount={false}
                 toolbarStart={
                   <>
-                    <FilterDropdown
-                      label="Status"
-                      icon={ArrowUpCircle}
-                      options={STATUS_OPTIONS}
-                      selected={statusIds}
-                      onSelectionChange={setStatusFilter}
-                      activeColor="emerald"
-                      searchPlaceholder="Buscar status..."
-                      emptyText="Nenhum status encontrado."
-                    />
-                    <FilterDropdown
-                      label="Categoria"
-                      icon={Tag}
-                      options={categoryOptions}
-                      selected={categoryIds}
-                      onSelectionChange={setCategoryFilter}
-                      activeColor="cyan"
-                      searchPlaceholder="Buscar categoria..."
-                      emptyText="Nenhuma categoria encontrada."
-                    />
-                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    <div data-testid="receivable-filter-status">
+                      <FilterDropdown
+                        label="Status"
+                        icon={ArrowUpCircle}
+                        options={STATUS_OPTIONS}
+                        selected={statusIds}
+                        onSelectionChange={setStatusFilter}
+                        activeColor="emerald"
+                        searchPlaceholder="Buscar status..."
+                        emptyText="Nenhum status encontrado."
+                      />
+                    </div>
+                    <div data-testid="receivable-filter-category">
+                      <FilterDropdown
+                        label="Categoria"
+                        icon={Tag}
+                        options={categoryOptions}
+                        selected={categoryIds}
+                        onSelectionChange={setCategoryFilter}
+                        activeColor="cyan"
+                        searchPlaceholder="Buscar categoria..."
+                        emptyText="Nenhuma categoria encontrada."
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-nowrap" data-testid="receivable-count">
                       {total} {total === 1 ? 'recebimento' : 'recebimentos'}
                       {entries.length < total &&
                         ` (${entries.length} carregados)`}
