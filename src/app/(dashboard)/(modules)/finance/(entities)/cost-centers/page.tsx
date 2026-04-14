@@ -736,15 +736,18 @@ function CostCentersPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="cost-centers-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            placeholder={costCentersConfig.display.labels.searchPlaceholder}
-            value={searchQuery}
-            onSearch={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="cost-centers-search">
+            <SearchBar
+              placeholder={costCentersConfig.display.labels.searchPlaceholder}
+              value={searchQuery}
+              onSearch={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -769,17 +772,19 @@ function CostCentersPageContent() {
                 showItemCount={false}
                 toolbarStart={
                   <>
-                    <FilterDropdown
-                      label="Status"
-                      icon={CircleDot}
-                      options={STATUS_OPTIONS}
-                      selected={statusIds}
-                      onSelectionChange={setStatusFilter}
-                      activeColor="violet"
-                      searchPlaceholder="Buscar status..."
-                      emptyText="Nenhum status encontrado."
-                    />
-                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    <div data-testid="cost-centers-filter-status">
+                      <FilterDropdown
+                        label="Status"
+                        icon={CircleDot}
+                        options={STATUS_OPTIONS}
+                        selected={statusIds}
+                        onSelectionChange={setStatusFilter}
+                        activeColor="violet"
+                        searchPlaceholder="Buscar status..."
+                        emptyText="Nenhum status encontrado."
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-nowrap" data-testid="cost-centers-count">
                       {total}{' '}
                       {total === 1 ? 'centro de custo' : 'centros de custo'}
                       {costCenters.length < total &&
