@@ -603,15 +603,18 @@ function LoansPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="loans-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            placeholder={loanConfig.display.labels.searchPlaceholder}
-            value={searchQuery}
-            onSearch={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="loans-search">
+            <SearchBar
+              placeholder={loanConfig.display.labels.searchPlaceholder}
+              value={searchQuery}
+              onSearch={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -636,27 +639,31 @@ function LoansPageContent() {
                 showItemCount={false}
                 toolbarStart={
                   <>
-                    <FilterDropdown
-                      label="Status"
-                      icon={Landmark}
-                      options={STATUS_OPTIONS}
-                      selected={statusIds}
-                      onSelectionChange={setStatusFilter}
-                      activeColor="emerald"
-                      searchPlaceholder="Buscar status..."
-                      emptyText="Nenhum status encontrado."
-                    />
-                    <FilterDropdown
-                      label="Tipo"
-                      icon={Tag}
-                      options={TYPE_OPTIONS}
-                      selected={typeIds}
-                      onSelectionChange={setTypeFilter}
-                      activeColor="violet"
-                      searchPlaceholder="Buscar tipo..."
-                      emptyText="Nenhum tipo encontrado."
-                    />
-                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    <div data-testid="loans-filter-status">
+                      <FilterDropdown
+                        label="Status"
+                        icon={Landmark}
+                        options={STATUS_OPTIONS}
+                        selected={statusIds}
+                        onSelectionChange={setStatusFilter}
+                        activeColor="emerald"
+                        searchPlaceholder="Buscar status..."
+                        emptyText="Nenhum status encontrado."
+                      />
+                    </div>
+                    <div data-testid="loans-filter-type">
+                      <FilterDropdown
+                        label="Tipo"
+                        icon={Tag}
+                        options={TYPE_OPTIONS}
+                        selected={typeIds}
+                        onSelectionChange={setTypeFilter}
+                        activeColor="violet"
+                        searchPlaceholder="Buscar tipo..."
+                        emptyText="Nenhum tipo encontrado."
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-nowrap" data-testid="loans-count">
                       {total} {total === 1 ? 'empréstimo' : 'empréstimos'}
                       {loans.length < total && ` (${loans.length} carregados)`}
                     </p>
