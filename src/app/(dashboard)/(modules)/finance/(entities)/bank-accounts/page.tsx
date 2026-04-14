@@ -688,15 +688,18 @@ function BankAccountsPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="bank-accounts-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            placeholder={bankAccountsConfig.display.labels.searchPlaceholder}
-            value={searchQuery}
-            onSearch={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="bank-accounts-search">
+            <SearchBar
+              placeholder={bankAccountsConfig.display.labels.searchPlaceholder}
+              value={searchQuery}
+              onSearch={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -721,27 +724,31 @@ function BankAccountsPageContent() {
                 showItemCount={false}
                 toolbarStart={
                   <>
-                    <FilterDropdown
-                      label="Status"
-                      icon={Landmark}
-                      options={STATUS_OPTIONS}
-                      selected={statusIds}
-                      onSelectionChange={setStatusFilter}
-                      activeColor="violet"
-                      searchPlaceholder="Buscar status..."
-                      emptyText="Nenhum status encontrado."
-                    />
-                    <FilterDropdown
-                      label="Tipo"
-                      icon={Building2}
-                      options={TYPE_OPTIONS}
-                      selected={typeIds}
-                      onSelectionChange={setTypeFilter}
-                      activeColor="cyan"
-                      searchPlaceholder="Buscar tipo..."
-                      emptyText="Nenhum tipo encontrado."
-                    />
-                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                    <div data-testid="bank-accounts-filter-status">
+                      <FilterDropdown
+                        label="Status"
+                        icon={Landmark}
+                        options={STATUS_OPTIONS}
+                        selected={statusIds}
+                        onSelectionChange={setStatusFilter}
+                        activeColor="violet"
+                        searchPlaceholder="Buscar status..."
+                        emptyText="Nenhum status encontrado."
+                      />
+                    </div>
+                    <div data-testid="bank-accounts-filter-type">
+                      <FilterDropdown
+                        label="Tipo"
+                        icon={Building2}
+                        options={TYPE_OPTIONS}
+                        selected={typeIds}
+                        onSelectionChange={setTypeFilter}
+                        activeColor="cyan"
+                        searchPlaceholder="Buscar tipo..."
+                        emptyText="Nenhum tipo encontrado."
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-nowrap" data-testid="bank-accounts-count">
                       {total} {total === 1 ? 'conta' : 'contas'}
                       {bankAccounts.length < total &&
                         ` (${bankAccounts.length} carregadas)`}
