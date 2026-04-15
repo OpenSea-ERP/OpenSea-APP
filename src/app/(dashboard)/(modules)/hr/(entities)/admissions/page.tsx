@@ -286,11 +286,14 @@ export default function AdmissionsPage() {
       </PageHeader>
 
       <PageBody>
-        <SearchBar
-          value={searchQuery}
-          onSearch={setSearchQuery}
-          placeholder="Buscar admissões por nome ou e-mail..."
-        />
+        <div data-testid="admissions-page" className="contents" />
+        <div data-testid="admissions-search">
+          <SearchBar
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            placeholder="Buscar admissões por nome ou e-mail..."
+          />
+        </div>
 
         {isLoading ? (
           <GridLoading />
@@ -308,16 +311,18 @@ export default function AdmissionsPage() {
               config={admissionsConfig}
               items={filteredAdmissions}
               toolbarStart={
-                <FilterDropdown
-                  label="Status"
-                  options={STATUS_OPTIONS.map(o => ({
-                    id: o.value,
-                    label: o.label,
-                  }))}
-                  selected={filterStatus ? [filterStatus] : []}
-                  onSelectionChange={ids => setFilterStatus(ids[0] ?? '')}
-                  activeColor="blue"
-                />
+                <div data-testid="admissions-filter-status">
+                  <FilterDropdown
+                    label="Status"
+                    options={STATUS_OPTIONS.map(o => ({
+                      id: o.value,
+                      label: o.label,
+                    }))}
+                    selected={filterStatus ? [filterStatus] : []}
+                    onSelectionChange={ids => setFilterStatus(ids[0] ?? '')}
+                    activeColor="blue"
+                  />
+                </div>
               }
               renderGridItem={(item, isSelected) => (
                 <EntityContextMenu
