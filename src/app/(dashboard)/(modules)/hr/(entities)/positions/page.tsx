@@ -625,15 +625,18 @@ function PositionsPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="positions-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            value={page.searchQuery}
-            placeholder={positionsConfig.display.labels.searchPlaceholder}
-            onSearch={value => page.handlers.handleSearch(value)}
-            onClear={() => page.handlers.handleSearch('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="positions-search">
+            <SearchBar
+              value={page.searchQuery}
+              placeholder={positionsConfig.display.labels.searchPlaceholder}
+              onSearch={value => page.handlers.handleSearch(value)}
+              onClear={() => page.handlers.handleSearch('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {infiniteIsLoading ? (
@@ -654,44 +657,48 @@ function PositionsPageContent() {
               items={displayedPositions}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Empresa"
-                    icon={Building2}
-                    options={availableCompanies.map(c => ({
-                      id: c.id,
-                      label: c.name,
-                    }))}
-                    selected={companyIds}
-                    onSelectionChange={setCompanyFilter}
-                    activeColor="emerald"
-                    searchPlaceholder="Buscar empresa..."
-                    emptyText="Nenhuma empresa encontrada."
-                    footerAction={{
-                      icon: ExternalLink,
-                      label: 'Ver todas as empresas',
-                      onClick: () => router.push('/admin/companies'),
-                      color: 'emerald',
-                    }}
-                  />
-                  <FilterDropdown
-                    label="Departamento"
-                    icon={Building2}
-                    options={availableDepartments.map(d => ({
-                      id: d.id,
-                      label: d.name,
-                    }))}
-                    selected={departmentIds}
-                    onSelectionChange={setDepartmentFilter}
-                    activeColor="blue"
-                    searchPlaceholder="Buscar departamento..."
-                    emptyText="Nenhum departamento encontrado."
-                    footerAction={{
-                      icon: ExternalLink,
-                      label: 'Ver todos os departamentos',
-                      onClick: () => router.push('/hr/departments'),
-                      color: 'blue',
-                    }}
-                  />
+                  <div data-testid="positions-filter-company">
+                    <FilterDropdown
+                      label="Empresa"
+                      icon={Building2}
+                      options={availableCompanies.map(c => ({
+                        id: c.id,
+                        label: c.name,
+                      }))}
+                      selected={companyIds}
+                      onSelectionChange={setCompanyFilter}
+                      activeColor="emerald"
+                      searchPlaceholder="Buscar empresa..."
+                      emptyText="Nenhuma empresa encontrada."
+                      footerAction={{
+                        icon: ExternalLink,
+                        label: 'Ver todas as empresas',
+                        onClick: () => router.push('/admin/companies'),
+                        color: 'emerald',
+                      }}
+                    />
+                  </div>
+                  <div data-testid="positions-filter-department">
+                    <FilterDropdown
+                      label="Departamento"
+                      icon={Building2}
+                      options={availableDepartments.map(d => ({
+                        id: d.id,
+                        label: d.name,
+                      }))}
+                      selected={departmentIds}
+                      onSelectionChange={setDepartmentFilter}
+                      activeColor="blue"
+                      searchPlaceholder="Buscar departamento..."
+                      emptyText="Nenhum departamento encontrado."
+                      footerAction={{
+                        icon: ExternalLink,
+                        label: 'Ver todos os departamentos',
+                        onClick: () => router.push('/hr/departments'),
+                        color: 'blue',
+                      }}
+                    />
+                  </div>
                 </>
               }
               renderGridItem={renderGridCard}
