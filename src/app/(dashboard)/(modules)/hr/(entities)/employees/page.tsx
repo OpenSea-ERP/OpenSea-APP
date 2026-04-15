@@ -922,14 +922,17 @@ function EmployeesPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="employees-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            placeholder={employeesConfig.display.labels.searchPlaceholder}
-            value={page.searchQuery}
-            onSearch={value => page.setSearchQuery(value)}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="employees-search">
+            <SearchBar
+              placeholder={employeesConfig.display.labels.searchPlaceholder}
+              value={page.searchQuery}
+              onSearch={value => page.setSearchQuery(value)}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {infiniteIsLoading ? (
@@ -950,63 +953,69 @@ function EmployeesPageContent() {
               items={displayedEmployees}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Empresa"
-                    icon={Building2}
-                    options={availableCompanies.map(c => ({
-                      id: c.id,
-                      label: c.name,
-                    }))}
-                    selected={companyIds}
-                    onSelectionChange={setCompanyFilter}
-                    activeColor="emerald"
-                    searchPlaceholder="Buscar empresa..."
-                    emptyText="Nenhuma empresa encontrada."
-                    footerAction={{
-                      icon: ExternalLink,
-                      label: 'Ver todas as empresas',
-                      onClick: () => router.push('/admin/companies'),
-                      color: 'emerald',
-                    }}
-                  />
-                  <FilterDropdown
-                    label="Departamento"
-                    icon={Building2}
-                    options={availableDepartments.map(d => ({
-                      id: d.id,
-                      label: d.name,
-                    }))}
-                    selected={departmentIds}
-                    onSelectionChange={setDepartmentFilter}
-                    activeColor="blue"
-                    searchPlaceholder="Buscar departamento..."
-                    emptyText="Nenhum departamento encontrado."
-                    footerAction={{
-                      icon: ExternalLink,
-                      label: 'Ver todos os departamentos',
-                      onClick: () => router.push('/hr/departments'),
-                      color: 'blue',
-                    }}
-                  />
-                  <FilterDropdown
-                    label="Cargo"
-                    icon={Briefcase}
-                    options={availablePositions.map(p => ({
-                      id: p.id,
-                      label: p.name,
-                    }))}
-                    selected={positionIds}
-                    onSelectionChange={setPositionFilter}
-                    activeColor="violet"
-                    searchPlaceholder="Buscar cargo..."
-                    emptyText="Nenhum cargo encontrado."
-                    footerAction={{
-                      icon: ExternalLink,
-                      label: 'Ver todos os cargos',
-                      onClick: () => router.push('/hr/positions'),
-                      color: 'violet',
-                    }}
-                  />
+                  <div data-testid="employees-filter-company">
+                    <FilterDropdown
+                      label="Empresa"
+                      icon={Building2}
+                      options={availableCompanies.map(c => ({
+                        id: c.id,
+                        label: c.name,
+                      }))}
+                      selected={companyIds}
+                      onSelectionChange={setCompanyFilter}
+                      activeColor="emerald"
+                      searchPlaceholder="Buscar empresa..."
+                      emptyText="Nenhuma empresa encontrada."
+                      footerAction={{
+                        icon: ExternalLink,
+                        label: 'Ver todas as empresas',
+                        onClick: () => router.push('/admin/companies'),
+                        color: 'emerald',
+                      }}
+                    />
+                  </div>
+                  <div data-testid="employees-filter-department">
+                    <FilterDropdown
+                      label="Departamento"
+                      icon={Building2}
+                      options={availableDepartments.map(d => ({
+                        id: d.id,
+                        label: d.name,
+                      }))}
+                      selected={departmentIds}
+                      onSelectionChange={setDepartmentFilter}
+                      activeColor="blue"
+                      searchPlaceholder="Buscar departamento..."
+                      emptyText="Nenhum departamento encontrado."
+                      footerAction={{
+                        icon: ExternalLink,
+                        label: 'Ver todos os departamentos',
+                        onClick: () => router.push('/hr/departments'),
+                        color: 'blue',
+                      }}
+                    />
+                  </div>
+                  <div data-testid="employees-filter-position">
+                    <FilterDropdown
+                      label="Cargo"
+                      icon={Briefcase}
+                      options={availablePositions.map(p => ({
+                        id: p.id,
+                        label: p.name,
+                      }))}
+                      selected={positionIds}
+                      onSelectionChange={setPositionFilter}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar cargo..."
+                      emptyText="Nenhum cargo encontrado."
+                      footerAction={{
+                        icon: ExternalLink,
+                        label: 'Ver todos os cargos',
+                        onClick: () => router.push('/hr/positions'),
+                        color: 'violet',
+                      }}
+                    />
+                  </div>
                 </>
               }
               renderGridItem={renderGridCard}
