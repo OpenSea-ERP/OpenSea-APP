@@ -463,15 +463,18 @@ export default function BonusesPage() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="bonuses-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            value={searchQuery}
-            placeholder={bonusesConfig.display.labels.searchPlaceholder}
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="bonuses-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder={bonusesConfig.display.labels.searchPlaceholder}
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -494,32 +497,36 @@ export default function BonusesPage() {
               items={filteredItems}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Funcionário"
-                    icon={User}
-                    options={employeeOptions}
-                    value={filterEmployeeId}
-                    onChange={v => setFilterEmployeeId(v)}
-                    activeColor="violet"
-                    searchPlaceholder="Buscar funcionário..."
-                    emptyText="Nenhum funcionário encontrado."
-                  />
-                  <FilterDropdown
-                    label="Status"
-                    icon={CircleCheck}
-                    options={paidStatusOptions}
-                    value={
-                      filterIsPaid === undefined
-                        ? ''
-                        : filterIsPaid
-                          ? 'true'
-                          : 'false'
-                    }
-                    onChange={v =>
-                      setFilterIsPaid(v === '' ? undefined : v === 'true')
-                    }
-                    activeColor="emerald"
-                  />
+                  <div data-testid="bonuses-filter-employee">
+                    <FilterDropdown
+                      label="Funcionário"
+                      icon={User}
+                      options={employeeOptions}
+                      value={filterEmployeeId}
+                      onChange={v => setFilterEmployeeId(v)}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar funcionário..."
+                      emptyText="Nenhum funcionário encontrado."
+                    />
+                  </div>
+                  <div data-testid="bonuses-filter-status">
+                    <FilterDropdown
+                      label="Status"
+                      icon={CircleCheck}
+                      options={paidStatusOptions}
+                      value={
+                        filterIsPaid === undefined
+                          ? ''
+                          : filterIsPaid
+                            ? 'true'
+                            : 'false'
+                      }
+                      onChange={v =>
+                        setFilterIsPaid(v === '' ? undefined : v === 'true')
+                      }
+                      activeColor="emerald"
+                    />
+                  </div>
                 </>
               }
               renderGridItem={renderGridCard}
