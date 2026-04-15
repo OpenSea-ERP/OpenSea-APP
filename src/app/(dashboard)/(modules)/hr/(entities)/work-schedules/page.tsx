@@ -485,15 +485,18 @@ function WorkSchedulesPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="work-schedules-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            placeholder={workSchedulesConfig.display.labels.searchPlaceholder}
-            value={page.searchQuery}
-            onSearch={value => page.handlers.handleSearch(value)}
-            onClear={() => page.handlers.handleSearch('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="work-schedules-search">
+            <SearchBar
+              placeholder={workSchedulesConfig.display.labels.searchPlaceholder}
+              value={page.searchQuery}
+              onSearch={value => page.handlers.handleSearch(value)}
+              onClear={() => page.handlers.handleSearch('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {infiniteIsLoading ? (
