@@ -546,7 +546,7 @@ export default function EsocialDashboardPage() {
     : `${certDaysLeft} dias`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="esocial-page">
       <PageActionBar
         breadcrumbItems={[
           { label: 'RH', href: '/hr' },
