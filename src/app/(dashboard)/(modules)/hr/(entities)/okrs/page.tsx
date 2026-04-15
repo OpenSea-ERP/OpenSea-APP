@@ -411,14 +411,17 @@ export default function OKRsPage() {
         </PageHeader>
 
         <PageBody>
-          <SearchBar
-            value={searchQuery}
-            placeholder="Buscar objetivos..."
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="okrs-page" className="contents" />
+          <div data-testid="okrs-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder="Buscar objetivos..."
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
@@ -440,22 +443,26 @@ export default function OKRsPage() {
               items={objectives}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Nível"
-                    icon={Building2}
-                    options={LEVEL_OPTIONS}
-                    value={filterLevel}
-                    onChange={v => setFilterLevel(v as ObjectiveLevel | '')}
-                    activeColor="violet"
-                  />
-                  <FilterDropdown
-                    label="Status"
-                    icon={Target}
-                    options={STATUS_OPTIONS}
-                    value={filterStatus}
-                    onChange={v => setFilterStatus(v as ObjectiveStatus | '')}
-                    activeColor="emerald"
-                  />
+                  <div data-testid="okrs-filter-level">
+                    <FilterDropdown
+                      label="Nível"
+                      icon={Building2}
+                      options={LEVEL_OPTIONS}
+                      value={filterLevel}
+                      onChange={v => setFilterLevel(v as ObjectiveLevel | '')}
+                      activeColor="violet"
+                    />
+                  </div>
+                  <div data-testid="okrs-filter-status">
+                    <FilterDropdown
+                      label="Status"
+                      icon={Target}
+                      options={STATUS_OPTIONS}
+                      value={filterStatus}
+                      onChange={v => setFilterStatus(v as ObjectiveStatus | '')}
+                      activeColor="emerald"
+                    />
+                  </div>
                 </>
               }
               renderGridItem={renderGridCard}
