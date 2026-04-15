@@ -434,7 +434,7 @@ export default function EmployeeEditPage() {
 
   if (isLoading) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="employees-edit-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -452,7 +452,7 @@ export default function EmployeeEditPage() {
 
   if (!employee) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="employees-edit-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -485,7 +485,7 @@ export default function EmployeeEditPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="employees-edit-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

@@ -299,7 +299,7 @@ export default function VacationEditPage() {
 
   if (isLoading) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="vacations-edit-page">
         <PageHeader>
           <PageActionBar breadcrumbItems={breadcrumbItems} />
         </PageHeader>
@@ -312,7 +312,7 @@ export default function VacationEditPage() {
 
   if (!vacation) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="vacations-edit-page">
         <PageHeader>
           <PageActionBar breadcrumbItems={breadcrumbItems} />
         </PageHeader>
@@ -336,7 +336,7 @@ export default function VacationEditPage() {
   // ==========================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="vacations-edit-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

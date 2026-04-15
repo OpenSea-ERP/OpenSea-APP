@@ -769,7 +769,7 @@ export default function EmployeeDetailPage() {
 
   if (isLoading) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="employees-detail-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -787,7 +787,7 @@ export default function EmployeeDetailPage() {
 
   if (!employee) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="employees-detail-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -816,7 +816,7 @@ export default function EmployeeDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="employees-detail-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

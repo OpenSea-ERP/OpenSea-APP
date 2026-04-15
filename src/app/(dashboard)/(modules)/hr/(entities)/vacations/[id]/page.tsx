@@ -121,7 +121,7 @@ export default function VacationDetailPage() {
 
   if (isLoading) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="vacations-detail-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -139,7 +139,7 @@ export default function VacationDetailPage() {
 
   if (!vacation) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="vacations-detail-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -168,7 +168,7 @@ export default function VacationDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="vacations-detail-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

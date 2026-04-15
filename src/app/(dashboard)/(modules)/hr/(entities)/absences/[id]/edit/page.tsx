@@ -310,7 +310,7 @@ export default function AbsenceEditPage() {
 
   if (isLoading) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="absences-edit-page">
         <PageHeader>
           <PageActionBar breadcrumbItems={breadcrumbItems} />
         </PageHeader>
@@ -323,7 +323,7 @@ export default function AbsenceEditPage() {
 
   if (!absence) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="absences-edit-page">
         <PageHeader>
           <PageActionBar breadcrumbItems={breadcrumbItems} />
         </PageHeader>
@@ -347,7 +347,7 @@ export default function AbsenceEditPage() {
   // ==========================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="absences-edit-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={breadcrumbItems}

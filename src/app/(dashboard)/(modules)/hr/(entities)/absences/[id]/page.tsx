@@ -88,7 +88,7 @@ export default function AbsenceDetailPage() {
 
   if (isLoading) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="absences-detail-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -110,7 +110,7 @@ export default function AbsenceDetailPage() {
 
   if (!absence) {
     return (
-      <PageLayout>
+      <PageLayout data-testid="absences-detail-page">
         <PageHeader>
           <PageActionBar
             breadcrumbItems={[
@@ -154,7 +154,7 @@ export default function AbsenceDetailPage() {
   // ============================================================================
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="absences-detail-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
