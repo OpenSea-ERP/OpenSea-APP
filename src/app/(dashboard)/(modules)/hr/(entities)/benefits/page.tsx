@@ -460,15 +460,18 @@ function BenefitsPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="benefits-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            placeholder={benefitsConfig.display.labels.searchPlaceholder}
-            value={page.searchQuery}
-            onSearch={value => page.handlers.handleSearch(value)}
-            onClear={() => page.handlers.handleSearch('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="benefits-search">
+            <SearchBar
+              placeholder={benefitsConfig.display.labels.searchPlaceholder}
+              value={page.searchQuery}
+              onSearch={value => page.handlers.handleSearch(value)}
+              onClear={() => page.handlers.handleSearch('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {infiniteIsLoading ? (
@@ -489,29 +492,33 @@ function BenefitsPageContent() {
               items={displayedPlans}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Tipo"
-                    icon={Heart}
-                    options={BENEFIT_TYPE_OPTIONS.map(o => ({
-                      id: o.value,
-                      label: o.label,
-                    }))}
-                    selected={typeFilter}
-                    onSelectionChange={setTypeFilter}
-                    activeColor="violet"
-                    searchPlaceholder="Buscar tipo..."
-                    emptyText="Nenhum tipo encontrado."
-                  />
-                  <FilterDropdown
-                    label="Status"
-                    options={[
-                      { id: 'active', label: 'Ativo' },
-                      { id: 'inactive', label: 'Inativo' },
-                    ]}
-                    selected={statusFilter}
-                    onSelectionChange={setStatusFilter}
-                    activeColor="emerald"
-                  />
+                  <div data-testid="benefits-filter-type">
+                    <FilterDropdown
+                      label="Tipo"
+                      icon={Heart}
+                      options={BENEFIT_TYPE_OPTIONS.map(o => ({
+                        id: o.value,
+                        label: o.label,
+                      }))}
+                      selected={typeFilter}
+                      onSelectionChange={setTypeFilter}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar tipo..."
+                      emptyText="Nenhum tipo encontrado."
+                    />
+                  </div>
+                  <div data-testid="benefits-filter-status">
+                    <FilterDropdown
+                      label="Status"
+                      options={[
+                        { id: 'active', label: 'Ativo' },
+                        { id: 'inactive', label: 'Inativo' },
+                      ]}
+                      selected={statusFilter}
+                      onSelectionChange={setStatusFilter}
+                      activeColor="emerald"
+                    />
+                  </div>
                 </>
               }
               renderGridItem={renderGridCard}
