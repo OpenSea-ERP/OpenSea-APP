@@ -245,24 +245,31 @@ function ReviewsPageContent() {
       </PageHeader>
 
       <PageBody>
+        <div data-testid="reviews-page" className="contents" />
         <div className="flex items-center gap-3 mb-4">
-          <SearchBar
-            placeholder="Buscar ciclos de avaliação..."
-            value={searchQuery}
-            onSearch={setSearchQuery}
-          />
-          <FilterDropdown
-            label="Tipo"
-            options={REVIEW_CYCLE_TYPE_OPTIONS}
-            selected={typeFilter}
-            onSelectionChange={setTypeFilter}
-          />
-          <FilterDropdown
-            label="Status"
-            options={REVIEW_CYCLE_STATUS_OPTIONS}
-            selected={statusFilter}
-            onSelectionChange={setStatusFilter}
-          />
+          <div data-testid="reviews-search" className="flex-1">
+            <SearchBar
+              placeholder="Buscar ciclos de avaliação..."
+              value={searchQuery}
+              onSearch={setSearchQuery}
+            />
+          </div>
+          <div data-testid="reviews-filter-type">
+            <FilterDropdown
+              label="Tipo"
+              options={REVIEW_CYCLE_TYPE_OPTIONS}
+              selected={typeFilter}
+              onSelectionChange={setTypeFilter}
+            />
+          </div>
+          <div data-testid="reviews-filter-status">
+            <FilterDropdown
+              label="Status"
+              options={REVIEW_CYCLE_STATUS_OPTIONS}
+              selected={statusFilter}
+              onSelectionChange={setStatusFilter}
+            />
+          </div>
         </div>
 
         {isLoading ? (
