@@ -58,6 +58,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { WhosOutWidget } from './_shared/components/whos-out-widget';
 
 interface CardItem {
   id: string;
@@ -648,6 +649,8 @@ export default function HRLandingPage() {
           }))}
         hasPermission={hasPermission}
       />
+
+      {hasPermission(HR_PERMISSIONS.VACATIONS.LIST) && <WhosOutWidget />}
 
       <PageDashboardSections
         sections={dynamicSections}
