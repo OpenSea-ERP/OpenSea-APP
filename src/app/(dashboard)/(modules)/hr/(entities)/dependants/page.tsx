@@ -509,15 +509,18 @@ export default function DependantsPage() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="dependants-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            value={searchQuery}
-            placeholder={dependantsConfig.display.labels.searchPlaceholder}
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="dependants-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder={dependantsConfig.display.labels.searchPlaceholder}
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -540,25 +543,29 @@ export default function DependantsPage() {
               items={filteredItems}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Funcionário"
-                    icon={User}
-                    options={employeeOptions}
-                    value={filterEmployeeId}
-                    onChange={v => setFilterEmployeeId(v)}
-                    activeColor="violet"
-                    searchPlaceholder="Buscar funcionário..."
-                    emptyText="Nenhum funcionário encontrado."
-                  />
-                  <FilterDropdown
-                    label="Parentesco"
-                    icon={Heart}
-                    options={RELATIONSHIP_OPTIONS}
-                    value={filterRelationship}
-                    onChange={v => setFilterRelationship(v)}
-                    activeColor="cyan"
-                  />
-                  <p className="text-sm text-muted-foreground whitespace-nowrap">
+                  <div data-testid="dependants-filter-employee">
+                    <FilterDropdown
+                      label="Funcionário"
+                      icon={User}
+                      options={employeeOptions}
+                      value={filterEmployeeId}
+                      onChange={v => setFilterEmployeeId(v)}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar funcionário..."
+                      emptyText="Nenhum funcionário encontrado."
+                    />
+                  </div>
+                  <div data-testid="dependants-filter-relationship">
+                    <FilterDropdown
+                      label="Parentesco"
+                      icon={Heart}
+                      options={RELATIONSHIP_OPTIONS}
+                      value={filterRelationship}
+                      onChange={v => setFilterRelationship(v)}
+                      activeColor="cyan"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground whitespace-nowrap" data-testid="dependants-count">
                     {filteredItems.length}{' '}
                     {filteredItems.length === 1 ? 'dependente' : 'dependentes'}
                   </p>
