@@ -495,15 +495,18 @@ export default function DeductionsPage() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="deductions-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            value={searchQuery}
-            placeholder={deductionsConfig.display.labels.searchPlaceholder}
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="deductions-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder={deductionsConfig.display.labels.searchPlaceholder}
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -526,49 +529,55 @@ export default function DeductionsPage() {
               items={filteredItems}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Funcionário"
-                    icon={User}
-                    options={employeeOptions}
-                    value={filterEmployeeId}
-                    onChange={v => setFilterEmployeeId(v)}
-                    activeColor="violet"
-                    searchPlaceholder="Buscar funcionário..."
-                    emptyText="Nenhum funcionário encontrado."
-                  />
-                  <FilterDropdown
-                    label="Status"
-                    icon={CircleCheck}
-                    options={statusOptions}
-                    value={
-                      filterIsApplied === undefined
-                        ? ''
-                        : filterIsApplied
-                          ? 'true'
-                          : 'false'
-                    }
-                    onChange={v =>
-                      setFilterIsApplied(v === '' ? undefined : v === 'true')
-                    }
-                    activeColor="emerald"
-                  />
-                  <FilterDropdown
-                    label="Tipo"
-                    icon={FileText}
-                    options={typeOptions}
-                    value={
-                      filterIsRecurring === undefined
-                        ? ''
-                        : filterIsRecurring
-                          ? 'true'
-                          : 'false'
-                    }
-                    onChange={v =>
-                      setFilterIsRecurring(v === '' ? undefined : v === 'true')
-                    }
-                    activeColor="cyan"
-                  />
-                  <p className="text-sm text-muted-foreground whitespace-nowrap">
+                  <div data-testid="deductions-filter-employee">
+                    <FilterDropdown
+                      label="Funcionário"
+                      icon={User}
+                      options={employeeOptions}
+                      value={filterEmployeeId}
+                      onChange={v => setFilterEmployeeId(v)}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar funcionário..."
+                      emptyText="Nenhum funcionário encontrado."
+                    />
+                  </div>
+                  <div data-testid="deductions-filter-status">
+                    <FilterDropdown
+                      label="Status"
+                      icon={CircleCheck}
+                      options={statusOptions}
+                      value={
+                        filterIsApplied === undefined
+                          ? ''
+                          : filterIsApplied
+                            ? 'true'
+                            : 'false'
+                      }
+                      onChange={v =>
+                        setFilterIsApplied(v === '' ? undefined : v === 'true')
+                      }
+                      activeColor="emerald"
+                    />
+                  </div>
+                  <div data-testid="deductions-filter-type">
+                    <FilterDropdown
+                      label="Tipo"
+                      icon={FileText}
+                      options={typeOptions}
+                      value={
+                        filterIsRecurring === undefined
+                          ? ''
+                          : filterIsRecurring
+                            ? 'true'
+                            : 'false'
+                      }
+                      onChange={v =>
+                        setFilterIsRecurring(v === '' ? undefined : v === 'true')
+                      }
+                      activeColor="cyan"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground whitespace-nowrap" data-testid="deductions-count">
                     {filteredItems.length}{' '}
                     {filteredItems.length === 1 ? 'dedução' : 'deduções'}
                   </p>
