@@ -142,22 +142,26 @@ function OnboardingPageContent() {
       </PageHeader>
 
       <PageBody>
-        <div className="space-y-4">
-          <SearchBar
-            value={search}
-            onSearch={setSearch}
-            placeholder="Buscar checklists de onboarding..."
-          />
+        <div className="space-y-4" data-testid="onboarding-page">
+          <div data-testid="onboarding-search">
+            <SearchBar
+              value={search}
+              onSearch={setSearch}
+              placeholder="Buscar checklists de onboarding..."
+            />
+          </div>
 
           <div className="flex items-center gap-2">
-            <FilterDropdown
-              label="Status"
-              value={statusFilter}
-              options={statusOptions}
-              onChange={val => setStatusFilter(val as OnboardingStatus | '')}
-              activeColor="emerald"
-            />
-            <span className="text-xs text-muted-foreground">
+            <div data-testid="onboarding-filter-status">
+              <FilterDropdown
+                label="Status"
+                value={statusFilter}
+                options={statusOptions}
+                onChange={val => setStatusFilter(val as OnboardingStatus | '')}
+                activeColor="emerald"
+              />
+            </div>
+            <span className="text-xs text-muted-foreground" data-testid="onboarding-count">
               {checklists.length} checklist(s)
             </span>
           </div>
