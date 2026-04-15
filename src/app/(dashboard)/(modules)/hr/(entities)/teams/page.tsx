@@ -588,15 +588,18 @@ function HRTeamsPageContent() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="teams-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            value={searchQuery}
-            placeholder={hrTeamsConfig.display.labels.searchPlaceholder}
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="teams-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder={hrTeamsConfig.display.labels.searchPlaceholder}
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -629,16 +632,18 @@ function HRTeamsPageContent() {
               defaultSortDirection="asc"
               customSortOptions={sortOptions}
               toolbarStart={
-                <FilterDropdown
-                  label="Status"
-                  icon={CheckCircle2}
-                  options={activeFilterOptions}
-                  selected={activeFilter}
-                  onSelectionChange={setActiveFilter}
-                  activeColor="blue"
-                  searchPlaceholder="Buscar..."
-                  emptyText="Nenhuma opção encontrada."
-                />
+                <div data-testid="teams-filter-status">
+                  <FilterDropdown
+                    label="Status"
+                    icon={CheckCircle2}
+                    options={activeFilterOptions}
+                    selected={activeFilter}
+                    onSelectionChange={setActiveFilter}
+                    activeColor="blue"
+                    searchPlaceholder="Buscar..."
+                    emptyText="Nenhuma opção encontrada."
+                  />
+                </div>
               }
             />
           )}
