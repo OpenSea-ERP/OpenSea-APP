@@ -519,15 +519,18 @@ export default function PayrollPage() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="payroll-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            value={searchQuery}
-            placeholder={payrollConfig.display.labels.searchPlaceholder}
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="payroll-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder={payrollConfig.display.labels.searchPlaceholder}
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Grid */}
           {isLoading ? (
@@ -550,30 +553,36 @@ export default function PayrollPage() {
               items={payrolls}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Mês"
-                    icon={Calendar}
-                    options={MONTHS}
-                    value={filterMonth}
-                    onChange={v => setFilterMonth(v)}
-                    activeColor="blue"
-                  />
-                  <FilterDropdown
-                    label="Ano"
-                    icon={CalendarDays}
-                    options={YEAR_OPTIONS}
-                    value={filterYear}
-                    onChange={v => setFilterYear(v)}
-                    activeColor="violet"
-                  />
-                  <FilterDropdown
-                    label="Status"
-                    icon={CircleCheck}
-                    options={STATUS_OPTIONS}
-                    value={filterStatus}
-                    onChange={v => setFilterStatus(v)}
-                    activeColor="emerald"
-                  />
+                  <div data-testid="payroll-filter-month">
+                    <FilterDropdown
+                      label="Mês"
+                      icon={Calendar}
+                      options={MONTHS}
+                      value={filterMonth}
+                      onChange={v => setFilterMonth(v)}
+                      activeColor="blue"
+                    />
+                  </div>
+                  <div data-testid="payroll-filter-year">
+                    <FilterDropdown
+                      label="Ano"
+                      icon={CalendarDays}
+                      options={YEAR_OPTIONS}
+                      value={filterYear}
+                      onChange={v => setFilterYear(v)}
+                      activeColor="violet"
+                    />
+                  </div>
+                  <div data-testid="payroll-filter-status">
+                    <FilterDropdown
+                      label="Status"
+                      icon={CircleCheck}
+                      options={STATUS_OPTIONS}
+                      value={filterStatus}
+                      onChange={v => setFilterStatus(v)}
+                      activeColor="emerald"
+                    />
+                  </div>
                 </>
               }
               renderGridItem={renderGridCard}
