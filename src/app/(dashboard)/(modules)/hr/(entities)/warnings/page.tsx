@@ -496,14 +496,17 @@ export default function WarningsPage() {
         </PageHeader>
 
         <PageBody>
-          <SearchBar
-            value={searchQuery}
-            placeholder="Buscar advertências..."
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="warnings-page" className="contents" />
+          <div data-testid="warnings-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder="Buscar advertências..."
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
@@ -525,40 +528,48 @@ export default function WarningsPage() {
               items={warnings}
               toolbarStart={
                 <>
-                  <FilterDropdown
-                    label="Funcionário"
-                    icon={User}
-                    options={employeeOptions}
-                    value={filterEmployeeId}
-                    onChange={v => setFilterEmployeeId(v)}
-                    activeColor="violet"
-                    searchPlaceholder="Buscar funcionário..."
-                    emptyText="Nenhum funcionário encontrado."
-                  />
-                  <FilterDropdown
-                    label="Tipo"
-                    icon={AlertTriangle}
-                    options={WARNING_TYPE_OPTIONS}
-                    value={filterType}
-                    onChange={v => setFilterType(v as WarningType | '')}
-                    activeColor="violet"
-                  />
-                  <FilterDropdown
-                    label="Gravidade"
-                    icon={ShieldAlert}
-                    options={WARNING_SEVERITY_OPTIONS}
-                    value={filterSeverity}
-                    onChange={v => setFilterSeverity(v as WarningSeverity | '')}
-                    activeColor="emerald"
-                  />
-                  <FilterDropdown
-                    label="Status"
-                    icon={CircleCheck}
-                    options={WARNING_STATUS_OPTIONS}
-                    value={filterStatus}
-                    onChange={v => setFilterStatus(v as WarningStatus | '')}
-                    activeColor="cyan"
-                  />
+                  <div data-testid="warnings-filter-employee">
+                    <FilterDropdown
+                      label="Funcionário"
+                      icon={User}
+                      options={employeeOptions}
+                      value={filterEmployeeId}
+                      onChange={v => setFilterEmployeeId(v)}
+                      activeColor="violet"
+                      searchPlaceholder="Buscar funcionário..."
+                      emptyText="Nenhum funcionário encontrado."
+                    />
+                  </div>
+                  <div data-testid="warnings-filter-type">
+                    <FilterDropdown
+                      label="Tipo"
+                      icon={AlertTriangle}
+                      options={WARNING_TYPE_OPTIONS}
+                      value={filterType}
+                      onChange={v => setFilterType(v as WarningType | '')}
+                      activeColor="violet"
+                    />
+                  </div>
+                  <div data-testid="warnings-filter-severity">
+                    <FilterDropdown
+                      label="Gravidade"
+                      icon={ShieldAlert}
+                      options={WARNING_SEVERITY_OPTIONS}
+                      value={filterSeverity}
+                      onChange={v => setFilterSeverity(v as WarningSeverity | '')}
+                      activeColor="emerald"
+                    />
+                  </div>
+                  <div data-testid="warnings-filter-status">
+                    <FilterDropdown
+                      label="Status"
+                      icon={CircleCheck}
+                      options={WARNING_STATUS_OPTIONS}
+                      value={filterStatus}
+                      onChange={v => setFilterStatus(v as WarningStatus | '')}
+                      activeColor="cyan"
+                    />
+                  </div>
                 </>
               }
               renderGridItem={renderGridCard}
