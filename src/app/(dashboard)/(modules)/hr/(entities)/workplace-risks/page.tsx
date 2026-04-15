@@ -499,15 +499,18 @@ export default function WorkplaceRisksPage() {
         </PageHeader>
 
         <PageBody>
+          <div data-testid="workplace-risks-page" className="contents" />
           {/* Search Bar */}
-          <SearchBar
-            value={searchQuery}
-            placeholder={workplaceRisksConfig.display.labels.searchPlaceholder}
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="workplace-risks-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder={workplaceRisksConfig.display.labels.searchPlaceholder}
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3">
