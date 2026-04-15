@@ -310,41 +310,48 @@ function SurveysPageContent() {
       </PageHeader>
 
       <PageBody>
+        <div data-testid="surveys-page" className="contents" />
         {/* Search Bar */}
-        <SearchBar
-          placeholder="Buscar pesquisas..."
-          value={searchQuery}
-          onSearch={setSearchQuery}
-          onClear={() => setSearchQuery('')}
-          showClear={true}
-          size="md"
-        />
+        <div data-testid="surveys-search">
+          <SearchBar
+            placeholder="Buscar pesquisas..."
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            showClear={true}
+            size="md"
+          />
+        </div>
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <FilterDropdown
-            label="Tipo"
-            icon={Tag}
-            options={SURVEY_TYPE_OPTIONS.map(o => ({
-              id: o.value,
-              label: o.label,
-            }))}
-            selected={typeFilter}
-            onSelectionChange={setTypeFilter}
-            activeColor="violet"
-            searchPlaceholder="Buscar tipo..."
-            emptyText="Nenhum tipo encontrado."
-          />
-          <FilterDropdown
-            label="Status"
-            options={SURVEY_STATUS_OPTIONS.map(o => ({
-              id: o.value,
-              label: o.label,
-            }))}
-            selected={statusFilter}
-            onSelectionChange={setStatusFilter}
-            activeColor="emerald"
-          />
+          <div data-testid="surveys-filter-type">
+            <FilterDropdown
+              label="Tipo"
+              icon={Tag}
+              options={SURVEY_TYPE_OPTIONS.map(o => ({
+                id: o.value,
+                label: o.label,
+              }))}
+              selected={typeFilter}
+              onSelectionChange={setTypeFilter}
+              activeColor="violet"
+              searchPlaceholder="Buscar tipo..."
+              emptyText="Nenhum tipo encontrado."
+            />
+          </div>
+          <div data-testid="surveys-filter-status">
+            <FilterDropdown
+              label="Status"
+              options={SURVEY_STATUS_OPTIONS.map(o => ({
+                id: o.value,
+                label: o.label,
+              }))}
+              selected={statusFilter}
+              onSelectionChange={setStatusFilter}
+              activeColor="emerald"
+            />
+          </div>
         </div>
 
         {/* Content */}
