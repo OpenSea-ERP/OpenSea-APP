@@ -419,14 +419,17 @@ export default function TimeBankPage() {
         </PageHeader>
 
         <PageBody>
-          <SearchBar
-            value={searchQuery}
-            placeholder="Buscar por funcionário..."
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="time-bank-page" className="contents" />
+          <div data-testid="time-bank-search">
+            <SearchBar
+              value={searchQuery}
+              placeholder="Buscar por funcionário..."
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {isLoading ? (
             <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
@@ -449,26 +452,30 @@ export default function TimeBankPage() {
                 items={filteredItems}
                 toolbarStart={
                   <>
-                    <FilterDropdown
-                      label="Funcionário"
-                      icon={User}
-                      options={employeeOptions}
-                      value={filterEmployeeId}
-                      onChange={v => setFilterEmployeeId(v)}
-                      activeColor="violet"
-                      searchPlaceholder="Buscar funcionário..."
-                      emptyText="Nenhum funcionário encontrado."
-                    />
-                    <FilterDropdown
-                      label="Ano"
-                      icon={Calendar}
-                      options={yearOptions}
-                      value={filterYear}
-                      onChange={v => setFilterYear(v)}
-                      activeColor="cyan"
-                      searchPlaceholder="Buscar ano..."
-                      emptyText="Nenhum ano encontrado."
-                    />
+                    <div data-testid="time-bank-filter-employee">
+                      <FilterDropdown
+                        label="Funcionário"
+                        icon={User}
+                        options={employeeOptions}
+                        value={filterEmployeeId}
+                        onChange={v => setFilterEmployeeId(v)}
+                        activeColor="violet"
+                        searchPlaceholder="Buscar funcionário..."
+                        emptyText="Nenhum funcionário encontrado."
+                      />
+                    </div>
+                    <div data-testid="time-bank-filter-year">
+                      <FilterDropdown
+                        label="Ano"
+                        icon={Calendar}
+                        options={yearOptions}
+                        value={filterYear}
+                        onChange={v => setFilterYear(v)}
+                        activeColor="cyan"
+                        searchPlaceholder="Buscar ano..."
+                        emptyText="Nenhum ano encontrado."
+                      />
+                    </div>
                   </>
                 }
                 renderGridItem={renderGridCard}
