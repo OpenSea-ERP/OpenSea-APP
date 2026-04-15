@@ -319,52 +319,61 @@ function TrainingsPageContent() {
       </PageHeader>
 
       <PageBody>
+        <div data-testid="trainings-page" className="contents" />
         {/* Search Bar */}
-        <SearchBar
-          placeholder="Buscar programas de treinamento..."
-          value={searchQuery}
-          onSearch={setSearchQuery}
-          onClear={() => setSearchQuery('')}
-          showClear={true}
-          size="md"
-        />
+        <div data-testid="trainings-search">
+          <SearchBar
+            placeholder="Buscar programas de treinamento..."
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            showClear={true}
+            size="md"
+          />
+        </div>
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <FilterDropdown
-            label="Categoria"
-            icon={Tag}
-            options={TRAINING_CATEGORY_OPTIONS.map(o => ({
-              id: o.value,
-              label: o.label,
-            }))}
-            selected={categoryFilter}
-            onSelectionChange={setCategoryFilter}
-            activeColor="violet"
-            searchPlaceholder="Buscar categoria..."
-            emptyText="Nenhuma categoria encontrada."
-          />
-          <FilterDropdown
-            label="Formato"
-            icon={BookOpen}
-            options={TRAINING_FORMAT_OPTIONS.map(o => ({
-              id: o.value,
-              label: o.label,
-            }))}
-            selected={formatFilter}
-            onSelectionChange={setFormatFilter}
-            activeColor="cyan"
-          />
-          <FilterDropdown
-            label="Obrigatoriedade"
-            options={[
-              { id: 'mandatory', label: 'Obrigatório' },
-              { id: 'optional', label: 'Opcional' },
-            ]}
-            selected={mandatoryFilter}
-            onSelectionChange={setMandatoryFilter}
-            activeColor="emerald"
-          />
+          <div data-testid="trainings-filter-category">
+            <FilterDropdown
+              label="Categoria"
+              icon={Tag}
+              options={TRAINING_CATEGORY_OPTIONS.map(o => ({
+                id: o.value,
+                label: o.label,
+              }))}
+              selected={categoryFilter}
+              onSelectionChange={setCategoryFilter}
+              activeColor="violet"
+              searchPlaceholder="Buscar categoria..."
+              emptyText="Nenhuma categoria encontrada."
+            />
+          </div>
+          <div data-testid="trainings-filter-format">
+            <FilterDropdown
+              label="Formato"
+              icon={BookOpen}
+              options={TRAINING_FORMAT_OPTIONS.map(o => ({
+                id: o.value,
+                label: o.label,
+              }))}
+              selected={formatFilter}
+              onSelectionChange={setFormatFilter}
+              activeColor="cyan"
+            />
+          </div>
+          <div data-testid="trainings-filter-mandatory">
+            <FilterDropdown
+              label="Obrigatoriedade"
+              options={[
+                { id: 'mandatory', label: 'Obrigatório' },
+                { id: 'optional', label: 'Opcional' },
+              ]}
+              selected={mandatoryFilter}
+              onSelectionChange={setMandatoryFilter}
+              activeColor="emerald"
+            />
+          </div>
         </div>
 
         {/* Content */}
