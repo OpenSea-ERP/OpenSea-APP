@@ -473,14 +473,17 @@ function AnnouncementsPageContent() {
         </PageHeader>
 
         <PageBody>
-          <SearchBar
-            placeholder="Buscar comunicados..."
-            value={searchQuery}
-            onSearch={value => setSearchQuery(value)}
-            onClear={() => setSearchQuery('')}
-            showClear={true}
-            size="md"
-          />
+          <div data-testid="announcements-page" className="contents" />
+          <div data-testid="announcements-search">
+            <SearchBar
+              placeholder="Buscar comunicados..."
+              value={searchQuery}
+              onSearch={value => setSearchQuery(value)}
+              onClear={() => setSearchQuery('')}
+              showClear={true}
+              size="md"
+            />
+          </div>
 
           {isLoading ? (
             <GridLoading count={6} layout="grid" size="md" gap="gap-4" />
@@ -554,16 +557,18 @@ function AnnouncementsPageContent() {
               }}
               items={filteredItems}
               toolbarStart={
-                <FilterDropdown
-                  label="Prioridade"
-                  icon={AlertTriangle}
-                  options={PRIORITY_FILTER_OPTIONS}
-                  selected={priorityFilter}
-                  onSelectionChange={setPriorityFilter}
-                  activeColor="violet"
-                  searchPlaceholder="Buscar prioridade..."
-                  emptyText="Nenhuma prioridade encontrada."
-                />
+                <div data-testid="announcements-filter-priority">
+                  <FilterDropdown
+                    label="Prioridade"
+                    icon={AlertTriangle}
+                    options={PRIORITY_FILTER_OPTIONS}
+                    selected={priorityFilter}
+                    onSelectionChange={setPriorityFilter}
+                    activeColor="violet"
+                    searchPlaceholder="Buscar prioridade..."
+                    emptyText="Nenhuma prioridade encontrada."
+                  />
+                </div>
               }
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
