@@ -615,7 +615,7 @@ export default function HRLandingPage() {
   }, []);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="hr-hub-page">
       <PageActionBar
         breadcrumbItems={[{ label: 'Recursos Humanos', href: '/hr' }]}
         actionButtons={[

@@ -536,7 +536,7 @@ export default function HROverviewPage() {
   ];
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="hr-overview-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

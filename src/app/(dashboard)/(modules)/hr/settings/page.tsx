@@ -1395,7 +1395,7 @@ export default function HRSettingsPage() {
   const defaultTab = searchParams.get('tab') || 'geral';
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="hr-settings-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[

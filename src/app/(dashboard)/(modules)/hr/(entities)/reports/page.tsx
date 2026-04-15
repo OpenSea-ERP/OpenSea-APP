@@ -358,7 +358,7 @@ export default function HRReportsPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="hr-reports-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
