@@ -17,7 +17,6 @@ import {
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Card } from '@/components/ui/card';
-import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,12 +40,14 @@ import { logger } from '@/lib/logger';
 import type { LoanStatus, LoanType } from '@/types/finance';
 import { LOAN_STATUS_LABELS, LOAN_TYPE_LABELS } from '@/types/finance';
 import {
+  AlertTriangle,
   Building2,
   Calendar,
   DollarSign,
   Landmark,
   Link as LinkIcon,
   Loader2,
+  Lock,
   NotebookText,
   Save,
   Trash2,
@@ -144,12 +145,11 @@ export default function EditLoanPage({
   // Section 1: Identificacao
   const [name, setName] = useState('');
   const [type, setType] = useState<LoanType>('PERSONAL');
-  const [description, setDescription] = useState('');
   const [contractNumber, setContractNumber] = useState('');
 
   // Section 2: Valores
   const [interestRate, setInterestRate] = useState(0);
-  const [interestType, setInterestType] = useState('SIMPLE');
+  const [interestType, setInterestType] = useState<'PRICE' | 'SAC'>('PRICE');
 
   // Section 3: Parcelas
   const [totalInstallments, setTotalInstallments] = useState(0);
@@ -172,11 +172,12 @@ export default function EditLoanPage({
     if (loan) {
       setName(loan.name || '');
       setType(loan.type);
-      setDescription('');
       setContractNumber(loan.contractNumber || '');
 
       setInterestRate(loan.interestRate || 0);
-      setInterestType(loan.interestType || 'SIMPLE');
+      const normalizedInterestType =
+        loan.interestType === 'SAC' ? 'SAC' : 'PRICE';
+      setInterestType(normalizedInterestType);
 
       setTotalInstallments(loan.totalInstallments || 0);
       setInstallmentDay(loan.installmentDay || 1);
@@ -189,6 +190,10 @@ export default function EditLoanPage({
       setNotes(loan.notes || '');
     }
   }, [loan]);
+
+  // Lock structural fields when there are paid installments
+  // (changing them would invalidate the existing amortization schedule)
+  const hasPaidInstallments = (loan?.paidInstallments ?? 0) > 0;
 
   // ============================================================================
   // HANDLERS
@@ -215,16 +220,19 @@ export default function EditLoanPage({
         id,
         data: {
           name: name.trim(),
-          type,
+          // Structural fields are blocked when paid installments exist
+          ...(hasPaidInstallments
+            ? {}
+            : {
+                type,
+                interestRate,
+                interestType,
+                installmentDay: installmentDay || undefined,
+                bankAccountId,
+                costCenterId,
+              }),
           contractNumber: contractNumber.trim() || undefined,
-          interestRate,
-          interestType: interestType || undefined,
-          startDate: startDate || undefined,
           endDate: endDate || undefined,
-          totalInstallments: totalInstallments || undefined,
-          installmentDay: installmentDay || undefined,
-          bankAccountId,
-          costCenterId,
           notes: notes.trim() || undefined,
         },
       });
@@ -438,10 +446,14 @@ export default function EditLoanPage({
                       <div className="grid gap-2">
                         <Label htmlFor="type">
                           Tipo <span className="text-rose-500">*</span>
+                          {hasPaidInstallments && (
+                            <Lock className="inline h-3 w-3 ml-1 text-muted-foreground" />
+                          )}
                         </Label>
                         <Select
                           value={type}
                           onValueChange={(v: string) => setType(v as LoanType)}
+                          disabled={hasPaidInstallments}
                         >
                           <SelectTrigger id="type">
                             <SelectValue placeholder="Selecione o tipo..." />
@@ -458,7 +470,7 @@ export default function EditLoanPage({
                         </Select>
                       </div>
 
-                      <div className="grid gap-2">
+                      <div className="grid gap-2 sm:col-span-2 lg:col-span-1">
                         <Label htmlFor="contractNumber">
                           Número do Contrato
                         </Label>
@@ -469,21 +481,34 @@ export default function EditLoanPage({
                           placeholder="Ex: CT-2026-001"
                         />
                       </div>
-
-                      <div className="grid gap-2">
-                        <Label htmlFor="description">Descrição</Label>
-                        <Input
-                          id="description"
-                          value={description}
-                          onChange={e => setDescription(e.target.value)}
-                          placeholder="Descrição breve do empréstimo"
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </Card>
+
+            {/* Lock Banner — visible only when paid installments exist */}
+            {hasPaidInstallments && (
+              <Card className="bg-amber-50 dark:bg-amber-500/8 border-amber-200 dark:border-amber-500/20 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                      Campos estruturais bloqueados
+                    </h4>
+                    <p className="text-sm text-amber-800 dark:text-amber-300">
+                      Este empréstimo já tem {loan?.paidInstallments} parcela(s)
+                      paga(s). Tipo, taxa, sistema de amortização, dia de
+                      vencimento, conta bancária e centro de custo não podem
+                      mais ser alterados — qualquer mudança invalidaria a tabela
+                      de amortização e os lançamentos já gerados. Para reajustar
+                      essas condições, registre uma renegociação criando um novo
+                      empréstimo vinculado.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {/* Form Card — Section 2: Valores */}
             <Card className="bg-white/5 py-2 overflow-hidden">
@@ -512,7 +537,10 @@ export default function EditLoanPage({
 
                       <div className="grid gap-2">
                         <Label htmlFor="interestRate">
-                          Taxa de Juros (% a.m.)
+                          Taxa de Juros (% a.a.)
+                          {hasPaidInstallments && (
+                            <Lock className="inline h-3 w-3 ml-1 text-muted-foreground" />
+                          )}
                         </Label>
                         <Input
                           id="interestRate"
@@ -524,21 +552,37 @@ export default function EditLoanPage({
                             setInterestRate(parseFloat(e.target.value) || 0)
                           }
                           placeholder="0,00"
+                          disabled={hasPaidInstallments}
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Equivalente a {(interestRate / 12).toFixed(2)}% a.m.
+                        </p>
                       </div>
 
                       <div className="grid gap-2">
-                        <Label htmlFor="interestType">Tipo de Juros</Label>
+                        <Label htmlFor="interestType">
+                          Sistema de Amortização
+                          {hasPaidInstallments && (
+                            <Lock className="inline h-3 w-3 ml-1 text-muted-foreground" />
+                          )}
+                        </Label>
                         <Select
                           value={interestType}
-                          onValueChange={setInterestType}
+                          onValueChange={(v: string) =>
+                            setInterestType(v as 'PRICE' | 'SAC')
+                          }
+                          disabled={hasPaidInstallments}
                         >
                           <SelectTrigger id="interestType">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="SIMPLE">Simples</SelectItem>
-                            <SelectItem value="COMPOUND">Composto</SelectItem>
+                            <SelectItem value="PRICE">
+                              Tabela Price (Parcela Fixa)
+                            </SelectItem>
+                            <SelectItem value="SAC">
+                              SAC (Amortização Constante)
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -574,18 +618,18 @@ export default function EditLoanPage({
                   <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="totalInstallments">
+                        <Label>
                           Total de Parcelas
+                          <Lock className="inline h-3 w-3 ml-1 text-muted-foreground" />
                         </Label>
                         <Input
-                          id="totalInstallments"
-                          type="number"
-                          min="1"
                           value={totalInstallments}
-                          onChange={e =>
-                            setTotalInstallments(parseInt(e.target.value) || 0)
-                          }
+                          disabled
+                          className="bg-muted"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Definido na criação do empréstimo
+                        </p>
                       </div>
 
                       <div className="grid gap-2">
@@ -603,6 +647,9 @@ export default function EditLoanPage({
                       <div className="grid gap-2">
                         <Label htmlFor="installmentDay">
                           Dia de Vencimento
+                          {hasPaidInstallments && (
+                            <Lock className="inline h-3 w-3 ml-1 text-muted-foreground" />
+                          )}
                         </Label>
                         <Input
                           id="installmentDay"
@@ -613,17 +660,23 @@ export default function EditLoanPage({
                           onChange={e =>
                             setInstallmentDay(parseInt(e.target.value) || 1)
                           }
+                          disabled={hasPaidInstallments}
                         />
                       </div>
 
                       <div className="grid gap-2">
-                        <Label htmlFor="startDate">Data de Início</Label>
+                        <Label>
+                          Data de Início
+                          <Lock className="inline h-3 w-3 ml-1 text-muted-foreground" />
+                        </Label>
                         <Input
-                          id="startDate"
-                          type="date"
                           value={startDate}
-                          onChange={e => setStartDate(e.target.value)}
+                          disabled
+                          className="bg-muted"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Definido na criação do empréstimo
+                        </p>
                       </div>
 
                       <div className="grid gap-2">
@@ -659,10 +712,14 @@ export default function EditLoanPage({
                         <Label htmlFor="bankAccountId">
                           Conta Bancária{' '}
                           <span className="text-rose-500">*</span>
+                          {hasPaidInstallments && (
+                            <Lock className="inline h-3 w-3 ml-1 text-muted-foreground" />
+                          )}
                         </Label>
                         <Select
                           value={bankAccountId}
                           onValueChange={setBankAccountId}
+                          disabled={hasPaidInstallments}
                         >
                           <SelectTrigger id="bankAccountId">
                             <SelectValue placeholder="Selecione uma conta bancária..." />
@@ -682,10 +739,14 @@ export default function EditLoanPage({
                         <Label htmlFor="costCenterId">
                           Centro de Custo{' '}
                           <span className="text-rose-500">*</span>
+                          {hasPaidInstallments && (
+                            <Lock className="inline h-3 w-3 ml-1 text-muted-foreground" />
+                          )}
                         </Label>
                         <Select
                           value={costCenterId}
                           onValueChange={setCostCenterId}
+                          disabled={hasPaidInstallments}
                         >
                           <SelectTrigger id="costCenterId">
                             <SelectValue placeholder="Selecione um centro de custo..." />

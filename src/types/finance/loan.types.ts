@@ -73,7 +73,13 @@ export interface CreateLoanData {
   notes?: string;
 }
 
-export type UpdateLoanData = Partial<Omit<CreateLoanData, 'principalAmount'>>;
+export type UpdateLoanData = Partial<
+  Omit<CreateLoanData, 'principalAmount' | 'totalInstallments' | 'startDate'>
+> & {
+  endDate?: string | null;
+  contractNumber?: string | null;
+  notes?: string | null;
+};
 
 export interface PayLoanInstallmentData {
   bankAccountId?: string;
