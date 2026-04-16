@@ -29,6 +29,7 @@ import { HR_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { usePermissions } from '@/hooks/use-permissions';
 import { recruitmentService } from '@/services/hr/recruitment.service';
 import { departmentsService } from '@/services/hr/departments.service';
+import { KanbanJobSelector } from '@/components/hr/kanban-job-selector';
 import type { JobPosting } from '@/types/hr';
 import { Briefcase, Loader2, MapPin, Plus, Users } from 'lucide-react';
 import {
@@ -302,12 +303,21 @@ function RecruitmentJobPostingsContent() {
         separator?: 'before';
       }> = [];
 
+      if (canView && item.status !== 'DRAFT') {
+        actions.push({
+          id: 'kanban',
+          label: 'Pipeline Kanban',
+          onClick: () => router.push(`/hr/recruitment/${item.id}/kanban`),
+          separator: 'before',
+        });
+      }
+
       if (canAdmin && item.status === 'DRAFT') {
         actions.push({
           id: 'publish',
           label: 'Publicar',
           onClick: () => publishMutation.mutate(item.id),
-          separator: 'before',
+          separator: actions.length === 0 ? 'before' : undefined,
         });
       }
 
@@ -335,7 +345,7 @@ function RecruitmentJobPostingsContent() {
 
       return actions;
     },
-    [canAdmin, canDelete, publishMutation, closeMutation]
+    [canView, canAdmin, canDelete, publishMutation, closeMutation, router]
   );
 
   const renderGridCard = (item: JobPosting, isSelected: boolean) => {
@@ -484,7 +494,9 @@ function RecruitmentJobPostingsContent() {
                   ]
                 : []),
             ]}
-          />
+          >
+            {canView && <KanbanJobSelector />}
+          </PageActionBar>
 
           <Header
             title="Recrutamento e Seleção"
