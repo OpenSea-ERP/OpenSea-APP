@@ -10,9 +10,32 @@ import { toast } from 'sonner';
 const QUERY_KEYS = {
   DRE: ['finance-dre-interactive'],
   DRE_CONSOLIDATED: ['finance-dre-consolidated'],
+  DRE_ANNUAL: ['finance-dre-annual'],
   LEDGER: ['finance-ledger'],
   TRIAL_BALANCE: ['finance-trial-balance'],
 } as const;
+
+export interface DreAnnualResponse {
+  year: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  netResult: number;
+  netMargin: number;
+  monthly: Array<{
+    month: number;
+    revenue: number;
+    expenses: number;
+    result: number;
+  }>;
+}
+
+export function useDreAnnual(year: number) {
+  return useQuery<DreAnnualResponse>({
+    queryKey: [...QUERY_KEYS.DRE_ANNUAL, year],
+    queryFn: () => financeReportsService.getAnnualDRE(year),
+    enabled: !!year,
+  });
+}
 
 export function useLedger(params: {
   chartOfAccountId: string;

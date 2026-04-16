@@ -81,6 +81,23 @@ export const financeReportsService = {
     );
   },
 
+  async getAnnualDRE(year: number): Promise<{
+    year: number;
+    totalRevenue: number;
+    totalExpenses: number;
+    netResult: number;
+    netMargin: number;
+    monthly: Array<{
+      month: number;
+      revenue: number;
+      expenses: number;
+      result: number;
+    }>;
+  }> {
+    const query = new URLSearchParams({ year: String(year) });
+    return apiClient.get(`/v1/finance/reports/dre?${query.toString()}`);
+  },
+
   async getInteractiveDRE(params: {
     startDate: string;
     endDate: string;
