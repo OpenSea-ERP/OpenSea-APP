@@ -72,6 +72,7 @@ export interface UpdateRecurringConfigRequest {
   frequencyUnit?: RecurrenceUnit;
   frequencyInterval?: number;
   endDate?: string | null;
+  totalOccurrences?: number | null;
   interestRate?: number | null;
   penaltyRate?: number | null;
   notes?: string | null;

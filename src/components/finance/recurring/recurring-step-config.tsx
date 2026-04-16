@@ -1,13 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -23,17 +17,16 @@ import type {
   RecurrenceUnit,
 } from '@/types/finance';
 import { INDEXATION_TYPE_LABELS, MONTH_LABELS } from '@/types/finance';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  CalendarIcon,
   ChevronDown,
   ChevronRight,
   Sliders,
 } from 'lucide-react';
 import { useState } from 'react';
+import { RecurrenceEnd, deriveEndMode } from './recurrence-end';
+import { RecurrencePreview } from './recurrence-preview';
 import type { RecurringWizardData } from './recurring-wizard';
 
 // =============================================================================
@@ -98,51 +91,6 @@ function SectionDivider({ label }: { label: string }) {
 }
 
 // =============================================================================
-// INLINE DATE PICKER
-// =============================================================================
-
-function InlineDatePicker({
-  value,
-  onChange,
-  placeholder = 'Selecionar',
-}: {
-  value: string;
-  onChange: (date: string) => void;
-  placeholder?: string;
-}) {
-  const dateValue = value ? parseISO(value) : undefined;
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'w-full justify-start text-left font-normal h-8',
-            !dateValue && 'text-muted-foreground'
-          )}
-        >
-          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-          {dateValue
-            ? format(dateValue, 'dd/MM/yyyy', { locale: ptBR })
-            : placeholder}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={dateValue}
-          onSelect={date => {
-            if (date) onChange(format(date, 'yyyy-MM-dd'));
-          }}
-          locale={ptBR}
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 
@@ -151,6 +99,7 @@ export function RecurringStepConfig({
   onChange,
 }: RecurringStepConfigProps) {
   const [adjustmentOpen, setAdjustmentOpen] = useState(false);
+  const endMode = deriveEndMode(data.endDate, data.totalOccurrences);
 
   return (
     <div className="space-y-1">
@@ -258,52 +207,55 @@ export function RecurringStepConfig({
       </div>
 
       {/* ================================================================= */}
-      {/* OCCURRENCES                                                        */}
+      {/* START DATE                                                         */}
       {/* ================================================================= */}
-      <SectionDivider label="Duração" />
+      <SectionDivider label="Início" />
 
-      <div className="flex items-center gap-2 py-1">
-        <span className="text-sm text-muted-foreground shrink-0">
-          Total de ocorrências
+      <div className="py-1 max-w-xs">
+        <span className="text-sm text-muted-foreground">
+          Data de início <span className="text-rose-500">*</span>
         </span>
-        <Input
-          type="number"
-          min={0}
-          value={data.totalOccurrences}
-          onChange={e =>
-            onChange({ totalOccurrences: parseInt(e.target.value) || 0 })
-          }
-          className="h-8 w-20"
-        />
-        <span className="text-[11px] text-muted-foreground">
-          (0 = infinita)
-        </span>
-      </div>
-
-      {/* ================================================================= */}
-      {/* DATES                                                              */}
-      {/* ================================================================= */}
-      <SectionDivider label="Período" />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-1">
-        <div className="space-y-1">
-          <span className="text-sm text-muted-foreground">
-            Data de início <span className="text-rose-500">*</span>
-          </span>
-          <InlineDatePicker
+        <div className="pt-1">
+          <DatePicker
             value={data.startDate}
-            onChange={d => onChange({ startDate: d })}
-          />
-        </div>
-        <div className="space-y-1">
-          <span className="text-sm text-muted-foreground">Data de término</span>
-          <InlineDatePicker
-            value={data.endDate}
-            onChange={d => onChange({ endDate: d })}
-            placeholder="Opcional"
+            onChange={v =>
+              onChange({ startDate: typeof v === 'string' ? v : '' })
+            }
+            placeholder="Selecionar data de início"
           />
         </div>
       </div>
+
+      {/* ================================================================= */}
+      {/* END (3-way radio)                                                  */}
+      {/* ================================================================= */}
+      <SectionDivider label="Término" />
+
+      <div className="py-1">
+        <RecurrenceEnd
+          mode={endMode}
+          endDate={data.endDate}
+          totalOccurrences={data.totalOccurrences}
+          onChange={({ endDate, totalOccurrences }) =>
+            onChange({ endDate, totalOccurrences })
+          }
+        />
+      </div>
+
+      {/* ================================================================= */}
+      {/* PREVIEW                                                            */}
+      {/* ================================================================= */}
+      {data.startDate && (
+        <div className="pt-3">
+          <RecurrencePreview
+            frequencyUnit={data.frequencyUnit}
+            frequencyInterval={data.frequencyInterval}
+            startDate={data.startDate}
+            endDate={data.endDate}
+            totalOccurrences={data.totalOccurrences}
+          />
+        </div>
+      )}
 
       {/* ================================================================= */}
       {/* AJUSTE AUTOMÁTICO (collapsible)                                    */}

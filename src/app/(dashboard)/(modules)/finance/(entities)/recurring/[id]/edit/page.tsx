@@ -19,7 +19,6 @@ import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-moda
 import { Card } from '@/components/ui/card';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
-import { FormErrorIcon } from '@/components/ui/form-error-icon';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +30,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  RecurrenceEnd,
+  deriveEndMode,
+} from '@/components/finance/recurring/recurrence-end';
+import { RecurrencePreview } from '@/components/finance/recurring/recurrence-preview';
 import {
   useRecurringConfig,
   useUpdateRecurringConfig,
@@ -138,6 +142,7 @@ export default function EditRecurringPage({
 
   // Section 2: Periodo
   const [endDate, setEndDate] = useState('');
+  const [totalOccurrences, setTotalOccurrences] = useState(0);
 
   // Section 3: Taxas
   const [interestRate, setInterestRate] = useState<number | undefined>(
@@ -159,6 +164,7 @@ export default function EditRecurringPage({
       setFrequencyUnit(config.frequencyUnit || 'MONTHLY');
       setFrequencyInterval(config.frequencyInterval || 1);
       setEndDate(config.endDate ? config.endDate.split('T')[0] : '');
+      setTotalOccurrences(config.totalOccurrences ?? 0);
       setInterestRate(config.interestRate ?? undefined);
       setPenaltyRate(config.penaltyRate ?? undefined);
       setNotes(config.notes || '');
@@ -190,6 +196,7 @@ export default function EditRecurringPage({
           frequencyUnit,
           frequencyInterval,
           endDate: endDate || null,
+          totalOccurrences: totalOccurrences > 0 ? totalOccurrences : null,
           interestRate: interestRate ?? null,
           penaltyRate: penaltyRate ?? null,
           notes: notes.trim() || null,
@@ -452,42 +459,47 @@ export default function EditRecurringPage({
                   <SectionHeader
                     icon={Calendar}
                     title="Período"
-                    subtitle="Data de término da recorrência"
+                    subtitle="Data de início e regra de término"
                   />
-                  <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="startDate">Data de Início</Label>
-                        <DatePicker
-                          id="startDate"
-                          value={
-                            config.startDate
-                              ? config.startDate.split('T')[0]
-                              : ''
-                          }
-                          onChange={() => undefined}
-                          disabled
-                          hideClear
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          A data de início não pode ser alterada
-                        </p>
-                      </div>
-
-                      <div className="grid gap-2">
-                        <Label htmlFor="endDate">Data de Término</Label>
-                        <DatePicker
-                          id="endDate"
-                          value={endDate}
-                          onChange={v =>
-                            setEndDate(typeof v === 'string' ? v : '')
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Deixe em branco para sem data de término
-                        </p>
-                      </div>
+                  <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-slate-800/60 space-y-5">
+                    <div className="grid gap-2 max-w-xs">
+                      <Label htmlFor="startDate">Data de Início</Label>
+                      <DatePicker
+                        id="startDate"
+                        value={
+                          config.startDate ? config.startDate.split('T')[0] : ''
+                        }
+                        onChange={() => undefined}
+                        disabled
+                        hideClear
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        A data de início não pode ser alterada
+                      </p>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label>Término</Label>
+                      <RecurrenceEnd
+                        mode={deriveEndMode(endDate, totalOccurrences)}
+                        endDate={endDate}
+                        totalOccurrences={totalOccurrences}
+                        onChange={({ endDate: next, totalOccurrences: n }) => {
+                          setEndDate(next);
+                          setTotalOccurrences(n);
+                        }}
+                      />
+                    </div>
+
+                    <RecurrencePreview
+                      frequencyUnit={frequencyUnit}
+                      frequencyInterval={frequencyInterval}
+                      startDate={
+                        config.startDate ? config.startDate.split('T')[0] : ''
+                      }
+                      endDate={endDate}
+                      totalOccurrences={totalOccurrences}
+                    />
                   </div>
                 </div>
               </div>
