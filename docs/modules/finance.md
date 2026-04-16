@@ -625,6 +625,42 @@ O `exportAccounting` retorna um `Blob` que deve ser tratado pelo chamador para d
 4. `useMarkContemplated()` chama o backend; status muda para `CONTEMPLATED` e `isContemplated` passa a `true`
 5. Lista é atualizada; a cobertura do crédito fica disponível para uso
 
+### Flow 7: Consultar DFC + drill-down de categoria
+
+1. Usuário acessa `/finance/reports/dfc`
+2. Seleciona exercício no seletor; `useDfcAnnual(year)` dispara
+3. KPIs mostram totais operacional/investimento/financiamento + variação líquida
+4. Gráfico 12 meses stacked usa barras translúcidas para meses negativos
+5. Tabela de categorias aparece ordenada por |net|; cada linha mostra chip colorido da atividade
+6. Clique em uma linha abre `Sheet` lateral (drawer) com lançamentos pagos dessa categoria no ano, via `useFinanceEntries({ categoryId, dueDateFrom, dueDateTo })`
+7. Drawer lista data + descrição + fornecedor/cliente + valor signed (verde entrada, rose saída)
+
+### Flow 8: Travar/liberar período contábil
+
+1. Admin acessa `/finance/settings/period-locks` (requer `FINANCE.PERIOD_LOCKS.ACCESS`)
+2. Seleciona exercício; grid 12 meses mostra quais estão abertos/fechados
+3. Clique em mês aberto → `Dialog` com campo opcional de motivo
+4. Envia via `useCreatePeriodLock()`; mês passa a ficar marcado com ícone `Lock` + cor rose
+5. Tentativas de criar/editar/excluir lançamentos nesse mês (na API) retornam 400 com mensagem clara
+6. Para liberar: clique no mês travado → `VerifyActionPinModal` exige PIN → `useReleasePeriodLock()`
+7. Histórico da página lista toda a trilha (quem travou, quando, motivo, quando liberou)
+
+### Flow 9: Recorrência com 3-way end + preview
+
+1. Usuário abre wizard em `/finance/recurring/new` ou edita em `/finance/recurring/[id]/edit`
+2. Seção "Término" mostra 3 botões (Nunca / Em uma data / Após N ocorrências) estilo Google Calendar
+3. Selecionar "Em uma data" abre DatePicker; "Após N" mostra input numérico (default 12)
+4. Card violeta "Próximas 5 ocorrências" aparece abaixo com descrição em pt-BR ("A cada 2 meses, começando em 15/03/2026, até 31/12/2026") + 5 datas absolutas (ex.: "qua, 15 mar 2026") e relativas ("em 3 dias")
+5. Ao salvar, o backend persiste `endDate` OU `totalOccurrences` OU nenhum (conforme modo)
+
+### Flow 10: Conciliação com bulk actions + balance widget
+
+1. Usuário importa OFX; modal mostra lista 100% de transações com FITID + créditos/débitos + net flow antes de confirmar
+2. Na página `/finance/reconciliation/[id]`, o Summary Card agora inclui "Confronto de saldos" (OFX × razão conciliado × diferença rose até zerar)
+3. Cada linha tem checkbox; selecionar várias ativa `BulkToolbar` sticky no topo
+4. Toolbar oferece "Criar lançamentos (N)" / "Ignorar (N)" / limpar — dispara mutations em paralelo via `Promise.all`
+5. Empty state da listagem mostra 2 CTAs: "Importar OFX" (se IMPORT perm) e "Conectar via Open Finance" → `/finance/bank-connections`
+
 ---
 
 ## Audit History
