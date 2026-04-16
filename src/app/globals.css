@@ -1812,3 +1812,22 @@ body {
   animation: error-highlight-pulse 2s ease-in-out;
   border-radius: var(--input-radius, 0.5rem);
 }
+
+/* ===========================================
+   PUNCH PWA — RIPPLE ANIMATION
+   Tap feedback for the big CTA in /punch.
+   =========================================== */
+@keyframes punch-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(6);
+    opacity: 0;
+  }
+}
+
+.animate-ripple {
+  animation: punch-ripple 0.6s ease-out forwards;
+}

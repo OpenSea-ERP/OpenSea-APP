@@ -1,22 +1,30 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { cn } from '@/lib/utils';
-import { LogIn, LogOut, Waves, WifiOff } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
-import { punchApi, type PunchRequest } from './api/punch.api';
-import { usePunchClockIn, usePunchClockOut } from './api/mutations';
+import { useOfflinePunch } from '@/hooks/hr/use-offline-punch';
+import { punchApi } from './api/punch.api';
+import { BigPunchCTA } from './components/big-punch-cta';
 import { GeofenceStatus } from './components/geofence-status';
+import { GeoBadge, type GeoState } from './components/geo-badge';
+import { JourneyTimer } from './components/journey-timer';
 import { KioskEmployeeSelector } from './components/kiosk-employee-selector';
 import { LiveClock } from './components/live-clock';
 import { LocationDisplay } from './components/location-display';
-import { OfflineIndicator } from './components/offline-indicator';
+import { PendingSyncBanner } from './components/pending-sync-banner';
 import { PunchReceipt } from './components/punch-receipt';
 import { SelfieCapture } from './components/selfie-capture';
-import { offlineQueue } from './utils/offline-queue';
+import { StreakCounter } from './components/streak-counter';
+import { TodayHistory } from './components/today-history';
+import {
+  registerPunchServiceWorker,
+  requestNotificationPermissionIfNeeded,
+} from './utils/register-sw';
+import { calculateStreak, filterToday, isWorkingNow } from './utils/streak';
+import { useQuery } from '@tanstack/react-query';
+import { Waves, WifiOff } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import type { TimeEntry } from '@/types/hr';
 
 type PunchType = 'CLOCK_IN' | 'CLOCK_OUT';
@@ -45,86 +53,54 @@ function PunchPageContent() {
   const [selfieData, setSelfieData] = useState<string | null>(null);
   const [punchResult, setPunchResult] = useState<PunchResult | null>(null);
   const [geofenceValid, setGeofenceValid] = useState<boolean | null>(null);
-  const [isOnline, setIsOnline] = useState(true);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [syncing, setSyncing] = useState(false);
   const [kioskEmployee, setKioskEmployee] = useState<KioskEmployee | null>(
     null
   );
   const locationRef = useRef<{ lat: number; lng: number } | null>(null);
   const kioskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Online/offline detection
+  const {
+    isOnline,
+    pendingCount,
+    isSyncing,
+    isSubmitting,
+    submitPunch,
+    flushQueue,
+  } = useOfflinePunch();
+
+  /* ---------- PWA bootstrap ---------- */
+
   useEffect(() => {
-    setIsOnline(navigator.onLine);
-    setPendingCount(offlineQueue.count);
-
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    void registerPunchServiceWorker();
+    void requestNotificationPermissionIfNeeded();
   }, []);
 
-  // Auto-sync when back online
+  // Native notification when a queued punch finishes syncing while user is here.
+  const previousPendingRef = useRef(pendingCount);
   useEffect(() => {
-    if (!isOnline) return;
-
-    const pending = offlineQueue.getAll();
-    if (pending.length === 0) return;
-
-    setSyncing(true);
-    let syncedCount = 0;
-
-    const syncNext = async () => {
-      const items = offlineQueue.getAll();
-      if (items.length === 0) {
-        setSyncing(false);
-        setPendingCount(0);
-        if (syncedCount > 0) {
-          toast.success(
-            `${syncedCount} registro(s) sincronizado(s) com sucesso.`
-          );
-        }
-        return;
-      }
-
-      const item = items[0];
+    if (
+      previousPendingRef.current > 0 &&
+      pendingCount === 0 &&
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      Notification.permission === 'granted' &&
+      document.visibilityState !== 'visible'
+    ) {
       try {
-        const request: PunchRequest = {
-          employeeId: item.employeeId,
-          latitude: item.latitude,
-          longitude: item.longitude,
-          notes: item.photoData
-            ? 'Selfie capturada no registro (offline)'
-            : undefined,
-        };
-
-        if (item.type === 'CLOCK_IN') {
-          await punchApi.clockIn(request);
-        } else {
-          await punchApi.clockOut(request);
-        }
-
-        offlineQueue.remove(item.id);
-        syncedCount++;
-        setPendingCount(offlineQueue.count);
-        await syncNext();
+        new Notification('Batidas sincronizadas', {
+          body: 'Todas as batidas pendentes foram enviadas com sucesso.',
+          icon: '/icon-192.png',
+          tag: 'opensea-punch-synced',
+        });
       } catch {
-        setSyncing(false);
-        toast.error('Erro ao sincronizar registros. Tentaremos novamente.');
+        /* notifications unavailable */
       }
-    };
+    }
+    previousPendingRef.current = pendingCount;
+  }, [pendingCount]);
 
-    syncNext();
-  }, [isOnline]);
+  /* ---------- Kiosk auto-reset ---------- */
 
-  // Kiosk auto-reset
   useEffect(() => {
     if (!isKioskMode || !punchResult) return;
 
@@ -135,9 +111,11 @@ function PunchPageContent() {
     return () => {
       if (kioskTimerRef.current) clearTimeout(kioskTimerRef.current);
     };
-  }, [isKioskMode, punchResult]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isKioskMode, punchResult]);
 
-  // Fetch punch configuration
+  /* ---------- Punch configuration & today entries ---------- */
+
   const { data: config } = useQuery({
     queryKey: ['punch-config'],
     queryFn: () => punchApi.getConfig(),
@@ -145,13 +123,6 @@ function PunchPageContent() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Mutations
-  const clockIn = usePunchClockIn();
-  const clockOut = usePunchClockOut();
-
-  const isLoading = clockIn.isPending || clockOut.isPending;
-
-  // Resolve employee ID based on mode
   const resolvedEmployeeId = isKioskMode
     ? (kioskEmployee?.id ?? '')
     : employeeId || user?.id || '';
@@ -160,8 +131,63 @@ function PunchPageContent() {
     ? (kioskEmployee?.name ?? '')
     : employeeName || user?.username || '';
 
-  // Feature flags from config (defaults: selfie required, gps optional, geofence off)
-  const selfieRequired = config?.selfieRequired ?? true;
+  const todayParams = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isoStart = today.toISOString().split('T')[0];
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const isoEnd = tomorrow.toISOString().split('T')[0];
+    return { startDate: isoStart, endDate: isoEnd };
+  }, []);
+
+  const { data: todayEntriesPage } = useQuery({
+    queryKey: ['punch-today-entries', resolvedEmployeeId, todayParams.startDate],
+    queryFn: async () => {
+      const { timeControlService } = await import(
+        '@/services/hr/time-control.service'
+      );
+      return timeControlService.listTimeEntries({
+        employeeId: resolvedEmployeeId,
+        startDate: todayParams.startDate,
+        endDate: todayParams.endDate,
+        perPage: 50,
+      });
+    },
+    enabled: !!resolvedEmployeeId,
+    staleTime: 30 * 1000,
+  });
+
+  const { data: streakEntriesPage } = useQuery({
+    queryKey: ['punch-streak-entries', resolvedEmployeeId],
+    queryFn: async () => {
+      const { timeControlService } = await import(
+        '@/services/hr/time-control.service'
+      );
+      const fromDate = new Date();
+      fromDate.setDate(fromDate.getDate() - 30);
+      return timeControlService.listTimeEntries({
+        employeeId: resolvedEmployeeId,
+        startDate: fromDate.toISOString().split('T')[0],
+        perPage: 200,
+      });
+    },
+    enabled: !!resolvedEmployeeId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const todayEntries = useMemo(
+    () => filterToday(todayEntriesPage?.timeEntries ?? []),
+    [todayEntriesPage]
+  );
+  const streak = useMemo(
+    () => calculateStreak(streakEntriesPage?.timeEntries ?? []),
+    [streakEntriesPage]
+  );
+  const isWorking = useMemo(() => isWorkingNow(todayEntries), [todayEntries]);
+
+  /* ---------- Feature flags from config ---------- */
+
+  const selfieRequired = config?.selfieRequired ?? false;
   const gpsRequired = config?.gpsRequired ?? false;
   const geofenceEnabled = config?.geofenceEnabled ?? false;
 
@@ -173,13 +199,26 @@ function PunchPageContent() {
     setGeofenceValid(isValid);
   }, []);
 
-  // Determine if punch buttons should be disabled
+  /* ---------- Geo badge state ---------- */
+
+  const geoState = useMemo<GeoState>(() => {
+    if (!locationRef.current) return { kind: 'unknown' };
+    if (!geofenceEnabled) return { kind: 'remote' };
+    if (geofenceValid === true) return { kind: 'office', zoneName: 'escritório' };
+    if (geofenceValid === false) return { kind: 'remote' };
+    return { kind: 'unknown' };
+  }, [geofenceEnabled, geofenceValid, locationRef.current?.lat]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ---------- CTA preconditions ---------- */
+
   const canPunch =
     !!resolvedEmployeeId &&
     (!selfieRequired || !!selfieData) &&
     (!gpsRequired || !!locationRef.current) &&
     (!geofenceEnabled || geofenceValid === true) &&
-    !isLoading;
+    !isSubmitting;
+
+  /* ---------- Submission ---------- */
 
   const handlePunch = useCallback(
     async (type: PunchType) => {
@@ -187,82 +226,53 @@ function PunchPageContent() {
         toast.error('Identificação do colaborador não encontrada.');
         return;
       }
-
       if (selfieRequired && !selfieData) {
         toast.error('Capture sua foto antes de registrar o ponto.');
         return;
       }
-
       if (gpsRequired && !locationRef.current) {
         toast.error('Localização GPS necessária para registrar o ponto.');
         return;
       }
-
       if (geofenceEnabled && geofenceValid !== true) {
         toast.error('Você precisa estar dentro da zona permitida.');
         return;
       }
 
       const label = type === 'CLOCK_IN' ? 'Entrada' : 'Saída';
+      const outcome = await submitPunch({
+        type,
+        employeeId: resolvedEmployeeId,
+        latitude: locationRef.current?.lat,
+        longitude: locationRef.current?.lng,
+        notes: selfieData ? 'Selfie capturada no registro' : undefined,
+      });
 
-      // Offline mode: save to queue
-      if (!isOnline) {
-        const offlinePunch = {
-          id: crypto.randomUUID(),
-          employeeId: resolvedEmployeeId,
+      if (outcome.status === 'synced') {
+        setPunchResult({
+          entry: outcome.entry,
           type,
-          timestamp: new Date().toISOString(),
-          latitude: locationRef.current?.lat,
-          longitude: locationRef.current?.lng,
-          photoData: selfieData ?? undefined,
-          createdAt: new Date().toISOString(),
-        };
-
-        offlineQueue.add(offlinePunch);
-        setPendingCount(offlineQueue.count);
-
+          timestamp: new Date(),
+        });
+        toast.success(`${label} registrada com sucesso!`);
+      } else {
         toast.success(
-          `${label} salva offline. Será sincronizada quando houver conexão.`
+          `${label} salva offline. Será sincronizada quando reconectar.`
         );
-
-        // Show a simplified result for offline
         setPunchResult({
           entry: {
-            id: offlinePunch.id,
+            id: outcome.pending.id,
             tenantId: '',
             employeeId: resolvedEmployeeId,
             entryType: type,
-            timestamp: offlinePunch.timestamp,
+            timestamp: outcome.pending.timestamp,
             latitude: locationRef.current?.lat,
             longitude: locationRef.current?.lng,
-            createdAt: offlinePunch.createdAt,
+            createdAt: outcome.pending.createdAt,
           },
           type,
           timestamp: new Date(),
         });
-        return;
-      }
-
-      // Online mode: send to API
-      const mutation = type === 'CLOCK_IN' ? clockIn : clockOut;
-
-      try {
-        const entry = await mutation.mutateAsync({
-          employeeId: resolvedEmployeeId,
-          latitude: locationRef.current?.lat,
-          longitude: locationRef.current?.lng,
-          notes: selfieData ? 'Selfie capturada no registro' : undefined,
-        });
-
-        setPunchResult({
-          entry,
-          type,
-          timestamp: new Date(),
-        });
-
-        toast.success(`${label} registrada com sucesso!`);
-      } catch {
-        toast.error(`Erro ao registrar ${label.toLowerCase()}.`);
       }
     },
     [
@@ -272,9 +282,7 @@ function PunchPageContent() {
       gpsRequired,
       geofenceEnabled,
       geofenceValid,
-      isOnline,
-      clockIn,
-      clockOut,
+      submitPunch,
     ]
   );
 
@@ -287,12 +295,13 @@ function PunchPageContent() {
     }
   }, [isKioskMode]);
 
-  // Not authenticated
+  /* ---------- Guards ---------- */
+
   if (!isAuthenticated) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
         <Waves className="size-12 text-violet-500 mb-4" />
-        <h1 className="text-xl font-bold mb-2">Acesso Necessário</h1>
+        <h1 className="text-xl font-bold mb-2">Acesso necessário</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Faça login para registrar seu ponto.
         </p>
@@ -300,12 +309,11 @@ function PunchPageContent() {
     );
   }
 
-  // No employee ID (and not kiosk mode)
   if (!isKioskMode && !resolvedEmployeeId) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
         <Waves className="size-12 text-violet-500 mb-4" />
-        <h1 className="text-xl font-bold mb-2">Colaborador Não Identificado</h1>
+        <h1 className="text-xl font-bold mb-2">Colaborador não identificado</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Acesse esta página através do QR Code ou link fornecido pela empresa.
         </p>
@@ -313,16 +321,18 @@ function PunchPageContent() {
     );
   }
 
+  /* ---------- Render ---------- */
+
   return (
-    <>
+    <div data-testid="punch-page" className="contents">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700/50">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="mx-auto flex max-w-md items-center gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <div className="flex size-9 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-500/20">
             <Waves className="size-5 text-violet-600 dark:text-violet-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold">
+            <h1 className="text-base font-bold text-slate-900 dark:text-slate-100">
               OpenSea Ponto
               {isKioskMode && (
                 <span className="ml-2 text-xs font-medium text-violet-500 dark:text-violet-400">
@@ -333,40 +343,29 @@ function PunchPageContent() {
             {resolvedEmployeeName && (
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
                 {resolvedEmployeeName}
+                {isWorking && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    em jornada
+                  </span>
+                )}
               </p>
             )}
           </div>
-          {/* Offline badge */}
           {!isOnline && (
-            <div className="flex items-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5">
-              <WifiOff className="size-3.5 text-slate-500" />
-              <span className="text-xs font-medium text-slate-500">
+            <div className="flex items-center gap-1.5 rounded-lg bg-rose-100 dark:bg-rose-500/20 px-2.5 py-1.5">
+              <WifiOff className="size-3.5 text-rose-600 dark:text-rose-300" />
+              <span className="text-xs font-semibold text-rose-700 dark:text-rose-300">
                 Offline
-              </span>
-            </div>
-          )}
-          {/* Pending sync badge */}
-          {pendingCount > 0 && isOnline && (
-            <div className="flex size-7 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/20">
-              <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
-                {pendingCount}
               </span>
             </div>
           )}
         </div>
       </header>
 
-      {/* Content */}
-      <div className="mx-auto max-w-lg space-y-4 px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        {/* Offline indicator */}
-        <OfflineIndicator
-          isOnline={isOnline}
-          pendingCount={pendingCount}
-          syncing={syncing}
-        />
-
+      {/* Body */}
+      <main className="mx-auto max-w-md space-y-4 px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         {punchResult ? (
-          /* Enhanced Receipt */
           <PunchReceipt
             entry={punchResult.entry}
             type={punchResult.type}
@@ -378,8 +377,15 @@ function PunchPageContent() {
             onReset={handleReset}
           />
         ) : (
-          /* Punch Form */
-          <div className="space-y-4">
+          <>
+            {/* Pending sync banner */}
+            <PendingSyncBanner
+              isOnline={isOnline}
+              pendingCount={pendingCount}
+              isSyncing={isSyncing}
+              onRetry={() => void flushQueue()}
+            />
+
             {/* Kiosk: Employee Selector */}
             {isKioskMode && (
               <KioskEmployeeSelector
@@ -389,101 +395,81 @@ function PunchPageContent() {
               />
             )}
 
-            {/* Selfie (conditionally shown) */}
+            {/* Live clock */}
+            <LiveClock />
+
+            {/* Selfie (conditional) */}
             {selfieRequired && (
-              <div className="rounded-2xl overflow-hidden bg-white dark:bg-slate-800 shadow-lg">
+              <div className="rounded-2xl overflow-hidden bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700">
                 <SelfieCapture
                   onCapture={setSelfieData}
                   captured={selfieData ?? undefined}
                   onRetake={() => setSelfieData(null)}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
               </div>
             )}
 
-            {/* Location */}
-            <LocationDisplay onLocationReady={handleLocationReady} />
-
-            {/* Geofence Status */}
-            <GeofenceStatus
-              latitude={locationRef.current?.lat ?? null}
-              longitude={locationRef.current?.lng ?? null}
-              enabled={geofenceEnabled}
-              onValidation={handleGeofenceValidation}
-            />
-
-            {/* Clock */}
-            <LiveClock />
-
-            {/* Punch Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handlePunch('CLOCK_IN')}
-                disabled={!canPunch}
-                className={cn(
-                  'flex items-center justify-center gap-2 rounded-2xl h-16',
-                  'bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base',
-                  'active:scale-[0.97] transition-all shadow-sm',
-                  'disabled:opacity-50 disabled:pointer-events-none'
-                )}
-              >
-                <LogIn className="size-5" />
-                <span>Entrada</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePunch('CLOCK_OUT')}
-                disabled={!canPunch}
-                className={cn(
-                  'flex items-center justify-center gap-2 rounded-2xl h-16',
-                  'bg-rose-500 hover:bg-rose-600 text-white font-bold text-base',
-                  'active:scale-[0.97] transition-all shadow-sm',
-                  'disabled:opacity-50 disabled:pointer-events-none'
-                )}
-              >
-                <LogOut className="size-5" />
-                <span>Saída</span>
-              </button>
+            {/* Hidden location/geofence drivers (UI surfaces in GeoBadge below) */}
+            <div className="sr-only">
+              <LocationDisplay onLocationReady={handleLocationReady} />
+              <GeofenceStatus
+                latitude={locationRef.current?.lat ?? null}
+                longitude={locationRef.current?.lng ?? null}
+                enabled={geofenceEnabled}
+                onValidation={handleGeofenceValidation}
+              />
             </div>
 
-            {/* Helper texts */}
-            {selfieRequired && !selfieData && (
-              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
-                Capture sua foto para habilitar o registro de ponto.
-              </p>
-            )}
-
-            {gpsRequired && !locationRef.current && (
-              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
-                Aguardando localização GPS...
-              </p>
-            )}
-
-            {geofenceEnabled && geofenceValid === false && (
-              <p className="text-center text-xs text-rose-400 dark:text-rose-500">
-                Registro bloqueado: fora da zona permitida.
-              </p>
-            )}
-
-            {isKioskMode && !kioskEmployee && (
-              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
-                Selecione um colaborador para registrar o ponto.
-              </p>
-            )}
-
-            {isLoading && (
-              <div className="flex items-center justify-center gap-2 py-2">
-                <div className="size-4 rounded-full border-2 border-violet-300 border-t-violet-600 animate-spin" />
-                <span className="text-sm text-slate-500 dark:text-slate-400">
-                  Registrando ponto...
-                </span>
+            {/* CTA */}
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <GeoBadge state={geoState} />
+                {streak > 0 && <StreakCounter days={streak} />}
               </div>
-            )}
-          </div>
+
+              <BigPunchCTA
+                state={isWorking ? 'working' : 'idle'}
+                disabled={!canPunch}
+                isLoading={isSubmitting}
+                onPunch={handlePunch}
+              />
+
+              {!canPunch && (
+                <div className="space-y-1 text-center max-w-xs">
+                  {selfieRequired && !selfieData && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Capture sua foto para liberar o registro.
+                    </p>
+                  )}
+                  {gpsRequired && !locationRef.current && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Aguardando localização GPS...
+                    </p>
+                  )}
+                  {geofenceEnabled && geofenceValid === false && (
+                    <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                      Fora da zona permitida — não é possível registrar agora.
+                    </p>
+                  )}
+                  {isKioskMode && !kioskEmployee && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Selecione um colaborador para registrar o ponto.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Journey timer */}
+            <JourneyTimer todayEntries={todayEntries} isWorking={isWorking} />
+
+            {/* History */}
+            <TodayHistory entries={todayEntries} />
+          </>
         )}
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
 
