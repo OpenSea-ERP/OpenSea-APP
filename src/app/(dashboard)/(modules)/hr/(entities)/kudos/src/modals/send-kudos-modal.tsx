@@ -95,6 +95,17 @@ interface SendKudosModalProps {
   onClose: () => void;
   isSubmitting: boolean;
   onSubmit: (data: SendKudosData) => Promise<void>;
+  /**
+   * Optional pre-fill values for external triggers (e.g. birthday widget).
+   * When provided, the modal skips step 1 (recipient/category selection) and
+   * lands directly on the message step with the values applied. The user can
+   * still go back to step 1 to change the selection.
+   */
+  defaultRecipientId?: string;
+  defaultCategory?: KudosCategory;
+  defaultMessage?: string;
+  /** When true, modal opens directly on step 2 (message). Defaults to false. */
+  startOnMessageStep?: boolean;
 }
 
 export function SendKudosModal({
@@ -102,11 +113,18 @@ export function SendKudosModal({
   onClose,
   isSubmitting,
   onSubmit,
+  defaultRecipientId,
+  defaultCategory,
+  defaultMessage,
+  startOnMessageStep = false,
 }: SendKudosModalProps) {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [toEmployeeId, setToEmployeeId] = useState('');
-  const [category, setCategory] = useState<KudosCategory | ''>('');
-  const [message, setMessage] = useState('');
+  const initialStep = startOnMessageStep ? 2 : 1;
+  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [toEmployeeId, setToEmployeeId] = useState(defaultRecipientId ?? '');
+  const [category, setCategory] = useState<KudosCategory | ''>(
+    defaultCategory ?? ''
+  );
+  const [message, setMessage] = useState(defaultMessage ?? '');
   const [isPublic, setIsPublic] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [wasOpen, setWasOpen] = useState(false);
@@ -115,13 +133,13 @@ export function SendKudosModal({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Reset when modal opens
+  // Reset when modal opens — applying pre-fill values when present
   if (isOpen && !wasOpen) {
     setWasOpen(true);
-    setCurrentStep(1);
-    setToEmployeeId('');
-    setCategory('');
-    setMessage('');
+    setCurrentStep(initialStep);
+    setToEmployeeId(defaultRecipientId ?? '');
+    setCategory(defaultCategory ?? '');
+    setMessage(defaultMessage ?? '');
     setIsPublic(true);
     setFieldErrors({});
     setEmployeeSearch('');
