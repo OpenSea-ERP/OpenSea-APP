@@ -327,12 +327,17 @@ export default function ExportPage() {
               </div>
               <div className="space-y-2">
                 <Label>Empresa (opcional)</Label>
-                <Select value={efdCompanyId} onValueChange={setEfdCompanyId}>
+                {/* Radix Select rejects SelectItem value=""; use a sentinel and
+                    map back to '' when reading the actual filter value. */}
+                <Select
+                  value={efdCompanyId || '__all__'}
+                  onValueChange={v => setEfdCompanyId(v === '__all__' ? '' : v)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Todas as empresas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as empresas</SelectItem>
+                    <SelectItem value="__all__">Todas as empresas</SelectItem>
                     {companiesData?.companies?.map(company => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.tradeName || company.legalName}
