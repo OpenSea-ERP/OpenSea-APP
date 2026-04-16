@@ -108,6 +108,13 @@ export {
   type ListInterviewsParams,
 } from './recruitment.service';
 export {
+  salaryHistoryService,
+  type SalaryHistoryRecord,
+  type ListSalaryHistoryResponse,
+  type RegisterSalaryChangeRequest,
+  type RegisterSalaryChangeResponse,
+} from './salary-history.service';
+export {
   oneOnOnesService,
   type OneOnOnesListResponse,
   type OneOnOneResponse,
