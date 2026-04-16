@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useBankAccounts } from '@/hooks/finance/use-bank-accounts';
 import { useImportOfx } from '@/hooks/finance/use-reconciliation';
-import type { ReconciliationImportPreview } from '@/types/finance';
+import type { Reconciliation, ReconciliationItem } from '@/types/finance';
 import { cn } from '@/lib/utils';
 import {
   ArrowDownCircle,
@@ -65,9 +65,9 @@ export function OfxImportModal({
   const [step, setStep] = useState(1);
   const [bankAccountId, setBankAccountId] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<ReconciliationImportPreview | null>(
-    null
-  );
+  const [importedReconciliation, setImportedReconciliation] = useState<
+    (Reconciliation & { items?: ReconciliationItem[] }) | null
+  >(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -131,7 +131,7 @@ export function OfxImportModal({
         bankAccountId,
         file,
       });
-      setPreview(result.preview);
+      setImportedReconciliation(result.reconciliation);
       setStep(2);
     } catch {
       toast.error('Erro ao processar o arquivo OFX.');
@@ -142,7 +142,7 @@ export function OfxImportModal({
     setStep(1);
     setBankAccountId('');
     setFile(null);
-    setPreview(null);
+    setImportedReconciliation(null);
     setIsDragging(false);
     onOpenChange(false);
   }, [onOpenChange]);
@@ -271,58 +271,14 @@ export function OfxImportModal({
     },
     {
       title: 'Prévia da Importação',
-      description: 'Confira os dados extraídos do arquivo OFX.',
+      description: 'Confira todas as transações extraídas do arquivo OFX.',
       icon: (
         <CheckCircle className="h-16 w-16 text-emerald-500 dark:text-emerald-400 opacity-80" />
       ),
       isValid: true,
       onBack: () => setStep(1),
-      content: preview ? (
-        <div className="space-y-4 p-1">
-          {/* Summary Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-lg border p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">
-                Total de Transações
-              </p>
-              <p className="text-xl font-bold">{preview.totalTransactions}</p>
-            </div>
-            <div className="rounded-lg border p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Período</p>
-              <p className="text-sm font-medium">
-                {formatDate(preview.periodStart)} a{' '}
-                {formatDate(preview.periodEnd)}
-              </p>
-            </div>
-          </div>
-
-          {/* Credits / Debits */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-lg border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-500/8 p-3 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300">
-                <ArrowUpCircle className="h-3.5 w-3.5" />
-                Créditos ({preview.creditCount})
-              </div>
-              <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300 font-mono">
-                {formatCurrency(preview.totalCredits)}
-              </p>
-            </div>
-            <div className="rounded-lg border border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-500/8 p-3 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs text-rose-700 dark:text-rose-300">
-                <ArrowDownCircle className="h-3.5 w-3.5" />
-                Débitos ({preview.debitCount})
-              </div>
-              <p className="text-lg font-bold text-rose-700 dark:text-rose-300 font-mono">
-                {formatCurrency(preview.totalDebits)}
-              </p>
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground text-center pt-2">
-            As transações serão comparadas com os lançamentos existentes para
-            sugestão automática de conciliação.
-          </p>
-        </div>
+      content: importedReconciliation ? (
+        <OfxImportPreview reconciliation={importedReconciliation} />
       ) : null,
       footer: (
         <div className="flex items-center justify-between w-full px-6 py-4 border-t border-border/50">
@@ -343,7 +299,161 @@ export function OfxImportModal({
       currentStep={step}
       onStepChange={setStep}
       onClose={handleClose}
-      heightClass="h-[520px]"
+      heightClass="h-[640px]"
     />
+  );
+}
+
+// ============================================================================
+// OFX IMPORT PREVIEW
+// ============================================================================
+
+function OfxImportPreview({
+  reconciliation,
+}: {
+  reconciliation: Reconciliation & { items?: ReconciliationItem[] };
+}) {
+  const items = reconciliation.items ?? [];
+  const credits = items.filter(i => i.transactionType === 'CREDIT');
+  const debits = items.filter(i => i.transactionType === 'DEBIT');
+  const totalCredits = credits.reduce((sum, i) => sum + Math.abs(i.amount), 0);
+  const totalDebits = debits.reduce((sum, i) => sum + Math.abs(i.amount), 0);
+  const net = totalCredits - totalDebits;
+
+  return (
+    <div className="space-y-3 p-1" data-testid="ofx-import-preview">
+      {/* Header stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="rounded-lg border p-2.5 space-y-0.5">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Transações
+          </p>
+          <p className="text-lg font-bold tabular-nums">
+            {reconciliation.totalItems}
+          </p>
+        </div>
+        <div className="rounded-lg border p-2.5 space-y-0.5">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Período
+          </p>
+          <p className="text-xs font-medium leading-tight">
+            {formatDate(reconciliation.periodStart)}
+            <br />
+            até {formatDate(reconciliation.periodEnd)}
+          </p>
+        </div>
+        <div className="rounded-lg border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-500/8 p-2.5 space-y-0.5">
+          <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+            <ArrowUpCircle className="h-3 w-3" />
+            Créditos ({credits.length})
+          </div>
+          <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300 font-mono tabular-nums">
+            {formatCurrency(totalCredits)}
+          </p>
+        </div>
+        <div className="rounded-lg border border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-500/8 p-2.5 space-y-0.5">
+          <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-rose-700 dark:text-rose-300">
+            <ArrowDownCircle className="h-3 w-3" />
+            Débitos ({debits.length})
+          </div>
+          <p className="text-sm font-bold text-rose-700 dark:text-rose-300 font-mono tabular-nums">
+            {formatCurrency(totalDebits)}
+          </p>
+        </div>
+      </div>
+
+      {/* Net Flow */}
+      <div
+        className={cn(
+          'rounded-lg border p-2.5 flex items-center justify-between',
+          net >= 0
+            ? 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-500/5'
+            : 'border-rose-200 dark:border-rose-800/40 bg-rose-50/50 dark:bg-rose-500/5'
+        )}
+      >
+        <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+          Fluxo líquido
+        </span>
+        <span
+          className={cn(
+            'text-base font-bold font-mono tabular-nums',
+            net >= 0
+              ? 'text-emerald-700 dark:text-emerald-300'
+              : 'text-rose-700 dark:text-rose-300'
+          )}
+        >
+          {net >= 0 ? '+' : ''}
+          {formatCurrency(net)}
+        </span>
+      </div>
+
+      {/* Transaction List */}
+      <div className="space-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-0.5">
+          Todas as transações ({items.length})
+        </p>
+        <div
+          className="rounded-lg border border-border max-h-[280px] overflow-y-auto"
+          data-testid="ofx-preview-list"
+        >
+          {items.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              Nenhuma transação detectada.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {items.map(item => {
+                const isCredit = item.transactionType === 'CREDIT';
+                return (
+                  <li
+                    key={item.id}
+                    className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors"
+                    data-testid="ofx-preview-row"
+                  >
+                    <div
+                      className={cn(
+                        'h-6 w-6 rounded-md flex items-center justify-center shrink-0',
+                        isCredit
+                          ? 'bg-emerald-100 dark:bg-emerald-500/10'
+                          : 'bg-rose-100 dark:bg-rose-500/10'
+                      )}
+                    >
+                      {isCredit ? (
+                        <ArrowUpCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <ArrowDownCircle className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">{item.description}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {formatDate(item.date)}
+                        {item.fitId && ` · FITID ${item.fitId}`}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        'text-sm font-mono font-semibold tabular-nums whitespace-nowrap',
+                        isCredit
+                          ? 'text-emerald-700 dark:text-emerald-300'
+                          : 'text-rose-700 dark:text-rose-300'
+                      )}
+                    >
+                      {isCredit ? '+' : '-'}
+                      {formatCurrency(Math.abs(item.amount))}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <p className="text-[11px] text-muted-foreground text-center">
+        As transações serão comparadas com lançamentos existentes para sugestão
+        automática.
+      </p>
+    </div>
   );
 }
