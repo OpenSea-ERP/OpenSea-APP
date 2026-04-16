@@ -519,6 +519,18 @@ export const HR_PERMISSIONS = {
     VIEW: HR_CODES.REPORTS.ACCESS,
     EXPORT: HR_CODES.REPORTS.EXPORT,
   },
+
+  /**
+   * Permissões de Reuniões 1:1 (One-on-Ones)
+   */
+  ONE_ON_ONES: {
+    LIST: HR_CODES.ONE_ON_ONES.ACCESS,
+    VIEW: HR_CODES.ONE_ON_ONES.ACCESS,
+    CREATE: HR_CODES.ONE_ON_ONES.REGISTER,
+    UPDATE: HR_CODES.ONE_ON_ONES.MODIFY,
+    DELETE: HR_CODES.ONE_ON_ONES.REMOVE,
+    MANAGE: HR_CODES.ONE_ON_ONES.ADMIN,
+  },
 } as const;
 
 /* ===========================================

@@ -107,3 +107,11 @@ export {
   type ListApplicationsParams,
   type ListInterviewsParams,
 } from './recruitment.service';
+export {
+  oneOnOnesService,
+  type OneOnOnesListResponse,
+  type OneOnOneResponse,
+  type TalkingPointResponse,
+  type ActionItemResponse,
+  type NoteResponse,
+} from './one-on-ones.service';

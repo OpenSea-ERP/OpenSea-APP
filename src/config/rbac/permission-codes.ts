@@ -459,6 +459,15 @@ export const HR_PERMISSIONS = {
     'remove',
     'admin'
   ),
+  ONE_ON_ONES: perm(
+    'hr',
+    'one-on-ones',
+    'access',
+    'register',
+    'modify',
+    'remove',
+    'admin'
+  ),
 } as const;
 
 // =============================================================================
