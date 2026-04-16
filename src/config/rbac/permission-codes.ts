@@ -446,7 +446,7 @@ export const HR_PERMISSIONS = {
     'modify',
     'remove'
   ),
-  KUDOS: perm('hr', 'kudos', 'access', 'register'),
+  KUDOS: perm('hr', 'kudos', 'access', 'register', 'modify', 'remove', 'admin'),
   SURVEYS: perm('hr', 'surveys', 'access', 'register', 'modify', 'remove'),
   OKRS: perm('hr', 'okrs', 'access', 'register', 'modify', 'remove'),
   REPORTS: perm('hr', 'reports', 'access', 'export'),

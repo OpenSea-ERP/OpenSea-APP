@@ -132,6 +132,79 @@ export interface EmployeeKudos {
   category: KudosCategory;
   isPublic: boolean;
   createdAt: string;
+
+  // Social feed extensions (backend feed endpoint)
+  /** Top emoji counts (max 5 entries) returned by `GET /v1/hr/kudos/feed` */
+  reactionsSummary?: KudosReactionSummaryEntry[];
+  /** Total reply count for thread preview */
+  repliesCount?: number;
+  /** Whether this kudos was pinned to the top of the feed */
+  isPinned?: boolean;
+  /** Timestamp when it was pinned */
+  pinnedAt?: string | null;
+  /** Employee id that pinned the kudos */
+  pinnedBy?: string | null;
+}
+
+/** Aggregated emoji entry returned in `reactionsSummary` */
+export interface KudosReactionSummaryEntry {
+  emoji: string;
+  count: number;
+  /** True when current user has reacted with this emoji */
+  hasReacted?: boolean;
+}
+
+/** Single reaction record (returned by `GET /v1/hr/kudos/:id/reactions`) */
+export interface KudosReaction {
+  id: string;
+  kudosId: string;
+  employeeId: string;
+  emoji: string;
+  createdAt: string;
+  employee?: {
+    id: string;
+    fullName: string;
+    photoUrl?: string;
+  };
+}
+
+export interface KudosReactionsGroupedResponse {
+  reactions: Array<{
+    emoji: string;
+    count: number;
+    employees: Array<{ id: string; fullName: string; photoUrl?: string }>;
+  }>;
+}
+
+export interface KudosReactionToggleResponse {
+  reactions: KudosReactionSummaryEntry[];
+  /** True if a reaction was created, false if it was removed */
+  added: boolean;
+}
+
+/** Single reply on a kudos thread */
+export interface KudosReply {
+  id: string;
+  kudosId: string;
+  authorEmployeeId: string;
+  authorEmployee?: {
+    id: string;
+    fullName: string;
+    photoUrl?: string;
+    position?: { name: string };
+    department?: { name: string };
+  };
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KudosRepliesResponse {
+  replies: KudosReply[];
+}
+
+export interface KudosReplyResponse {
+  reply: KudosReply;
 }
 
 export interface SendKudosData {
@@ -139,6 +212,25 @@ export interface SendKudosData {
   message: string;
   category: KudosCategory;
   isPublic?: boolean;
+}
+
+export interface ToggleReactionData {
+  emoji: string;
+}
+
+export interface CreateReplyData {
+  content: string;
+}
+
+export interface UpdateReplyData {
+  content: string;
+}
+
+export interface KudosFeedQueryParams {
+  /** When provided, restricts to pinned (true) or non-pinned (false). */
+  pinned?: boolean;
+  page?: number;
+  limit?: number;
 }
 
 // ============================================================================

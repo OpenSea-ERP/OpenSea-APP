@@ -4,14 +4,22 @@ import type {
   AnnouncementsResponse,
   CreateAnnouncementData,
   CreateEmployeeRequestData,
+  CreateReplyData,
   EmployeeRequestResponse,
   EmployeeRequestsResponse,
+  KudosFeedQueryParams,
   KudosListResponse,
+  KudosReactionToggleResponse,
+  KudosReactionsGroupedResponse,
+  KudosRepliesResponse,
+  KudosReplyResponse,
   KudosResponse,
   OnboardingResponse,
   HRPendingApprovalsResponse,
   SendKudosData,
+  ToggleReactionData,
   UpdateAnnouncementData,
+  UpdateReplyData,
 } from '@/types/hr';
 
 // ============================================================================
@@ -33,6 +41,13 @@ export interface ListAnnouncementsParams {
 export interface ListKudosParams {
   page?: number;
   perPage?: number;
+}
+
+export interface ListKudosFeedParams {
+  page?: number;
+  perPage?: number;
+  /** When true, returns only pinned items; when false, only non-pinned. */
+  pinned?: boolean;
 }
 
 export interface ListPendingApprovalsParams {
@@ -149,10 +164,88 @@ export const portalService = {
     );
   },
 
-  async listKudosFeed(params?: ListKudosParams): Promise<KudosListResponse> {
+  async listKudosFeed(
+    params?: ListKudosFeedParams
+  ): Promise<KudosListResponse> {
+    const { perPage, pinned, ...rest } = params ?? {};
+    const query: KudosFeedQueryParams & { page?: number } = { ...rest };
+    if (perPage !== undefined) query.limit = perPage;
+    if (pinned !== undefined) query.pinned = pinned;
     return apiClient.get<KudosListResponse>(
-      `/v1/hr/kudos/feed${buildQuery(params)}`
+      `/v1/hr/kudos/feed${buildQuery(query)}`
     );
+  },
+
+  // --------------------------------------------------------------------------
+  // Kudos Reactions
+  // --------------------------------------------------------------------------
+
+  async toggleKudosReaction(
+    kudosId: string,
+    reaction: ToggleReactionData
+  ): Promise<KudosReactionToggleResponse> {
+    return apiClient.post<KudosReactionToggleResponse>(
+      `/v1/hr/kudos/${kudosId}/reactions`,
+      reaction
+    );
+  },
+
+  async listKudosReactions(
+    kudosId: string
+  ): Promise<KudosReactionsGroupedResponse> {
+    return apiClient.get<KudosReactionsGroupedResponse>(
+      `/v1/hr/kudos/${kudosId}/reactions`
+    );
+  },
+
+  // --------------------------------------------------------------------------
+  // Kudos Replies (thread)
+  // --------------------------------------------------------------------------
+
+  async listKudosReplies(kudosId: string): Promise<KudosRepliesResponse> {
+    return apiClient.get<KudosRepliesResponse>(
+      `/v1/hr/kudos/${kudosId}/replies`
+    );
+  },
+
+  async createKudosReply(
+    kudosId: string,
+    reply: CreateReplyData
+  ): Promise<KudosReplyResponse> {
+    return apiClient.post<KudosReplyResponse>(
+      `/v1/hr/kudos/${kudosId}/replies`,
+      reply
+    );
+  },
+
+  async updateKudosReply(
+    replyId: string,
+    reply: UpdateReplyData
+  ): Promise<KudosReplyResponse> {
+    return apiClient.patch<KudosReplyResponse>(
+      `/v1/hr/kudos/replies/${replyId}`,
+      reply
+    );
+  },
+
+  async deleteKudosReply(replyId: string): Promise<void> {
+    return apiClient.delete<void>(`/v1/hr/kudos/replies/${replyId}`);
+  },
+
+  // --------------------------------------------------------------------------
+  // Kudos Pin / Unpin
+  // --------------------------------------------------------------------------
+
+  async pinKudos(kudosId: string): Promise<KudosResponse> {
+    return apiClient.post<KudosResponse>(`/v1/hr/kudos/${kudosId}/pin`, {});
+  },
+
+  async unpinKudos(kudosId: string): Promise<KudosResponse> {
+    return apiClient.post<KudosResponse>(`/v1/hr/kudos/${kudosId}/unpin`, {});
+  },
+
+  async deleteKudos(kudosId: string): Promise<void> {
+    return apiClient.delete<void>(`/v1/hr/kudos/${kudosId}`);
   },
 
   // --------------------------------------------------------------------------
