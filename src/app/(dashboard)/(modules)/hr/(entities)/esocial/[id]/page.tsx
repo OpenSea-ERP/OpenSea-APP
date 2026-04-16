@@ -28,7 +28,10 @@ import { Separator } from '@/components/ui/separator';
 import { usePermissions } from '@/hooks/use-permissions';
 import { esocialService } from '@/services/hr/esocial.service';
 import { toast } from 'sonner';
-import type { EsocialEventStatus, EventStatusAction } from '@/types/esocial';
+import type { EventStatusAction } from '@/types/esocial';
+import { EsocialStatusChip } from '@/components/hr/esocial-status-chip';
+import { EsocialRetryButton } from '@/components/hr/esocial-retry-button';
+import { getEsocialCodeInfo } from '@/lib/hr/esocial-codes';
 
 // ============================
 // Status Config
@@ -343,26 +346,59 @@ export default function EsocialEventDetailPage() {
                 Retificar
               </Button>
             )}
+            <EsocialRetryButton
+              eventId={event.id}
+              status={event.status}
+              size="default"
+              className="h-9 px-2.5"
+              label="Reenviar"
+            />
           </div>
         }
       />
 
-      {/* Rejection alert */}
-      {event.status === 'REJECTED' && event.rejectionCode && (
-        <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 dark:border-rose-500/20 dark:bg-rose-500/8 px-4 py-3">
-          <AlertTriangle className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-rose-700 dark:text-rose-300">
-              Rejeitado - Código {event.rejectionCode}
-            </p>
-            {event.rejectionMessage && (
-              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
-                {event.rejectionMessage}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Rejection / error hint card */}
+      {(event.status === 'REJECTED' || event.status === 'ERROR') &&
+        (event.rejectionCode || event.rejectionMessage) && (
+          <Card className="bg-rose-50/60 dark:bg-rose-500/8 border border-rose-200 dark:border-rose-500/20 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-500/15">
+                <AlertTriangle className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">
+                    Próximo passo recomendado
+                  </p>
+                  {event.rejectionCode && (
+                    <Badge
+                      variant="outline"
+                      className="font-mono text-xs border-rose-300 text-rose-700 dark:border-rose-500/30 dark:text-rose-300"
+                    >
+                      Cód. {event.rejectionCode}
+                    </Badge>
+                  )}
+                </div>
+                {event.rejectionCode && (
+                  <p className="text-xs text-rose-700/90 dark:text-rose-300/90">
+                    {getEsocialCodeInfo(event.rejectionCode).message}
+                  </p>
+                )}
+                {event.rejectionMessage && (
+                  <p className="text-xs text-rose-600 dark:text-rose-400 break-words">
+                    {event.rejectionMessage}
+                  </p>
+                )}
+                {event.rejectionCode && (
+                  <p className="text-xs text-rose-700 dark:text-rose-200 mt-1">
+                    <span className="font-medium">Sugestão: </span>
+                    {getEsocialCodeInfo(event.rejectionCode).hint}
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column: Event details */}
@@ -380,18 +416,11 @@ export default function EsocialEventDetailPage() {
                   <Badge variant="outline" className="font-mono text-xs">
                     {event.eventType}
                   </Badge>
-                  <Badge
-                    variant={
-                      event.status === 'ACCEPTED'
-                        ? 'default'
-                        : event.status === 'REJECTED' ||
-                            event.status === 'ERROR'
-                          ? 'destructive'
-                          : 'secondary'
-                    }
-                  >
-                    {statusConfig.label}
-                  </Badge>
+                  <EsocialStatusChip
+                    status={event.status}
+                    returnCode={event.rejectionCode}
+                    returnMessage={event.rejectionMessage}
+                  />
                 </div>
                 <h2 className="text-lg font-semibold mt-1">
                   {event.description}
