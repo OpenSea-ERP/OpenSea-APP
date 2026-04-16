@@ -37,6 +37,7 @@ import {
   CalendarOff,
   Clock,
   ExternalLink,
+  GitBranchPlus,
   Loader2,
   LogOut,
   Palmtree,
@@ -862,8 +863,19 @@ function EmployeesPageContent() {
     page.modals.open('create');
   }, [page.modals]);
 
+  const handleOpenOrgChart = useCallback(() => {
+    router.push('/hr/employees/org-chart');
+  }, [router]);
+
   const actionButtons = useMemo<ActionButtonWithPermission[]>(
     () => [
+      {
+        id: 'employees-org-chart',
+        title: 'Organograma',
+        icon: GitBranchPlus,
+        onClick: handleOpenOrgChart,
+        variant: 'outline',
+      },
       {
         id: 'import-employees',
         title: 'Importar',
@@ -881,7 +893,7 @@ function EmployeesPageContent() {
         permission: employeesConfig.permissions?.create,
       },
     ],
-    [handleImport, handleCreate]
+    [handleOpenOrgChart, handleImport, handleCreate]
   );
 
   const visibleActionButtons = useMemo<HeaderButton[]>(
