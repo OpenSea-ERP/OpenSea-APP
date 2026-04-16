@@ -17,6 +17,7 @@ import {
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Card } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -681,11 +682,12 @@ export default function EditLoanPage({
 
                       <div className="grid gap-2">
                         <Label htmlFor="endDate">Data de Término</Label>
-                        <Input
+                        <DatePicker
                           id="endDate"
-                          type="date"
                           value={endDate}
-                          onChange={e => setEndDate(e.target.value)}
+                          onChange={v =>
+                            setEndDate(typeof v === 'string' ? v : '')
+                          }
                         />
                       </div>
                     </div>

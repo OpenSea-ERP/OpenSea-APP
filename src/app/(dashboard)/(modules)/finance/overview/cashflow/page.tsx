@@ -6,7 +6,7 @@ import { ArrowLeft, Target, TrendingDown, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -104,20 +104,18 @@ export default function CashflowPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate">Data Início</Label>
-              <Input
+              <DatePicker
                 id="startDate"
-                type="date"
                 value={startDate}
-                onChange={e => setStartDate(e.target.value)}
+                onChange={v => setStartDate(typeof v === 'string' ? v : '')}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="endDate">Data Fim</Label>
-              <Input
+              <DatePicker
                 id="endDate"
-                type="date"
                 value={endDate}
-                onChange={e => setEndDate(e.target.value)}
+                onChange={v => setEndDate(typeof v === 'string' ? v : '')}
               />
             </div>
             <div className="space-y-2">

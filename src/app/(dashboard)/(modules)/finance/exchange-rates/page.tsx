@@ -12,6 +12,7 @@ import {
   PageLayout,
 } from '@/components/layout/page-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -285,13 +286,12 @@ export default function ExchangeRatesPage() {
                     <CalendarDays className="h-4 w-4 text-muted-foreground" />
                     Data da cotação
                   </Label>
-                  <Input
+                  <DatePicker
                     id="rate-date"
-                    type="date"
                     value={date}
-                    max={getTodayISO()}
-                    onChange={e => setDate(e.target.value)}
-                    className="w-48"
+                    onChange={v => setDate(typeof v === 'string' ? v : '')}
+                    toDate={new Date()}
+                    className="w-56"
                   />
                 </div>
                 <p className="text-xs text-muted-foreground pb-3">

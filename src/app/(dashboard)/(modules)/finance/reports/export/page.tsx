@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -170,20 +171,18 @@ export default function ExportPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate">Data Início</Label>
-              <Input
+              <DatePicker
                 id="startDate"
-                type="date"
                 value={startDate}
-                onChange={e => setStartDate(e.target.value)}
+                onChange={v => setStartDate(typeof v === 'string' ? v : '')}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="endDate">Data Fim</Label>
-              <Input
+              <DatePicker
                 id="endDate"
-                type="date"
                 value={endDate}
-                onChange={e => setEndDate(e.target.value)}
+                onChange={v => setEndDate(typeof v === 'string' ? v : '')}
               />
             </div>
           </div>
