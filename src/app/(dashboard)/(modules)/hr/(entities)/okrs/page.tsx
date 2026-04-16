@@ -14,6 +14,7 @@ import {
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { Badge } from '@/components/ui/badge';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import { Button } from '@/components/ui/button';
 import {
   CoreProvider,
   EntityCard,
@@ -22,14 +23,23 @@ import {
 } from '@/core';
 import type { ContextMenuAction } from '@/core/components/entity-context-menu';
 import { usePermissions } from '@/hooks/use-permissions';
+import { OkrTreeNode as OkrTreeNodeView } from '@/components/hr/okr-tree-node';
+import {
+  buildOkrTree,
+  filterOkrTree,
+  flattenOkrTree,
+} from '@/lib/hr/okr-rollup';
 import type { OKRObjective, ObjectiveLevel, ObjectiveStatus } from '@/types/hr';
 import {
   BarChart3,
   Building2,
+  Calendar,
   ExternalLink,
+  ListTree,
   Loader2,
   Pencil,
   Plus,
+  Rows3,
   Target,
   Trash2,
   Users,
@@ -42,20 +52,19 @@ import {
   useListObjectives,
   useDeleteObjective,
   getObjectiveLevelLabel,
-  getObjectiveStatusLabel,
   getObjectiveLevelColor,
+  getObjectiveStatusLabel,
   getObjectiveStatusColor,
   getProgressBarClass,
   getProgressColor,
   formatPeriodLabel,
-  formatDate,
 } from './src';
 import { HR_PERMISSIONS } from '../../_shared/constants/hr-permissions';
 
-const CreateObjectiveModal = dynamic(
+const CreateOKRModal = dynamic(
   () =>
-    import('./src/modals/create-objective-modal').then(m => ({
-      default: m.CreateObjectiveModal,
+    import('@/components/hr/create-okr-modal').then(m => ({
+      default: m.CreateOKRModal,
     })),
   { ssr: false }
 );
@@ -78,6 +87,17 @@ const STATUS_OPTIONS: { value: ObjectiveStatus; label: string }[] = [
   { value: 'CANCELLED', label: 'Cancelado' },
 ];
 
+const PERIOD_OPTIONS = [
+  { value: 'Q1_2026', label: '1T 2026' },
+  { value: 'Q2_2026', label: '2T 2026' },
+  { value: 'Q3_2026', label: '3T 2026' },
+  { value: 'Q4_2026', label: '4T 2026' },
+  { value: 'Q1_2027', label: '1T 2027' },
+  { value: 'Q2_2027', label: '2T 2027' },
+];
+
+type ViewMode = 'tree' | 'list';
+
 // ============================================================================
 // PAGE
 // ============================================================================
@@ -92,19 +112,24 @@ export default function OKRsPage() {
   const canDelete = hasPermission(HR_PERMISSIONS.OKRS.DELETE);
 
   // ============================================================================
-  // FILTERS
+  // VIEW MODE + FILTERS
   // ============================================================================
 
+  const [viewMode, setViewMode] = useState<ViewMode>('tree');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLevel, setFilterLevel] = useState<ObjectiveLevel | ''>('');
   const [filterStatus, setFilterStatus] = useState<ObjectiveStatus | ''>('');
+  const [filterPeriod, setFilterPeriod] = useState<string>('');
+  const [filterOwnerId, setFilterOwnerId] = useState<string>('');
 
   const queryParams = useMemo(() => {
-    const params: Record<string, unknown> = { perPage: 20 };
+    const params: Record<string, unknown> = { perPage: 50 };
     if (filterLevel) params.level = filterLevel;
     if (filterStatus) params.status = filterStatus;
+    if (filterPeriod) params.period = filterPeriod;
+    if (filterOwnerId) params.ownerId = filterOwnerId;
     return params;
-  }, [filterLevel, filterStatus]);
+  }, [filterLevel, filterStatus, filterPeriod, filterOwnerId]);
 
   // ============================================================================
   // DATA
@@ -121,24 +146,58 @@ export default function OKRsPage() {
   } = useListObjectives(queryParams);
   const deleteObjective = useDeleteObjective();
 
-  const allObjectives = data?.pages.flatMap(p => p.objectives ?? []) ?? [];
+  const allObjectives = useMemo(
+    () => data?.pages.flatMap(p => p.objectives ?? []) ?? [],
+    [data]
+  );
 
-  const objectives = useMemo(() => {
+  const ownerOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const objective of allObjectives) {
+      if (objective.owner) {
+        seen.set(objective.owner.id, objective.owner.fullName);
+      }
+    }
+    return Array.from(seen.entries()).map(([value, label]) => ({
+      value,
+      label,
+    }));
+  }, [allObjectives]);
+
+  const filteredBySearch = useMemo(() => {
     if (!searchQuery.trim()) return allObjectives;
-    const q = searchQuery.toLowerCase();
-    return allObjectives.filter(o => {
-      const title = (o.title ?? '').toLowerCase();
-      const description = (o.description ?? '').toLowerCase();
-      return title.includes(q) || description.includes(q);
+    const term = searchQuery.toLowerCase();
+    return allObjectives.filter(objective => {
+      const title = (objective.title ?? '').toLowerCase();
+      const description = (objective.description ?? '').toLowerCase();
+      const ownerName = (objective.owner?.fullName ?? '').toLowerCase();
+      return (
+        title.includes(term) ||
+        description.includes(term) ||
+        ownerName.includes(term)
+      );
     });
   }, [allObjectives, searchQuery]);
 
-  // Infinite scroll sentinel
+  // Tree must be built from full set so children with non-matching parents
+  // still cascade up properly; then we filter the tree post-build.
+  const tree = useMemo(
+    () => buildOkrTree(allObjectives),
+    [allObjectives]
+  );
+
+  const filteredTree = useMemo(() => {
+    if (!searchQuery.trim()) return tree;
+    const matchedIds = new Set(filteredBySearch.map(o => o.id));
+    return filterOkrTree(tree, node => matchedIds.has(node.objective.id));
+  }, [tree, filteredBySearch, searchQuery]);
+
+  // Infinite scroll sentinel (somente em list view)
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel || viewMode !== 'list') return;
 
     const observer = new IntersectionObserver(
       entries => {
@@ -151,7 +210,7 @@ export default function OKRsPage() {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, viewMode]);
 
   // ============================================================================
   // STATE
@@ -165,14 +224,29 @@ export default function OKRsPage() {
   // COMPUTED
   // ============================================================================
 
-  const initialIds = useMemo(() => objectives.map(i => i.id), [objectives]);
+  const totalsByHealth = useMemo(() => {
+    const flat = flattenOkrTree(tree);
+    return flat.reduce(
+      (acc, node) => {
+        acc[node.health] = (acc[node.health] ?? 0) + 1;
+        acc.total += 1;
+        return acc;
+      },
+      { total: 0 } as Record<string, number>
+    );
+  }, [tree]);
+
+  const initialIds = useMemo(
+    () => filteredBySearch.map(item => item.id),
+    [filteredBySearch]
+  );
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
 
-  const handleDelete = useCallback((id: string) => {
-    setDeleteTargetId(id);
+  const handleDelete = useCallback((objectiveId: string) => {
+    setDeleteTargetId(objectiveId);
     setShowDeletePin(true);
   }, []);
 
@@ -183,6 +257,13 @@ export default function OKRsPage() {
     setShowDeletePin(false);
     setDeleteTargetId(null);
   }, [deleteTargetId, deleteObjective]);
+
+  const handleSelectNode = useCallback(
+    (objectiveId: string) => {
+      router.push(`/hr/okrs/${objectiveId}`);
+    },
+    [router]
+  );
 
   // ============================================================================
   // CONTEXT MENU
@@ -227,7 +308,7 @@ export default function OKRsPage() {
   }, [canView, canUpdate, canDelete]);
 
   // ============================================================================
-  // RENDER CARDS
+  // RENDER CARDS (LIST VIEW)
   // ============================================================================
 
   const renderGridCard = (item: OKRObjective, isSelected: boolean) => (
@@ -263,7 +344,6 @@ export default function OKRsPage() {
         ]}
         metadata={
           <div className="flex flex-col gap-2 text-xs text-muted-foreground">
-            {/* Progress bar */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span>Progresso</span>
@@ -412,15 +492,120 @@ export default function OKRsPage() {
 
         <PageBody>
           <div data-testid="okrs-page" className="contents" />
-          <div data-testid="okrs-search">
-            <SearchBar
-              value={searchQuery}
-              placeholder="Buscar objetivos..."
-              onSearch={value => setSearchQuery(value)}
-              onClear={() => setSearchQuery('')}
-              showClear={true}
-              size="md"
-            />
+
+          {/* Search + view toggle */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div data-testid="okrs-search" className="flex-1 min-w-[220px]">
+              <SearchBar
+                value={searchQuery}
+                placeholder="Buscar objetivos, responsáveis..."
+                onSearch={value => setSearchQuery(value)}
+                onClear={() => setSearchQuery('')}
+                showClear={true}
+                size="md"
+              />
+            </div>
+            <div
+              role="group"
+              aria-label="Modo de visualização"
+              className="inline-flex rounded-md border border-input bg-background p-0.5"
+              data-testid="okrs-view-toggle"
+            >
+              <Button
+                type="button"
+                size="sm"
+                variant={viewMode === 'tree' ? 'default' : 'ghost'}
+                className="h-8 px-3"
+                onClick={() => setViewMode('tree')}
+                data-testid="okrs-view-toggle-tree"
+                aria-pressed={viewMode === 'tree'}
+              >
+                <ListTree className="h-4 w-4 mr-1" />
+                Árvore
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                className="h-8 px-3"
+                onClick={() => setViewMode('list')}
+                data-testid="okrs-view-toggle-list"
+                aria-pressed={viewMode === 'list'}
+              >
+                <Rows3 className="h-4 w-4 mr-1" />
+                Lista
+              </Button>
+            </div>
+          </div>
+
+          {/* Filtros (acessíveis em ambas as views) */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div data-testid="okrs-filter-period">
+              <FilterDropdown
+                label="Período"
+                icon={Calendar}
+                options={PERIOD_OPTIONS}
+                value={filterPeriod}
+                onChange={value => setFilterPeriod(value)}
+                activeColor="violet"
+              />
+            </div>
+            <div data-testid="okrs-filter-level">
+              <FilterDropdown
+                label="Nível"
+                icon={Building2}
+                options={LEVEL_OPTIONS}
+                value={filterLevel}
+                onChange={value => setFilterLevel(value as ObjectiveLevel | '')}
+                activeColor="violet"
+              />
+            </div>
+            <div data-testid="okrs-filter-status">
+              <FilterDropdown
+                label="Status"
+                icon={Target}
+                options={STATUS_OPTIONS}
+                value={filterStatus}
+                onChange={value =>
+                  setFilterStatus(value as ObjectiveStatus | '')
+                }
+                activeColor="emerald"
+              />
+            </div>
+            {ownerOptions.length > 0 && (
+              <div data-testid="okrs-filter-owner">
+                <FilterDropdown
+                  label="Responsável"
+                  icon={Users}
+                  options={ownerOptions}
+                  value={filterOwnerId}
+                  onChange={value => setFilterOwnerId(value)}
+                  activeColor="blue"
+                />
+              </div>
+            )}
+            {totalsByHealth.total > 0 && (
+              <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+                <Badge
+                  variant="outline"
+                  className="border-emerald-500 text-emerald-700 dark:text-emerald-300"
+                >
+                  No caminho: {totalsByHealth.ON_TRACK ?? 0}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="border-amber-500 text-amber-700 dark:text-amber-300"
+                >
+                  Em risco: {totalsByHealth.AT_RISK ?? 0}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="border-rose-500 text-rose-700 dark:text-rose-300"
+                >
+                  Fora do caminho: {totalsByHealth.OFF_TRACK ?? 0}
+                </Badge>
+              </div>
+            )}
           </div>
 
           {isLoading ? (
@@ -437,34 +622,42 @@ export default function OKRsPage() {
                 },
               }}
             />
+          ) : viewMode === 'tree' ? (
+            <div data-testid="okrs-tree" className="space-y-3">
+              {filteredTree.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
+                  <Target className="h-12 w-12 text-muted-foreground mb-3" />
+                  <p className="text-sm font-medium">
+                    Nenhum objetivo encontrado
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Crie um OKR de empresa para começar a hierarquia.
+                  </p>
+                  {canCreate && (
+                    <Button
+                      size="sm"
+                      className="mt-4 h-9 px-2.5"
+                      onClick={() => setShowCreateModal(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Novo Objetivo
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                filteredTree.map(rootNode => (
+                  <OkrTreeNodeView
+                    key={rootNode.objective.id}
+                    node={rootNode}
+                    onSelect={handleSelectNode}
+                  />
+                ))
+              )}
+            </div>
           ) : (
             <EntityGrid
               config={okrsConfig}
-              items={objectives}
-              toolbarStart={
-                <>
-                  <div data-testid="okrs-filter-level">
-                    <FilterDropdown
-                      label="Nível"
-                      icon={Building2}
-                      options={LEVEL_OPTIONS}
-                      value={filterLevel}
-                      onChange={v => setFilterLevel(v as ObjectiveLevel | '')}
-                      activeColor="violet"
-                    />
-                  </div>
-                  <div data-testid="okrs-filter-status">
-                    <FilterDropdown
-                      label="Status"
-                      icon={Target}
-                      options={STATUS_OPTIONS}
-                      value={filterStatus}
-                      onChange={v => setFilterStatus(v as ObjectiveStatus | '')}
-                      activeColor="emerald"
-                    />
-                  </div>
-                </>
-              }
+              items={filteredBySearch}
               renderGridItem={renderGridCard}
               renderListItem={renderListCard}
               isLoading={isLoading}
@@ -480,16 +673,21 @@ export default function OKRsPage() {
             />
           )}
 
-          <div ref={sentinelRef} className="h-1" />
-          {isFetchingNextPage && (
-            <div className="flex justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
+          {viewMode === 'list' && (
+            <>
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
           )}
 
-          <CreateObjectiveModal
+          <CreateOKRModal
             isOpen={showCreateModal}
             onClose={() => setShowCreateModal(false)}
+            availableObjectives={allObjectives}
           />
 
           <VerifyActionPinModal
