@@ -21,7 +21,7 @@ import type {
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { FileText, Loader2, Search, User } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useCreateWarning } from '../api';
 
@@ -95,20 +95,43 @@ const SEVERITY_LEVELS: {
 interface CreateWarningModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * Funcionário pré-selecionado ao abrir o modal. Útil quando a criação é
+   * disparada a partir do detalhe de uma advertência existente (escalada
+   * disciplinar) para evitar que o gestor reselecione o colaborador.
+   */
+  defaultEmployeeId?: string;
+  /**
+   * Tipo de advertência sugerido inicialmente (próximo passo da escala).
+   */
+  defaultType?: WarningType;
 }
 
 export function CreateWarningModal({
   isOpen,
   onClose,
+  defaultEmployeeId,
+  defaultType,
 }: CreateWarningModalProps) {
   const createWarning = useCreateWarning();
   const [step, setStep] = useState(1);
 
   // Step 1 state
-  const [employeeId, setEmployeeId] = useState('');
+  const [employeeId, setEmployeeId] = useState(defaultEmployeeId ?? '');
   const [issuedBy, setIssuedBy] = useState('');
-  const [warningType, setWarningType] = useState<WarningType | ''>('');
+  const [warningType, setWarningType] = useState<WarningType | ''>(
+    defaultType ?? ''
+  );
   const [severity, setSeverity] = useState<WarningSeverity | ''>('');
+
+  // Sincroniza os defaults sempre que o modal abre — assim, ao fechar e
+  // reabrir a partir de outra advertência, os campos refletem o novo contexto.
+  useEffect(() => {
+    if (isOpen) {
+      if (defaultEmployeeId) setEmployeeId(defaultEmployeeId);
+      if (defaultType) setWarningType(defaultType);
+    }
+  }, [isOpen, defaultEmployeeId, defaultType]);
 
   // Step 2 state
   const [reason, setReason] = useState('');

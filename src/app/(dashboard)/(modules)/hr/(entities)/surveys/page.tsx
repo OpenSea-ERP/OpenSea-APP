@@ -1,6 +1,10 @@
 /**
  * OpenSea OS - Surveys Listing Page
- * Página de listagem de pesquisas
+ *
+ * Página de listagem de pesquisas com tabs de status (Ativas / Para Responder
+ * / Resultados / Rascunhos) e cards ricos com métricas. Inspirado em 15Five
+ * (Pulse) e Lattice (Engagement) — destaque para pesquisas que pedem ação do
+ * usuário e visão clara de progresso.
  */
 
 'use client';
@@ -16,12 +20,12 @@ import {
 } from '@/components/layout/page-layout';
 import { SearchBar } from '@/components/layout/search-bar';
 import { Badge } from '@/components/ui/badge';
-import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { usePermissions } from '@/hooks/use-permissions';
 import { HR_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { surveysService } from '@/services/hr/surveys.service';
-import type { Survey, SurveyType, SurveyStatus } from '@/types/hr';
+import type { Survey, SurveyStatus, SurveyType } from '@/types/hr';
 import {
   useInfiniteQuery,
   useMutation,
@@ -29,12 +33,13 @@ import {
 } from '@tanstack/react-query';
 import {
   Calendar,
+  CheckCircle2,
   ClipboardList,
-  Eye,
+  Inbox,
   Loader2,
   Lock,
   Plus,
-  Tag,
+  Sparkles,
   Users,
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -50,12 +55,42 @@ import { toast } from 'sonner';
 import {
   SURVEY_TYPE_LABELS,
   SURVEY_TYPE_COLORS,
-  SURVEY_TYPE_OPTIONS,
   SURVEY_STATUS_LABELS,
   SURVEY_STATUS_COLORS,
-  SURVEY_STATUS_OPTIONS,
 } from './src';
 import { CreateSurveyModal } from './src/modals/create-survey-modal';
+
+type StatusTab = 'active' | 'pending' | 'results' | 'drafts' | 'all';
+
+const TAB_CONFIG: Record<
+  StatusTab,
+  { label: string; description: string; status?: SurveyStatus[] }
+> = {
+  active: {
+    label: 'Ativas',
+    description: 'Pesquisas em andamento aceitando respostas.',
+    status: ['ACTIVE'],
+  },
+  pending: {
+    label: 'Para Responder',
+    description: 'Pesquisas ativas que aguardam sua participação.',
+    status: ['ACTIVE'],
+  },
+  results: {
+    label: 'Resultados',
+    description: 'Pesquisas encerradas e resultados consolidados.',
+    status: ['CLOSED'],
+  },
+  drafts: {
+    label: 'Rascunhos',
+    description: 'Pesquisas em preparação que ainda não foram ativadas.',
+    status: ['DRAFT'],
+  },
+  all: {
+    label: 'Todas',
+    description: 'Todas as pesquisas do tenant.',
+  },
+};
 
 export default function SurveysPage() {
   return (
@@ -78,23 +113,24 @@ function SurveysPageContent() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [surveyToDelete, setSurveyToDelete] = useState<string | null>(null);
 
+  const canAccess = hasPermission(HR_PERMISSIONS.SURVEYS.ACCESS);
   const canCreate = hasPermission(HR_PERMISSIONS.SURVEYS.REGISTER);
   const canModify = hasPermission(HR_PERMISSIONS.SURVEYS.MODIFY);
   const canDelete = hasPermission(HR_PERMISSIONS.SURVEYS.REMOVE);
 
   // ============================================================================
-  // URL-BASED FILTERS
+  // STATUS TAB
   // ============================================================================
 
-  const typeFilter = useMemo(() => {
-    const raw = searchParams.get('type');
-    return raw ? raw.split(',').filter(Boolean) : [];
-  }, [searchParams]);
+  const tabFromUrl = (searchParams.get('tab') as StatusTab) || 'active';
+  const activeTab: StatusTab = TAB_CONFIG[tabFromUrl] ? tabFromUrl : 'active';
 
-  const statusFilter = useMemo(() => {
-    const raw = searchParams.get('status');
-    return raw ? raw.split(',').filter(Boolean) : [];
-  }, [searchParams]);
+  const setTab = useCallback(
+    (next: StatusTab) => {
+      router.push(next === 'active' ? '/hr/surveys' : `/hr/surveys?tab=${next}`);
+    },
+    [router]
+  );
 
   // ============================================================================
   // INFINITE SCROLL DATA FETCHING
@@ -134,8 +170,8 @@ function SurveysPageContent() {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
+    const element = sentinelRef.current;
+    if (!element) return;
 
     const observer = new IntersectionObserver(
       entries => {
@@ -146,7 +182,7 @@ function SurveysPageContent() {
       { rootMargin: '300px' }
     );
 
-    observer.observe(el);
+    observer.observe(element);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
@@ -176,88 +212,49 @@ function SurveysPageContent() {
     },
   });
 
-  const activateMutation = useMutation({
-    mutationFn: surveysService.activate.bind(surveysService),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['surveys'] });
-      toast.success('Pesquisa ativada com sucesso');
-    },
-    onError: () => {
-      toast.error(
-        'Erro ao ativar pesquisa. Verifique se há pelo menos uma pergunta.'
-      );
-    },
-  });
-
-  const closeMutation = useMutation({
-    mutationFn: surveysService.close.bind(surveysService),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['surveys'] });
-      toast.success('Pesquisa encerrada com sucesso');
-    },
-    onError: () => {
-      toast.error('Erro ao encerrar pesquisa');
-    },
-  });
-
   // ============================================================================
-  // CLIENT-SIDE FILTERS
+  // FILTERED LISTS PER TAB
   // ============================================================================
+
+  const tabCounts = useMemo(() => {
+    const counts: Record<StatusTab, number> = {
+      active: 0,
+      pending: 0,
+      results: 0,
+      drafts: 0,
+      all: allSurveys.length,
+    };
+    for (const survey of allSurveys) {
+      if (survey.status === 'ACTIVE') counts.active += 1;
+      if (survey.status === 'CLOSED') counts.results += 1;
+      if (survey.status === 'DRAFT') counts.drafts += 1;
+      // pending = active surveys (until backend exposes "responded by user")
+      if (survey.status === 'ACTIVE') counts.pending += 1;
+    }
+    return counts;
+  }, [allSurveys]);
 
   const displayedSurveys = useMemo(() => {
     let items = allSurveys;
+    const allowedStatus = TAB_CONFIG[activeTab].status;
+    if (allowedStatus) {
+      const allowed = new Set<string>(allowedStatus);
+      items = items.filter(survey => allowed.has(survey.status));
+    }
 
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+      const term = searchQuery.toLowerCase();
       items = items.filter(
-        s =>
-          s.title.toLowerCase().includes(q) ||
-          (s.description && s.description.toLowerCase().includes(q)) ||
-          SURVEY_TYPE_LABELS[s.type]?.toLowerCase().includes(q)
+        survey =>
+          survey.title.toLowerCase().includes(term) ||
+          (survey.description &&
+            survey.description.toLowerCase().includes(term)) ||
+          SURVEY_TYPE_LABELS[survey.type]?.toLowerCase().includes(term)
       );
     }
 
-    if (typeFilter.length > 0) {
-      const set = new Set(typeFilter);
-      items = items.filter(s => set.has(s.type));
-    }
-
-    if (statusFilter.length > 0) {
-      const set = new Set(statusFilter);
-      items = items.filter(s => set.has(s.status));
-    }
-
     return items;
-  }, [allSurveys, searchQuery, typeFilter, statusFilter]);
-
-  // ============================================================================
-  // URL FILTER BUILDERS
-  // ============================================================================
-
-  const buildFilterUrl = useCallback(
-    (params: { type?: string[]; status?: string[] }) => {
-      const types = params.type !== undefined ? params.type : typeFilter;
-      const statuses =
-        params.status !== undefined ? params.status : statusFilter;
-      const parts: string[] = [];
-      if (types.length > 0) parts.push(`type=${types.join(',')}`);
-      if (statuses.length > 0) parts.push(`status=${statuses.join(',')}`);
-      return parts.length > 0
-        ? `/hr/surveys?${parts.join('&')}`
-        : '/hr/surveys';
-    },
-    [typeFilter, statusFilter]
-  );
-
-  const setTypeFilter = useCallback(
-    (ids: string[]) => router.push(buildFilterUrl({ type: ids })),
-    [router, buildFilterUrl]
-  );
-
-  const setStatusFilter = useCallback(
-    (ids: string[]) => router.push(buildFilterUrl({ status: ids })),
-    [router, buildFilterUrl]
-  );
+  }, [allSurveys, activeTab, searchQuery]);
 
   // ============================================================================
   // HANDLERS
@@ -305,16 +302,42 @@ function SurveysPageContent() {
 
         <Header
           title="Pesquisas"
-          description="Gerencie pesquisas de engajamento, satisfação e clima organizacional"
+          description="Acompanhe engajamento, eNPS e clima organizacional com pesquisas curtas e recorrentes."
         />
       </PageHeader>
 
       <PageBody>
         <div data-testid="surveys-page" className="contents" />
+
+        {/* Status Tabs */}
+        <Tabs
+          value={activeTab}
+          onValueChange={value => setTab(value as StatusTab)}
+        >
+          <TabsList className="grid w-full grid-cols-5 h-12 mb-4">
+            {(['active', 'pending', 'results', 'drafts', 'all'] as StatusTab[]).map(
+              tab => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  data-testid={`surveys-tab-${tab}`}
+                >
+                  {TAB_CONFIG[tab].label}
+                  {tabCounts[tab] > 0 && (
+                    <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">
+                      {tabCounts[tab]}
+                    </span>
+                  )}
+                </TabsTrigger>
+              )
+            )}
+          </TabsList>
+        </Tabs>
+
         {/* Search Bar */}
-        <div data-testid="surveys-search">
+        <div data-testid="surveys-search" className="mb-4">
           <SearchBar
-            placeholder="Buscar pesquisas..."
+            placeholder={`Buscar em ${TAB_CONFIG[activeTab].label.toLowerCase()}...`}
             value={searchQuery}
             onSearch={setSearchQuery}
             onClear={() => setSearchQuery('')}
@@ -323,39 +346,19 @@ function SurveysPageContent() {
           />
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <div data-testid="surveys-filter-type">
-            <FilterDropdown
-              label="Tipo"
-              icon={Tag}
-              options={SURVEY_TYPE_OPTIONS.map(o => ({
-                id: o.value,
-                label: o.label,
-              }))}
-              selected={typeFilter}
-              onSelectionChange={setTypeFilter}
-              activeColor="violet"
-              searchPlaceholder="Buscar tipo..."
-              emptyText="Nenhum tipo encontrado."
-            />
-          </div>
-          <div data-testid="surveys-filter-status">
-            <FilterDropdown
-              label="Status"
-              options={SURVEY_STATUS_OPTIONS.map(o => ({
-                id: o.value,
-                label: o.label,
-              }))}
-              selected={statusFilter}
-              onSelectionChange={setStatusFilter}
-              activeColor="emerald"
-            />
-          </div>
-        </div>
+        {/* Tab description */}
+        <p className="text-xs text-muted-foreground mb-4">
+          {TAB_CONFIG[activeTab].description}
+        </p>
 
         {/* Content */}
-        {isLoading ? (
+        {!canAccess ? (
+          <GridError
+            type="server"
+            title="Sem permissão"
+            message="Você não tem permissão para visualizar pesquisas."
+          />
+        ) : isLoading ? (
           <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
         ) : error ? (
           <GridError
@@ -369,42 +372,22 @@ function SurveysPageContent() {
             }}
           />
         ) : displayedSurveys.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <ClipboardList className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold">
-              {searchQuery
-                ? 'Nenhuma pesquisa encontrada'
-                : 'Nenhuma pesquisa cadastrada'}
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-md">
-              {searchQuery
-                ? `Nenhum resultado para "${searchQuery}". Tente outra busca.`
-                : 'Crie a primeira pesquisa para começar a medir o engajamento da equipe.'}
-            </p>
-          </div>
+          <SurveysEmptyState
+            tab={activeTab}
+            search={searchQuery}
+            canCreate={canCreate}
+            onCreate={() => setIsCreateOpen(true)}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {displayedSurveys.map(survey => (
               <SurveyCard
                 key={survey.id}
                 survey={survey}
+                showRespondCta={activeTab === 'pending'}
                 onView={() => router.push(`/hr/surveys/${survey.id}`)}
-                onEdit={
-                  canModify && survey.status === 'DRAFT'
-                    ? () => router.push(`/hr/surveys/${survey.id}/edit`)
-                    : undefined
-                }
-                onActivate={
-                  canModify && survey.status === 'DRAFT'
-                    ? () => activateMutation.mutate(survey.id)
-                    : undefined
-                }
-                onClose={
-                  canModify && survey.status === 'ACTIVE'
-                    ? () => closeMutation.mutate(survey.id)
-                    : undefined
+                onRespond={() =>
+                  router.push(`/hr/surveys/respond/${survey.id}`)
                 }
                 onDelete={
                   canDelete &&
@@ -412,6 +395,7 @@ function SurveysPageContent() {
                     ? () => handleDelete(survey.id)
                     : undefined
                 }
+                canModify={canModify}
               />
             ))}
           </div>
@@ -430,8 +414,8 @@ function SurveysPageContent() {
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
           isSubmitting={createMutation.isPending}
-          onSubmit={async data => {
-            await createMutation.mutateAsync(data);
+          onSubmit={async payload => {
+            await createMutation.mutateAsync(payload);
           }}
         />
 
@@ -452,23 +436,111 @@ function SurveysPageContent() {
 }
 
 // ============================================================================
+// EMPTY STATE
+// ============================================================================
+
+function SurveysEmptyState({
+  tab,
+  search,
+  canCreate,
+  onCreate,
+}: {
+  tab: StatusTab;
+  search: string;
+  canCreate: boolean;
+  onCreate: () => void;
+}) {
+  if (search) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="rounded-full bg-muted p-4 mb-4">
+          <ClipboardList className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-semibold">Nenhum resultado encontrado</h3>
+        <p className="text-sm text-muted-foreground mt-1 max-w-md">
+          Nenhuma pesquisa encontrada para &ldquo;{search}&rdquo;. Tente outra
+          busca ou troque a aba.
+        </p>
+      </div>
+    );
+  }
+
+  const messages: Record<
+    StatusTab,
+    { title: string; description: string; icon: React.ReactNode }
+  > = {
+    active: {
+      title: 'Nenhuma pesquisa ativa',
+      description:
+        'Quando você ativar uma pesquisa, ela aparecerá aqui para o time responder.',
+      icon: <ClipboardList className="h-8 w-8 text-muted-foreground" />,
+    },
+    pending: {
+      title: 'Tudo em dia',
+      description:
+        'Você não tem pesquisas pendentes para responder no momento. Bom trabalho!',
+      icon: <CheckCircle2 className="h-8 w-8 text-emerald-500" />,
+    },
+    results: {
+      title: 'Sem resultados ainda',
+      description:
+        'Pesquisas encerradas e seus resultados consolidados aparecerão aqui.',
+      icon: <Inbox className="h-8 w-8 text-muted-foreground" />,
+    },
+    drafts: {
+      title: 'Nenhum rascunho',
+      description:
+        'Comece criando uma pesquisa Pulse curta para medir o sentimento da equipe.',
+      icon: <Sparkles className="h-8 w-8 text-violet-500" />,
+    },
+    all: {
+      title: 'Nenhuma pesquisa criada',
+      description:
+        'Crie a primeira pesquisa para começar a medir o engajamento da equipe.',
+      icon: <ClipboardList className="h-8 w-8 text-muted-foreground" />,
+    },
+  };
+
+  const config = messages[tab];
+
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="rounded-full bg-muted p-4 mb-4">{config.icon}</div>
+      <h3 className="text-lg font-semibold">{config.title}</h3>
+      <p className="text-sm text-muted-foreground mt-1 max-w-md">
+        {config.description}
+      </p>
+      {canCreate && (tab === 'all' || tab === 'drafts' || tab === 'active') && (
+        <button
+          type="button"
+          onClick={onCreate}
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700"
+        >
+          <Plus className="h-4 w-4" />
+          Criar primeira pesquisa
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // SURVEY CARD
 // ============================================================================
 
 function SurveyCard({
   survey,
+  showRespondCta,
   onView,
-  onEdit,
-  onActivate,
-  onClose,
+  onRespond,
   onDelete,
 }: {
   survey: Survey;
+  showRespondCta: boolean;
   onView: () => void;
-  onEdit?: () => void;
-  onActivate?: () => void;
-  onClose?: () => void;
+  onRespond: () => void;
   onDelete?: () => void;
+  canModify: boolean;
 }) {
   const typeLabel = SURVEY_TYPE_LABELS[survey.type] ?? survey.type;
   const typeColors =
@@ -478,10 +550,14 @@ function SurveyCard({
     SURVEY_STATUS_COLORS[survey.status as SurveyStatus] ??
     SURVEY_STATUS_COLORS.DRAFT;
 
+  const responsesCount = survey._count?.responses ?? 0;
+  const questionsCount = survey._count?.questions ?? 0;
+
   return (
     <div
       className="group relative rounded-xl border bg-white dark:bg-slate-800/60 p-5 transition-all hover:shadow-md cursor-pointer"
       onClick={onView}
+      data-testid={`survey-card-${survey.id}`}
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
@@ -495,7 +571,7 @@ function SurveyCard({
             {survey.title}
           </h3>
           {survey.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
               {survey.description}
             </p>
           )}
@@ -525,49 +601,69 @@ function SurveyCard({
             Anônima
           </Badge>
         )}
+        {questionsCount > 0 && (
+          <Badge
+            variant="outline"
+            className="text-xs bg-slate-100 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300 border-0"
+          >
+            {questionsCount} {questionsCount === 1 ? 'pergunta' : 'perguntas'}
+          </Badge>
+        )}
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      {/* Metrics row */}
+      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+        <div className="flex items-center gap-1">
+          <Users className="h-3.5 w-3.5" />
+          <span>
+            {responsesCount} {responsesCount === 1 ? 'resposta' : 'respostas'}
+          </span>
+        </div>
         {survey.startDate && (
           <div className="flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5" />
             <span>
               {new Date(survey.startDate).toLocaleDateString('pt-BR')}
             </span>
+            {survey.endDate && (
+              <>
+                <span className="mx-1">→</span>
+                <span>
+                  {new Date(survey.endDate).toLocaleDateString('pt-BR')}
+                </span>
+              </>
+            )}
           </div>
-        )}
-        {survey.endDate && (
-          <div className="flex items-center gap-1">
-            <span>até</span>
-            <span>{new Date(survey.endDate).toLocaleDateString('pt-BR')}</span>
-          </div>
-        )}
-        {survey._count && (
-          <>
-            <div className="flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" />
-              <span>{survey._count.responses} respostas</span>
-            </div>
-          </>
         )}
       </div>
 
-      {/* Context Actions (hover) */}
-      {(onEdit || onActivate || onClose || onDelete) && (
+      {/* CTA respond */}
+      {showRespondCta && (
+        <button
+          type="button"
+          onClick={event => {
+            event.stopPropagation();
+            onRespond();
+          }}
+          className="w-full mt-1 inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white hover:bg-violet-700"
+        >
+          Responder agora
+        </button>
+      )}
+
+      {/* Hover actions */}
+      {onDelete && (
         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-          {onEdit && (
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="h-7 w-7 rounded-md bg-background border flex items-center justify-center hover:bg-accent text-xs"
-              title="Editar"
-            >
-              <Eye className="h-3.5 w-3.5" />
-            </button>
-          )}
+          <button
+            onClick={event => {
+              event.stopPropagation();
+              onDelete();
+            }}
+            className="h-7 px-2 rounded-md bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300 text-xs font-medium hover:bg-rose-100"
+            title="Excluir"
+          >
+            Excluir
+          </button>
         </div>
       )}
     </div>
