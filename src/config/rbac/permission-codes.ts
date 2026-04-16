@@ -450,6 +450,7 @@ export const HR_PERMISSIONS = {
   SURVEYS: perm('hr', 'surveys', 'access', 'register', 'modify', 'remove'),
   OKRS: perm('hr', 'okrs', 'access', 'register', 'modify', 'remove'),
   REPORTS: perm('hr', 'reports', 'access', 'export'),
+  SALARY: perm('hr', 'salary', 'access', 'modify', 'admin'),
   RECRUITMENT: perm(
     'hr',
     'recruitment',

@@ -521,6 +521,17 @@ export const HR_PERMISSIONS = {
   },
 
   /**
+   * Permissões de Histórico Salarial (Salary History)
+   */
+  SALARY: {
+    LIST: HR_CODES.SALARY.ACCESS,
+    VIEW: HR_CODES.SALARY.ACCESS,
+    CREATE: HR_CODES.SALARY.MODIFY,
+    UPDATE: HR_CODES.SALARY.MODIFY,
+    MANAGE: HR_CODES.SALARY.ADMIN,
+  },
+
+  /**
    * Permissões de Reuniões 1:1 (One-on-Ones)
    */
   ONE_ON_ONES: {
@@ -639,6 +650,9 @@ export type RecruitmentPermission =
 export type ReportPermission =
   (typeof HR_PERMISSIONS.REPORTS)[keyof typeof HR_PERMISSIONS.REPORTS];
 
+export type SalaryPermission =
+  (typeof HR_PERMISSIONS.SALARY)[keyof typeof HR_PERMISSIONS.SALARY];
+
 export type HRPermission =
   | CompanyPermission
   | DepartmentPermission
@@ -672,7 +686,8 @@ export type HRPermission =
   | KudosPermission
   | SurveyPermission
   | RecruitmentPermission
-  | ReportPermission;
+  | ReportPermission
+  | SalaryPermission;
 
 /* ===========================================
    HELPER FUNCTIONS
