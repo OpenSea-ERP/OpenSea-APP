@@ -7,6 +7,7 @@
 
 import { GridError } from '@/components/handlers/grid-error';
 import { ManualMatchModal } from '@/components/finance/reconciliation/manual-match-modal';
+import { ReconciliationBalanceWidget } from '@/components/finance/reconciliation/reconciliation-balance-widget';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
@@ -16,6 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
@@ -163,6 +165,10 @@ export default function ReconciliationDetailPage({
   );
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<'ignore' | 'create' | null>(
+    null
+  );
 
   // ============================================================================
   // MUTATIONS
@@ -285,6 +291,63 @@ export default function ReconciliationDetailPage({
     setSelectedItem(item);
     setMatchModalOpen(true);
   }, []);
+
+  // ============================================================================
+  // BULK HANDLERS
+  // ============================================================================
+
+  const toggleSelect = useCallback((itemId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const selectAllPending = useCallback(() => {
+    setSelectedIds(new Set(pendingItems.map(i => i.id)));
+  }, [pendingItems]);
+
+  const handleBulkIgnore = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setBulkAction('ignore');
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map(itemId =>
+          ignoreMutation.mutateAsync({ reconciliationId: id, itemId })
+        )
+      );
+      toast.success(`${selectedIds.size} transações ignoradas.`);
+      clearSelection();
+      refetch();
+    } catch {
+      toast.error('Erro ao ignorar em lote.');
+    } finally {
+      setBulkAction(null);
+    }
+  }, [selectedIds, id, ignoreMutation, refetch, clearSelection]);
+
+  const handleBulkCreate = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setBulkAction('create');
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map(itemId =>
+          createEntryMutation.mutateAsync({ reconciliationId: id, itemId })
+        )
+      );
+      toast.success(`${selectedIds.size} lançamentos criados.`);
+      clearSelection();
+      refetch();
+    } catch {
+      toast.error('Erro ao criar lançamentos em lote.');
+    } finally {
+      setBulkAction(null);
+    }
+  }, [selectedIds, id, createEntryMutation, refetch, clearSelection]);
 
   // ============================================================================
   // LOADING STATE
@@ -466,6 +529,15 @@ export default function ReconciliationDetailPage({
                 />
               </div>
             </div>
+
+            {/* Balance Widget */}
+            <div className="mt-4">
+              <ReconciliationBalanceWidget
+                items={items}
+                totalCredits={reconciliation.totalCredits}
+                totalDebits={reconciliation.totalDebits}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -495,18 +567,42 @@ export default function ReconciliationDetailPage({
                 </p>
               </div>
             ) : (
-              pendingItems.map(item => (
-                <TransactionRow
-                  key={item.id}
-                  item={item}
-                  isEditable={isEditable && canModify}
-                  onMatch={() => openMatchModal(item)}
-                  onIgnore={() => handleIgnore(item)}
-                  onCreateEntry={() => handleCreateEntry(item)}
-                  isIgnoring={ignoreMutation.isPending}
-                  isCreating={createEntryMutation.isPending}
-                />
-              ))
+              <>
+                {isEditable && canModify && (
+                  <BulkToolbar
+                    selectedCount={selectedIds.size}
+                    totalPending={pendingItems.length}
+                    allSelected={
+                      selectedIds.size > 0 &&
+                      selectedIds.size === pendingItems.length
+                    }
+                    onSelectAll={selectAllPending}
+                    onClear={clearSelection}
+                    onBulkIgnore={handleBulkIgnore}
+                    onBulkCreate={handleBulkCreate}
+                    isIgnoring={bulkAction === 'ignore'}
+                    isCreating={bulkAction === 'create'}
+                  />
+                )}
+                {pendingItems.map(item => (
+                  <TransactionRow
+                    key={item.id}
+                    item={item}
+                    isEditable={isEditable && canModify}
+                    selected={selectedIds.has(item.id)}
+                    onToggleSelect={
+                      isEditable && canModify
+                        ? () => toggleSelect(item.id)
+                        : undefined
+                    }
+                    onMatch={() => openMatchModal(item)}
+                    onIgnore={() => handleIgnore(item)}
+                    onCreateEntry={() => handleCreateEntry(item)}
+                    isIgnoring={ignoreMutation.isPending}
+                    isCreating={createEntryMutation.isPending}
+                  />
+                ))}
+              </>
             )}
           </TabsContent>
 
@@ -609,6 +705,8 @@ function StatBox({
 function TransactionRow({
   item,
   isEditable,
+  selected,
+  onToggleSelect,
   onMatch,
   onIgnore,
   onCreateEntry,
@@ -617,6 +715,8 @@ function TransactionRow({
 }: {
   item: ReconciliationItem;
   isEditable: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
   onMatch?: () => void;
   onIgnore?: () => void;
   onCreateEntry?: () => void;
@@ -627,8 +727,25 @@ function TransactionRow({
   const confidenceBadge = getConfidenceBadge(item.matchConfidence);
 
   return (
-    <Card className="p-3 hover:bg-muted/30 transition-colors">
+    <Card
+      className={cn(
+        'p-3 hover:bg-muted/30 transition-colors',
+        selected &&
+          'ring-2 ring-violet-500/40 bg-violet-50/50 dark:bg-violet-500/5'
+      )}
+    >
       <div className="flex items-center gap-3">
+        {/* Selection checkbox */}
+        {onToggleSelect && (
+          <Checkbox
+            checked={!!selected}
+            onCheckedChange={onToggleSelect}
+            aria-label="Selecionar transação"
+            data-testid={`tx-select-${item.id}`}
+            className="shrink-0"
+          />
+        )}
+
         {/* Icon */}
         <div
           className={cn(
@@ -755,5 +872,105 @@ function TransactionRow({
         )}
       </div>
     </Card>
+  );
+}
+
+// ============================================================================
+// BULK TOOLBAR
+// ============================================================================
+
+function BulkToolbar({
+  selectedCount,
+  totalPending,
+  allSelected,
+  onSelectAll,
+  onClear,
+  onBulkIgnore,
+  onBulkCreate,
+  isIgnoring,
+  isCreating,
+}: {
+  selectedCount: number;
+  totalPending: number;
+  allSelected: boolean;
+  onSelectAll: () => void;
+  onClear: () => void;
+  onBulkIgnore: () => void;
+  onBulkCreate: () => void;
+  isIgnoring: boolean;
+  isCreating: boolean;
+}) {
+  const hasSelection = selectedCount > 0;
+  return (
+    <div
+      data-testid="reconciliation-bulk-toolbar"
+      className={cn(
+        'sticky top-2 z-10 flex items-center gap-3 rounded-xl border px-3 py-2 backdrop-blur-sm transition-all',
+        hasSelection
+          ? 'border-violet-500/40 bg-violet-50/80 dark:bg-violet-500/8'
+          : 'border-border bg-white/70 dark:bg-slate-900/60'
+      )}
+    >
+      <Checkbox
+        checked={allSelected}
+        onCheckedChange={allSelected ? onClear : onSelectAll}
+        aria-label={allSelected ? 'Desmarcar todas' : 'Selecionar todas'}
+        data-testid="tx-select-all"
+      />
+      <span className="text-sm text-muted-foreground">
+        {hasSelection ? (
+          <>
+            <span className="font-semibold text-foreground">
+              {selectedCount}
+            </span>{' '}
+            de {totalPending} selecionadas
+          </>
+        ) : (
+          <>Selecione transações para ações em lote</>
+        )}
+      </span>
+      {hasSelection && (
+        <div className="flex items-center gap-2 ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={onBulkCreate}
+            disabled={isCreating || isIgnoring}
+            data-testid="bulk-create-entries"
+          >
+            {isCreating ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+            ) : (
+              <Plus className="h-3.5 w-3.5 mr-1" />
+            )}
+            Criar lançamentos ({selectedCount})
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={onBulkIgnore}
+            disabled={isCreating || isIgnoring}
+            data-testid="bulk-ignore"
+          >
+            {isIgnoring ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+            ) : (
+              <EyeOff className="h-3.5 w-3.5 mr-1" />
+            )}
+            Ignorar ({selectedCount})
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs text-muted-foreground"
+            onClick={onClear}
+          >
+            Limpar
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
