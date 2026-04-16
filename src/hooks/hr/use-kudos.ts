@@ -29,11 +29,13 @@ import {
 // ============================================================================
 
 export const KUDOS_QUERY_KEYS = {
-  feed: (filter?: 'pinned' | 'regular') => ['hr', 'kudos', 'feed', filter] as const,
+  feed: (filter?: 'pinned' | 'regular') =>
+    ['hr', 'kudos', 'feed', filter] as const,
   sent: () => ['hr', 'kudos', 'sent'] as const,
   received: () => ['hr', 'kudos', 'received'] as const,
   replies: (kudosId: string) => ['hr', 'kudos', kudosId, 'replies'] as const,
-  reactions: (kudosId: string) => ['hr', 'kudos', kudosId, 'reactions'] as const,
+  reactions: (kudosId: string) =>
+    ['hr', 'kudos', kudosId, 'reactions'] as const,
 } as const;
 
 const KUDOS_FEED_PAGE_SIZE = 20;
@@ -250,12 +252,8 @@ export function useDeleteKudosReply() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      replyId,
-    }: {
-      replyId: string;
-      kudosId: string;
-    }) => portalService.deleteKudosReply(replyId),
+    mutationFn: async ({ replyId }: { replyId: string; kudosId: string }) =>
+      portalService.deleteKudosReply(replyId),
 
     onSuccess: (_data, { kudosId, replyId }) => {
       queryClient.setQueryData<{ replies: KudosReply[] }>(
@@ -371,7 +369,10 @@ function bumpRepliesCount(
           kudosItem.id === kudosId
             ? {
                 ...kudosItem,
-                repliesCount: Math.max(0, (kudosItem.repliesCount ?? 0) + delta),
+                repliesCount: Math.max(
+                  0,
+                  (kudosItem.repliesCount ?? 0) + delta
+                ),
               }
             : kudosItem
         ),

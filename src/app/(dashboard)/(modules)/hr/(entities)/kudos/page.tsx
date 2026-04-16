@@ -591,7 +591,8 @@ function EmptyState({ tab, canSend, onCreate }: EmptyStateProps) {
   const descriptionByTab: Record<TabValue, string> = {
     feed: 'Reconheca um colega e seja a faisca dessa cultura.',
     sent: 'Que tal celebrar uma conquista recente de alguem?',
-    received: 'Continue fazendo um otimo trabalho — em breve aparecerao por aqui.',
+    received:
+      'Continue fazendo um otimo trabalho — em breve aparecerao por aqui.',
   };
 
   return (

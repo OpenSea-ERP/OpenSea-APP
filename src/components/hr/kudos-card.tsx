@@ -317,8 +317,7 @@ export function KudosCard({
             className={cn(
               'inline-flex items-center gap-1 rounded-full border border-border bg-transparent px-2.5 py-1 text-xs text-muted-foreground transition-colors',
               'hover:border-primary/40 hover:bg-accent hover:text-foreground',
-              isThreadExpanded &&
-                'border-primary/40 bg-accent text-foreground'
+              isThreadExpanded && 'border-primary/40 bg-accent text-foreground'
             )}
             aria-expanded={isThreadExpanded}
           >

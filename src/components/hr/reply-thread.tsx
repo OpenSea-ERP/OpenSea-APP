@@ -217,9 +217,7 @@ export function ReplyThread({
                         <Button
                           type="button"
                           size="sm"
-                          disabled={
-                            !editDraft.trim() || updateReply.isPending
-                          }
+                          disabled={!editDraft.trim() || updateReply.isPending}
                           onClick={() => handleSubmitEdit(reply.id)}
                         >
                           {updateReply.isPending ? (
@@ -309,7 +307,6 @@ export function ReplyThread({
         title="Excluir resposta"
         description="Digite seu PIN de Acao para excluir esta resposta. Essa acao nao pode ser desfeita."
       />
-
     </div>
   );
 }
