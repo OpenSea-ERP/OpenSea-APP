@@ -1,17 +1,18 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import { useFinanceEntries } from '@/hooks/finance';
+import { usePermissions } from '@/hooks/use-permissions';
 import { FINANCE_ENTRY_STATUS_LABELS } from '@/types/finance';
-import { ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 
 type TabType = 'payable' | 'receivable';
 
 export default function OverduePage() {
-  const router = useRouter();
+  const { hasPermission } = usePermissions();
   const [currentTab, setCurrentTab] = useState<TabType>('payable');
 
   const { data, isLoading, error } = useFinanceEntries({
@@ -40,45 +41,50 @@ export default function OverduePage() {
     return diff > 0 ? diff : 0;
   };
 
+  // Aging colors: avoid yellow/orange (CLAUDE.md) — use rose ramps + amber
+  // only for the lightest 7-day bucket where the warning isn't yet critical.
   const getAgingBadge = (days: number) => {
     if (days <= 7) {
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      return 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300';
     } else if (days <= 30) {
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      return 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300';
     } else if (days <= 60) {
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
+      return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200';
     } else {
-      return 'bg-rose-200 text-rose-900 dark:bg-rose-800 dark:text-rose-100';
+      return 'bg-rose-200 text-rose-900 dark:bg-rose-500/30 dark:text-rose-100';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'OVERDUE':
-        return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
+        return 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200';
       case 'PARTIALLY_PAID':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300';
     }
   };
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Contas Vencidas</h1>
-            <p className="text-muted-foreground">
-              Visualize contas vencidas e em atraso
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageActionBar
+        breadcrumbItems={[
+          { label: 'Financeiro', href: '/finance' },
+          { label: 'Visão Geral', href: '/finance/overview' },
+          { label: 'Contas Vencidas' },
+        ]}
+        hasPermission={hasPermission}
+      />
+
+      <PageHeroBanner
+        title="Contas Vencidas"
+        description="Acompanhe contas a pagar e a receber em atraso, com aging por faixa de dias e total inadimplente do período."
+        icon={AlertTriangle}
+        iconGradient="from-rose-500 to-rose-600"
+        buttons={[]}
+        hasPermission={hasPermission}
+      />
 
       {/* Tabs */}
       <div className="flex border-b border-border">

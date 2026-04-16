@@ -1,9 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Target, TrendingDown, TrendingUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Activity, Target, TrendingDown, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -16,8 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import { CashflowChart } from '@/components/finance/analytics/cashflow-chart';
 import { useFinanceCashflow, useCashflowAccuracy } from '@/hooks/finance';
+import { usePermissions } from '@/hooks/use-permissions';
 
 type CashflowGroupBy = 'day' | 'week' | 'month';
 
@@ -59,7 +60,7 @@ function getAccuracyIconClass(accuracy: number): string {
 }
 
 export default function CashflowPage() {
-  const router = useRouter();
+  const { hasPermission } = usePermissions();
   const defaultRange = getMonthRange();
   const [startDate, setStartDate] = useState(defaultRange.start);
   const [endDate, setEndDate] = useState(defaultRange.end);
@@ -79,22 +80,23 @@ export default function CashflowPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push('/finance')}
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Fluxo de Caixa</h1>
-          <p className="text-muted-foreground">
-            Visualize entradas, saídas e saldo acumulado por período
-          </p>
-        </div>
-      </div>
+      <PageActionBar
+        breadcrumbItems={[
+          { label: 'Financeiro', href: '/finance' },
+          { label: 'Visão Geral', href: '/finance/overview' },
+          { label: 'Fluxo de Caixa' },
+        ]}
+        hasPermission={hasPermission}
+      />
+
+      <PageHeroBanner
+        title="Fluxo de Caixa"
+        description="Visualize entradas, saídas e saldo acumulado por período. Acompanhe a precisão das previsões e identifique tendências."
+        icon={Activity}
+        iconGradient="from-violet-500 to-indigo-600"
+        buttons={[]}
+        hasPermission={hasPermission}
+      />
 
       <Card>
         <CardHeader>

@@ -7,13 +7,13 @@
 
 import { GridError } from '@/components/handlers/grid-error';
 import { GridLoading } from '@/components/handlers/grid-loading';
-import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import {
   PageBody,
   PageHeader,
   PageLayout,
 } from '@/components/layout/page-layout';
+import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import { SearchBar } from '@/components/layout/search-bar';
 import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
@@ -496,14 +496,17 @@ function ChartOfAccountsPageContent() {
           ]}
           buttons={actionButtons}
         />
-
-        <Header
-          title="Plano de Contas"
-          description="Gerencie a estrutura contábil hierárquica da empresa"
-        />
       </PageHeader>
 
       <PageBody>
+        <PageHeroBanner
+          title="Plano de Contas"
+          description="Gerencie a estrutura contábil hierárquica da empresa: ativos, passivos, patrimônio, receitas e despesas. Vincule categorias e centros de custo para que cada lançamento seja contabilizado automaticamente."
+          icon={BookOpen}
+          iconGradient="from-violet-500 to-indigo-600"
+          buttons={[]}
+          hasPermission={hasPermission}
+        />
         <div data-testid="chart-of-accounts-page" className="contents" />
         {/* Search Bar */}
         <div data-testid="chart-of-accounts-search">
