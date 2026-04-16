@@ -11,6 +11,7 @@ const QUERY_KEYS = {
   DRE: ['finance-dre-interactive'],
   DRE_CONSOLIDATED: ['finance-dre-consolidated'],
   DRE_ANNUAL: ['finance-dre-annual'],
+  DFC_ANNUAL: ['finance-dfc-annual'],
   LEDGER: ['finance-ledger'],
   TRIAL_BALANCE: ['finance-trial-balance'],
 } as const;
@@ -29,10 +30,43 @@ export interface DreAnnualResponse {
   }>;
 }
 
+export type DfcActivity = 'OPERATING' | 'INVESTING' | 'FINANCING';
+
+export interface DfcAnnualResponse {
+  year: number;
+  operating: number;
+  investing: number;
+  financing: number;
+  netCashFlow: number;
+  monthly: Array<{
+    month: number;
+    operating: number;
+    investing: number;
+    financing: number;
+    net: number;
+  }>;
+  categories: Array<{
+    activity: DfcActivity;
+    categoryId: string;
+    categoryName: string;
+    inflow: number;
+    outflow: number;
+    net: number;
+  }>;
+}
+
 export function useDreAnnual(year: number) {
   return useQuery<DreAnnualResponse>({
     queryKey: [...QUERY_KEYS.DRE_ANNUAL, year],
     queryFn: () => financeReportsService.getAnnualDRE(year),
+    enabled: !!year,
+  });
+}
+
+export function useDfcAnnual(year: number) {
+  return useQuery<DfcAnnualResponse>({
+    queryKey: [...QUERY_KEYS.DFC_ANNUAL, year],
+    queryFn: () => financeReportsService.getAnnualDFC(year),
     enabled: !!year,
   });
 }

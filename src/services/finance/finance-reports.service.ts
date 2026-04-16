@@ -98,6 +98,32 @@ export const financeReportsService = {
     return apiClient.get(`/v1/finance/reports/dre?${query.toString()}`);
   },
 
+  async getAnnualDFC(year: number): Promise<{
+    year: number;
+    operating: number;
+    investing: number;
+    financing: number;
+    netCashFlow: number;
+    monthly: Array<{
+      month: number;
+      operating: number;
+      investing: number;
+      financing: number;
+      net: number;
+    }>;
+    categories: Array<{
+      activity: 'OPERATING' | 'INVESTING' | 'FINANCING';
+      categoryId: string;
+      categoryName: string;
+      inflow: number;
+      outflow: number;
+      net: number;
+    }>;
+  }> {
+    const query = new URLSearchParams({ year: String(year) });
+    return apiClient.get(`/v1/finance/reports/dfc?${query.toString()}`);
+  },
+
   async getInteractiveDRE(params: {
     startDate: string;
     endDate: string;
