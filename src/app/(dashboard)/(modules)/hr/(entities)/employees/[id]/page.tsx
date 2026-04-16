@@ -142,6 +142,10 @@ import {
 } from '../src';
 import { EmployeeDocumentsChecklist } from '../src/components/employee-documents-checklist';
 import { MedicalExamTimeline } from '@/components/hr/medical-exam-timeline';
+import { SalaryTimelineCard } from '@/components/hr/salary-timeline-card';
+import type { SalaryTimelineUserSummary } from '@/components/hr/salary-timeline-card';
+import { salaryHistoryService } from '@/services/hr';
+import { calculateNextReviewDate } from '@/lib/hr/calculate-salary-change';
 import type { EmployeeDependant } from '@/types/hr';
 import { dependantsApi, dependantKeys } from '../src/api/dependants.api';
 
@@ -345,6 +349,65 @@ export default function EmployeeDetailPage() {
     enabled: activeTab === 'payroll',
   });
 
+  // Salary history (timeline)
+  const { data: salaryHistoryData, isLoading: isLoadingSalaryHistory } =
+    useQuery({
+      queryKey: ['salary-history', employeeId],
+      queryFn: () => salaryHistoryService.listByEmployee(employeeId),
+      enabled: activeTab === 'salary',
+    });
+
+  // Resolve salary history authors so we show name + avatar
+  const salaryHistoryEntries = salaryHistoryData?.history ?? [];
+  const uniqueSalaryAuthorIds = useMemo(
+    () =>
+      Array.from(new Set(salaryHistoryEntries.map(record => record.changedBy))),
+    [salaryHistoryEntries]
+  );
+
+  const { data: salaryAuthors = [] } = useQuery({
+    queryKey: ['salary-history-authors', employeeId, uniqueSalaryAuthorIds],
+    queryFn: async () => {
+      const responses = await Promise.all(
+        uniqueSalaryAuthorIds.map(async authorId => {
+          try {
+            const response = await usersService.getUser(authorId);
+            return { authorId, user: response.user };
+          } catch {
+            return { authorId, user: null };
+          }
+        })
+      );
+      return responses;
+    },
+    enabled: activeTab === 'salary' && uniqueSalaryAuthorIds.length > 0,
+  });
+
+  const salaryAuthorById = useMemo(() => {
+    const map = new Map<string, SalaryTimelineUserSummary>();
+    for (const entry of salaryAuthors) {
+      if (!entry.user) continue;
+      const profileName =
+        [entry.user.profile?.name, entry.user.profile?.surname]
+          .filter(Boolean)
+          .join(' ')
+          .trim() || entry.user.username;
+      map.set(entry.authorId, {
+        id: entry.authorId,
+        name: profileName,
+        avatarUrl: entry.user.profile?.avatarUrl ?? null,
+      });
+    }
+    return map;
+  }, [salaryAuthors]);
+
+  const latestSalaryEntry = salaryHistoryEntries[0];
+  const nextSalaryReviewDate = latestSalaryEntry?.effectiveDate
+    ? calculateNextReviewDate(latestSalaryEntry.effectiveDate)
+    : employee?.hireDate
+      ? calculateNextReviewDate(employee.hireDate)
+      : null;
+
   // Print queue
   const { actions: printActions } = usePrintQueue();
   const isInPrintQueue = employee ? printActions.isInQueue(employee.id) : false;
@@ -470,6 +533,7 @@ export default function EmployeeDetailPage() {
   const { hasPermission } = usePermissions();
   const canEdit = hasPermission(HR_PERMISSIONS.EMPLOYEES.UPDATE);
   const canDelete = hasPermission(HR_PERMISSIONS.EMPLOYEES.DELETE);
+  const canViewSalary = hasPermission(HR_PERMISSIONS.SALARY.VIEW);
 
   // ============================================================================
   // HANDLERS
@@ -953,6 +1017,16 @@ export default function EmployeeDetailPage() {
               <Receipt className="h-4 w-4 hidden sm:inline" />
               <span>Holerites</span>
             </TabsTrigger>
+            {canViewSalary && (
+              <TabsTrigger
+                value="salary"
+                className="gap-2 flex-shrink-0"
+                data-testid="employee-tab-salary"
+              >
+                <Banknote className="h-4 w-4 hidden sm:inline" />
+                <span>Salário</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="details" className="flex flex-col gap-6">
@@ -2310,6 +2384,89 @@ export default function EmployeeDetailPage() {
               </div>
             </Card>
           </TabsContent>
+
+          {canViewSalary && (
+            <TabsContent
+              value="salary"
+              className="flex flex-col gap-6"
+              data-testid="employee-tab-salary-content"
+            >
+              <Card className="bg-white dark:bg-white/5 border border-border overflow-hidden py-0">
+                <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+                  <Banknote className="h-5 w-5 text-foreground" />
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold">
+                      Histórico Salarial
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Salário atual, próxima revisão sugerida e timeline com
+                      promotion markers.
+                    </p>
+                  </div>
+                  <Link href={`/hr/employees/${employeeId}/salary`}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 h-9 px-2.5"
+                      data-testid="employee-salary-open-page"
+                    >
+                      Abrir página completa
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="border-b border-border" />
+                <div className="space-y-4 p-4 sm:p-6">
+                  <div className="rounded-xl border border-border bg-linear-to-br from-emerald-500/10 via-teal-500/5 to-transparent p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                          <TrendingUp className="h-3.5 w-3.5" />
+                          Salário atual
+                        </div>
+                        <p className="mt-1 font-mono text-3xl font-bold tracking-tight">
+                          {formatSalary(employee.baseSalary)}
+                        </p>
+                        {latestSalaryEntry?.effectiveDate && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Vigente desde{' '}
+                            {new Date(
+                              latestSalaryEntry.effectiveDate
+                            ).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                      </div>
+                      {nextSalaryReviewDate && (
+                        <div className="rounded-lg border border-border bg-white px-3 py-2 text-xs dark:bg-slate-900/60">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5 text-amber-500" />
+                            Próxima revisão sugerida
+                          </div>
+                          <p className="mt-0.5 font-mono text-sm font-semibold">
+                            {nextSalaryReviewDate.toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <SalaryTimelineCard
+                    entries={salaryHistoryEntries}
+                    isLoading={isLoadingSalaryHistory}
+                    userResolver={userId => salaryAuthorById.get(userId)}
+                    emptyAction={
+                      <Link href={`/hr/employees/${employeeId}/salary`}>
+                        <Button data-testid="employee-salary-empty-cta">
+                          <Plus className="mr-2 h-4 w-4" />
+                          Registrar primeira mudança
+                        </Button>
+                      </Link>
+                    }
+                  />
+                </div>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </PageBody>
 
