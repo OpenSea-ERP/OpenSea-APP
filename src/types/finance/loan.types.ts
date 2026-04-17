@@ -99,12 +99,7 @@ export interface LoansQuery {
   // were removed (they were never real columns on the Loan model) and
   // `outstandingBalance` is not part of the whitelist either — keep only
   // values the backend Zod enum accepts so we don't send 400-bound requests.
-  sortBy?:
-    | 'createdAt'
-    | 'startDate'
-    | 'principalAmount'
-    | 'name'
-    | 'status';
+  sortBy?: 'createdAt' | 'startDate' | 'principalAmount' | 'name' | 'status';
   sortOrder?: 'asc' | 'desc';
 }
 

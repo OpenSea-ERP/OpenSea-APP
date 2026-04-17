@@ -150,282 +150,282 @@ export default function DfcPage() {
           hasPermission={hasPermission}
         />
 
-      {/* Year selector */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-end gap-3 flex-wrap">
-            <div className="space-y-2">
-              <Label htmlFor="dfc-year">Exercício</Label>
-              <Select
-                value={String(year)}
-                onValueChange={v => setYear(Number(v))}
-              >
-                <SelectTrigger id="dfc-year" className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEAR_OPTIONS.map(y => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {/* Year selector */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-end gap-3 flex-wrap">
+              <div className="space-y-2">
+                <Label htmlFor="dfc-year">Exercício</Label>
+                <Select
+                  value={String(year)}
+                  onValueChange={v => setYear(Number(v))}
+                >
+                  <SelectTrigger id="dfc-year" className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEAR_OPTIONS.map(y => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Error */}
-      {error && (
-        <Card className="border-rose-200 dark:border-rose-500/20 bg-rose-50/40 dark:bg-rose-500/5">
-          <CardContent className="p-8 text-center space-y-3">
-            <AlertCircle className="h-10 w-10 mx-auto text-rose-600 dark:text-rose-400" />
-            <div>
-              <p className="font-semibold text-rose-900 dark:text-rose-200">
-                Não foi possível carregar a DFC
-              </p>
-              <p className="text-sm text-rose-800 dark:text-rose-300">
-                {error instanceof Error
-                  ? error.message
-                  : 'Erro ao consultar os fluxos de caixa.'}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => refetch()}
-              disabled={isFetching}
-            >
-              <RotateCw
-                className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')}
-              />
-              Tentar novamente
-            </Button>
           </CardContent>
         </Card>
-      )}
 
-      {/* Loading */}
-      {isLoading && !data && (
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4 space-y-2">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-8 w-32" />
+        {/* Error */}
+        {error && (
+          <Card className="border-rose-200 dark:border-rose-500/20 bg-rose-50/40 dark:bg-rose-500/5">
+            <CardContent className="p-8 text-center space-y-3">
+              <AlertCircle className="h-10 w-10 mx-auto text-rose-600 dark:text-rose-400" />
+              <div>
+                <p className="font-semibold text-rose-900 dark:text-rose-200">
+                  Não foi possível carregar a DFC
+                </p>
+                <p className="text-sm text-rose-800 dark:text-rose-300">
+                  {error instanceof Error
+                    ? error.message
+                    : 'Erro ao consultar os fluxos de caixa.'}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => refetch()}
+                disabled={isFetching}
+              >
+                <RotateCw
+                  className={cn('h-4 w-4 mr-2', isFetching && 'animate-spin')}
+                />
+                Tentar novamente
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Loading */}
+        {isLoading && !data && (
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-4 space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-8 w-32" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {data && (
+          <>
+            {/* KPIs */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <KpiCard
+                icon={Briefcase}
+                label="Operacional"
+                value={data.operating}
+                accent="sky"
+              />
+              <KpiCard
+                icon={TrendingUp}
+                label="Investimento"
+                value={data.investing}
+                accent="violet"
+              />
+              <KpiCard
+                icon={Landmark}
+                label="Financiamento"
+                value={data.financing}
+                accent="amber"
+              />
+              <KpiCard
+                icon={Banknote}
+                label="Variação Líquida"
+                value={data.netCashFlow}
+                accent="emerald"
+                highlight
+              />
+            </div>
+
+            {/* Monthly chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Fluxo mensal — {data.year}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-12 gap-2 h-44">
+                  {data.monthly.map(row => (
+                    <div
+                      key={row.month}
+                      className="flex flex-col items-center justify-end gap-1"
+                      title={`${MONTH_LABELS[row.month - 1]}: operacional ${formatCurrency(
+                        row.operating
+                      )} · investimento ${formatCurrency(
+                        row.investing
+                      )} · financiamento ${formatCurrency(
+                        row.financing
+                      )} · líquido ${formatCurrency(row.net)}`}
+                    >
+                      <div className="flex items-end gap-0.5 h-36 w-full">
+                        {(['operating', 'investing', 'financing'] as const).map(
+                          k => {
+                            const value = row[k];
+                            const heightPct =
+                              (Math.abs(value) / monthlyMax) * 100;
+                            const positive = value >= 0;
+                            const colorMap = {
+                              operating: positive
+                                ? 'bg-sky-400 dark:bg-sky-500'
+                                : 'bg-sky-200 dark:bg-sky-500/40',
+                              investing: positive
+                                ? 'bg-violet-400 dark:bg-violet-500'
+                                : 'bg-violet-200 dark:bg-violet-500/40',
+                              financing: positive
+                                ? 'bg-amber-400 dark:bg-amber-500'
+                                : 'bg-amber-200 dark:bg-amber-500/40',
+                            };
+                            return (
+                              <div
+                                key={k}
+                                className={cn(
+                                  'flex-1 rounded-sm transition-all',
+                                  colorMap[k]
+                                )}
+                                style={{ height: `${Math.max(heightPct, 1)}%` }}
+                              />
+                            );
+                          }
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        {MONTH_LABELS[row.month - 1]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 rounded-sm bg-sky-400 dark:bg-sky-500" />
+                    Operacional
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 rounded-sm bg-violet-400 dark:bg-violet-500" />
+                    Investimento
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 rounded-sm bg-amber-400 dark:bg-amber-500" />
+                    Financiamento
+                  </span>
+                  <span className="text-muted-foreground/70">
+                    · Barras translúcidas indicam fluxo negativo no mês.
+                  </span>
+                </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
 
-      {data && (
-        <>
-          {/* KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <KpiCard
-              icon={Briefcase}
-              label="Operacional"
-              value={data.operating}
-              accent="sky"
-            />
-            <KpiCard
-              icon={TrendingUp}
-              label="Investimento"
-              value={data.investing}
-              accent="violet"
-            />
-            <KpiCard
-              icon={Landmark}
-              label="Financiamento"
-              value={data.financing}
-              accent="amber"
-            />
-            <KpiCard
-              icon={Banknote}
-              label="Variação Líquida"
-              value={data.netCashFlow}
-              accent="emerald"
-              highlight
-            />
-          </div>
-
-          {/* Monthly chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                Fluxo mensal — {data.year}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-12 gap-2 h-44">
-                {data.monthly.map(row => (
-                  <div
-                    key={row.month}
-                    className="flex flex-col items-center justify-end gap-1"
-                    title={`${MONTH_LABELS[row.month - 1]}: operacional ${formatCurrency(
-                      row.operating
-                    )} · investimento ${formatCurrency(
-                      row.investing
-                    )} · financiamento ${formatCurrency(
-                      row.financing
-                    )} · líquido ${formatCurrency(row.net)}`}
-                  >
-                    <div className="flex items-end gap-0.5 h-36 w-full">
-                      {(['operating', 'investing', 'financing'] as const).map(
-                        k => {
-                          const value = row[k];
-                          const heightPct =
-                            (Math.abs(value) / monthlyMax) * 100;
-                          const positive = value >= 0;
-                          const colorMap = {
-                            operating: positive
-                              ? 'bg-sky-400 dark:bg-sky-500'
-                              : 'bg-sky-200 dark:bg-sky-500/40',
-                            investing: positive
-                              ? 'bg-violet-400 dark:bg-violet-500'
-                              : 'bg-violet-200 dark:bg-violet-500/40',
-                            financing: positive
-                              ? 'bg-amber-400 dark:bg-amber-500'
-                              : 'bg-amber-200 dark:bg-amber-500/40',
-                          };
-                          return (
-                            <div
-                              key={k}
-                              className={cn(
-                                'flex-1 rounded-sm transition-all',
-                                colorMap[k]
-                              )}
-                              style={{ height: `${Math.max(heightPct, 1)}%` }}
-                            />
-                          );
-                        }
-                      )}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      {MONTH_LABELS[row.month - 1]}
-                    </span>
+            {/* Categories with drill-down */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-muted-foreground" />
+                  Categorias — clique para ver lançamentos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {data.categories.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    Nenhum lançamento pago nesse ano.
                   </div>
-                ))}
-              </div>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded-sm bg-sky-400 dark:bg-sky-500" />
-                  Operacional
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded-sm bg-violet-400 dark:bg-violet-500" />
-                  Investimento
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block w-3 h-3 rounded-sm bg-amber-400 dark:bg-amber-500" />
-                  Financiamento
-                </span>
-                <span className="text-muted-foreground/70">
-                  · Barras translúcidas indicam fluxo negativo no mês.
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Categories with drill-down */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Layers className="h-4 w-4 text-muted-foreground" />
-                Categorias — clique para ver lançamentos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {data.categories.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  Nenhum lançamento pago nesse ano.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-muted/40">
-                      <tr>
-                        <th className="text-left py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Atividade
-                        </th>
-                        <th className="text-left py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Categoria
-                        </th>
-                        <th className="text-right py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Entradas
-                        </th>
-                        <th className="text-right py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Saídas
-                        </th>
-                        <th className="text-right py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Líquido
-                        </th>
-                        <th className="w-10" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.categories.map(row => {
-                        const meta = ACTIVITY_META[row.activity];
-                        return (
-                          <tr
-                            key={row.categoryId}
-                            className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
-                            data-testid={`dfc-row-${row.categoryId}`}
-                            onClick={() =>
-                              setDrillDown({
-                                categoryId: row.categoryId,
-                                categoryName: row.categoryName,
-                                activity: row.activity,
-                              })
-                            }
-                          >
-                            <td className="py-2 px-4">
-                              <Badge
-                                variant="outline"
-                                className={cn('text-[10px]', meta.color)}
-                              >
-                                {meta.label}
-                              </Badge>
-                            </td>
-                            <td className="py-2 px-4 text-sm font-medium">
-                              {row.categoryName}
-                            </td>
-                            <td className="py-2 px-4 text-right text-sm font-mono text-emerald-600 dark:text-emerald-400">
-                              {formatCurrency(row.inflow)}
-                            </td>
-                            <td className="py-2 px-4 text-right text-sm font-mono text-rose-600 dark:text-rose-400">
-                              {formatCurrency(row.outflow)}
-                            </td>
-                            <td
-                              className={cn(
-                                'py-2 px-4 text-right text-sm font-mono font-semibold',
-                                netColor(row.net)
-                              )}
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted/40">
+                        <tr>
+                          <th className="text-left py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Atividade
+                          </th>
+                          <th className="text-left py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Categoria
+                          </th>
+                          <th className="text-right py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Entradas
+                          </th>
+                          <th className="text-right py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Saídas
+                          </th>
+                          <th className="text-right py-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Líquido
+                          </th>
+                          <th className="w-10" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.categories.map(row => {
+                          const meta = ACTIVITY_META[row.activity];
+                          return (
+                            <tr
+                              key={row.categoryId}
+                              className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                              data-testid={`dfc-row-${row.categoryId}`}
+                              onClick={() =>
+                                setDrillDown({
+                                  categoryId: row.categoryId,
+                                  categoryName: row.categoryName,
+                                  activity: row.activity,
+                                })
+                              }
                             >
-                              {formatCurrency(row.net)}
-                            </td>
-                            <td className="py-2 px-4 text-muted-foreground">
-                              <ChevronRight className="h-4 w-4" />
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                              <td className="py-2 px-4">
+                                <Badge
+                                  variant="outline"
+                                  className={cn('text-[10px]', meta.color)}
+                                >
+                                  {meta.label}
+                                </Badge>
+                              </td>
+                              <td className="py-2 px-4 text-sm font-medium">
+                                {row.categoryName}
+                              </td>
+                              <td className="py-2 px-4 text-right text-sm font-mono text-emerald-600 dark:text-emerald-400">
+                                {formatCurrency(row.inflow)}
+                              </td>
+                              <td className="py-2 px-4 text-right text-sm font-mono text-rose-600 dark:text-rose-400">
+                                {formatCurrency(row.outflow)}
+                              </td>
+                              <td
+                                className={cn(
+                                  'py-2 px-4 text-right text-sm font-mono font-semibold',
+                                  netColor(row.net)
+                                )}
+                              >
+                                {formatCurrency(row.net)}
+                              </td>
+                              <td className="py-2 px-4 text-muted-foreground">
+                                <ChevronRight className="h-4 w-4" />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          <p className="text-xs text-muted-foreground">
-            Classificação derivada do nome + slug da categoria (palavras como
-            "investimento", "imobilizado", "empréstimo", "financiamento" e
-            similares). Para ajustar, renomeie a categoria ou inclua o termo
-            correspondente no slug.
-          </p>
-        </>
-      )}
+            <p className="text-xs text-muted-foreground">
+              Classificação derivada do nome + slug da categoria (palavras como
+              "investimento", "imobilizado", "empréstimo", "financiamento" e
+              similares). Para ajustar, renomeie a categoria ou inclua o termo
+              correspondente no slug.
+            </p>
+          </>
+        )}
 
         {/* Drill-down drawer */}
         <DrillDownDrawer

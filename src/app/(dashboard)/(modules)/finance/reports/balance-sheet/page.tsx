@@ -311,159 +311,165 @@ export default function BalanceSheetPage() {
 
         {/* Date Range Selector */}
         <div className="flex flex-wrap items-center gap-3">
-          <DatePicker label="Início" value={startDate} onChange={setStartDate} />
+          <DatePicker
+            label="Início"
+            value={startDate}
+            onChange={setStartDate}
+          />
           <DatePicker label="Fim" value={endDate} onChange={setEndDate} />
         </div>
 
-      {/* Loading */}
-      {isLoading && <BalanceSheetSkeleton />}
+        {/* Loading */}
+        {isLoading && <BalanceSheetSkeleton />}
 
-      {/* Error */}
-      {error && !isLoading && (
-        <Card className="bg-white dark:bg-slate-800/60 border border-border">
-          <CardContent className="py-12 text-center">
-            <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-rose-500 opacity-50" />
-            <p className="text-muted-foreground">
-              Erro ao carregar o balanço patrimonial. Tente novamente.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Data */}
-      {data && !isLoading && (
-        <>
-          {/* 3-column layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Column 1: Assets */}
-            <div className="space-y-6">
-              <SectionCard
-                title="Ativo"
-                icon={Building2}
-                iconColor="text-emerald-500"
-                section={data.assets?.current}
-                totalLabel="Total do Ativo"
-                totalValue={data.assets?.total ?? 0}
-                totalColor="text-emerald-600 dark:text-emerald-400"
-              />
-              {data.assets.nonCurrent && (
-                <Card className="bg-white dark:bg-slate-800/60 border border-border">
-                  <CardContent className="p-0">
-                    <div className="px-4 py-2 bg-muted/30 border-b border-border/50">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {data.assets.nonCurrent.title}
-                      </span>
-                    </div>
-                    <div className="divide-y divide-border/30">
-                      {(data.assets.nonCurrent.accounts ?? []).map(acc => (
-                        <AccountRow key={acc.name} account={acc} />
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-muted/20 border-t border-border/50">
-                      <span className="text-sm font-semibold text-muted-foreground">
-                        Subtotal {data.assets.nonCurrent.title}
-                      </span>
-                      <span className="font-mono font-semibold tabular-nums">
-                        {formatCurrency(data.assets.nonCurrent.subtotal)}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {/* Column 2: Liabilities */}
-            <div className="space-y-6">
-              <SectionCard
-                title="Passivo"
-                icon={Landmark}
-                iconColor="text-rose-500"
-                section={data.liabilities?.current}
-                totalLabel="Total do Passivo"
-                totalValue={data.liabilities?.total ?? 0}
-                totalColor="text-rose-600 dark:text-rose-400"
-              />
-              {data.liabilities.nonCurrent && (
-                <Card className="bg-white dark:bg-slate-800/60 border border-border">
-                  <CardContent className="p-0">
-                    <div className="px-4 py-2 bg-muted/30 border-b border-border/50">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {data.liabilities.nonCurrent.title}
-                      </span>
-                    </div>
-                    <div className="divide-y divide-border/30">
-                      {(data.liabilities.nonCurrent.accounts ?? []).map(acc => (
-                        <AccountRow key={acc.name} account={acc} />
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-muted/20 border-t border-border/50">
-                      <span className="text-sm font-semibold text-muted-foreground">
-                        Subtotal {data.liabilities.nonCurrent.title}
-                      </span>
-                      <span className="font-mono font-semibold tabular-nums">
-                        {formatCurrency(data.liabilities.nonCurrent.subtotal)}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {/* Column 3: Equity */}
-            <div>
-              <EquityCard
-                accounts={data.equity?.accounts ?? []}
-                total={data.equity?.total ?? 0}
-              />
-            </div>
-          </div>
-
-          {/* Footer: Balance Check */}
+        {/* Error */}
+        {error && !isLoading && (
           <Card className="bg-white dark:bg-slate-800/60 border border-border">
-            <CardContent className="py-4">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-                  <div className="text-center sm:text-left">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      Ativo Total
-                    </p>
-                    <p className="text-xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
-                      {formatCurrency(data.assets?.total ?? 0)}
-                    </p>
-                  </div>
-                  <span className="text-2xl font-light text-muted-foreground">
-                    vs
-                  </span>
-                  <div className="text-center sm:text-left">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      Passivo + Patrimônio Líquido
-                    </p>
-                    <p className="text-xl font-bold font-mono tabular-nums text-rose-600 dark:text-rose-400">
-                      {formatCurrency(
-                        (data.liabilities?.total ?? 0) +
-                          (data.equity?.total ?? 0)
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {data.isBalanced ? (
-                  <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/30 px-4 py-1.5 text-sm">
-                    <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                    Equilibrado
-                  </Badge>
-                ) : (
-                  <Badge className="bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300 border-rose-200 dark:border-rose-800/30 px-4 py-1.5 text-sm">
-                    <AlertTriangle className="h-4 w-4 mr-1.5" />
-                    Desequilibrado (diferenca: {formatCurrency(data.difference)}
-                    )
-                  </Badge>
-                )}
-              </div>
+            <CardContent className="py-12 text-center">
+              <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-rose-500 opacity-50" />
+              <p className="text-muted-foreground">
+                Erro ao carregar o balanço patrimonial. Tente novamente.
+              </p>
             </CardContent>
           </Card>
-        </>
-      )}
+        )}
+
+        {/* Data */}
+        {data && !isLoading && (
+          <>
+            {/* 3-column layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Column 1: Assets */}
+              <div className="space-y-6">
+                <SectionCard
+                  title="Ativo"
+                  icon={Building2}
+                  iconColor="text-emerald-500"
+                  section={data.assets?.current}
+                  totalLabel="Total do Ativo"
+                  totalValue={data.assets?.total ?? 0}
+                  totalColor="text-emerald-600 dark:text-emerald-400"
+                />
+                {data.assets.nonCurrent && (
+                  <Card className="bg-white dark:bg-slate-800/60 border border-border">
+                    <CardContent className="p-0">
+                      <div className="px-4 py-2 bg-muted/30 border-b border-border/50">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {data.assets.nonCurrent.title}
+                        </span>
+                      </div>
+                      <div className="divide-y divide-border/30">
+                        {(data.assets.nonCurrent.accounts ?? []).map(acc => (
+                          <AccountRow key={acc.name} account={acc} />
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-muted/20 border-t border-border/50">
+                        <span className="text-sm font-semibold text-muted-foreground">
+                          Subtotal {data.assets.nonCurrent.title}
+                        </span>
+                        <span className="font-mono font-semibold tabular-nums">
+                          {formatCurrency(data.assets.nonCurrent.subtotal)}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Column 2: Liabilities */}
+              <div className="space-y-6">
+                <SectionCard
+                  title="Passivo"
+                  icon={Landmark}
+                  iconColor="text-rose-500"
+                  section={data.liabilities?.current}
+                  totalLabel="Total do Passivo"
+                  totalValue={data.liabilities?.total ?? 0}
+                  totalColor="text-rose-600 dark:text-rose-400"
+                />
+                {data.liabilities.nonCurrent && (
+                  <Card className="bg-white dark:bg-slate-800/60 border border-border">
+                    <CardContent className="p-0">
+                      <div className="px-4 py-2 bg-muted/30 border-b border-border/50">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {data.liabilities.nonCurrent.title}
+                        </span>
+                      </div>
+                      <div className="divide-y divide-border/30">
+                        {(data.liabilities.nonCurrent.accounts ?? []).map(
+                          acc => (
+                            <AccountRow key={acc.name} account={acc} />
+                          )
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-muted/20 border-t border-border/50">
+                        <span className="text-sm font-semibold text-muted-foreground">
+                          Subtotal {data.liabilities.nonCurrent.title}
+                        </span>
+                        <span className="font-mono font-semibold tabular-nums">
+                          {formatCurrency(data.liabilities.nonCurrent.subtotal)}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Column 3: Equity */}
+              <div>
+                <EquityCard
+                  accounts={data.equity?.accounts ?? []}
+                  total={data.equity?.total ?? 0}
+                />
+              </div>
+            </div>
+
+            {/* Footer: Balance Check */}
+            <Card className="bg-white dark:bg-slate-800/60 border border-border">
+              <CardContent className="py-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+                    <div className="text-center sm:text-left">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Ativo Total
+                      </p>
+                      <p className="text-xl font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(data.assets?.total ?? 0)}
+                      </p>
+                    </div>
+                    <span className="text-2xl font-light text-muted-foreground">
+                      vs
+                    </span>
+                    <div className="text-center sm:text-left">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Passivo + Patrimônio Líquido
+                      </p>
+                      <p className="text-xl font-bold font-mono tabular-nums text-rose-600 dark:text-rose-400">
+                        {formatCurrency(
+                          (data.liabilities?.total ?? 0) +
+                            (data.equity?.total ?? 0)
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {data.isBalanced ? (
+                    <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/30 px-4 py-1.5 text-sm">
+                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                      Equilibrado
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300 border-rose-200 dark:border-rose-800/30 px-4 py-1.5 text-sm">
+                      <AlertTriangle className="h-4 w-4 mr-1.5" />
+                      Desequilibrado (diferenca:{' '}
+                      {formatCurrency(data.difference)})
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         {/* Empty state */}
         {!data && !isLoading && !error && (

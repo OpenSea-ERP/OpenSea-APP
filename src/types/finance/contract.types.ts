@@ -83,12 +83,7 @@ export interface ContractsQuery {
   endDateTo?: string;
   // P1-41: narrowed to the real backend enum. `monthlyValue` was never a
   // real Contract column and has been removed from the backend whitelist.
-  sortBy?:
-    | 'createdAt'
-    | 'startDate'
-    | 'endDate'
-    | 'paymentAmount'
-    | 'status';
+  sortBy?: 'createdAt' | 'startDate' | 'endDate' | 'paymentAmount' | 'status';
   sortOrder?: 'asc' | 'desc';
 }
 

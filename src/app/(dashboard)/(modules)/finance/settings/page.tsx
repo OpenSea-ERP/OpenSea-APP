@@ -243,10 +243,7 @@ export default function FinanceSettingsPage() {
   const saveLocalPreferences = useCallback((): boolean => {
     try {
       localStorage.setItem('finance-export-prefs', JSON.stringify(exportPrefs));
-      localStorage.setItem(
-        'finance-tax-defaults',
-        JSON.stringify(taxDefaults)
-      );
+      localStorage.setItem('finance-tax-defaults', JSON.stringify(taxDefaults));
       localStorage.setItem(
         'finance-notification-prefs',
         JSON.stringify(notifPrefs)

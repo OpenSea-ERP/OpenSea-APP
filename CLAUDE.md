@@ -199,17 +199,17 @@ All user-facing text (labels, placeholders, toasts, titles, errors, dialogs) in 
 
 ### Required pattern pairings
 
-| Data / interaction | ❌ Never ship | ✅ Ship instead (reference) |
-|---|---|---|
-| Date input | `<input type="text">` | Calendar picker (Google Calendar, Airbnb) |
-| Timeframe / cronograma | Plain date pair | Timeline / Gantt / calendar grid (Linear Cycles, Asana) |
-| File upload | Raw `<input type="file">` | Dropzone + preview + per-file progress (Dropbox, Vercel, Notion) |
-| Long form | Single scroll with 20 fields | `StepWizardDialog` OR `CollapsibleSection` groups (Stripe, Typeform) |
-| Data table | Plain `<table>` | `EntityGrid` + filters + empty state + skeleton (Linear, Airtable) |
-| Global search | Scattered search inputs | Command palette `⌘K` (Raycast, Linear, Notion) |
-| Numeric entry (money, %, qty) | Plain text input | Masked input with currency/locale formatting |
-| Status / category | Dropdown with text | Colored chip/badge with dual-theme (see §9) |
-| Chart | Raw numbers | Visual chart with tooltip + legend (Stripe, Vercel Analytics) |
+| Data / interaction            | ❌ Never ship                | ✅ Ship instead (reference)                                          |
+| ----------------------------- | ---------------------------- | -------------------------------------------------------------------- |
+| Date input                    | `<input type="text">`        | Calendar picker (Google Calendar, Airbnb)                            |
+| Timeframe / cronograma        | Plain date pair              | Timeline / Gantt / calendar grid (Linear Cycles, Asana)              |
+| File upload                   | Raw `<input type="file">`    | Dropzone + preview + per-file progress (Dropbox, Vercel, Notion)     |
+| Long form                     | Single scroll with 20 fields | `StepWizardDialog` OR `CollapsibleSection` groups (Stripe, Typeform) |
+| Data table                    | Plain `<table>`              | `EntityGrid` + filters + empty state + skeleton (Linear, Airtable)   |
+| Global search                 | Scattered search inputs      | Command palette `⌘K` (Raycast, Linear, Notion)                       |
+| Numeric entry (money, %, qty) | Plain text input             | Masked input with currency/locale formatting                         |
+| Status / category             | Dropdown with text           | Colored chip/badge with dual-theme (see §9)                          |
+| Chart                         | Raw numbers                  | Visual chart with tooltip + legend (Stripe, Vercel Analytics)        |
 
 ### Every listing page MUST have
 
@@ -265,35 +265,35 @@ HR has domain-specific interactions that need dedicated widgets — generic form
 
 ### HR-specific widget pairings
 
-| Interaction | ❌ Never ship | ✅ Ship instead (reference) |
-|---|---|---|
-| Employee list | Plain table with name only | Directory cards: avatar + role + dept + manager + status (BambooHR, Humaans) |
-| Employee profile | Single-page form | Tabbed profile: Overview / Documents / History / Performance / Time-off (BambooHR) |
-| Avatar / photo | Initials only | Photo upload with crop + fallback initials colored by name hash (Gusto) |
-| Org chart | Flat employee list | Interactive tree with zoom/pan + team filter (Rippling, Deel) |
-| Vacation request | Date range inputs | Calendar picker with team overlay (see conflicts) + balance sidebar (BambooHR PTO) |
-| Vacation approval | Plain list | Timeline view: who's out each month + color per type (sick/vacation/parental) |
-| Time tracking / ponto | Plain buttons | Big "Bater ponto" CTA + current session timer + location/geo badge + streak (Sólides Ponto) |
-| Work schedule / escala | Text description | Weekly grid with colored shifts (Humaans, When I Work) |
-| Admission flow | Single giant form | Multi-step wizard with progress bar + saved progress + document uploads per step (Rippling) |
-| Document collection | Raw file inputs | Checklist with state per doc: pending / uploaded / approved / rejected (Rippling) |
-| Signature | Type-your-name field | Canvas signature or DocuSign-style embedded sign (Rippling, Deel) |
-| Holerite / contracheque | Table of numbers | Downloadable PDF card + preview modal + history list by month (Gusto) |
-| Payroll run | Plain form | Step-by-step "run" with pre-flight checks, diffs vs last run, approval (Gusto) |
-| Performance review | Plain text inputs | Scale inputs (1–5) + radar chart + self/manager split view (Lattice) |
-| OKR / goals | Flat task list | Nested hierarchy: company → team → individual, with progress bars (15Five) |
-| Kudos / recognition | Comment box | Social feed: sender + receiver avatars + reaction emojis + replies (Slack, Lattice) |
-| Employee request (férias, reembolso, atestado) | Generic form | Typed request form per kind + state machine visible (pending → approved → processed) |
-| Absence calendar | Date list | Month grid view with colored bands per absence type + filters (BambooHR) |
-| Announcement / mural | Text block | Card feed with pinned items + read receipts + target audience badges (Notion, Slack) |
-| Onboarding progress | Checklist | Journey-style progress with milestone unlocks + mentor assigned + day counter (Rippling) |
-| Birthday / anniversary | List | Social feed card with CTA "parabenizar" + auto-notification (BambooHR) |
-| Salary history | Number column | Timeline with promotion markers + % increase per change + currency badges |
-| eSocial event status | Plain badge | Colored chip + tooltip with event code + SEFAZ-style status icon + retry button on failure |
-| Workforce analytics | Single KPI | Dashboard with headcount trend, turnover, time-to-hire, gender/race split (BambooHR Insights) |
-| Recruitment pipeline | Table of candidates | Kanban: Triagem → Entrevista → Oferta → Contratado, drag-and-drop (Gupy) |
-| Interview scheduling | Date text | Calendar picker with interviewer availability + timezone + integrations (Gupy, Calendly) |
-| 1:1 meeting | Generic note | Talking-points template + shared agenda + action items (Lattice, 15Five) |
+| Interaction                                    | ❌ Never ship              | ✅ Ship instead (reference)                                                                   |
+| ---------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| Employee list                                  | Plain table with name only | Directory cards: avatar + role + dept + manager + status (BambooHR, Humaans)                  |
+| Employee profile                               | Single-page form           | Tabbed profile: Overview / Documents / History / Performance / Time-off (BambooHR)            |
+| Avatar / photo                                 | Initials only              | Photo upload with crop + fallback initials colored by name hash (Gusto)                       |
+| Org chart                                      | Flat employee list         | Interactive tree with zoom/pan + team filter (Rippling, Deel)                                 |
+| Vacation request                               | Date range inputs          | Calendar picker with team overlay (see conflicts) + balance sidebar (BambooHR PTO)            |
+| Vacation approval                              | Plain list                 | Timeline view: who's out each month + color per type (sick/vacation/parental)                 |
+| Time tracking / ponto                          | Plain buttons              | Big "Bater ponto" CTA + current session timer + location/geo badge + streak (Sólides Ponto)   |
+| Work schedule / escala                         | Text description           | Weekly grid with colored shifts (Humaans, When I Work)                                        |
+| Admission flow                                 | Single giant form          | Multi-step wizard with progress bar + saved progress + document uploads per step (Rippling)   |
+| Document collection                            | Raw file inputs            | Checklist with state per doc: pending / uploaded / approved / rejected (Rippling)             |
+| Signature                                      | Type-your-name field       | Canvas signature or DocuSign-style embedded sign (Rippling, Deel)                             |
+| Holerite / contracheque                        | Table of numbers           | Downloadable PDF card + preview modal + history list by month (Gusto)                         |
+| Payroll run                                    | Plain form                 | Step-by-step "run" with pre-flight checks, diffs vs last run, approval (Gusto)                |
+| Performance review                             | Plain text inputs          | Scale inputs (1–5) + radar chart + self/manager split view (Lattice)                          |
+| OKR / goals                                    | Flat task list             | Nested hierarchy: company → team → individual, with progress bars (15Five)                    |
+| Kudos / recognition                            | Comment box                | Social feed: sender + receiver avatars + reaction emojis + replies (Slack, Lattice)           |
+| Employee request (férias, reembolso, atestado) | Generic form               | Typed request form per kind + state machine visible (pending → approved → processed)          |
+| Absence calendar                               | Date list                  | Month grid view with colored bands per absence type + filters (BambooHR)                      |
+| Announcement / mural                           | Text block                 | Card feed with pinned items + read receipts + target audience badges (Notion, Slack)          |
+| Onboarding progress                            | Checklist                  | Journey-style progress with milestone unlocks + mentor assigned + day counter (Rippling)      |
+| Birthday / anniversary                         | List                       | Social feed card with CTA "parabenizar" + auto-notification (BambooHR)                        |
+| Salary history                                 | Number column              | Timeline with promotion markers + % increase per change + currency badges                     |
+| eSocial event status                           | Plain badge                | Colored chip + tooltip with event code + SEFAZ-style status icon + retry button on failure    |
+| Workforce analytics                            | Single KPI                 | Dashboard with headcount trend, turnover, time-to-hire, gender/race split (BambooHR Insights) |
+| Recruitment pipeline                           | Table of candidates        | Kanban: Triagem → Entrevista → Oferta → Contratado, drag-and-drop (Gupy)                      |
+| Interview scheduling                           | Date text                  | Calendar picker with interviewer availability + timezone + integrations (Gupy, Calendly)      |
+| 1:1 meeting                                    | Generic note               | Talking-points template + shared agenda + action items (Lattice, 15Five)                      |
 
 ### Every HR employee card MUST have
 

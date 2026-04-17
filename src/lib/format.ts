@@ -1,11 +1,14 @@
 export function formatCurrency(
   value: number | null | undefined,
-  currency: string = 'BRL',
+  currency: string = 'BRL'
 ): string {
   if (value === null || value === undefined) {
     if (currency === 'BRL') return 'R$ 0,00';
     try {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(0);
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency,
+      }).format(0);
     } catch {
       return `${currency} 0,00`;
     }

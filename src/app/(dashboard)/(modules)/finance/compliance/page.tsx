@@ -172,11 +172,15 @@ function CompliancePageContent() {
   // ---------------------------------------------------------------------------
 
   const now = useMemo(() => new Date(), []);
-  const [simplesYear, setSimplesYear] = useState(() => new Date().getFullYear());
+  const [simplesYear, setSimplesYear] = useState(() =>
+    new Date().getFullYear()
+  );
   const [calendarMonth, setCalendarMonth] = useState(
     () => new Date().getMonth() + 1
   );
-  const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear());
+  const [calendarYear, setCalendarYear] = useState(() =>
+    new Date().getFullYear()
+  );
   const [spedYear, setSpedYear] = useState(() => new Date().getFullYear());
   const [searchQuery, setSearchQuery] = useState('');
   const [payTargetId, setPayTargetId] = useState<string | null>(null);

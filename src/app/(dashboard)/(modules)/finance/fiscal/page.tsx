@@ -944,9 +944,7 @@ function FiscalPageContent() {
                 content: (
                   <div className="space-y-4 py-2">
                     <div>
-                      <Label htmlFor="correction-text">
-                        Texto de Correção
-                      </Label>
+                      <Label htmlFor="correction-text">Texto de Correção</Label>
                       <Textarea
                         id="correction-text"
                         placeholder="Descreva a correção a ser feita..."

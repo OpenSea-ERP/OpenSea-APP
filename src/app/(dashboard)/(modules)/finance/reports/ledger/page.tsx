@@ -319,226 +319,232 @@ export default function LedgerPage() {
           hasPermission={hasPermission}
         />
 
-      {/* Filter Bar */}
-      <Card className="bg-white dark:bg-slate-800/60 border border-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base font-semibold">
-            <BookOpen className="h-4 w-4 text-violet-500" />
-            Razão Contábil
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-            {/* Account Selector */}
-            <div className="flex-1 min-w-60">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">
-                Conta Contábil
-              </label>
-              <Combobox
-                options={accountOptions}
-                value={selectedAccountId}
-                onValueChange={setSelectedAccountId}
-                placeholder={
-                  accountsLoading
-                    ? 'Carregando contas...'
-                    : 'Selecione uma conta...'
+        {/* Filter Bar */}
+        <Card className="bg-white dark:bg-slate-800/60 border border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <BookOpen className="h-4 w-4 text-violet-500" />
+              Razão Contábil
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+              {/* Account Selector */}
+              <div className="flex-1 min-w-60">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5 block">
+                  Conta Contábil
+                </label>
+                <Combobox
+                  options={accountOptions}
+                  value={selectedAccountId}
+                  onValueChange={setSelectedAccountId}
+                  placeholder={
+                    accountsLoading
+                      ? 'Carregando contas...'
+                      : 'Selecione uma conta...'
+                  }
+                  searchPlaceholder="Buscar por código ou nome..."
+                  emptyText="Nenhuma conta encontrada."
+                  disabled={accountsLoading}
+                />
+              </div>
+
+              {/* Date Range */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Período
+                </label>
+                <div className="flex items-center gap-2">
+                  <DatePicker
+                    label="De"
+                    value={startDate}
+                    onChange={setStartDate}
+                  />
+                  <span className="text-muted-foreground text-sm">até</span>
+                  <DatePicker
+                    label="Até"
+                    value={endDate}
+                    onChange={setEndDate}
+                  />
+                </div>
+              </div>
+
+              {/* Consultar Button */}
+              <Button
+                size="sm"
+                className="h-9 px-4"
+                onClick={handleConsultar}
+                disabled={!selectedAccountId}
+              >
+                <Search className="h-4 w-4 mr-1.5" />
+                Consultar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* No account selected / not yet queried */}
+        {!queriedParams && (
+          <Card className="bg-white dark:bg-slate-800/60 border border-border">
+            <CardContent className="py-16 text-center">
+              <BookOpen className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-30" />
+              <p className="text-muted-foreground">
+                Selecione uma conta para visualizar o razão.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Loading */}
+        {isLoading && <LedgerSkeleton />}
+
+        {/* Error */}
+        {error && !isLoading && (
+          <Card className="bg-white dark:bg-slate-800/60 border border-border">
+            <CardContent className="py-12 text-center">
+              <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-rose-500 opacity-50" />
+              <p className="text-muted-foreground">
+                Erro ao carregar o razão. Verifique os filtros e tente
+                novamente.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Data */}
+        {data && !isLoading && (
+          <>
+            {/* Account header */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                  Conta
+                </p>
+                <p className="text-lg font-semibold">
+                  {data.account.code} — {data.account.name}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Período: {formatDate(data.period.from)} a{' '}
+                  {formatDate(data.period.to)}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3 gap-1.5"
+                onClick={handleExportCsv}
+                disabled={!data.entries.length}
+              >
+                <Download className="h-4 w-4" />
+                Exportar CSV
+              </Button>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <SummaryCard label="Saldo Inicial" value={data.openingBalance} />
+              <SummaryCard
+                label="Total Débitos"
+                value={data.totalDebits}
+                valueClass="text-emerald-600 dark:text-emerald-400"
+              />
+              <SummaryCard
+                label="Total Créditos"
+                value={data.totalCredits}
+                valueClass="text-rose-600 dark:text-rose-400"
+              />
+              <SummaryCard
+                label="Saldo Final"
+                value={data.closingBalance}
+                valueClass={
+                  data.closingBalance >= 0
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-rose-600 dark:text-rose-400'
                 }
-                searchPlaceholder="Buscar por código ou nome..."
-                emptyText="Nenhuma conta encontrada."
-                disabled={accountsLoading}
               />
             </div>
 
-            {/* Date Range */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Período
-              </label>
-              <div className="flex items-center gap-2">
-                <DatePicker
-                  label="De"
-                  value={startDate}
-                  onChange={setStartDate}
-                />
-                <span className="text-muted-foreground text-sm">até</span>
-                <DatePicker label="Até" value={endDate} onChange={setEndDate} />
-              </div>
-            </div>
+            {/* Table */}
+            <Card className="bg-white dark:bg-slate-800/60 border border-border">
+              <CardContent className="p-0 overflow-auto">
+                {data.entries.length === 0 ? (
+                  <div className="py-16 text-center">
+                    <BookOpen className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-30" />
+                    <p className="text-muted-foreground">
+                      Nenhum lançamento encontrado no período.
+                    </p>
+                  </div>
+                ) : (
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30">
+                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+                          Data
+                        </th>
+                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+                          Lançamento
+                        </th>
+                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Descrição
+                        </th>
+                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground text-right whitespace-nowrap">
+                          Débito
+                        </th>
+                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground text-right whitespace-nowrap">
+                          Crédito
+                        </th>
+                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground text-right whitespace-nowrap">
+                          Saldo
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.entries.map((entry: LedgerEntry, idx: number) => (
+                        <LedgerRow
+                          key={`${entry.journalEntryId}-${idx}`}
+                          entry={entry}
+                        />
+                      ))}
+                    </tbody>
+                    {/* Footer totals row */}
+                    <tfoot>
+                      <tr className="border-t-2 border-border bg-muted/20">
+                        <td
+                          colSpan={3}
+                          className="px-4 py-3 text-sm font-semibold text-muted-foreground"
+                        >
+                          Totais do período
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right font-mono tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
+                          {formatCurrency(data.totalDebits)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right font-mono tabular-nums font-semibold text-rose-600 dark:text-rose-400">
+                          {formatCurrency(data.totalCredits)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right font-mono tabular-nums font-bold">
+                          {formatCurrency(data.closingBalance)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
 
-            {/* Consultar Button */}
-            <Button
-              size="sm"
-              className="h-9 px-4"
-              onClick={handleConsultar}
-              disabled={!selectedAccountId}
-            >
-              <Search className="h-4 w-4 mr-1.5" />
-              Consultar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* No account selected / not yet queried */}
-      {!queriedParams && (
-        <Card className="bg-white dark:bg-slate-800/60 border border-border">
-          <CardContent className="py-16 text-center">
-            <BookOpen className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-30" />
-            <p className="text-muted-foreground">
-              Selecione uma conta para visualizar o razão.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Loading */}
-      {isLoading && <LedgerSkeleton />}
-
-      {/* Error */}
-      {error && !isLoading && (
-        <Card className="bg-white dark:bg-slate-800/60 border border-border">
-          <CardContent className="py-12 text-center">
-            <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-rose-500 opacity-50" />
-            <p className="text-muted-foreground">
-              Erro ao carregar o razão. Verifique os filtros e tente novamente.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Data */}
-      {data && !isLoading && (
-        <>
-          {/* Account header */}
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                Conta
-              </p>
-              <p className="text-lg font-semibold">
-                {data.account.code} — {data.account.name}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Período: {formatDate(data.period.from)} a{' '}
-                {formatDate(data.period.to)}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 px-3 gap-1.5"
-              onClick={handleExportCsv}
-              disabled={!data.entries.length}
-            >
-              <Download className="h-4 w-4" />
-              Exportar CSV
-            </Button>
-          </div>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <SummaryCard label="Saldo Inicial" value={data.openingBalance} />
-            <SummaryCard
-              label="Total Débitos"
-              value={data.totalDebits}
-              valueClass="text-emerald-600 dark:text-emerald-400"
-            />
-            <SummaryCard
-              label="Total Créditos"
-              value={data.totalCredits}
-              valueClass="text-rose-600 dark:text-rose-400"
-            />
-            <SummaryCard
-              label="Saldo Final"
-              value={data.closingBalance}
-              valueClass={
-                data.closingBalance >= 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-rose-600 dark:text-rose-400'
-              }
-            />
-          </div>
-
-          {/* Table */}
+        {/* Empty state when queried but no data returned */}
+        {queriedParams && !isLoading && !error && !data && (
           <Card className="bg-white dark:bg-slate-800/60 border border-border">
-            <CardContent className="p-0 overflow-auto">
-              {data.entries.length === 0 ? (
-                <div className="py-16 text-center">
-                  <BookOpen className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-30" />
-                  <p className="text-muted-foreground">
-                    Nenhum lançamento encontrado no período.
-                  </p>
-                </div>
-              ) : (
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/30">
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
-                        Data
-                      </th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
-                        Lançamento
-                      </th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Descrição
-                      </th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground text-right whitespace-nowrap">
-                        Débito
-                      </th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground text-right whitespace-nowrap">
-                        Crédito
-                      </th>
-                      <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground text-right whitespace-nowrap">
-                        Saldo
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.entries.map((entry: LedgerEntry, idx: number) => (
-                      <LedgerRow
-                        key={`${entry.journalEntryId}-${idx}`}
-                        entry={entry}
-                      />
-                    ))}
-                  </tbody>
-                  {/* Footer totals row */}
-                  <tfoot>
-                    <tr className="border-t-2 border-border bg-muted/20">
-                      <td
-                        colSpan={3}
-                        className="px-4 py-3 text-sm font-semibold text-muted-foreground"
-                      >
-                        Totais do período
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right font-mono tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
-                        {formatCurrency(data.totalDebits)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right font-mono tabular-nums font-semibold text-rose-600 dark:text-rose-400">
-                        {formatCurrency(data.totalCredits)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right font-mono tabular-nums font-bold">
-                        {formatCurrency(data.closingBalance)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              )}
+            <CardContent className="py-16 text-center">
+              <BookOpen className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-30" />
+              <p className="text-muted-foreground">
+                Nenhum lançamento encontrado no período para a conta
+                selecionada.
+              </p>
             </CardContent>
           </Card>
-        </>
-      )}
-
-      {/* Empty state when queried but no data returned */}
-      {queriedParams && !isLoading && !error && !data && (
-        <Card className="bg-white dark:bg-slate-800/60 border border-border">
-          <CardContent className="py-16 text-center">
-            <BookOpen className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-30" />
-            <p className="text-muted-foreground">
-              Nenhum lançamento encontrado no período para a conta selecionada.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+        )}
       </PageBody>
     </PageLayout>
   );
