@@ -12,7 +12,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Bell,
-  Check,
   Copy,
   Mail,
   MessageCircle,
