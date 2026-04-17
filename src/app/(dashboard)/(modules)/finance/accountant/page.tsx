@@ -6,11 +6,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft,
   Calculator,
-  Check,
   Clock,
   Copy,
   MoreVertical,
@@ -18,7 +15,6 @@ import {
   ShieldOff,
   Trash2,
   UserPlus,
-  X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,7 +27,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Header } from '@/components/layout/header';
 import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { InviteAccountantModal } from '@/components/finance/invite-accountant-modal';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -233,7 +235,6 @@ function EmptyState({ onInvite }: { onInvite: () => void }) {
 // =============================================================================
 
 export default function AccountantPortalPage() {
-  const router = useRouter();
   const { hasPermission } = usePermissions();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<AccountantAccess | null>(
@@ -264,64 +265,73 @@ export default function AccountantPortalPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <PageActionBar
-        breadcrumbItems={[
-          { label: 'Financeiro', href: '/finance' },
-          { label: 'Portal do Contador' },
-        ]}
-        hasPermission={hasPermission}
-        buttons={[
-          {
-            id: 'invite',
-            title: 'Convidar Contador',
-            icon: UserPlus,
-            variant: 'default',
-            onClick: () => setInviteOpen(true),
-          },
-        ]}
-      />
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={[
+            { label: 'Financeiro', href: '/finance' },
+            { label: 'Portal do Contador' },
+          ]}
+          hasPermission={hasPermission}
+          buttons={[
+            {
+              id: 'invite',
+              title: 'Convidar Contador',
+              icon: UserPlus,
+              variant: 'default',
+              onClick: () => setInviteOpen(true),
+            },
+          ]}
+        />
 
-      {isLoading ? (
-        <LoadingSkeleton />
-      ) : error ? (
-        <Card>
-          <CardContent className="py-8 text-center text-rose-600">
-            Erro ao carregar acessos de contadores.
-          </CardContent>
-        </Card>
-      ) : accesses.length === 0 ? (
-        <EmptyState onInvite={() => setInviteOpen(true)} />
-      ) : (
-        <div className="space-y-3">
-          {accesses.map(access => (
-            <AccountantCard
-              key={access.id}
-              access={access}
-              onRevoke={setRevokeTarget}
-              onCopyLink={handleCopyLink}
-            />
-          ))}
-        </div>
-      )}
+        <Header
+          title="Portal do Contador"
+          description="Conceda acesso de leitura aos dados financeiros para contadores externos, com trilha de auditoria e revogação a qualquer momento."
+        />
+      </PageHeader>
 
-      {/* Invite Modal */}
-      <InviteAccountantModal
-        open={inviteOpen}
-        onOpenChange={open => {
-          setInviteOpen(open);
-          if (!open) refetch();
-        }}
-      />
+      <PageBody>
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : error ? (
+          <Card>
+            <CardContent className="py-8 text-center text-rose-600">
+              Erro ao carregar acessos de contadores.
+            </CardContent>
+          </Card>
+        ) : accesses.length === 0 ? (
+          <EmptyState onInvite={() => setInviteOpen(true)} />
+        ) : (
+          <div className="space-y-3">
+            {accesses.map(access => (
+              <AccountantCard
+                key={access.id}
+                access={access}
+                onRevoke={setRevokeTarget}
+                onCopyLink={handleCopyLink}
+              />
+            ))}
+          </div>
+        )}
 
-      {/* Revoke PIN Confirmation */}
-      <VerifyActionPinModal
-        isOpen={!!revokeTarget}
-        onClose={() => setRevokeTarget(null)}
-        onSuccess={handleRevoke}
-        title="Revogar Acesso do Contador"
-        description={`Digite seu PIN de ação para revogar o acesso de ${revokeTarget?.name ?? 'este contador'}.`}
-      />
-    </div>
+        {/* Invite Modal */}
+        <InviteAccountantModal
+          open={inviteOpen}
+          onOpenChange={open => {
+            setInviteOpen(open);
+            if (!open) refetch();
+          }}
+        />
+
+        {/* Revoke PIN Confirmation */}
+        <VerifyActionPinModal
+          isOpen={!!revokeTarget}
+          onClose={() => setRevokeTarget(null)}
+          onSuccess={handleRevoke}
+          title="Revogar Acesso do Contador"
+          description={`Digite seu PIN de ação para revogar o acesso de ${revokeTarget?.name ?? 'este contador'}.`}
+        />
+      </PageBody>
+    </PageLayout>
   );
 }
