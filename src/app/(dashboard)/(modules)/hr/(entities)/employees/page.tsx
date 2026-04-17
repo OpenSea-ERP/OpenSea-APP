@@ -78,14 +78,6 @@ const CreateModal = dynamic(
     import('./src/modals/create-modal').then(m => ({ default: m.CreateModal })),
   { ssr: false }
 );
-const EditModal = dynamic(
-  () => import('./src/modals/edit-modal').then(m => ({ default: m.EditModal })),
-  { ssr: false }
-);
-const ViewModal = dynamic(
-  () => import('./src/modals/view-modal').then(m => ({ default: m.ViewModal })),
-  { ssr: false }
-);
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 const QuickAbsenceModal = dynamic(
   () =>
@@ -491,11 +483,15 @@ function EmployeesPageContent() {
   // ============================================================================
 
   const handleContextView = (ids: string[]) => {
-    page.handlers.handleItemsView(ids);
+    if (ids.length === 1) {
+      router.push(`/hr/employees/${ids[0]}`);
+    }
   };
 
   const handleContextEdit = (ids: string[]) => {
-    page.handlers.handleItemsEdit(ids);
+    if (ids.length === 1) {
+      router.push(`/hr/employees/${ids[0]}/edit`);
+    }
   };
 
   const handleContextDuplicate = (ids: string[]) => {
@@ -1066,20 +1062,16 @@ function EmployeesPageContent() {
                 delete: canDelete,
               }}
               handlers={{
-                onView: page.handlers.handleItemsView,
-                onEdit: page.handlers.handleItemsEdit,
+                onView: (ids: string[]) =>
+                  ids.length === 1 && router.push(`/hr/employees/${ids[0]}`),
+                onEdit: (ids: string[]) =>
+                  ids.length === 1 &&
+                  router.push(`/hr/employees/${ids[0]}/edit`),
                 onDuplicate: page.handlers.handleItemsDuplicate,
                 onDelete: page.handlers.handleItemsDelete,
               }}
             />
           )}
-
-          {/* View Modal */}
-          <ViewModal
-            isOpen={page.modals.isOpen('view')}
-            onClose={() => page.modals.close('view')}
-            employee={page.modals.viewingItem}
-          />
 
           {/* Create Modal */}
           <CreateModal
@@ -1131,16 +1123,6 @@ function EmployeesPageContent() {
             }}
           />
 
-          {/* Edit Modal */}
-          <EditModal
-            isOpen={page.modals.isOpen('edit')}
-            onClose={() => page.modals.close('edit')}
-            employee={page.modals.editingItem}
-            isSubmitting={crud.isUpdating}
-            onSubmit={async (id, data) => {
-              await crud.update(id, data);
-            }}
-          />
 
           {/* Delete Confirmation */}
           <VerifyActionPinModal
