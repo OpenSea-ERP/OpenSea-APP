@@ -219,14 +219,14 @@ export default function OverduePage() {
                       </td>
                       <td className="p-4 text-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getAgingBadge(daysOverdue)}`}
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getAgingBadge(daysOverdue)}`}
                         >
                           {daysOverdue} {daysOverdue === 1 ? 'dia' : 'dias'}
                         </span>
                       </td>
                       <td className="p-4">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(entry.status)}`}
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(entry.status)}`}
                         >
                           {FINANCE_ENTRY_STATUS_LABELS[entry.status]}
                         </span>
