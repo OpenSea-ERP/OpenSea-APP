@@ -593,7 +593,7 @@ export default function FinanceCategoriesPage() {
                                 <>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
-                                    className="text-destructive"
+                                    className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-500/8"
                                     onClick={() =>
                                       handleDeleteRequest(category.id)
                                     }
