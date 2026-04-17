@@ -381,18 +381,24 @@ function PayablePageContent() {
       );
       return;
     }
-    setBulkSelectedIds(ids);
+    // Capture a fresh snapshot so later confirm handlers see the intended ids
+    // even if `bulkSelectedIds` is updated by another selection event.
+    const snapshot = [...ids];
+    setBulkSelectedIds(snapshot);
     action();
   }, []);
 
   const handleBulkCancelConfirm = useCallback(async () => {
+    // Capture ids locally before the async call so we don't read a stale state
+    // if selection changes during the confirmation flow.
+    const ids = [...bulkSelectedIds];
     try {
       const result = await bulkCancelMutation.mutateAsync({
-        entryIds: bulkSelectedIds,
+        entryIds: ids,
       });
       if (result.failed > 0) {
         toast.warning(
-          `${result.success} de ${bulkSelectedIds.length} lançamentos cancelados.`,
+          `${result.success} de ${ids.length} lançamentos cancelados.`,
           {
             description: result.errors
               .map(e => e.error)
@@ -413,13 +419,14 @@ function PayablePageContent() {
   }, [bulkSelectedIds, bulkCancelMutation]);
 
   const handleBulkDeleteConfirm = useCallback(async () => {
+    const ids = [...bulkSelectedIds];
     try {
       const result = await bulkDeleteMutation.mutateAsync({
-        entryIds: bulkSelectedIds,
+        entryIds: ids,
       });
       if (result.failed > 0) {
         toast.warning(
-          `${result.success} de ${bulkSelectedIds.length} lançamentos excluídos.`,
+          `${result.success} de ${ids.length} lançamentos excluídos.`,
           {
             description: result.errors
               .map(e => e.error)
