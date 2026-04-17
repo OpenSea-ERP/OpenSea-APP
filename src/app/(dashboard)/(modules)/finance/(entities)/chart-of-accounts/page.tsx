@@ -188,7 +188,7 @@ function AccountRow({
             {account.name}
           </span>
           {account.isSystem && (
-            <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium border border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-600 dark:text-slate-300 shrink-0">
+            <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-600 dark:text-slate-300 shrink-0">
               Sistema
             </span>
           )}
@@ -199,7 +199,7 @@ function AccountRow({
       <td className="px-4 py-3">
         <span
           className={cn(
-            'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium border',
+            'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border',
             TYPE_COLORS[account.type]
           )}
         >
@@ -226,7 +226,7 @@ function AccountRow({
         <Badge
           variant="outline"
           className={cn(
-            'text-[11px]',
+            'text-xs',
             account.isActive
               ? 'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300'
               : 'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-700 dark:text-slate-300'
