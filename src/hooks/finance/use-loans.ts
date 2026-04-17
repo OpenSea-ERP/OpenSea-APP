@@ -22,14 +22,8 @@ export interface LoansFilters {
   search?: string;
   status?: LoanStatus;
   type?: LoanType;
-  sortBy?:
-    | 'createdAt'
-    | 'totalAmount'
-    | 'institution'
-    | 'status'
-    | 'name'
-    | 'principalAmount'
-    | 'outstandingBalance';
+  // Aligned with LoansQuery['sortBy'] — backend Zod enum only accepts these
+  sortBy?: 'createdAt' | 'startDate' | 'principalAmount' | 'name' | 'status';
   sortOrder?: 'asc' | 'desc';
 }
 
