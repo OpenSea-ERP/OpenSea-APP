@@ -45,6 +45,7 @@ import {
   Settings,
   XCircle,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/format';
 import { useRouter } from 'next/navigation';
 import { use, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -53,16 +54,8 @@ import { toast } from 'sonner';
 // HELPERS
 // =============================================================================
 
-function formatCurrency(value: number | null | undefined): string {
-  if (value == null) return 'R$ 0,00';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
-
 function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return '\u2014';
+  if (!dateStr) return '—';
   return new Intl.DateTimeFormat('pt-BR').format(new Date(dateStr));
 }
 
@@ -399,7 +392,7 @@ export default function RecurringDetailPage({
             </CardContent>
           </Card>
 
-          {/* Card 3: Vinculacao */}
+          {/* Card 3: Vinculação */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">

@@ -64,6 +64,7 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -74,14 +75,6 @@ import { toast } from 'sonner';
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatCurrency(value: number | null | undefined): string {
-  if (value == null) return 'R$ 0,00';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '-';
@@ -853,7 +846,7 @@ export default function ConsortiumDetailPage({
             </CardContent>
           </Card>
 
-          {/* Card 4: Vinculacao */}
+          {/* Card 4: Vinculação */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">

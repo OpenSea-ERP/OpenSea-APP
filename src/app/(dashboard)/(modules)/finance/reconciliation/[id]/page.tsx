@@ -31,6 +31,7 @@ import {
   useCancelReconciliation,
 } from '@/hooks/finance/use-reconciliation';
 import { usePermissions } from '@/hooks/use-permissions';
+import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type {
   ReconciliationItem,
@@ -62,13 +63,6 @@ import { toast } from 'sonner';
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('pt-BR');

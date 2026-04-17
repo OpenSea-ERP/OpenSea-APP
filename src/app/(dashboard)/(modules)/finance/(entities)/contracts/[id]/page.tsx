@@ -51,6 +51,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -60,16 +61,8 @@ import { toast } from 'sonner';
 // HELPERS
 // =============================================================================
 
-function formatCurrency(value: number | null | undefined): string {
-  if (value == null) return 'R$ 0,00';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
-
 function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return '\u2014';
+  if (!dateStr) return '—';
   return new Intl.DateTimeFormat('pt-BR').format(new Date(dateStr));
 }
 

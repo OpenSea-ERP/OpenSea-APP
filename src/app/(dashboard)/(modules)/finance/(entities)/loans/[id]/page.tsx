@@ -33,6 +33,7 @@ import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useDeleteLoan, useLoan, usePayLoanInstallment } from '@/hooks/finance';
 import { usePermissions } from '@/hooks/use-permissions';
 import { calculatePrice, calculateSAC } from '@/lib/finance/amortization';
+import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { LoanInstallment, LoanStatus } from '@/types/finance';
 import { LOAN_STATUS_LABELS, LOAN_TYPE_LABELS } from '@/types/finance';
@@ -56,14 +57,6 @@ import { toast } from 'sonner';
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatCurrency(value: number | null | undefined): string {
-  if (value == null) return 'R$ 0,00';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '-';
