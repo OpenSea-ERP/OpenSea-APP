@@ -35,13 +35,15 @@ const SIGNER_STATUS_LABEL: Record<SignerStatus, string> = {
 };
 
 const SIGNER_STATUS_COLOR: Record<SignerStatus, string> = {
-  PENDING: 'bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-300',
+  PENDING:
+    'bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-300',
   NOTIFIED: 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300',
   VIEWED: 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300',
   SIGNED:
     'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
   REJECTED: 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300',
-  EXPIRED: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
+  EXPIRED:
+    'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
 };
 
 function formatDateTime(isoString: string | null): string {
@@ -175,7 +177,9 @@ export default function PublicVerifyPage() {
             </div>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Código de verificação</p>
+            <p className="text-xs text-muted-foreground">
+              Código de verificação
+            </p>
             <div className="mt-1 flex items-center gap-2">
               <code className="flex-1 rounded-md bg-slate-100 px-3 py-2 font-mono text-xs dark:bg-slate-800/60">
                 {verification.verificationCode ?? code}

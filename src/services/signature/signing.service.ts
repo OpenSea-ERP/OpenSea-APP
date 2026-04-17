@@ -75,9 +75,7 @@ async function publicRequest<T>(
   const response = await fetch(url.toString(), {
     method,
     headers:
-      body !== undefined
-        ? { 'Content-Type': 'application/json' }
-        : undefined,
+      body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
     credentials: 'omit',
     mode: 'cors',
@@ -120,10 +118,7 @@ export const signingService = {
     );
   },
 
-  async verifyOtp(
-    token: string,
-    otpCode: string
-  ): Promise<VerifyOtpResponse> {
+  async verifyOtp(token: string, otpCode: string): Promise<VerifyOtpResponse> {
     return publicRequest<VerifyOtpResponse>(
       API_ENDPOINTS.SIGNATURE.SIGNING.OTP_VERIFY(token),
       { method: 'POST', body: { otpCode } }

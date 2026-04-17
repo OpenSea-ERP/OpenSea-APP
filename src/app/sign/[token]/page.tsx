@@ -270,9 +270,8 @@ export default function PublicSigningPage() {
           Link de assinatura indisponível
         </h1>
         <p className="text-sm text-muted-foreground">
-          O link pode ter expirado, já ter sido utilizado ou ser inválido.
-          Entre em contato com quem solicitou a assinatura para receber um novo
-          link.
+          O link pode ter expirado, já ter sido utilizado ou ser inválido. Entre
+          em contato com quem solicitou a assinatura para receber um novo link.
         </p>
       </Card>
     );
@@ -316,8 +315,8 @@ export default function PublicSigningPage() {
         <AlertTriangle className="mx-auto mb-4 h-14 w-14 text-amber-500" />
         <h1 className="mb-2 text-2xl font-semibold">Link expirado</h1>
         <p className="text-sm text-muted-foreground">
-          O prazo para assinatura expirou. Solicite um novo link ao remetente
-          do documento.
+          O prazo para assinatura expirou. Solicite um novo link ao remetente do
+          documento.
         </p>
       </Card>
     );
@@ -357,7 +356,8 @@ export default function PublicSigningPage() {
                 variant="secondary"
                 className="bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300"
               >
-                Nível {signerInfo.signatureLevel === 'SIMPLE'
+                Nível{' '}
+                {signerInfo.signatureLevel === 'SIMPLE'
                   ? 'Simples'
                   : signerInfo.signatureLevel === 'ADVANCED'
                     ? 'Avançada'

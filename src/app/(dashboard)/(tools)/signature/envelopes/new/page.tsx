@@ -95,9 +95,9 @@ export default function CreateEnvelopePage() {
     useState<UploadedDocument | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStage, setUploadStage] = useState<'idle' | 'hashing' | 'uploading'>(
-    'idle'
-  );
+  const [uploadStage, setUploadStage] = useState<
+    'idle' | 'hashing' | 'uploading'
+  >('idle');
   const [isDragging, setIsDragging] = useState(false);
 
   const [signers, setSigners] = useState<SignerInput[]>([
@@ -442,9 +442,7 @@ export default function CreateEnvelopePage() {
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <UserPlus className="h-5 w-5 text-blue-600" />
-                <h2 className="font-medium">
-                  Assinantes ({signers.length})
-                </h2>
+                <h2 className="font-medium">Assinantes ({signers.length})</h2>
               </div>
               <Button variant="outline" size="sm" onClick={addSigner}>
                 <Plus className="mr-1 h-4 w-4" />
@@ -496,7 +494,11 @@ export default function CreateEnvelopePage() {
                       <Input
                         value={signer.externalName ?? ''}
                         onChange={event =>
-                          updateSigner(index, 'externalName', event.target.value)
+                          updateSigner(
+                            index,
+                            'externalName',
+                            event.target.value
+                          )
                         }
                         placeholder="Nome completo"
                         className="mt-0.5 h-8 text-sm"

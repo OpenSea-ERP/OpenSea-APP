@@ -37,4 +37,20 @@ export const signatureTemplatesService = {
       data
     );
   },
+
+  // TODO(backend): update/delete endpoints are not yet implemented in the API.
+  // Once available, these wrappers will be used directly by the templates page.
+  async updateTemplate(
+    id: string,
+    data: Partial<CreateTemplateData> & { isActive?: boolean }
+  ): Promise<TemplateResponse> {
+    return apiClient.patch<TemplateResponse>(
+      API_ENDPOINTS.SIGNATURE.TEMPLATES.UPDATE(id),
+      data
+    );
+  },
+
+  async deleteTemplate(id: string): Promise<void> {
+    await apiClient.delete<void>(API_ENDPOINTS.SIGNATURE.TEMPLATES.DELETE(id));
+  },
 };
