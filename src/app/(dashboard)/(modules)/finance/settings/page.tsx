@@ -295,17 +295,26 @@ export default function FinanceSettingsPage() {
   // HANDLERS
   // ============================================================================
 
-  const saveLocalPreferences = useCallback(() => {
-    localStorage.setItem('finance-export-prefs', JSON.stringify(exportPrefs));
-    localStorage.setItem('finance-tax-defaults', JSON.stringify(taxDefaults));
-    localStorage.setItem(
-      'finance-notification-prefs',
-      JSON.stringify(notifPrefs)
-    );
-    localStorage.setItem(
-      'finance-approval-prefs',
-      JSON.stringify(approvalPrefs)
-    );
+  const saveLocalPreferences = useCallback((): boolean => {
+    try {
+      localStorage.setItem('finance-export-prefs', JSON.stringify(exportPrefs));
+      localStorage.setItem(
+        'finance-tax-defaults',
+        JSON.stringify(taxDefaults)
+      );
+      localStorage.setItem(
+        'finance-notification-prefs',
+        JSON.stringify(notifPrefs)
+      );
+      localStorage.setItem(
+        'finance-approval-prefs',
+        JSON.stringify(approvalPrefs)
+      );
+      return true;
+    } catch {
+      toast.error('Não foi possível salvar preferências localmente');
+      return false;
+    }
   }, [exportPrefs, taxDefaults, notifPrefs, approvalPrefs]);
 
   const handleSave = async () => {
@@ -334,10 +343,11 @@ export default function FinanceSettingsPage() {
     return isNaN(parsed) ? 0 : parsed;
   };
 
-  const accounts = Array.isArray(accountsQuery.data) ? accountsQuery.data : [];
-  const categories = Array.isArray(categoriesQuery.data)
-    ? categoriesQuery.data
-    : [];
+  // queryFn returns the typed arrays directly (EmailAccount[] / Category[]);
+  // when the query is still loading or disabled, data is undefined → default to
+  // an empty array for rendering only. Errors propagate via React Query state.
+  const accounts = accountsQuery.data ?? [];
+  const categories = categoriesQuery.data ?? [];
   const config = configQuery.data;
   const isLoading = configQuery.isLoading || accountsQuery.isLoading;
 
