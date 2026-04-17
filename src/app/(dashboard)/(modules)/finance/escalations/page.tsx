@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -203,22 +204,27 @@ function EscalationLoadingSkeleton() {
 export default function EscalationsPage() {
   const router = useRouter();
   const { hasPermission } = usePermissions();
+  const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data, isLoading, refetch } = useEscalations();
+  const { data, isLoading } = useEscalations();
   const deleteMutation = useDeleteEscalation();
   const duplicateMutation = useDuplicateEscalation();
   const toggleActiveMutation = useToggleEscalationActive();
 
   const escalations = useMemo(() => data?.escalations ?? [], [data]);
 
+  const invalidateEscalations = () => {
+    queryClient.invalidateQueries({ queryKey: ['escalations'] });
+  };
+
   const handleDuplicate = async (id: string) => {
     try {
       await duplicateMutation.mutateAsync(id);
       toast.success('Régua de cobrança duplicada com sucesso!');
-      refetch();
+      invalidateEscalations();
     } catch {
       toast.error('Erro ao duplicar régua de cobrança.');
     }
@@ -228,7 +234,7 @@ export default function EscalationsPage() {
     try {
       await toggleActiveMutation.mutateAsync(id);
       toast.success('Status da régua de cobrança atualizado!');
-      refetch();
+      invalidateEscalations();
     } catch {
       toast.error('Erro ao alterar status.');
     }
@@ -239,7 +245,7 @@ export default function EscalationsPage() {
     try {
       await deleteMutation.mutateAsync(deleteId);
       toast.success('Régua de cobrança excluída com sucesso!');
-      refetch();
+      invalidateEscalations();
       setDeleteId(null);
     } catch {
       toast.error('Erro ao excluir régua de cobrança.');
@@ -329,7 +335,7 @@ export default function EscalationsPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onSaved={() => {
-          refetch();
+          invalidateEscalations();
           setCreateOpen(false);
         }}
       />
@@ -341,7 +347,7 @@ export default function EscalationsPage() {
           onOpenChange={open => !open && setEditId(null)}
           escalationId={editId}
           onSaved={() => {
-            refetch();
+            invalidateEscalations();
             setEditId(null);
           }}
         />
