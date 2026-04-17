@@ -1,6 +1,7 @@
 'use client';
 
 import { PageActionBar } from '@/components/layout/page-action-bar';
+import { CollapsibleSection } from '@/components/shared/forms/collapsible-section';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,11 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -42,7 +38,6 @@ import {
   Bell,
   Calculator,
   CheckCircle2,
-  ChevronDown,
   Download,
   Info,
   Loader2,
@@ -53,56 +48,6 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-// =============================================================================
-// COLLAPSIBLE SECTION COMPONENT
-// =============================================================================
-
-function CollapsibleSection({
-  icon: Icon,
-  title,
-  subtitle,
-  defaultOpen = true,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  subtitle: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="bg-white dark:bg-slate-800/60 border border-border">
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer select-none hover:bg-muted/40 transition-colors">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-violet-50 dark:bg-violet-500/8">
-                  <Icon className="h-4 w-4 text-violet-700 dark:text-violet-300" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">{title}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{subtitle}</p>
-                </div>
-              </div>
-              <ChevronDown
-                className={`h-5 w-5 text-muted-foreground transition-transform ${
-                  isOpen ? 'rotate-180' : ''
-                }`}
-              />
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="pt-0">{children}</CardContent>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
-  );
-}
 
 // =============================================================================
 // TYPES FOR LOCAL PREFERENCES

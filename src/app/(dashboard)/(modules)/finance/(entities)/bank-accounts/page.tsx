@@ -37,6 +37,7 @@ import {
   useCreateBankAccount,
   type BankAccountsFilters,
 } from '@/hooks/finance/use-bank-accounts';
+import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type {
   BankAccount,
@@ -129,13 +130,6 @@ const bankAccountsConfig: EntityConfig<BankAccount> = {
 // HELPERS
 // =============================================================================
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
-
 function getStatusColor(status: BankAccountStatus): string {
   const colors: Record<BankAccountStatus, string> = {
     ACTIVE:
@@ -150,6 +144,22 @@ function getStatusColor(status: BankAccountStatus): string {
 
 function getTypeBadgeColor(): string {
   return 'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300';
+}
+
+/**
+ * Builds a diagonal gradient from the account's stored color.
+ * Previously the code appended `dd` (hex alpha) to the string — that only
+ * works when the stored value is a 6-digit hex. rgb()/hsl()/short-hex inputs
+ * produced broken CSS like `rgb(...)dd`. Now we detect the hex form and
+ * darken the second stop with color-mix() for a portable ~80% opacity,
+ * falling back to the raw color for non-hex inputs.
+ */
+function buildIconGradient(rawColor: string | null | undefined): string {
+  const DEFAULT_COLOR = '#0ea5e9'; // sky-500 (palette-compliant default)
+  const color = rawColor || DEFAULT_COLOR;
+  const isHex6 = /^#[0-9a-fA-F]{6}$/.test(color);
+  const mixed = isHex6 ? `color-mix(in srgb, ${color} 80%, #000)` : color;
+  return `linear-gradient(135deg, ${color}, ${mixed})`;
 }
 
 // =============================================================================
@@ -167,7 +177,7 @@ type ActionButtonWithPermission = HeaderButton & {
 export default function BankAccountsPage() {
   return (
     <Suspense
-      fallback={<GridLoading count={9} layout="list" size="md" gap="gap-4" />}
+      fallback={<GridLoading count={6} layout="list" size="md" gap="gap-4" />}
     >
       <BankAccountsPageContent />
     </Suspense>
@@ -456,7 +466,7 @@ function BankAccountsPageContent() {
           }
           icon={Landmark}
           iconBgStyle={{
-            background: `linear-gradient(135deg, ${item.color || '#3b82f6'}, ${item.color || '#3b82f6'}dd)`,
+            background: buildIconGradient(item.color),
           }}
           badges={[
             {
@@ -587,7 +597,7 @@ function BankAccountsPageContent() {
           title={item.name}
           icon={Landmark}
           iconBgStyle={{
-            background: `linear-gradient(135deg, ${item.color || '#3b82f6'}, ${item.color || '#3b82f6'}dd)`,
+            background: buildIconGradient(item.color),
           }}
           metadata={
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -715,7 +725,7 @@ function BankAccountsPageContent() {
 
           {/* Grid */}
           {isLoading ? (
-            <GridLoading count={9} layout="list" size="md" gap="gap-4" />
+            <GridLoading count={6} layout="list" size="md" gap="gap-4" />
           ) : error ? (
             <GridError
               type="server"
