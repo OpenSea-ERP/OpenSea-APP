@@ -64,34 +64,38 @@ const statusConfig: Record<
 > = {
   PENDING_APPROVAL: {
     label: PAYMENT_ORDER_STATUS_LABELS.PENDING_APPROVAL,
-    color: 'bg-amber-50 text-amber-700 dark:bg-amber-500/8 dark:text-amber-300',
+    color:
+      'border border-teal-600/25 dark:border-teal-500/20 bg-teal-50 text-teal-700 dark:bg-teal-500/8 dark:text-teal-300',
     icon: Clock,
   },
   APPROVED: {
     label: PAYMENT_ORDER_STATUS_LABELS.APPROVED,
-    color: 'bg-sky-50 text-sky-700 dark:bg-sky-500/8 dark:text-sky-300',
+    color:
+      'border border-sky-600/25 dark:border-sky-500/20 bg-sky-50 text-sky-700 dark:bg-sky-500/8 dark:text-sky-300',
     icon: CheckCircle2,
   },
   REJECTED: {
     label: PAYMENT_ORDER_STATUS_LABELS.REJECTED,
-    color: 'bg-slate-50 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300',
+    color:
+      'border border-slate-600/25 dark:border-slate-500/20 bg-slate-50 text-slate-700 dark:bg-slate-500/8 dark:text-slate-300',
     icon: XCircle,
   },
   PROCESSING: {
     label: PAYMENT_ORDER_STATUS_LABELS.PROCESSING,
     color:
-      'bg-violet-50 text-violet-700 dark:bg-violet-500/8 dark:text-violet-300',
+      'border border-violet-600/25 dark:border-violet-500/20 bg-violet-50 text-violet-700 dark:bg-violet-500/8 dark:text-violet-300',
     icon: Loader2,
   },
   COMPLETED: {
     label: PAYMENT_ORDER_STATUS_LABELS.COMPLETED,
     color:
-      'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300',
+      'border border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300',
     icon: CheckCircle2,
   },
   FAILED: {
     label: PAYMENT_ORDER_STATUS_LABELS.FAILED,
-    color: 'bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
+    color:
+      'border border-rose-600/25 dark:border-rose-500/20 bg-rose-50 text-rose-700 dark:bg-rose-500/8 dark:text-rose-300',
     icon: AlertCircle,
   },
 };
@@ -102,16 +106,18 @@ const methodConfig: Record<
 > = {
   PIX: {
     label: BANK_PAYMENT_METHOD_LABELS.PIX,
-    color: 'bg-teal-50 text-teal-700 dark:bg-teal-500/8 dark:text-teal-300',
+    color:
+      'border border-teal-600/25 dark:border-teal-500/20 bg-teal-50 text-teal-700 dark:bg-teal-500/8 dark:text-teal-300',
   },
   TED: {
     label: BANK_PAYMENT_METHOD_LABELS.TED,
-    color: 'bg-sky-50 text-sky-700 dark:bg-sky-500/8 dark:text-sky-300',
+    color:
+      'border border-sky-600/25 dark:border-sky-500/20 bg-sky-50 text-sky-700 dark:bg-sky-500/8 dark:text-sky-300',
   },
   BOLETO: {
     label: BANK_PAYMENT_METHOD_LABELS.BOLETO,
     color:
-      'bg-violet-50 text-violet-700 dark:bg-violet-500/8 dark:text-violet-300',
+      'border border-violet-600/25 dark:border-violet-500/20 bg-violet-50 text-violet-700 dark:bg-violet-500/8 dark:text-violet-300',
   },
 };
 
