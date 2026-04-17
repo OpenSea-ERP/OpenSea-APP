@@ -24,6 +24,7 @@ import { esocialService } from '@/services/hr/esocial.service';
 import { toast } from 'sonner';
 import type { EsocialBatchListItem } from '@/types/esocial';
 import { EsocialStatusChip } from '@/components/hr/esocial-status-chip';
+import { EsocialEnvironmentBadge } from '@/components/hr/esocial-environment-badge';
 
 // ============================
 // Batch Row
@@ -206,16 +207,19 @@ export default function EsocialBatchesPage() {
       />
 
       {/* Summary */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 dark:bg-violet-500/8">
-          <Package className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 dark:bg-violet-500/8">
+            <Package className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">Lotes de Transmissão</h2>
+            <p className="text-sm text-muted-foreground">
+              {totalCount} lote(s) encontrado(s)
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-semibold">Lotes de Transmissão</h2>
-          <p className="text-sm text-muted-foreground">
-            {totalCount} lote(s) encontrado(s)
-          </p>
-        </div>
+        <EsocialEnvironmentBadge />
       </div>
 
       {/* Batch List */}

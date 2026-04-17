@@ -1,4 +1,7 @@
-export type EsocialEnvironment = 'PRODUCAO' | 'HOMOLOGACAO';
+export type EsocialEnvironment =
+  | 'PRODUCAO'
+  | 'PRODUCAO_RESTRITA'
+  | 'HOMOLOGACAO';
 
 export interface EsocialConfig {
   id: string;

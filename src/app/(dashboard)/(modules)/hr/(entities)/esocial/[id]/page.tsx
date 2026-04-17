@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import type { EventStatusAction } from '@/types/esocial';
 import { EsocialStatusChip } from '@/components/hr/esocial-status-chip';
 import { EsocialRetryButton } from '@/components/hr/esocial-retry-button';
+import { EsocialEnvironmentBadge } from '@/components/hr/esocial-environment-badge';
 import { getEsocialCodeInfo } from '@/lib/hr/esocial-codes';
 
 // ============================
@@ -356,6 +357,8 @@ export default function EsocialEventDetailPage() {
           </div>
         }
       />
+
+      <EsocialEnvironmentBadge />
 
       {/* Rejection / error hint card */}
       {(event.status === 'REJECTED' || event.status === 'ERROR') &&

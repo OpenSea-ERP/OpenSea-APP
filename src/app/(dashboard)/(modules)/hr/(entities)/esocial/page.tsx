@@ -47,6 +47,7 @@ import { toast } from 'sonner';
 import type { EsocialEventListItem } from '@/types/esocial';
 import { EsocialStatusChip } from '@/components/hr/esocial-status-chip';
 import { EsocialRetryButton } from '@/components/hr/esocial-retry-button';
+import { EsocialEnvironmentBadge } from '@/components/hr/esocial-environment-badge';
 
 // ============================
 // KPI Card Component
@@ -587,6 +588,8 @@ export default function EsocialDashboardPage() {
         title="eSocial"
         description="Eventos, transmissão e acompanhamento do eSocial"
       />
+
+      <EsocialEnvironmentBadge showBanner />
 
       {/* Certificate expiry alert */}
       {dashboard?.certificateExpiry &&

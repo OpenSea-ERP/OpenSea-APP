@@ -1139,9 +1139,10 @@ function EsocialTab() {
             <div className="space-y-2">
               <p className="text-sm font-medium">Ambiente</p>
               <p className="text-xs text-muted-foreground">
-                Selecione o ambiente de envio dos eventos
+                Selecione o ambiente de envio dos eventos. Apenas Produção tem
+                validade legal.
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant={
@@ -1160,6 +1161,23 @@ function EsocialTab() {
                 <Button
                   size="sm"
                   variant={
+                    configData?.environment === 'PRODUCAO_RESTRITA'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  className="h-9 px-2.5"
+                  onClick={() =>
+                    configMutation.mutate({
+                      environment: 'PRODUCAO_RESTRITA',
+                    })
+                  }
+                  disabled={configMutation.isPending}
+                >
+                  Produção Restrita
+                </Button>
+                <Button
+                  size="sm"
+                  variant={
                     configData?.environment === 'HOMOLOGACAO'
                       ? 'default'
                       : 'outline'
@@ -1173,6 +1191,28 @@ function EsocialTab() {
                   Homologação
                 </Button>
               </div>
+              {configData?.environment === 'PRODUCAO_RESTRITA' && (
+                <p className="text-xs rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+                  Produção Restrita aceita dados reais e responde como a
+                  Produção, mas os eventos transmitidos{' '}
+                  <strong>não têm validade legal</strong>. Use somente para
+                  testes de integração.
+                </p>
+              )}
+              {configData?.environment === 'HOMOLOGACAO' && (
+                <p className="text-xs rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sky-800 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200">
+                  Homologação é o ambiente de testes com dados sintéticos. Os
+                  eventos transmitidos aqui{' '}
+                  <strong>não têm validade legal</strong>.
+                </p>
+              )}
+              {configData?.environment === 'PRODUCAO' && (
+                <p className="text-xs rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
+                  Produção é o ambiente oficial. Os eventos transmitidos aqui
+                  <strong> têm validade legal</strong> e cumprem as obrigações
+                  junto ao governo.
+                </p>
+              )}
             </div>
 
             {/* Auto generate */}
