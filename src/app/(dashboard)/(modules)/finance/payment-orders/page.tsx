@@ -307,7 +307,11 @@ export default function PaymentOrdersPage() {
     null
   );
   const [orderToReject, setOrderToReject] = useState<PaymentOrder | null>(null);
+  const [pendingRejectReason, setPendingRejectReason] = useState<string | null>(
+    null
+  );
   const [showApprovePin, setShowApprovePin] = useState(false);
+  const [showRejectPin, setShowRejectPin] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -328,9 +332,10 @@ export default function PaymentOrdersPage() {
     [data]
   );
 
-  // Infinite scroll
+  // Infinite scroll — observe sentinel as soon as it mounts
   useEffect(() => {
-    if (!sentinelRef.current) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -339,9 +344,9 @@ export default function PaymentOrdersPage() {
       },
       { threshold: 0.1 }
     );
-    observer.observe(sentinelRef.current);
+    observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, orders.length]);
 
   const handleApprove = useCallback((order: PaymentOrder) => {
     setOrderToApprove(order);
@@ -364,19 +369,26 @@ export default function PaymentOrdersPage() {
     setOrderToReject(order);
   }, []);
 
-  const handleRejectConfirmed = useCallback(
-    async (reason: string) => {
-      if (!orderToReject) return;
-      try {
-        await rejectMutation.mutateAsync({ id: orderToReject.id, reason });
-        toast.success('Ordem de pagamento rejeitada');
-        setOrderToReject(null);
-      } catch {
-        toast.error('Erro ao rejeitar ordem de pagamento');
-      }
-    },
-    [orderToReject, rejectMutation]
-  );
+  const handleRejectReasonSubmit = useCallback((reason: string) => {
+    setPendingRejectReason(reason);
+    setShowRejectPin(true);
+  }, []);
+
+  const handleRejectConfirmed = useCallback(async () => {
+    if (!orderToReject || !pendingRejectReason) return;
+    try {
+      await rejectMutation.mutateAsync({
+        id: orderToReject.id,
+        reason: pendingRejectReason,
+      });
+      toast.success('Ordem de pagamento rejeitada');
+      setOrderToReject(null);
+      setPendingRejectReason(null);
+      setShowRejectPin(false);
+    } catch {
+      toast.error('Erro ao rejeitar ordem de pagamento');
+    }
+  }, [orderToReject, pendingRejectReason, rejectMutation]);
 
   return (
     <PageLayout>
@@ -463,12 +475,27 @@ export default function PaymentOrdersPage() {
         description="Digite seu PIN de Ação para aprovar esta ordem de pagamento."
       />
 
-      {/* Reject reason modal */}
+      {/* Reject reason modal (step 1: capture reason) */}
       <RejectReasonModal
-        isOpen={!!orderToReject}
-        onClose={() => setOrderToReject(null)}
-        onConfirm={handleRejectConfirmed}
+        isOpen={!!orderToReject && !showRejectPin}
+        onClose={() => {
+          setOrderToReject(null);
+          setPendingRejectReason(null);
+        }}
+        onConfirm={handleRejectReasonSubmit}
         isLoading={rejectMutation.isPending}
+      />
+
+      {/* Reject PIN confirmation (step 2: verify PIN) */}
+      <VerifyActionPinModal
+        isOpen={showRejectPin}
+        onClose={() => {
+          setShowRejectPin(false);
+          setPendingRejectReason(null);
+        }}
+        onSuccess={handleRejectConfirmed}
+        title="Confirmar Rejeição"
+        description="Digite seu PIN de Ação para rejeitar esta ordem de pagamento."
       />
     </PageLayout>
   );
