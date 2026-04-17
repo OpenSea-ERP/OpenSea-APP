@@ -96,7 +96,7 @@ function EscalationCard({
               {config.isDefault && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/8 dark:text-violet-300 dark:border-violet-800"
+                  className="text-xs bg-violet-50 text-violet-700 border-violet-600/25 dark:bg-violet-500/8 dark:text-violet-300 dark:border-violet-500/20"
                 >
                   Padrão
                 </Badge>
@@ -104,10 +104,10 @@ function EscalationCard({
               <Badge
                 variant="outline"
                 className={cn(
-                  'text-[10px]',
+                  'text-xs',
                   config.isActive
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/8 dark:text-emerald-300 dark:border-emerald-800'
-                    : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-500/8 dark:text-slate-400 dark:border-slate-700'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-600/25 dark:bg-emerald-500/8 dark:text-emerald-300 dark:border-emerald-500/20'
+                    : 'bg-slate-50 text-slate-500 border-slate-600/25 dark:bg-slate-500/8 dark:text-slate-400 dark:border-slate-500/20'
                 )}
               >
                 {config.isActive ? 'Ativa' : 'Inativa'}
@@ -136,7 +136,12 @@ function EscalationCard({
           {/* Context Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                aria-label="Ações"
+              >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
