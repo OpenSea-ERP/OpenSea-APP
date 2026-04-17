@@ -48,6 +48,7 @@ import {
   ShieldCheck,
   XCircle,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/format';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -135,13 +136,6 @@ const STATUS_TABS = [
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleString('pt-BR', {
@@ -306,7 +300,7 @@ function OrderCard({ order, canApprove, onApprove, onReject }: OrderCardProps) {
 
 export default function PaymentOrdersPage() {
   const router = useRouter();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
   const canApprove = hasPermission(FINANCE_PERMISSIONS.PAYMENT_ORDERS.ADMIN);
   const canCreate = hasPermission(FINANCE_PERMISSIONS.ENTRIES.REGISTER);
 
@@ -435,7 +429,10 @@ export default function PaymentOrdersPage() {
           ))}
         </div>
 
-        {isLoading ? (
+        {isLoading || permissionsLoading ? (
+          // Wait for permissions to resolve before rendering the list so
+          // Aprovar/Rejeitar buttons don't flash in for users without the
+          // PAYMENT_ORDERS.ADMIN permission on hard refresh (P2-44 FOUC).
           <GridLoading />
         ) : error ? (
           <GridError message="Erro ao carregar ordens de pagamento" />
