@@ -153,7 +153,7 @@ export default function PaymentLinksPage() {
   }, []);
 
   return (
-    <PageLayout>
+    <PageLayout data-testid="payment-links-page">
       <PageHeader>
         <PageActionBar
           breadcrumbItems={[
@@ -166,6 +166,7 @@ export default function PaymentLinksPage() {
                 size="sm"
                 className="gap-1.5 h-9 px-2.5"
                 onClick={() => setShowCreateModal(true)}
+                data-testid="payment-links-create"
               >
                 <Plus className="h-4 w-4" />
                 Novo Link
@@ -173,15 +174,15 @@ export default function PaymentLinksPage() {
             ) : undefined
           }
         />
-      </PageHeader>
 
-      <PageBody>
         <Header
           title="Links de Pagamento"
           description="Crie e gerencie links de pagamento para compartilhar com seus clientes"
         />
+      </PageHeader>
 
-        <div className="mb-4">
+      <PageBody>
+        <div className="mb-4" data-testid="payment-links-filters">
           <FilterDropdown
             label="Status"
             options={STATUS_OPTIONS}
