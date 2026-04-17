@@ -3,6 +3,14 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import { useFinanceEntriesInfinite } from '@/hooks/finance';
@@ -171,71 +179,75 @@ export default function OverduePage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="text-left p-4 font-semibold">Código</th>
-                  <th className="text-left p-4 font-semibold">Descrição</th>
-                  <th className="text-left p-4 font-semibold">Categoria</th>
-                  <th className="text-left p-4 font-semibold">
+            <Table aria-label="Contas vencidas">
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="font-semibold">Código</TableHead>
+                  <TableHead className="font-semibold">Descrição</TableHead>
+                  <TableHead className="font-semibold">Categoria</TableHead>
+                  <TableHead className="font-semibold">
                     {currentTab === 'payable' ? 'Fornecedor' : 'Cliente'}
-                  </th>
-                  <th className="text-right p-4 font-semibold">Valor</th>
-                  <th className="text-left p-4 font-semibold">Vencimento</th>
-                  <th className="text-center p-4 font-semibold">
+                  </TableHead>
+                  <TableHead className="text-right font-semibold">
+                    Valor
+                  </TableHead>
+                  <TableHead className="font-semibold">Vencimento</TableHead>
+                  <TableHead className="text-center font-semibold">
                     Dias em Atraso
-                  </th>
-                  <th className="text-left p-4 font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+                  </TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {entries.map(entry => {
                   const daysOverdue = calculateDaysOverdue(entry.dueDate);
                   return (
-                    <tr
+                    <TableRow
                       key={entry.id}
-                      className="hover:bg-muted/50 cursor-pointer transition-colors"
+                      className="cursor-pointer hover:bg-muted/50"
                       onClick={() =>
                         router.push(`/finance/${currentTab}/${entry.id}`)
                       }
                     >
-                      <td className="p-4 font-mono text-sm">{entry.code}</td>
-                      <td className="p-4">
+                      <TableCell className="font-mono text-sm">
+                        {entry.code}
+                      </TableCell>
+                      <TableCell>
                         <div className="font-medium">{entry.description}</div>
-                      </td>
-                      <td className="p-4 text-sm">
+                      </TableCell>
+                      <TableCell className="text-sm">
                         {entry.categoryName || '—'}
-                      </td>
-                      <td className="p-4 text-sm">
+                      </TableCell>
+                      <TableCell className="text-sm">
                         {currentTab === 'payable'
                           ? entry.supplierName || '—'
                           : entry.customerName || '—'}
-                      </td>
-                      <td className="p-4 text-right font-mono text-sm">
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
                         {formatCurrency(entry.expectedAmount)}
-                      </td>
-                      <td className="p-4 text-sm">
+                      </TableCell>
+                      <TableCell className="text-sm">
                         {formatDate(entry.dueDate)}
-                      </td>
-                      <td className="p-4 text-center">
+                      </TableCell>
+                      <TableCell className="text-center">
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getAgingBadge(daysOverdue)}`}
                         >
                           {daysOverdue} {daysOverdue === 1 ? 'dia' : 'dias'}
                         </span>
-                      </td>
-                      <td className="p-4">
+                      </TableCell>
+                      <TableCell>
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(entry.status)}`}
                         >
                           {FINANCE_ENTRY_STATUS_LABELS[entry.status]}
                         </span>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </Card>
