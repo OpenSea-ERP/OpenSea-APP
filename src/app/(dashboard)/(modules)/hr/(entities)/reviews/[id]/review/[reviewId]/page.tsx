@@ -223,21 +223,11 @@ export default function PerformanceReviewDetailPage() {
       if (!review) return;
       const next = NEXT_STATUS[review.status];
       if (!next) return;
-      // O backend tem endpoints especificos: self-assessment, manager-review e
-      // acknowledge. Mapeamos para a transicao adequada.
-      if (next === 'SELF_ASSESSMENT') {
-        await reviewsService.submitSelfAssessment(reviewId, {
-          selfScore: review.selfScore ?? 0,
-        });
-      } else if (next === 'MANAGER_REVIEW') {
-        await reviewsService.submitSelfAssessment(reviewId, {
-          selfScore: review.selfScore ?? 0,
-        });
-      } else if (next === 'COMPLETED') {
-        await reviewsService.submitManagerReview(reviewId, {
-          managerScore: review.managerScore ?? 0,
-        });
-      }
+      // Endpoint dedicado PATCH /v1/hr/performance-reviews/:id/advance-status
+      // — avança o status SEM escrever notas/comentários. Substitui o hack
+      // antigo de chamar `submitSelfAssessment({ selfScore: 0 })` só para
+      // empurrar o status, que zerava notas já preenchidas (regressão P0).
+      await reviewsService.advanceStatus(reviewId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

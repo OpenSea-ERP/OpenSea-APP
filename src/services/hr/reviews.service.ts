@@ -207,6 +207,21 @@ class ReviewsService {
       `${this.reviewsUrl}/${reviewId}/acknowledge`
     );
   }
+
+  /**
+   * Avança o status da avaliação para a próxima etapa (PENDING → SELF_ASSESSMENT
+   * → MANAGER_REVIEW → COMPLETED) sem gravar notas nem comentários. O body é
+   * strict e rejeita qualquer campo — não envie `selfScore`/`managerScore`.
+   *
+   * Substitui o hack antigo de chamar `submitSelfAssessment({ selfScore: 0 })`
+   * apenas para avançar status, que zerava notas já preenchidas (regressão P0).
+   */
+  async advanceStatus(reviewId: string): Promise<PerformanceReviewResponse> {
+    return apiClient.patch<PerformanceReviewResponse>(
+      `${this.reviewsUrl}/${reviewId}/advance-status`,
+      {}
+    );
+  }
 }
 
 export const reviewsService = new ReviewsService();
