@@ -19,6 +19,14 @@ import type { HeaderButton } from '@/components/layout/types/header.types';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
 import { Badge } from '@/components/ui/badge';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { FINANCE_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -161,14 +169,14 @@ function AccountRow({
   const isParent = level === 0;
 
   return (
-    <tr
+    <TableRow
       className={cn(
-        'border-b border-border/50 transition-colors hover:bg-muted/50',
+        'hover:bg-muted/50 transition-colors',
         isParent && 'bg-muted/20 font-medium'
       )}
     >
       {/* Código + Nome */}
-      <td className="px-4 py-3">
+      <TableCell>
         <div
           className="flex items-center gap-2"
           style={{ paddingLeft: `${level * 24}px` }}
@@ -193,10 +201,10 @@ function AccountRow({
             </span>
           )}
         </div>
-      </td>
+      </TableCell>
 
       {/* Tipo */}
-      <td className="px-4 py-3">
+      <TableCell>
         <span
           className={cn(
             'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border',
@@ -205,24 +213,24 @@ function AccountRow({
         >
           {TYPE_LABELS[account.type]}
         </span>
-      </td>
+      </TableCell>
 
       {/* Classe */}
-      <td className="px-4 py-3 hidden md:table-cell">
+      <TableCell className="hidden md:table-cell">
         <span className="text-sm text-muted-foreground">
           {CLASS_LABELS[account.accountClass] ?? account.accountClass}
         </span>
-      </td>
+      </TableCell>
 
       {/* Natureza */}
-      <td className="px-4 py-3 hidden lg:table-cell">
+      <TableCell className="hidden lg:table-cell">
         <span className="text-sm text-muted-foreground">
           {NATURE_LABELS[account.nature] ?? account.nature}
         </span>
-      </td>
+      </TableCell>
 
       {/* Status */}
-      <td className="px-4 py-3 hidden sm:table-cell">
+      <TableCell className="hidden sm:table-cell">
         <Badge
           variant="outline"
           className={cn(
@@ -234,10 +242,10 @@ function AccountRow({
         >
           {account.isActive ? 'Ativo' : 'Inativo'}
         </Badge>
-      </td>
+      </TableCell>
 
-      {/* Acoes */}
-      <td className="px-4 py-3 text-right">
+      {/* Ações */}
+      <TableCell className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -271,8 +279,8 @@ function AccountRow({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -573,47 +581,39 @@ function ChartOfAccountsPageContent() {
               className="rounded-lg border border-border overflow-hidden"
               data-testid="chart-of-accounts-table"
             >
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/30">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Código / Nome
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Tipo
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
-                        Classe
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
-                        Natureza
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
-                        Status
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-16">
-                        Ações
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orderedAccounts.map(account => (
-                      <AccountRow
-                        key={account.id}
-                        account={account}
-                        level={getCodeLevel(account.code)}
-                        onView={handleView}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        canView={canView}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table aria-label="Plano de contas contábeis">
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead>Código / Nome</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Classe
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Natureza
+                    </TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Status
+                    </TableHead>
+                    <TableHead className="w-16 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orderedAccounts.map(account => (
+                    <AccountRow
+                      key={account.id}
+                      account={account}
+                      level={getCodeLevel(account.code)}
+                      onView={handleView}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      canView={canView}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
             </div>
 
             {/* Infinite scroll sentinel */}
