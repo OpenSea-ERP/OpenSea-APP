@@ -28,6 +28,11 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { PageActionBar } from '@/components/layout/page-action-bar';
+import {
+  PageBody,
+  PageHeader,
+  PageLayout,
+} from '@/components/layout/page-layout';
 import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import { useDfcAnnual, type DfcActivity } from '@/hooks/finance/use-reports';
 import { useFinanceEntries } from '@/hooks/finance/use-finance-entries';
@@ -123,24 +128,27 @@ export default function DfcPage() {
   }, [data]);
 
   return (
-    <div className="container mx-auto p-6 space-y-6" data-testid="dfc-page">
-      <PageActionBar
-        breadcrumbItems={[
-          { label: 'Financeiro', href: '/finance' },
-          { label: 'Relatórios', href: '/finance/reports' },
-          { label: 'DFC' },
-        ]}
-        hasPermission={hasPermission}
-      />
+    <PageLayout data-testid="dfc-page">
+      <PageHeader>
+        <PageActionBar
+          breadcrumbItems={[
+            { label: 'Financeiro', href: '/finance' },
+            { label: 'Relatórios', href: '/finance/reports' },
+            { label: 'DFC' },
+          ]}
+          hasPermission={hasPermission}
+        />
+      </PageHeader>
 
-      <PageHeroBanner
-        title="DFC — Demonstração dos Fluxos de Caixa"
-        description="Fluxos de caixa operacional, de investimento e de financiamento do ano selecionado. Clique em uma categoria para auditar os lançamentos que geraram o valor."
-        icon={Waves}
-        iconGradient="from-sky-500 to-cyan-600"
-        buttons={[]}
-        hasPermission={hasPermission}
-      />
+      <PageBody>
+        <PageHeroBanner
+          title="DFC — Demonstração dos Fluxos de Caixa"
+          description="Fluxos operacionais, de investimento e de financiamento do ano selecionado. Clique em uma categoria para auditar os lançamentos."
+          icon={Waves}
+          iconGradient="from-sky-500 to-cyan-600"
+          buttons={[]}
+          hasPermission={hasPermission}
+        />
 
       {/* Year selector */}
       <Card>
@@ -419,13 +427,14 @@ export default function DfcPage() {
         </>
       )}
 
-      {/* Drill-down drawer */}
-      <DrillDownDrawer
-        year={year}
-        drill={drillDown}
-        onClose={() => setDrillDown(null)}
-      />
-    </div>
+        {/* Drill-down drawer */}
+        <DrillDownDrawer
+          year={year}
+          drill={drillDown}
+          onClose={() => setDrillDown(null)}
+        />
+      </PageBody>
+    </PageLayout>
   );
 }
 
