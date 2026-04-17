@@ -42,6 +42,7 @@ import { signingService } from '@/services/signature';
 import {
   AlertTriangle,
   CheckCircle2,
+  Download,
   FileSignature,
   Loader2,
   MailCheck,
@@ -278,22 +279,7 @@ export default function PublicSigningPage() {
   }
 
   if (signed || signerInfo.signerStatus === 'SIGNED') {
-    return (
-      <Card className="mx-auto mt-8 max-w-xl p-8 text-center">
-        <CheckCircle2 className="mx-auto mb-4 h-14 w-14 text-emerald-500" />
-        <h1 className="mb-2 text-2xl font-semibold">
-          Documento assinado com sucesso!
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Você receberá uma cópia do documento assinado por e-mail assim que
-          todas as partes concluírem suas assinaturas.
-        </p>
-        <div className="mt-6 inline-flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          Gerando PDF final com carimbo de autenticidade...
-        </div>
-      </Card>
-    );
+    return <SignedConfirmation token={token} />;
   }
 
   if (signerInfo.signerStatus === 'REJECTED') {
@@ -579,5 +565,134 @@ export default function PublicSigningPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// ============================================================================
+// Signed confirmation screen — polls for the signed PDF and offers download.
+// ============================================================================
+
+function SignedConfirmation({ token }: { token: string }) {
+  const [pdfReady, setPdfReady] = useState(false);
+  const [pollAttempts, setPollAttempts] = useState(0);
+  const [checkingAgain, setCheckingAgain] = useState(false);
+
+  const MAX_ATTEMPTS = 10;
+  const POLL_INTERVAL_MS = 3000;
+
+  const pdfUrl = useMemo(
+    () => signingService.buildSignedPdfUrl(token),
+    [token]
+  );
+
+  // Poll until PDF is ready or we exhaust attempts.
+  useEffect(() => {
+    if (pdfReady) return;
+    if (pollAttempts >= MAX_ATTEMPTS) return;
+
+    let cancelled = false;
+    const timeout = setTimeout(
+      () => {
+        signingService
+          .isSignedPdfReady(token)
+          .then(ready => {
+            if (cancelled) return;
+            if (ready) {
+              setPdfReady(true);
+            } else {
+              setPollAttempts(previous => previous + 1);
+            }
+          })
+          .catch(() => {
+            if (!cancelled) {
+              setPollAttempts(previous => previous + 1);
+            }
+          });
+      },
+      // first attempt is immediate, subsequent attempts are spaced
+      pollAttempts === 0 ? 1200 : POLL_INTERVAL_MS
+    );
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [pdfReady, pollAttempts, token]);
+
+  const handleManualRetry = useCallback(async () => {
+    setCheckingAgain(true);
+    try {
+      const ready = await signingService.isSignedPdfReady(token);
+      if (ready) {
+        setPdfReady(true);
+      } else {
+        toast.info(
+          'O PDF assinado ainda está sendo gerado. Tente novamente em alguns instantes.'
+        );
+      }
+    } catch {
+      toast.error('Não foi possível verificar a disponibilidade do PDF.');
+    } finally {
+      setCheckingAgain(false);
+    }
+  }, [token]);
+
+  const handleDownload = useCallback(() => {
+    // window.open handles Content-Disposition attachment reliably across
+    // browsers — the browser triggers a download instead of navigating away.
+    window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+  }, [pdfUrl]);
+
+  const pollingExhausted = !pdfReady && pollAttempts >= MAX_ATTEMPTS;
+
+  return (
+    <Card className="mx-auto mt-8 max-w-xl p-8 text-center">
+      <CheckCircle2 className="mx-auto mb-4 h-14 w-14 text-emerald-500" />
+      <h1 className="mb-2 text-2xl font-semibold">
+        Documento assinado com sucesso!
+      </h1>
+      <p className="text-sm text-muted-foreground">
+        Você também receberá uma cópia por e-mail assim que todas as partes
+        concluírem suas assinaturas.
+      </p>
+
+      <div className="mt-6 flex flex-col items-center gap-3">
+        {pdfReady ? (
+          <Button
+            type="button"
+            onClick={handleDownload}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Baixar PDF assinado
+          </Button>
+        ) : pollingExhausted ? (
+          <>
+            <p className="inline-flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-500/8 dark:text-amber-300">
+              <AlertTriangle className="h-3 w-3" />
+              PDF ainda não disponível. Tente novamente em alguns instantes.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleManualRetry}
+              disabled={checkingAgain}
+            >
+              {checkingAgain ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Tentar baixar novamente
+            </Button>
+          </>
+        ) : (
+          <div className="inline-flex items-center gap-2 rounded-md bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:bg-emerald-500/8 dark:text-emerald-300">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Gerando PDF final com carimbo de autenticidade...
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }

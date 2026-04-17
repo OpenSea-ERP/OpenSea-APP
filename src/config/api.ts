@@ -1303,6 +1303,7 @@ export const API_ENDPOINTS = {
       REJECT: (token: string) => `/v1/signature/sign/${token}/reject`,
       OTP_REQUEST: (token: string) => `/v1/signature/sign/${token}/otp`,
       OTP_VERIFY: (token: string) => `/v1/signature/sign/${token}/otp/verify`,
+      SIGNED_PDF: (token: string) => `/v1/signature/sign/${token}/signed-pdf`,
     },
     VERIFY: {
       GET: (code: string) => `/v1/signature/verify/${code}`,

@@ -152,6 +152,46 @@ export const signingService = {
   },
 
   /**
+   * Build the absolute URL for the public signed-PDF download. Consumers
+   * should open this URL in a new tab (or via `<a download>`). It is not
+   * fetched via XHR because the PDF may be large and browsers handle binary
+   * downloads more reliably via direct navigation.
+   */
+  buildSignedPdfUrl(token: string): string {
+    return new URL(
+      API_ENDPOINTS.SIGNATURE.SIGNING.SIGNED_PDF(token),
+      apiConfig.baseURL
+    ).toString();
+  },
+
+  /**
+   * Issue a HEAD-equivalent check to see whether the signed PDF is already
+   * available for the given signer. Used to poll the backend while the
+   * certificate/signing job finishes. Returns true on 200, false on 404, and
+   * rethrows any other error.
+   */
+  async isSignedPdfReady(token: string): Promise<boolean> {
+    const url = new URL(
+      API_ENDPOINTS.SIGNATURE.SIGNING.SIGNED_PDF(token),
+      apiConfig.baseURL
+    );
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      credentials: 'omit',
+      mode: 'cors',
+      // Range request with 0 bytes — cheap way to test availability without
+      // pulling the full PDF. If the server ignores the range, the browser
+      // will still abort once this function returns, so cost stays bounded.
+      headers: { Range: 'bytes=0-0' },
+    });
+    if (response.status === 404) return false;
+    if (!response.ok && response.status !== 206) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return true;
+  },
+
+  /**
    * Fetch the signed document as a base64 JSON payload — IDM-immune because
    * IDM only intercepts GET binary responses, not POST JSON bodies.
    * Mirrors the storage preview IDM-protection pattern.
