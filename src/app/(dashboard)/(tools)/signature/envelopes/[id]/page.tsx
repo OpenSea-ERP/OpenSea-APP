@@ -8,6 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { usePermissions } from '@/hooks/use-permissions';
 import { TOOLS_PERMISSIONS } from '@/config/rbac/permission-codes';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -152,7 +162,9 @@ export default function EnvelopeDetailPage({
   const queryClient = useQueryClient();
   const { hasPermission } = usePermissions();
   const canModify = hasPermission(TOOLS_PERMISSIONS.SIGNATURE.ENVELOPES.MODIFY);
+  const [showCancelReasonDialog, setShowCancelReasonDialog] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['signature', 'envelope', id],
@@ -163,7 +175,8 @@ export default function EnvelopeDetailPage({
   });
 
   const cancelMutation = useMutation({
-    mutationFn: () => envelopesService.cancelEnvelope(id),
+    mutationFn: (reason?: string) =>
+      envelopesService.cancelEnvelope(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['signature', 'envelope', id],
@@ -171,6 +184,7 @@ export default function EnvelopeDetailPage({
       queryClient.invalidateQueries({ queryKey: ['signature', 'envelopes'] });
       toast.success('Envelope cancelado');
       setShowCancelModal(false);
+      setCancelReason('');
     },
     onError: () => toast.error('Erro ao cancelar envelope'),
   });
@@ -260,7 +274,10 @@ export default function EnvelopeDetailPage({
                   {
                     title: 'Cancelar',
                     icon: Trash2,
-                    onClick: () => setShowCancelModal(true),
+                    onClick: () => {
+                      setCancelReason('');
+                      setShowCancelReasonDialog(true);
+                    },
                     variant: 'outline' as const,
                     style: {
                       className:
@@ -353,10 +370,65 @@ export default function EnvelopeDetailPage({
           </Card>
         </div>
 
+        {/* Step 1 — capture optional reason for the audit trail */}
+        <Dialog
+          open={showCancelReasonDialog}
+          onOpenChange={setShowCancelReasonDialog}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Cancelar envelope</DialogTitle>
+              <DialogDescription>
+                Esta ação impedirá novas assinaturas neste envelope. O motivo
+                abaixo ficará registrado na trilha de auditoria.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-2">
+              <Label htmlFor="envelope-cancel-reason">
+                Motivo do cancelamento
+              </Label>
+              <Textarea
+                id="envelope-cancel-reason"
+                value={cancelReason}
+                onChange={event => setCancelReason(event.target.value)}
+                placeholder="Ex.: Envelope criado em duplicidade."
+                rows={4}
+                maxLength={2000}
+              />
+              <p className="text-xs text-muted-foreground">
+                Opcional — até 2000 caracteres.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowCancelReasonDialog(false)}
+                className="h-9 px-2.5"
+              >
+                Voltar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setShowCancelReasonDialog(false);
+                  setShowCancelModal(true);
+                }}
+                className="h-9 px-2.5"
+              >
+                Prosseguir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Step 2 — confirm with action PIN */}
         <VerifyActionPinModal
           isOpen={showCancelModal}
           onClose={() => setShowCancelModal(false)}
-          onSuccess={() => cancelMutation.mutate()}
+          onSuccess={() => {
+            const trimmed = cancelReason.trim();
+            cancelMutation.mutate(trimmed ? trimmed : undefined);
+          }}
           title="Confirmar Cancelamento"
           description="Digite seu PIN de ação para cancelar este envelope de assinatura."
         />

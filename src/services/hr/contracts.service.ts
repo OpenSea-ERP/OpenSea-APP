@@ -65,9 +65,11 @@ export const hrContractsService = {
     );
   },
 
-  async cancelSignature(contractId: string): Promise<void> {
+  async cancelSignature(contractId: string, reason?: string): Promise<void> {
+    const trimmed = reason?.trim();
     await apiClient.delete<void>(
-      API_ENDPOINTS.HR_CONTRACTS.CANCEL_SIGNATURE(contractId)
+      API_ENDPOINTS.HR_CONTRACTS.CANCEL_SIGNATURE(contractId),
+      trimmed ? { reason: trimmed } : undefined
     );
   },
 };

@@ -176,8 +176,11 @@ function ContractCard({
             });
           }}
           isRequestPending={requestMutation.isPending}
-          onCancelSignature={async () => {
-            await cancelMutation.mutateAsync(contract.id);
+          onCancelSignature={async reason => {
+            await cancelMutation.mutateAsync({
+              contractId: contract.id,
+              reason,
+            });
           }}
           isCancelPending={cancelMutation.isPending}
         />

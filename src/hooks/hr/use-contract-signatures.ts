@@ -67,11 +67,16 @@ export function useCancelContractSignature() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (contractId: string) =>
-      hrContractsService.cancelSignature(contractId),
-    onSuccess: async (_result, contractId) => {
+    mutationFn: ({
+      contractId,
+      reason,
+    }: {
+      contractId: string;
+      reason?: string;
+    }) => hrContractsService.cancelSignature(contractId, reason),
+    onSuccess: async (_result, variables) => {
       await queryClient.invalidateQueries({
-        queryKey: HR_CONTRACT_KEYS.signatureStatus(contractId),
+        queryKey: HR_CONTRACT_KEYS.signatureStatus(variables.contractId),
       });
       await queryClient.invalidateQueries({
         queryKey: HR_CONTRACT_KEYS.all,

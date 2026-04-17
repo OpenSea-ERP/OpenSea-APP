@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import type {
   EnvelopeStatus,
   SignatureEnvelopeSigner,
@@ -75,8 +76,12 @@ export interface SignatureStatusSectionProps {
   /** Callback that triggers the backend request-signature mutation. */
   onRequestSignature: (payload: RequestSignaturePayload) => Promise<void>;
   isRequestPending: boolean;
-  /** Optional callback for cancelling an active envelope. */
-  onCancelSignature?: () => Promise<void>;
+  /**
+   * Optional callback for cancelling an active envelope. Receives an optional
+   * reason string captured by the confirmation dialog — callers should forward
+   * it to the backend so the audit log records why the envelope was cancelled.
+   */
+  onCancelSignature?: (reason?: string) => Promise<void>;
   isCancelPending?: boolean;
 }
 
@@ -153,6 +158,8 @@ export function SignatureStatusSection({
   const [signerName, setSignerName] = useState(defaultSignerName);
   const [signerEmail, setSignerEmail] = useState(defaultSignerEmail);
   const [expiresInDays, setExpiresInDays] = useState<number>(14);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const hasSignature = !!signatureEnvelopeId || !!statusData?.envelopeId;
   const envelopeId = signatureEnvelopeId || statusData?.envelopeId;
@@ -181,11 +188,18 @@ export function SignatureStatusSection({
     }
   };
 
-  const handleCancelSignature = async () => {
+  const handleOpenCancelDialog = () => {
+    setCancelReason('');
+    setShowCancelDialog(true);
+  };
+
+  const handleConfirmCancel = async () => {
     if (!onCancelSignature) return;
     try {
-      await onCancelSignature();
+      const trimmed = cancelReason.trim();
+      await onCancelSignature(trimmed ? trimmed : undefined);
       toast.success('Envio de assinatura cancelado.');
+      setShowCancelDialog(false);
     } catch {
       toast.error('Erro ao cancelar a assinatura digital');
     }
@@ -426,7 +440,7 @@ export function SignatureStatusSection({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleCancelSignature}
+              onClick={handleOpenCancelDialog}
               disabled={isCancelPending}
               className="h-9 px-2.5 text-rose-600 hover:text-rose-700 border-rose-200 hover:bg-rose-50 dark:border-rose-500/20 dark:text-rose-400 dark:hover:bg-rose-500/10"
             >
@@ -444,6 +458,57 @@ export function SignatureStatusSection({
           </div>
         )}
       </div>
+
+      {/* Cancel Signature Dialog — captures optional reason for audit trail */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancelar envio de assinatura</DialogTitle>
+            <DialogDescription>
+              O envelope será cancelado e os signatários não poderão mais
+              assinar. O motivo informado ficará registrado na trilha de
+              auditoria.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 py-2">
+            <Label htmlFor="cancel-reason">Motivo do cancelamento</Label>
+            <Textarea
+              id="cancel-reason"
+              value={cancelReason}
+              onChange={event => setCancelReason(event.target.value)}
+              placeholder="Ex.: O contrato precisará ser reemitido com ajustes."
+              rows={4}
+              maxLength={500}
+            />
+            <p className="text-xs text-muted-foreground">
+              Opcional — até 500 caracteres.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+              disabled={isCancelPending}
+              className="h-9 px-2.5"
+            >
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmCancel}
+              disabled={isCancelPending}
+              className="h-9 px-2.5"
+            >
+              {isCancelPending && (
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              )}
+              Confirmar cancelamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -46,8 +46,12 @@ export const envelopesService = {
     );
   },
 
-  async cancelEnvelope(id: string, _reason?: string): Promise<void> {
-    await apiClient.delete<void>(API_ENDPOINTS.SIGNATURE.ENVELOPES.CANCEL(id));
+  async cancelEnvelope(id: string, reason?: string): Promise<void> {
+    const trimmed = reason?.trim();
+    await apiClient.delete<void>(
+      API_ENDPOINTS.SIGNATURE.ENVELOPES.CANCEL(id),
+      trimmed ? { reason: trimmed } : undefined
+    );
   },
 
   async resendNotifications(id: string): Promise<{ notifiedCount: number }> {

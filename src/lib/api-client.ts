@@ -220,8 +220,39 @@ class ApiClient {
     });
   }
 
-  async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+  async delete<T>(
+    endpoint: string,
+    dataOrOptions?: unknown,
+    options?: RequestOptions
+  ): Promise<T> {
+    // Backward-compatible overload: when the second argument is undefined or
+    // matches the shape of RequestOptions (no body payload expected), treat it
+    // as the options bag. Otherwise treat it as the JSON body to send with the
+    // DELETE request (e.g. a cancellation reason).
+    const looksLikeOptions =
+      dataOrOptions !== undefined &&
+      typeof dataOrOptions === 'object' &&
+      dataOrOptions !== null &&
+      ('params' in (dataOrOptions as Record<string, unknown>) ||
+        'headers' in (dataOrOptions as Record<string, unknown>) ||
+        'skipRefresh' in (dataOrOptions as Record<string, unknown>) ||
+        'timeout' in (dataOrOptions as Record<string, unknown>));
+
+    if (dataOrOptions === undefined || looksLikeOptions) {
+      return this.request<T>(endpoint, {
+        ...(dataOrOptions as RequestOptions | undefined),
+        method: 'DELETE',
+      });
+    }
+
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'DELETE',
+      body:
+        dataOrOptions instanceof FormData
+          ? dataOrOptions
+          : JSON.stringify(dataOrOptions),
+    });
   }
 
   /**
