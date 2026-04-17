@@ -21,11 +21,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
   Table,
   TableBody,
   TableCell,
@@ -497,76 +492,25 @@ export default function FinanceCategoriesPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {/* Desktop: direct icon buttons */}
-                        <div className="hidden sm:flex gap-1 justify-end">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() =>
-                                  router.push(
-                                    `/finance/categories/${category.id}`
-                                  )
-                                }
-                              >
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Visualizar</TooltipContent>
-                          </Tooltip>
-                          {canEdit && !category.isSystem && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() =>
-                                    router.push(
-                                      `/finance/categories/${category.id}/edit`
-                                    )
-                                  }
-                                >
-                                  <Edit className="h-4 w-4 text-sky-500" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Editar</TooltipContent>
-                            </Tooltip>
-                          )}
-                          {canDelete && !category.isSystem && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() =>
-                                    handleDeleteRequest(category.id)
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4 text-rose-600" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Excluir</TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-
-                        {/* Mobile: dropdown menu */}
-                        <div className="sm:hidden flex justify-end">
+                        {/* Single kebab menu consolidates actions (P2-16/P2-38).
+                            Replaces the previous desktop triplet of direct
+                            Eye/Edit/Trash icon buttons so behaviour matches
+                            other finance listings (chart-of-accounts, cost-
+                            centers) and keeps the destructive action in a
+                            separator-guarded group. */}
+                        <div className="flex justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                aria-label="Ações da categoria"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuItem
                                 onClick={() =>
                                   router.push(
@@ -593,7 +537,7 @@ export default function FinanceCategoriesPage() {
                                 <>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
-                                    className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-500/8"
+                                    className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-500/8 dark:text-rose-400 dark:focus:text-rose-400"
                                     onClick={() =>
                                       handleDeleteRequest(category.id)
                                     }
