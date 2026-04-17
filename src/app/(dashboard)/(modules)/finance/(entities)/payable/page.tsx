@@ -342,16 +342,30 @@ function PayablePageContent() {
   );
 
   const handleDeleteConfirm = useCallback(async () => {
-    for (const id of itemsToDelete) {
-      await deleteMutation.mutateAsync(id);
-    }
+    // P0-35: serial await would short-circuit on the first failure and the
+    // toast message would still claim full success. allSettled lets every
+    // delete run, then we report the truthful count of successes/failures.
+    const results = await Promise.allSettled(
+      itemsToDelete.map(id => deleteMutation.mutateAsync(id))
+    );
     setDeleteModalOpen(false);
     setItemsToDelete([]);
-    toast.success(
-      itemsToDelete.length === 1
-        ? 'Conta a pagar excluída com sucesso!'
-        : `${itemsToDelete.length} contas a pagar excluídas!`
-    );
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - succeeded;
+    if (succeeded > 0) {
+      toast.success(
+        succeeded === 1
+          ? 'Conta a pagar excluída com sucesso!'
+          : `${succeeded} contas a pagar excluídas!`
+      );
+    }
+    if (failed > 0) {
+      toast.error(
+        failed === 1
+          ? 'Falha ao excluir 1 conta a pagar.'
+          : `Falha ao excluir ${failed} contas a pagar.`
+      );
+    }
   }, [itemsToDelete, deleteMutation]);
 
   // ============================================================================
@@ -512,10 +526,14 @@ function PayablePageContent() {
           title={item.description || 'Sem descrição'}
           subtitle={item.supplierName || item.customerName || 'Sem fornecedor'}
           icon={ArrowDownCircle}
+          // P0-36: overdue payables now read as a more saturated rose so
+          // they are visually distinguishable from on-track entries (which
+          // use the slate gradient). Previously both branches returned the
+          // same string, making the indicator dead.
           iconBgColor={
             isOverdue
-              ? 'bg-linear-to-br from-rose-500 to-rose-600'
-              : 'bg-linear-to-br from-rose-500 to-rose-600'
+              ? 'bg-gradient-to-br from-rose-600 to-rose-700'
+              : 'bg-gradient-to-br from-slate-500 to-slate-600'
           }
           badges={[
             {

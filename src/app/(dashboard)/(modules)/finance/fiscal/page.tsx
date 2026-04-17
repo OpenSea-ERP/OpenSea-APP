@@ -180,6 +180,10 @@ function FiscalPageContent() {
 
   const canView = hasPermission(FINANCE_PERMISSIONS.FISCAL.ACCESS);
   const canCreate = hasPermission(FINANCE_PERMISSIONS.FISCAL.REGISTER);
+  // P0-34: emit a Carta de Correção mutates an authorized fiscal document.
+  // It must be gated by an edit permission (MODIFY) — not just ACCESS — to
+  // prevent read-only users (e.g. accountants viewing) from triggering it.
+  const canEdit = hasPermission(FINANCE_PERMISSIONS.FISCAL.MODIFY);
   const canDelete = hasPermission(FINANCE_PERMISSIONS.FISCAL.REMOVE);
 
   // ============================================================================
@@ -428,7 +432,7 @@ function FiscalPageContent() {
                 },
               ]
             : []),
-          ...(canView && item.status === 'AUTHORIZED'
+          ...(canEdit && item.status === 'AUTHORIZED'
             ? [
                 {
                   id: 'correction-letter',
@@ -537,7 +541,7 @@ function FiscalPageContent() {
                 },
               ]
             : []),
-          ...(canView && item.status === 'AUTHORIZED'
+          ...(canEdit && item.status === 'AUTHORIZED'
             ? [
                 {
                   id: 'correction-letter',

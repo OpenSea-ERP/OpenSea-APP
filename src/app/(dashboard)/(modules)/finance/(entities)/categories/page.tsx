@@ -239,9 +239,13 @@ export default function FinanceCategoriesPage() {
     try {
       await deleteMutation.mutateAsync(deleteTarget);
       toast.success('Categoria excluída com sucesso!');
-      setDeleteTarget(null);
     } catch {
       toast.error('Erro ao excluir categoria.');
+    } finally {
+      // Always close the PIN modal and clear the target so the UI never
+      // stays in a "frozen" state after a successful delete (P0-33).
+      setIsPinOpen(false);
+      setDeleteTarget(null);
     }
   }, [deleteTarget, deleteMutation]);
 

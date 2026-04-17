@@ -410,6 +410,11 @@ export default function FinanceLandingPage() {
   const [countsLoading, setCountsLoading] = useState(true);
 
   useEffect(() => {
+    // P0-38: guard against state updates after unmount. Without this, the
+    // effect resolves after the user navigates away and React logs a memory
+    // leak warning (and on long pages can pin closures over disposed state).
+    let cancelled = false;
+
     async function fetchCounts() {
       const [payable, receivable, bankAccounts, categories] =
         await Promise.allSettled([
@@ -426,6 +431,8 @@ export default function FinanceLandingPage() {
           bankAccountsService.list({ status: 'ACTIVE', perPage: 1 }),
           financeCategoriesService.list(),
         ]);
+
+      if (cancelled) return;
 
       const extractCount = (
         result: PromiseSettledResult<unknown>
@@ -445,6 +452,10 @@ export default function FinanceLandingPage() {
       setCountsLoading(false);
     }
     fetchCounts();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

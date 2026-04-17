@@ -303,16 +303,28 @@ function LoansPageContent() {
   );
 
   const handleDeleteConfirm = useCallback(async () => {
-    for (const id of itemsToDelete) {
-      await deleteMutation.mutateAsync(id);
-    }
+    // P0-35: report partial failures truthfully.
+    const results = await Promise.allSettled(
+      itemsToDelete.map(id => deleteMutation.mutateAsync(id))
+    );
     setDeleteModalOpen(false);
     setItemsToDelete([]);
-    toast.success(
-      itemsToDelete.length === 1
-        ? 'Empréstimo excluído com sucesso!'
-        : `${itemsToDelete.length} empréstimos excluídos!`
-    );
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - succeeded;
+    if (succeeded > 0) {
+      toast.success(
+        succeeded === 1
+          ? 'Empréstimo excluído com sucesso!'
+          : `${succeeded} empréstimos excluídos!`
+      );
+    }
+    if (failed > 0) {
+      toast.error(
+        failed === 1
+          ? 'Falha ao excluir 1 empréstimo.'
+          : `Falha ao excluir ${failed} empréstimos.`
+      );
+    }
   }, [itemsToDelete, deleteMutation]);
 
   // ============================================================================

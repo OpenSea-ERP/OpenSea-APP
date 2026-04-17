@@ -322,16 +322,28 @@ function CostCentersPageContent() {
   };
 
   const handleDeleteConfirm = useCallback(async () => {
-    for (const id of itemsToDelete) {
-      await deleteMutation.mutateAsync(id);
-    }
+    // P0-35: report partial failures truthfully.
+    const results = await Promise.allSettled(
+      itemsToDelete.map(id => deleteMutation.mutateAsync(id))
+    );
     setDeleteModalOpen(false);
     setItemsToDelete([]);
-    toast.success(
-      itemsToDelete.length === 1
-        ? 'Centro de custo excluído com sucesso!'
-        : `${itemsToDelete.length} centros de custo excluídos!`
-    );
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - succeeded;
+    if (succeeded > 0) {
+      toast.success(
+        succeeded === 1
+          ? 'Centro de custo excluído com sucesso!'
+          : `${succeeded} centros de custo excluídos!`
+      );
+    }
+    if (failed > 0) {
+      toast.error(
+        failed === 1
+          ? 'Falha ao excluir 1 centro de custo.'
+          : `Falha ao excluir ${failed} centros de custo.`
+      );
+    }
   }, [itemsToDelete, deleteMutation]);
 
   const handleCreate = useCallback(

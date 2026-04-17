@@ -358,16 +358,28 @@ function ReceivablePageContent() {
   );
 
   const handleDeleteConfirm = useCallback(async () => {
-    for (const id of itemsToDelete) {
-      await deleteMutation.mutateAsync(id);
-    }
+    // P0-35: report partial failures truthfully (see payable for rationale).
+    const results = await Promise.allSettled(
+      itemsToDelete.map(id => deleteMutation.mutateAsync(id))
+    );
     setDeleteModalOpen(false);
     setItemsToDelete([]);
-    toast.success(
-      itemsToDelete.length === 1
-        ? 'Conta a receber excluída com sucesso!'
-        : `${itemsToDelete.length} contas a receber excluídas!`
-    );
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - succeeded;
+    if (succeeded > 0) {
+      toast.success(
+        succeeded === 1
+          ? 'Conta a receber excluída com sucesso!'
+          : `${succeeded} contas a receber excluídas!`
+      );
+    }
+    if (failed > 0) {
+      toast.error(
+        failed === 1
+          ? 'Falha ao excluir 1 conta a receber.'
+          : `Falha ao excluir ${failed} contas a receber.`
+      );
+    }
   }, [itemsToDelete, deleteMutation]);
 
   // ============================================================================

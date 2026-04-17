@@ -347,16 +347,28 @@ function BankAccountsPageContent() {
   );
 
   const handleDeleteConfirm = useCallback(async () => {
-    for (const id of itemsToDelete) {
-      await deleteMutation.mutateAsync(id);
-    }
+    // P0-35: report partial failures truthfully.
+    const results = await Promise.allSettled(
+      itemsToDelete.map(id => deleteMutation.mutateAsync(id))
+    );
     setDeleteModalOpen(false);
     setItemsToDelete([]);
-    toast.success(
-      itemsToDelete.length === 1
-        ? 'Conta bancária excluída com sucesso!'
-        : `${itemsToDelete.length} contas bancárias excluídas!`
-    );
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - succeeded;
+    if (succeeded > 0) {
+      toast.success(
+        succeeded === 1
+          ? 'Conta bancária excluída com sucesso!'
+          : `${succeeded} contas bancárias excluídas!`
+      );
+    }
+    if (failed > 0) {
+      toast.error(
+        failed === 1
+          ? 'Falha ao excluir 1 conta bancária.'
+          : `Falha ao excluir ${failed} contas bancárias.`
+      );
+    }
   }, [itemsToDelete, deleteMutation]);
 
   const handleCreate = useCallback(

@@ -20,7 +20,9 @@ import {
 export interface ConsortiaFilters {
   search?: string;
   status?: string;
-  isContemplated?: string;
+  // P0-37: backend expects boolean. Page maps the dropdown's "YES" / "NO"
+  // strings to true/false before calling the hook.
+  isContemplated?: boolean;
   sortBy?: 'createdAt' | 'monthlyPayment' | 'administrator' | 'status';
   sortOrder?: 'asc' | 'desc';
 }
@@ -64,12 +66,7 @@ export function useConsortiaInfinite(filters?: ConsortiaFilters) {
         perPage: CONSORTIA_PAGE_SIZE,
         search: filters?.search || undefined,
         status: (filters?.status as ConsortiaQuery['status']) || undefined,
-        isContemplated:
-          filters?.isContemplated === 'YES'
-            ? true
-            : filters?.isContemplated === 'NO'
-              ? false
-              : undefined,
+        isContemplated: filters?.isContemplated,
         sortBy: filters?.sortBy || undefined,
         sortOrder: filters?.sortOrder || undefined,
       });

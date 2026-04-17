@@ -177,8 +177,11 @@ function ConsortiaPageContent() {
     () => ({
       search: debouncedSearch || undefined,
       status: statusIds.length === 1 ? statusIds[0] : undefined,
+      // P0-37: backend expects boolean. The dropdown emits string ids
+      // ('YES' / 'NO') so we map them here. Multi-select (length > 1) means
+      // "no preference" → undefined skips the filter on the backend.
       isContemplated:
-        contemplatedIds.length === 1 ? contemplatedIds[0] : undefined,
+        contemplatedIds.length === 1 ? contemplatedIds[0] === 'YES' : undefined,
       sortBy,
       sortOrder,
     }),
@@ -279,16 +282,28 @@ function ConsortiaPageContent() {
   };
 
   const handleDeleteConfirm = useCallback(async () => {
-    for (const id of itemsToDelete) {
-      await deleteMutation.mutateAsync(id);
-    }
+    // P0-35: report partial failures truthfully.
+    const results = await Promise.allSettled(
+      itemsToDelete.map(id => deleteMutation.mutateAsync(id))
+    );
     setDeleteModalOpen(false);
     setItemsToDelete([]);
-    toast.success(
-      itemsToDelete.length === 1
-        ? 'Consórcio excluído com sucesso!'
-        : `${itemsToDelete.length} consórcios excluídos!`
-    );
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - succeeded;
+    if (succeeded > 0) {
+      toast.success(
+        succeeded === 1
+          ? 'Consórcio excluído com sucesso!'
+          : `${succeeded} consórcios excluídos!`
+      );
+    }
+    if (failed > 0) {
+      toast.error(
+        failed === 1
+          ? 'Falha ao excluir 1 consórcio.'
+          : `Falha ao excluir ${failed} consórcios.`
+      );
+    }
   }, [itemsToDelete, deleteMutation]);
 
   // ============================================================================
