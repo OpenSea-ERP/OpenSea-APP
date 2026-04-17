@@ -100,7 +100,7 @@ function getStatusColor(status: LoanStatus): string {
     RENEGOTIATED:
       'border-amber-600/25 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/8 text-amber-700 dark:text-amber-300',
     CANCELLED:
-      'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
+      'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-600 dark:text-slate-400',
   };
   return colors[status] ?? colors.ACTIVE;
 }

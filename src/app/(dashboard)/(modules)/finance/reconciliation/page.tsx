@@ -87,7 +87,7 @@ function getStatusColor(status: ReconciliationStatus): string {
     COMPLETED:
       'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
     CANCELLED:
-      'border-slate-300 dark:border-white/[0.1] bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400',
+      'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-600 dark:text-slate-400',
   };
   return colors[status] ?? colors.PENDING;
 }

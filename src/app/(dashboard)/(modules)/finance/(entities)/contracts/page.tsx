@@ -94,7 +94,7 @@ function formatDate(dateStr: string | null | undefined): string {
 function getStatusColor(status: ContractStatus): string {
   const colors: Record<ContractStatus, string> = {
     DRAFT:
-      'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
+      'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-600 dark:text-slate-400',
     ACTIVE:
       'border-emerald-600/25 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
     EXPIRED:
@@ -102,7 +102,7 @@ function getStatusColor(status: ContractStatus): string {
     RENEWED:
       'border-sky-600/25 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/8 text-sky-700 dark:text-sky-300',
     CANCELLED:
-      'border-gray-300 dark:border-white/[0.1] bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400',
+      'border-slate-600/25 dark:border-slate-500/20 bg-slate-50 dark:bg-slate-500/8 text-slate-600 dark:text-slate-400',
   };
   return colors[status] ?? colors.DRAFT;
 }
