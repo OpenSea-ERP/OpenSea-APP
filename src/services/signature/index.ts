@@ -13,3 +13,12 @@ export type {
   TemplatesListResponse,
   TemplateResponse,
 } from './templates.service';
+export { signingService } from './signing.service';
+export type {
+  SigningPageResponse,
+  SignDocumentPayload,
+  RejectDocumentPayload,
+  VerifyByCodeResponse,
+  RequestOtpResponse,
+  VerifyOtpResponse,
+} from './signing.service';

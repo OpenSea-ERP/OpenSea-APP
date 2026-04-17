@@ -1292,10 +1292,20 @@ export const API_ENDPOINTS = {
       GET: (token: string) => `/v1/signature/sign/${token}`,
       SIGN: (token: string) => `/v1/signature/sign/${token}`,
       REJECT: (token: string) => `/v1/signature/sign/${token}/reject`,
+      OTP_REQUEST: (token: string) => `/v1/signature/sign/${token}/otp`,
+      OTP_VERIFY: (token: string) => `/v1/signature/sign/${token}/otp/verify`,
+    },
+    VERIFY: {
+      GET: (code: string) => `/v1/signature/verify/${code}`,
     },
     TEMPLATES: {
       LIST: '/v1/signature/templates',
       CREATE: '/v1/signature/templates',
+      UPDATE: (id: string) => `/v1/signature/templates/${id}`,
+      DELETE: (id: string) => `/v1/signature/templates/${id}`,
+    },
+    ENVELOPES_EXTRA: {
+      SIGNED_PDF: (id: string) => `/v1/signature/envelopes/${id}/signed-pdf`,
     },
   },
   // Sales - Analytics
