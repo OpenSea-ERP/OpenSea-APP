@@ -1,7 +1,7 @@
 /**
- * CreateConsortiumWizard - Modal de criacao de consorcios
- * Usa NavigationWizardDialog com 3 secoes:
- * Dados Basicos, Pagamentos, Vinculacao
+ * CreateConsortiumWizard - Modal de criação de consórcios
+ * Usa NavigationWizardDialog com 3 seções:
+ * Dados Básicos, Pagamentos, Vinculação
  */
 
 'use client';
@@ -513,7 +513,7 @@ export function CreateConsortiumWizard({
         </div>
       )}
 
-      {/* Section: Vinculacao */}
+      {/* Section: Vinculação */}
       {activeSection === 'linking' && (
         <div className="space-y-5">
           {/* Bank account */}

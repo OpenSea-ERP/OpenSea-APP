@@ -1,7 +1,7 @@
 /**
- * CreateLoanWizard - Modal de criacao de emprestimos
- * Usa NavigationWizardDialog com 3 secoes:
- * Dados Basicos, Parcelas, Vinculacao
+ * CreateLoanWizard - Modal de criação de empréstimos
+ * Usa NavigationWizardDialog com 3 seções:
+ * Dados Básicos, Parcelas, Vinculação
  */
 
 'use client';
@@ -548,7 +548,7 @@ export function CreateLoanWizard({
         </div>
       )}
 
-      {/* Section: Vinculacao */}
+      {/* Section: Vinculação */}
       {activeSection === 'linking' && (
         <div className="space-y-5">
           {/* Bank account */}
