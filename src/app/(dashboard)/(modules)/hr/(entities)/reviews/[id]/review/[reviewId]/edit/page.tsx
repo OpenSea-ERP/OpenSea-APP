@@ -41,8 +41,6 @@ import { reviewsService } from '@/services/hr/reviews.service';
 import type { ReviewCompetency } from '@/types/hr';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  ChevronDown,
-  ChevronUp,
   ClipboardCheck,
   Loader2,
   Plus,
@@ -62,53 +60,10 @@ import { toast } from 'sonner';
 import { HR_PERMISSIONS } from '../../../../../../_shared/constants/hr-permissions';
 import { performanceReviewKeys } from '@/hooks/hr/use-review-competencies';
 
-// ============================================================================
-// COLLAPSIBLE SECTION
-// ============================================================================
+import { CollapsibleSection } from '@/components/hr/collapsible-section';
 
-function CollapsibleSection({
-  icon: Icon,
-  title,
-  subtitle,
-  defaultOpen = true,
-  iconColorClass = 'text-muted-foreground',
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  subtitle?: string;
-  defaultOpen?: boolean;
-  iconColorClass?: string;
-  children: React.ReactNode;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="border-b border-border/40 last:border-0">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between px-5 py-3 hover:bg-accent/50 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center gap-3">
-          <Icon className={`h-4 w-4 ${iconColorClass}`} />
-          <div className="text-left">
-            <p className="text-sm font-medium">{title}</p>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            )}
-          </div>
-        </div>
-        {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        )}
-      </button>
-      {isOpen && <div className="px-5 pb-4 pt-1">{children}</div>}
-    </div>
-  );
-}
+const REVIEW_SECTION_WRAPPER = 'border-b border-border/40 last:border-0';
+const REVIEW_SECTION_BODY = 'px-5 pb-4 pt-1';
 
 // ============================================================================
 // PAGE
@@ -400,6 +355,9 @@ export default function PerformanceReviewEditPage() {
             iconColorClass="text-rose-500"
             title="Auto-avaliacao"
             subtitle="Reflexao do colaborador sobre o proprio desempenho"
+          
+            wrapperClassName={REVIEW_SECTION_WRAPPER}
+            bodyClassName={REVIEW_SECTION_BODY}
           >
             <div className="space-y-3">
               <div className="space-y-1.5">
@@ -429,6 +387,9 @@ export default function PerformanceReviewEditPage() {
             iconColorClass="text-violet-500"
             title="Avaliacao do gestor"
             subtitle="Visao do gestor direto sobre o desempenho do colaborador"
+          
+            wrapperClassName={REVIEW_SECTION_WRAPPER}
+            bodyClassName={REVIEW_SECTION_BODY}
           >
             <div className="space-y-3">
               <div className="space-y-1.5">
@@ -458,6 +419,9 @@ export default function PerformanceReviewEditPage() {
             iconColorClass="text-emerald-500"
             title="Pontos fortes / a melhorar / metas"
             subtitle="Sintese qualitativa para os proximos ciclos"
+          
+            wrapperClassName={REVIEW_SECTION_WRAPPER}
+            bodyClassName={REVIEW_SECTION_BODY}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1.5">
@@ -516,6 +480,9 @@ export default function PerformanceReviewEditPage() {
             iconColorClass="text-amber-500"
             title="Competencias"
             subtitle={`${localCompetencies.length} competencia(s) avaliada(s)`}
+          
+            wrapperClassName={REVIEW_SECTION_WRAPPER}
+            bodyClassName={REVIEW_SECTION_BODY}
           >
             <CompetenciesEditor
               competencies={localCompetencies}

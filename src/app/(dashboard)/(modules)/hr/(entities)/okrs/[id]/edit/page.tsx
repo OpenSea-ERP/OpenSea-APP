@@ -25,8 +25,6 @@ import type {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BarChart3,
-  ChevronDown,
-  ChevronUp,
   Loader2,
   Plus,
   Save,
@@ -80,51 +78,7 @@ const KR_TYPE_OPTIONS: { value: KeyResultType; label: string }[] = [
   { value: 'BINARY', label: 'Binário (Sim/Não)' },
 ];
 
-// ============================================================================
-// COLLAPSIBLE SECTION
-// ============================================================================
-
-function CollapsibleSection({
-  icon: Icon,
-  title,
-  subtitle,
-  defaultOpen = true,
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  subtitle?: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div>
-      <button
-        type="button"
-        className="flex w-full items-center justify-between px-5 py-3 hover:bg-accent/50 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center gap-3">
-          <Icon className="h-4 w-4 text-muted-foreground" />
-          <div className="text-left">
-            <p className="text-sm font-medium">{title}</p>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            )}
-          </div>
-        </div>
-        {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        )}
-      </button>
-      {isOpen && <div className="px-5 pb-4">{children}</div>}
-    </div>
-  );
-}
+import { CollapsibleSection } from '@/components/hr/collapsible-section';
 
 // ============================================================================
 // PAGE
