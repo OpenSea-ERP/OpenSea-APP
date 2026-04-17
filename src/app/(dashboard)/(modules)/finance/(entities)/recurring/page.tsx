@@ -262,8 +262,10 @@ function RecurringPageContent() {
   const buildFilterUrl = useCallback(
     (params: { status?: string | undefined; type?: string | undefined }) => {
       const parts: string[] = [];
-      const sts = 'status' in params ? params.status : statusFilter;
-      const typ = 'type' in params ? params.type : typeFilter;
+      // Only use the passed-in value when it was explicitly provided (not undefined);
+      // otherwise fall back to the current filter state.
+      const sts = params.status !== undefined ? params.status : statusFilter;
+      const typ = params.type !== undefined ? params.type : typeFilter;
       if (sts) parts.push(`status=${sts}`);
       if (typ) parts.push(`type=${typ}`);
       return parts.length > 0
