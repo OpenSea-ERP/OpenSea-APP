@@ -1,6 +1,11 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 
@@ -43,6 +48,34 @@ export function useNotificationsListV2(filters?: ListFilters) {
         `/v1/notifications/me${query ? `?${query}` : ''}`
       );
     },
+    refetchInterval: 30_000,
+    staleTime: 10_000,
+  });
+}
+
+export function useNotificationsInfiniteV2(
+  filters?: Omit<ListFilters, 'cursor'>
+) {
+  return useInfiniteQuery({
+    queryKey: ['notifications', 'v2', 'infinite', filters ?? {}] as const,
+    queryFn: async ({
+      pageParam,
+    }: {
+      pageParam?: string;
+    }): Promise<ListResponse> => {
+      const params = new URLSearchParams();
+      if (filters?.isRead !== undefined)
+        params.set('isRead', String(filters.isRead));
+      if (filters?.kind) params.set('kind', filters.kind);
+      if (filters?.state) params.set('state', filters.state);
+      params.set('limit', String(filters?.limit ?? 30));
+      if (pageParam) params.set('cursor', pageParam);
+      return apiClient.get<ListResponse>(
+        `/v1/notifications/me?${params.toString()}`
+      );
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: last => last.nextCursor ?? undefined,
     refetchInterval: 30_000,
     staleTime: 10_000,
   });

@@ -9,7 +9,7 @@ import {
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { PageActionBar } from '@/components/layout/page-action-bar';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { NotificationItem } from '@/features/notifications/components/renderers/notification-item';
 import {
   useMarkAllReadV2,
-  useNotificationsListV2,
+  useNotificationsInfiniteV2,
 } from '@/features/notifications/hooks/use-notifications-v2';
 
 type ReadFilter = 'all' | 'unread' | 'read';
@@ -37,20 +37,47 @@ export default function NotificationsPage() {
   const [kindFilter, setKindFilter] = useState<string>('all');
 
   const filters = useMemo(() => {
-    const f: Record<string, unknown> = { limit: 50 };
+    const f: {
+      limit: number;
+      isRead?: boolean;
+      kind?: string;
+    } = { limit: 30 };
     if (readFilter === 'read') f.isRead = true;
     if (readFilter === 'unread') f.isRead = false;
     if (kindFilter !== 'all') f.kind = kindFilter;
     return f;
   }, [readFilter, kindFilter]);
 
-  const { data, isLoading, refetch, isFetching } =
-    useNotificationsListV2(filters);
+  const {
+    data,
+    isLoading,
+    refetch,
+    isFetching,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useNotificationsInfiniteV2(filters);
   const markAll = useMarkAllReadV2();
 
-  const items = data?.notifications ?? [];
-  const unread = data?.totalUnread ?? 0;
-  const total = data?.total ?? 0;
+  const items = useMemo(
+    () => data?.pages.flatMap(p => p.notifications) ?? [],
+    [data]
+  );
+  const unread = data?.pages[0]?.totalUnread ?? 0;
+  const total = data?.pages[0]?.total ?? 0;
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!sentinelRef.current || !hasNextPage || isFetchingNextPage) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0]?.isIntersecting) fetchNextPage();
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, items.length]);
 
   return (
     <div className="space-y-6">
@@ -172,8 +199,23 @@ export default function NotificationsPage() {
           {items.map(n => (
             <NotificationItem key={n.id} notification={n} />
           ))}
-          {isFetching && (
-            <div className="flex items-center justify-center py-4">
+          {hasNextPage && (
+            <div
+              ref={sentinelRef}
+              className="flex items-center justify-center py-4"
+            >
+              {isFetchingNextPage && (
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              )}
+            </div>
+          )}
+          {!hasNextPage && items.length > 0 && (
+            <p className="text-center text-[11px] text-muted-foreground py-3">
+              Você chegou ao fim.
+            </p>
+          )}
+          {isFetching && !isFetchingNextPage && (
+            <div className="flex items-center justify-center py-2">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             </div>
           )}

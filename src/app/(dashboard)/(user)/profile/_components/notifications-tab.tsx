@@ -11,13 +11,14 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMultiplePermissions } from '@/hooks/use-permissions';
 
+import { ModulePreferencesGrid } from '@/features/notifications/components/preferences/module-preferences-grid';
 import {
   useNotificationModulesManifest,
   useNotificationPreferencesBundle,
@@ -29,6 +30,7 @@ import {
   useUpdateNotificationSettings,
 } from '@/features/notifications/hooks/use-notification-preferences';
 import { usePushSubscription } from '@/features/notifications/hooks/use-push-subscription';
+import type { NotificationPreferenceRow } from '@/features/notifications/types';
 import { cn } from '@/lib/utils';
 
 const CHANNEL_META = {
@@ -48,6 +50,12 @@ const MASTER_FIELDS: Array<[MasterKey, keyof typeof CHANNEL_META]> = [
 ];
 
 export function NotificationsTab() {
+  const perms = useMultiplePermissions({
+    canRead: 'tools.notifications.preferences.access',
+    canModify: 'tools.notifications.preferences.modify',
+    canManageDevices: 'tools.notifications.devices.admin',
+  });
+
   const settings = useNotificationSettings();
   const preferences = useNotificationPreferencesBundle();
   const manifest = useNotificationModulesManifest();
@@ -59,11 +67,13 @@ export function NotificationsTab() {
   const revoke = useRevokePushDevice();
   const push = usePushSubscription();
 
-  const moduleEnabledMap = useMemo(() => {
-    const map = new Map<string, boolean>();
-    preferences.data?.modules.forEach(m => map.set(m.code, m.isEnabled));
-    return map;
-  }, [preferences.data]);
+  const handleModuleToggle = (moduleCode: string, enabled: boolean) => {
+    updatePrefs.mutate({ modules: [{ code: moduleCode, isEnabled: enabled }] });
+  };
+
+  const handlePreferencesChange = (rows: NotificationPreferenceRow[]) => {
+    updatePrefs.mutate({ preferences: rows });
+  };
 
   const isLoading =
     settings.isLoading || manifest.isLoading || preferences.isLoading;
@@ -75,6 +85,14 @@ export function NotificationsTab() {
         <Skeleton className="h-56 w-full" />
         <Skeleton className="h-72 w-full" />
       </div>
+    );
+  }
+
+  if (!perms.canRead) {
+    return (
+      <Card className="p-8 text-center text-muted-foreground">
+        Você não tem permissão para visualizar preferências de notificação.
+      </Card>
     );
   }
 
@@ -111,6 +129,7 @@ export function NotificationsTab() {
             control={
               <Switch
                 checked={settings.data.doNotDisturb}
+                disabled={!perms.canModify}
                 onCheckedChange={v =>
                   updateSettings.mutate({ doNotDisturb: v })
                 }
@@ -137,6 +156,7 @@ export function NotificationsTab() {
             control={
               <Switch
                 checked={settings.data.soundEnabled}
+                disabled={!perms.canModify}
                 onCheckedChange={v =>
                   updateSettings.mutate({ soundEnabled: v })
                 }
@@ -184,6 +204,7 @@ export function NotificationsTab() {
                 </span>
                 <Switch
                   checked={Boolean(settings.data?.[key])}
+                  disabled={!perms.canModify}
                   onCheckedChange={v =>
                     updateSettings.mutate({ [key]: v } as Record<
                       string,
@@ -196,25 +217,27 @@ export function NotificationsTab() {
           })}
         </div>
 
-        {push.permission !== 'granted' && push.permission !== 'unsupported' && (
-          <div className="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-between gap-3">
-            <p className="text-xs text-blue-700 dark:text-blue-300">
-              Para receber notificações push neste dispositivo, é preciso
-              autorizar o navegador.
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={push.subscribing}
-              onClick={() => push.subscribe(navigator.userAgent)}
-            >
-              {push.subscribing ? 'Ativando...' : 'Ativar push'}
-            </Button>
-          </div>
-        )}
+        {perms.canManageDevices &&
+          push.permission !== 'granted' &&
+          push.permission !== 'unsupported' && (
+            <div className="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-between gap-3">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                Para receber notificações push neste dispositivo, é preciso
+                autorizar o navegador.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={push.subscribing}
+                onClick={() => push.subscribe(navigator.userAgent)}
+              >
+                {push.subscribing ? 'Ativando...' : 'Ativar push'}
+              </Button>
+            </div>
+          )}
       </Card>
 
-      {/* Por módulo — versão enxuta (apenas master por módulo) */}
+      {/* Por módulo — grid granular por categoria × canal × frequência */}
       <Card className="p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
         <div className="flex items-center gap-3 mb-5">
           <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
@@ -225,43 +248,28 @@ export function NotificationsTab() {
               Por módulo
             </h2>
             <p className="text-xs text-gray-500 dark:text-white/50">
-              Escolha quais áreas do sistema devem te notificar.
+              Expanda um módulo para configurar cada categoria por canal e
+              frequência.
             </p>
           </div>
         </div>
 
-        <div className="divide-y divide-gray-100 dark:divide-white/5">
-          {manifest.data?.modules.map(mod => {
-            const enabled = moduleEnabledMap.get(mod.code) ?? true;
-            return (
-              <div
-                key={mod.code}
-                className="flex items-center justify-between gap-4 py-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
-                    {mod.displayName}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-white/50">
-                    {mod.categories.length} tipos de notificação
-                  </p>
-                </div>
-                <Switch
-                  checked={enabled}
-                  onCheckedChange={v =>
-                    updatePrefs.mutate({
-                      modules: [{ code: mod.code, isEnabled: v }],
-                    })
-                  }
-                />
-              </div>
-            );
-          })}
-        </div>
+        {manifest.data && preferences.data ? (
+          <ModulePreferencesGrid
+            modules={manifest.data.modules}
+            preferences={preferences.data}
+            onModuleToggle={handleModuleToggle}
+            onPreferencesChange={handlePreferencesChange}
+          />
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-white/50 py-4">
+            Carregando preferências...
+          </p>
+        )}
       </Card>
 
       {/* Dispositivos push */}
-      {(devices.data?.devices?.length ?? 0) > 0 && (
+      {perms.canManageDevices && (devices.data?.devices?.length ?? 0) > 0 && (
         <Card className="p-6 bg-white/95 dark:bg-white/5 border-gray-200 dark:border-white/10">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400">

@@ -32,6 +32,7 @@ import {
   type NotificationFormField,
   type NotificationRecord,
 } from '../../types';
+import { sanitizeText, sanitizeUrl } from '../../utils/sanitize';
 
 interface NotificationItemProps {
   notification: NotificationRecord;
@@ -49,7 +50,9 @@ export function NotificationItem({
   const router = useRouter();
   const markRead = useMarkNotificationReadV2();
 
-  const navigateTarget = resolveNavigateTarget(notification, kind);
+  const navigateTarget = sanitizeUrl(resolveNavigateTarget(notification, kind));
+  const safeTitle = sanitizeText(notification.title);
+  const safeMessage = sanitizeText(notification.message);
 
   const handleClick = (e: React.MouseEvent) => {
     // Ignore clicks that came from interactive children (buttons, links, inputs)
@@ -101,7 +104,7 @@ export function NotificationItem({
                 : 'font-medium text-gray-500 dark:text-white/50'
             )}
           >
-            {notification.title}
+            {safeTitle}
           </h4>
           <span
             className={cn(
@@ -126,7 +129,7 @@ export function NotificationItem({
               : 'text-gray-400 dark:text-white/30'
           )}
         >
-          {notification.message}
+          {safeMessage}
         </p>
 
         <KindRenderer
@@ -239,22 +242,26 @@ function KindRenderer({
   compact?: boolean;
 }) {
   switch (kind) {
-    case NotificationKind.LINK:
-      return notification.actionUrl ? (
+    case NotificationKind.LINK: {
+      const safeLinkUrl = sanitizeUrl(notification.actionUrl);
+      const rawActionText =
+        notification.metadata &&
+        (notification.metadata as Record<string, unknown>).actionText
+          ? String(
+              (notification.metadata as Record<string, unknown>).actionText
+            )
+          : 'Abrir';
+      return safeLinkUrl ? (
         <Link
-          href={notification.actionUrl}
+          href={safeLinkUrl}
           className="text-xs text-primary hover:underline inline-flex items-center gap-1"
           onClick={onOpen}
         >
           <ExternalLink className="h-3 w-3" />
-          {notification.metadata &&
-          (notification.metadata as Record<string, unknown>).actionText
-            ? String(
-                (notification.metadata as Record<string, unknown>).actionText
-              )
-            : 'Abrir'}
+          {sanitizeText(rawActionText)}
         </Link>
       ) : null;
+    }
 
     case NotificationKind.ACTIONABLE:
     case NotificationKind.APPROVAL:
@@ -363,7 +370,9 @@ function ActionButtons({
       <div className="text-xs text-muted-foreground italic flex items-center gap-1">
         <Check className="h-3 w-3" />
         Resolvido como{' '}
-        <span className="font-medium">{notification.resolvedAction}</span>
+        <span className="font-medium">
+          {sanitizeText(notification.resolvedAction)}
+        </span>
       </div>
     );
   }
@@ -386,7 +395,7 @@ function ActionButtons({
             disabled={isPending}
             className="h-7 text-xs"
           >
-            {action.label}
+            {sanitizeText(action.label)}
           </Button>
         ))}
       </div>
@@ -437,7 +446,9 @@ function FormRenderer({ notification }: { notification: NotificationRecord }) {
     >
       {fields.map(field => (
         <div key={field.key} className="space-y-1">
-          <label className="text-xs font-medium">{field.label}</label>
+          <label className="text-xs font-medium">
+            {sanitizeText(field.label)}
+          </label>
           {field.type === 'textarea' ? (
             <textarea
               required={field.required}
@@ -471,7 +482,7 @@ function FormRenderer({ notification }: { notification: NotificationRecord }) {
         disabled={isPending}
         className="h-7 text-xs"
       >
-        {submit?.label ?? 'Enviar'}
+        {sanitizeText(submit?.label) || 'Enviar'}
       </Button>
     </form>
   );
@@ -488,6 +499,7 @@ function ProgressBlock({
 }) {
   const pct =
     total > 0 ? Math.min(100, Math.round((progress / total) * 100)) : 0;
+  const safeDetailsUrl = sanitizeUrl(detailsUrl);
   return (
     <div className="space-y-1 pt-1">
       <div className="flex justify-between items-center text-[11px] text-muted-foreground">
@@ -502,9 +514,9 @@ function ProgressBlock({
           style={{ width: `${pct}%` }}
         />
       </div>
-      {detailsUrl && (
+      {safeDetailsUrl && (
         <Link
-          href={detailsUrl}
+          href={safeDetailsUrl}
           className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
         >
           Ver detalhes <ChevronRight className="h-3 w-3" />
@@ -525,7 +537,10 @@ function ImageBannerBlock({
   actionUrl: string | null;
   compact?: boolean;
 }) {
-  if (!imageUrl) return null;
+  const safeImageUrl = sanitizeUrl(imageUrl);
+  const safeAlt = sanitizeText(imageAlt) || 'Banner';
+  const safeActionUrl = sanitizeUrl(actionUrl);
+  if (!safeImageUrl) return null;
   return (
     <div className="pt-1 space-y-1.5">
       <div
@@ -535,8 +550,8 @@ function ImageBannerBlock({
         )}
       >
         <img
-          src={imageUrl}
-          alt={imageAlt ?? 'Banner'}
+          src={safeImageUrl}
+          alt={safeAlt}
           className="w-full h-full object-cover"
           onError={e => {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
@@ -544,9 +559,9 @@ function ImageBannerBlock({
         />
         <ImageIcon className="h-6 w-6 text-muted-foreground absolute" />
       </div>
-      {actionUrl && (
+      {safeActionUrl && (
         <Link
-          href={actionUrl}
+          href={safeActionUrl}
           className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
         >
           Abrir <ChevronRight className="h-3 w-3" />
@@ -564,12 +579,15 @@ function ReportBlock({
   compact?: boolean;
 }) {
   const md = (notification.metadata ?? {}) as Record<string, unknown>;
-  const url =
-    (md.reportUrl as string | undefined) ?? notification.actionUrl ?? null;
-  const name = (md.reportName as string | undefined) ?? 'Relatório';
-  const format = (md.reportFormat as string | undefined) ?? 'pdf';
+  const safeUrl = sanitizeUrl(
+    (md.reportUrl as string | undefined) ?? notification.actionUrl ?? null
+  );
+  const safeName =
+    sanitizeText(md.reportName as string | undefined) || 'Relatório';
+  const safeFormat =
+    sanitizeText(md.reportFormat as string | undefined) || 'pdf';
   const size = md.reportSize as number | undefined;
-  const period = md.reportPeriod as string | undefined;
+  const safePeriod = sanitizeText(md.reportPeriod as string | undefined);
 
   return (
     <div
@@ -580,14 +598,14 @@ function ReportBlock({
         <FileText className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium truncate">{name}</p>
+        <p className="text-xs font-medium truncate">{safeName}</p>
         <p className="text-[11px] text-muted-foreground">
-          {format.toUpperCase()}
+          {safeFormat.toUpperCase()}
           {size ? ` · ${(size / 1024).toFixed(0)} KB` : ''}
-          {period ? ` · ${period}` : ''}
+          {safePeriod ? ` · ${safePeriod}` : ''}
         </p>
       </div>
-      {url && (
+      {safeUrl && (
         <Button
           asChild
           size="sm"
@@ -595,8 +613,8 @@ function ReportBlock({
           className="h-7 gap-1 shrink-0"
         >
           <Link
-            href={url}
-            target={url.startsWith('http') ? '_blank' : undefined}
+            href={safeUrl}
+            target={safeUrl.startsWith('http') ? '_blank' : undefined}
           >
             <Download className="h-3.5 w-3.5" />
             {compact ? '' : 'Baixar'}
@@ -613,34 +631,36 @@ function EmailPreviewBlock({
   notification: NotificationRecord;
 }) {
   const md = (notification.metadata ?? {}) as Record<string, unknown>;
-  const from =
-    (md.emailFromName as string | undefined) ?? (md.emailFrom as string);
-  const subject = md.emailSubject as string | undefined;
-  const preview = md.emailPreview as string | undefined;
-  const openUrl =
-    (md.openInAppUrl as string | undefined) ?? notification.actionUrl ?? null;
+  const safeFrom = sanitizeText(
+    (md.emailFromName as string | undefined) ?? (md.emailFrom as string)
+  );
+  const safeSubject = sanitizeText(md.emailSubject as string | undefined);
+  const safePreview = sanitizeText(md.emailPreview as string | undefined);
+  const safeOpenUrl = sanitizeUrl(
+    (md.openInAppUrl as string | undefined) ?? notification.actionUrl ?? null
+  );
 
   return (
     <div className="space-y-1 mt-1 p-2 rounded-md border border-sky-200 dark:border-sky-500/20 bg-sky-50/60 dark:bg-sky-500/5">
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
         <Mail className="h-3 w-3" />
         <span className="font-medium text-gray-800 dark:text-white/80">
-          {from}
+          {safeFrom}
         </span>
       </div>
-      {subject && (
+      {safeSubject && (
         <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-          {subject}
+          {safeSubject}
         </p>
       )}
-      {preview && (
+      {safePreview && (
         <p className="text-[11px] text-muted-foreground line-clamp-2">
-          {preview}
+          {safePreview}
         </p>
       )}
-      {openUrl && (
+      {safeOpenUrl && (
         <Link
-          href={openUrl}
+          href={safeOpenUrl}
           className="inline-flex items-center gap-1 text-[11px] text-sky-600 dark:text-sky-400 hover:underline"
         >
           Abrir no e-mail <ChevronRight className="h-3 w-3" />
