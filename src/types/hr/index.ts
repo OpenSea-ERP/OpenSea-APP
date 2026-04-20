@@ -36,3 +36,4 @@ export * from './okr.types';
 export * from './recruitment.types';
 export * from './kanban.types';
 export * from './one-on-ones.types';
+export * from './biometria.types';

@@ -542,6 +542,37 @@ export const HR_PERMISSIONS = {
     DELETE: HR_CODES.ONE_ON_ONES.REMOVE,
     MANAGE: HR_CODES.ONE_ON_ONES.ADMIN,
   },
+
+  /**
+   * Permissões de Enrollment Facial (Phase 05 — plans 05-03 / 05-08).
+   * Raw string literals until the central permission-codes.ts is
+   * extended by Phase 05 backend migration.
+   */
+  FACE_ENROLLMENT: {
+    ACCESS: 'hr.face-enrollment.access',
+    REGISTER: 'hr.face-enrollment.register',
+    REMOVE: 'hr.face-enrollment.remove',
+    ADMIN: 'hr.face-enrollment.admin',
+  },
+
+  /**
+   * Permissões de Crachás (QR badge emission + rotation).
+   * Phase 05 — plan 05-04 (rotation) + future plans for badge PDF.
+   */
+  CRACHAS: {
+    ACCESS: 'hr.crachas.access',
+    PRINT: 'hr.crachas.print',
+    ADMIN: 'hr.crachas.admin',
+  },
+
+  /**
+   * Permissões de PIN de Ponto (Punch PIN set / unlock).
+   * Gated by hr.punch-devices.admin per D-11 — mirror token here
+   * so page code can import from a single HR constants module.
+   */
+  PUNCH_PIN: {
+    ADMIN: 'hr.punch-devices.admin',
+  },
 } as const;
 
 /* ===========================================
