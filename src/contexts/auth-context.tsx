@@ -133,6 +133,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // needs to list pairable devices. Phase 5 — Plan 05-10 / Rule 3.
     '/kiosk',
     '/kiosk/setup',
+    // Consulta pública de autenticidade de recibo de ponto (sem auth,
+    // rate-limited no backend). Phase 6 — Plan 06-03. Apenas whitelist
+    // LGPD é exposto (nome, razão social, CNPJ mascarado, NSR, tipo).
+    '/punch/verify',
   ];
 
   // Verifica se a rota atual é pública
@@ -140,7 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     route =>
       pathname === route ||
       pathname?.startsWith('/reset-password') ||
-      pathname?.startsWith('/kiosk')
+      pathname?.startsWith('/kiosk') ||
+      pathname?.startsWith('/punch/verify')
   );
 
   // Se houve erro ao buscar usuário (token inválido/expirado), coordena com refresh
