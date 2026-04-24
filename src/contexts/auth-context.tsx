@@ -124,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     '/fast-login',
     '/register',
     '/reset-password',
+    '/forgot-password',
     '/setup-pins',
     '/magic-link',
     '/',
@@ -144,6 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     route =>
       pathname === route ||
       pathname?.startsWith('/reset-password') ||
+      pathname?.startsWith('/forgot-password') ||
       pathname?.startsWith('/kiosk') ||
       pathname?.startsWith('/punch/verify')
   );

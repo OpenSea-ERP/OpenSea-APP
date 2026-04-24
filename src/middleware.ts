@@ -12,6 +12,8 @@ export function middleware(request: NextRequest) {
     '/login',
     '/fast-login',
     '/register',
+    '/forgot-password',
+    '/reset-password',
     '/',
     '/select-tenant',
   ];
