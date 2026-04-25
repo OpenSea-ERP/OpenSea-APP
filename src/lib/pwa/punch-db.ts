@@ -15,11 +15,30 @@
  * API with a thin promise-based facade (~80 LOC), no `idb`/`dexie` runtime cost.
  */
 
-const DB_NAME = 'opensea-punch';
-const DB_VERSION = 1;
-const STORE_NAME = 'pending-punches';
+export const DB_NAME = 'opensea-punch';
+// Phase 8 / Plan 08-01 — D-05: bump v1→v2 para introduzir status enum +
+// nextRetryAt + requestId. Migration aditiva: campos opcionais — rows
+// legados sem esses campos ficam com status='pending' implícito.
+export const DB_VERSION = 2;
+export const STORE_NAME = 'pending-punches';
 
-export type PunchType = 'CLOCK_IN' | 'CLOCK_OUT';
+export type PunchType = 'CLOCK_IN' | 'CLOCK_OUT' | 'BREAK_START' | 'BREAK_END';
+
+/**
+ * Phase 8 / Plan 08-01 — D-05/D-06.
+ *
+ *  - `pending`  → na fila esperando primeiro envio (default).
+ *  - `syncing`  → fetch em vôo (transitivo).
+ *  - `failed`   → última tentativa falhou; aguardando `nextRetryAt`.
+ *  - `paused`   → backoff exausto; só retoma via `retryNow()` manual.
+ *  - `expired`  → idosa (>7 dias) e marcada como descartada (UI mostra warning).
+ */
+export type PunchStatus =
+  | 'pending'
+  | 'syncing'
+  | 'failed'
+  | 'paused'
+  | 'expired';
 
 export interface PendingPunch {
   /** UUID generated client-side at enqueue time. */
@@ -39,6 +58,12 @@ export interface PendingPunch {
   createdAt: string;
   /** ISO timestamp of the most recent failed sync attempt, when applicable. */
   lastError?: string | null;
+  // Phase 8 / Plan 08-01 — D-05/D-06.
+  status: PunchStatus;
+  /** epoch-ms; quando definido, replay só dispara após `Date.now() >= nextRetryAt`. */
+  nextRetryAt?: number;
+  /** Idempotency requestId Phase 4-04. Preservado por batida; reusado em retries. */
+  requestId?: string;
 }
 
 let cachedDbPromise: Promise<IDBDatabase> | null = null;
@@ -134,6 +159,10 @@ export async function enqueuePunch(
     attempts: 0,
     createdAt: nowIso,
     lastError: null,
+    // Phase 8 / Plan 08-01 — D-05/D-06.
+    status: 'pending',
+    nextRetryAt: undefined,
+    requestId: crypto.randomUUID(),
   };
 
   await runTransaction('readwrite', store => store.add(pendingPunch));
@@ -151,16 +180,74 @@ export function removePunch(id: string): Promise<void> {
   }).then(() => undefined);
 }
 
+/**
+ * Phase 8 / Plan 08-01 — D-05.
+ *
+ * `options` carrega o estado novo do backoff:
+ *  - `status: 'failed'`   → ainda há tentativas pela frente, `nextRetryAt` definido.
+ *  - `status: 'paused'`   → backoff esgotado, `nextRetryAt` undefined (UI sugere retry manual).
+ *
+ * Se `options` ausente (compat call sites legados), apenas incrementa
+ * `attempts` + grava `lastError` mantendo `status` inalterado.
+ */
 export async function markPunchFailed(
   id: string,
-  errorMessage: string
+  errorMessage: string,
+  options?: { status: PunchStatus; nextRetryAt?: number }
 ): Promise<void> {
   const all = await getPendingPunches();
   const target = all.find(punch => punch.id === id);
   if (!target) return;
   target.attempts += 1;
   target.lastError = errorMessage;
+  if (options) {
+    target.status = options.status;
+    target.nextRetryAt = options.nextRetryAt;
+  }
   await runTransaction('readwrite', store => store.put(target));
+}
+
+/**
+ * Phase 8 / Plan 08-01 — D-05.
+ *
+ * Zera o estado de backoff de uma batida (status='pending', attempts=0,
+ * nextRetryAt limpo, lastError limpo). Chamado pelo botão "Tentar agora"
+ * antes de disparar o flush manual.
+ */
+export async function resetPunchRetry(id: string): Promise<void> {
+  const all = await getPendingPunches();
+  const target = all.find(punch => punch.id === id);
+  if (!target) return;
+  target.attempts = 0;
+  target.status = 'pending';
+  target.nextRetryAt = undefined;
+  target.lastError = null;
+  await runTransaction('readwrite', store => store.put(target));
+}
+
+/**
+ * Phase 8 / Plan 08-01 — D-09 (TTL 7 dias).
+ *
+ * Marca `status='expired'` em todas as batidas com `createdAt` anterior
+ * a `timestampMs`. Retorna a contagem de rows afetadas (só conta rows
+ * que ainda não estavam expired).
+ */
+export async function markPunchesExpiredOlderThan(
+  timestampMs: number
+): Promise<number> {
+  const all = await getPendingPunches();
+  let count = 0;
+  for (const punch of all) {
+    if (punch.status === 'expired') continue;
+    const createdAtMs = Date.parse(punch.createdAt);
+    if (Number.isFinite(createdAtMs) && createdAtMs < timestampMs) {
+      punch.status = 'expired';
+      punch.nextRetryAt = undefined;
+      await runTransaction('readwrite', store => store.put(punch));
+      count++;
+    }
+  }
+  return count;
 }
 
 export async function countPendingPunches(): Promise<number> {

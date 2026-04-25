@@ -15,14 +15,26 @@ import {
   countPendingPunches,
   enqueuePunch,
   getPendingPunches,
+  markPunchesExpiredOlderThan,
   markPunchFailed,
   removePunch,
+  resetPunchRetry,
   type PendingPunch,
   type PunchType,
 } from '@/lib/pwa/punch-db';
 import { punchApi, type PunchRequest } from '@/app/punch/api/punch.api';
 import type { TimeEntry } from '@/types/hr';
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+/**
+ * Phase 8 / Plan 08-01 — D-05.
+ * Backoff exponencial: 30s → 1m → 5m → 30m. Após 4 falhas, status='paused'
+ * e retoma só via `retryNow(id)`.
+ */
+const BACKOFF_SEQUENCE_MS = [30_000, 60_000, 5 * 60_000, 30 * 60_000];
+
+/** Phase 8 / Plan 08-01 — D-09: TTL 7 dias antes de descartar com warning. */
+const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type PunchOutcome =
   | { status: 'synced'; entry: TimeEntry }
@@ -45,6 +57,12 @@ interface UseOfflinePunchReturn {
   submitPunch: (input: PunchInput) => Promise<PunchOutcome>;
   /** Imperatively triggers a flush of the IndexedDB queue. */
   flushQueue: () => Promise<void>;
+  /**
+   * Phase 8 / Plan 08-01 — D-05: usuário tocou "Tentar agora" em uma batida
+   * com `status='paused'` ou `status='failed'` aguardando backoff. Reseta
+   * o estado e dispara um flush imediato (ignorando o `nextRetryAt`).
+   */
+  retryNow: (punchId: string) => Promise<void>;
 }
 
 const SW_BROADCAST_SOURCE = 'opensea-punch-sw';
@@ -115,8 +133,24 @@ export function useOfflinePunch(): UseOfflinePunchReturn {
     setIsSyncing(true);
 
     try {
+      // Phase 8 / Plan 08-01 — D-09: marca expired itens > 7 dias.
+      const expiredCount = await markPunchesExpiredOlderThan(
+        Date.now() - TTL_MS
+      );
+      if (expiredCount > 0) {
+        // Warning persistente — UI fica responsável por surfacing.
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[useOfflinePunch] ${expiredCount} batida(s) expirou(am) após 7 dias sem sync (status=expired).`
+        );
+      }
+
       const queue = await getPendingPunches();
       for (const punch of queue) {
+        // Phase 8 / Plan 08-01 — D-05: backoff gate.
+        if (punch.status === 'paused' || punch.status === 'expired') continue;
+        if (punch.nextRetryAt && Date.now() < punch.nextRetryAt) continue;
+
         const request: PunchRequest = {
           employeeId: punch.employeeId,
           latitude: punch.latitude,
@@ -132,8 +166,17 @@ export function useOfflinePunch(): UseOfflinePunchReturn {
           await removePunch(punch.id);
         } catch (err) {
           const message = err instanceof Error ? err.message : 'unknown';
-          await markPunchFailed(punch.id, message);
-          throw err;
+          // Phase 8 / Plan 08-01 — D-05: backoff exponencial + status enum.
+          const nextAttempt = (punch.attempts ?? 0) + 1;
+          const idx = Math.min(nextAttempt - 1, BACKOFF_SEQUENCE_MS.length - 1);
+          const isLast = nextAttempt > BACKOFF_SEQUENCE_MS.length;
+          await markPunchFailed(punch.id, message, {
+            status: isLast ? 'paused' : 'failed',
+            nextRetryAt: isLast
+              ? undefined
+              : Date.now() + BACKOFF_SEQUENCE_MS[idx],
+          });
+          // Não throw — outras batidas da fila ainda devem ser tentadas.
         }
       }
 
@@ -151,6 +194,14 @@ export function useOfflinePunch(): UseOfflinePunchReturn {
       await refreshPendingCount();
     }
   }, [refreshPendingCount]);
+
+  const retryNow = useCallback(
+    async (punchId: string) => {
+      await resetPunchRetry(punchId);
+      await flushQueue();
+    },
+    [flushQueue]
+  );
 
   // Auto-flush when (re)connecting or when pending items appear.
   useEffect(() => {
@@ -204,5 +255,6 @@ export function useOfflinePunch(): UseOfflinePunchReturn {
     isSyncing,
     submitPunch,
     flushQueue,
+    retryNow,
   };
 }
