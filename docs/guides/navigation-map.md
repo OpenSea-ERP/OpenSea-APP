@@ -452,3 +452,46 @@ Dashboard hub do módulo Compliance com 5 tabs de artefatos legais:
   regulatória + audit log `ESOCIAL_SUBMIT`).
 - Edição `EsocialConfig.inpiNumber` → audit log `ESOCIAL_CONFIG_UPDATED` com
   `{ inpiChanged: boolean }` (valor do INPI nunca é logado).
+
+---
+
+## HR > Ponto (Gestor) — Phase 7 / Plan 07-06
+
+Dashboard do gestor para acompanhar batidas em tempo real, resolver exceções
+em lote, monitorar saúde dos dispositivos e auditar funcionários faltantes.
+Consome endpoints Wave 2 (Plans 03/04/05) + Socket.IO scope do Plan 02.
+
+### Routes
+
+| Rota                  | Permissão                                                 | Descrição                                                         |
+| --------------------- | --------------------------------------------------------- | ----------------------------------------------------------------- |
+| `/hr/punch/dashboard` | `hr.punch-approvals.access` OR `hr.punch-approvals.admin` | Heatmap funcionário×dia + feed realtime + cards faltantes/devices |
+| `/hr/punch/approvals` | `hr.punch-approvals.access` OR `hr.punch-approvals.admin` | Fila de exceções com multi-select + PIN gate quando lote > 5      |
+| `/hr/punch/health`    | `hr.punch-approvals.admin` OR `hr.punch-devices.access`   | Status online/offline de PunchDevice em tempo real                |
+| `/hr/punch/missing`   | `hr.punch-approvals.access` OR `hr.punch-approvals.admin` | Lista de funcionários sem batida na data selecionada (job 22h)    |
+
+### Entry points
+
+- Card "Ponto — Gestor" em `/hr` (seção "Gestão de Tempo"), gated por
+  `hr.punch-approvals.access` — não renderiza se usuário não tem a permissão.
+
+### Realtime
+
+- Feed de batidas: Socket.IO `punch.time-entry.scoped` em room
+  `tenant:{id}:hr` — incremental via `queryClient.setQueryData` (não invalidate).
+- Status de dispositivos: Socket.IO `tenant.hr.devices.status-change` em room
+  `tenant:{id}:hr:admin` — incremental.
+- Hooks: `usePunchFeed()`, `usePunchDevicesHealth()`.
+
+### Sensitive operations
+
+- Resolver exceções em lote com > 5 selecionadas → `VerifyActionPinModal`
+  obrigatório (header `x-action-pin-token`).
+- Upload de PDF de evidência → header `x-action-pin-token` propagado por
+  `PunchEvidenceUploader`.
+
+### LGPD
+
+- Backend não retorna CPF nas 4 rotas (DTO sanitiza).
+- Filtros não usam CPF/PIS/CNPJ na query string.
+- Playwright sentinel valida ausência de "cpf" no DOM.

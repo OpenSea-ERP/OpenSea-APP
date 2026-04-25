@@ -286,6 +286,16 @@ const sections: {
         permission: HR_PERMISSIONS.EMPLOYEES.LIST,
       },
       {
+        id: 'punch-dashboard',
+        title: 'Ponto — Gestor',
+        description: 'Heatmap do time, exceções e exports',
+        icon: Clock,
+        href: '/hr/punch/dashboard',
+        gradient: 'from-blue-500 to-indigo-600',
+        hoverBg: 'hover:bg-blue-50 dark:hover:bg-blue-500/10',
+        permission: 'hr.punch-approvals.access',
+      },
+      {
         id: 'crachas',
         title: 'Crachás',
         description: 'Emissão de crachás e rotação de QR code',
