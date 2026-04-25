@@ -25,8 +25,7 @@ import {
 
 vi.mock('@/app/punch/api/punch.api', () => ({
   punchApi: {
-    clockIn: vi.fn(),
-    clockOut: vi.fn(),
+    executeClock: vi.fn(),
     getConfig: vi.fn(),
     validateGeofence: vi.fn(),
   },
@@ -94,7 +93,7 @@ describe('useOfflinePunch backoff (Plan 8-01)', () => {
       };
     });
 
-    (punchApi.clockOut as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (punchApi.executeClock as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'te-1',
     });
 
@@ -112,9 +111,12 @@ describe('useOfflinePunch backoff (Plan 8-01)', () => {
       await result.current.flushQueue();
     });
 
-    // Apenas a okPunch (status=pending) foi tentada.
-    expect(punchApi.clockOut).toHaveBeenCalledTimes(1);
-    expect(punchApi.clockIn).not.toHaveBeenCalled();
+    // Apenas a okPunch (status=pending) foi tentada — uma chamada via endpoint unificado.
+    expect(punchApi.executeClock).toHaveBeenCalledTimes(1);
+    const callArgs = (punchApi.executeClock as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(callArgs.entryType).toBe('CLOCK_OUT');
+    expect(callArgs.requestId).toBeTruthy();
     // okPunch removida; outras 2 ainda na fila.
     const after = await getPendingPunches();
     expect(after.find(p => p.id === okPunch.id)).toBeUndefined();
@@ -128,7 +130,7 @@ describe('useOfflinePunch backoff (Plan 8-01)', () => {
       type: 'CLOCK_IN',
     });
 
-    (punchApi.clockIn as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+    (punchApi.executeClock as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       new Error('network down')
     );
 
@@ -153,7 +155,7 @@ describe('useOfflinePunch backoff (Plan 8-01)', () => {
       employeeId: 'emp-1',
       type: 'CLOCK_IN',
     });
-    (punchApi.clockIn as ReturnType<typeof vi.fn>).mockRejectedValue(
+    (punchApi.executeClock as ReturnType<typeof vi.fn>).mockRejectedValue(
       new Error('network')
     );
 
@@ -214,7 +216,7 @@ describe('useOfflinePunch backoff (Plan 8-01)', () => {
       };
     });
 
-    (punchApi.clockIn as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (punchApi.executeClock as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'te-x',
     });
 
@@ -225,7 +227,11 @@ describe('useOfflinePunch backoff (Plan 8-01)', () => {
       await result.current.retryNow(punch.id);
     });
 
-    expect(punchApi.clockIn).toHaveBeenCalledTimes(1);
+    expect(punchApi.executeClock).toHaveBeenCalledTimes(1);
+    expect(
+      (punchApi.executeClock as ReturnType<typeof vi.fn>).mock.calls[0][0]
+        .entryType
+    ).toBe('CLOCK_IN');
     const after = await getPendingPunches();
     expect(after.find(p => p.id === punch.id)).toBeUndefined();
   });

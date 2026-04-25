@@ -1,11 +1,10 @@
 import { apiClient } from '@/lib/api-client';
-import { timeControlService } from '@/services/hr';
-import type { ClockInOutRequest } from '@/services/hr/time-control.service';
 import type {
   TimeEntry,
   PunchConfiguration,
   GeofenceValidationResult,
 } from '@/types/hr';
+import type { PunchType } from '@/lib/pwa/punch-db';
 
 export interface PunchRequest {
   employeeId: string;
@@ -14,26 +13,42 @@ export interface PunchRequest {
   notes?: string;
 }
 
-export const punchApi = {
-  async clockIn(data: PunchRequest): Promise<TimeEntry> {
-    const request: ClockInOutRequest = {
-      employeeId: data.employeeId,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      notes: data.notes,
-    };
-    const response = await timeControlService.clockIn(request);
-    return response.timeEntry;
-  },
+/**
+ * Body for the unified Phase 4-04 endpoint POST /v1/hr/punch/clock when
+ * called from the PWA (JWT auth). `requestId` is required for idempotency
+ * (server-wins) so retries from the offline queue don't double-record.
+ */
+export interface ExecuteClockRequest extends PunchRequest {
+  entryType: PunchType;
+  requestId: string;
+  /** ISO timestamp captured at the moment the user tapped the CTA. */
+  timestamp?: string;
+}
 
-  async clockOut(data: PunchRequest): Promise<TimeEntry> {
-    const request: ClockInOutRequest = {
-      employeeId: data.employeeId,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      notes: data.notes,
-    };
-    const response = await timeControlService.clockOut(request);
+interface ExecuteClockResponseRaw {
+  timeEntry: TimeEntry;
+}
+
+export const punchApi = {
+  /**
+   * POST /v1/hr/punch/clock — Phase 4-04 unified endpoint with idempotency
+   * via `requestId` (Plan 8-01 truth #3). Replaces the legacy
+   * /v1/hr/time-control/clock-(in|out) calls in both the online path and
+   * the offline-queue replay path of `useOfflinePunch`.
+   */
+  async executeClock(data: ExecuteClockRequest): Promise<TimeEntry> {
+    const response = await apiClient.post<ExecuteClockResponseRaw>(
+      '/v1/hr/punch/clock',
+      {
+        employeeId: data.employeeId,
+        entryType: data.entryType,
+        timestamp: data.timestamp,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        notes: data.notes,
+        requestId: data.requestId,
+      }
+    );
     return response.timeEntry;
   },
 

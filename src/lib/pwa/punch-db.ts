@@ -141,6 +141,13 @@ export interface EnqueuePunchInput {
   longitude?: number;
   photoData?: string;
   notes?: string;
+  /**
+   * Optional idempotency key — when the foreground submitter has already
+   * generated a `requestId` for the online attempt, it should pass the
+   * SAME key here on fallback so subsequent retries hit the server's
+   * idempotency cache instead of creating a duplicate batida.
+   */
+  requestId?: string;
 }
 
 export async function enqueuePunch(
@@ -162,7 +169,7 @@ export async function enqueuePunch(
     // Phase 8 / Plan 08-01 — D-05/D-06.
     status: 'pending',
     nextRetryAt: undefined,
-    requestId: crypto.randomUUID(),
+    requestId: input.requestId ?? crypto.randomUUID(),
   };
 
   await runTransaction('readwrite', store => store.add(pendingPunch));

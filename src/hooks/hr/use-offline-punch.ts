@@ -151,18 +151,17 @@ export function useOfflinePunch(): UseOfflinePunchReturn {
         if (punch.status === 'paused' || punch.status === 'expired') continue;
         if (punch.nextRetryAt && Date.now() < punch.nextRetryAt) continue;
 
-        const request: PunchRequest = {
-          employeeId: punch.employeeId,
-          latitude: punch.latitude,
-          longitude: punch.longitude,
-          notes: punch.notes,
-        };
         try {
-          if (punch.type === 'CLOCK_IN') {
-            await punchApi.clockIn(request);
-          } else {
-            await punchApi.clockOut(request);
-          }
+          await punchApi.executeClock({
+            employeeId: punch.employeeId,
+            entryType: punch.type,
+            timestamp: punch.timestamp,
+            latitude: punch.latitude,
+            longitude: punch.longitude,
+            notes: punch.notes,
+            // Phase 4-04 idempotency — server-wins on retries.
+            requestId: punch.requestId ?? crypto.randomUUID(),
+          });
           await removePunch(punch.id);
         } catch (err) {
           const message = err instanceof Error ? err.message : 'unknown';
@@ -216,6 +215,10 @@ export function useOfflinePunch(): UseOfflinePunchReturn {
     async (input: PunchInput): Promise<PunchOutcome> => {
       const { type, ...request } = input;
 
+      // Phase 4-04 idempotency: generate the requestId BEFORE the online
+      // attempt so the same key is reused on fallback to the offline queue.
+      const requestId = crypto.randomUUID();
+
       const queueLocally = async (): Promise<PunchOutcome> => {
         const pending = await enqueuePunch({
           employeeId: request.employeeId,
@@ -223,6 +226,7 @@ export function useOfflinePunch(): UseOfflinePunchReturn {
           latitude: request.latitude,
           longitude: request.longitude,
           notes: request.notes,
+          requestId,
         });
         await refreshPendingCount();
         return { status: 'queued', pending };
@@ -234,10 +238,14 @@ export function useOfflinePunch(): UseOfflinePunchReturn {
 
       setIsSubmitting(true);
       try {
-        const entry =
-          type === 'CLOCK_IN'
-            ? await punchApi.clockIn(request)
-            : await punchApi.clockOut(request);
+        const entry = await punchApi.executeClock({
+          employeeId: request.employeeId,
+          entryType: type,
+          latitude: request.latitude,
+          longitude: request.longitude,
+          notes: request.notes,
+          requestId,
+        });
         return { status: 'synced', entry };
       } catch {
         return queueLocally();
