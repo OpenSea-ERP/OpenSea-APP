@@ -8,10 +8,43 @@ import {
   Coffee,
   History,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo } from 'react';
 
+import {
+  PunchSyncStatusBadge,
+  type PunchSyncStatus,
+} from './punch-sync-status-badge';
+
+/**
+ * Phase 8 / Plan 08-03 / Task 1 (D-04 + D-07 + D-10).
+ *
+ * `TimeEntry` enriched with two PWA-only virtual fields:
+ *
+ * - `syncStatus`: 'pending' | 'syncing' | 'synced' | 'failed' — surfaced as a
+ *   `<PunchSyncStatusBadge>` per row. Calculated by the parent (which merges
+ *   server-side entries with IDB-pending entries from `useOfflinePunch`).
+ * - `canJustify`: boolean — when true, the row exposes an inline link to
+ *   `/punch/justify/{id}` so the employee can self-justify exceptions
+ *   (e.g. missed punches, geofence rejections, face-match retries).
+ *
+ * Both fields are optional so legacy rows that don't carry them stay rendering
+ * as today.
+ */
+export interface TimeEntryWithSync extends TimeEntry {
+  syncStatus?: PunchSyncStatus;
+  canJustify?: boolean;
+}
+
 interface TodayHistoryProps {
-  entries: TimeEntry[];
+  entries: TimeEntryWithSync[];
+  /**
+   * Phase 8 / Plan 08-03: when used inside `/punch/history` (extended view),
+   * the list is purely informational — the inline "Justificar" CTA is
+   * suppressed because the user is browsing past data, not resolving the
+   * current day. `/punch` keeps the default actionable behaviour.
+   */
+  readOnly?: boolean;
 }
 
 const TYPE_LABEL: Record<TimeEntry['entryType'], string> = {
@@ -23,7 +56,7 @@ const TYPE_LABEL: Record<TimeEntry['entryType'], string> = {
   OVERTIME_END: 'Fim da hora extra',
 };
 
-export function TodayHistory({ entries }: TodayHistoryProps) {
+export function TodayHistory({ entries, readOnly = false }: TodayHistoryProps) {
   const sorted = useMemo(
     () =>
       [...entries].sort(
@@ -44,7 +77,7 @@ export function TodayHistory({ entries }: TodayHistoryProps) {
       <header className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700/60">
         <History className="size-4 text-slate-500 dark:text-slate-400" />
         <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Hoje
+          {readOnly ? 'Histórico' : 'Hoje'}
         </h2>
         <span className="ml-auto text-xs text-slate-500 dark:text-slate-400 tabular-nums">
           {sorted.length} {sorted.length === 1 ? 'batida' : 'batidas'}
@@ -88,9 +121,21 @@ export function TodayHistory({ entries }: TodayHistoryProps) {
                   </p>
                 )}
               </div>
+              {entry.syncStatus && (
+                <PunchSyncStatusBadge status={entry.syncStatus} />
+              )}
               <span className="font-mono tabular-nums text-sm font-semibold text-slate-700 dark:text-slate-200">
                 {time}
               </span>
+              {!readOnly && entry.canJustify && (
+                <Link
+                  href={`/punch/justify/${entry.id}`}
+                  data-testid="punch-justify-link"
+                  className="text-xs font-semibold text-violet-600 dark:text-violet-300 hover:underline"
+                >
+                  Justificar
+                </Link>
+              )}
             </li>
           );
         })}

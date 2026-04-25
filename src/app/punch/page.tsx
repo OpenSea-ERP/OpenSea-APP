@@ -12,6 +12,7 @@ import { LiveClock } from './components/live-clock';
 import { LocationDisplay } from './components/location-display';
 import { PendingSyncBanner } from './components/pending-sync-banner';
 import { PunchReceipt } from './components/punch-receipt';
+import { PushConsentModal } from './components/push-consent-modal';
 import { PWAInstallBanner } from './components/pwa-install-banner';
 import { SelfieCapture } from './components/selfie-capture';
 import { StreakCounter } from './components/streak-counter';
@@ -64,6 +65,8 @@ function PunchPageContent() {
   const [kioskEmployee, setKioskEmployee] = useState<KioskEmployee | null>(
     null
   );
+  // Phase 8 / Plan 08-03 — D-03: push consent modal pós-1ª batida.
+  const [showPushConsent, setShowPushConsent] = useState(false);
   const locationRef = useRef<{ lat: number; lng: number } | null>(null);
   const kioskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -82,6 +85,34 @@ function PunchPageContent() {
     void registerPunchServiceWorker();
     void requestNotificationPermissionIfNeeded();
   }, []);
+
+  // Phase 8 / Plan 08-03 — D-03: Web Push consent prompt opens ~1.5s after the
+  // FIRST successful punch in the session. Skip when Notification.permission
+  // is already 'granted'/'denied', when the user already saw the modal once
+  // (localStorage 'push-consent-shown'), or when we're running in kiosk mode
+  // (which is shared across employees and shouldn't subscribe to anyone's
+  // push channel).
+  useEffect(() => {
+    if (!punchResult?.entry) return;
+    if (isKioskMode) return;
+    if (typeof window === 'undefined') return;
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'default') return;
+    try {
+      if (localStorage.getItem('push-consent-shown')) return;
+    } catch {
+      return;
+    }
+    const timer = setTimeout(() => {
+      setShowPushConsent(true);
+      try {
+        localStorage.setItem('push-consent-shown', Date.now().toString());
+      } catch {
+        /* localStorage unavailable — non-critical UX flag */
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [punchResult?.entry, isKioskMode]);
 
   // Native notification when a queued punch finishes syncing while user is here.
   const previousPendingRef = useRef(pendingCount);
@@ -155,9 +186,8 @@ function PunchPageContent() {
       todayParams.startDate,
     ],
     queryFn: async () => {
-      const { timeControlService } = await import(
-        '@/services/hr/time-control.service'
-      );
+      const { timeControlService } =
+        await import('@/services/hr/time-control.service');
       return timeControlService.listTimeEntries({
         employeeId: resolvedEmployeeId,
         startDate: todayParams.startDate,
@@ -172,9 +202,8 @@ function PunchPageContent() {
   const { data: streakEntriesPage } = useQuery({
     queryKey: ['punch-streak-entries', resolvedEmployeeId],
     queryFn: async () => {
-      const { timeControlService } = await import(
-        '@/services/hr/time-control.service'
-      );
+      const { timeControlService } =
+        await import('@/services/hr/time-control.service');
       const fromDate = new Date();
       fromDate.setDate(fromDate.getDate() - 30);
       return timeControlService.listTimeEntries({
@@ -487,6 +516,13 @@ function PunchPageContent() {
           </>
         )}
       </main>
+
+      {/* Phase 8 / Plan 08-03 — D-03: push consent prompt pós-1ª batida */}
+      <PushConsentModal
+        open={showPushConsent}
+        onClose={() => setShowPushConsent(false)}
+        employeeName={resolvedEmployeeName || user?.username || undefined}
+      />
     </div>
   );
 }
