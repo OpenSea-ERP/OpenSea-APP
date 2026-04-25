@@ -9,7 +9,7 @@ import { PageActionBar } from '@/components/layout/page-action-bar';
 import { PageDashboardSections } from '@/components/layout/page-dashboard-sections';
 import { PageHeroBanner } from '@/components/layout/page-hero-banner';
 import { usePermissions } from '@/hooks/use-permissions';
-import { Monitor, Printer, MonitorSmartphone } from 'lucide-react';
+import { Monitor, Printer, MonitorSmartphone, Smartphone } from 'lucide-react';
 
 const sections = [
   {
@@ -30,6 +30,16 @@ const sections = [
         description: 'Configure e monitore terminais de ponto de venda',
         icon: MonitorSmartphone,
         href: '/devices/pos-terminals',
+        gradient: 'from-violet-500 to-purple-600',
+        hoverBg: 'hover:bg-violet-50 dark:hover:bg-violet-500/10',
+      },
+      {
+        id: 'punch-pwa',
+        title: 'Punch PWA',
+        description:
+          'Distribua a PWA de ponto pessoal aos colaboradores (QR + cartaz)',
+        icon: Smartphone,
+        href: '/devices/downloads/punch-pwa',
         gradient: 'from-violet-500 to-purple-600',
         hoverBg: 'hover:bg-violet-50 dark:hover:bg-violet-500/10',
       },

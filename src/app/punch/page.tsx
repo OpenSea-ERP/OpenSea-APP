@@ -12,6 +12,7 @@ import { LiveClock } from './components/live-clock';
 import { LocationDisplay } from './components/location-display';
 import { PendingSyncBanner } from './components/pending-sync-banner';
 import { PunchReceipt } from './components/punch-receipt';
+import { PWAInstallBanner } from './components/pwa-install-banner';
 import { SelfieCapture } from './components/selfie-capture';
 import { StreakCounter } from './components/streak-counter';
 import { TodayHistory } from './components/today-history';
@@ -374,6 +375,11 @@ function PunchPageContent() {
           )}
         </div>
       </header>
+
+      {/* PWA install banner — only renders on mobile + non-standalone */}
+      <div className="mx-auto max-w-md px-4 pt-3">
+        <PWAInstallBanner />
+      </div>
 
       {/* Body */}
       <main className="mx-auto max-w-md space-y-4 px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
