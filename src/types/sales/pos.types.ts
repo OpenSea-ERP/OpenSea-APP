@@ -1,4 +1,12 @@
 // POS Terminal
+export interface PosTerminalPairingSummary {
+  id: string;
+  deviceLabel: string;
+  pairedAt: string;
+  lastSeenAt: string | null;
+  appVersion: string | null;
+}
+
 export type PosTerminalMode =
   | 'SALES_ONLY'
   | 'SALES_WITH_CHECKOUT'
@@ -23,6 +31,9 @@ export interface PosTerminal {
   isActive: boolean;
   hasPairing: boolean;
   defaultPriceTableId: string | null;
+  // Pairing summary + connectivity (only present in list responses; null when unpaired).
+  pairing?: PosTerminalPairingSummary | null;
+  isOnline?: boolean;
   // Emporion Fase 1 — operator session + coordination + applied profile.
   // Optional in the type because legacy seeds / older list responses may not
   // surface them; consumers should fall back to backend defaults.

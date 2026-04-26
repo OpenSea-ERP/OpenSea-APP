@@ -31,12 +31,11 @@ export default function TerminalConfigurePage() {
   const { data: terminal, isLoading, error, refetch } = usePosTerminal(id);
 
   const breadcrumbItems = [
-    { label: 'Vendas', href: '/sales' },
-    { label: 'PDV', href: '/sales/pos' },
-    { label: 'Terminais', href: '/sales/terminals' },
+    { label: 'Dispositivos', href: '/devices' },
+    { label: 'Terminais POS', href: '/devices/pos-terminals' },
     {
       label: terminal?.terminalName ?? 'Terminal',
-      href: `/sales/terminals#${id}`,
+      href: `/devices/pos-terminals#${id}`,
     },
     { label: 'Configuração' },
   ];

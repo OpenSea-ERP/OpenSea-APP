@@ -91,7 +91,7 @@ export default function PosPairPage() {
               ) : (
                 <p className="text-xs text-muted-foreground text-center">
                   Solicite o código ao administrador no painel{' '}
-                  <code className="font-mono">/sales/terminals</code>.
+                  <code className="font-mono">/devices/pos-terminals</code>.
                 </p>
               )}
             </div>
