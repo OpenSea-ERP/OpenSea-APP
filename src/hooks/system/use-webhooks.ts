@@ -3,6 +3,11 @@
  *
  * Golden rule: never `|| []`. Errors propagate to React Query.
  * Golden rule: useInfiniteQuery (não useQuery) — listings sempre infinite scroll.
+ *
+ * Backend contract (listWebhooksResponseSchema): { items, total, count }.
+ * Pagination: offset/limit (NOT page). React Query pageParam carries the
+ * cumulative offset; getNextPageParam returns next offset until
+ * loaded === total.
  */
 
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -26,29 +31,27 @@ export const WEBHOOKS_QUERY_KEYS = {
 export function useWebhooks(filters?: WebhookEndpointFilters) {
   const result = useInfiniteQuery({
     queryKey: WEBHOOKS_QUERY_KEYS.list(filters),
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 0 }) => {
       const response = await webhooksService.list({
-        page: pageParam as number,
+        offset: pageParam as number,
         limit: PAGE_SIZE,
         status: filters?.status,
         search: filters?.search,
       });
       return response;
     },
-    initialPageParam: 1,
-    getNextPageParam: lastPage => {
-      if (lastPage.meta.page < lastPage.meta.pages) {
-        return lastPage.meta.page + 1;
-      }
-      return undefined;
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((acc, p) => acc + p.items.length, 0);
+      return loaded < lastPage.total ? loaded : undefined;
     },
     staleTime: 30_000,
   });
 
   // Flatten without silent fallback — undefined while loading is OK
-  const items = result.data?.pages.flatMap(p => p.data);
-  const total = result.data?.pages[0]?.meta.total;
-  const counter = result.data?.pages[0]?.meta.count;
+  const items = result.data?.pages.flatMap(p => p.items);
+  const total = result.data?.pages[0]?.total;
+  const counter = result.data?.pages[0]?.count;
 
   return {
     ...result,

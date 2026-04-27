@@ -33,7 +33,7 @@ function buildEndpointQuery(
   if (!params) return '';
   if (params.status && params.status !== 'all') q.set('status', params.status);
   if (params.search) q.set('search', params.search);
-  if (params.page) q.set('page', String(params.page));
+  if (typeof params.offset === 'number') q.set('offset', String(params.offset));
   if (params.limit) q.set('limit', String(params.limit));
   const qs = q.toString();
   return qs ? `?${qs}` : '';
@@ -62,7 +62,7 @@ function buildDeliveryQuery(
   if (params.toDate) q.set('toDate', params.toDate);
   if (params.httpStatus !== undefined)
     q.set('httpStatus', String(params.httpStatus));
-  if (params.page) q.set('page', String(params.page));
+  if (typeof params.offset === 'number') q.set('offset', String(params.offset));
   if (params.limit) q.set('limit', String(params.limit));
   const qs = q.toString();
   return qs ? `?${qs}` : '';

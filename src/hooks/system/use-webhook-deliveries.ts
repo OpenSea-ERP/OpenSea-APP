@@ -1,9 +1,14 @@
 /**
  * useWebhookDeliveries — infinite scroll log + 30s polling (V1 A5).
  *
- * Refetch interval is 30s when the filter includes PENDING or FAILED (transient
- * states); idle (only DELIVERED/DEAD or 'all') uses no polling. Backend is the
- * source of truth — UI shows a snapshot.
+ * Refetch interval is 30s ONLY when the filter explicitly includes PENDING or
+ * FAILED (transient states). 'all' filter does NOT poll — backend snapshot is
+ * authoritative; admin pode refetchar manualmente. (WR-01 fix.)
+ *
+ * Backend contract (listDeliveriesResponseSchema): { items, total, count }.
+ * Pagination: offset/limit (NOT page). React Query pageParam carries the
+ * cumulative offset; getNextPageParam returns next offset until
+ * loaded === total.
  */
 
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -17,7 +22,7 @@ import { WEBHOOKS_QUERY_KEYS } from './use-webhooks';
 const DELIVERIES_PAGE_SIZE = 25;
 
 function shouldPoll(filters?: WebhookDeliveryFilters): boolean {
-  if (!filters || !filters.status || filters.status === 'all') return true;
+  if (!filters || !filters.status || filters.status === 'all') return false;
   const list = Array.isArray(filters.status)
     ? filters.status
     : [filters.status];
@@ -36,30 +41,30 @@ export function useWebhookDeliveries(
       id,
       filters as unknown as Record<string, unknown>
     ),
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 0 }) => {
       if (!webhookId) throw new Error('webhookId required');
       const response = await webhooksService.listDeliveries(webhookId, {
         ...filters,
-        page: pageParam as number,
+        offset: pageParam as number,
         limit: DELIVERIES_PAGE_SIZE,
       });
       return response;
     },
-    initialPageParam: 1,
-    getNextPageParam: lastPage => {
-      if (lastPage.meta.page < lastPage.meta.pages) {
-        return lastPage.meta.page + 1;
-      }
-      return undefined;
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((acc, p) => acc + p.items.length, 0);
+      return loaded < lastPage.total ? loaded : undefined;
     },
     enabled: !!webhookId,
-    // V1 A5 — React Query polling at 30_000 ms; Socket.IO is the v2 upgrade.
+    // V1 A5 — Polling 30s só quando filtro tem PENDING ou FAILED.
+    // 'all'/'DELIVERED'/'DEAD' não poll (idle states; WR-01 fix).
     refetchInterval: shouldPoll(filters) ? 30_000 : false,
     staleTime: 10_000,
   });
 
-  const items = result.data?.pages.flatMap(p => p.data);
-  const total = result.data?.pages[0]?.meta.total;
+  const items = result.data?.pages.flatMap(p => p.items);
+  const total = result.data?.pages[0]?.total;
+  const counter = result.data?.pages[0]?.count;
 
-  return { ...result, items, total };
+  return { ...result, items, total, counter };
 }
