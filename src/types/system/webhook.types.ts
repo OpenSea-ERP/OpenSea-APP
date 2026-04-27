@@ -1,6 +1,12 @@
 /**
  * Webhook outbound types — Phase 11
  * Mirrors backend DTOs from src/mappers/system/webhook-{endpoint,delivery}/*-to-dto.ts
+ *
+ * Canonical source: OpenSea-API/src/http/schemas/system/webhooks/webhook-schemas.ts
+ * - listWebhooksResponseSchema  → { items, total, count }
+ * - listDeliveriesResponseSchema → { items, total, count }
+ * - reprocessBulkResponseSchema → skipped* are string[] (delivery IDs), errors[].message
+ * - listWebhooksQuerySchema / listDeliveriesQuerySchema → use offset/limit (NOT page)
  */
 
 export type WebhookEndpointStatus = 'ACTIVE' | 'PAUSED' | 'AUTO_DISABLED';
@@ -55,6 +61,7 @@ export interface WebhookEndpointDTO {
 
 export interface WebhookDeliveryDTO {
   id: string;
+  tenantId: string;
   endpointId: string;
   eventId: string;
   eventType: string;
@@ -65,15 +72,14 @@ export interface WebhookDeliveryDTO {
   lastAttemptAt: string | null;
   lastHttpStatus: number | null;
   lastErrorClass: WebhookDeliveryErrorClass | null;
-  lastErrorMessageSanitized: string | null;
+  lastErrorMessage: string | null;
   lastDurationMs: number | null;
   /** truncated to ~1KB by backend */
-  lastResponseBody: string | null;
+  responseBodyTruncated: string | null;
   lastRetryAfterSeconds: number | null;
-  /** Format: 'v1=a3b1c...' — masked after first 8 hex chars */
-  signatureMasked: string | null;
-  attempts: AttemptLog[];
+  payloadHash: string;
   createdAt: string;
+  updatedAt: string | null;
 }
 
 export interface CreateWebhookRequest {
@@ -85,6 +91,11 @@ export interface CreateWebhookRequest {
 
 export interface UpdateWebhookRequest {
   description?: string | null;
+  /**
+   * @deprecated Backend `updateWebhookBodySchema` does NOT accept `apiVersion`
+   * (D-23 — versionamento imutável após criação). Field kept here for hypothetical
+   * caller compatibility; UI must NOT send it. To change version, recreate webhook.
+   */
   apiVersion?: string;
   subscribedEvents?: string[];
   status?: 'ACTIVE' | 'PAUSED';
@@ -102,13 +113,15 @@ export interface RegenerateWebhookSecretResponse {
   secret: string;
 }
 
+// Backend uses offset/limit, not page/limit. Frontend service computes offset from React Query pageParam.
 export interface WebhookEndpointFilters {
   status?: WebhookEndpointStatus | 'all';
   search?: string;
-  page?: number;
+  offset?: number;
   limit?: number;
 }
 
+// Backend uses offset/limit, not page/limit. Frontend service computes offset from React Query pageParam.
 export interface WebhookDeliveryFilters {
   status?: WebhookDeliveryStatus | WebhookDeliveryStatus[] | 'all';
   eventType?: string | string[];
@@ -117,16 +130,14 @@ export interface WebhookDeliveryFilters {
   /** ISO 8601 date or `YYYY-MM-DD` */
   toDate?: string;
   httpStatus?: number;
-  page?: number;
+  offset?: number;
   limit?: number;
 }
 
-export interface WebhookEndpointListMeta {
+export interface WebhookEndpointListResponse {
+  items: WebhookEndpointDTO[];
   total: number;
-  page: number;
-  limit: number;
-  pages: number;
-  count?: {
+  count: {
     active: number;
     paused: number;
     autoDisabled: number;
@@ -134,29 +145,24 @@ export interface WebhookEndpointListMeta {
   };
 }
 
-export interface WebhookEndpointListResponse {
-  data: WebhookEndpointDTO[];
-  meta: WebhookEndpointListMeta;
-}
-
-export interface WebhookDeliveryListMeta {
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
-}
-
 export interface WebhookDeliveryListResponse {
-  data: WebhookDeliveryDTO[];
-  meta: WebhookDeliveryListMeta;
+  items: WebhookDeliveryDTO[];
+  total: number;
+  count: {
+    pending: number;
+    delivered: number;
+    failed: number;
+    dead: number;
+    total: number;
+  };
 }
 
 export interface ReprocessBulkResponse {
   enqueued: number;
-  skippedCooldown: number;
-  skippedCap: number;
-  skippedNotFound: number;
-  errors: Array<{ deliveryId: string; reason: string }>;
+  skippedCooldown: string[];
+  skippedCap: string[];
+  skippedNotFound: string[];
+  errors: Array<{ deliveryId: string; message: string }>;
 }
 
 export interface PingWebhookResponse {
