@@ -36,7 +36,7 @@ import {
   useWebhook,
 } from '@/hooks/system';
 import { usePermissions } from '@/hooks/use-permissions';
-import { WEBHOOK_API_VERSIONS, type WebhookEventType } from '@/types/system';
+import { type WebhookEventType } from '@/types/system';
 import { ArrowRight, Save } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -55,7 +55,6 @@ export default function EditWebhookPage() {
   const regenerateSecret = useRegenerateWebhookSecret();
 
   const [description, setDescription] = useState('');
-  const [apiVersion, setApiVersion] = useState<string>(WEBHOOK_API_VERSIONS[0]);
   const [events, setEvents] = useState<WebhookEventType[]>([]);
   const [active, setActive] = useState(true);
 
@@ -68,7 +67,6 @@ export default function EditWebhookPage() {
   useEffect(() => {
     if (!webhook) return;
     setDescription(webhook.description ?? '');
-    setApiVersion(webhook.apiVersion);
     setEvents(webhook.subscribedEvents as WebhookEventType[]);
     setActive(webhook.status === 'ACTIVE');
   }, [webhook]);
@@ -89,7 +87,6 @@ export default function EditWebhookPage() {
       id: webhook.id,
       data: {
         description: description.trim() || null,
-        apiVersion,
         subscribedEvents: events,
         status: active ? 'ACTIVE' : 'PAUSED',
       },
@@ -317,26 +314,29 @@ export default function EditWebhookPage() {
           )}
         </Card>
 
-        {/* Versão de payload */}
-        <Card className="p-4 sm:p-6 space-y-5">
+        {/* Versão de payload — D-23: imutável após criação */}
+        <Card className="p-4 sm:p-6 space-y-3">
           <h2 className="font-semibold text-base">Versão do payload</h2>
-          <select
-            value={apiVersion}
-            onChange={e => setApiVersion(e.target.value)}
-            className="w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            {WEBHOOK_API_VERSIONS.map(v => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-          {apiVersion !== webhook.apiVersion && (
-            <p className="text-xs text-amber-700 dark:text-amber-300">
-              Alterar a versão pode quebrar integrações existentes — confirme
-              com o cliente externo.
+          <div className="space-y-2">
+            <Label htmlFor="webhook-api-version">Versão atual</Label>
+            <Input
+              id="webhook-api-version"
+              value={webhook.apiVersion}
+              readOnly
+              disabled
+              className="font-mono text-sm max-w-xs"
+            />
+            <p className="text-xs text-muted-foreground">
+              Para alterar a versão, recrie o webhook (D-23 — versionamento
+              imutável após criação).
+              <Link
+                href="/devices/webhooks/new"
+                className="ml-1 underline underline-offset-2 hover:text-foreground"
+              >
+                Recriar com nova versão →
+              </Link>
             </p>
-          )}
+          </div>
         </Card>
 
         {/* Secret */}
