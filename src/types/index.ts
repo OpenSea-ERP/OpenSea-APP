@@ -16,6 +16,7 @@ export * from './esocial';
 export * from './sales';
 export * from './stock';
 export * from './storage';
+export * from './system';
 // Tasks has naming conflicts with sales (Comment, CreateCommentRequest, UpdateCommentRequest).
 // Import from '@/types/tasks' directly for task-specific types.
 export {
