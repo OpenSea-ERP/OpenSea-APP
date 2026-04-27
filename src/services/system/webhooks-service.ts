@@ -3,7 +3,9 @@
  * Cliente axios para os 11 endpoints REST `/v1/system/webhooks/*` (Plan 11-02).
  *
  * PIN-gated mutations (delete, regenerate-secret, reactivate) recebem
- * `actionPin` e enviam via header `X-Action-Pin` (ADR-032 / Plan 11-02 Task 4).
+ * `actionPinToken` (JWT scope=action-pin emitido após VerifyActionPinModal)
+ * e enviam via header `x-action-pin-token` (Plan 11-02 Task 4 / verifyActionPin
+ * middleware @ src/http/middlewares/verify-action-pin.ts).
  */
 
 import { apiClient } from '@/lib/api-client';
@@ -91,31 +93,31 @@ export const webhooksService = {
     );
   },
 
-  delete(id: string, actionPin: string): Promise<{ ok: true }> {
+  delete(id: string, actionPinToken: string): Promise<{ ok: true }> {
     return apiClient.delete<{ ok: true }>(`${BASE}/${id}`, {
-      headers: { 'X-Action-Pin': actionPin },
+      headers: { 'x-action-pin-token': actionPinToken },
     });
   },
 
   regenerateSecret(
     id: string,
-    actionPin: string
+    actionPinToken: string
   ): Promise<RegenerateWebhookSecretResponse> {
     return apiClient.post<RegenerateWebhookSecretResponse>(
       `${BASE}/${id}/regenerate-secret`,
       {},
-      { headers: { 'X-Action-Pin': actionPin } }
+      { headers: { 'x-action-pin-token': actionPinToken } }
     );
   },
 
   reactivate(
     id: string,
-    actionPin: string
+    actionPinToken: string
   ): Promise<{ endpoint: WebhookEndpointDTO }> {
     return apiClient.post<{ endpoint: WebhookEndpointDTO }>(
       `${BASE}/${id}/reactivate`,
       {},
-      { headers: { 'X-Action-Pin': actionPin } }
+      { headers: { 'x-action-pin-token': actionPinToken } }
     );
   },
 

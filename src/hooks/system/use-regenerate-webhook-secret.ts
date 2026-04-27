@@ -11,8 +11,13 @@ import { WEBHOOKS_QUERY_KEYS } from './use-webhooks';
 export function useRegenerateWebhookSecret() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, actionPin }: { id: string; actionPin: string }) =>
-      webhooksService.regenerateSecret(id, actionPin),
+    mutationFn: ({
+      id,
+      actionPinToken,
+    }: {
+      id: string;
+      actionPinToken: string;
+    }) => webhooksService.regenerateSecret(id, actionPinToken),
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({
         queryKey: WEBHOOKS_QUERY_KEYS.detail(variables.id),
