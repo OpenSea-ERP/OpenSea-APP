@@ -91,14 +91,11 @@ export interface CreateWebhookRequest {
 
 export interface UpdateWebhookRequest {
   description?: string | null;
-  /**
-   * @deprecated Backend `updateWebhookBodySchema` does NOT accept `apiVersion`
-   * (D-23 — versionamento imutável após criação). Field kept here for hypothetical
-   * caller compatibility; UI must NOT send it. To change version, recreate webhook.
-   */
-  apiVersion?: string;
   subscribedEvents?: string[];
   status?: 'ACTIVE' | 'PAUSED';
+  // `apiVersion` is intentionally omitted — D-23 (versionamento imutável após
+  // criação). Backend `updateWebhookBodySchema` does NOT accept it. To change
+  // version, recreate the webhook via `/devices/webhooks/new`.
 }
 
 export interface CreateWebhookResponse {
