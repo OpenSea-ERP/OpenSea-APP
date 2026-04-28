@@ -92,19 +92,19 @@ export default function WebhookDetailPage() {
     'all' | WebhookDeliveryStatus
   >('all');
   const [eventFilter, setEventFilter] = useState<string>('all');
-  const [fromDate, setFromDate] = useState<string | null>(null);
-  const [toDate, setToDate] = useState<string | null>(null);
+  const [createdAfter, setCreatedAfter] = useState<string | null>(null);
+  const [createdBefore, setCreatedBefore] = useState<string | null>(null);
   const [httpStatus, setHttpStatus] = useState('');
 
   const deliveryFilters: WebhookDeliveryFilters = useMemo(
     () => ({
       status: statusFilter,
       eventType: eventFilter !== 'all' ? eventFilter : undefined,
-      fromDate: fromDate ?? undefined,
-      toDate: toDate ?? undefined,
+      createdAfter: createdAfter ?? undefined,
+      createdBefore: createdBefore ?? undefined,
       httpStatus: httpStatus ? Number(httpStatus) : undefined,
     }),
-    [statusFilter, eventFilter, fromDate, toDate, httpStatus]
+    [statusFilter, eventFilter, createdAfter, createdBefore, httpStatus]
   );
 
   const {
@@ -482,9 +482,9 @@ export default function WebhookDetailPage() {
                 <div className="space-y-1">
                   <Label className="text-xs">De</Label>
                   <DatePicker
-                    value={fromDate}
+                    value={createdAfter}
                     onChange={v =>
-                      setFromDate(typeof v === 'string' ? v : null)
+                      setCreatedAfter(typeof v === 'string' ? v : null)
                     }
                     placeholder="Data inicial"
                   />
@@ -493,8 +493,10 @@ export default function WebhookDetailPage() {
                 <div className="space-y-1">
                   <Label className="text-xs">Até</Label>
                   <DatePicker
-                    value={toDate}
-                    onChange={v => setToDate(typeof v === 'string' ? v : null)}
+                    value={createdBefore}
+                    onChange={v =>
+                      setCreatedBefore(typeof v === 'string' ? v : null)
+                    }
                     placeholder="Data final"
                   />
                 </div>

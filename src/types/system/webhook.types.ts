@@ -125,10 +125,16 @@ export interface WebhookEndpointFilters {
 export interface WebhookDeliveryFilters {
   status?: WebhookDeliveryStatus | WebhookDeliveryStatus[] | 'all';
   eventType?: string | string[];
-  /** ISO 8601 date or `YYYY-MM-DD` */
-  fromDate?: string;
-  /** ISO 8601 date or `YYYY-MM-DD` */
-  toDate?: string;
+  /**
+   * ISO 8601 date or `YYYY-MM-DD`.
+   * Mapped 1:1 to backend `listDeliveriesQuerySchema.createdAfter` (z.coerce.date()).
+   */
+  createdAfter?: string;
+  /**
+   * ISO 8601 date or `YYYY-MM-DD`.
+   * Mapped 1:1 to backend `listDeliveriesQuerySchema.createdBefore` (z.coerce.date()).
+   */
+  createdBefore?: string;
   httpStatus?: number;
   offset?: number;
   limit?: number;

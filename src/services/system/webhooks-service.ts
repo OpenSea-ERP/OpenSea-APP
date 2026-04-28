@@ -58,8 +58,8 @@ function buildDeliveryQuery(
       q.set('eventType', params.eventType);
     }
   }
-  if (params.fromDate) q.set('fromDate', params.fromDate);
-  if (params.toDate) q.set('toDate', params.toDate);
+  if (params.createdAfter) q.set('createdAfter', params.createdAfter);
+  if (params.createdBefore) q.set('createdBefore', params.createdBefore);
   if (params.httpStatus !== undefined)
     q.set('httpStatus', String(params.httpStatus));
   if (typeof params.offset === 'number') q.set('offset', String(params.offset));
