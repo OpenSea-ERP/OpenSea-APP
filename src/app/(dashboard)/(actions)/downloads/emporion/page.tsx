@@ -32,7 +32,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FaWindows } from 'react-icons/fa';
 
-const GITHUB_REPO = 'OpenSea-ERP/OpenSea-Emporion';
+// Releases moram no repo público — o repo principal Emporion é privado
+// (privacy = source code) mas o release.yml publica os installers para o
+// repo público OpenSea-Emporion-Releases. GitHub API anônima só consegue
+// listar releases de repos públicos.
+const GITHUB_REPO = 'OpenSea-ERP/OpenSea-Emporion-Releases';
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}/releases`;
 
 interface GitHubAsset {

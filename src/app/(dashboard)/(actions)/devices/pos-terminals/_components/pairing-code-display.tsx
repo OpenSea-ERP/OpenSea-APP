@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { usePairingCode } from '@/hooks/sales';
-import { Loader2 } from 'lucide-react';
+import { Check, Copy, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface PairingCodeDisplayProps {
   terminalId: string;
@@ -16,6 +17,7 @@ export function PairingCodeDisplay({
 }: PairingCodeDisplayProps) {
   const { data, isLoading, refetch } = usePairingCode(terminalId);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!data?.expiresAt) return;
@@ -34,6 +36,18 @@ export function PairingCodeDisplay({
     return () => clearInterval(interval);
   }, [data?.expiresAt, refetch]);
 
+  async function handleCopy() {
+    if (!data?.code) return;
+    try {
+      await navigator.clipboard.writeText(data.code);
+      setCopied(true);
+      toast.success('Código copiado para a área de transferência');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Não foi possível copiar o código');
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -50,10 +64,24 @@ export function PairingCodeDisplay({
           <span className="text-sm">Gerando...</span>
         </div>
       ) : (
-        <div className="flex items-baseline justify-between gap-3">
-          <p className="font-mono text-2xl font-bold text-violet-700 dark:text-violet-200 tracking-widest">
-            {data.code}
-          </p>
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={handleCopy}
+            title="Clique para copiar"
+            className={cn(
+              'group flex items-center gap-2 font-mono text-2xl font-bold text-violet-700 dark:text-violet-200 tracking-widest',
+              'hover:text-violet-900 dark:hover:text-violet-100 transition-colors',
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 rounded'
+            )}
+          >
+            <span>{data.code}</span>
+            {copied ? (
+              <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Copy className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+            )}
+          </button>
           <p className="text-xs text-violet-700 dark:text-violet-300 whitespace-nowrap">
             Expira em{' '}
             <span className="font-mono font-semibold">{secondsLeft}s</span>

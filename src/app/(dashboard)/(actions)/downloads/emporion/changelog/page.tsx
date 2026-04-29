@@ -17,7 +17,9 @@ import { cn } from '@/lib/utils';
 import { History, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-const GITHUB_REPO = 'OpenSea-ERP/OpenSea-Emporion';
+// Repo público onde os installers são publicados (release.yml).
+// O repo principal Emporion é privado e a GitHub API anônima retorna 404.
+const GITHUB_REPO = 'OpenSea-ERP/OpenSea-Emporion-Releases';
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}/releases`;
 
 interface GitHubAsset {

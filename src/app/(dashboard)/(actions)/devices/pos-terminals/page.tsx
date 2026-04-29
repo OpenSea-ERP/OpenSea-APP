@@ -67,6 +67,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { PairingCodeDisplay } from './_components/pairing-code-display';
+import { EditTerminalDialog } from './_components/edit-terminal-dialog';
 
 const DEVICE_TOKEN_KEY = 'pos_device_token';
 
@@ -188,6 +189,7 @@ export default function PosTerminalsPage() {
   // Destructive action modals
   const [deleteTarget, setDeleteTarget] = useState<PosTerminal | null>(null);
   const [unpairTarget, setUnpairTarget] = useState<PosTerminal | null>(null);
+  const [editTarget, setEditTarget] = useState<PosTerminal | null>(null);
 
   // Device-already-paired state (to hide "Pair this device" button)
   const [hasLocalDeviceToken, setHasLocalDeviceToken] = useState(false);
@@ -507,7 +509,9 @@ export default function PosTerminalsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
                             {canModify && (
-                              <DropdownMenuItem disabled>
+                              <DropdownMenuItem
+                                onClick={() => setEditTarget(terminal)}
+                              >
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Editar
                               </DropdownMenuItem>
@@ -703,6 +707,15 @@ export default function PosTerminalsPage() {
         onSuccess={handleConfirmUnpair}
         title="Revogar pareamento"
         description={`Digite seu PIN de ação para revogar o pareamento de "${unpairTarget?.terminalName ?? ''}".`}
+      />
+
+      {/* Editar terminal — Geral + Zonas */}
+      <EditTerminalDialog
+        open={!!editTarget}
+        terminal={editTarget}
+        onOpenChange={open => {
+          if (!open) setEditTarget(null);
+        }}
       />
     </PageLayout>
   );
