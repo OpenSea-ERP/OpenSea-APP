@@ -3,13 +3,6 @@
  * Facilita importação em páginas de entidades
  */
 
-// Layout
-export { PageHeader } from './layout/page-header';
-export type { PageHeaderAction, PageHeaderConfig } from './layout/page-header';
-
-export { EntityListPage } from './layout/entity-list-page';
-export type { EntityListPageConfig } from './layout/entity-list-page';
-
 // Forms
 export { AttributeManager } from './forms/attribute-manager';
 export { DynamicFormField } from './forms/dynamic-form-field';
