@@ -7,7 +7,18 @@ npm run dev                    # Start Next.js dev server (http://localhost:3000
 npm run build                  # Build for production
 npm run lint                   # Check with ESLint
 npm run test:e2e               # Run Playwright E2E tests
+npm run storybook              # Start Storybook + MCP (http://localhost:6006, /mcp endpoint)
+npm run build-storybook        # Build static Storybook (storybook-static/)
+npm run storybook:coverage     # Check coverage of new components vs stories
 ```
+
+## Storybook (catálogo de componentes via MCP)
+
+- **Local:** `npm run storybook` → http://localhost:6006 (UI + MCP em `/mcp`)
+- **Deployed:** https://opensea-storybook.fly.dev (auto-stop quando ocioso)
+- **Convenções, mocks globais, snapshot baseline:** [docs/patterns/storybook-pattern.md](./docs/patterns/storybook-pattern.md)
+- **Regra D:** todo componente novo em `components/ui/`, `components/shared/` ou `components/layout/` precisa `.stories.tsx` no mesmo PR. Hook pre-commit avisa se faltar (warn-only).
+- **Infra files:** `.storybook/`, `Dockerfile.storybook`, `fly.storybook.toml`, `.github/workflows/storybook-deploy.yml`, `scripts/check-storybook-coverage.mjs`
 
 ## Path Aliases
 

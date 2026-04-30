@@ -1,0 +1,2 @@
+node scripts/check-storybook-coverage.mjs
+npx lint-staged

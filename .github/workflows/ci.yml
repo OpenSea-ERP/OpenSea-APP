@@ -82,3 +82,28 @@ jobs:
 
       - name: Verify build output
         run: test -d .next
+
+  # Runs Storybook stories as Vitest tests in a real browser (Playwright).
+  # Blocks the PR on accessibility violations (serious/critical) because
+  # parameters.a11y.test === 'error' in .storybook/preview.tsx.
+  storybook-tests:
+    name: Storybook a11y + smoke tests
+    runs-on: ubuntu-latest
+    needs: lint-format-typecheck
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Storybook tests (a11y gate)
+        run: npm run test:storybook

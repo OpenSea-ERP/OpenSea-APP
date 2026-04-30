@@ -18,6 +18,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "storybook:coverage": "node scripts/check-storybook-coverage.mjs",
+    "test:storybook": "vitest run --project=storybook",
+    "prepare": "husky",
     "api:export": "cd ../OpenSea-API && npx tsx scripts/export-swagger.ts"
   },
   "dependencies": {
@@ -150,6 +152,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@vitest/browser": "^4.1.5",
+    "@vitest/browser-playwright": "^4.1.5",
     "@vitest/coverage-v8": "^4.0.18",
     "baseline-browser-mapping": "^2.10.0",
     "cross-env": "^7.0.3",

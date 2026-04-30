@@ -1,0 +1,26 @@
+# Storybook + MCP container — Estratégia B (dev server em produção).
+#
+# addon-mcp 0.6.0 expõe /mcp via Vite middleware do dev server. Build
+# estático servido por `serve`/nginx NÃO expõe o endpoint. Validação
+# feita na Fase 1 (smoke local). Memory bumpado para 512mb (Vite + MCP).
+
+FROM node:22-alpine AS deps
+WORKDIR /app
+RUN apk add --no-cache libc6-compat
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+FROM node:22-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache libc6-compat
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Pre-warm o build estático pra reduzir cold start. O dev server ainda é
+# o que serve /mcp, mas o cache de Vite acelera o boot.
+RUN npm run build-storybook -- -o /app/storybook-static || true
+
+ENV NODE_ENV=production
+EXPOSE 6006
+
+CMD ["npx", "storybook", "dev", "-p", "6006", "-h", "0.0.0.0", "--ci", "--no-open"]

@@ -12,33 +12,36 @@ These rules MUST be followed in EVERY file. Violations block PR merge.
 
 ### Backend
 
-| # | Rule | Source |
-|---|---|---|
-| 1 | **EVERY controller uses `preHandler`** (never `onRequest`) | Stock pattern. Finance used `onRequest` — WRONG |
-| 2 | **EVERY endpoint has full middleware chain:** `[verifyJwt, verifyTenant, createPermissionMiddleware({...})]` | Stock pattern |
-| 3 | **EVERY CREATE endpoint adds `createPlanLimitsMiddleware`** | Stock has it. Finance MISSING — caused unlimited creation |
-| 4 | **EVERY repository query filters by `tenantId` AND `deletedAt: null`** | Stock pattern. Missing tenant = data leak between tenants |
-| 5 | **EVERY list repository uses pagination** (`skip/take` + count) | Stock pattern. Finance Bank Accounts/Cost Centers MISSING pagination |
-| 6 | **EVERY domain entity uses soft delete** (`deletedAt DateTime?`) | Stock pattern |
-| 7 | **EVERY write operation logs to audit** via `logAudit()` with humanized PT-BR text | Stock pattern |
-| 8 | **EVERY error uses typed errors** (`BadRequestError`, `ResourceNotFoundError`, `ForbiddenError`) | Stock pattern. Finance catches only `BadRequestError` — incomplete |
-| 9 | **Zod schemas on ALL inputs** with `.describe()` for Swagger | Stock has it. Finance list schemas MISSING descriptions |
-| 10 | **Module middleware at route group level** via `createModuleMiddleware('SALES')` | Consistent across Stock/HR/Finance |
+| #   | Rule                                                                                                         | Source                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| 1   | **EVERY controller uses `preHandler`** (never `onRequest`)                                                   | Stock pattern. Finance used `onRequest` — WRONG                      |
+| 2   | **EVERY endpoint has full middleware chain:** `[verifyJwt, verifyTenant, createPermissionMiddleware({...})]` | Stock pattern                                                        |
+| 3   | **EVERY CREATE endpoint adds `createPlanLimitsMiddleware`**                                                  | Stock has it. Finance MISSING — caused unlimited creation            |
+| 4   | **EVERY repository query filters by `tenantId` AND `deletedAt: null`**                                       | Stock pattern. Missing tenant = data leak between tenants            |
+| 5   | **EVERY list repository uses pagination** (`skip/take` + count)                                              | Stock pattern. Finance Bank Accounts/Cost Centers MISSING pagination |
+| 6   | **EVERY domain entity uses soft delete** (`deletedAt DateTime?`)                                             | Stock pattern                                                        |
+| 7   | **EVERY write operation logs to audit** via `logAudit()` with humanized PT-BR text                           | Stock pattern                                                        |
+| 8   | **EVERY error uses typed errors** (`BadRequestError`, `ResourceNotFoundError`, `ForbiddenError`)             | Stock pattern. Finance catches only `BadRequestError` — incomplete   |
+| 9   | **Zod schemas on ALL inputs** with `.describe()` for Swagger                                                 | Stock has it. Finance list schemas MISSING descriptions              |
+| 10  | **Module middleware at route group level** via `createModuleMiddleware('SALES')`                             | Consistent across Stock/HR/Finance                                   |
 
 ### Frontend
 
-| # | Rule | Source |
-|---|---|---|
-| 11 | **NEVER use traditional pagination** — always `useInfiniteQuery` + IntersectionObserver sentinel | CLAUDE.md rule. Finance Receivable/Payable/Loans VIOLATE this |
-| 12 | **EVERY list hook uses `useInfiniteQuery`** (never `useQuery` for lists) | Stock pattern. Finance hooks use basic `useQuery` — WRONG |
-| 13 | **EVERY destructive action uses `VerifyActionPinModal`** (never `confirm()`) | CLAUDE.md rule. Finance detail pages use `confirm()` — WRONG |
-| 14 | **Permission gating: HIDE elements** (never disable) | CLAUDE.md rule. Finance detail pages MISSING permission checks |
-| 15 | **Filters go inside EntityGrid via `toolbarStart`** | CLAUDE.md rule. Finance puts filters in separate Card above — WRONG |
-| 16 | **Edit pages follow: PageLayout > PageActionBar (Delete+Save) > Identity Card > Form Card** | Stock pattern. Finance edit pages redirect to detail — incomplete |
-| 17 | **All user-facing text in formal Portuguese with accents** | CLAUDE.md rule |
-| 18 | **Context menu order: View → Edit → [Custom] → Delete (destructive last)** | CLAUDE.md rule |
-| 19 | **Loading states use `GridLoading`**, error states use `GridError` | Stock pattern. Finance uses basic skeletons — inconsistent |
-| 20 | **URL-synced filters** using `useSearchParams` + `router.push` | Stock products page pattern |
+| #   | Rule                                                                                                                                                                                                                                                                                        | Source                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 11  | **NEVER use traditional pagination** — always `useInfiniteQuery` + IntersectionObserver sentinel                                                                                                                                                                                            | CLAUDE.md rule. Finance Receivable/Payable/Loans VIOLATE this          |
+| 12  | **EVERY list hook uses `useInfiniteQuery`** (never `useQuery` for lists)                                                                                                                                                                                                                    | Stock pattern. Finance hooks use basic `useQuery` — WRONG              |
+| 13  | **EVERY destructive action uses `VerifyActionPinModal`** (never `confirm()`)                                                                                                                                                                                                                | CLAUDE.md rule. Finance detail pages use `confirm()` — WRONG           |
+| 14  | **Permission gating: HIDE elements** (never disable)                                                                                                                                                                                                                                        | CLAUDE.md rule. Finance detail pages MISSING permission checks         |
+| 15  | **Filters go inside EntityGrid via `toolbarStart`**                                                                                                                                                                                                                                         | CLAUDE.md rule. Finance puts filters in separate Card above — WRONG    |
+| 16  | **Edit pages follow: PageLayout > PageActionBar (Delete+Save) > Identity Card > Form Card**                                                                                                                                                                                                 | Stock pattern. Finance edit pages redirect to detail — incomplete      |
+| 17  | **All user-facing text in formal Portuguese with accents**                                                                                                                                                                                                                                  | CLAUDE.md rule                                                         |
+| 18  | **Context menu order: View → Edit → [Custom] → Delete (destructive last)**                                                                                                                                                                                                                  | CLAUDE.md rule                                                         |
+| 19  | **Loading states use `GridLoading`**, error states use `GridError`                                                                                                                                                                                                                          | Stock pattern. Finance uses basic skeletons — inconsistent             |
+| 20  | **URL-synced filters** using `useSearchParams` + `router.push`                                                                                                                                                                                                                              | Stock products page pattern                                            |
+| 21  | **Storybook coverage:** todo componente novo (ou modificado) em `components/ui/`, `components/shared/` ou `components/layout/` precisa de `.stories.tsx` co-localizado no mesmo PR. Componentes de módulo (`components/<modulo>/...`) só viram story quando padrão se repete em 3+ módulos. | Storybook adoção 2026-04-30 — ver `docs/patterns/storybook-pattern.md` |
+
+> **Por quê regra 21:** Storybook expõe catálogo via MCP pra agentes (Claude Code) consultarem antes de criar páginas. Sem story, agente não enxerga o padrão e replica errado em outras páginas. Hook pre-commit `npm run storybook:coverage` avisa quando faltar (warn-only, não bloqueia).
 
 ---
 
@@ -57,57 +60,62 @@ import { AUDIT_MESSAGES } from '@/constants/audit-messages';
 import type { FastifyInstance } from 'fastify';
 
 export async function v1CreateCustomerController(app: FastifyInstance) {
-  app.post('/v1/customers', {
-    schema: {
-      tags: ['Sales - Customers'],
-      summary: 'Criar novo cliente',
-      body: createCustomerSchema,
-      response: {
-        201: z.object({ customer: customerResponseSchema }),
-        400: z.object({ message: z.string() }),
+  app.post(
+    '/v1/customers',
+    {
+      schema: {
+        tags: ['Sales - Customers'],
+        summary: 'Criar novo cliente',
+        body: createCustomerSchema,
+        response: {
+          201: z.object({ customer: customerResponseSchema }),
+          400: z.object({ message: z.string() }),
+        },
+        security: [{ bearerAuth: [] }],
       },
-      security: [{ bearerAuth: [] }],
+      preHandler: [
+        // ← ALWAYS preHandler, NEVER onRequest
+        verifyJwt,
+        verifyTenant,
+        createPlanLimitsMiddleware('contacts'), // ← ONLY on CREATE endpoints
+        createPermissionMiddleware({
+          permissionCode: PermissionCodes.SALES.CUSTOMERS.REGISTER,
+          resource: 'customers',
+        }),
+      ],
     },
-    preHandler: [                           // ← ALWAYS preHandler, NEVER onRequest
-      verifyJwt,
-      verifyTenant,
-      createPlanLimitsMiddleware('contacts'), // ← ONLY on CREATE endpoints
-      createPermissionMiddleware({
-        permissionCode: PermissionCodes.SALES.CUSTOMERS.REGISTER,
-        resource: 'customers',
-      }),
-    ],
-  }, async (request, reply) => {
-    const userId = request.user.sub;
-    const tenantId = request.user.tenantId!;  // ← ALWAYS from JWT, never from body
+    async (request, reply) => {
+      const userId = request.user.sub;
+      const tenantId = request.user.tenantId!; // ← ALWAYS from JWT, never from body
 
-    try {
-      const useCase = makeCreateCustomerUseCase();
-      const { customer } = await useCase.execute({
-        tenantId,
-        ...request.body,
-      });
+      try {
+        const useCase = makeCreateCustomerUseCase();
+        const { customer } = await useCase.execute({
+          tenantId,
+          ...request.body,
+        });
 
-      // Audit logging
-      const userName = await getUserName(userId);
-      await logAudit(request, {
-        message: AUDIT_MESSAGES.SALES.CUSTOMER_CREATE,
-        entityId: customer.id.toString(),
-        placeholders: { userName, customerName: customer.name },
-        newData: request.body,
-      });
+        // Audit logging
+        const userName = await getUserName(userId);
+        await logAudit(request, {
+          message: AUDIT_MESSAGES.SALES.CUSTOMER_CREATE,
+          entityId: customer.id.toString(),
+          placeholders: { userName, customerName: customer.name },
+          newData: request.body,
+        });
 
-      return reply.status(201).send({ customer: customerToDTO(customer) });
-    } catch (error) {
-      if (error instanceof BadRequestError) {
-        return reply.status(400).send({ message: error.message });
+        return reply.status(201).send({ customer: customerToDTO(customer) });
+      } catch (error) {
+        if (error instanceof BadRequestError) {
+          return reply.status(400).send({ message: error.message });
+        }
+        if (error instanceof ResourceNotFoundError) {
+          return reply.status(404).send({ message: error.message });
+        }
+        throw error; // ← Let Fastify handle unexpected errors
       }
-      if (error instanceof ResourceNotFoundError) {
-        return reply.status(404).send({ message: error.message });
-      }
-      throw error;  // ← Let Fastify handle unexpected errors
     }
-  });
+  );
 }
 ```
 
@@ -215,7 +223,7 @@ export function useCustomersInfinite(filters?: CustomersFilters) {
       });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       if (lastPage.meta.page < lastPage.meta.pages) {
         return lastPage.meta.page + 1;
       }
@@ -368,20 +376,20 @@ return (
 
 ## 4. Finance Anti-Patterns (WHAT NOT TO DO)
 
-| Anti-Pattern | Where in Finance | Correct Pattern |
-|---|---|---|
-| `onRequest` for middleware | ALL controllers | Use `preHandler` |
-| No `createPlanLimitsMiddleware` on CREATE | ALL create controllers | Add it |
-| `confirm()` for delete | Bank Accounts, Cost Centers detail | `VerifyActionPinModal` |
-| `useQuery` for lists | All list hooks | `useInfiniteQuery` |
-| Traditional pagination buttons | Receivable, Payable, Loans pages | IntersectionObserver sentinel |
-| Filters in Card above table | Receivable page | Inside `EntityGrid` via `toolbarStart` |
-| No permission checks on buttons | Detail page delete buttons | `hasPermission()` → hide |
-| Edit page redirects to detail | Bank Accounts, Cost Centers | Full edit form |
-| Basic skeleton loading | Detail pages | `GridLoading` component |
-| Catch only `BadRequestError` | All controllers | Catch `BadRequestError` + `ResourceNotFoundError` + rethrow |
-| No `.describe()` on query schemas | List schemas | Add descriptions for Swagger |
-| Repository returns all items (no pagination) | Bank Accounts, Cost Centers | Always paginate |
+| Anti-Pattern                                 | Where in Finance                   | Correct Pattern                                             |
+| -------------------------------------------- | ---------------------------------- | ----------------------------------------------------------- |
+| `onRequest` for middleware                   | ALL controllers                    | Use `preHandler`                                            |
+| No `createPlanLimitsMiddleware` on CREATE    | ALL create controllers             | Add it                                                      |
+| `confirm()` for delete                       | Bank Accounts, Cost Centers detail | `VerifyActionPinModal`                                      |
+| `useQuery` for lists                         | All list hooks                     | `useInfiniteQuery`                                          |
+| Traditional pagination buttons               | Receivable, Payable, Loans pages   | IntersectionObserver sentinel                               |
+| Filters in Card above table                  | Receivable page                    | Inside `EntityGrid` via `toolbarStart`                      |
+| No permission checks on buttons              | Detail page delete buttons         | `hasPermission()` → hide                                    |
+| Edit page redirects to detail                | Bank Accounts, Cost Centers        | Full edit form                                              |
+| Basic skeleton loading                       | Detail pages                       | `GridLoading` component                                     |
+| Catch only `BadRequestError`                 | All controllers                    | Catch `BadRequestError` + `ResourceNotFoundError` + rethrow |
+| No `.describe()` on query schemas            | List schemas                       | Add descriptions for Swagger                                |
+| Repository returns all items (no pagination) | Bank Accounts, Cost Centers        | Always paginate                                             |
 
 ---
 
@@ -462,6 +470,7 @@ New pattern: hide entire sections/pages based on skills
 ## 6. File Naming Conventions
 
 ### Backend
+
 ```
 Controller:     v1-{action}-{resource}.controller.ts     (e.g., v1-create-customer.controller.ts)
 Schema:         {resource}.schema.ts                      (e.g., customer.schema.ts)
@@ -480,6 +489,7 @@ Audit:          sales.messages.ts                          (in constants/audit-m
 ```
 
 ### Frontend
+
 ```
 Page:           page.tsx                                   (Next.js convention)
 Hook:           use-{resource}.ts                          (e.g., use-customers.ts)
