@@ -15,6 +15,9 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "storybook:coverage": "node scripts/check-storybook-coverage.mjs",
     "api:export": "cd ../OpenSea-API && npx tsx scripts/export-swagger.ts"
   },
   "dependencies": {
@@ -132,6 +135,11 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@storybook/addon-a11y": "10.3.6",
+    "@storybook/addon-mcp": "0.6.0",
+    "@storybook/addon-themes": "10.3.6",
+    "@storybook/addon-vitest": "10.3.6",
+    "@storybook/nextjs-vite": "10.3.6",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -154,6 +162,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.2.14",
     "prettier": "^3.6.2",
+    "storybook": "10.3.6",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18",

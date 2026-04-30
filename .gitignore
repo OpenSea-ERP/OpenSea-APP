@@ -151,3 +151,6 @@ src/types/generated/
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Storybook build output
+storybook-static/

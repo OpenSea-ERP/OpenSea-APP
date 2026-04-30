@@ -9,12 +9,15 @@ type: feedback
 ## 1. React Query / useEntityCrud — Response Handling
 
 ### The Rule
+
 In `listFn`, `createFn`, `updateFn`, `getFn` passed to `useEntityCrud`: **ALWAYS access response fields directly, NEVER use fallback operators.**
 
 ### Why This Matters
+
 When a token expires and the API returns an error object instead of the expected response shape, `|| []` turns the error into a silent "success with 0 items". React Query caches this empty result, never retries, and the user sees a blank page with no error message. Only a hard refresh fixes it.
 
 ### Correct Pattern
+
 ```ts
 // CORRECT - error propagates, React Query shows error state + retries
 listFn: async () => {
@@ -26,6 +29,7 @@ createFn: (data) => productsService.createProduct(data).then(r => r.product),
 ```
 
 ### Anti-Patterns (NEVER DO THIS)
+
 ```ts
 // BAD: || [] silently swallows errors
 return response.manufacturers || [];
@@ -42,6 +46,7 @@ let items = Array.isArray(response) ? response : response.manufacturers || [];
 ## 2. EntityGrid — Filter Placement
 
 ### The Rule
+
 FilterDropdown components go **inside** EntityGrid via the `toolbarStart` prop, NOT as a separate `<div>` between SearchBar and the grid.
 
 ```tsx
@@ -71,7 +76,9 @@ Every entity listing page follows this structure inside `<PageBody>`:
 **Important**: We no longer use View or Edit modals on listing pages. View navigates to `/entity/[id]`, Edit navigates to `/entity/[id]/edit`.
 
 ### Item Count Format
+
 Use `showItemCount={false}` + custom `toolbarStart` to show "Total de X items":
+
 ```tsx
 <EntityGrid
   showItemCount={false}
@@ -84,6 +91,7 @@ Use `showItemCount={false}` + custom `toolbarStart` to show "Total de X items":
 ```
 
 ### Grid Card Pattern
+
 - **Title**: Entity name
 - **Subtitle**: Secondary identifier (e.g., CNPJ formatado, unit of measure)
 - **Badges**: Colored chips with flag support — country with `CircleFlag`, code with `Hash`, status, features
@@ -91,6 +99,7 @@ Use `showItemCount={false}` + custom `toolbarStart` to show "Total de X items":
 - **Sensitive data**: Do NOT show ratings/evaluations on listing cards — only inside detail page
 
 ### List Card Pattern
+
 The `EntityCard` title prop accepts `ReactNode`, allowing composition of title + inline elements.
 
 - **Line 1 (title)**: Name + secondary info as muted text (e.g., CNPJ, unit abbreviation)
@@ -137,6 +146,7 @@ metadata={
 ```
 
 ### Badge Color Convention
+
 - **Slate**: Codes, identifiers (e.g., manufacturer code with `Hash` icon)
 - **Violet**: Country/origin (with `CircleFlag` when available)
 - **Blue** (sky): Quantity/count info, features (website)
@@ -146,10 +156,14 @@ metadata={
 - All badges use dual-theme: `border-{color}-600/25 dark:border-{color}-500/20 bg-{color}-50 dark:bg-{color}-500/8 text-{color}-700 dark:text-{color}-300`
 
 ### Country Badge with Flag
+
 Use `CircleFlag` from `react-circle-flags` + `COUNTRIES` from `@/components/ui/country-select` to resolve country name → ISO code:
+
 ```tsx
 function getCountryCodeFromName(name: string): string | null {
-  const match = COUNTRIES.find(c => c.name.toLowerCase() === name.toLowerCase().trim());
+  const match = COUNTRIES.find(
+    c => c.name.toLowerCase() === name.toLowerCase().trim()
+  );
   return match?.code ?? null;
 }
 // In badge: flag: cc && cc !== 'OTHER' ? cc.toLowerCase() : undefined
@@ -199,6 +213,7 @@ All actions conditioned on RBAC permissions. If user lacks permission, element *
 ## 8. Detail/Edit Pages — Layout & Structure
 
 ### Page Layout
+
 All detail and edit pages use `PageLayout > PageHeader > PageBody`:
 
 ```tsx
@@ -214,35 +229,44 @@ All detail and edit pages use `PageLayout > PageHeader > PageBody`:
 ```
 
 ### Loading & Error States
+
 Both must use the full `PageLayout > PageHeader > PageBody` structure with `PageActionBar` breadcrumbs, `GridLoading`, and `GridError`.
 
 ### Action Bar — Smart Buttons
+
 Action bars must have **intelligent buttons that help the workflow**, not just CRUD actions:
+
 - **Detail page**: contextual navigation (e.g., icon-only "Produtos" with tooltip) + "Editar". **NO delete button** on detail pages — delete is only on edit pages.
 - **Edit page**: "Cancelar" (ghost, no icon, navigates back) + "Excluir" (subdued destructive) + "Salvar alterações" (default)
 - Contextual buttons only appear when relevant (e.g., "Produtos" hidden when count is 0)
 
 ### Detail Page — Conditional Sections
+
 Sections that display optional data (Contatos, Endereço, Observações) should **only render when data exists**. Do NOT show empty sections with "Nenhum dado cadastrado" messages — just hide the entire section.
 
 ### Identity Card — Layout Rules
 
 The Identity Card has a strict 3-zone layout:
 
-| Zone | Content |
-|------|---------|
-| **Left** | Icon with gradient (h-14 w-14 rounded-xl) |
+| Zone       | Content                                                               |
+| ---------- | --------------------------------------------------------------------- |
+| **Left**   | Icon with gradient (h-14 w-14 rounded-xl)                             |
 | **Center** | Title (h1 bold) + Active/Inactive badge inline + subtitle chips below |
-| **Right** | Metadata: creation date (Calendar sky) + update date (Clock amber) |
+| **Right**  | Metadata: creation date (Calendar sky) + update date (Clock amber)    |
 
 **Active/Inactive badge**: Always inline with h1 title. Emerald for active, gray for inactive:
+
 ```tsx
 <div className="flex items-center gap-2.5">
   <h1 className="truncate text-xl font-bold">{name}</h1>
   {isActive ? (
-    <span className="... border-emerald-600/25 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/8 dark:text-emerald-300">Ativo</span>
+    <span className="... border-emerald-600/25 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/8 dark:text-emerald-300">
+      Ativo
+    </span>
   ) : (
-    <span className="... border-gray-300 bg-gray-100 text-gray-600 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-gray-400">Inativo</span>
+    <span className="... border-gray-300 bg-gray-100 text-gray-600 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-gray-400">
+      Inativo
+    </span>
   )}
 </div>
 ```
@@ -250,6 +274,7 @@ The Identity Card has a strict 3-zone layout:
 **Subtitle chips** (below the name): Only non-redundant contextual info as icon+text chips. Country chip should use `CircleFlag` for the flag icon when available.
 
 **Chip style** (used in subtitle and section badges):
+
 ```tsx
 <div className="flex items-center gap-1.5 rounded-md border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] px-2 py-1 text-xs text-muted-foreground">
   <CircleFlag countryCode={code} height={14} width={14} />
@@ -258,7 +283,9 @@ The Identity Card has a strict 3-zone layout:
 ```
 
 ### Edit Page Identity Card
+
 Same layout but:
+
 - "Editando {entity}" above the title instead of subtitle chips
 - **Right zone**: Switch Ativo/Inativo with `bg-white/5` background (replaces creation date metadata)
 - Status toggle is ONLY here — NOT duplicated inside the form body
@@ -267,18 +294,23 @@ Same layout but:
 <div className="flex-1 min-w-0">
   <p className="text-sm text-muted-foreground">Editando {entityName}</p>
   <h1 className="text-xl font-bold truncate">{name}</h1>
-</div>
-{/* Right zone: Status Switch */}
+</div>;
+{
+  /* Right zone: Status Switch */
+}
 <div className="hidden sm:flex items-center gap-3 shrink-0 rounded-lg bg-white/5 px-4 py-2">
   <div className="text-right">
     <p className="text-xs font-semibold">Status</p>
-    <p className="text-[11px] text-muted-foreground">{isActive ? 'Ativa' : 'Inativa'}</p>
+    <p className="text-[11px] text-muted-foreground">
+      {isActive ? 'Ativa' : 'Inativa'}
+    </p>
   </div>
   <Switch checked={isActive} onCheckedChange={setIsActive} />
-</div>
+</div>;
 ```
 
 ### Form Card
+
 Wraps the form component with reduced vertical padding:
 
 ```tsx
@@ -294,6 +326,7 @@ Wraps the form component with reduced vertical padding:
 Forms are organized into **SectionHeader** + content wrapper sections:
 
 ### SectionHeader Component
+
 Each section has: icon (left, no box, `h-5 w-5 text-foreground`), title + subtitle, separator line.
 
 ```tsx
@@ -314,6 +347,7 @@ function SectionHeader({ icon: Icon, title, subtitle }) {
 ```
 
 ### Section Content Wrapper
+
 ```tsx
 <div className="w-full rounded-xl border border-border bg-white p-6 dark:bg-white/5">
   {/* fields */}
@@ -321,7 +355,9 @@ function SectionHeader({ icon: Icon, title, subtitle }) {
 ```
 
 ### CountrySelect in Forms
+
 Use `CountrySelect` combobox (with flags) instead of text input for country fields. Store as code internally, convert to name on save:
+
 ```tsx
 // State: countryCode (ISO code, e.g., "BR")
 // Load: setCountryCode(getCountryCodeFromName(manufacturer.country))
@@ -330,43 +366,59 @@ Use `CountrySelect` combobox (with flags) instead of text input for country fiel
 ```
 
 ### Star Rating Editor
+
 Interactive 5-star rating with click-to-set and click-again-to-clear:
+
 ```tsx
 <div className="flex items-center gap-1 h-9">
   {[1, 2, 3, 4, 5].map(star => (
-    <button key={star} type="button"
+    <button
+      key={star}
+      type="button"
       onClick={() => setRating(rating === star ? 0 : star)}
-      className="p-0.5 rounded hover:scale-110 transition-transform">
-      <Star className={`h-5 w-5 ${star <= rating
-        ? 'fill-amber-400 text-amber-400'
-        : 'fill-none text-gray-300 dark:text-gray-600 hover:text-amber-300'
-      }`} />
+      className="p-0.5 rounded hover:scale-110 transition-transform"
+    >
+      <Star
+        className={`h-5 w-5 ${
+          star <= rating
+            ? 'fill-amber-400 text-amber-400'
+            : 'fill-none text-gray-300 dark:text-gray-600 hover:text-amber-300'
+        }`}
+      />
     </button>
   ))}
-  {rating > 0 && <span className="ml-2 text-xs text-muted-foreground">{rating}/5</span>}
+  {rating > 0 && (
+    <span className="ml-2 text-xs text-muted-foreground">{rating}/5</span>
+  )}
 </div>
 ```
 
 ### Star Rating Viewer (Detail Page)
+
 Uses InfoField layout. When rated: shows filled/empty stars (no text). When not rated: shows "Não avaliado" as text:
+
 ```tsx
-{manufacturer.rating ? (
-  <div>
-    <p className="text-xs text-muted-foreground mb-1">Avaliação</p>
-    <StarRating rating={manufacturer.rating} />
-  </div>
-) : (
-  <InfoField label="Avaliação" value="Não avaliado" />
-)}
+{
+  manufacturer.rating ? (
+    <div>
+      <p className="text-xs text-muted-foreground mb-1">Avaliação</p>
+      <StarRating rating={manufacturer.rating} />
+    </div>
+  ) : (
+    <InfoField label="Avaliação" value="Não avaliado" />
+  );
+}
 ```
 
 ### Standard Sections (manufacturer example)
+
 1. **Identificação** (`Info` icon) — Row 1: Razão Social, Nome Fantasia, CNPJ. Row 2: Código, Website, Avaliação (stars)
 2. **Contato** (`Phone` icon) — Email, Telefone
 3. **Endereço** (`MapPinHouse` icon) — Address fields
 4. **Observações** (`NotebookText` icon) — Notes textarea
 
 ### Information Card Pattern (Detail/Edit pages)
+
 Cards in detail and edit pages use this structure:
 
 ```tsx
@@ -382,13 +434,12 @@ Cards in detail and edit pages use this structure:
   </div>
   <div className="border-b border-border" />
   {/* Card Content */}
-  <div className="p-4 sm:p-6">
-    {/* fields */}
-  </div>
+  <div className="p-4 sm:p-6">{/* fields */}</div>
 </Card>
 ```
 
 Key rules:
+
 - **Card dark bg**: `dark:bg-white/5` (NOT `dark:bg-slate-800/60`)
 - **Card py**: Always `py-0` to override Card component default `py-6`
 - **Header padding**: `pt-4 pb-2` — no fractional values
@@ -397,6 +448,7 @@ Key rules:
 - **Content padding**: `p-4 sm:p-6`
 
 ### ModuleCard Pattern
+
 Feature toggle cards with dual-theme backgrounds:
 
 ```tsx
@@ -419,20 +471,25 @@ Feature toggle cards with dual-theme backgrounds:
 ## 10. Attribute Display & Editor — Visual Design
 
 ### Attribute Viewer (Detail Page) — Card Layout
+
 Each attribute is a **single card** (not a table row) with one main line:
+
 - **Left**: Type icon (in a subtle box) + attribute label
 - **Right**: Status badges (Obrigatório/Opcional, Etiqueta, Relatórios) — all inline, same row
 
 Type icon map: `string`→`Type`, `number`→`Hash`, `boolean`→`ToggleLeft`, `date`→`CalendarCheck`, `select`→`List`
 
 Below the main line (optional sections separated by `border-t`):
+
 - "Opções de escolha" (only for `select` type) — NOT "Opções"
 - Advanced details grid (unit, mask, placeholder, default value, description)
 
 ### Toggle Chips (dual-theme colors)
+
 Toggle buttons for attribute properties use **pill-style chips** with proper light/dark theming:
 
 **Active state** — subtle tinted background + darker text in light, transparent tint + lighter text in dark:
+
 ```
 Obrigatório:  border-amber-600/25  dark:border-amber-500/20  bg-amber-50   dark:bg-amber-500/8   text-amber-700  dark:text-amber-300
 Etiqueta:     border-sky-600/25    dark:border-sky-500/20    bg-sky-50     dark:bg-sky-500/8     text-sky-700    dark:text-sky-300
@@ -445,17 +502,21 @@ Avançadas:    border-purple-600/25 dark:border-purple-500/20 bg-purple-50  dark
 ## 11. Color System & Button Conventions
 
 ### Destructive = Rose (NOT Red)
+
 The entire design system uses **Rose** instead of Red for destructive actions. Rose is warmer and integrates better with the UI.
 
 ### Button Variants
+
 - **default**: `shadow-sm` (not `shadow-lg`), solid bg
 - **destructive**: flat (no shadow), solid bg — **only used in context menus and modals, NOT in action bars**
 - **sm size**: `h-9 px-2.5 rounded-lg text-sm` — compact for action bars
 
 ### PageActionBar Buttons
+
 Action bar renders buttons with `min-h-0` (no forced min-height). Buttons use `size="sm"` for compact appearance. `HeaderButton.icon` is optional — buttons without icon show only text.
 
 **Icon-only buttons with tooltip**: When a `HeaderButton` has a `tooltip` field set, the button renders as icon-only (text hidden) wrapped in a Radix Tooltip. Use for secondary/contextual actions that don't need label clutter:
+
 ```tsx
 { id: 'view-products', title: 'X Produtos', tooltip: 'Listar produtos', icon: Package, variant: 'outline' }
 ```
@@ -463,21 +524,26 @@ Action bar renders buttons with `min-h-0` (no forced min-height). Buttons use `s
 **Outline button hover**: Use `hover:bg-slate-200 dark:hover:bg-slate-800` for consistent subtle hover on outline buttons in action bars.
 
 **Destructive button — subdued style (action bars only)**: On edit pages, the delete button should NOT use the `destructive` variant (too attention-grabbing). Instead use `variant: 'default'` with custom className: slate bg that becomes solid rose on hover:
+
 ```tsx
 {
   variant: 'default',
   className: 'bg-slate-200 text-slate-700 border-transparent hover:bg-rose-600 hover:text-white dark:bg-[#334155] dark:text-white dark:hover:bg-rose-600',
 }
 ```
+
 **Why:** The solid rose `destructive` variant draws too much attention in action bars. The subdued slate approach keeps the button discreet until the user intentionally hovers, where it transitions to solid rose signaling danger. When `className` is set on a button, the icon inherits text color (no forced `text-white`).
 
 ### Breadcrumb Text — Title Case
+
 `PageBreadcrumb` applies `toTitleCase()` to all labels (split by space, capitalize first letter of each word). This handles UPPERCASE entity names gracefully (e.g., "SEA TEXTIL" → "Sea Textil"). Uses `split(' ')` approach, NOT regex `\b\w` which breaks with accented characters (e.g., "Início").
 
 ### Tabs (Light Theme)
+
 Light tabs use subtle slate tones, not heavy gray:
+
 ```css
---tabs-list-bg: rgb(var(--os-slate-100) / 0.6);  /* NOT gray-100/0.8 */
+--tabs-list-bg: rgb(var(--os-slate-100) / 0.6); /* NOT gray-100/0.8 */
 --tabs-trigger-hover: rgb(var(--os-white) / 0.7);
 ```
 
@@ -516,6 +582,7 @@ iconUrl: iconUrl.trim() || null,
 ## 14. Categories — Ordering by displayOrder
 
 Categories use `displayOrder` for manual ordering:
+
 - Backend: all `findMany` queries include `orderBy: { displayOrder: 'asc' }`
 - Backend: auto-increment on create (counts siblings, assigns `siblings.length`)
 - Frontend listing: `showSorting={false}` + `defaultSortField="custom"` + `customSortFn` by `displayOrder`
@@ -525,6 +592,10 @@ Categories use `displayOrder` for manual ordering:
 ## 15. Labels & Text — Portuguese
 
 All user-facing text (labels, placeholders, toasts, titles, errors, dialogs) in **formal Portuguese** with correct accents. Code and logs stay in English.
+
+## 15.1 Storybook — Catálogo de componentes
+
+Componentes em `components/ui/`, `components/shared/` e `components/layout/` têm story co-localizada (`*.stories.tsx`). Convenções, mocks globais, MCP setup e estados obrigatórios por categoria estão em [storybook-pattern.md](./storybook-pattern.md). Hook pre-commit avisa quando componente novo é commitado sem story (warn-only).
 
 ## 16. Infinite Scroll with Server-Side Filters & Sorting
 
@@ -549,6 +620,7 @@ All user-facing text (labels, placeholders, toasts, titles, errors, dialogs) in 
 ### Backend Requirements
 
 The list endpoint MUST support:
+
 - `page` (default: 1), `limit` (default: 20, max: 100)
 - `search` (string, case-insensitive name contains)
 - `sortBy` (enum: name, createdAt, updatedAt), `sortOrder` (enum: asc, desc)
@@ -571,15 +643,21 @@ export function useEntityInfinite(filters?: EntityFilters) {
   const result = useInfiniteQuery({
     queryKey: ['entities', 'infinite', filters],
     queryFn: async ({ pageParam = 1 }) => {
-      return entityService.list({ page: pageParam, limit: PAGE_SIZE, ...filters });
+      return entityService.list({
+        page: pageParam,
+        limit: PAGE_SIZE,
+        ...filters,
+      });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.page < lastPage.meta.pages ? lastPage.meta.page + 1 : undefined,
+    getNextPageParam: lastPage =>
+      lastPage.meta.page < lastPage.meta.pages
+        ? lastPage.meta.page + 1
+        : undefined,
     staleTime: 30_000,
   });
 
-  const items = result.data?.pages.flatMap((p) => p.items) ?? [];
+  const items = result.data?.pages.flatMap(p => p.items) ?? [];
   const total = result.data?.pages[0]?.meta.total ?? 0;
 
   return { ...result, items, total };
@@ -589,6 +667,7 @@ export function useEntityInfinite(filters?: EntityFilters) {
 ### Page Pattern (`page.tsx`)
 
 Key rules:
+
 - **NO `useEntityCrud` for listing** — use `useEntityInfinite` directly
 - **NO client-side filtering** — all filters are server-side via query params
 - **Search**: `useState` + `useDebounce(300ms)` → passed as `filters.search`
@@ -611,18 +690,23 @@ Key rules:
   defaultSortDirection="desc"
   onSortChange={(field, direction) => {
     // Delegates to server-side sorting — EntityGrid skips internal sort
-    setSortBy(field); setSortOrder(direction);
+    setSortBy(field);
+    setSortOrder(direction);
   }}
   onItemDoubleClick={item => router.push(`/entity/${item.id}`)}
   // Do NOT pass onItemClick for navigation
-/>
-{/* Sentinel + loading indicator OUTSIDE EntityGrid */}
-<div ref={sentinelRef} className="h-1" />
-{isFetchingNextPage && (
-  <div className="flex justify-center py-4">
-    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-  </div>
-)}
+/>;
+{
+  /* Sentinel + loading indicator OUTSIDE EntityGrid */
+}
+<div ref={sentinelRef} className="h-1" />;
+{
+  isFetchingNextPage && (
+    <div className="flex justify-center py-4">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
 ```
 
 ### Checklist for New Infinite Scroll Pages
@@ -646,9 +730,9 @@ Key rules:
 
 ### Quando usar cada um
 
-| Cenário | Componente | Exemplo |
-|---------|-----------|---------|
-| Fluxo linear sequencial (1→2→3→fim) | `StepWizardDialog` | Criar produto, criar conta de email |
+| Cenário                                   | Componente               | Exemplo                                      |
+| ----------------------------------------- | ------------------------ | -------------------------------------------- |
+| Fluxo linear sequencial (1→2→3→fim)       | `StepWizardDialog`       | Criar produto, criar conta de email          |
 | Formulário complexo com seções navegáveis | `NavigationWizardDialog` | Editar variante, criar lançamento financeiro |
 
 ### StepWizardDialog (Linear)
