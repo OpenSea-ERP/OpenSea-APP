@@ -44,7 +44,7 @@ test.describe('/devices/pos-terminals — realtime sync update', () => {
       `${API_URL.replace(/\/$/, '')}/v1/pos/sync/notify`,
       {
         headers: {
-          Authorization: `Bearer ${deviceToken}`,
+          'x-pos-device-token': deviceToken,
           'Content-Type': 'application/json',
         },
         data: {
