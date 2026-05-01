@@ -19,8 +19,11 @@
     "build-storybook": "storybook build",
     "storybook:coverage": "node scripts/check-storybook-coverage.mjs",
     "test:storybook": "vitest run --project=storybook",
+    "test:visual": "cross-env OPENSEA_VISUAL_REGRESSION=1 vitest run --project=storybook",
+    "test:visual:update": "cross-env OPENSEA_VISUAL_REGRESSION=1 vitest run --project=storybook --update",
     "prepare": "husky",
-    "api:export": "cd ../OpenSea-API && npx tsx scripts/export-swagger.ts"
+    "api:export": "cd ../OpenSea-API && npx tsx scripts/export-swagger.ts",
+    "storybook:dashboard": "node scripts/generate-quality-dashboard-data.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

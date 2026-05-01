@@ -1,0 +1,61 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Patterns/Destructive Actions PIN" />
+
+Toda ação destrutiva no produto precisa passar por `VerifyActionPinModal`. Isso
+inclui exclusão simples, exclusão em lote, revogação, arquivamento e operações
+equivalentes que removem acesso, desfazem vínculo ou produzem perda material.
+Não use diálogo de confirmação simples, `alert`, `window.confirm` ou botão
+“Excluir” com efeito imediato. O PIN é a barreira padrão do projeto para ações
+irreversíveis ou sensíveis.
+
+O fluxo correto é sempre em duas etapas. Primeiro, a UI captura a intenção
+destrutiva e salva o contexto em estado local, por exemplo `isPinModalOpen` e
+`itemIdPendingDelete`. Depois, o `VerifyActionPinModal` é aberto com título e
+descrição em PT-BR, explicando claramente o que será afetado. O `onSuccess`
+executa a ação real somente após o PIN validado. Esse padrão vale da mesma forma
+para `ContextMenu`, `SelectionToolbar` e CTAs de cabeçalho.
+
+Se a tela tiver várias ações destrutivas, reutilize um único modal e troque a
+mensagem de acordo com o alvo atual. Isso evita drift entre implementações e
+garante consistência de segurança.
+
+```tsx
+import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
+import type { ContextMenuAction } from '@/core/components/entity-context-menu';
+import { EntityContextMenu } from '@/core/components/entity-context-menu';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+
+export function ContractRow({ contract }: { contract: { id: string; name: string } }) {
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pendingContract, setPendingContract] = useState<{ id: string; name: string } | null>(null);
+
+  const actions: ContextMenuAction[] = [
+    {
+      label: 'Excluir',
+      icon: Trash2,
+      onClick: () => {
+        setPendingContract(contract);
+        setIsPinModalOpen(true);
+      },
+    },
+  ];
+
+  return (
+    <>
+      <EntityContextMenu itemId={contract.id} actions={actions}>
+        <div data-item-card>{contract.name}</div>
+      </EntityContextMenu>
+
+      <VerifyActionPinModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        onSuccess={() => pendingContract ? deleteContract(pendingContract.id) : undefined}
+        title="Excluir contrato"
+        description={`Digite seu PIN de ação para excluir "${pendingContract?.name ?? 'este contrato'}". Esta ação não pode ser desfeita.`}
+      />
+    </>
+  );
+}
+```

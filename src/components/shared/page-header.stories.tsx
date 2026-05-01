@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Download, Package, Plus, Upload, Users } from 'lucide-react';
+import { expect } from 'vitest';
+import { page } from '@vitest/browser/context';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from './page-header';
 
@@ -21,11 +23,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const wrap = (children: React.ReactNode) => (
-  <div className="bg-background min-h-[200px]">{children}</div>
+const wrap = (children: React.ReactNode, testId?: string) => (
+  <div
+    {...(testId ? { 'data-testid': testId } : {})}
+    className="bg-background min-h-[200px]"
+  >
+    {children}
+  </div>
 );
 
 export const Default: Story = {
+  tags: ['visual'],
   render: () =>
     wrap(
       <PageHeader
@@ -34,8 +42,14 @@ export const Default: Story = {
         icon={<Package />}
         gradient="from-blue-500 to-indigo-600"
         showBackButton={false}
-      />
+      />,
+      'page-header-default'
     ),
+  play: async () => {
+    await expect
+      .element(page.getByTestId('page-header-default'))
+      .toMatchScreenshot('page-header-default');
+  },
 };
 
 export const WithBackButton: Story = {

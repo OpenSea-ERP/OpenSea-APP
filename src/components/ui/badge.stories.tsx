@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { CheckCircle2, Clock, ShieldAlert, Sparkles } from 'lucide-react';
+import { expect } from 'vitest';
+import { page } from '@vitest/browser/context';
 import { Badge } from './badge';
 
 const meta = {
@@ -29,8 +31,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const AllVariants: Story = {
+  tags: ['visual'],
   render: () => (
-    <div className="flex flex-wrap gap-3">
+    <div data-testid="badge-all-variants" className="flex flex-wrap gap-3">
       <Badge variant="default">Default</Badge>
       <Badge variant="secondary">Secondary</Badge>
       <Badge variant="destructive">Destructive</Badge>
@@ -39,6 +42,11 @@ export const AllVariants: Story = {
       <Badge variant="outline">Outline</Badge>
     </div>
   ),
+  play: async () => {
+    await expect
+      .element(page.getByTestId('badge-all-variants'))
+      .toMatchScreenshot('badge-all-variants');
+  },
 };
 
 // Padrão de chips dual-theme (CLAUDE.md §9):

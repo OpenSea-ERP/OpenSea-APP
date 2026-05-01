@@ -1,0 +1,135 @@
+import { Meta } from '@storybook/blocks';
+import {
+  coverageBySubfolder,
+  deprecatedComponents,
+  storiesWithoutPlay,
+  recentStories,
+} from './quality-dashboard.data';
+
+<Meta title="Foundations/Quality Dashboard" />
+
+# Painel de Qualidade do Catálogo
+
+Este painel apresenta métricas de saúde do catálogo Storybook do OpenSea-APP. Ele existe para garantir cobertura adequada de stories, identificar componentes obsoletos e rastrear lacunas de testes de interação (funções `play`). Consulte-o sempre que integrar um novo componente, preparar uma revisão de qualidade ou planejar sprints de manutenção do design system.
+
+> **Dados estáticos.** Execute `npm run storybook:dashboard` para atualizar o arquivo de dados e recarregue o Storybook.
+
+---
+
+## Cobertura por Subpasta
+
+Proporção de componentes `.tsx` (excluindo stories) que possuem ao menos um arquivo `.stories.tsx` na mesma subpasta de `src/components/`.
+
+<table>
+  <thead>
+    <tr>
+      <th>Pasta</th>
+      <th>Total</th>
+      <th>Com Story</th>
+      <th>Cobertura</th>
+    </tr>
+  </thead>
+  <tbody>
+    {coverageBySubfolder.map(row => (
+      <tr key={row.path}>
+        <td><code>{row.path}</code></td>
+        <td>{row.total}</td>
+        <td>{row.storied}</td>
+        <td>
+          {row.total > 0
+            ? `${Math.round(row.storied / row.total * 100)}%`
+            : '—'}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+---
+
+## Componentes Deprecated em Uso
+
+Componentes com anotação `@deprecated` no código-fonte. Devem ser substituídos ou removidos.
+
+{deprecatedComponents.length === 0 ? (
+  <p>Nenhum componente marcado como <code>@deprecated</code> encontrado.</p>
+) : (
+  <ul>
+    {deprecatedComponents.map(d => (
+      <li key={d.file}>
+        <code>{d.file}</code> — {d.count} ocorrência(s)
+      </li>
+    ))}
+  </ul>
+)}
+
+---
+
+## Stories sem Play Function
+
+Stories que não possuem um bloco `play:` para testes de interação automatizados. Considere adicionar interações para aumentar a cobertura de comportamento.
+
+{storiesWithoutPlay.length === 0 ? (
+  <p>Todas as stories possuem função <code>play</code>.</p>
+) : (
+  <details>
+    <summary>{storiesWithoutPlay.length} stories sem <code>play</code></summary>
+    <ul>
+      {storiesWithoutPlay.map(f => (
+        <li key={f}><code>{f}</code></li>
+      ))}
+    </ul>
+  </details>
+)}
+
+---
+
+## Violações de Acessibilidade (A11y)
+
+Os testes de acessibilidade são executados pelo addon A11y durante o test runner do Storybook. Para verificar violações:
+
+```bash
+npm run test:storybook
+```
+
+Os erros surgem como falhas Vitest no terminal. Consulte também:
+
+- [Introdução ao Catálogo](?path=/docs/foundations-introduction--docs)
+- Grupo **Patterns** no painel lateral
+
+---
+
+## Stories Modificadas Recentemente
+
+Top 10 stories por data de última modificação (via `git log`).
+
+<table>
+  <thead>
+    <tr>
+      <th>Arquivo</th>
+      <th>Última modificação</th>
+    </tr>
+  </thead>
+  <tbody>
+    {recentStories.map(s => (
+      <tr key={s.file}>
+        <td><code>{s.file}</code></td>
+        <td>{s.modifiedAt || '—'}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+---
+
+## Como Atualizar Este Painel
+
+1. Execute na raiz de `OpenSea-APP/`:
+
+   ```bash
+   npm run storybook:dashboard
+   ```
+
+2. O script regenera `.storybook/foundations/quality-dashboard.data.ts` com dados frescos.
+3. Reinicie ou recarregue o Storybook para visualizar as mudanças.
+4. Faça commit do arquivo `quality-dashboard.data.ts` atualizado para que o dashboard funcione sem re-execução em cada sessão de desenvolvimento.

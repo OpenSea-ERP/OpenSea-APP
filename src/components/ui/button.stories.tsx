@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { expect } from 'vitest';
+import { page } from '@vitest/browser/context';
 import { Button } from './button';
 
 const meta = {
@@ -35,8 +37,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const AllVariants: Story = {
+  tags: ['visual'],
   render: () => (
-    <div className="flex flex-wrap gap-3">
+    <div data-testid="button-all-variants" className="flex flex-wrap gap-3">
       <Button variant="default">Default</Button>
       <Button variant="destructive">Destructive</Button>
       <Button variant="outline">Outline</Button>
@@ -46,6 +49,11 @@ export const AllVariants: Story = {
       <Button variant="text">Text</Button>
     </div>
   ),
+  play: async () => {
+    await expect
+      .element(page.getByTestId('button-all-variants'))
+      .toMatchScreenshot('button-all-variants');
+  },
 };
 
 export const AllSizes: Story = {

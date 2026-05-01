@@ -24,6 +24,15 @@ const sharedAlias = {
 //  - "storybook": Storybook stories rendered in real browser (Playwright/Chromium)
 //    via @storybook/addon-vitest. Drives the a11y gate (parameters.a11y.test='error'
 //    in .storybook/preview.tsx). Run with: npx vitest run --project=storybook
+//
+// Visual regression toggle:
+//  Set `OPENSEA_VISUAL_REGRESSION=1` (see `npm run test:visual` / `test:visual:update`)
+//  to filter the storybook project to stories tagged `'visual'` only. Those stories
+//  expose a `play` function calling `expect.element(...).toMatchScreenshot('name')`.
+//  Baseline images live next to the story file in `__screenshots__/` (created on
+//  first run / `--update`). See `.storybook/visual-regression-pattern.md`.
+const VISUAL_REGRESSION = process.env.OPENSEA_VISUAL_REGRESSION === '1';
+
 export default defineConfig({
   test: {
     coverage: {
@@ -62,6 +71,10 @@ export default defineConfig({
         plugins: [
           storybookTest({
             configDir: path.join(dirname, '.storybook'),
+            // When OPENSEA_VISUAL_REGRESSION=1, restrict to stories that opt in
+            // via `tags: ['visual']` so the screenshot suite is isolated from the
+            // a11y gate (which runs on the default `'test'` tag).
+            ...(VISUAL_REGRESSION ? { tags: { include: ['visual'] } } : {}),
           }),
         ],
         resolve: { alias: sharedAlias },
@@ -72,6 +85,17 @@ export default defineConfig({
             headless: true,
             provider: playwright({}),
             instances: [{ browser: 'chromium' }],
+            // Sensible default for visual regression: pixelmatch with a small
+            // ratio tolerance to absorb sub-pixel font/AA noise. Stories can
+            // override per-call via `toMatchScreenshot(name, { ... })`.
+            expect: {
+              toMatchScreenshot: {
+                comparatorName: 'pixelmatch',
+                comparatorOptions: {
+                  allowedMismatchedPixelRatio: 0.01,
+                },
+              },
+            },
           },
         },
       },

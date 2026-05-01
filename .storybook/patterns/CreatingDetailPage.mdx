@@ -1,0 +1,75 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Patterns/Creating Detail Page" />
+
+Para páginas de detalhe, show ou edição orientada por abas, use como base a story
+<a href="?path=/docs/pages-entitydetailpagetemplate--default">Pages/EntityDetailPageTemplate</a>.
+A composição recomendada é `PageLayout` > `PageHeaderShell` > `PageActionBar` >
+`PageBody` > identity card > `Tabs` > cards de conteúdo. Neste contexto,
+`PageHeaderShell` é o `PageHeader` exportado por `@/components/layout/page-layout`,
+enquanto o identity card é um padrão visual sobre `Card`, com `bg-white/5 p-5 rounded-xl`.
+
+O topo precisa comunicar navegação e intenção: breadcrumb no `PageActionBar`,
+botão de excluir com variante destrutiva rose e botão de salvar como ação
+primária. A regra do projeto é fixa: o botão de excluir é sempre destrutivo
+rose, conforme a convenção de cor do sistema (§9.1), e não deve competir com o
+CTA de salvar. Quando a tela for somente leitura, ainda mantenha a estrutura;
+apenas remova ações que não se aplicam.
+
+Dentro do body, o identity card resume quem é a entidade e desde quando existe.
+As abas usam `TabsList` com `grid-cols-N h-12 mb-4`, e cada aba contém cards de
+conteúdo com o mesmo ritmo visual do restante do sistema. Evite abrir modal de
+edição a partir daqui; detalhe e edição devem viver em rota dedicada ou em aba
+própria dentro da mesma página.
+
+```tsx
+import { Save, Trash2, User } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import { PageBody, PageHeader as PageHeaderShell, PageLayout } from '@/components/layout/page-layout';
+
+const IdentityCard = () => (
+  <Card className="bg-white/5 p-5 rounded-xl">
+    <div className="flex items-center gap-4">
+      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600">
+        <User className="h-7 w-7 text-white" />
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">Cliente</p>
+        <h2 className="text-xl font-bold">Maria Souza</h2>
+      </div>
+    </div>
+  </Card>
+);
+
+export function CustomerDetailPage() {
+  return (
+    <PageLayout>
+      <PageHeaderShell>
+        <PageActionBar
+          breadcrumbItems={breadcrumbItems}
+          buttons={[
+            { id: 'delete', title: 'Excluir', icon: Trash2, onClick: openDeletePin, variant: 'destructive', className: 'bg-rose-600 hover:bg-rose-700' },
+            { id: 'save', title: 'Salvar', icon: Save, onClick: handleSave },
+          ]}
+        />
+      </PageHeaderShell>
+
+      <PageBody>
+        <IdentityCard />
+        <Tabs defaultValue="geral" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-12 mb-4">
+            <TabsTrigger value="geral">Geral</TabsTrigger>
+            <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+            <TabsTrigger value="historico">Histórico</TabsTrigger>
+          </TabsList>
+          <TabsContent value="geral"><Card className="bg-white/5 py-2 overflow-hidden" /></TabsContent>
+          <TabsContent value="financeiro"><Card className="bg-white/5 py-2 overflow-hidden" /></TabsContent>
+          <TabsContent value="historico"><Card className="bg-white/5 py-2 overflow-hidden" /></TabsContent>
+        </Tabs>
+      </PageBody>
+    </PageLayout>
+  );
+}
+```

@@ -1,0 +1,79 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Patterns/Creating Listing Page" />
+
+Este padrão descreve a montagem de uma página de listagem nova a partir da story
+<a href="?path=/docs/pages-entitylistpagetemplate--default">Pages/EntityListPageTemplate</a>.
+A sequência canônica é: `PageLayout` > `PageHeader` > `PageBody` >
+`SearchBar` > `GridLoading | GridError | EntityGrid` > `SelectionToolbar` >
+modais. A regra mais importante é estrutural: a busca livre fica acima do grid,
+mas filtros facetados e chips de refinamento entram dentro do `EntityGrid` via
+`toolbarStart`, nunca em um bloco solto antes da grade. Isso mantém desktop e
+mobile consistentes, inclusive no drawer de filtros do grid.
+
+A listagem deve assumir carregamento contínuo. Use scroll infinito ou cursor do
+servidor; não introduza paginação client-side com páginas numeradas, slicing em
+memória ou `TablePagination`. `GridLoading` e `GridError` vivem no nível da
+página, e o `EntityGrid` entra apenas quando já existe um conjunto de itens para
+renderização. Quando houver seleção múltipla, mostre `SelectionToolbar` com
+ações em lote. Para ações destrutivas, o fluxo de exclusão deve abrir o modal
+específico do módulo ou a verificação por PIN, nunca um `window.confirm`.
+
+Não crie modais de visualizar ou editar. Clique simples, duplo clique ou ação de
+menu devem navegar para rota dedicada de detalhe ou edição. Os únicos modais
+esperados aqui são os de renomear, criar, excluir e duplicar.
+
+```tsx
+import { GridError } from '@/components/handlers/grid-error';
+import { GridLoading } from '@/components/handlers/grid-loading';
+import { SearchBar } from '@/components/layout/search-bar';
+import { PageActionBar } from '@/components/layout/page-action-bar';
+import { PageBody, PageHeader, PageLayout } from '@/components/layout/page-layout';
+import { VerifyActionPinModal } from '@/components/modals/verify-action-pin-modal';
+import { Button } from '@/components/ui/button';
+import { EntityGrid } from '@/core/components/entity-grid';
+import { SelectionToolbar } from '@/core/components/selection-toolbar';
+
+export function ProductsPage() {
+  return (
+    <PageLayout>
+      <PageHeader>
+        <PageActionBar breadcrumbItems={breadcrumbItems} buttons={headerButtons} />
+      </PageHeader>
+
+      <PageBody>
+        <SearchBar value={query} onSearch={setQuery} placeholder="Buscar produtos..." />
+
+        {isLoading ? (
+          <GridLoading count={9} layout="grid" size="md" gap="gap-4" />
+        ) : error ? (
+          <GridError
+            title="Não foi possível carregar os produtos"
+            action={{ label: 'Tentar novamente', onClick: refetch }}
+          />
+        ) : (
+          <EntityGrid
+            config={productsConfig}
+            items={items}
+            renderGridItem={renderGridItem}
+            renderListItem={renderListItem}
+            toolbarStart={
+              <>
+                <Button size="sm" variant="outline">Status: Ativos</Button>
+                <Button size="sm" variant="outline">Categoria: Camisetas</Button>
+              </>
+            }
+            activeFilterCount={2}
+            onItemDoubleClick={item => router.push(`/stock/products/${item.id}`)}
+          />
+        )}
+
+        {selectedIds.length > 0 && <SelectionToolbar selectedIds={selectedIds} totalItems={totalItems} onClear={clearSelection} />}
+        <div ref={loadMoreRef} />
+        {/* Modais do módulo: Rename, Create, Duplicate; Delete sempre com PIN */}
+        <VerifyActionPinModal isOpen={isDeletePinOpen} onClose={closeDeletePin} onSuccess={confirmDelete} />
+      </PageBody>
+    </PageLayout>
+  );
+}
+```

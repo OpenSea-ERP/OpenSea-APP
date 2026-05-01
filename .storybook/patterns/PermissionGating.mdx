@@ -1,0 +1,55 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Patterns/Permission Gating" />
+
+Controle de permissão no OpenSea-APP é regra de renderização, não de cosmética.
+Quando o usuário não possui a permissão necessária, o elemento não aparece.
+Não use botão desabilitado como substituto de autorização e não deixe ações
+sensíveis visíveis com tooltip de negação. O hook canônico é `usePermissions`,
+e a checagem deve acontecer com `hasPermission(PERMISSIONS.MODULE.RESOURCE.ACTION)`.
+No repositório atual, muitos módulos expõem constantes próprias como
+`STOCK_PERMISSIONS` ou `HR_PERMISSIONS`; se não houver um agregador `PERMISSIONS`,
+faça o alias local do módulo e mantenha o mesmo shape mental.
+
+Esse gating precisa existir em três pontos recorrentes. Primeiro, nas ações do
+`EntityContextMenu`, para impedir que o item sequer seja oferecido. Segundo, nos
+CTAs de nível de página, como botão de criar, exportar ou aprovar. Terceiro, na
+`SelectionToolbar`, onde ações em lote costumam ser perigosas por escala. Em todos
+esses casos, prefira construir a lista já filtrada em vez de renderizar tudo e
+depois esconder via CSS. Isso simplifica leitura, acessibilidade e testes.
+
+```tsx
+import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EntityContextMenu } from '@/core/components/entity-context-menu';
+import { SelectionToolbar } from '@/core/components/selection-toolbar';
+import { usePermissions } from '@/hooks/use-permissions';
+import { STOCK_PERMISSIONS } from '@/app/(dashboard)/(modules)/stock/_shared/constants/stock-permissions';
+
+const PERMISSIONS = { STOCK: STOCK_PERMISSIONS };
+
+export function ProductsActions({ item, selectedIds }: { item: { id: string }; selectedIds: string[] }) {
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission(PERMISSIONS.STOCK.PRODUCTS.CREATE);
+  const canEdit = hasPermission(PERMISSIONS.STOCK.PRODUCTS.MODIFY);
+  const canDelete = hasPermission(PERMISSIONS.STOCK.PRODUCTS.REMOVE);
+
+  return (
+    <>
+      {canCreate ? <Button size="sm"><Plus className="h-4 w-4" /> Novo produto</Button> : null}
+
+      <EntityContextMenu
+        itemId={item.id}
+        actions={[
+          ...(canEdit ? [{ label: 'Editar', icon: Edit, onClick: () => openEdit(item.id) }] : []),
+          ...(canDelete ? [{ label: 'Excluir', icon: Trash2, onClick: () => requestDelete(item.id) }] : []),
+        ]}
+      >
+        <div data-item-card />
+      </EntityContextMenu>
+
+      {canDelete ? <SelectionToolbar selectedIds={selectedIds} totalItems={200} onClear={clearSelection} defaultActions={{ delete: true }} handlers={{ onDelete: requestBulkDelete }} /> : null}
+    </>
+  );
+}
+```

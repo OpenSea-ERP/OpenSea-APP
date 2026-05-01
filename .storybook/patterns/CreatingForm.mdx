@@ -1,0 +1,59 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Patterns/Creating Form" />
+
+O formulário canônico do projeto aparece na story
+<a href="?path=/docs/pages-entityformpagetemplate--default">Pages/EntityFormPageTemplate</a>,
+mas ele existe em duas variações. A primeira é a página standalone de criação ou
+edição, com `PageHeader`, `PageLayout` e `PageBody`. A segunda é uma seção inline
+dentro de uma página de detalhe, normalmente abaixo do identity card ou em uma
+aba específica. Em ambos os casos, a organização dos campos deve ser a mesma:
+seções curtas, sem parede de inputs, com `CollapsibleSection` para agrupar
+contextos como dados básicos, endereço, fiscal e observações.
+
+Quando o fluxo passar de cinco seções reais, pare de empilhar cards e migre para
+`StepWizardDialog`. A intenção é reduzir carga cognitiva, não esconder campos por
+arbitragem estética. Campos obrigatórios precisam ser marcados visualmente e
+também com `aria-required`. Em caso de erro, o controle recebe `aria-invalid` e
+aponta para uma mensagem via `aria-describedby`. Isso vale para `Input`, `Select`
+e `Textarea`. No envio, o botão principal mantém o mesmo lugar e troca o rótulo
+por spinner, sem mover layout e sem permitir clique repetido.
+
+```tsx
+import { Building2, Loader2, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { PageBody, PageLayout } from '@/components/layout/page-layout';
+import { PageHeader } from '@/components/shared/page-header';
+import { CollapsibleSection } from '@/components/shared/forms/collapsible-section';
+import { StepWizardDialog } from '@/components/ui/step-wizard-dialog';
+
+export function SupplierFormPage() {
+  const nameErrorId = 'supplier-name-error';
+
+  return (
+    <PageLayout>
+      <PageHeader title="Novo fornecedor" description="Cadastro principal" icon={<Building2 />} gradient="from-emerald-500 to-teal-600" />
+      <PageBody>
+        {sections.length > 5 ? <StepWizardDialog open={isWizardOpen} onOpenChange={setIsWizardOpen} steps={steps} /> : null}
+
+        <CollapsibleSection icon={Building2} title="Dados básicos" subtitle="Identificação principal">
+          <Label htmlFor="supplier-name">Razão social <span aria-hidden="true" className="text-rose-500">*</span></Label>
+          <Input id="supplier-name" aria-required="true" aria-invalid={!!errors.name} aria-describedby={errors.name ? nameErrorId : undefined} />
+          {errors.name ? <p id={nameErrorId} className="text-sm text-rose-500">{errors.name}</p> : null}
+        </CollapsibleSection>
+
+        <CollapsibleSection icon={MapPin} title="Endereço" subtitle="Entrega e cobrança">
+          <Textarea id="supplier-address" />
+        </CollapsibleSection>
+
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
+        </Button>
+      </PageBody>
+    </PageLayout>
+  );
+}
+```
